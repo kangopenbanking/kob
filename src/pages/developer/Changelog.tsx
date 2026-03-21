@@ -6,6 +6,30 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "10.0.0",
+      date: "2026-03-21",
+      type: "major",
+      changes: [
+        { type: "feature", description: "Remittance-as-a-Service (RaaS) — Full inbound + outbound remittance lifecycle with 5-state machine (created → pending → received → credited → settled)" },
+        { type: "feature", description: "Remittance Partner Adapter Layer — provider-agnostic interface for Thunes, TerraPay, Onafriq with HMAC-SHA256 signature verification and canonical event model" },
+        { type: "feature", description: "Remittance Routing Engine — smart destination routing to KOB wallets, bank accounts, and merchant/bill payments with double-entry ledger postings" },
+        { type: "feature", description: "Remittance Settlement & Reconciliation — automated statement import, 5-type mismatch detection, daily cron for stale transaction flagging" },
+        { type: "feature", description: "Outbound Remittance Engine — corridor discovery, quote generation, multi-layered compliance (sanctions, limits, usage tracking), delivery method selection" },
+        { type: "feature", description: "Remittance Webhook Ingestion — rate-limited, signature-verified inbound webhooks with dedupe via webhook_inbox table" },
+        { type: "feature", description: "Bank Confirmation Handler — real-time and batch bank credit confirmation with settlement ledger posting" },
+        { type: "feature", description: "Admin Remittance Command Center — 5 dashboard pages: Overview, Partners, Bank Confirmations, Settlements, Outbound Monitoring" },
+        { type: "feature", description: "Consumer Send Money page (/app/send-money) — 5-step flow with corridor picker, live quotes, and transfer history with tracking" },
+        { type: "feature", description: "Consumer Inbound Remittance tracking (/app/remittances) — status filters, event timeline, volume summary" },
+        { type: "feature", description: "Banking App Remittance view (/bank/:id/remittances) — institution-scoped inbound remittance tracking" },
+        { type: "feature", description: "Professional Remittance landing page (/remittance) — Wise-inspired design with corridor rates, delivery options, and API section" },
+        { type: "improvement", description: "SDK documentation updated with remittance endpoint examples for Node.js, Python, and PHP libraries" },
+        { type: "improvement", description: "Outbound compliance decisions routed through edge function (was direct DB) for proper audit trail and email notifications" },
+        { type: "improvement", description: "Usage tracking fixed with atomic increment RPC function (increment_remittance_usage) replacing broken upsert" },
+        { type: "fix", description: "listOutbound now queries by sender_user_id instead of sender_email for stable history across email changes" },
+        { type: "fix", description: "Admin RemittancePartners now forwards session token in invoke headers for proper RBAC resolution" },
+      ]
+    },
+    {
       version: "9.1.0",
       date: "2026-03-20",
       type: "minor",
