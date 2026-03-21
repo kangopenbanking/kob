@@ -32,6 +32,7 @@ import {
   Store,
   Link2,
   CheckCircle2,
+  Landmark,
   type LucideIcon,
 } from "lucide-react";
 
