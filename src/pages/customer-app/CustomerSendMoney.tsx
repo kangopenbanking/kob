@@ -524,10 +524,10 @@ export default function CustomerSendMoney() {
           {/* Step 4: Confirmation */}
           {step === "confirm" && (
             <motion.div key="confirm" {...stepTransition} className="space-y-4">
-              <Card className="border-amber-200/60 overflow-hidden shadow-md">
-                <div className="bg-amber-50 px-4 py-3 border-b border-amber-200/40 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <p className="text-sm font-bold text-amber-800">Confirm Transfer</p>
+              <Card className="border-fi-amber/20 overflow-hidden shadow-md">
+                <div className="bg-fi-amber/5 px-4 py-3 border-b border-fi-amber/10 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-fi-amber" />
+                  <p className="text-sm font-bold text-foreground">Confirm Transfer</p>
                 </div>
                 <CardContent className="p-4 space-y-4">
                   <div className="rounded-2xl bg-muted/30 border border-border/30 p-4 space-y-2 text-sm">
