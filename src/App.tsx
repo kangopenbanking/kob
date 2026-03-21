@@ -850,6 +850,7 @@ function App() {
               <Route path="roles-permissions" element={<RolesPermissions />} />
               <Route path="compare" element={<CompetitiveComparison />} />
               <Route path="migrate" element={<MigrationGuide />} />
+              <Route path="pay-by-bank" element={<PayByBankGuide />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
 

@@ -76,7 +76,7 @@ export default function AdminPayByBank() {
 
   return (
     <div>
-      <AdminPageHeader title="Pay by Bank" description="Monitor and manage redirect-based SCA payment intents" />
+      <AdminPageHeader title="Pay by Bank" description="Monitor and manage redirect-based SCA payment intents" icon={CreditCard} />
 
       <div className="p-6 space-y-6">
         {/* Stats */}
