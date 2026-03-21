@@ -20960,6 +20960,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_profiles_by_name: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          full_name: string
+          id: string
+          phone_masked: string
+        }[]
+      }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
         Returns: undefined
