@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight,
   Shield,
@@ -25,19 +26,20 @@ import {
   Receipt,
   ChevronDown,
   Star,
-  Eye,
   Repeat,
+  Send,
 } from "lucide-react";
 
-import heroPhone from "@/assets/remittance/hero-phone.png";
 import youngWoman from "@/assets/remittance/young-woman.jpg";
 import familyHappy from "@/assets/remittance/family-happy.jpg";
 import womanCard from "@/assets/remittance/woman-card.jpg";
 import manLaptop from "@/assets/remittance/man-laptop.jpeg";
 import marketVendor from "@/assets/remittance/market-vendor.jpeg";
 import familyBed from "@/assets/remittance/family-bed.jpg";
+import walletDest from "@/assets/remittance/wallet-dest.jpg";
+import bankDest from "@/assets/remittance/bank-dest.jpg";
+import billsDest from "@/assets/remittance/bills-dest.jpg";
 
-/* ─── Animation variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
@@ -47,14 +49,13 @@ const fadeUp = {
   }),
 };
 
-/* ─── Currency data ─── */
-const currencies = [
-  { code: "EUR", name: "Euro", flag: "🇪🇺", rate: 655.957 },
-  { code: "USD", name: "US Dollar", flag: "🇺🇸", rate: 605.22 },
-  { code: "GBP", name: "British Pound", flag: "🇬🇧", rate: 765.43 },
-  { code: "CAD", name: "Canadian Dollar", flag: "🇨🇦", rate: 445.18 },
-  { code: "CHF", name: "Swiss Franc", flag: "🇨🇭", rate: 680.50 },
-  { code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", rate: 0.39 },
+const defaultCurrencies = [
+  { code: "EUR", name: "Euro", flag: "🇪🇺", rate: 655.957, fee_pct: 0.5 },
+  { code: "USD", name: "US Dollar", flag: "🇺🇸", rate: 605.22, fee_pct: 0.8 },
+  { code: "GBP", name: "British Pound", flag: "🇬🇧", rate: 765.43, fee_pct: 0.6 },
+  { code: "CAD", name: "Canadian Dollar", flag: "🇨🇦", rate: 445.18, fee_pct: 0.7 },
+  { code: "CHF", name: "Swiss Franc", flag: "🇨🇭", rate: 680.50, fee_pct: 0.5 },
+  { code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", rate: 0.39, fee_pct: 0.3 },
 ];
 
 const corridors = [
@@ -67,9 +68,9 @@ const corridors = [
 ];
 
 const destinations = [
-  { icon: Smartphone, title: "KOB Wallet", desc: "Instant credit to any KOB digital wallet. Spend, save, or withdraw instantly.", img: youngWoman },
-  { icon: Landmark, title: "Bank Account", desc: "Direct deposit into any Cameroonian bank account via our bank connector network.", img: womanCard },
-  { icon: Receipt, title: "Bills & Invoices", desc: "Pay school fees, utilities, or merchant invoices directly from diaspora funds.", img: marketVendor },
+  { icon: Smartphone, title: "KOB Wallet", desc: "Instant credit to any KOB digital wallet. Spend, save, or withdraw instantly.", img: walletDest },
+  { icon: Landmark, title: "Bank Account", desc: "Direct deposit into any Cameroonian bank account via our bank connector network.", img: bankDest },
+  { icon: Receipt, title: "Bills & Invoices", desc: "Pay school fees, utilities, or merchant invoices directly from diaspora funds.", img: billsDest },
 ];
 
 const stats = [
@@ -86,14 +87,83 @@ const steps = [
   { num: "04", title: "Instant credit", desc: "Recipient gets funds in their chosen destination. Real-time notifications at every step.", icon: Zap },
 ];
 
-/* ─── Live Send Form Component ─── */
+/* ─── Hook to fetch admin exchange rates ─── */
+function useAdminRates() {
+  const [currencies, setCurrencies] = useState(defaultCurrencies);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const { data } = await supabase
+          .from("admin_exchange_rates")
+          .select("base_currency, rate, effective_rate, margin_percentage")
+          .eq("is_active", true)
+          .eq("target_currency", "XAF");
+
+        if (data && data.length > 0) {
+          const flagMap: Record<string, { flag: string; name: string }> = {
+            EUR: { flag: "🇪🇺", name: "Euro" },
+            USD: { flag: "🇺🇸", name: "US Dollar" },
+            GBP: { flag: "🇬🇧", name: "British Pound" },
+            CAD: { flag: "🇨🇦", name: "Canadian Dollar" },
+            CHF: { flag: "🇨🇭", name: "Swiss Franc" },
+            NGN: { flag: "🇳🇬", name: "Nigerian Naira" },
+            XOF: { flag: "🏳️", name: "CFA Franc BCEAO" },
+          };
+
+          const merged = defaultCurrencies.map((dc) => {
+            const admin = data.find((d: any) => d.base_currency === dc.code);
+            if (admin) {
+              return {
+                ...dc,
+                rate: Number(admin.effective_rate || admin.rate),
+                fee_pct: Number(admin.margin_percentage) || dc.fee_pct,
+              };
+            }
+            return dc;
+          });
+
+          // Add any admin currencies not in defaults
+          data.forEach((d: any) => {
+            if (!merged.find((m) => m.code === d.base_currency)) {
+              const info = flagMap[d.base_currency] || { flag: "🌍", name: d.base_currency };
+              merged.push({
+                code: d.base_currency,
+                name: info.name,
+                flag: info.flag,
+                rate: Number(d.effective_rate || d.rate),
+                fee_pct: Number(d.margin_percentage) || 0.5,
+              });
+            }
+          });
+
+          setCurrencies(merged);
+        }
+      } catch {
+        // Fallback to defaults silently
+      }
+    };
+    fetchRates();
+  }, []);
+
+  return currencies;
+}
+
+/* ─── Live Send Form ─── */
 function SendForm() {
+  const currencies = useAdminRates();
   const [amount, setAmount] = useState("1000");
   const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Sync selectedCurrency when currencies load from admin
+  useEffect(() => {
+    const match = currencies.find((c) => c.code === selectedCurrency.code);
+    if (match && match.rate !== selectedCurrency.rate) setSelectedCurrency(match);
+  }, [currencies]);
+
   const numericAmount = parseFloat(amount) || 0;
-  const feePercent = 0.005;
+  const feePercent = (selectedCurrency.fee_pct || 0.5) / 100;
   const fee = numericAmount * feePercent;
   const convertedAmount = useMemo(
     () => Math.round((numericAmount - fee) * selectedCurrency.rate),
@@ -105,25 +175,25 @@ function SendForm() {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md"
+      className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40"
     >
       {/* You send */}
       <div className="space-y-1.5 mb-5">
-        <label className="text-sm font-medium text-muted-foreground">You send</label>
-        <div className="flex items-center border rounded-xl overflow-hidden border-border focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
+        <label className="text-sm font-semibold text-foreground">You send</label>
+        <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
           <Input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="border-0 text-xl font-bold h-14 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="border-0 text-2xl font-bold h-16 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
             placeholder="0"
           />
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 px-4 h-14 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[120px] justify-center"
+              className="flex items-center gap-2 px-4 h-16 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[130px] justify-center"
             >
-              <span className="text-lg">{selectedCurrency.flag}</span>
+              <span className="text-xl">{selectedCurrency.flag}</span>
               {selectedCurrency.code}
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -134,7 +204,7 @@ function SendForm() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -4, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-[calc(100%+4px)] bg-white rounded-xl shadow-xl border border-border z-50 min-w-[200px] overflow-hidden"
+                  className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] overflow-hidden"
                 >
                   {currencies.map((c) => (
                     <button
@@ -155,10 +225,10 @@ function SendForm() {
       </div>
 
       {/* Fee breakdown */}
-      <div className="space-y-2 py-4 border-y border-border/60 mb-5 text-sm">
+      <div className="space-y-2.5 py-4 border-y border-border/50 mb-5 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground flex items-center gap-1.5">
-            <Banknote className="h-3.5 w-3.5" /> Our fee
+            <Banknote className="h-3.5 w-3.5" /> Our fee ({selectedCurrency.fee_pct}%)
           </span>
           <span className="font-semibold text-foreground">
             {fee.toFixed(2)} {selectedCurrency.code}
@@ -182,28 +252,29 @@ function SendForm() {
 
       {/* They receive */}
       <div className="space-y-1.5 mb-6">
-        <label className="text-sm font-medium text-muted-foreground">Recipient gets</label>
-        <div className="flex items-center border rounded-xl overflow-hidden border-border bg-muted/30">
-          <div className="flex-1 px-4 py-3.5">
+        <label className="text-sm font-semibold text-foreground">Recipient gets</label>
+        <div className="flex items-center border-2 rounded-xl overflow-hidden border-border bg-muted/20">
+          <div className="flex-1 px-4 py-4">
             <motion.span
               key={convertedAmount}
               initial={{ opacity: 0.5, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-xl font-bold text-foreground"
+              className="text-2xl font-bold text-foreground"
             >
               {convertedAmount.toLocaleString()}
             </motion.span>
           </div>
-          <div className="flex items-center gap-2 px-4 h-14 bg-muted/50 font-semibold text-sm min-w-[120px] justify-center">
-            <span className="text-lg">🇨🇲</span>
+          <div className="flex items-center gap-2 px-4 h-16 bg-muted/50 font-semibold text-sm min-w-[130px] justify-center">
+            <span className="text-xl">🇨🇲</span>
             XAF
           </div>
         </div>
       </div>
 
       <Link to="/app/send-money" className="block">
-        <Button className="w-full h-13 rounded-xl text-base font-bold shadow-lg hover:shadow-xl transition-all" size="lg">
-          Send money now <ArrowRight className="ml-2 h-5 w-5" />
+        <Button className="w-full h-14 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all gap-2" size="lg">
+          <Send className="h-5 w-5" />
+          Send money now
         </Button>
       </Link>
 
@@ -214,7 +285,6 @@ function SendForm() {
   );
 }
 
-/* ─── Country flags row ─── */
 function FlagRow() {
   const flags = ["🇫🇷", "🇺🇸", "🇬🇧", "🇨🇦", "🇩🇪", "🇳🇬", "🇧🇪", "🇨🇭"];
   return (
@@ -234,11 +304,10 @@ function FlagRow() {
   );
 }
 
-/* ─── Main page ─── */
 export default function RemittanceLanding() {
   return (
     <div className="min-h-screen bg-background">
-      {/* ══════════ HERO — Wise-style with live form ══════════ */}
+      {/* ══════════ HERO ══════════ */}
       <section className="relative overflow-hidden bg-[hsl(var(--primary))]">
         <div className="absolute inset-0">
           <div className="absolute top-20 -left-20 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl" />
@@ -247,7 +316,6 @@ export default function RemittanceLanding() {
 
         <div className="container mx-auto px-4 py-16 lg:py-24">
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
-            {/* Left copy */}
             <motion.div initial="hidden" animate="visible" className="flex-1 space-y-5">
               <motion.div custom={0} variants={fadeUp} className="flex items-center gap-2">
                 <div className="flex items-center gap-0.5">
@@ -275,6 +343,11 @@ export default function RemittanceLanding() {
                     Open an Account <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <Link to="/developer">
+                  <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-14 text-base font-semibold bg-transparent">
+                    Explore API
+                  </Button>
+                </Link>
               </motion.div>
 
               <motion.div custom={4} variants={fadeUp}>
@@ -282,7 +355,6 @@ export default function RemittanceLanding() {
               </motion.div>
             </motion.div>
 
-            {/* Right — live form */}
             <div className="w-full max-w-md lg:max-w-lg">
               <SendForm />
             </div>
@@ -319,11 +391,7 @@ export default function RemittanceLanding() {
       {/* ══════════ NEVER PAY A HIDDEN FEE ══════════ */}
       <section className="py-20 lg:py-28 bg-[hsl(var(--primary))]">
         <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
               NEVER PAY A HIDDEN FEE AGAIN
             </h2>
@@ -339,13 +407,12 @@ export default function RemittanceLanding() {
               </Button>
             </Link>
             <Link to="/developer">
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-14 font-semibold backdrop-blur-sm">
+              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-14 font-semibold backdrop-blur-sm bg-transparent">
                 Learn how to send money
               </Button>
             </Link>
           </div>
 
-          {/* Corridors grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {corridors.map((c, i) => (
               <motion.div
@@ -386,16 +453,11 @@ export default function RemittanceLanding() {
         </div>
       </section>
 
-      {/* ══════════ SECURITY — "Disappoint thieves" ══════════ */}
+      {/* ══════════ SECURITY ══════════ */}
       <section className="py-20 lg:py-28 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
               <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight mb-6">
                 Disappoint thieves
               </h2>
@@ -409,24 +471,13 @@ export default function RemittanceLanding() {
               </Link>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="grid grid-cols-3 gap-4"
-            >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="grid grid-cols-3 gap-4">
               {[
                 { icon: Shield, title: "Dedicated threat and fraud teams", desc: "Our dedicated fraud and security teams work to keep your money safe" },
                 { icon: Lock, title: "2-factor authentication", desc: "We use 2-factor authentication to protect your account" },
                 { icon: Building2, title: "Trusted institutions", desc: "We trust your money with established financial institutions" },
               ].map((item, i) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
+                <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                   <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow text-center">
                     <CardContent className="p-5 flex flex-col items-center gap-3">
                       <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -446,16 +497,9 @@ export default function RemittanceLanding() {
       {/* ══════════ HOW IT WORKS ══════════ */}
       <section className="py-20 lg:py-28 bg-muted/30">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <Badge variant="outline" className="mb-4 text-sm">How it works</Badge>
-            <h2 className="text-4xl lg:text-5xl font-black text-foreground">
-              Money arrives in seconds
-            </h2>
+            <h2 className="text-4xl lg:text-5xl font-black text-foreground">Money arrives in seconds</h2>
             <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
               A seamless four-step process from sender to recipient. No delays, no hidden fees.
             </p>
@@ -463,13 +507,7 @@ export default function RemittanceLanding() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {steps.map((step, i) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-              >
+              <motion.div key={step.num} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
                 <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
                   <CardContent className="p-6">
                     <div className="h-12 w-12 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors flex items-center justify-center mb-4">
@@ -486,30 +524,17 @@ export default function RemittanceLanding() {
         </div>
       </section>
 
-      {/* ══════════ DESTINATIONS — Full images (Wise style) ══════════ */}
+      {/* ══════════ DESTINATIONS ══════════ */}
       <section className="py-20 lg:py-28 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <Badge variant="outline" className="mb-4 text-sm">Delivery options</Badge>
-            <h2 className="text-4xl lg:text-5xl font-black text-foreground">
-              Choose where the money lands
-            </h2>
+            <h2 className="text-4xl lg:text-5xl font-black text-foreground">Choose where the money lands</h2>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-6">
             {destinations.map((dest, i) => (
-              <motion.div
-                key={dest.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-              >
+              <motion.div key={dest.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
                 <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 group">
                   <CardContent className="p-0">
                     <div className="relative h-56 overflow-hidden">
@@ -533,16 +558,11 @@ export default function RemittanceLanding() {
         </div>
       </section>
 
-      {/* ══════════ PEOPLE SECTION — Connecting diaspora ══════════ */}
+      {/* ══════════ PEOPLE — Connecting diaspora ══════════ */}
       <section className="py-20 lg:py-28 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
               <Badge variant="outline" className="mb-4 text-sm">Built for Cameroon</Badge>
               <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight mb-6">
                 FOR PEOPLE
@@ -571,13 +591,7 @@ export default function RemittanceLanding() {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="grid grid-cols-2 gap-4"
-            >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <img src={youngWoman} alt="Young Cameroonian woman" className="rounded-2xl w-full h-48 object-cover shadow-lg" loading="lazy" />
                 <img src={familyHappy} alt="Happy family" className="rounded-2xl w-full h-64 object-cover shadow-lg" loading="lazy" />
@@ -591,48 +605,12 @@ export default function RemittanceLanding() {
         </div>
       </section>
 
-      {/* ══════════ MEET MONEY WITHOUT BORDERS ══════════ */}
-      <section className="py-20 lg:py-28 bg-background relative overflow-hidden">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto"
-          >
-            <div className="relative w-48 h-48 mx-auto mb-8">
-              <img src={heroPhone} alt="KOB App" className="w-full h-full object-contain rounded-3xl" loading="lazy" />
-            </div>
-            <h2 className="text-4xl lg:text-6xl font-black text-foreground leading-tight mb-6">
-              MEET MONEY
-              <br />
-              <span className="text-primary">WITHOUT BORDERS</span>
-            </h2>
-            <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-              We're building the best way to move and manage the world's money. Min fees. Max ease. Full speed.
-            </p>
-            <Link to="/register">
-              <Button size="lg" className="rounded-full px-10 h-14 text-base font-bold shadow-lg">
-                Let's start for free <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
       {/* ══════════ STATS BAR ══════════ */}
       <section className="bg-[hsl(var(--primary))] text-white">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
+              <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center">
                 <s.icon className="h-6 w-6 text-white/60 mx-auto mb-2" />
                 <p className="text-3xl font-black">{s.value}</p>
                 <p className="text-sm text-white/60 mt-1">{s.label}</p>
@@ -649,14 +627,8 @@ export default function RemittanceLanding() {
         </div>
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <Badge className="bg-primary/20 text-primary-foreground border-primary/30 mb-4">
-                For Banks & Fintechs
-              </Badge>
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+              <Badge className="bg-primary/20 text-primary-foreground border-primary/30 mb-4">For Banks & Fintechs</Badge>
               <h2 className="text-4xl lg:text-5xl font-black leading-tight mb-6">
                 Remittance-as-a-Service
                 <br />
@@ -694,12 +666,7 @@ export default function RemittanceLanding() {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
               <img src={manLaptop} alt="Developer integrating KOB API" className="rounded-3xl shadow-2xl w-full object-cover h-[450px]" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent rounded-3xl" />
             </motion.div>
@@ -711,7 +678,6 @@ export default function RemittanceLanding() {
       <section className="py-20 lg:py-28 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* Inbound */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card className="h-full border-0 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
                 <CardContent className="p-0">
@@ -739,7 +705,6 @@ export default function RemittanceLanding() {
               </Card>
             </motion.div>
 
-            {/* Outbound */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
               <Card className="h-full border-0 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
                 <CardContent className="p-0">
@@ -773,12 +738,7 @@ export default function RemittanceLanding() {
       {/* ══════════ FINAL CTA ══════════ */}
       <section className="py-20 lg:py-28 relative overflow-hidden bg-[hsl(var(--primary))]">
         <div className="container mx-auto px-4 text-center relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <h2 className="text-4xl lg:text-6xl font-black text-white leading-tight mb-6">
               Start sending money
               <br />
