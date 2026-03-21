@@ -20826,6 +20826,7 @@ export type Database = {
           transaction_type: string
         }[]
       }
+      get_profile_phone: { Args: { _profile_id: string }; Returns: string }
       get_role_hierarchy_level: {
         Args: { _role: Database["public"]["Enums"]["operational_role_type"] }
         Returns: number
