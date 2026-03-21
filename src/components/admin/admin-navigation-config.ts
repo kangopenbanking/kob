@@ -1,4 +1,5 @@
 import {
+  Send,
   Receipt,
   Globe,
   Languages,
