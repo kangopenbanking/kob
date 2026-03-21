@@ -59,6 +59,8 @@ const AdminSupportChat: React.FC = () => {
 
   const { messages, loading: msgsLoading } = useSupportMessages(activeConvId);
   const sendMessage = useSendMessage();
+  const assignConversationEmail = useAssignConversation();
+  const resolveNotification = useResolveNotification();
 
   const fetchConversations = useCallback(async () => {
     let q = supabase
