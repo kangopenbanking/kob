@@ -37,6 +37,15 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   atm_withdrawal: "atm_withdrawal",
   standing_order: "standing_order",
   dormancy_fee: "dormancy_fee",
+  remittance_inbound: "remittance_inbound",
+  remittance_outbound: "remittance_outbound",
+  remittance_bank_credit: "remittance_bank_credit",
+  remittance_wallet_credit: "remittance_wallet_credit",
+  remittance_bill_payment: "remittance_bill_payment",
+  remittance_fx_markup: "remittance_fx_markup",
+  overdraft_interest: "overdraft_interest",
+  overdraft_setup_fee: "overdraft_setup_fee",
+  overdraft_renewal_fee: "overdraft_renewal_fee",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
