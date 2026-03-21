@@ -1,75 +1,133 @@
 
 
-# Hero Send Form — Full Payment Integration by Destination Type + E2E Audit
+# Pay by Bank — Redirect-Based SCA Implementation Plan
 
-## Summary
+## What Already Exists
 
-Transform the hero section's static calculator into a fully functional multi-destination send form that adapts its fields based on the selected delivery method (KOB Wallet, Bank Account, Bills & Fees). Desktop users can complete the entire flow — from amount entry through quote to confirmation — without leaving the `/remittance` page. Also fix identified gaps across the page.
+| Component | Status |
+|---|---|
+| `pisp-create-consent` | ✅ Creates PISP consent with `AwaitingAuthorisation` status |
+| `consent-authorize` | ✅ Authorizes/rejects consents; supports both API-based and form-based (PKCE) flows |
+| `pisp-domestic-payment` | ✅ Creates payment against authorized consent |
+| `pisp-payment-submission` | ✅ Submits payment for execution |
+| `pisp_consents` table | ✅ Full lifecycle with status, expiry, creditor/debtor, risk |
+| `payments` + `payment_events` tables | ✅ Payment records with event tracking |
+| `oauth_sessions` + `authorization_codes` | ✅ PKCE session + code exchange |
+| Consumer App (PIN/biometric auth) | ✅ `/app/scan` with QR payment approval |
+| Webhook governance | ✅ HMAC-SHA256 verified, multi-endpoint, 24 event types |
+| Bank connector architecture | ✅ Memory confirms file/DB/MQ/pull modes exist |
 
-## Current State
+## What's Missing (The Gap)
 
-The `SendForm` in `RemittanceLanding.tsx` is a **demo calculator only**: it shows exchange rates and a "Send money now" button that links to `/app/send-money`. The delivery method buttons (wallet/bank/bills) change local state but produce no form changes or actual API calls.
+| # | Gap | Priority |
+|---|---|---|
+| 1 | **No `pay_by_bank_intents` table** — need a merchant-facing payment intent that wraps PISP consent + tracks redirect_uri, state, merchant branding | HIGH |
+| 2 | **No hosted authorization page** (`/pay/authorize`) — the web UI where users authenticate and approve the payment | HIGH |
+| 3 | **No `pay-by-bank` edge function** — merchant-facing API to create intent, get status, handle callbacks | HIGH |
+| 4 | **No Consumer App approval screen** for Pay by Bank — `CustomerScan.tsx` handles QR payments but not redirect-based bank payment authorization | HIGH |
+| 5 | **No deep link handling** — `kob://authorize?consent_id=...` not wired | MEDIUM |
+| 6 | **No webhook events** for `payment.authorized`, `payment.submitted`, `payment.completed`, `payment.failed` | MEDIUM |
+| 7 | **No merchant checkout button component** — embeddable "Pay by Bank (KOB)" button/SDK snippet | LOW |
 
 ## Implementation Plan
 
-### 1. Rebuild SendForm with Destination-Specific Fields
+### Phase 1: Database & Edge Function (Core API)
 
-Transform `SendForm` into a multi-step inline component with 3 states: **calculate → details → confirm/success**.
-
-**When "KOB Wallet" is selected:**
-- Show: Recipient phone (`+237` prefix), Recipient name
-- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "mobile_wallet"`
-
-**When "Bank Account" is selected:**
-- Show: Bank selector dropdown (reuse the priority logic from `BankSelector.tsx` — KOB Partner banks first, then Flutterwave banks, then CM fallback), Account number / RIB input, Recipient name
-- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "bank_transfer"`
-
-**When "Bills & Fees" is selected:**
-- Show: Purpose selector (School Fees, Utilities, Medical, Other), Bill reference/invoice number, Recipient name
-- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "bill_payment"` and purpose metadata
-
-### 2. Add Inline Quote + Confirm Steps
-
-After user fills details and clicks "Get Quote":
-- Call `remittance-outbound` with `action: "get_quote"`
-- Display quote breakdown inline (fee, rate, receiver gets, delivery estimate)
-- "Confirm & Send" button calls `action: "send"`
-- On success: show inline success state with reference number and "Send Another" reset button
-- On error: show toast with error message
-- Auth check: if user not logged in, redirect to `/app/send-money` with pre-filled params via URL query string
-
-### 3. Form State Machine
+**Migration — `pay_by_bank_intents` table:**
 
 ```text
-CALCULATE → (click "Get Quote") → QUOTE_REVIEW → (click "Send") → PROCESSING → SUCCESS
-    ↑                                    |                                         |
-    └────────────── (Edit) ──────────────┘              (Send Another) ────────────┘
+Columns: id, merchant_id, consent_id, amount, currency, 
+         redirect_uri, state, status (awaiting_auth → authorized → submitted → processing → completed → failed),
+         merchant_name, merchant_logo_url, debtor_account,
+         creditor_account, description, expires_at,
+         authorization_url, created_at, updated_at
 ```
 
-### 4. E2E Gaps Identified & Fixes
+RLS: service_role only (edge function mediated).
 
-| # | Gap | Fix |
-|---|---|---|
-| 1 | Hero send button is just a Link to `/app/send-money` — no actual form submission | Replace with functional inline flow |
-| 2 | Delivery method buttons are cosmetic — no field changes | Add conditional form fields per destination |
-| 3 | No auth check before sending | Check session; if not logged in, redirect to `/app/send-money` with query params |
-| 4 | Bank selector not integrated — just a phone field regardless of destination | Add bank dropdown for "Bank Account" mode |
-| 5 | "API Documentation" button in RaaS section links to `/developer` — correct, no fix needed | — |
-| 6 | Corridor cards in "Never Pay Hidden Fee" section use hardcoded data, not admin rates | Wire to `useAdminRates` hook already in use |
-| 7 | No loading/disabled state on send button during API calls | Add loading spinner and disabled state |
+**Edge function — `pay-by-bank/index.ts`:**
 
-### 5. Files to Modify
+Actions:
+- `create_intent` — Merchant creates payment intent → auto-creates PISP consent → returns `authorization_url` + `intent_id`
+- `get_intent` — Merchant polls status
+- `authorize` — User approves (called from hosted page or consumer app) → marks consent authorized → creates payment + submission → triggers bank connector or wallet movement
+- `reject` — User rejects → updates status → redirects with `error=access_denied`
+- `callback` — Internal: bank connector confirms execution → updates status → fires webhooks
+- `list_intents` — Merchant lists their payment intents
+
+### Phase 2: Hosted Authorization Page (Web Fallback)
+
+**New route: `/pay/authorize`** (`src/pages/PayByBankAuthorize.tsx`)
+
+Flow:
+1. URL: `/pay/authorize?intent_id=...&state=...`
+2. Page fetches intent details (merchant name, amount, currency)
+3. If not logged in → inline login (email/PIN or phone/PIN)
+4. Shows approval screen: merchant logo, amount, account selector, fees
+5. "Approve" → calls `pay-by-bank` edge function `authorize` action
+6. "Reject" → calls `reject` action
+7. Both redirect back to `redirect_uri?intent_id=...&status=...&state=...`
+
+Design: Minimal, secure-feeling page (bank-grade UI). No navigation chrome. KOB branding only.
+
+### Phase 3: Consumer App Approval Screen
+
+**New component: `PayByBankApproval.tsx`** in customer-app
+
+- Accessible via deep link `kob://authorize?intent_id=...` or route `/app/authorize-payment/:intentId`
+- Shows merchant name/logo, amount, account picker, fee breakdown
+- Confirm with PIN (reuse existing PIN verification)
+- On approve → calls edge function → shows receipt → "Return to merchant" button opens `redirect_uri`
+
+**Update `CustomerScan.tsx`** to detect `kob_pay_by_bank` QR codes (for Proposal C later).
+
+### Phase 4: Webhook Events & Merchant Verification
+
+Add 4 new webhook event types to the catalogue:
+- `pay_by_bank.authorized`
+- `pay_by_bank.submitted`
+- `pay_by_bank.completed`
+- `pay_by_bank.failed`
+
+Fire via existing `trigger_webhooks()` DB function from within the edge function at each status transition.
+
+**Merchant verification endpoint**: `GET /v1/pay-by-bank/{intent_id}` already covered by `get_intent` action.
+
+### Phase 5: SDK & Documentation
+
+- Add `payByBank.createIntent()`, `payByBank.getIntent()` to Node.js, Python, PHP SDKs
+- Add Pay by Bank section to API docs, Postman collection, OpenAPI spec
+- Add changelog entry
+- Add merchant integration guide to `/developer` portal
+
+### Phase 6 (Future): Decoupled SCA
+
+- Merchant displays QR code with `intent_id`
+- User scans in KOB app → approval screen
+- Merchant polls via websocket or webhook confirms
+
+## Files Summary
 
 | File | Action |
 |---|---|
-| `src/pages/RemittanceLanding.tsx` | Rebuild `SendForm` component with multi-step flow, destination-specific fields, `remittance-outbound` API integration, auth check, inline quote/confirm/success states |
+| **Migration** | Create `pay_by_bank_intents` table with RLS |
+| `supabase/functions/pay-by-bank/index.ts` | **Create** — core API (create, authorize, reject, get, list, callback) |
+| `src/pages/PayByBankAuthorize.tsx` | **Create** — hosted authorization page |
+| `src/pages/customer-app/PayByBankApproval.tsx` | **Create** — consumer app approval screen |
+| `src/App.tsx` | **Modify** — add routes `/pay/authorize`, `/app/authorize-payment/:intentId` |
+| `supabase/functions/postman-collection/index.ts` | **Modify** — add Pay by Bank endpoints |
+| `supabase/functions/public-api-spec/index.ts` | **Modify** — add OpenAPI paths |
+| `packages/sdk-node/src/types.ts` | **Modify** — add PayByBankIntent type |
+| `packages/sdk-python/kangopenbanking/types.py` | **Modify** — add PayByBankIntent dataclass |
+| `src/pages/developer/Changelog.tsx` | **Modify** — add v10.1.0 entry |
 
-No new edge functions or migrations needed — all APIs (`remittance-outbound` actions: `get_corridors`, `get_quote`, `send`) already exist and are production-ready.
+## Security Requirements
 
-### Technical Notes
-
-- The form fetches corridors on mount via `remittance-outbound` `get_corridors` to validate available routes
-- Bank list for "Bank Account" mode: fetch from `flutterwave-list-banks` + `institutions` table (same pattern as `BankSelector.tsx`)
-- For unauthenticated users: the "Send money now" button redirects to sign-in → `/app/send-money` with `?amount=X&currency=EUR&dest=wallet` pre-fill
-- All form inputs validated client-side before API call (amount > 0, phone format, bank selection required)
+- PKCE mandatory on authorization flow
+- `state` parameter validated on redirect
+- CSRF token on hosted page form submissions
+- Intent expires after configurable window (default 15 minutes)
+- PIN/biometric required for approval (SCA)
+- Device binding logged via `user_sessions`
+- Risk checks: amount thresholds, velocity, merchant reputation
 
