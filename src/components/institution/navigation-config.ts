@@ -72,6 +72,7 @@ export const institutionNavigation = [
     title: "Payment Gateway",
     items: [
       { title: "Merchants", path: "/fi-portal/gateway-merchants", icon: Store, sectionKey: "gateway-merchants" },
+      { title: "Pay by Bank", path: "/fi-portal/pay-by-bank", icon: Landmark, sectionKey: "payments" },
       { title: "Payment Links", path: "/fi-portal/gateway-payment-links", icon: Link2, sectionKey: "gateway-payment-links" },
       { title: "Subscriptions & Plans", path: "/fi-portal/gateway-subscriptions", icon: RefreshCw, sectionKey: "gateway-subscriptions" },
       { title: "Subaccounts", path: "/fi-portal/gateway-subaccounts", icon: GitBranch, sectionKey: "gateway-subaccounts" },
