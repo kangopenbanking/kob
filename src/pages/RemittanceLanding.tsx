@@ -338,15 +338,29 @@ function SendForm() {
     return true;
   }, [recipientName, recipientPhone, deliveryMethod, bankCode, accountNumber, billPurpose, billReference]);
 
-  const selectSuggestion = (s: { id: string; full_name: string; phone: string }) => {
+  const selectSuggestion = async (s: { id: string; full_name: string; phone: string }) => {
     setRecipientName(s.full_name);
-    if (s.phone && deliveryMethod === "wallet") {
-      const phoneStr = s.phone.replace(/\s/g, "");
-      const matched = phoneCountries.find((c) => phoneStr.startsWith(c.code));
-      if (matched) { setSelectedCountryCode(matched.code); setRecipientPhone(phoneStr.slice(matched.code.length)); }
-      else { setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, "")); }
-    }
     setShowNameSuggestions(false);
+    if (deliveryMethod === "wallet") {
+      // Fetch the full phone number via secure RPC
+      try {
+        const { data: fullPhone } = await supabase.rpc("get_profile_phone", { _profile_id: s.id });
+        if (fullPhone) {
+          const phoneStr = (fullPhone as string).replace(/\s/g, "");
+          // Sort by longest dial code first to match +237 before +2
+          const sorted = [...phoneCountries].sort((a, b) => b.code.length - a.code.length);
+          const matched = sorted.find((c) => phoneStr.startsWith(c.code));
+          if (matched) {
+            setSelectedCountryCode(matched.code);
+            setRecipientPhone(phoneStr.slice(matched.code.length));
+          } else {
+            setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, ""));
+          }
+        }
+      } catch {
+        // If RPC fails, just use the masked phone display
+      }
+    }
   };
 
   const handleGetQuote = async () => {
