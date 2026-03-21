@@ -2247,6 +2247,7 @@ serve(async (req) => {
         { name: 'Bank Directory', description: 'Bank/ASPSP registration, lifecycle management, PSU linking, and public directory' },
         { name: 'Bank Connectors', description: 'Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks' },
         { name: 'Interbank', description: 'Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)' },
+        { name: 'Pay by Bank', description: 'Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)' },
       ],
       components: {
         securitySchemes: {
