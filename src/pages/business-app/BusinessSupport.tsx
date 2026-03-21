@@ -73,18 +73,7 @@ const BusinessSupport: React.FC = () => {
 
       {step === 'list' && (
         <div className="flex flex-1 flex-col p-4 gap-4 overflow-y-auto">
-          <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">How it works</h3>
-            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Choose a department that best fits your issue</li>
-              <li>Describe your issue briefly</li>
-              <li>Chat live with a support agent</li>
-              <li>Upload images or files if needed</li>
-            </ol>
-            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-              <strong>NOTE:</strong> The KOB team will respond within <strong>15 minutes</strong> and up to <strong>24 hours</strong> depending on your issue.
-            </p>
-          </div>
+          <HowItWorksFlow defaultOpen steps={supportFlowSteps} />
           <Button onClick={() => setStep('departments')} className="rounded-xl">Start New Conversation</Button>
           <ConversationList conversations={conversations} loading={convsLoading} onSelect={(id) => { setActiveConvId(id); setStep('chat'); }} />
         </div>
