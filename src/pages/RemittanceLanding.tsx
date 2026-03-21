@@ -401,7 +401,7 @@ function SendForm() {
     try {
       const recipientDetails: any = { name: recipientName };
       if (deliveryMethod === "wallet") {
-        recipientDetails.phone = `+237${recipientPhone.replace(/\s/g, "")}`;
+        recipientDetails.phone = `${selectedCountryCode}${recipientPhone.replace(/\s/g, "")}`;
       } else if (deliveryMethod === "bank") {
         recipientDetails.bank_code = bankCode;
         recipientDetails.account_number = accountNumber;
