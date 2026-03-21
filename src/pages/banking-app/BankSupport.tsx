@@ -19,6 +19,13 @@ import {
 
 type Step = 'list' | 'departments' | 'subject' | 'chat';
 
+const supportFlowSteps: FlowStep[] = [
+  { icon: ListChecks, title: 'Choose a department', description: 'Pick the team that best fits your issue for faster routing.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
+  { icon: PenLine, title: 'Describe your issue', description: 'Write a brief summary so our agents can prepare.', color: 'hsl(150,70%,90%)', iconColor: 'hsl(150,50%,35%)' },
+  { icon: MessageCircle, title: 'Chat with an agent', description: 'Get live help from the KOB support team.', color: 'hsl(35,90%,90%)', iconColor: 'hsl(35,70%,40%)' },
+  { icon: Paperclip, title: 'Attach files if needed', description: 'Upload images or documents to help explain your issue. NOTE: KOB responds within 15 min – 24 hrs.', color: 'hsl(280,70%,92%)', iconColor: 'hsl(280,50%,45%)' },
+];
+
 const BankSupport: React.FC = () => {
   const navigate = useNavigate();
   const { institutionId } = useParams();
