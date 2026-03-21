@@ -271,6 +271,8 @@ const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManage
 const AdminBillManagement = lazy(() => import("./pages/admin/AdminBillManagement"));
 const AdminInterbankPayments = lazy(() => import("./pages/admin/AdminInterbankPayments"));
 const AdminBankDirectory = lazy(() => import("./pages/admin/AdminBankDirectory"));
+const RemittanceOverview = lazy(() => import("./pages/admin/RemittanceOverview"));
+const RemittanceSettlement = lazy(() => import("./pages/admin/RemittanceSettlement"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
@@ -753,6 +755,9 @@ function App() {
               {/* Phase 2+3: Interbank Engine */}
               <Route path="interbank-payments" element={<AdminInterbankPayments />} />
               <Route path="bank-directory" element={<AdminBankDirectory />} />
+              {/* Phase 1: Remittance-as-a-Service */}
+              <Route path="remittance-overview" element={<RemittanceOverview />} />
+              <Route path="remittance-settlements" element={<RemittanceSettlement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
