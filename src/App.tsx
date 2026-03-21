@@ -1147,6 +1147,7 @@ function App() {
               <Route path="*" element={<NestedNotFound portalName="Business App" homePath="/biz/home" />} />
             </Route>
 
+            <Route path="/pay/authorize" element={<PayByBankAuthorize />} />
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>

@@ -184,6 +184,54 @@ export interface WebhookEvent {
   created_at: string;
 }
 
+// --- Pay by Bank ---
+export type PayByBankStatus = 'awaiting_auth' | 'authorized' | 'submitted' | 'processing' | 'completed' | 'failed' | 'expired' | 'rejected';
+
+export interface CreatePayByBankIntentRequest {
+  merchant_id: string;
+  amount: number;
+  currency?: string;
+  redirect_uri: string;
+  state: string;
+  description?: string;
+  creditor_account?: string;
+  creditor_name?: string;
+  customer_email?: string;
+}
+
+export interface PayByBankIntent {
+  id: string;
+  merchant_id: string;
+  consent_id: string;
+  amount: number;
+  currency: string;
+  redirect_uri: string;
+  state: string;
+  status: PayByBankStatus;
+  merchant_name?: string;
+  merchant_logo_url?: string;
+  debtor_account?: string;
+  creditor_account?: string;
+  creditor_name?: string;
+  description?: string;
+  expires_at: string;
+  authorization_url?: string;
+  customer_email?: string;
+  customer_user_id?: string;
+  metadata?: Record<string, unknown>;
+  failure_reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PayByBankIntentResponse {
+  intent_id: string;
+  consent_id: string;
+  authorization_url: string;
+  expires_at: string;
+  status: PayByBankStatus;
+}
+
 // --- Common ---
 export interface PaginatedResponse<T> {
   data: T[];
