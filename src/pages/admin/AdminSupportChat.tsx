@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthenticatedUser } from '@/hooks/useAuthenticatedUser';
 import { ChatThread } from '@/components/support/ChatThread';
 import { ChatInput } from '@/components/support/ChatInput';
-import { useSupportMessages, useSendMessage } from '@/hooks/useSupportChat';
+import { useSupportMessages, useSendMessage, useAssignConversation, useResolveNotification } from '@/hooks/useSupportChat';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -59,6 +59,8 @@ const AdminSupportChat: React.FC = () => {
 
   const { messages, loading: msgsLoading } = useSupportMessages(activeConvId);
   const sendMessage = useSendMessage();
+  const assignConversationEmail = useAssignConversation();
+  const resolveNotification = useResolveNotification();
 
   const fetchConversations = useCallback(async () => {
     let q = supabase
@@ -105,6 +107,11 @@ const AdminSupportChat: React.FC = () => {
     }).eq('id', convId);
     toast({ title: `Conversation ${status}` });
     fetchConversations();
+
+    // Send resolution/closure email to user
+    if (status === 'resolved' || status === 'closed') {
+      resolveNotification(convId, status as 'resolved' | 'closed');
+    }
   };
 
   const updatePriority = async (convId: string, priority: string) => {
@@ -120,6 +127,14 @@ const AdminSupportChat: React.FC = () => {
     }).eq('id', convId);
     toast({ title: agentId ? 'Agent assigned' : 'Agent unassigned' });
     fetchConversations();
+
+    // Send assignment email to agent
+    if (agentId) {
+      const agent = agents.find((a: any) => a.id === agentId);
+      if (agent?.user_id) {
+        assignConversationEmail(convId, agent.user_id);
+      }
+    }
   };
 
   // ---- Department CRUD ----
