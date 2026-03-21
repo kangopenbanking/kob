@@ -56,6 +56,7 @@ const StatusWidget = lazy(() => import("./pages/StatusWidget"));
 const EmbedStatusWidget = lazy(() => import("./pages/EmbedStatusWidget"));
 const CustomerFundAccount = lazy(() => import("./pages/CustomerFundAccount"));
 const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission"));
+const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -931,6 +932,7 @@ function App() {
             <Route path="/embed-status-widget" element={<EmbedStatusWidget />} />
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
+            <Route path="/remittance" element={<Layout><RemittanceLanding /></Layout>} />
             <Route path="/manual/:type" element={<Layout><ProductManual /></Layout>} />
             <Route path="/bank-integration-guide" element={<Layout><BankIntegrationGuide /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
