@@ -275,6 +275,7 @@ const RemittanceOverview = lazy(() => import("./pages/admin/RemittanceOverview")
 const RemittanceSettlement = lazy(() => import("./pages/admin/RemittanceSettlement"));
 const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners"));
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
+const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
@@ -454,6 +455,7 @@ const CustomerStores = lazy(() => import("./pages/customer-app/CustomerStores"))
 const CustomerStoreDetail = lazy(() => import("./pages/customer-app/CustomerStoreDetail"));
 const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
 const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
+const CustomerSendMoney = lazy(() => import("./pages/customer-app/CustomerSendMoney"));
 
 // Business App PWA
 const BusinessSplash = lazy(() => import("./pages/business-app/BusinessSplash"));
@@ -762,6 +764,7 @@ function App() {
               <Route path="remittance-partners" element={<RemittancePartners />} />
               <Route path="remittance-bank-confirmations" element={<RemittanceBankConfirmations />} />
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
+              <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -1061,6 +1064,7 @@ function App() {
               <Route path="cart" element={<CustomerCart />} />
               <Route path="orders" element={<CustomerOrderTracking />} />
               <Route path="disputes" element={<CustomerDisputes />} />
+              <Route path="send-money" element={<CustomerSendMoney />} />
             </Route>
 
             {/* Business App PWA Routes */}
