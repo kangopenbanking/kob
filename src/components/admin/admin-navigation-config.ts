@@ -144,6 +144,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Bank Confirmations", path: "/admin/remittance-bank-confirmations", icon: CheckCircle2 },
       { title: "Settlements & Recon", path: "/admin/remittance-settlements", icon: ArrowLeftRight },
       { title: "Outbound Transfers", path: "/admin/remittance-outbound", icon: Send },
+      { title: "Pay by Bank", path: "/admin/pay-by-bank", icon: Landmark },
     ],
   },
   {
