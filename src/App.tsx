@@ -393,6 +393,7 @@ const MerchantBulkOperations = lazy(() => import("./pages/merchant/MerchantBulkO
 const MerchantWhiteLabel = lazy(() => import("./pages/merchant/MerchantWhiteLabel"));
 const MerchantAdvancedAnalytics = lazy(() => import("./pages/merchant/MerchantAdvancedAnalytics"));
 const MerchantPOSTill = lazy(() => import("./pages/merchant/MerchantPOSTill"));
+const MerchantPayByBank = lazy(() => import("./pages/merchant/MerchantPayByBank"));
 
 // Banking App PWA
 const BankSplash = lazy(() => import("./pages/banking-app/BankSplash"));
