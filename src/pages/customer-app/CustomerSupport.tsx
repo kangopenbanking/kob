@@ -47,7 +47,7 @@ const CustomerSupport: React.FC = () => {
     await sendMessage(activeConvId, userId, 'user', content, fileUrl, fileType);
   };
 
-  const title = step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support';
+  const title = step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support Chat';
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
