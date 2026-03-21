@@ -108,6 +108,7 @@ export default function RemittancePartners() {
             requires_kyc_level: form.requires_kyc_level || "basic",
           },
         },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
       if (res.error) throw res.error;
       return res.data;
