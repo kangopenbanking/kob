@@ -142,6 +142,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Partners & Corridors", path: "/admin/remittance-partners", icon: Building2 },
       { title: "Bank Confirmations", path: "/admin/remittance-bank-confirmations", icon: CheckCircle2 },
       { title: "Settlements & Recon", path: "/admin/remittance-settlements", icon: ArrowLeftRight },
+      { title: "Outbound Transfers", path: "/admin/remittance-outbound", icon: Send },
     ],
   },
   {
