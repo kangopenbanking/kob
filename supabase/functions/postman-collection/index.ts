@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
       { key: 'beneficiary_id', value: 'BENEFICIARY_UUID', type: 'string' },
       { key: 'bank_id', value: 'BANK_UUID', type: 'string' },
       { key: 'connector_id', value: 'CONNECTOR_UUID', type: 'string' },
+      { key: 'intent_id', value: 'INTENT_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
