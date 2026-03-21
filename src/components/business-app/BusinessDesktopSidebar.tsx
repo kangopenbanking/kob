@@ -77,6 +77,12 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    title: 'Support',
+    items: [
+      { label: 'Support Chat', icon: MessageCircle, path: `${basePath}/support` },
+    ],
+  },
+  {
     title: 'Settings',
     items: [
       { label: 'Settings', icon: Settings, path: `${basePath}/settings` },

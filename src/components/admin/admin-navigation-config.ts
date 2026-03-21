@@ -168,6 +168,12 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Support",
+    items: [
+      { title: "Support Chat", path: "/admin/support-chat", icon: MessageCircle },
+    ],
+  },
+  {
     title: "Configuration",
     items: [
       { title: "System Config", path: "/admin/system-config", icon: Settings },
