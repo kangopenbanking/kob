@@ -22,6 +22,7 @@ const BankMore: React.FC = () => {
   const accountItems = [
     { icon: Shield, label: 'KYC Status', description: 'Verification', path: 'kyc', color: 'bg-[hsl(var(--bank-teal))]', iconColor: 'text-white' },
     { icon: Bell, label: 'Notifications', description: 'Alerts & updates', path: 'more/alerts', color: 'bg-[hsl(var(--bank-amber))]', iconColor: 'text-[hsl(var(--bank-amber-fg))]' },
+    { icon: MessageCircle, label: 'Live Chat', description: 'Chat with support', path: 'more/support', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white' },
     { icon: Settings, label: 'Settings', description: 'Account & security', path: 'more/settings', color: 'bg-[hsl(var(--bank-sky))]', iconColor: 'text-white' },
     { icon: HelpCircle, label: 'Help & Support', description: 'FAQs & contact', path: 'more/help', color: 'bg-[hsl(var(--bank-lime))]', iconColor: 'text-[hsl(var(--bank-lime-fg))]' },
   ];

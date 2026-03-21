@@ -77,7 +77,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
     <div className="border-t border-border bg-background p-3">
       {file && (
         <div className="mb-2 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs">
-          {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-primary" /> : <FileText className="h-4 w-4 text-primary" />}
+          {file.type.startsWith('image/') ? (
+            <img src={URL.createObjectURL(file)} alt="Preview" className="h-10 w-10 rounded object-cover shrink-0" />
+          ) : (
+            <FileText className="h-4 w-4 text-primary shrink-0" />
+          )}
           <span className="flex-1 truncate">{file.name}</span>
           <button onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ''; }}>
             <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />

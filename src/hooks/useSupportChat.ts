@@ -144,5 +144,40 @@ export function useSendMessage() {
       .from('support_conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId);
+
+    // Fire email notification on agent reply
+    if (senderType === 'agent') {
+      try {
+        const { data: conv } = await supabase
+          .from('support_conversations')
+          .select('user_id, subject')
+          .eq('id', conversationId)
+          .single() as any;
+
+        if (conv?.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', conv.user_id)
+            .single() as any;
+
+          if (profile?.email) {
+            await supabase.functions.invoke('managed-send-email', {
+              body: {
+                email_key: 'support_agent_reply',
+                to_email: profile.email,
+                variables: {
+                  user_name: profile.full_name || 'Customer',
+                  subject: conv.subject || 'Support Chat',
+                  message_preview: (content || 'Sent an attachment').substring(0, 100),
+                },
+              },
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Support email notification failed:', e);
+      }
+    }
   }, []);
 }
