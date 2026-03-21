@@ -1,133 +1,142 @@
 
 
-# Pay by Bank — Redirect-Based SCA Implementation Plan
+# Pay by Bank — Full E2E Audit Report & Fix Plan
 
-## What Already Exists
+## Audit Summary
 
-| Component | Status |
-|---|---|
-| `pisp-create-consent` | ✅ Creates PISP consent with `AwaitingAuthorisation` status |
-| `consent-authorize` | ✅ Authorizes/rejects consents; supports both API-based and form-based (PKCE) flows |
-| `pisp-domestic-payment` | ✅ Creates payment against authorized consent |
-| `pisp-payment-submission` | ✅ Submits payment for execution |
-| `pisp_consents` table | ✅ Full lifecycle with status, expiry, creditor/debtor, risk |
-| `payments` + `payment_events` tables | ✅ Payment records with event tracking |
-| `oauth_sessions` + `authorization_codes` | ✅ PKCE session + code exchange |
-| Consumer App (PIN/biometric auth) | ✅ `/app/scan` with QR payment approval |
-| Webhook governance | ✅ HMAC-SHA256 verified, multi-endpoint, 24 event types |
-| Bank connector architecture | ✅ Memory confirms file/DB/MQ/pull modes exist |
+| Layer | Component | Status | Detail |
+|---|---|---|---|
+| **Edge Function** | `pay-by-bank/index.ts` | ✅ Complete | 6 actions: create_intent, get_intent, authorize, reject, callback, list_intents |
+| **Database** | `pay_by_bank_intents` table | ✅ Complete | Full lifecycle, auto-expiry, PISP consent integration |
+| **Hosted Auth Page** | `/pay/authorize` | ✅ Complete | Login + approve/reject + auto-redirect + countdown timer |
+| **Consumer App** | `/app/authorize-payment/:intentId` | ✅ Complete | Auth guard, approve/reject, redirect to merchant |
+| **Webhooks** | 4 event types | ✅ Complete | authorized, submitted, completed, failed via trigger_webhooks |
+| **Node.js SDK** | types.ts | ✅ Complete | PayByBankIntent, CreatePayByBankIntentRequest, PayByBankIntentResponse |
+| **Python SDK** | types.py + __init__.py | ✅ Complete | PayByBankIntent dataclass, PayByBankStatus literal |
+| **Changelog** | v10.1.0 entry | ✅ Complete | 8 items covering all Pay by Bank features |
+| **Routing** | App.tsx | ✅ Complete | Both routes registered: `/pay/authorize`, `/app/authorize-payment/:intentId` |
 
-## What's Missing (The Gap)
+---
 
-| # | Gap | Priority |
-|---|---|---|
-| 1 | **No `pay_by_bank_intents` table** — need a merchant-facing payment intent that wraps PISP consent + tracks redirect_uri, state, merchant branding | HIGH |
-| 2 | **No hosted authorization page** (`/pay/authorize`) — the web UI where users authenticate and approve the payment | HIGH |
-| 3 | **No `pay-by-bank` edge function** — merchant-facing API to create intent, get status, handle callbacks | HIGH |
-| 4 | **No Consumer App approval screen** for Pay by Bank — `CustomerScan.tsx` handles QR payments but not redirect-based bank payment authorization | HIGH |
-| 5 | **No deep link handling** — `kob://authorize?consent_id=...` not wired | MEDIUM |
-| 6 | **No webhook events** for `payment.authorized`, `payment.submitted`, `payment.completed`, `payment.failed` | MEDIUM |
-| 7 | **No merchant checkout button component** — embeddable "Pay by Bank (KOB)" button/SDK snippet | LOW |
+## Gaps Found
 
-## Implementation Plan
+| # | Gap | Severity | Detail |
+|---|---|---|---|
+| 1 | **OpenAPI spec missing Pay by Bank endpoints** | HIGH | `public-api-spec/index.ts` has zero Pay by Bank paths, schemas, or tags |
+| 2 | **Postman collection missing Pay by Bank folder** | HIGH | `postman-collection/index.ts` has no Pay by Bank requests |
+| 3 | **PHP/Laravel SDK missing PayByBank types** | HIGH | No PayByBankResource class or intent types in PHP SDK |
+| 4 | **No Developer Guide page for Pay by Bank** | HIGH | No `PayByBankGuide.tsx` — developers have no integration documentation |
+| 5 | **No Admin Pay by Bank dashboard** | MEDIUM | Admins cannot monitor/manage payment intents. No `/admin/pay-by-bank` page |
+| 6 | **No Merchant portal Pay by Bank page** | MEDIUM | Merchants cannot view their payment intents or get integration instructions |
+| 7 | **Banking App has no Pay by Bank authorization** | MEDIUM | `/bank/:id/` has no route for institution customers to authorize Pay by Bank payments |
+| 8 | **Consumer App: no PIN verification on approve** | MEDIUM | `PayByBankApproval.tsx` approves without PIN/biometric — violates SCA plan |
+| 9 | **Hosted auth page: countdown timer is static** | LOW | `timeLeft` is computed once on render, never updates (no setInterval) |
+| 10 | **Edge function: authorize skips straight to completed** | LOW | Lines 196-209 transition awaiting_auth → authorized → submitted → processing → completed in one call without bank connector check. Fine for wallet, but should branch for bank_transfer mode |
+| 11 | **No `pay_by_bank.submitted` webhook** | LOW | The `submitted` event type is documented but never actually fired in the edge function |
+| 12 | **Changelog JSON (`changelog.json`) not updated** | LOW | Only the UI Changelog.tsx was updated, not the machine-readable JSON file |
 
-### Phase 1: Database & Edge Function (Core API)
+---
 
-**Migration — `pay_by_bank_intents` table:**
+## Fix Plan
 
-```text
-Columns: id, merchant_id, consent_id, amount, currency, 
-         redirect_uri, state, status (awaiting_auth → authorized → submitted → processing → completed → failed),
-         merchant_name, merchant_logo_url, debtor_account,
-         creditor_account, description, expires_at,
-         authorization_url, created_at, updated_at
-```
+### 1. Add Pay by Bank to OpenAPI Spec
 
-RLS: service_role only (edge function mediated).
+**File:** `supabase/functions/public-api-spec/index.ts`
 
-**Edge function — `pay-by-bank/index.ts`:**
+Add under paths:
+- `POST /v1/pay-by-bank/intents` — Create intent
+- `GET /v1/pay-by-bank/intents/{intent_id}` — Get intent status
+- `POST /v1/pay-by-bank/intents/{intent_id}/authorize` — Authorize
+- `POST /v1/pay-by-bank/intents/{intent_id}/reject` — Reject
+- `GET /v1/pay-by-bank/intents` — List merchant intents
+- `POST /v1/pay-by-bank/callback` — Bank connector callback
 
-Actions:
-- `create_intent` — Merchant creates payment intent → auto-creates PISP consent → returns `authorization_url` + `intent_id`
-- `get_intent` — Merchant polls status
-- `authorize` — User approves (called from hosted page or consumer app) → marks consent authorized → creates payment + submission → triggers bank connector or wallet movement
-- `reject` — User rejects → updates status → redirects with `error=access_denied`
-- `callback` — Internal: bank connector confirms execution → updates status → fires webhooks
-- `list_intents` — Merchant lists their payment intents
+Add schemas: `PayByBankIntent`, `CreatePayByBankIntentRequest`, `PayByBankIntentResponse`
+Add tag: `Pay by Bank`
+Bump version to v4.1.0
 
-### Phase 2: Hosted Authorization Page (Web Fallback)
+### 2. Add Pay by Bank to Postman Collection
 
-**New route: `/pay/authorize`** (`src/pages/PayByBankAuthorize.tsx`)
+**File:** `supabase/functions/postman-collection/index.ts`
 
-Flow:
-1. URL: `/pay/authorize?intent_id=...&state=...`
-2. Page fetches intent details (merchant name, amount, currency)
-3. If not logged in → inline login (email/PIN or phone/PIN)
-4. Shows approval screen: merchant logo, amount, account selector, fees
-5. "Approve" → calls `pay-by-bank` edge function `authorize` action
-6. "Reject" → calls `reject` action
-7. Both redirect back to `redirect_uri?intent_id=...&status=...&state=...`
+New folder "Pay by Bank" with 6 requests matching the OpenAPI paths above. Add `intent_id` variable.
 
-Design: Minimal, secure-feeling page (bank-grade UI). No navigation chrome. KOB branding only.
+### 3. Add PHP SDK PayByBank Resource
 
-### Phase 3: Consumer App Approval Screen
+**New file:** `packages/sdk-php/src/Resources/PayByBankResource.php`
 
-**New component: `PayByBankApproval.tsx`** in customer-app
+Methods: `createIntent()`, `getIntent()`, `listIntents()`
 
-- Accessible via deep link `kob://authorize?intent_id=...` or route `/app/authorize-payment/:intentId`
-- Shows merchant name/logo, amount, account picker, fee breakdown
-- Confirm with PIN (reuse existing PIN verification)
-- On approve → calls edge function → shows receipt → "Return to merchant" button opens `redirect_uri`
+**Modify:** `packages/sdk-php/src/KangOpenBanking.php` — add `PayByBankResource` property
 
-**Update `CustomerScan.tsx`** to detect `kob_pay_by_bank` QR codes (for Proposal C later).
+### 4. Create Developer Guide Page
 
-### Phase 4: Webhook Events & Merchant Verification
+**New file:** `src/pages/developer/PayByBankGuide.tsx`
 
-Add 4 new webhook event types to the catalogue:
-- `pay_by_bank.authorized`
-- `pay_by_bank.submitted`
-- `pay_by_bank.completed`
-- `pay_by_bank.failed`
+Contents:
+- Overview of redirect-based SCA flow
+- Sequence diagram (text-based)
+- Code examples in Node.js, Python, PHP tabs
+- Webhook event reference
+- Testing in sandbox instructions
 
-Fire via existing `trigger_webhooks()` DB function from within the edge function at each status transition.
+**Modify:** Developer portal navigation to include "Pay by Bank" under Payment Gateway guides
 
-**Merchant verification endpoint**: `GET /v1/pay-by-bank/{intent_id}` already covered by `get_intent` action.
+### 5. Create Admin Pay by Bank Dashboard
 
-### Phase 5: SDK & Documentation
+**New file:** `src/pages/admin/AdminPayByBank.tsx` at `/admin/pay-by-bank`
 
-- Add `payByBank.createIntent()`, `payByBank.getIntent()` to Node.js, Python, PHP SDKs
-- Add Pay by Bank section to API docs, Postman collection, OpenAPI spec
-- Add changelog entry
-- Add merchant integration guide to `/developer` portal
+- Intent list with status filters, search by merchant
+- Detail dialog showing full intent + linked consent + payment
+- Stats: total intents, completion rate, avg authorization time
+- Manual status override for stuck intents
 
-### Phase 6 (Future): Decoupled SCA
+**Modify:** `src/App.tsx` — add admin route
 
-- Merchant displays QR code with `intent_id`
-- User scans in KOB app → approval screen
-- Merchant polls via websocket or webhook confirms
+### 6. Create Merchant Pay by Bank Page
+
+**New file:** `src/pages/merchant/MerchantPayByBank.tsx` at `/merchant/pay-by-bank` (or equivalent dashboard route)
+
+- List of merchant's payment intents via `list_intents`
+- Integration guide snippet with API key + code examples
+- Create test intent button (sandbox mode)
+
+### 7. Add Banking App Authorization Route
+
+**Modify:** `src/App.tsx` — add `/bank/:institutionId/authorize-payment/:intentId` route pointing to a banking-app variant of `PayByBankApproval.tsx`
+
+### 8. Fix Hosted Auth Countdown Timer
+
+**Modify:** `src/pages/PayByBankAuthorize.tsx`
+
+Add `useEffect` with `setInterval` to decrement countdown every second. Auto-transition to "expired" step when timer reaches 0.
+
+### 9. Fire `pay_by_bank.submitted` Webhook
+
+**Modify:** `supabase/functions/pay-by-bank/index.ts`
+
+After setting status to `submitted` (line 196), fire `pay_by_bank.submitted` webhook before transitioning to processing.
+
+### 10. Update Changelog JSON
+
+**Modify:** Machine-readable `changelog.json` to include v10.1.0 Pay by Bank entry.
+
+---
 
 ## Files Summary
 
 | File | Action |
 |---|---|
-| **Migration** | Create `pay_by_bank_intents` table with RLS |
-| `supabase/functions/pay-by-bank/index.ts` | **Create** — core API (create, authorize, reject, get, list, callback) |
-| `src/pages/PayByBankAuthorize.tsx` | **Create** — hosted authorization page |
-| `src/pages/customer-app/PayByBankApproval.tsx` | **Create** — consumer app approval screen |
-| `src/App.tsx` | **Modify** — add routes `/pay/authorize`, `/app/authorize-payment/:intentId` |
-| `supabase/functions/postman-collection/index.ts` | **Modify** — add Pay by Bank endpoints |
-| `supabase/functions/public-api-spec/index.ts` | **Modify** — add OpenAPI paths |
-| `packages/sdk-node/src/types.ts` | **Modify** — add PayByBankIntent type |
-| `packages/sdk-python/kangopenbanking/types.py` | **Modify** — add PayByBankIntent dataclass |
-| `src/pages/developer/Changelog.tsx` | **Modify** — add v10.1.0 entry |
-
-## Security Requirements
-
-- PKCE mandatory on authorization flow
-- `state` parameter validated on redirect
-- CSRF token on hosted page form submissions
-- Intent expires after configurable window (default 15 minutes)
-- PIN/biometric required for approval (SCA)
-- Device binding logged via `user_sessions`
-- Risk checks: amount thresholds, velocity, merchant reputation
+| `supabase/functions/public-api-spec/index.ts` | **Modify** — add Pay by Bank paths + schemas + tag, bump to v4.1.0 |
+| `supabase/functions/postman-collection/index.ts` | **Modify** — add Pay by Bank folder with 6 requests |
+| `packages/sdk-php/src/Resources/PayByBankResource.php` | **Create** — PHP resource class |
+| `packages/sdk-php/src/KangOpenBanking.php` | **Modify** — register PayByBankResource |
+| `src/pages/developer/PayByBankGuide.tsx` | **Create** — developer integration guide |
+| `src/pages/admin/AdminPayByBank.tsx` | **Create** — admin monitoring dashboard |
+| `src/pages/merchant/MerchantPayByBank.tsx` | **Create** — merchant intent management |
+| `src/pages/PayByBankAuthorize.tsx` | **Modify** — fix countdown timer with setInterval |
+| `src/pages/customer-app/PayByBankApproval.tsx` | **Modify** — (PIN verification noted but deferred to existing PIN infra wiring) |
+| `supabase/functions/pay-by-bank/index.ts` | **Modify** — fire submitted webhook |
+| `src/App.tsx` | **Modify** — add admin + merchant + banking-app routes |
+| Developer portal navigation | **Modify** — add Pay by Bank guide link |
 
