@@ -162,6 +162,7 @@ const navSections = [
     items: [
       { title: "Web Applications", path: "/developer/guides/web" },
       { title: "Mobile Applications", path: "/developer/guides/mobile" },
+      { title: "Pay by Bank (SCA)", path: "/developer/pay-by-bank" },
       { title: "AI Integration", path: "/developer/ai-integration-guide" },
       { title: "PayPal Integration", path: "/developer/gateway/paypal" },
     ],

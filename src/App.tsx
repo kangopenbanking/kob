@@ -627,6 +627,7 @@ function App() {
               <Route path="gateway-subaccounts" element={<GatewaySubaccounts />} />
               <Route path="gateway-customers" element={<GatewayCustomers />} />
               <Route path="gateway-merchants" element={<GatewayMerchants />} />
+              <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="fund-account" element={<InstitutionFundAccount />} />
               {/* Bank Connector Kit */}
               <Route path="connector" element={<ConnectorOverview />} />
