@@ -220,6 +220,7 @@ type FormStage = "calculate" | "details" | "quote_review" | "processing" | "succ
 function SendForm() {
   const currencies = useAdminRates();
   const banks = useBankList();
+  const { data: supportedCountries } = useSupportedCountries("consumer");
   const navigate = useNavigate();
 
   const [stage, setStage] = useState<FormStage>("calculate");
@@ -231,15 +232,83 @@ function SendForm() {
   // Recipient fields
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState("+237");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [billPurpose, setBillPurpose] = useState("");
   const [billReference, setBillReference] = useState("");
 
+  // Name autocomplete
+  const [nameSuggestions, setNameSuggestions] = useState<{ id: string; full_name: string; phone: string }[]>([]);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const [nameSearching, setNameSearching] = useState(false);
+  const nameRef = useRef<HTMLDivElement>(null);
+
   // Quote & processing state
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [txRef, setTxRef] = useState("");
+
+  // Phone countries from admin
+  const phoneCountries = useMemo(() => {
+    if (!supportedCountries || supportedCountries.length === 0) {
+      return [
+        { code: "+237", country: "Cameroon", flag: "🇨🇲" },
+        { code: "+234", country: "Nigeria", flag: "🇳🇬" },
+        { code: "+233", country: "Ghana", flag: "🇬🇭" },
+        { code: "+254", country: "Kenya", flag: "🇰🇪" },
+      ];
+    }
+    return supportedCountries.map((c) => ({
+      code: c.dial_code || c.code,
+      country: c.country,
+      flag: c.flag,
+    }));
+  }, [supportedCountries]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (nameRef.current && !nameRef.current.contains(e.target as Node)) {
+        setShowNameSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Name autocomplete search
+  useEffect(() => {
+    const trimmed = recipientName.trim();
+    if (trimmed.length < 2) {
+      setNameSuggestions([]);
+      setShowNameSuggestions(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setNameSearching(true);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name, phone")
+          .ilike("full_name", `${trimmed}%`)
+          .limit(5);
+        if (data && data.length > 0) {
+          setNameSuggestions(data.filter((p: any) => p.full_name));
+          setShowNameSuggestions(true);
+        } else {
+          setNameSuggestions([]);
+          setShowNameSuggestions(false);
+        }
+      } catch {
+        setNameSuggestions([]);
+      } finally {
+        setNameSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [recipientName]);
 
   const selectedCurrency = currencies[selectedIdx] || currencies[0];
   const numericAmount = parseFloat(amount) || 0;
