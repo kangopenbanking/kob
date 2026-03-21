@@ -109,6 +109,7 @@ const BusinessSplashInner: React.FC = () => {
       logoUrl={kobLogo}
       tagline="Your business management app"
       appKey="kob-business"
+      defaultInstallUrl="https://kangopenbanking.com/biz"
     />
   );
 };
