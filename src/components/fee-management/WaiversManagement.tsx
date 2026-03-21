@@ -36,6 +36,9 @@ const TRANSACTION_TYPES = [
   "escrow_payment", "api_request", "mobile_recharge", "invoice_create",
   "credit_report_purchase", "overdraft_fee", "loan_processing_fee",
   "atm_withdrawal", "standing_order", "dormancy_fee",
+  "remittance_inbound", "remittance_outbound", "remittance_bank_credit",
+  "remittance_wallet_credit", "remittance_bill_payment", "remittance_fx_markup",
+  "overdraft_interest", "overdraft_setup_fee", "overdraft_renewal_fee",
 ];
 
 interface WaiversManagementProps {

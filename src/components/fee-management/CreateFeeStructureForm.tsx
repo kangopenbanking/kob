@@ -52,6 +52,17 @@ const TRANSACTION_TYPES = [
   { value: "atm_withdrawal", label: "ATM Withdrawal", icon: Banknote, category: "Banking" },
   { value: "standing_order", label: "Standing Order", icon: RefreshCw, category: "Banking" },
   { value: "dormancy_fee", label: "Dormancy Fee", icon: Lock, category: "Banking" },
+  // Remittance
+  { value: "remittance_inbound", label: "Remittance Inbound", icon: ArrowDownToLine, category: "Remittance" },
+  { value: "remittance_outbound", label: "Remittance Outbound", icon: Send, category: "Remittance" },
+  { value: "remittance_bank_credit", label: "Remittance Bank Credit", icon: Landmark, category: "Remittance" },
+  { value: "remittance_wallet_credit", label: "Remittance Wallet Credit", icon: Wallet, category: "Remittance" },
+  { value: "remittance_bill_payment", label: "Remittance Bill Payment", icon: Receipt, category: "Remittance" },
+  { value: "remittance_fx_markup", label: "Remittance FX Markup", icon: ArrowLeftRight, category: "Remittance" },
+  // Overdraft (additional)
+  { value: "overdraft_interest", label: "Overdraft Interest", icon: ArrowDownToLine, category: "Lending" },
+  { value: "overdraft_setup_fee", label: "Overdraft Setup Fee", icon: ArrowDownToLine, category: "Lending" },
+  { value: "overdraft_renewal_fee", label: "Overdraft Renewal Fee", icon: RefreshCw, category: "Lending" },
 ];
 
 const FEE_MODELS = [

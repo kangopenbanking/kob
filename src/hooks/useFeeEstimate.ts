@@ -37,6 +37,15 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   atm_withdrawal: "atm_withdrawal",
   standing_order: "standing_order",
   dormancy_fee: "dormancy_fee",
+  remittance_inbound: "remittance_inbound",
+  remittance_outbound: "remittance_outbound",
+  remittance_bank_credit: "remittance_bank_credit",
+  remittance_wallet_credit: "remittance_wallet_credit",
+  remittance_bill_payment: "remittance_bill_payment",
+  remittance_fx_markup: "remittance_fx_markup",
+  overdraft_interest: "overdraft_interest",
+  overdraft_setup_fee: "overdraft_setup_fee",
+  overdraft_renewal_fee: "overdraft_renewal_fee",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
@@ -60,6 +69,15 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   atm_withdrawal: { rate: 0, fixed: 150 },
   standing_order: { rate: 0, fixed: 100 },
   dormancy_fee: { rate: 0, fixed: 500 },
+  remittance_inbound: { rate: 0.02, fixed: 100 },
+  remittance_outbound: { rate: 0.025, fixed: 150 },
+  remittance_bank_credit: { rate: 0.015, fixed: 75 },
+  remittance_wallet_credit: { rate: 0.01, fixed: 50 },
+  remittance_bill_payment: { rate: 0.02, fixed: 100 },
+  remittance_fx_markup: { rate: 0.015, fixed: 0 },
+  overdraft_interest: { rate: 0.08, fixed: 0 },
+  overdraft_setup_fee: { rate: 0, fixed: 1000 },
+  overdraft_renewal_fee: { rate: 0, fixed: 500 },
 };
 
 interface UseFeeEstimateOptions {
