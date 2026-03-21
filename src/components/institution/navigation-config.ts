@@ -4,6 +4,7 @@ import {
   Store, Shield, UserCheck, Wallet, MapPin, Banknote, PiggyBank, BookOpen,
   Receipt, KeyRound, ScrollText, UserPlus, ShieldAlert, Bell, Mail,
   Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog, HelpCircle,
+  Landmark,
 } from "lucide-react";
 
 export const institutionNavigation = [
