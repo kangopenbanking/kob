@@ -9,6 +9,7 @@ const footerSections = [
     links: [
       { label: "About Kang", to: "/about", title: "Learn about Kang Open Banking" },
       { label: "Help Centre", to: "/help-centre", title: "Guides, FAQs and Open Banking resources" },
+      { label: "Live Chat", to: "#support-chat", title: "Chat with our support team" },
       { label: "Governance", to: "/compliance", title: "Corporate governance policies" },
       { label: "Regulatory", to: "/regulatory/cameroon-compliance", title: "COBAC & BEAC regulatory compliance" },
       { label: "Investor Relations", to: "/investors/technical-overview", title: "Technical overview for investors" },
