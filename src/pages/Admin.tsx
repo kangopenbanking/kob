@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
 import { API_CONFIG } from "@/config/api";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+import type { Easing } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
 const fadeUp = {
