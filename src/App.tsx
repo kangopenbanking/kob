@@ -421,6 +421,7 @@ const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
 const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
 const BankRemittances = lazy(() => import("./pages/banking-app/BankRemittances"));
+const BankSupport = lazy(() => import("./pages/banking-app/BankSupport"));
 
 
 // Customer App PWA
