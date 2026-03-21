@@ -207,7 +207,7 @@ export function useSendMessage() {
             await supabase.functions.invoke('managed-send-email', {
               body: {
                 email_key: 'support_agent_reply',
-                to_email: profile.email,
+                recipient_email: profile.email,
                 variables: {
                   user_name: profile.full_name || 'Customer',
                   subject: conv.subject || 'Support Chat',
