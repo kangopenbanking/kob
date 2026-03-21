@@ -915,7 +915,7 @@ function SendForm() {
       </AnimatePresence>
 
       <p className="text-xs text-center text-muted-foreground mt-3">
-        You could save vs banks. <span className="text-primary font-medium cursor-pointer hover:underline">How do we collect this data?</span>
+        For better experience, <Link to="/app" className="text-primary font-medium hover:underline">download the Kang app</Link>
       </p>
     </motion.div>
   );
