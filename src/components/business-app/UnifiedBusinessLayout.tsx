@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
@@ -18,6 +18,14 @@ import {
 const UnifiedBusinessInner: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+
+  // Persistently swap manifest to business-specific PWA config
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]');
+    const original = link?.getAttribute('href');
+    if (link) link.setAttribute('href', '/manifest-biz.json');
+    return () => { if (link && original) link.setAttribute('href', original); };
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

@@ -30,7 +30,7 @@ const BusinessSupport: React.FC = () => {
 
   const { departments, loading: deptsLoading } = useSupportDepartments();
   const { conversations, loading: convsLoading, refresh } = useSupportConversations(userId);
-  const { messages } = useSupportMessages(activeConvId);
+  const { messages } = useSupportMessages(activeConvId, userId);
   const createConversation = useCreateConversation();
   const sendMessage = useSendMessage();
 

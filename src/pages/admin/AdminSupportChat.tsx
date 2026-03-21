@@ -57,7 +57,7 @@ const AdminSupportChat: React.FC = () => {
   const [agentSearchResults, setAgentSearchResults] = useState<any[]>([]);
   const [agentForm, setAgentForm] = useState({ user_id: '', department_id: '', max_concurrent_chats: 5 });
 
-  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId);
+  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, user?.id);
   const sendMessage = useSendMessage();
   const assignConversationEmail = useAssignConversation();
   const resolveNotification = useResolveNotification();
@@ -89,7 +89,13 @@ const AdminSupportChat: React.FC = () => {
   useEffect(() => {
     const ch = supabase
       .channel('admin-support-convs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_conversations' }, () => fetchConversations())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_conversations' }, (payload) => {
+        fetchConversations();
+        // Play sound for new conversations
+        if (payload.eventType === 'INSERT') {
+          import('@/utils/notificationSound').then(m => m.playNotificationSound());
+        }
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [fetchConversations]);
