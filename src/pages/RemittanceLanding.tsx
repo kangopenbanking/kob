@@ -579,7 +579,7 @@ function SendForm() {
             </div>
             <div className="border-t border-border/50 pt-2.5 flex justify-between text-sm">
               <span className="text-muted-foreground">Recipient gets</span>
-              <span className="font-bold text-primary text-lg">{(quote.receive_amount || convertedAmount).toLocaleString()} XAF</span>
+              <span className="font-bold text-primary text-lg">{(quote.receive_amount || convertedAmount).toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
             </div>
           </div>
 
