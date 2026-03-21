@@ -1064,6 +1064,7 @@ function App() {
               <Route path="cart" element={<CustomerCart />} />
               <Route path="orders" element={<CustomerOrderTracking />} />
               <Route path="disputes" element={<CustomerDisputes />} />
+              <Route path="send-money" element={<CustomerSendMoney />} />
             </Route>
 
             {/* Business App PWA Routes */}
