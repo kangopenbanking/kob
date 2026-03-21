@@ -60,7 +60,7 @@ const BankSupport: React.FC = () => {
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
         <h1 className="text-lg font-bold text-foreground">
-          {step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support'}
+          {step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support Chat'}
         </h1>
       </div>
 
