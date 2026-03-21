@@ -89,7 +89,13 @@ const AdminSupportChat: React.FC = () => {
   useEffect(() => {
     const ch = supabase
       .channel('admin-support-convs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_conversations' }, () => fetchConversations())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_conversations' }, (payload) => {
+        fetchConversations();
+        // Play sound for new conversations
+        if (payload.eventType === 'INSERT') {
+          import('@/utils/notificationSound').then(m => m.playNotificationSound());
+        }
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [fetchConversations]);

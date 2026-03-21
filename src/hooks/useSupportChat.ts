@@ -51,14 +51,16 @@ export function useSupportConversations(userId?: string) {
   return { conversations, loading, refresh };
 }
 
-export function useSupportMessages(conversationId?: string) {
+export function useSupportMessages(conversationId?: string, currentUserId?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
+    initialLoadDone.current = false;
     if (!conversationId) { setLoading(false); return; }
 
-    const fetch = async () => {
+    const fetchMessages = async () => {
       const { data } = await supabase
         .from('support_messages')
         .select('*')
@@ -66,8 +68,9 @@ export function useSupportMessages(conversationId?: string) {
         .order('created_at', { ascending: true }) as any;
       setMessages(data || []);
       setLoading(false);
+      initialLoadDone.current = true;
     };
-    fetch();
+    fetchMessages();
 
     const channel = supabase
       .channel(`support-msg-${conversationId}`)
@@ -77,12 +80,17 @@ export function useSupportMessages(conversationId?: string) {
         table: 'support_messages',
         filter: `conversation_id=eq.${conversationId}`,
       }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as ChatMessage]);
+        const newMsg = payload.new as ChatMessage;
+        setMessages((prev) => [...prev, newMsg]);
+        // Play sound for incoming messages from others
+        if (initialLoadDone.current && newMsg.sender_id !== currentUserId) {
+          playNotificationSound();
+        }
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [conversationId]);
+  }, [conversationId, currentUserId]);
 
   return { messages, loading };
 }
