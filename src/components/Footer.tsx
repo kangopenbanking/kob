@@ -46,6 +46,10 @@ const footerSections = [
       { label: "Sandbox", to: "/developer/sandbox", title: "API testing sandbox environment" },
       { label: "Changelog", to: "/developer/changelog", title: "API version changelog" },
       { label: "API Explorer", to: "/developer/api-explorer", title: "Interactive API explorer tool" },
+      { label: "Zapier", to: "/integrations/zapier", title: "Zapier no-code integration guide" },
+      { label: "Make.com", to: "/integrations/make", title: "Make.com automation integration guide" },
+      { label: "Bubble.io", to: "/integrations/bubble", title: "Bubble.io no-code app builder guide" },
+      { label: "Retool", to: "/integrations/retool", title: "Retool internal tools integration guide" },
     ],
   },
   {
