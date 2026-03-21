@@ -1,126 +1,92 @@
 
 
-# Live Chat Support System — Full Implementation Plan
+# Support Chat System — E2E Audit Report & Fix Plan
 
-## Overview
+## Audit Summary
 
-Build a multi-portal live chat support system with department routing, agent assignment, file/image uploads, and admin management. The chat widget appears as a floating button on the website (above the scroll-to-top/cookie banner), and as an integrated feature in the Consumer App, Merchant/Business App, and Banking App.
+| Component | Status | Gaps Found |
+|---|---|---|
+| Database schema (4 tables + RLS + realtime) | ✅ Complete | — |
+| Storage bucket (`support-attachments`) | ✅ Complete | — |
+| Website floating widget | ✅ Complete | — |
+| Consumer App (`/app/support`) | ✅ Complete | — |
+| Business App (`/biz/support`) | ✅ Complete | — |
+| Banking App (`/bank/:id/more/support`) | ✅ Complete | — |
+| Admin dashboard (`/admin/support-chat`) | ⚠️ Partial | 4 gaps |
+| In-app notifications | ❌ Missing | No trigger on new message |
+| Push notifications (OneSignal) | ❌ Missing | Not wired |
+| Email notifications | ❌ Missing | No managed email type |
+| Admin Department CRUD | ❌ Missing | View-only, no create/edit/delete |
+| Admin Agent Management | ❌ Missing | View-only, no add/remove agents |
+| Admin Assign Agent to Conversation | ❌ Missing | No assignment UI |
+| Banking App "More" nav link | ❌ Missing | No "Support" item in `BankMore.tsx` |
 
-## Architecture
+---
 
-```text
-┌─────────────────────────────────────────────────┐
-│                   Database                       │
-│  support_departments                             │
-│  support_agents (user_id, department_id, status) │
-│  support_conversations (user_id, dept, status,   │
-│    assigned_agent_id, channel, priority)          │
-│  support_messages (conversation_id, sender_type, │
-│    content, file_url, file_type, read_at)         │
-└────────────────────┬────────────────────────────┘
-                     │ Realtime (postgres_changes)
-     ┌───────────────┼───────────────────┐
-     │               │                   │
-  Website         Apps (Consumer,     Admin Portal
-  Floating        Merchant, Banking)  (full management)
-  Chat Widget     In-app chat page
-```
+## Gaps & Fix Plan
 
-## Database (1 migration)
+### 1. Admin Department CRUD (HIGH)
 
-**Tables:**
+**Gap:** `AdminSupportChat.tsx` Departments tab is read-only — just lists departments. No forms to create, edit, toggle active, or delete departments.
 
-1. `support_departments` — id, name, description, icon, is_active, display_order
-2. `support_agents` — id, user_id (FK profiles), department_id, status (online/offline/busy), max_concurrent_chats
-3. `support_conversations` — id, user_id, department_id, assigned_agent_id, channel (website/consumer_app/merchant_app/banking_app), status (open/assigned/resolved/closed), priority (low/medium/high/urgent), subject, metadata, created_at, updated_at, resolved_at
-4. `support_messages` — id, conversation_id, sender_type (user/agent/system), sender_id, content, file_url, file_type, read_at, created_at
+**Fix:** Add inline "Add Department" form (name, description, icon dropdown, display_order) and edit/delete buttons per row. Use direct Supabase inserts/updates since admin RLS already permits full access.
 
-RLS: Users see own conversations. Agents see assigned + unassigned in their department. Admins see all. Enable realtime on `support_messages` and `support_conversations`.
+### 2. Admin Agent Management (HIGH)
 
-## Components to Create
+**Gap:** Agents tab only lists existing agents with no way to add, remove, or reassign agents to departments.
 
-### 1. Floating Chat Widget (Website — `src/components/SupportChatWidget.tsx`)
-- Fixed bottom-right button (above cookie banner, z-50)
-- Expands into a chat panel (400×500px on desktop, fullscreen on mobile)
-- Step 1: Department picker (icons + names from `support_departments`)
-- Step 2: Subject input + optional file
-- Step 3: Live chat thread with message input, file/image upload button
-- Realtime message subscription
-- Unread badge on the floating button
-- Add to `Layout.tsx` alongside `CookieConsentBanner`
+**Fix:** Add "Add Agent" dialog with user search (from `profiles` table), department selector, and max concurrent chats input. Add remove button per agent. Add status toggle (online/offline/busy).
 
-### 2. Consumer App Chat Page (`src/pages/customer-app/CustomerSupport.tsx`)
-- Route: `/app/support`
-- Same chat flow but full-page mobile layout
-- Add "Support" to `CustomerMore.tsx` utility items
-- Conversation history list + active chat view
+### 3. Admin Assign Agent to Conversation (HIGH)
 
-### 3. Merchant/Business App Chat (`src/pages/business-app/BusinessSupport.tsx`)
-- Route: `/biz/support`
-- Add to `BusinessMobileNav` quick actions or More section
-- Same chat UI adapted for business context (channel = `merchant_app`)
+**Gap:** Conversation action bar has priority change and resolve/close but no agent assignment dropdown.
 
-### 4. Banking App Chat (`src/pages/banking-app/BankSupport.tsx`)
-- Route: `/bank/:institutionId/support`
-- Accessible from banking app More/Settings
-- Channel = `banking_app`
+**Fix:** Add agent selector dropdown in the conversation action bar. On select, update `assigned_agent_id` and set status to `assigned`. Show assigned agent name in the conversation list item.
 
-### 5. Admin Support Dashboard (`src/pages/admin/AdminSupportChat.tsx`)
-- Route: `/admin/support-chat`
-- Left panel: conversation queue (filterable by department, status, priority)
-- Right panel: active chat thread with agent replies
-- Features: assign to agent/department, change priority, resolve/close, view user profile
-- Department management tab (CRUD departments)
-- Agent management tab (assign users as agents, set department, toggle online/offline)
-- Stats: open conversations, avg response time, resolved today
+### 4. In-App Notification on New Message (HIGH)
 
-### 6. Shared Chat Components (`src/components/support/`)
-- `ChatThread.tsx` — message list with bubbles, timestamps, file previews
-- `ChatInput.tsx` — text input + file upload (images & documents only, max 5MB)
-- `DepartmentPicker.tsx` — grid of department cards
-- `ConversationList.tsx` — list of user's past/active conversations
+**Gap:** No `app_notifications` record is created when an agent sends a message. Users won't know they have a reply unless they check the chat.
 
-## File Upload
-- Use existing `storefront-assets` bucket or create `support-attachments` bucket
-- Accept: images (jpg/png/webp/gif) + documents (pdf/doc/docx) only
-- Max 5MB per file
-- Display inline previews for images, download links for documents
+**Fix:** Add a DB trigger `notify_support_new_message()` on `support_messages` INSERT. When `sender_type = 'agent'`, insert into `app_notifications` for the conversation's `user_id` with title "New Support Reply" and message preview.
 
-## Realtime
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE support_conversations;
-```
+### 5. Push Notification via OneSignal (MEDIUM)
 
-## Navigation Updates
+**Gap:** OneSignal is integrated (`useOneSignal.ts`) but not wired to support chat events.
 
-| Portal | Change |
-|---|---|
-| Website (`Layout.tsx`) | Add `<SupportChatWidget />` after `<CookieConsentBanner />` |
-| Consumer App (`CustomerMore.tsx`) | Add "Support" item to utility list |
-| Business App sidebar/nav | Add "Support" link |
-| Banking App nav | Add "Support" link |
-| Admin nav config | Add "Support Chat" under new "Support" section |
-| Footer | Add "Live Chat" link |
+**Fix:** In the same DB trigger (or a separate edge function call from the admin send flow), fire a push notification via OneSignal's REST API targeting the user's `user_id` tag. This can be done in the `useSendMessage` hook when `senderType === 'agent'` by invoking a lightweight edge function.
 
-## Files Summary
+### 6. Email Notification on New Conversation & Agent Reply (MEDIUM)
+
+**Gap:** No email is sent when a new support conversation is created or when an agent replies.
+
+**Fix:** Add two `managed_email_types` entries: `support_new_conversation` and `support_agent_reply`. Fire via `managed-send-email` from the DB trigger or edge function. Include conversation subject, message preview, and a link to the app support page.
+
+### 7. Banking App "More" Page — Missing Support Link (LOW)
+
+**Gap:** `BankMore.tsx` `accountItems` array has "Help & Support" pointing to `more/help` (generic help page), but no direct link to the live chat at `more/support`.
+
+**Fix:** Add a "Live Chat" item to `accountItems` with `MessageCircle` icon pointing to `more/support`, or update the existing "Help & Support" entry to point to the support chat.
+
+### 8. File Upload — Missing Image Preview in ChatInput (LOW)
+
+**Gap:** When a user selects an image file, the preview bar shows filename + icon but not an actual image thumbnail preview.
+
+**Fix:** Add a small `<img>` thumbnail preview when `file.type.startsWith('image/')` using `URL.createObjectURL(file)`.
+
+---
+
+## Files to Modify/Create
 
 | File | Action |
 |---|---|
-| **Migration** | Create 4 tables + RLS + realtime |
-| `src/components/support/ChatThread.tsx` | **Create** — shared message thread |
-| `src/components/support/ChatInput.tsx` | **Create** — input with file upload |
-| `src/components/support/DepartmentPicker.tsx` | **Create** — department selector |
-| `src/components/support/ConversationList.tsx` | **Create** — conversation history |
-| `src/components/SupportChatWidget.tsx` | **Create** — floating website widget |
-| `src/pages/customer-app/CustomerSupport.tsx` | **Create** — consumer app chat |
-| `src/pages/business-app/BusinessSupport.tsx` | **Create** — business app chat |
-| `src/pages/banking-app/BankSupport.tsx` | **Create** — banking app chat |
-| `src/pages/admin/AdminSupportChat.tsx` | **Create** — admin dashboard |
-| `src/components/Layout.tsx` | **Modify** — add chat widget |
-| `src/pages/customer-app/CustomerMore.tsx` | **Modify** — add Support link |
-| `src/components/admin/admin-navigation-config.ts` | **Modify** — add Support section |
-| `src/components/business-app/BusinessDesktopSidebar.tsx` | **Modify** — add Support link |
-| `src/components/Footer.tsx` | **Modify** — add Live Chat link |
-| `src/App.tsx` | **Modify** — add 4 new routes |
+| `src/pages/admin/AdminSupportChat.tsx` | **Modify** — Add dept CRUD forms, agent add/remove, conversation assignment dropdown |
+| `src/pages/banking-app/BankMore.tsx` | **Modify** — Add "Live Chat" item to accountItems |
+| `src/components/support/ChatInput.tsx` | **Modify** — Add image thumbnail preview |
+| `src/hooks/useSupportChat.ts` | **Modify** — Fire in-app notification + push notification on agent reply |
+| **Migration** | **Create** — Add `notify_support_new_message()` trigger on `support_messages` for in-app notifications |
+| **Migration** | **Create** — Insert `support_new_conversation` and `support_agent_reply` into `managed_email_types` |
+
+## Scope
+
+7 modifications across 5 existing files + 1 migration. No new edge functions required — the existing `managed-send-email` handles email delivery, and in-app notifications use the existing `app_notifications` table with a DB trigger.
 
