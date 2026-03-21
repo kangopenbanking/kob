@@ -73,9 +73,20 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   atm_withdrawal: { icon: Banknote, category: "Banking", label: "ATM Withdrawal" },
   standing_order: { icon: RefreshCw, category: "Banking", label: "Standing Order" },
   dormancy_fee: { icon: Lock, category: "Banking", label: "Dormancy Fee" },
+  // Remittance
+  remittance_inbound: { icon: ArrowDownToLine, category: "Remittance", label: "Remittance Inbound" },
+  remittance_outbound: { icon: Send, category: "Remittance", label: "Remittance Outbound" },
+  remittance_bank_credit: { icon: Landmark, category: "Remittance", label: "Remittance Bank Credit" },
+  remittance_wallet_credit: { icon: Wallet, category: "Remittance", label: "Remittance Wallet Credit" },
+  remittance_bill_payment: { icon: Receipt, category: "Remittance", label: "Remittance Bill Payment" },
+  remittance_fx_markup: { icon: ArrowLeftRight, category: "Remittance", label: "Remittance FX Markup" },
+  // Overdraft (additional)
+  overdraft_interest: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Interest" },
+  overdraft_setup_fee: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Setup Fee" },
+  overdraft_renewal_fee: { icon: RefreshCw, category: "Lending", label: "Overdraft Renewal Fee" },
 };
 
-const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Banking", "Savings", "Lending", "Social", "International", "Gateway", "Services"];
+const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Banking", "Savings", "Lending", "Remittance", "Social", "International", "Gateway", "Services"];
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: any }> = {
   Core: { bg: "bg-blue-500/5", border: "border-blue-200 dark:border-blue-800", text: "text-blue-700 dark:text-blue-400", icon: ArrowLeftRight },
