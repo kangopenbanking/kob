@@ -493,47 +493,6 @@ export default function RemittanceLanding() {
         </div>
       </section>
 
-      {/* ══════════ SECURITY ══════════ */}
-      <section className="py-20 lg:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight mb-6">
-                Disappoint thieves
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                Every month, millions of personal and business customers trust us to move over billions of their money. We keep it safe with dedicated fraud and security teams, 2-factor authentication, and trusted financial institutions.
-              </p>
-              <Link to="/security">
-                <Button variant="outline" className="rounded-full px-6 h-12 font-semibold border-primary text-primary hover:bg-primary/5">
-                  How we keep your money safe <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="grid grid-cols-3 gap-4">
-              {[
-                { icon: Shield, title: "Dedicated threat and fraud teams", desc: "Our dedicated fraud and security teams work to keep your money safe" },
-                { icon: Lock, title: "2-factor authentication", desc: "We use 2-factor authentication to protect your account" },
-                { icon: Building2, title: "Trusted institutions", desc: "We trust your money with established financial institutions" },
-              ].map((item, i) => (
-                <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                  <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow text-center">
-                    <CardContent className="p-5 flex flex-col items-center gap-3">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <item.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* ══════════ HOW IT WORKS ══════════ */}
       <section className="py-20 lg:py-28 bg-muted/30">
         <div className="container mx-auto px-4">
