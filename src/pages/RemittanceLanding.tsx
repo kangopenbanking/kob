@@ -349,7 +349,7 @@ export default function RemittanceLanding() {
     <div className="min-h-screen bg-background">
       {/* ══════════ HERO ══════════ */}
       <section className="relative overflow-hidden bg-[hsl(var(--primary))]">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 -left-20 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl" />
           <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl" />
         </div>
