@@ -1,5 +1,6 @@
 import { DynamicNavigation } from "./DynamicNavigation";
 import { Footer } from "./Footer";
+import { CookieConsentBanner } from "./CookieConsentBanner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export const Layout = ({ children, showFooter = true }: LayoutProps) => {
         {children}
       </main>
       {showFooter && <Footer />}
+      <CookieConsentBanner />
     </div>
   );
 };
