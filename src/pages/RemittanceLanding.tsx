@@ -399,10 +399,10 @@ function SendForm() {
         body: {
           action: "get_quote",
           amount: numericAmount,
-          source_currency: selectedCurrency.code,
-          destination_currency: "XAF",
+           source_currency: selectedCurrency.code,
+          destination_currency: destCountries[selectedDestIdx]?.currency || "XAF",
           delivery_method: deliveryMethodMap[deliveryMethod],
-          destination_country: "CM",
+          destination_country: destCountries[selectedDestIdx]?.country || "CM",
         },
       });
 
