@@ -43,6 +43,7 @@ class KangOpenBanking
     public readonly GatewayResource $gateway;
     public readonly SandboxResource $sandbox;
     public readonly WebhooksResource $webhooks;
+    public readonly PayByBankResource $payByBank;
 
     /**
      * @param array{
