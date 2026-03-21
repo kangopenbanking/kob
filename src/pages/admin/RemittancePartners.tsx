@@ -68,6 +68,7 @@ export default function RemittancePartners() {
             settlement_frequency: form.settlement_frequency || "daily",
           },
         },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
       if (res.error) throw res.error;
       return res.data;
