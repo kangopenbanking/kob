@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, FileText, Package, ShoppingBag, Wallet, Monitor, ScanLine,
   Users, BarChart3, Store, Settings, Shield, Truck, Tag, Star,
-  ChevronRight, LogOut, Building2, Crown,
+  ChevronRight, LogOut, Building2, Crown, MessageCircle,
 } from 'lucide-react';
 import {
   Sidebar,
