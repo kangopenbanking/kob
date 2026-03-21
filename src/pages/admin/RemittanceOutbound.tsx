@@ -84,26 +84,20 @@ export default function RemittanceOutbound() {
   // Compliance decision mutation
   const complianceMutation = useMutation({
     mutationFn: async ({ checkId, decision, remittanceId }: { checkId: string; decision: "approved" | "rejected"; remittanceId: string }) => {
-      await supabase.from("remittance_compliance_checks").update({
-        status: decision,
-        notes: complianceNote,
-        resolved_at: new Date().toISOString(),
-      }).eq("id", checkId);
-
-      if (decision === "approved") {
-        await supabase.from("remittances").update({
-          status: "pending",
-          compliance_status: "cleared",
-          compliance_cleared_at: new Date().toISOString(),
-        }).eq("id", remittanceId);
-      } else {
-        await supabase.from("remittances").update({
-          status: "failed",
-          compliance_status: "rejected",
-          cancellation_reason: complianceNote || "Compliance review rejected",
-          cancelled_at: new Date().toISOString(),
-        }).eq("id", remittanceId);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("remittance-outbound", {
+        body: {
+          action: "compliance_decision",
+          check_id: checkId,
+          decision,
+          note: complianceNote,
+          remittance_id: remittanceId,
+        },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-outbound-compliance"] });
@@ -112,6 +106,7 @@ export default function RemittanceOutbound() {
       setComplianceDialog(null);
       setComplianceNote("");
     },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   const filtered = remittances?.filter((r: any) => {

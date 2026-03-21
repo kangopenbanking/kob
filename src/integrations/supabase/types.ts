@@ -16290,6 +16290,7 @@ export type Database = {
           sender_id_type: string | null
           sender_name: string | null
           sender_phone: string | null
+          sender_user_id: string | null
           settled_at: string | null
           status: string
           trace_id: string | null
@@ -16343,6 +16344,7 @@ export type Database = {
           sender_id_type?: string | null
           sender_name?: string | null
           sender_phone?: string | null
+          sender_user_id?: string | null
           settled_at?: string | null
           status?: string
           trace_id?: string | null
@@ -16396,6 +16398,7 @@ export type Database = {
           sender_id_type?: string | null
           sender_name?: string | null
           sender_phone?: string | null
+          sender_user_id?: string | null
           settled_at?: string | null
           status?: string
           trace_id?: string | null
@@ -20861,6 +20864,17 @@ export type Database = {
       }
       hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
       hash_secret_value: { Args: { secret: string }; Returns: string }
+      increment_remittance_usage: {
+        Args: {
+          _amount: number
+          _corridor_id: string
+          _currency?: string
+          _period_start: string
+          _period_type: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
         Returns: boolean

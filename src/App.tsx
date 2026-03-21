@@ -413,6 +413,7 @@ const BankSettings = lazy(() => import("./pages/banking-app/BankSettings"));
 const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
 const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
+const BankRemittances = lazy(() => import("./pages/banking-app/BankRemittances"));
 
 
 // Customer App PWA
@@ -456,6 +457,7 @@ const CustomerStoreDetail = lazy(() => import("./pages/customer-app/CustomerStor
 const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
 const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
 const CustomerSendMoney = lazy(() => import("./pages/customer-app/CustomerSendMoney"));
+const CustomerRemittances = lazy(() => import("./pages/customer-app/CustomerRemittances"));
 
 // Business App PWA
 const BusinessSplash = lazy(() => import("./pages/business-app/BusinessSplash"));
@@ -1017,6 +1019,7 @@ function App() {
               <Route path="more/alerts" element={<BankAlerts />} />
               <Route path="more/help" element={<BankHelp />} />
               <Route path="more/disputes" element={<BankDisputes />} />
+              <Route path="more/remittances" element={<BankRemittances />} />
             </Route>
 
             {/* Customer App PWA Routes — unified (no institutionId) */}
@@ -1065,6 +1068,7 @@ function App() {
               <Route path="orders" element={<CustomerOrderTracking />} />
               <Route path="disputes" element={<CustomerDisputes />} />
               <Route path="send-money" element={<CustomerSendMoney />} />
+              <Route path="remittances" element={<CustomerRemittances />} />
             </Route>
 
             {/* Business App PWA Routes */}
