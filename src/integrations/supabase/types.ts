@@ -15652,6 +15652,7 @@ export type Database = {
         Row: {
           created_at: string | null
           est_delivery_seconds: number | null
+          fee_tiers: Json | null
           fees_model: Json | null
           from_country: string
           from_currency: string
@@ -15660,12 +15661,15 @@ export type Database = {
           max_amount: number
           min_amount: number
           partner_id: string
+          requires_kyc_level: string | null
+          settlement_delay_hours: number | null
           to_country: string
           to_currency: string
         }
         Insert: {
           created_at?: string | null
           est_delivery_seconds?: number | null
+          fee_tiers?: Json | null
           fees_model?: Json | null
           from_country: string
           from_currency: string
@@ -15674,12 +15678,15 @@ export type Database = {
           max_amount?: number
           min_amount?: number
           partner_id: string
+          requires_kyc_level?: string | null
+          settlement_delay_hours?: number | null
           to_country?: string
           to_currency?: string
         }
         Update: {
           created_at?: string | null
           est_delivery_seconds?: number | null
+          fee_tiers?: Json | null
           fees_model?: Json | null
           from_country?: string
           from_currency?: string
@@ -15688,6 +15695,8 @@ export type Database = {
           max_amount?: number
           min_amount?: number
           partner_id?: string
+          requires_kyc_level?: string | null
+          settlement_delay_hours?: number | null
           to_country?: string
           to_currency?: string
         }
@@ -15787,13 +15796,17 @@ export type Database = {
       remittance_partners: {
         Row: {
           api_base_url: string | null
+          api_environment: string | null
           auth_config_encrypted: Json | null
           auth_method: string | null
+          auto_settlement: boolean | null
           created_at: string | null
           display_name: string
           id: string
+          last_settlement_at: string | null
           name: string
           public_key: string | null
+          settlement_frequency: string | null
           status: string
           supported_corridors: Json | null
           updated_at: string | null
@@ -15801,13 +15814,17 @@ export type Database = {
         }
         Insert: {
           api_base_url?: string | null
+          api_environment?: string | null
           auth_config_encrypted?: Json | null
           auth_method?: string | null
+          auto_settlement?: boolean | null
           created_at?: string | null
           display_name: string
           id?: string
+          last_settlement_at?: string | null
           name: string
           public_key?: string | null
+          settlement_frequency?: string | null
           status?: string
           supported_corridors?: Json | null
           updated_at?: string | null
@@ -15815,13 +15832,17 @@ export type Database = {
         }
         Update: {
           api_base_url?: string | null
+          api_environment?: string | null
           auth_config_encrypted?: Json | null
           auth_method?: string | null
+          auto_settlement?: boolean | null
           created_at?: string | null
           display_name?: string
           id?: string
+          last_settlement_at?: string | null
           name?: string
           public_key?: string | null
+          settlement_frequency?: string | null
           status?: string
           supported_corridors?: Json | null
           updated_at?: string | null
@@ -15885,6 +15906,65 @@ export type Database = {
           },
           {
             foreignKeyName: "remittance_quotes_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_recon_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          matched: number | null
+          mismatched: number | null
+          partner_id: string | null
+          period_end: string
+          period_start: string
+          run_type: string
+          stale_flagged: number | null
+          started_at: string | null
+          status: string | null
+          total_checked: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          matched?: number | null
+          mismatched?: number | null
+          partner_id?: string | null
+          period_end: string
+          period_start: string
+          run_type?: string
+          stale_flagged?: number | null
+          started_at?: string | null
+          status?: string | null
+          total_checked?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          matched?: number | null
+          mismatched?: number | null
+          partner_id?: string | null
+          period_end?: string
+          period_start?: string
+          run_type?: string
+          stale_flagged?: number | null
+          started_at?: string | null
+          status?: string | null
+          total_checked?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_recon_runs_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "remittance_partners"
@@ -16012,6 +16092,9 @@ export type Database = {
         Row: {
           amount_in: number
           amount_out: number
+          bank_batch_item_id: string | null
+          bank_confirm_status: string | null
+          bank_confirmed_at: string | null
           compliance_status: string | null
           correlation_id: string | null
           corridor_id: string | null
@@ -16049,6 +16132,9 @@ export type Database = {
         Insert: {
           amount_in: number
           amount_out: number
+          bank_batch_item_id?: string | null
+          bank_confirm_status?: string | null
+          bank_confirmed_at?: string | null
           compliance_status?: string | null
           correlation_id?: string | null
           corridor_id?: string | null
@@ -16086,6 +16172,9 @@ export type Database = {
         Update: {
           amount_in?: number
           amount_out?: number
+          bank_batch_item_id?: string | null
+          bank_confirm_status?: string | null
+          bank_confirmed_at?: string | null
           compliance_status?: string | null
           correlation_id?: string | null
           corridor_id?: string | null
