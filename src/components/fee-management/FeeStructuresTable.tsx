@@ -99,6 +99,7 @@ const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string
   Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
   Services: { bg: "bg-teal-500/5", border: "border-teal-200 dark:border-teal-800", text: "text-teal-700 dark:text-teal-400", icon: FileText },
   Banking: { bg: "bg-slate-500/5", border: "border-slate-200 dark:border-slate-800", text: "text-slate-700 dark:text-slate-400", icon: Landmark },
+  Remittance: { bg: "bg-indigo-500/5", border: "border-indigo-200 dark:border-indigo-800", text: "text-indigo-700 dark:text-indigo-400", icon: Send },
 };
 
 function getFeeDisplay(s: any) {

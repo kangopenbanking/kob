@@ -69,6 +69,15 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   atm_withdrawal: { rate: 0, fixed: 150 },
   standing_order: { rate: 0, fixed: 100 },
   dormancy_fee: { rate: 0, fixed: 500 },
+  remittance_inbound: { rate: 0.02, fixed: 100 },
+  remittance_outbound: { rate: 0.025, fixed: 150 },
+  remittance_bank_credit: { rate: 0.015, fixed: 75 },
+  remittance_wallet_credit: { rate: 0.01, fixed: 50 },
+  remittance_bill_payment: { rate: 0.02, fixed: 100 },
+  remittance_fx_markup: { rate: 0.015, fixed: 0 },
+  overdraft_interest: { rate: 0.08, fixed: 0 },
+  overdraft_setup_fee: { rate: 0, fixed: 1000 },
+  overdraft_renewal_fee: { rate: 0, fixed: 500 },
 };
 
 interface UseFeeEstimateOptions {

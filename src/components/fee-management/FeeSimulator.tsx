@@ -27,6 +27,16 @@ const CHANNELS = [
   { value: "savings_deposit", label: "Savings Deposit" },
   { value: "paypal_payment", label: "PayPal Payment" },
   { value: "ussd_payment", label: "USSD Payment" },
+  { value: "remittance_inbound", label: "Remittance Inbound" },
+  { value: "remittance_outbound", label: "Remittance Outbound" },
+  { value: "remittance_bank_credit", label: "Remittance Bank Credit" },
+  { value: "remittance_wallet_credit", label: "Remittance Wallet Credit" },
+  { value: "remittance_bill_payment", label: "Remittance Bill Payment" },
+  { value: "remittance_fx_markup", label: "Remittance FX Markup" },
+  { value: "overdraft_fee", label: "Overdraft Fee" },
+  { value: "overdraft_interest", label: "Overdraft Interest" },
+  { value: "overdraft_setup_fee", label: "Overdraft Setup Fee" },
+  { value: "overdraft_renewal_fee", label: "Overdraft Renewal Fee" },
 ];
 
 const PRESETS = [1000, 5000, 10000, 50000, 100000, 500000, 1000000];
