@@ -12927,6 +12927,89 @@ export type Database = {
         }
         Relationships: []
       }
+      pay_by_bank_intents: {
+        Row: {
+          amount: number
+          authorization_url: string | null
+          consent_id: string | null
+          created_at: string
+          creditor_account: string | null
+          creditor_name: string | null
+          currency: string
+          customer_email: string | null
+          customer_user_id: string | null
+          debtor_account: string | null
+          description: string | null
+          expires_at: string
+          failure_reason: string | null
+          id: string
+          merchant_id: string
+          merchant_logo_url: string | null
+          merchant_name: string | null
+          metadata: Json | null
+          redirect_uri: string
+          state: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          authorization_url?: string | null
+          consent_id?: string | null
+          created_at?: string
+          creditor_account?: string | null
+          creditor_name?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_user_id?: string | null
+          debtor_account?: string | null
+          description?: string | null
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          merchant_id: string
+          merchant_logo_url?: string | null
+          merchant_name?: string | null
+          metadata?: Json | null
+          redirect_uri: string
+          state: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          authorization_url?: string | null
+          consent_id?: string | null
+          created_at?: string
+          creditor_account?: string | null
+          creditor_name?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_user_id?: string | null
+          debtor_account?: string | null
+          description?: string | null
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          merchant_id?: string
+          merchant_logo_url?: string | null
+          merchant_name?: string | null
+          metadata?: Json | null
+          redirect_uri?: string
+          state?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_by_bank_intents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_events: {
         Row: {
           created_at: string
