@@ -673,9 +673,40 @@ function SendForm() {
               {convertedAmount.toLocaleString()}
             </motion.span>
           </div>
-          <div className="flex items-center gap-2 px-4 h-16 bg-muted/50 font-semibold text-sm min-w-[130px] justify-center">
-            <span className="text-xl">🇨🇲</span>
-            XAF
+          <div className="relative">
+            <button
+              onClick={() => stage === "calculate" && setShowDestDropdown(!showDestDropdown)}
+              className="flex items-center gap-2 px-4 h-16 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[130px] justify-center"
+            >
+              <span className="text-xl">{destCountries[selectedDestIdx]?.flag || "🇨🇲"}</span>
+              {destCountries[selectedDestIdx]?.currency || "XAF"}
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showDestDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] max-h-[240px] overflow-y-auto"
+                >
+                  {destCountries.map((dc, i) => (
+                    <button
+                      key={dc.currency + dc.country}
+                      onClick={() => { setSelectedDestIdx(i); setShowDestDropdown(false); }}
+                      className={`flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/60 transition-colors text-sm ${
+                        i === selectedDestIdx ? "bg-primary/5 text-primary" : ""
+                      }`}
+                    >
+                      <span className="text-lg">{dc.flag}</span>
+                      <span className="font-medium">{dc.currency}</span>
+                      <span className="text-muted-foreground text-xs ml-auto">{dc.country}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
