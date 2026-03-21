@@ -279,8 +279,10 @@ const RemittanceSettlement = lazy(() => import("./pages/admin/RemittanceSettleme
 const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners"));
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
+const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
 
-// Developer Portal — Identity & Onboarding Guides
+// Developer Portal — Identity & Onboarding Guides + Pay by Bank
+const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
 const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
 const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
