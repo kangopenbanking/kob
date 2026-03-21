@@ -84,6 +84,7 @@ export default function RemittancePartners() {
 
   const corridorMutation = useMutation({
     mutationFn: async (form: any) => {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("remittance-engine", {
         body: {
           action: "admin_manage_corridor",
