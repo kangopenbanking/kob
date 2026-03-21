@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthenticatedUser } from '@/hooks/useAuthenticatedUser';
 import { ChatThread } from '@/components/support/ChatThread';
 import { ChatInput } from '@/components/support/ChatInput';
-import { useSupportMessages, useSendMessage } from '@/hooks/useSupportChat';
+import { useSupportMessages, useSendMessage, useAssignConversation, useResolveNotification } from '@/hooks/useSupportChat';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
