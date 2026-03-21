@@ -490,6 +490,7 @@ const BusinessStorefront = lazy(() => import("./pages/business-app/BusinessStore
 const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInventory"));
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
 const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
+const BusinessSupport = lazy(() => import("./pages/business-app/BusinessSupport"));
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
