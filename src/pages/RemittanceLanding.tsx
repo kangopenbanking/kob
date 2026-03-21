@@ -227,6 +227,8 @@ function SendForm() {
   const [amount, setAmount] = useState("1000");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDestDropdown, setShowDestDropdown] = useState(false);
+  const [selectedDestIdx, setSelectedDestIdx] = useState(0);
   const [deliveryMethod, setDeliveryMethod] = useState<"wallet" | "bank" | "bills">("wallet");
 
   // Recipient fields
@@ -267,6 +269,45 @@ function SendForm() {
     }));
   }, [supportedCountries]);
 
+  // Destination countries for "Recipient gets" selector
+  const destCountries = useMemo(() => {
+    const base = [
+      { currency: "XAF", country: "Cameroon", flag: "🇨🇲", rate: 1 },
+      { currency: "NGN", country: "Nigeria", flag: "🇳🇬", rate: 0 },
+      { currency: "GHS", country: "Ghana", flag: "🇬🇭", rate: 0 },
+      { currency: "KES", country: "Kenya", flag: "🇰🇪", rate: 0 },
+    ];
+    // If admin countries available, build from them
+    if (supportedCountries && supportedCountries.length > 0) {
+      const currencyMap: Record<string, { currency: string; country: string; flag: string }> = {
+        "CM": { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+        "NG": { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+        "GH": { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+        "KE": { currency: "KES", country: "Kenya", flag: "🇰🇪" },
+        "GA": { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
+        "CG": { currency: "XAF", country: "Congo", flag: "🇨🇬" },
+        "TD": { currency: "XAF", country: "Chad", flag: "🇹🇩" },
+        "CF": { currency: "XAF", country: "Central African Republic", flag: "🇨🇫" },
+        "GQ": { currency: "XAF", country: "Equatorial Guinea", flag: "🇬🇶" },
+      };
+      const dynamicDest = supportedCountries
+        .filter((c) => c.enabled_consumer_app)
+        .map((c) => {
+          const mapped = Object.entries(currencyMap).find(([, v]) => v.country === c.country);
+          return mapped ? { ...mapped[1], rate: 0 } : { currency: "XAF", country: c.country, flag: c.flag, rate: 0 };
+        });
+      // Dedupe by currency+country
+      const seen = new Set<string>();
+      return dynamicDest.filter((d) => {
+        const key = `${d.currency}-${d.country}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    return base;
+  }, [supportedCountries]);
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -292,7 +333,7 @@ function SendForm() {
         const { data } = await supabase
           .from("profiles")
           .select("id, full_name, phone_number")
-          .ilike("full_name", `${trimmed}%`)
+          .ilike("full_name", `%${trimmed}%`)
           .limit(5);
         if (data && data.length > 0) {
           setNameSuggestions(data.filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" })));
@@ -358,10 +399,10 @@ function SendForm() {
         body: {
           action: "get_quote",
           amount: numericAmount,
-          source_currency: selectedCurrency.code,
-          destination_currency: "XAF",
+           source_currency: selectedCurrency.code,
+          destination_currency: destCountries[selectedDestIdx]?.currency || "XAF",
           delivery_method: deliveryMethodMap[deliveryMethod],
-          destination_country: "CM",
+          destination_country: destCountries[selectedDestIdx]?.country || "CM",
         },
       });
 
@@ -415,9 +456,9 @@ function SendForm() {
           action: "send",
           amount: numericAmount,
           source_currency: selectedCurrency.code,
-          destination_currency: "XAF",
+          destination_currency: destCountries[selectedDestIdx]?.currency || "XAF",
           delivery_method: deliveryMethodMap[deliveryMethod],
-          destination_country: "CM",
+          destination_country: destCountries[selectedDestIdx]?.country || "CM",
           recipient: recipientDetails,
         },
       });
@@ -476,7 +517,7 @@ function SendForm() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Receives</span>
-            <span className="font-semibold text-primary">{convertedAmount.toLocaleString()} XAF</span>
+            <span className="font-semibold text-primary">{convertedAmount.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -534,11 +575,11 @@ function SendForm() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Rate</span>
-              <span className="font-semibold text-foreground">1 {selectedCurrency.code} = {(quote.rate || selectedCurrency.rate).toLocaleString()} XAF</span>
+              <span className="font-semibold text-foreground">1 {selectedCurrency.code} = {(quote.rate || selectedCurrency.rate).toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
             </div>
             <div className="border-t border-border/50 pt-2.5 flex justify-between text-sm">
               <span className="text-muted-foreground">Recipient gets</span>
-              <span className="font-bold text-primary text-lg">{(quote.receive_amount || convertedAmount).toLocaleString()} XAF</span>
+              <span className="font-bold text-primary text-lg">{(quote.receive_amount || convertedAmount).toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
             </div>
           </div>
 
@@ -648,7 +689,7 @@ function SendForm() {
             <Repeat className="h-3.5 w-3.5" /> Rate
           </span>
           <span className="font-semibold text-foreground">
-            1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} XAF
+            1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -673,9 +714,40 @@ function SendForm() {
               {convertedAmount.toLocaleString()}
             </motion.span>
           </div>
-          <div className="flex items-center gap-2 px-4 h-16 bg-muted/50 font-semibold text-sm min-w-[130px] justify-center">
-            <span className="text-xl">🇨🇲</span>
-            XAF
+          <div className="relative">
+            <button
+              onClick={() => stage === "calculate" && setShowDestDropdown(!showDestDropdown)}
+              className="flex items-center gap-2 px-4 h-16 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[130px] justify-center"
+            >
+              <span className="text-xl">{destCountries[selectedDestIdx]?.flag || "🇨🇲"}</span>
+              {destCountries[selectedDestIdx]?.currency || "XAF"}
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showDestDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] max-h-[240px] overflow-y-auto"
+                >
+                  {destCountries.map((dc, i) => (
+                    <button
+                      key={dc.currency + dc.country}
+                      onClick={() => { setSelectedDestIdx(i); setShowDestDropdown(false); }}
+                      className={`flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/60 transition-colors text-sm ${
+                        i === selectedDestIdx ? "bg-primary/5 text-primary" : ""
+                      }`}
+                    >
+                      <span className="text-lg">{dc.flag}</span>
+                      <span className="font-medium">{dc.currency}</span>
+                      <span className="text-muted-foreground text-xs ml-auto">{dc.country}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -884,7 +956,7 @@ function SendForm() {
       </AnimatePresence>
 
       <p className="text-xs text-center text-muted-foreground mt-3">
-        You could save vs banks. <span className="text-primary font-medium cursor-pointer hover:underline">How do we collect this data?</span>
+        For better experience, <Link to="/app" className="text-primary font-medium hover:underline">download the Kang app</Link>
       </p>
     </motion.div>
   );
