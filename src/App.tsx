@@ -59,6 +59,7 @@ const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission")
 const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
 const PayByBankAuthorize = lazy(() => import("./pages/PayByBankAuthorize"));
 const PayByBankApproval = lazy(() => import("./pages/customer-app/PayByBankApproval"));
+const CustomerSupport = lazy(() => import("./pages/customer-app/CustomerSupport"));
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -280,6 +281,7 @@ const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners")
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
 const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
+const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
@@ -420,6 +422,7 @@ const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
 const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
 const BankRemittances = lazy(() => import("./pages/banking-app/BankRemittances"));
+const BankSupport = lazy(() => import("./pages/banking-app/BankSupport"));
 
 
 // Customer App PWA
@@ -487,6 +490,7 @@ const BusinessStorefront = lazy(() => import("./pages/business-app/BusinessStore
 const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInventory"));
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
 const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
+const BusinessSupport = lazy(() => import("./pages/business-app/BusinessSupport"));
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
@@ -776,6 +780,7 @@ function App() {
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
+              <Route path="support-chat" element={<AdminSupportChat />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -1031,6 +1036,7 @@ function App() {
               <Route path="more/help" element={<BankHelp />} />
               <Route path="more/disputes" element={<BankDisputes />} />
               <Route path="more/remittances" element={<BankRemittances />} />
+              <Route path="more/support" element={<BankSupport />} />
             </Route>
 
             {/* Customer App PWA Routes — unified (no institutionId) */}
@@ -1081,6 +1087,7 @@ function App() {
               <Route path="send-money" element={<CustomerSendMoney />} />
               <Route path="remittances" element={<CustomerRemittances />} />
               <Route path="authorize-payment/:intentId" element={<PayByBankApproval />} />
+              <Route path="support" element={<CustomerSupport />} />
             </Route>
 
             {/* Business App PWA Routes */}
@@ -1129,6 +1136,7 @@ function App() {
               <Route path="enterprise" element={<BusinessEnterprise />} />
               <Route path="webhook-logs" element={<BusinessWebhookLogs />} />
               <Route path="disputes" element={<BusinessDisputesPage />} />
+              <Route path="support" element={<BusinessSupport />} />
               <Route path="kyb" element={<MerchantKYB />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="api-key-management" element={<MerchantApiKeyManagement />} />

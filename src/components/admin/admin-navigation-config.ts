@@ -33,6 +33,7 @@ import {
   Link2,
   CheckCircle2,
   Landmark,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -164,6 +165,12 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Rewards",
     items: [
       { title: "Rewards & Referrals", path: "/admin/rewards-management", icon: DollarSign },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      { title: "Support Chat", path: "/admin/support-chat", icon: MessageCircle },
     ],
   },
   {

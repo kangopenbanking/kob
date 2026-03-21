@@ -25,6 +25,7 @@ const utilityItems = [
   { label: 'Remittances', icon: Download, path: 'remittances', color: 'bg-[hsl(150,50%,90%)]', iconColor: 'text-[hsl(150,45%,35%)]' },
   { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
   { label: 'Disputes', icon: ShieldAlert, path: 'disputes', color: 'bg-[hsl(0,60%,92%)]', iconColor: 'text-[hsl(0,50%,45%)]' },
+  { label: 'Support', icon: HelpCircle, path: 'support', color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,50%,45%)]' },
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Alerts', icon: Bell, path: 'alerts', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Help', icon: HelpCircle, path: 'help', color: 'bg-muted', iconColor: 'text-foreground' },
