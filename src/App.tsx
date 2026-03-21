@@ -1136,6 +1136,7 @@ function App() {
               <Route path="enterprise" element={<BusinessEnterprise />} />
               <Route path="webhook-logs" element={<BusinessWebhookLogs />} />
               <Route path="disputes" element={<BusinessDisputesPage />} />
+              <Route path="support" element={<BusinessSupport />} />
               <Route path="kyb" element={<MerchantKYB />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
