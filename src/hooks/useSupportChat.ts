@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { ChatMessage } from '@/components/support/ChatThread';
+import { playNotificationSound } from '@/utils/notificationSound';
 import type { Department } from '@/components/support/DepartmentPicker';
 import type { ConversationSummary } from '@/components/support/ConversationList';
 
