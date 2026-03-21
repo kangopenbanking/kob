@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ListChecks, PenLine, MessageCircle, Paperclip } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DepartmentPicker, type Department } from '@/components/support/DepartmentPicker';
 import { ChatThread } from '@/components/support/ChatThread';
 import { ChatInput } from '@/components/support/ChatInput';
 import { ConversationList } from '@/components/support/ConversationList';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
