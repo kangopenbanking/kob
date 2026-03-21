@@ -291,11 +291,11 @@ function SendForm() {
       try {
         const { data } = await supabase
           .from("profiles")
-          .select("id, full_name, phone")
+          .select("id, full_name, phone_number")
           .ilike("full_name", `${trimmed}%`)
           .limit(5);
         if (data && data.length > 0) {
-          setNameSuggestions(data.filter((p: any) => p.full_name));
+          setNameSuggestions(data.filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" })));
           setShowNameSuggestions(true);
         } else {
           setNameSuggestions([]);
