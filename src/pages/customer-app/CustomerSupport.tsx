@@ -47,7 +47,7 @@ const CustomerSupport: React.FC = () => {
     await sendMessage(activeConvId, userId, 'user', content, fileUrl, fileType);
   };
 
-  const title = step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support';
+  const title = step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support Chat';
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
@@ -65,6 +65,19 @@ const CustomerSupport: React.FC = () => {
 
       {step === 'list' && (
         <div className="flex flex-1 flex-col p-4 gap-4 overflow-y-auto">
+          {/* How it works guide */}
+          <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">How it works</h3>
+            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Choose a department that best fits your issue</li>
+              <li>Describe your issue briefly</li>
+              <li>Chat live with a support agent</li>
+              <li>Upload images or files if needed</li>
+            </ol>
+            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
+              <strong>NOTE:</strong> The KOB team will respond within <strong>15 minutes</strong> and up to <strong>24 hours</strong> depending on your issue.
+            </p>
+          </div>
           <Button onClick={() => setStep('departments')} className="rounded-xl">
             Start New Conversation
           </Button>
