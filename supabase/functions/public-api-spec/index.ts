@@ -1807,7 +1807,7 @@ paths['/v1/consumer/njangi/contribute'] = {
 };
 
 paths['/v1/consumer/njangi/payout'] = {
-  post: { tags: ['Consumer Tools'], summary: 'Trigger Njangi payout', description: 'Disburse the accumulated pot to the next eligible member.', operationId: 'njangiPayout', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' }, recipient_id: { type: 'string', format: 'uuid', description: 'Override random selection (manual mode only)' } } } } } }, responses: { '200': { description: 'Payout initiated' }, ...errorResponses } },
+  post: { tags: ['Consumer Tools'], summary: 'Trigger Njangi payout', description: 'Disburse the accumulated pot to the next eligible member.', operationId: 'njangiPayout', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' }, recipient_id: { type: 'string', format: 'uuid', description: 'Override random selection (manual mode only)' } } } } } }, responses: { '200': successResult('Payout initiated'), ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
