@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +8,8 @@ import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal } from 
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { API_CONFIG } from '@/config/api';
 import yaml from 'js-yaml';
-
-
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
