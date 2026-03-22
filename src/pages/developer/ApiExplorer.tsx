@@ -81,7 +81,15 @@ const ApiExplorer = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Helmet>
+        <title>API Explorer — Kang Open Banking | Swagger UI</title>
+        <meta name="description" content="Interactive API Explorer for Kang Open Banking. Test 326+ endpoints for payments, accounts, transfers, and open banking services in Cameroon and CEMAC region." />
+        <meta property="og:title" content="Kang Open Banking API Explorer" />
+        <meta property="og:description" content="Interactive Swagger UI documentation for the KOB payment gateway and open banking platform." />
+        <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer" />
+      </Helmet>
+    <div className="container mx-auto px-4 py-8" data-testid="api-explorer-container">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">API Explorer</h1>
         <p className="text-lg text-muted-foreground mb-6">
