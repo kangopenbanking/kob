@@ -1,92 +1,174 @@
+# KOB Pro-Gateway: Postman Hardening + Playwright E2E Plan + Empty State CTAs
 
+## Overview
 
-# Support Chat System — E2E Audit Report & Fix Plan
-
-## Audit Summary
-
-| Component | Status | Gaps Found |
-|---|---|---|
-| Database schema (4 tables + RLS + realtime) | ✅ Complete | — |
-| Storage bucket (`support-attachments`) | ✅ Complete | — |
-| Website floating widget | ✅ Complete | — |
-| Consumer App (`/app/support`) | ✅ Complete | — |
-| Business App (`/biz/support`) | ✅ Complete | — |
-| Banking App (`/bank/:id/more/support`) | ✅ Complete | — |
-| Admin dashboard (`/admin/support-chat`) | ⚠️ Partial | 4 gaps |
-| In-app notifications | ❌ Missing | No trigger on new message |
-| Push notifications (OneSignal) | ❌ Missing | Not wired |
-| Email notifications | ❌ Missing | No managed email type |
-| Admin Department CRUD | ❌ Missing | View-only, no create/edit/delete |
-| Admin Agent Management | ❌ Missing | View-only, no add/remove agents |
-| Admin Assign Agent to Conversation | ❌ Missing | No assignment UI |
-| Banking App "More" nav link | ❌ Missing | No "Support" item in `BankMore.tsx` |
+Three deliverables: (1) Harden the Postman collection edge function with per-request test scripts and chained variable extraction for sandbox + prod environments, (2) Create a comprehensive Playwright E2E UI test plan document covering all dashboard surfaces, (3) Upgrade all empty states across merchant/admin/developer/institution pages to include actionable CTAs.
 
 ---
 
-## Gaps & Fix Plan
+## Deliverable 1 — Postman Collection Hardening
 
-### 1. Admin Department CRUD (HIGH)
+**Current state**: The `postman-collection` edge function already has auto-auth pre-request scripts, sandbox/prod environments, and collection variables. It has basic `testStatus`/`testJson`/`testHasField` helpers but they are not attached to individual requests.
 
-**Gap:** `AdminSupportChat.tsx` Departments tab is read-only — just lists departments. No forms to create, edit, toggle active, or delete departments.
+**Changes to `supabase/functions/postman-collection/index.ts**`:
 
-**Fix:** Add inline "Add Department" form (name, description, icon dropdown, display_order) and edit/delete buttons per row. Use direct Supabase inserts/updates since admin RLS already permits full access.
+- Add `event` (test scripts) to every request item using the existing helpers
+- Add variable chaining: requests that create resources save IDs into collection variables (e.g., charge creation saves `charge_id`, payout saves `payout_id`)
+- Add folder-level test events for common assertions (JSON body, status codes)
+- Add per-folder pre-request scripts for auth-gated folders
+- Add new Postman collection variables: `idempotency_key`, `webhook_url`, `subscription_id`, `payment_link_id`, `virtual_account_id`, `subaccount_id`, `customer_id`
+- Enhance environment definitions with `merchant_api_key`, `webhook_secret`, `idempotency_key_prefix`
+- Add a "Smoke Test" folder with a chained sequence: health → token → create charge → verify charge → refund → verify refund
 
-### 2. Admin Agent Management (HIGH)
-
-**Gap:** Agents tab only lists existing agents with no way to add, remove, or reassign agents to departments.
-
-**Fix:** Add "Add Agent" dialog with user search (from `profiles` table), department selector, and max concurrent chats input. Add remove button per agent. Add status toggle (online/offline/busy).
-
-### 3. Admin Assign Agent to Conversation (HIGH)
-
-**Gap:** Conversation action bar has priority change and resolve/close but no agent assignment dropdown.
-
-**Fix:** Add agent selector dropdown in the conversation action bar. On select, update `assigned_agent_id` and set status to `assigned`. Show assigned agent name in the conversation list item.
-
-### 4. In-App Notification on New Message (HIGH)
-
-**Gap:** No `app_notifications` record is created when an agent sends a message. Users won't know they have a reply unless they check the chat.
-
-**Fix:** Add a DB trigger `notify_support_new_message()` on `support_messages` INSERT. When `sender_type = 'agent'`, insert into `app_notifications` for the conversation's `user_id` with title "New Support Reply" and message preview.
-
-### 5. Push Notification via OneSignal (MEDIUM)
-
-**Gap:** OneSignal is integrated (`useOneSignal.ts`) but not wired to support chat events.
-
-**Fix:** In the same DB trigger (or a separate edge function call from the admin send flow), fire a push notification via OneSignal's REST API targeting the user's `user_id` tag. This can be done in the `useSendMessage` hook when `senderType === 'agent'` by invoking a lightweight edge function.
-
-### 6. Email Notification on New Conversation & Agent Reply (MEDIUM)
-
-**Gap:** No email is sent when a new support conversation is created or when an agent replies.
-
-**Fix:** Add two `managed_email_types` entries: `support_new_conversation` and `support_agent_reply`. Fire via `managed-send-email` from the DB trigger or edge function. Include conversation subject, message preview, and a link to the app support page.
-
-### 7. Banking App "More" Page — Missing Support Link (LOW)
-
-**Gap:** `BankMore.tsx` `accountItems` array has "Help & Support" pointing to `more/help` (generic help page), but no direct link to the live chat at `more/support`.
-
-**Fix:** Add a "Live Chat" item to `accountItems` with `MessageCircle` icon pointing to `more/support`, or update the existing "Help & Support" entry to point to the support chat.
-
-### 8. File Upload — Missing Image Preview in ChatInput (LOW)
-
-**Gap:** When a user selects an image file, the preview bar shows filename + icon but not an actual image thumbnail preview.
-
-**Fix:** Add a small `<img>` thumbnail preview when `file.type.startsWith('image/')` using `URL.createObjectURL(file)`.
+**Modify the `r()` helper** to accept an optional `tests` array and `postTests` script block, automatically injecting `event` into each item.
 
 ---
 
-## Files to Modify/Create
+## Deliverable 2 — Playwright E2E UI Test Plan
 
-| File | Action |
-|---|---|
-| `src/pages/admin/AdminSupportChat.tsx` | **Modify** — Add dept CRUD forms, agent add/remove, conversation assignment dropdown |
-| `src/pages/banking-app/BankMore.tsx` | **Modify** — Add "Live Chat" item to accountItems |
-| `src/components/support/ChatInput.tsx` | **Modify** — Add image thumbnail preview |
-| `src/hooks/useSupportChat.ts` | **Modify** — Fire in-app notification + push notification on agent reply |
-| **Migration** | **Create** — Add `notify_support_new_message()` trigger on `support_messages` for in-app notifications |
-| **Migration** | **Create** — Insert `support_new_conversation` and `support_agent_reply` into `managed_email_types` |
+**Current state**: No Playwright setup exists. The project uses Vitest for unit tests.
 
-## Scope
+**Create `docs/e2e/playwright-test-plan.md**` — a comprehensive test plan document covering:
 
-7 modifications across 5 existing files + 1 migration. No new edge functions required — the existing `managed-send-email` handles email delivery, and in-app notifications use the existing `app_notifications` table with a DB trigger.
+### Admin Dashboard (70 pages)
 
+- Dashboard loads with stats, pending actions visible
+- Each sidebar nav item navigates correctly
+- KYC/KYB review queues: filter, approve, reject actions
+- Payment Command Center: live transaction stream renders
+- Merchant Management: list, search, view detail, approve/suspend
+- Webhook Management: list, delivery logs visible
+- Settlement Approval: list, approve/reject
+- Dispute Management: list, respond with evidence
+- Notifications: bell icon shows count, dropdown lists notifications, mark-as-read
+
+### Merchant Dashboard (43 pages)
+
+- Dashboard loads with revenue stats, recent transactions
+- Transactions: list, filter, search, pagination, detail sheet
+- Settlements: list, filter, export CSV
+- Payouts: list, request withdrawal flow, PIN confirmation
+- Refunds: list, filter
+- Disputes: list, respond
+- API Keys: create, rotate, revoke, secret shown once
+- Webhooks: register endpoint, test event, delivery logs
+- Settlement Accounts: add account, edit, delete
+- KYB: submit form, status tracking
+- Storefront: create, publish/unpublish
+- Subscriptions: list, cancel
+- Payment Links: create, copy link, view stats
+- Branding: upload logo, set colors
+- Analytics: charts render with data
+
+### Developer Portal (80+ pages)
+
+- Home page loads with quickstart cards
+- API Explorer: spec loads, endpoints expandable, "Try It" works
+- API Keys: create sandbox key, copy
+- Sandbox: data generator works
+- Webhook Testing: simulate event, verify delivery
+- Each guide page: renders content, code blocks copyable
+- Changelog: entries display with dates
+- Status Page: services listed with health indicators
+
+### Institution Dashboard
+
+- Connector pages: overview, uploads, mappings, status, reconciliation
+- Beneficiaries: list, add, edit
+- Settlement: list, details, export
+
+### Cross-cutting
+
+- Empty states: every page with no data shows CTA button
+- Notifications: real-time delivery, dismiss, mark-read
+- Data consistency: API response matches UI display
+- Responsive: key pages work at 375px mobile width
+- Auth guard: unauthenticated access redirects to login
+
+---
+
+## Deliverable 3 — Empty State CTAs
+
+**Current state**: The `EmptyState` component supports an `action` prop `{ label, onClick }` but most usages across merchant/admin/institution pages do NOT pass it. Empty states show icon + title + description only — no actionable button.
+
+**Changes**:
+
+### Merchant pages (6 files):
+
+
+| Page                        | Current                  | CTA to add                                                 |
+| --------------------------- | ------------------------ | ---------------------------------------------------------- |
+| `MerchantTransactions.tsx`  | "No transactions found"  | "Create Test Charge" → navigate to dashboard               |
+| `MerchantSettlements.tsx`   | "No settlements found"   | "View Transactions" → navigate to transactions             |
+| `MerchantRefunds.tsx`       | "No refunds found"       | "View Transactions" → navigate to transactions             |
+| `MerchantPayouts.tsx`       | "No payouts found"       | "Add Settlement Account" → navigate to settlement accounts |
+| `MerchantSubscriptions.tsx` | "No subscriptions found" | "Create Plan" → open create plan dialog                    |
+| `MerchantEscrow.tsx`        | "No escrow wallets"      | "Create Escrow Wallet" → trigger create action             |
+
+
+### Admin pages (inline `EmptyState` components in `AdminInterbankPayments.tsx`, `AdminBankDirectory.tsx`):
+
+- Add CTA buttons to inline empty states where applicable (e.g., "Add Participant", "Register Bank", "Register Connector")
+
+### Institution connector pages (6 files using `ConnectorEmptyState`):
+
+- The component already supports `actionLabel` + `onAction` props
+- Verify all usages pass these props; add where missing
+
+### PWA pages (`Loans.tsx`, `Savings.tsx`):
+
+- Add "Apply for a Loan" and "Open Savings Account" CTAs to their empty states (these use raw CSS classes, not the `EmptyState` component — will use the component or add inline buttons)
+
+---
+
+## Technical Approach
+
+### Files to modify:
+
+1. `supabase/functions/postman-collection/index.ts` — Add test scripts + variable chaining to all 165+ requests
+2. `docs/e2e/playwright-test-plan.md` — New comprehensive test plan
+3. `src/pages/merchant/MerchantTransactions.tsx` — Add `action` prop to EmptyState
+4. `src/pages/merchant/MerchantSettlements.tsx` — Add `action` prop
+5. `src/pages/merchant/MerchantRefunds.tsx` — Add `action` prop
+6. `src/pages/merchant/MerchantPayouts.tsx` — Add `action` prop
+7. `src/pages/merchant/MerchantSubscriptions.tsx` — Add `action` prop
+8. `src/pages/merchant/MerchantEscrow.tsx` — Add `action` prop
+9. `src/pages/admin/AdminInterbankPayments.tsx` — Add CTAs to inline empty states
+10. `src/pages/admin/AdminBankDirectory.tsx` — Add CTAs to inline empty states
+11. `src/pages/Loans.tsx` — Add CTA buttons
+12. `src/pages/Savings.tsx` — Add CTA buttons
+13. Institution connector pages — Verify/add `actionLabel` props
+14. `CHANGELOG.md` — Update
+
+### Deployment:
+
+- Redeploy `postman-collection` edge function
+- All frontend changes are additive (no breaking changes)
+
+&nbsp;
+
+ADD-ON DELIVERABLES (MANDATORY):
+
+1) Postman: create 2 environments (Sandbox + Production), implement collection pre-request scripts for idempotency + auth, add tests, and provide 6 runnable E2E flows:
+
+   - Merchant KYB lifecycle
+
+   - Merchant key rotation
+
+   - Merchant webhooks + delivery logs
+
+   - Charge -> provider webhook -> final state
+
+   - Refund -> webhook -> final
+
+   - Dedupe test (same webhook twice)
+
+2) Playwright: implement 3 role-based projects (admin/merchant/developer), create route inventory, run “Page Integrity” and “Form Integrity” on every page, plus “Cross-role Data Consistency” and “Payments Reliability” suites, and publish HTML reports.
+
+3) Publish new reports:
+
+   - POSTMAN_E2E_[REPORT.md](http://REPORT.md)
+
+   - UI_E2E_[REPORT.md](http://REPORT.md)
+
+   - DOCS_EXPLORER_STABILITY_[REPORT.md](http://REPORT.md)
