@@ -48,6 +48,7 @@ const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PendingApproval = lazy(() => import("./pages/PendingApproval"));
 const Apps = lazy(() => import("./pages/Apps"));
 const PublicStorefront = lazy(() => import("./pages/PublicStorefront"));
