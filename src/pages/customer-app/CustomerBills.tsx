@@ -178,15 +178,19 @@ const CustomerBills: React.FC = () => {
                   className="h-11 rounded-2xl border-border/50 bg-muted/40 pl-10 text-sm shadow-sm focus-visible:ring-primary/30" />
               </motion.div>
 
-              {/* Category Grid */}
-              <motion.div variants={stagger} initial="initial" animate="animate" className="grid grid-cols-3 gap-3">
+              {/* Category List — full-width colored cards */}
+              <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-3">
                 {filteredCategories.map(cat => (
-                  <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.93 }} onClick={() => setSelectedCategory(cat)}
-                    className="group flex flex-col items-center gap-2.5 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40 transition-shadow active:shadow-md">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${cat.iconBg} text-white shadow-md`}>
+                  <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.97 }} onClick={() => setSelectedCategory(cat)}
+                    className={`flex items-center gap-3.5 rounded-2xl ${cardColors[cat.id]} p-4 shadow-sm transition-shadow active:shadow-md`}>
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${cat.iconBg} text-white shadow-sm`}>
                       {cat.icon}
                     </div>
-                    <span className="text-xs font-semibold text-foreground">{cat.name}</span>
+                    <div className="flex flex-1 flex-col items-start">
+                      <span className="text-sm font-bold text-foreground">{cat.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{cat.billers.length} billers</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/50" strokeWidth={1.5} />
                   </motion.button>
                 ))}
               </motion.div>
