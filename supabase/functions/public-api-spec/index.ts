@@ -1120,7 +1120,7 @@ paths['/v1/savings/accounts/{accountId}/withdraw'] = {
     tags: ['Savings'], summary: 'Withdraw from savings', operationId: 'savingsWithdraw', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 25000 }, destination: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Withdrawal recorded' }, ...errorResponses },
+    responses: { '200': successResult('Withdrawal recorded'), ...errorResponses },
   },
 };
 
