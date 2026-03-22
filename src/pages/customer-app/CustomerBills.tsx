@@ -16,18 +16,17 @@ interface BillCategory {
   id: string;
   name: string;
   icon: React.ReactNode;
-  gradient: string;
   iconBg: string;
   billers: string[];
 }
 
 const categories: BillCategory[] = [
-  { id: 'electricity', name: 'Electricity', icon: <Zap className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-amber-400 to-orange-500', iconBg: 'bg-amber-500', billers: ['ENEO', 'AES SONEL', 'PowerCam'] },
-  { id: 'water', name: 'Water', icon: <Droplets className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-sky-400 to-blue-500', iconBg: 'bg-sky-500', billers: ['CamWater', 'SNEC'] },
-  { id: 'internet', name: 'Internet', icon: <Wifi className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-emerald-400 to-teal-500', iconBg: 'bg-emerald-500', billers: ['Camtel', 'MTN Fiber', 'Orange Fiber', 'YooMee'] },
-  { id: 'tv', name: 'TV', icon: <Tv className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-violet-400 to-purple-500', iconBg: 'bg-violet-500', billers: ['Canal+', 'DStv', 'StarTimes'] },
-  { id: 'phone', name: 'Phone', icon: <Phone className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-rose-400 to-pink-500', iconBg: 'bg-rose-500', billers: ['MTN', 'Orange', 'Nexttel'] },
-  { id: 'insurance', name: 'Insurance', icon: <Shield className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-orange-400 to-red-500', iconBg: 'bg-orange-500', billers: ['Activa', 'Chanas', 'SAAR'] },
+  { id: 'electricity', name: 'Electricity', icon: <Zap className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-amber-500', billers: ['ENEO', 'AES SONEL', 'PowerCam'] },
+  { id: 'water', name: 'Water', icon: <Droplets className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-sky-500', billers: ['CamWater', 'SNEC'] },
+  { id: 'internet', name: 'Internet', icon: <Wifi className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-emerald-500', billers: ['Camtel', 'MTN Fiber', 'Orange Fiber', 'YooMee'] },
+  { id: 'tv', name: 'TV', icon: <Tv className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-violet-500', billers: ['Canal+', 'DStv', 'StarTimes'] },
+  { id: 'phone', name: 'Phone', icon: <Phone className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-rose-500', billers: ['MTN', 'Orange', 'Nexttel'] },
+  { id: 'insurance', name: 'Insurance', icon: <Shield className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-orange-500', billers: ['Activa', 'Chanas', 'SAAR'] },
 ];
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
@@ -128,18 +127,18 @@ const CustomerBills: React.FC = () => {
   return (
     <div className="flex flex-col gap-0 pb-28">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-5 pb-7 pt-5">
+      <div className="relative overflow-hidden bg-primary px-5 pb-7 pt-5">
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5" />
         <div className="absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-white/5" />
         <div className="relative z-10 flex items-center gap-3">
           <motion.button whileTap={{ scale: 0.9 }} onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-            <ArrowLeft className="h-5 w-5 text-white" strokeWidth={1.5} />
+            <ArrowLeft className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
           </motion.button>
           <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-primary-foreground">
               {selectedBiller ? selectedBiller : selectedCategory ? selectedCategory.name : 'Pay Bills'}
             </h1>
-            <p className="text-xs text-white/70">
+            <p className="text-xs text-primary-foreground/70">
               {selectedBiller ? 'Enter payment details' : selectedCategory ? 'Select a biller' : 'Quick & secure bill payments'}
             </p>
           </div>
@@ -149,11 +148,11 @@ const CustomerBills: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="relative z-10 mt-4 flex items-center gap-2.5 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
-            <CreditCard className="h-4.5 w-4.5 text-white" strokeWidth={1.5} />
+            <CreditCard className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-white/60">Available Balance</span>
-            <span className="text-base font-bold text-white">{walletBalance.toLocaleString()} <span className="text-xs font-normal text-white/70">XAF</span></span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/60">Available Balance</span>
+            <span className="text-base font-bold text-primary-foreground">{walletBalance.toLocaleString()} <span className="text-xs font-normal text-primary-foreground/70">XAF</span></span>
           </div>
         </motion.div>
       </div>
@@ -175,7 +174,7 @@ const CustomerBills: React.FC = () => {
                 {filteredCategories.map(cat => (
                   <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.93 }} onClick={() => setSelectedCategory(cat)}
                     className="group flex flex-col items-center gap-2.5 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40 transition-shadow active:shadow-md">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${cat.gradient} text-white shadow-md`}>
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${cat.iconBg} text-white shadow-md`}>
                       {cat.icon}
                     </div>
                     <span className="text-xs font-semibold text-foreground">{cat.name}</span>
@@ -207,7 +206,7 @@ const CustomerBills: React.FC = () => {
                       return (
                         <motion.div key={bill.id} variants={fadeUp}
                           className="flex items-center gap-3 rounded-2xl bg-card p-3.5 shadow-sm ring-1 ring-border/40">
-                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${cat?.gradient || 'from-gray-400 to-gray-500'} text-white shadow-sm`}>
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${cat?.iconBg || 'bg-muted-foreground'} text-white shadow-sm`}>
                             {cat?.icon || <Receipt className="h-4 w-4" strokeWidth={1.5} />}
                           </div>
                           <div className="flex min-w-0 flex-1 flex-col">
@@ -239,7 +238,7 @@ const CustomerBills: React.FC = () => {
                   <motion.button key={biller} variants={fadeUp} whileTap={{ scale: 0.97 }} onClick={() => setSelectedBiller(biller)}
                     className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40 transition-shadow active:shadow-md">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${selectedCategory.gradient} text-white shadow-sm`}>
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${selectedCategory.iconBg} text-white shadow-sm`}>
                         {selectedCategory.icon}
                       </div>
                       <div className="flex flex-col items-start">
@@ -260,10 +259,10 @@ const CustomerBills: React.FC = () => {
               transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }} className="flex flex-col gap-5">
               {paid ? (
                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  className="flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-br from-primary/5 to-primary/10 py-12 ring-1 ring-primary/20">
+                  className="flex flex-col items-center gap-4 rounded-3xl bg-primary/5 py-12 ring-1 ring-primary/20">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.15 }}
-                    className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-                    <CheckCircle2 className="h-8 w-8 text-white" strokeWidth={1.5} />
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-primary shadow-lg">
+                    <CheckCircle2 className="h-8 w-8 text-primary-foreground" strokeWidth={1.5} />
                   </motion.div>
                   <div className="flex flex-col items-center gap-1">
                     <p className="text-base font-bold text-foreground">Payment Successful</p>
@@ -275,7 +274,7 @@ const CustomerBills: React.FC = () => {
                   {/* Biller Info Card */}
                   <motion.div variants={fadeUp} initial="initial" animate="animate"
                     className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${selectedCategory?.gradient} text-white shadow-md`}>
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${selectedCategory?.iconBg} text-white shadow-md`}>
                       {selectedCategory?.icon}
                     </div>
                     <div className="flex flex-col">
@@ -313,7 +312,7 @@ const CustomerBills: React.FC = () => {
 
                   <motion.div variants={fadeUp} initial="initial" animate="animate" transition={{ delay: 0.16 }}>
                     <Button onClick={handlePayRequest} disabled={paying || !accountNumber || amountNum <= 0}
-                      className="h-13 w-full rounded-2xl bg-gradient-to-r from-primary to-primary/85 text-base font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                      className="h-13 w-full rounded-2xl bg-primary text-primary-foreground text-base font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
                       {paying ? (
                         <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />Processing…</span>
                       ) : (
