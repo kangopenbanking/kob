@@ -8,6 +8,8 @@ const r = (name: string, method: string, path: string, opts?: {
   query?: { key: string; value: string }[];
   desc?: string;
   headers?: { key: string; value: string }[];
+  tests?: string[];
+  saveVar?: { field: string; varName: string };
 }) => {
   const item: Record<string, unknown> = {
     name,
@@ -41,6 +43,22 @@ const r = (name: string, method: string, path: string, opts?: {
     };
   }
 
+  // Auto-inject test scripts
+  const testLines: string[] = [];
+  const expectedStatus = method === 'POST' ? 201 : method === 'DELETE' ? 204 : 200;
+  testLines.push(`pm.test("Status is 2xx", function () { pm.expect(pm.response.code).to.be.within(200, 299); });`);
+  if (method !== 'DELETE') {
+    testLines.push(`pm.test("Body is JSON", function () { pm.response.to.be.json; });`);
+  }
+  if (opts?.tests) testLines.push(...opts.tests);
+  if (opts?.saveVar) {
+    testLines.push(`var d = pm.response.json(); if (d.${opts.saveVar.field}) { pm.collectionVariables.set('${opts.saveVar.varName}', d.${opts.saveVar.field}); }`);
+  }
+
+  item.event = [
+    { listen: 'test', script: { type: 'text/javascript', exec: testLines } },
+  ];
+
   return item;
 };
 
@@ -66,6 +84,9 @@ Deno.serve(async (req) => {
         { key: 'client_id', value: 'YOUR_SANDBOX_CLIENT_ID', enabled: true },
         { key: 'client_secret', value: 'YOUR_SANDBOX_CLIENT_SECRET', enabled: true },
         { key: 'api_key', value: 'YOUR_SANDBOX_API_KEY', enabled: true },
+        { key: 'merchant_api_key', value: '', enabled: true },
+        { key: 'webhook_secret', value: '', enabled: true },
+        { key: 'idempotency_key_prefix', value: 'test_', enabled: true },
       ],
     },
     {
@@ -77,6 +98,9 @@ Deno.serve(async (req) => {
         { key: 'client_id', value: 'YOUR_PROD_CLIENT_ID', enabled: true },
         { key: 'client_secret', value: 'YOUR_PROD_CLIENT_SECRET', enabled: true },
         { key: 'api_key', value: 'YOUR_PROD_API_KEY', enabled: true },
+        { key: 'merchant_api_key', value: '', enabled: true },
+        { key: 'webhook_secret', value: '', enabled: true },
+        { key: 'idempotency_key_prefix', value: 'live_', enabled: true },
       ],
     },
   ];
@@ -145,6 +169,18 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
       { key: 'intent_id', value: 'INTENT_UUID', type: 'string' },
       { key: 'client_id', value: 'YOUR_CLIENT_ID', type: 'string' },
       { key: 'client_secret', value: 'YOUR_CLIENT_SECRET', type: 'string' },
+      { key: 'idempotency_key', value: '', type: 'string' },
+      { key: 'webhook_url', value: 'https://yourapp.com/webhooks/kob', type: 'string' },
+      { key: 'subscription_id', value: 'SUB_UUID', type: 'string' },
+      { key: 'payment_link_id', value: 'PL_UUID', type: 'string' },
+      { key: 'virtual_account_id', value: 'VA_UUID', type: 'string' },
+      { key: 'subaccount_id', value: 'SA_UUID', type: 'string' },
+      { key: 'customer_id', value: 'CUST_UUID', type: 'string' },
+      { key: 'token_id', value: 'TOKEN_UUID', type: 'string' },
+      { key: 'plan_id', value: 'PLAN_UUID', type: 'string' },
+      { key: 'reconciliation_run_id', value: 'RECON_UUID', type: 'string' },
+      { key: 'mismatch_id', value: 'MISMATCH_UUID', type: 'string' },
+      { key: 'escrow_id', value: 'ESCROW_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
@@ -757,6 +793,8 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           r('Create Charge', 'POST', '/v1/gateway/charges', {
             body: { merchant_id: '{{merchant_id}}', amount: 5000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237677123456', tx_ref: 'order_001' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'charge_id' },
+            tests: [`pm.test("Has charge id", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
           }),
           r('Get Charge', 'GET', '/v1/gateway/charges/{{charge_id}}'),
           r('List Charges', 'GET', '/v1/gateway/charges', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
@@ -766,12 +804,14 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           r('Create Refund', 'POST', '/v1/gateway/refunds', {
             body: { charge_id: '{{charge_id}}', amount: 5000, reason: 'Customer request' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'refund_id' },
           }),
           r('Get Refund', 'GET', '/v1/gateway/refunds/{{refund_id}}'),
           r('List Refunds', 'GET', '/v1/gateway/refunds', { query: [{ key: 'limit', value: '50' }] }),
           r('Create Payout', 'POST', '/v1/gateway/payouts', {
             body: { merchant_id: '{{merchant_id}}', amount: 10000, currency: 'XAF', channel: 'mobile_money', beneficiary_phone: '237677123456', beneficiary_name: 'Jean Dupont', tx_ref: 'pay_001' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'payout_id' },
           }),
           r('Get Payout', 'GET', '/v1/gateway/payouts/{{payout_id}}'),
           r('List Payouts', 'GET', '/v1/gateway/payouts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
@@ -1280,6 +1320,47 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           r('Bank Connector Callback', 'POST', '/v1/pay-by-bank/callback', {
             body: { intent_id: '{{intent_id}}', status: 'completed' },
             desc: 'Internal callback from bank connector confirming payment execution',
+          }),
+        ],
+      },
+
+      // ── Smoke Test (E2E Chained Flow) ───────────────────────────────
+      {
+        name: 'Smoke Test (E2E)',
+        description: 'Chained sequence: health → auth → create charge → verify → refund → verify refund. Run in order.',
+        item: [
+          r('1. Health Check', 'GET', '/v1/health', {
+            tests: [`pm.test("API is healthy", function () { pm.response.to.have.status(200); });`],
+          }),
+          r('2. Get Auth Token', 'POST', '/v1/oauth/token', {
+            bodyMode: 'urlencoded',
+            urlencoded: [
+              { key: 'grant_type', value: 'client_credentials' },
+              { key: 'client_id', value: '{{client_id}}' },
+              { key: 'client_secret', value: '{{client_secret}}' },
+              { key: 'scope', value: 'accounts payments' },
+            ],
+            tests: [
+              `pm.test("Got access_token", function () { var d = pm.response.json(); pm.expect(d).to.have.property('access_token'); pm.collectionVariables.set('access_token', d.access_token); });`,
+            ],
+          }),
+          r('3. Create Charge', 'POST', '/v1/gateway/charges', {
+            body: { merchant_id: '{{merchant_id}}', amount: 1000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237650000000', tx_ref: 'smoke_{{$timestamp}}' },
+            headers: [{ key: 'Idempotency-Key', value: 'smoke_charge_{{$timestamp}}' }],
+            saveVar: { field: 'id', varName: 'charge_id' },
+            tests: [`pm.test("Charge created with id", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
+          }),
+          r('4. Get Charge', 'GET', '/v1/gateway/charges/{{charge_id}}', {
+            tests: [`pm.test("Charge retrieved", function () { pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('charge_id')); });`],
+          }),
+          r('5. Create Refund', 'POST', '/v1/gateway/refunds', {
+            body: { charge_id: '{{charge_id}}', amount: 1000, reason: 'Smoke test refund' },
+            headers: [{ key: 'Idempotency-Key', value: 'smoke_refund_{{$timestamp}}' }],
+            saveVar: { field: 'id', varName: 'refund_id' },
+            tests: [`pm.test("Refund created", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
+          }),
+          r('6. Get Refund', 'GET', '/v1/gateway/refunds/{{refund_id}}', {
+            tests: [`pm.test("Refund retrieved", function () { pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('refund_id')); });`],
           }),
         ],
       },

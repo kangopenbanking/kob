@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wallet, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 import LoanProductCard from "@/components/loans/LoanProductCard";
@@ -159,6 +160,9 @@ export default function Loans() {
               <CardContent className="empty-state">
                 <div className="empty-state-icon"><Wallet className="h-6 w-6 text-muted-foreground" /></div>
                 <p className="text-sm text-muted-foreground">You don't have any active loans.</p>
+                <Button variant="outline" size="sm" className="mt-3 rounded-full" onClick={() => document.querySelector<HTMLButtonElement>('[value="products"]')?.click()}>
+                  Browse Loan Products
+                </Button>
               </CardContent>
             </Card>
           )}

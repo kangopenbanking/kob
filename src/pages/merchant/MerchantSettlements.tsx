@@ -78,7 +78,7 @@ export default function MerchantSettlements() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <EmptyState icon={<Landmark className="h-6 w-6 text-muted-foreground" />} title="No settlements found" description="Settlements are created automatically from successful charges" />
+            <EmptyState icon={<Landmark className="h-6 w-6 text-muted-foreground" />} title="No settlements found" description="Settlements are created automatically from successful charges" action={{ label: "View Transactions", onClick: () => window.location.href = "/merchant/transactions" }} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

@@ -146,7 +146,7 @@ export default function MerchantEscrow() {
       <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
         {escrows.length === 0 ? (
           <Card><CardContent className="py-12">
-            <EmptyState icon={<Wallet className="h-6 w-6 text-muted-foreground" />} title="No escrow wallets" description="Create an escrow wallet to securely hold funds for marketplace or service transactions." />
+            <EmptyState icon={<Wallet className="h-6 w-6 text-muted-foreground" />} title="No escrow wallets" description="Create an escrow wallet to securely hold funds for marketplace or service transactions." action={{ label: "Create Escrow Wallet", onClick: () => setCreateOpen(true) }} />
           </CardContent></Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

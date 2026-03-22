@@ -146,7 +146,7 @@ export default function MerchantTransactions() {
         <Card className="border-border/60">
           <CardContent className="p-0">
             {filtered.length === 0 ? (
-              <EmptyState icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />} title="No transactions found" description="Adjust your filters or date range" />
+              <EmptyState icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />} title="No transactions found" description="Adjust your filters or date range, or create a test charge to get started." action={{ label: "Create Test Charge", onClick: () => window.location.href = "/merchant" }} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

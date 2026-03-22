@@ -204,7 +204,7 @@ export default function MerchantPayouts() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <EmptyState icon={<Banknote className="h-6 w-6 text-muted-foreground" />} title="No payouts found" description="Payouts will appear here once settlements are processed" />
+            <EmptyState icon={<Banknote className="h-6 w-6 text-muted-foreground" />} title="No payouts found" description="Payouts will appear here once settlements are processed" action={{ label: "Add Settlement Account", onClick: () => window.location.href = "/merchant/settlement-accounts" }} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

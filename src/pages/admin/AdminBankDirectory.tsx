@@ -95,7 +95,7 @@ function TableSkeleton({ cols, rows = 5 }: { cols: number; rows?: number }) {
   );
 }
 
-function EmptyState({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
+function EmptyState({ icon: Icon, title, description, actionLabel, onAction }: { icon: any; title: string; description: string; actionLabel?: string; onAction?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="rounded-2xl bg-muted/50 p-4 mb-4">
@@ -103,6 +103,11 @@ function EmptyState({ icon: Icon, title, description }: { icon: any; title: stri
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
       <p className="text-sm text-muted-foreground max-w-sm">{description}</p>
+      {actionLabel && onAction && (
+        <Button size="sm" className="mt-4 gap-2" onClick={onAction}>
+          <Plus className="h-4 w-4" />{actionLabel}
+        </Button>
+      )}
     </div>
   );
 }
