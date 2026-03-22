@@ -1015,15 +1015,15 @@ paths['/v1/credit/score'] = {
 };
 
 paths['/v1/credit/simulate'] = {
-  post: { tags: ['Credit Scoring'], summary: 'Simulate score impact', operationId: 'creditScoreSimulate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { action_type: { type: 'string', enum: ['pay_off_debt', 'new_credit', 'late_payment'] }, amount: { type: 'number', example: 100000 } } } } } }, responses: { '200': { description: 'Simulation result' }, ...errorResponses } },
+  post: { tags: ['Credit Scoring'], summary: 'Simulate score impact', operationId: 'creditScoreSimulate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { action_type: { type: 'string', enum: ['pay_off_debt', 'new_credit', 'late_payment'] }, amount: { type: 'number', example: 100000 } } } } } }, responses: { '200': { description: 'Simulation result', content: { 'application/json': { schema: { type: 'object', properties: { current_score: { type: 'integer' }, simulated_score: { type: 'integer' }, impact: { type: 'integer' }, grade_change: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/credit/tips'] = {
-  get: { tags: ['Credit Scoring'], summary: 'Get improvement tips', operationId: 'creditScoreTips', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Tips list' }, ...errorResponses } },
+  get: { tags: ['Credit Scoring'], summary: 'Get improvement tips', operationId: 'creditScoreTips', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Tips list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, description: { type: 'string' }, impact: { type: 'string', enum: ['high', 'medium', 'low'] } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/credit/report'] = {
-  post: { tags: ['Credit Scoring'], summary: 'Generate credit report', operationId: 'creditReportGenerate', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Report generated' }, ...errorResponses } },
+  post: { tags: ['Credit Scoring'], summary: 'Generate credit report', operationId: 'creditReportGenerate', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Report generated', content: { 'application/json': { schema: { type: 'object', properties: { report_id: { type: 'string', format: 'uuid' }, score: { $ref: '#/components/schemas/CreditScore' }, generated_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
