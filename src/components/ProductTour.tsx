@@ -453,7 +453,7 @@ export const ProductTour = () => {
                 size="sm"
                 onClick={prev}
                 disabled={current === 0}
-                className="rounded-full h-9 w-9 p-0"
+                className="rounded-full h-9 w-9 p-0 border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
