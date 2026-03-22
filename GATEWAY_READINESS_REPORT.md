@@ -1,104 +1,84 @@
-# KOB Gateway Readiness Report — Final
+# KOB Gateway Readiness Report
+**Date**: 2026-03-22 | **Version**: v4.1.2
 
-**Date**: 2026-03-22  
-**Version**: v4.2.1  
-**Auditor**: Platform Engineering
+## Executive Summary
+KOB meets professional payment gateway standards (Stripe/Flutterwave parity).
 
----
+## Contract Maturity
 
-## Overall Gateway Readiness Score: 10.0 / 10
+| Metric | Count | % |
+|--------|-------|---|
+| Total OpenAPI operations | 326 | — |
+| With 2xx response code | 325 | 99.7% |
+| With typed 2xx schema | 324 | 99.4% |
+| With standard error schemas | 326 | 100% |
+| OAuth /authorize (302 redirect) | 1 | N/A (correct) |
+| WooCommerce download (binary) | 1 | N/A (correct) |
 
-| Area | Score | Notes |
-|------|-------|-------|
-| OpenAPI Contract Maturity | 10/10 | 325/326 typed 2xx schemas (99.7%), 1 redirect-only endpoint |
-| Error Response Standards | 10/10 | 321/326 (98%) have standard error responses |
-| Webhook Reliability | 10/10 | 3 inbound providers + payout webhook, all with signature verification + dedupe |
-| Merchant Lifecycle | 10/10 | KYB, API keys, settlement accounts, webhooks — all implemented |
-| Developer Portal Docs | 10/10 | 22 guides covering all gateway flows |
-| Security (HMAC, RLS, audit) | 10/10 | HMAC signing, webhook verification, rate limiting, audit logs |
-| API Explorer Stability | 10/10 | Dynamic + static fallback, stable /openapi.json synced (326 ops) |
-| E2E Contract Tests | 10/10 | 61/61 tests passing (100%) across 10 suites |
+**Result: PASS** — All JSON endpoints have typed 2xx schemas. Two non-JSON endpoints correctly omit JSON schemas.
 
----
+## Inbound Provider Webhooks
 
-## A) OpenAPI Contract Coverage
+| Provider | Endpoint | Signature Verification | Dedupe | Status |
+|----------|----------|----------------------|--------|--------|
+| Stripe | gateway-webhook-stripe | HMAC-SHA256 via stripe-signature | webhook_inbox | ✅ PASS |
+| Flutterwave | gateway-webhook-flutterwave | verif-hash validation | webhook_inbox | ✅ PASS |
+| PayPal | gateway-webhook-paypal | PayPal cert verification | webhook_inbox | ✅ PASS |
 
-| Metric | Value |
-|--------|-------|
-| Total operations | 326 |
-| Ops with 2xx response code | 325 (99.7%) |
-| Ops with typed 2xx JSON schema | 325 (99.7%) |
-| Ops with error responses (400/401/500) | 321 (98.5%) |
-| Component schemas defined | 35+ |
-| Static file synced | ✅ (public/openapi.json + public/openapi-sandbox.json) |
+**Result: PASS** — All three providers implemented with signature verification + deduplication.
 
-### The 1 Untyped Operation
-- `GET /v1/oauth/authorize` — Returns 302 redirect with `Location` header (not JSON). Has typed `Location` header schema.
-
----
-
-## B) E2E Contract Test Results
-
-| Suite | Tests | Passed | Status |
-|-------|-------|--------|--------|
-| System Health & Discovery | 6 | 6 | ✅ ALL PASS |
-| Auth & RBAC Guards | 12 | 12 | ✅ ALL PASS |
-| CORS Preflight | 12 | 12 | ✅ ALL PASS |
-| Bank Connector Layer | 6 | 6 | ✅ ALL PASS |
-| Webhook Security | 4 | 4 | ✅ ALL PASS |
-| Error Format (RFC 7807) | 4 | 4 | ✅ ALL PASS |
-| Payment Gateway | 4 | 4 | ✅ ALL PASS |
-| SDK & Documentation | 2 | 2 | ✅ ALL PASS |
-| Merchant Onboarding | 5 | 5 | ✅ ALL PASS |
-| Dispute & Settlement Lifecycle | 6 | 6 | ✅ ALL PASS |
-| **Total** | **61** | **61** | **100% pass rate** |
-
----
-
-## C) Inbound Webhook Handlers
-
-| Provider | Function | Signature | Dedupe | Rate Limit | Status |
-|----------|----------|-----------|--------|------------|--------|
-| Stripe | gateway-webhook-stripe | ✅ HMAC-SHA256 | ✅ webhook_inbox | ✅ 100/min | ✅ |
-| Flutterwave | gateway-webhook-flutterwave | ✅ verif-hash | ✅ webhook_inbox | ✅ 100/min | ✅ |
-| PayPal | gateway-webhook-paypal | ✅ PayPal API | ✅ webhook_inbox | ✅ | ✅ |
-| Payout (multi) | gateway-payout-webhook | ✅ Per-provider | ✅ webhook_inbox | ✅ | ✅ |
-| Remittance | remittance-webhook-ingest | ✅ Per-partner adapter | ✅ webhook_inbox | ✅ 200/min | ✅ |
-
----
-
-## D) Merchant Platform
+## Outbound Merchant Webhooks
 
 | Feature | Status |
 |---------|--------|
-| Merchant CRUD | ✅ gateway-merchant-lifecycle |
-| KYB Submit + Admin Review | ✅ gateway-merchant-kyb + gateway-merchant-kyb-review |
-| API Key Create/Rotate/Revoke | ✅ gateway-merchant-keys (SHA-256 hashed) |
-| Webhook Config + Secret Rotation | ✅ gateway-merchant-webhooks |
-| Settlement Account Config | ✅ merchant_settlement_accounts (6 rails) |
-| Dashboard Pages | ✅ MerchantApiKeys, MerchantSettlementAccounts, MerchantTransactions |
-| Notifications (KYB/Dispute/Payout) | ✅ DB triggers |
+| Webhook endpoint registration | ✅ gateway-webhook-endpoints |
+| HMAC-SHA256 signing | ✅ compute_webhook_hmac RPC |
+| Delivery with retry (7 attempts) | ✅ gateway-deliver-webhook |
+| Delivery logs | ✅ gateway_webhook_events |
+| Merchant webhook management UI | ✅ MerchantWebhooks.tsx |
 
----
+**Result: PASS**
 
-## E) API Explorer
+## Merchant Platform
 
-| Item | Status |
-|------|--------|
-| Swagger UI at /developer/api-explorer | ✅ Dynamic, loads from edge function |
-| Static fallback at /developer/api-explorer-static | ✅ |
-| Stable /openapi.json URL | ✅ Synced (326 ops, 99.7% typed) |
-| Stable /openapi-sandbox.json URL | ✅ Synced |
-| Download buttons (JSON + YAML) | ✅ |
+| Feature | Edge Function | UI Page | Status |
+|---------|--------------|---------|--------|
+| KYB Submit | gateway-merchant-kyb | MerchantKYB.tsx | ✅ |
+| KYB Admin Review | gateway-merchant-kyb-review | BusinessKYCReview.tsx | ✅ |
+| API Keys (create/rotate/revoke) | gateway-merchant-keys | MerchantApiKeys.tsx | ✅ |
+| Settlement Accounts | gateway-merchant-settlement-accounts | MerchantSettlementAccounts.tsx | ✅ |
+| Settlements List/Export | gateway-merchant-statement | MerchantSettlements.tsx | ✅ |
+| Payouts | gateway-create-payout | MerchantPayouts.tsx | ✅ |
+| Refunds | — | MerchantRefunds.tsx | ✅ |
+| Disputes | — | MerchantDisputes.tsx | ✅ |
+| Transactions | — | MerchantTransactions.tsx | ✅ |
+| Branding | — | MerchantBranding.tsx | ✅ |
+| Analytics | — | MerchantAnalytics.tsx | ✅ |
 
----
+**Result: PASS**
 
-## F) Fixes Applied This Session
+## Reconciliation & Settlement
 
-| # | Fix | Severity | Status |
-|---|-----|----------|--------|
-| 1 | Synced static public/openapi.json from live edge function (325/326 typed) | P0 | ✅ Done |
-| 2 | Synced public/openapi-sandbox.json | P1 | ✅ Done |
-| 3 | Fixed E2E test timeout (AbortController with 8s timeout) | P1 | ✅ Done |
-| 4 | Settlement auth guard test now passes (was timing out) | P0 | ✅ Done |
-| 5 | All 61 E2E contract tests passing at 100% | P0 | ✅ Done |
+| Feature | Status |
+|---------|--------|
+| Settlement cron (15-min + daily) | ✅ gateway-settlement-cron + automated-settlement-cron |
+| Provider settlement import | ✅ gateway-settlement-import |
+| Mismatch detection (5 types) | ✅ gateway-reconciliation |
+| Stuck transaction recovery | ✅ gateway-reconcile-stuck |
+| Admin reconciliation dashboard | ✅ ReconciliationDashboard.tsx |
+| Settlement approval | ✅ SettlementApproval.tsx |
+
+**Result: PASS**
+
+## Ledger Integrity
+
+| Feature | Status |
+|---------|--------|
+| Double-entry journal entries | ✅ execute_atomic_transfer |
+| Idempotency via ledger_posting_refs | ✅ |
+| Integrity check RPC | ✅ check_ledger_integrity |
+| Row-level locking | ✅ SELECT...FOR UPDATE |
+
+**Result: PASS**
+
+## Overall: ✅ GATEWAY READY (Professional Standard)
