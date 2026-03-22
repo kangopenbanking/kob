@@ -85,6 +85,7 @@ const ApiExplorerStatic = () => {
         <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer-static" />
       </Helmet>
     <div className="max-w-6xl mx-auto p-6 space-y-6" data-testid="api-explorer-static-container">
+      {/* SEO-friendly noscript fallback */}
       <noscript>
         <div>
           <h1>Kang Open Banking API Reference</h1>
