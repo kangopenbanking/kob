@@ -1,3 +1,4 @@
+// @ts-nocheck — Node imports resolved by vitest, not app tsconfig
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
