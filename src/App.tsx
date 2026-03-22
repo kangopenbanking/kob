@@ -154,6 +154,7 @@ const CodeExamples = lazy(() => import("./pages/developer/CodeExamples"));
 const SDKsPage = lazy(() => import("./pages/developer/SDKsPage"));
 const ApiTesting = lazy(() => import("./pages/developer/ApiTesting"));
 const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
+const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic"));
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
