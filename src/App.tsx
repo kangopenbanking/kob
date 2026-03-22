@@ -155,6 +155,8 @@ const SDKsPage = lazy(() => import("./pages/developer/SDKsPage"));
 const ApiTesting = lazy(() => import("./pages/developer/ApiTesting"));
 const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
 const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic"));
+const RedocPage = lazy(() => import("./pages/developer/RedocPage"));
+const DocsHealth = lazy(() => import("./pages/developer/DocsHealth"));
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
