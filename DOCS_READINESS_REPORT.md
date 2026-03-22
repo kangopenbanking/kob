@@ -1,7 +1,7 @@
 # KOB Docs Readiness Report — Final
 
 **Date**: 2026-03-22  
-**Version**: v4.1.1
+**Version**: v4.2.1
 
 ---
 
@@ -15,7 +15,7 @@
 | Payments | unified-payments.md, payment-methods.md, refunds.md, payouts.md, beneficiaries.md, disputes.md | ✅ |
 | Webhooks | webhooks-overview.md, merchant-webhooks.md, provider-webhooks.md | ✅ |
 | Reporting | settlements.md, transaction-reports.md, reconciliation.md | ✅ |
-| Sandbox | sandbox-overview.md, test-cards-and-momo.md, **test-webhooks.md** | ✅ |
+| Sandbox | sandbox-overview.md, test-cards-and-momo.md, test-webhooks.md | ✅ |
 | Reference | errors.md, idempotency.md, rate-limits.md, versioning-and-changelog.md | ✅ |
 | Merchants | merchant-onboarding.md | ✅ |
 | **Total Guides** | **22** | **✅ Complete** |
@@ -26,12 +26,13 @@
 
 | Asset | URL | Status |
 |-------|-----|--------|
-| OpenAPI JSON (static) | `/openapi.json` | ✅ Synced (326 ops) |
+| OpenAPI JSON (static) | `/openapi.json` | ✅ Synced (326 ops, 99.7% typed) |
+| OpenAPI Sandbox JSON | `/openapi-sandbox.json` | ✅ Synced |
 | OpenAPI JSON (edge fn) | `public-api-spec` function | ✅ Live |
 | OpenAPI JSON (dedicated) | `openapi-json` function | ✅ Live |
 | Postman collection | `postman-collection` function | ✅ Live |
 | Interactive Explorer | `/developer/api-explorer` | ✅ Swagger UI |
-| Static Explorer | `/developer/api-explorer-static` | ✅ Added |
+| Static Explorer | `/developer/api-explorer-static` | ✅ |
 
 ---
 

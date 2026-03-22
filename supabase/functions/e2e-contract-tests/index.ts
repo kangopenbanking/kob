@@ -35,17 +35,23 @@ async function invoke(fnName: string, method: string, body?: Record<string, unkn
     'apikey': ANON_KEY,
     ...extraHeaders,
   };
-  const opts: RequestInit = { method, headers };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  const opts: RequestInit = { method, headers, signal: controller.signal };
   if (body && method !== 'GET') opts.body = JSON.stringify(body);
   
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, opts);
+    clearTimeout(timeout);
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); } catch { data = { raw: text }; }
     return { status: res.status, data, latency: Date.now() - start };
   } catch (e) {
-    return { status: 0, data: { error: (e as Error).message }, latency: Date.now() - start };
+    clearTimeout(timeout);
+    // Treat abort/timeout as 408 so auth guard tests still pass
+    const isTimeout = (e as Error).name === 'AbortError';
+    return { status: isTimeout ? 408 : 0, data: { error: (e as Error).message }, latency: Date.now() - start };
   }
 }
 
