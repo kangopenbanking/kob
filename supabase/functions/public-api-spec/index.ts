@@ -1819,7 +1819,7 @@ paths['/v1/gateway/funding-intents'] = {
 };
 
 paths['/v1/gateway/funding-intents/{intentId}'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Get funding intent', operationId: 'gatewayGetFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding intent details' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Get funding intent', operationId: 'gatewayGetFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding intent details', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' }, source: { type: 'string' }, status: { type: 'string' }, redirect_url: { type: 'string' }, created_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/funding-intents/{intentId}/cancel'] = {
