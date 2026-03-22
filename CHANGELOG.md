@@ -5,6 +5,23 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] — 2026-03-22
+
+### Added — Banking Operations Bank-Grade Hardening
+- **Ledger**: `ledger_posting_refs` table for cross-domain idempotent ledger tracking
+- **Ledger**: `check_ledger_integrity()` DB function — validates balanced entries, orphan lines, duplicate postings
+- **Ledger**: Integrity check endpoint via `ledger-accounts?action=integrity-check` (admin-only)
+- **Ledger**: Posting refs lookup endpoint via `ledger-accounts?action=posting-refs`
+- **Reports**: BANKING_OPS_PARITY_REPORT.md — 136 banking-tagged operations at 100% contract coverage
+- **Reports**: LEDGER_GRADE_REPORT.md — double-entry enforcement verification
+- **Reports**: BANK_CONNECTOR_KIT_REPORT.md — 18 file connector actions verified
+- **Reports**: INTERBANK_ENGINE_REPORT.md — 25 interbank actions + ISO 20022 mapping verified
+- **Reports**: BANK_DASHBOARD_E2E_REPORT.md — 16 banking dashboard pages verified
+- **Reports**: BANKING_OPS_READINESS_REPORT.md, CONNECTOR_KIT_READINESS_REPORT.md, INTERBANK_READINESS_REPORT.md
+
+### No Breaking Changes
+- All existing endpoints, schemas, and behavior preserved
+
 ## [4.2.0] — 2026-03-22
 
 ### Added — Postman Hardening + Playwright E2E + Empty State CTAs

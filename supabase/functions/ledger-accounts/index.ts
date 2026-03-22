@@ -20,9 +20,38 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ── GET: List ledger accounts ──
+    // ── GET: List ledger accounts OR integrity check ──
     if (req.method === 'GET') {
       const url = new URL(req.url);
+      const action = url.searchParams.get('action');
+
+      // ── Ledger Integrity Check ──
+      if (action === 'integrity-check') {
+        const { data: result, error } = await supabase.rpc('check_ledger_integrity');
+        if (error) throw error;
+        return new Response(JSON.stringify({ data: result }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // ── Posting refs lookup ──
+      if (action === 'posting-refs') {
+        const refType = url.searchParams.get('reference_type');
+        const refId = url.searchParams.get('reference_id');
+        let query = supabase.from('ledger_posting_refs').select('*', { count: 'exact' });
+        if (refType) query = query.eq('reference_type', refType);
+        if (refId) query = query.eq('reference_id', refId);
+        const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
+        const offset = parseInt(url.searchParams.get('offset') || '0');
+        const { data, error, count } = await query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+        if (error) throw error;
+        return new Response(JSON.stringify({ data, pagination: { total: count || 0, limit, offset } }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '25'), 100);
       const offset = parseInt(url.searchParams.get('offset') || '0');
       const accountType = url.searchParams.get('account_type');
