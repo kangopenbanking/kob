@@ -25,8 +25,36 @@ const iconMap: Record<string, React.ElementType> = {
 };
 const getIcon = (name?: string) => iconMap[name || ''] || Receipt;
 
+// Category card solid bg colors (no gradients)
+const catCardColor: Record<string, string> = {
+  'graduation-cap': 'bg-indigo-100 dark:bg-indigo-900/40',
+  zap: 'bg-amber-100 dark:bg-amber-900/40',
+  droplets: 'bg-sky-100 dark:bg-sky-900/40',
+  wifi: 'bg-emerald-100 dark:bg-emerald-900/40',
+  tv: 'bg-violet-100 dark:bg-violet-900/40',
+  phone: 'bg-rose-100 dark:bg-rose-900/40',
+  shield: 'bg-orange-100 dark:bg-orange-900/40',
+  landmark: 'bg-teal-100 dark:bg-teal-900/40',
+  receipt: 'bg-gray-100 dark:bg-gray-800/40',
+  'building-2': 'bg-slate-100 dark:bg-slate-800/40',
+};
+const catIconBg: Record<string, string> = {
+  'graduation-cap': 'bg-indigo-500',
+  zap: 'bg-amber-500',
+  droplets: 'bg-sky-500',
+  wifi: 'bg-emerald-500',
+  tv: 'bg-violet-500',
+  phone: 'bg-rose-500',
+  shield: 'bg-orange-500',
+  landmark: 'bg-teal-500',
+  receipt: 'bg-gray-500',
+  'building-2': 'bg-slate-500',
+};
+
 type Step = 'home' | 'providers' | 'provider-detail' | 'form' | 'confirm' | 'receipt';
 
+const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
+const fadeUp = { initial: { opacity: 0, y: 14, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } } };
 const slideIn = { initial: { opacity: 0, x: 24 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -24 } };
 const fadeIn = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -12 } };
 
