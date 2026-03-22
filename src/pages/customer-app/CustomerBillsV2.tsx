@@ -322,7 +322,7 @@ const CustomerBillsV2: React.FC = () => {
         {step === 'provider-detail' && selectedProvider && (
           <motion.div key="provider-detail" {...slideIn} className="flex flex-col gap-4">
             {/* Provider banner */}
-            <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
+            <div className="rounded-2xl border border-border/60 bg-primary/5 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15">
                   {React.createElement(getIcon(selectedProvider.icon), { className: 'h-6 w-6 text-primary', strokeWidth: 1.5 })}
