@@ -1208,7 +1208,7 @@ paths['/v1/flutterwave/bank-transfer'] = {
     tags: ['Payments'], summary: 'Initiate bank transfer via Flutterwave', operationId: 'flutterwaveBankTransfer', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code', 'amount'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' }, amount: { type: 'number', example: 100000 }, currency: { type: 'string', example: 'XAF' }, narration: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
+    responses: { '200': successResult('Transfer initiated'), ...errorResponses },
   },
 };
 
