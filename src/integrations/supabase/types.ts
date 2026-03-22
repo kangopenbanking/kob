@@ -11249,6 +11249,44 @@ export type Database = {
           },
         ]
       }
+      ledger_posting_refs: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          idempotency_key: string | null
+          journal_entry_id: string | null
+          reference_id: string
+          reference_type: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string
+          id?: string
+          idempotency_key?: string | null
+          journal_entry_id?: string | null
+          reference_id: string
+          reference_type: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          idempotency_key?: string | null
+          journal_entry_id?: string | null
+          reference_id?: string
+          reference_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       linked_account_change_requests: {
         Row: {
           created_at: string | null
@@ -21104,6 +21142,7 @@ export type Database = {
         Returns: boolean
       }
       check_api_key_expiration: { Args: never; Returns: undefined }
+      check_ledger_integrity: { Args: never; Returns: Json }
       check_postiq_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
