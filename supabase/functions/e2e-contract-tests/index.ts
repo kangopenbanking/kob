@@ -544,6 +544,7 @@ Deno.serve(async (req) => {
       'sdks': suiteSDKs,
       'merchant_onboarding': suiteMerchantOnboarding,
       'dispute_settlement': suiteDisputeSettlement,
+      'spec_maturity': suiteSpecMaturity,
     };
 
     const runnersToExecute = suiteFilter && allRunners[suiteFilter]
