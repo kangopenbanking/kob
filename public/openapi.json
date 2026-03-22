@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "description": "This is a summary specification. The full dynamic OpenAPI specification with 250+ endpoints is available at the x-full-spec-url below. AI agents and tooling should fetch the full spec for complete coverage.",
     "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
@@ -24,7 +24,7 @@
     },
     {
       "url": "https://api.kangopenbanking.com/v1",
-      "description": "Sandbox — use sandbox API keys obtained from the developer portal at https://kangopenbanking.com/developer/sandbox",
+      "description": "Sandbox \u2014 use sandbox API keys obtained from the developer portal at https://kangopenbanking.com/developer/sandbox",
       "x-environment": "sandbox"
     }
   ],
@@ -33,18 +33,36 @@
     "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
   },
   "security": [
-    { "oauth2": ["accounts", "payments"] },
-    { "bearerAuth": [] }
+    {
+      "oauth2": [
+        "accounts",
+        "payments"
+      ]
+    },
+    {
+      "bearerAuth": []
+    }
   ],
   "paths": {
     "/health": {
       "get": {
         "summary": "API Health Check",
         "operationId": "getHealth",
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "security": [],
         "responses": {
-          "200": { "description": "API is healthy", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthStatus" } } } }
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -52,7 +70,9 @@
       "post": {
         "summary": "Request Access Token",
         "operationId": "createToken",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "security": [],
         "requestBody": {
           "required": true,
@@ -61,23 +81,65 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "grant_type": { "type": "string", "enum": ["client_credentials", "authorization_code", "refresh_token"] },
-                  "client_id": { "type": "string" },
-                  "client_secret": { "type": "string" },
-                  "code": { "type": "string" },
-                  "redirect_uri": { "type": "string" },
-                  "code_verifier": { "type": "string" },
-                  "refresh_token": { "type": "string" }
+                  "grant_type": {
+                    "type": "string",
+                    "enum": [
+                      "client_credentials",
+                      "authorization_code",
+                      "refresh_token"
+                    ]
+                  },
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "type": "string"
+                  },
+                  "code_verifier": {
+                    "type": "string"
+                  },
+                  "refresh_token": {
+                    "type": "string"
+                  }
                 },
-                "required": ["grant_type", "client_id"]
+                "required": [
+                  "grant_type",
+                  "client_id"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Access token issued" },
-          "400": { "description": "Invalid request", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "description": "Authentication failed", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": {
+            "description": "Access token issued"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -85,14 +147,29 @@
       "get": {
         "summary": "List Accounts (AISP)",
         "operationId": "listAccounts",
-        "tags": ["AISP — Account Information"],
+        "tags": [
+          "AISP \u2014 Account Information"
+        ],
         "parameters": [
-          { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "x-consent-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "List of accounts" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden — insufficient scope" }
+          "200": {
+            "description": "List of accounts"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden \u2014 insufficient scope"
+          }
         }
       }
     },
@@ -100,15 +177,38 @@
       "post": {
         "summary": "Initiate Domestic Payment (PISP)",
         "operationId": "createDomesticPayment",
-        "tags": ["PISP — Payment Initiation"],
+        "tags": [
+          "PISP \u2014 Payment Initiation"
+        ],
         "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "x-consent-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "201": { "description": "Payment initiated" },
-          "400": { "description": "Validation error" },
-          "422": { "description": "Business rule violation" }
+          "201": {
+            "description": "Payment initiated"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "422": {
+            "description": "Business rule violation"
+          }
         }
       }
     },
@@ -116,472 +216,1015 @@
       "post": {
         "summary": "Create Charge (MoMo, Card, USSD, Apple Pay, Google Pay, PayPal)",
         "operationId": "gatewayCreateCharge",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Charge created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Charge created"
+          }
+        }
       },
       "get": {
         "summary": "List Charges",
         "operationId": "gatewayListCharges",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Charges list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Charges list"
+          }
+        }
       }
     },
     "/gateway/charges/{chargeId}": {
       "get": {
         "summary": "Get Charge by ID",
         "operationId": "gatewayGetCharge",
-        "tags": ["Payment Gateway"],
-        "parameters": [{ "name": "chargeId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Charge details" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "parameters": [
+          {
+            "name": "chargeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Charge details"
+          }
+        }
       }
     },
     "/gateway/charges/{chargeId}/capture": {
       "post": {
         "summary": "Capture Pre-Authorized Charge",
         "operationId": "gatewayCapture",
-        "tags": ["Payment Gateway"],
-        "parameters": [{ "name": "chargeId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Charge captured" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "parameters": [
+          {
+            "name": "chargeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Charge captured"
+          }
+        }
       }
     },
     "/gateway/charges/{chargeId}/void": {
       "post": {
         "summary": "Void Pre-Authorized Charge",
         "operationId": "gatewayVoid",
-        "tags": ["Payment Gateway"],
-        "parameters": [{ "name": "chargeId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Charge voided" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "parameters": [
+          {
+            "name": "chargeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Charge voided"
+          }
+        }
       }
     },
     "/gateway/payouts": {
       "post": {
         "summary": "Create Payout (Bank, MoMo, PayPal)",
         "operationId": "gatewayCreatePayout",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Payout created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Payout created"
+          }
+        }
       },
       "get": {
         "summary": "List Payouts",
         "operationId": "gatewayListPayouts",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Payouts list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Payouts list"
+          }
+        }
       }
     },
     "/gateway/refunds": {
       "post": {
         "summary": "Create Refund",
         "operationId": "gatewayCreateRefund",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Refund created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Refund created"
+          }
+        }
       },
       "get": {
         "summary": "List Refunds",
         "operationId": "gatewayListRefunds",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Refunds list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Refunds list"
+          }
+        }
       }
     },
     "/gateway/disputes": {
       "get": {
         "summary": "List Disputes",
         "operationId": "gatewayListDisputes",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Disputes list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Disputes list"
+          }
+        }
+      },
+      "post": {
+        "summary": "File a Dispute",
+        "operationId": "fileDispute",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "charge_id",
+                  "reason"
+                ],
+                "properties": {
+                  "charge_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "evidence_urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dispute filed"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
       }
     },
     "/gateway/settlements": {
       "get": {
         "summary": "List Settlements",
         "operationId": "gatewayListSettlements",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Settlements list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Settlements list"
+          }
+        }
       }
     },
     "/gateway/payment-links": {
       "post": {
         "summary": "Create Payment Link",
         "operationId": "gatewayCreatePaymentLink",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Payment link created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Payment link created"
+          }
+        }
       },
       "get": {
         "summary": "List Payment Links",
         "operationId": "gatewayListPaymentLinks",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Payment links" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment links"
+          }
+        }
       }
     },
     "/gateway/subscriptions": {
       "post": {
         "summary": "Create Subscription",
         "operationId": "gatewayCreateSubscription",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Subscription created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Subscription created"
+          }
+        }
       },
       "get": {
         "summary": "List Subscriptions",
         "operationId": "gatewayListSubscriptions",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Subscriptions list" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscriptions list"
+          }
+        }
       }
     },
     "/gateway/split-payments": {
       "post": {
         "summary": "Create Split Payment (Marketplace)",
         "operationId": "gatewayCreateSplit",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Split created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Split created"
+          }
+        }
       }
     },
     "/gateway/fund-account": {
       "post": {
         "summary": "Fund Account (MoMo, Card, Bank, PayPal)",
         "operationId": "gatewayFundAccount",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Funding initiated" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Funding initiated"
+          }
+        }
       }
     },
     "/gateway/withdraw-to-bank": {
       "post": {
         "summary": "Withdraw to Bank Account",
-        "operationId": "gatewayWithdrawToBank",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Withdrawal initiated" } }
+        "operationId": "withdrawToBank",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency",
+                  "bank_code",
+                  "account_number"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "bank_code": {
+                    "type": "string"
+                  },
+                  "account_number": {
+                    "type": "string"
+                  },
+                  "narration": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Withdrawal initiated"
+          }
+        }
       }
     },
     "/gateway/funding-intents": {
       "post": {
         "summary": "Create Funding Intent",
         "operationId": "gatewayCreateFundingIntent",
-        "tags": ["Funding Intents"],
-        "responses": { "201": { "description": "Funding intent created" } }
+        "tags": [
+          "Funding Intents"
+        ],
+        "responses": {
+          "201": {
+            "description": "Funding intent created"
+          }
+        }
       },
       "get": {
         "summary": "List Funding Intents",
         "operationId": "gatewayListFundingIntents",
-        "tags": ["Funding Intents"],
-        "responses": { "200": { "description": "Funding intents list" } }
+        "tags": [
+          "Funding Intents"
+        ],
+        "responses": {
+          "200": {
+            "description": "Funding intents list"
+          }
+        }
       }
     },
     "/gateway/funding-intents/{intentId}": {
       "get": {
         "summary": "Get Funding Intent",
         "operationId": "gatewayGetFundingIntent",
-        "tags": ["Funding Intents"],
-        "parameters": [{ "name": "intentId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Funding intent details" } }
+        "tags": [
+          "Funding Intents"
+        ],
+        "parameters": [
+          {
+            "name": "intentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Funding intent details"
+          }
+        }
       }
     },
     "/gateway/funding-intents/{intentId}/cancel": {
       "post": {
         "summary": "Cancel Funding Intent",
         "operationId": "gatewayCancelFundingIntent",
-        "tags": ["Funding Intents"],
-        "parameters": [{ "name": "intentId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Funding intent cancelled" } }
+        "tags": [
+          "Funding Intents"
+        ],
+        "parameters": [
+          {
+            "name": "intentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Funding intent cancelled"
+          }
+        }
       }
     },
     "/gateway/wallets/{merchantId}": {
       "get": {
         "summary": "Get Merchant Wallet Balance",
         "operationId": "gatewayGetWallet",
-        "tags": ["Payment Gateway"],
-        "parameters": [{ "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Wallet balance" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet balance"
+          }
+        }
       }
     },
     "/gateway/escrow": {
       "post": {
         "summary": "Create Escrow Hold",
         "operationId": "gatewayCreateEscrow",
-        "tags": ["Escrow & Treasury"],
-        "responses": { "201": { "description": "Escrow hold created" } }
+        "tags": [
+          "Escrow & Treasury"
+        ],
+        "responses": {
+          "201": {
+            "description": "Escrow hold created"
+          }
+        }
       }
     },
     "/gateway/treasury/yield-accounts": {
       "post": {
         "summary": "Create Yield Account",
         "operationId": "gatewayCreateYieldAccount",
-        "tags": ["Escrow & Treasury"],
-        "responses": { "201": { "description": "Yield account created" } }
+        "tags": [
+          "Escrow & Treasury"
+        ],
+        "responses": {
+          "201": {
+            "description": "Yield account created"
+          }
+        }
       }
     },
     "/gateway/merchants": {
       "post": {
         "summary": "Register Merchant",
         "operationId": "gatewayRegisterMerchant",
-        "tags": ["Merchants"],
-        "responses": { "201": { "description": "Merchant registered" } }
+        "tags": [
+          "Merchants"
+        ],
+        "responses": {
+          "201": {
+            "description": "Merchant registered"
+          }
+        }
       }
     },
     "/gateway/merchants/{merchantId}/verify": {
       "post": {
         "summary": "Submit KYB Verification",
         "operationId": "gatewayVerifyMerchant",
-        "tags": ["Merchants"],
-        "parameters": [{ "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "KYB submitted" } }
+        "tags": [
+          "Merchants"
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KYB submitted"
+          }
+        }
       }
     },
     "/gateway/webhooks": {
       "post": {
         "summary": "Register Webhook Endpoint",
         "operationId": "gatewayRegisterWebhook",
-        "tags": ["Webhooks"],
-        "responses": { "201": { "description": "Webhook registered" } }
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "201": {
+            "description": "Webhook registered"
+          }
+        }
       },
       "get": {
         "summary": "List Webhook Endpoints",
         "operationId": "gatewayListWebhooks",
-        "tags": ["Webhooks"],
-        "responses": { "200": { "description": "Webhook endpoints" } }
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook endpoints"
+          }
+        }
       }
     },
     "/gateway/fee-estimate": {
       "get": {
         "summary": "Estimate Transaction Fee",
         "operationId": "gatewayFeeEstimate",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Fee estimate" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee estimate"
+          }
+        }
       }
     },
     "/gateway/exchange-rate": {
       "get": {
         "summary": "Get Exchange Rate",
         "operationId": "gatewayExchangeRate",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Exchange rate" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Exchange rate"
+          }
+        }
       }
     },
     "/gateway/risk/score": {
       "post": {
         "summary": "Score Transaction Risk",
         "operationId": "gatewayRiskScore",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Risk score" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Risk score"
+          }
+        }
       }
     },
     "/gateway/customers/tokenize": {
       "post": {
         "summary": "Tokenize Payment Method",
         "operationId": "gatewayTokenize",
-        "tags": ["Payment Gateway"],
-        "responses": { "201": { "description": "Token created" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "201": {
+            "description": "Token created"
+          }
+        }
       }
     },
     "/gateway/reconciliation/trigger": {
       "post": {
         "summary": "Trigger Reconciliation Run",
         "operationId": "gatewayReconcile",
-        "tags": ["Payment Gateway"],
-        "responses": { "200": { "description": "Reconciliation started" } }
+        "tags": [
+          "Payment Gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation started"
+          }
+        }
       }
     },
     "/pos/products": {
       "post": {
         "summary": "Create POS Product",
         "operationId": "posCreateProduct",
-        "tags": ["POS"],
-        "responses": { "201": { "description": "Product created" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "201": {
+            "description": "Product created"
+          }
+        }
       },
       "get": {
         "summary": "List POS Products",
         "operationId": "posListProducts",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "Products list" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Products list"
+          }
+        }
       }
     },
     "/pos/inventory": {
       "get": {
         "summary": "Get POS Inventory",
         "operationId": "posGetInventory",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "Inventory items" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory items"
+          }
+        }
       },
       "post": {
         "summary": "Adjust POS Inventory",
         "operationId": "posAdjustInventory",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "Inventory adjusted" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory adjusted"
+          }
+        }
       }
     },
     "/pos/orders": {
       "post": {
         "summary": "Create POS Order",
         "operationId": "posCreateOrder",
-        "tags": ["POS"],
-        "responses": { "201": { "description": "Order created" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "201": {
+            "description": "Order created"
+          }
+        }
       },
       "get": {
         "summary": "List POS Orders",
         "operationId": "posListOrders",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "Orders list" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Orders list"
+          }
+        }
       }
     },
     "/pos/orders/{orderId}/pay": {
       "post": {
         "summary": "Pay POS Order (MoMo, Card, PayPal, Bank, Wallet)",
         "operationId": "posPayOrder",
-        "tags": ["POS"],
-        "parameters": [{ "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Payment initiated" } }
+        "tags": [
+          "POS"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment initiated"
+          }
+        }
       }
     },
     "/pos/refunds": {
       "post": {
         "summary": "Create POS Refund/Return",
         "operationId": "posCreateRefund",
-        "tags": ["POS"],
-        "responses": { "201": { "description": "Refund created" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "201": {
+            "description": "Refund created"
+          }
+        }
       }
     },
     "/pos/stores": {
       "get": {
         "summary": "Browse Merchant Stores (Consumer Marketplace)",
         "operationId": "posStoreBrowse",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "Store listings" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Store listings"
+          }
+        }
       }
     },
     "/pos/qr-payment": {
       "post": {
         "summary": "QR Code Payment (Generate/Scan-to-Pay)",
         "operationId": "posQrPayment",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "QR payment processed" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "QR payment processed"
+          }
+        }
       }
     },
     "/pos/woo-connector": {
       "post": {
         "summary": "WooCommerce POS Connector (Connect/Import/Push)",
         "operationId": "posWooConnector",
-        "tags": ["POS"],
-        "responses": { "200": { "description": "WooCommerce action completed" } }
+        "tags": [
+          "POS"
+        ],
+        "responses": {
+          "200": {
+            "description": "WooCommerce action completed"
+          }
+        }
       }
     },
     "/loans/apply": {
       "post": {
         "summary": "Apply for Loan",
         "operationId": "loansApply",
-        "tags": ["Loans"],
-        "responses": { "201": { "description": "Application submitted" } }
+        "tags": [
+          "Loans"
+        ],
+        "responses": {
+          "201": {
+            "description": "Application submitted"
+          }
+        }
       }
     },
     "/savings/create": {
       "post": {
         "summary": "Create Savings Account",
         "operationId": "savingsCreate",
-        "tags": ["Savings"],
-        "responses": { "201": { "description": "Savings account created" } }
+        "tags": [
+          "Savings"
+        ],
+        "responses": {
+          "201": {
+            "description": "Savings account created"
+          }
+        }
       }
     },
     "/ledger/journal": {
       "post": {
         "summary": "Post Journal Entry",
         "operationId": "ledgerJournal",
-        "tags": ["Ledger"],
-        "responses": { "201": { "description": "Journal entry posted" } }
+        "tags": [
+          "Ledger"
+        ],
+        "responses": {
+          "201": {
+            "description": "Journal entry posted"
+          }
+        }
       }
     },
     "/cards/create": {
       "post": {
         "summary": "Create Virtual Card",
         "operationId": "cardsCreate",
-        "tags": ["Virtual Cards"],
-        "responses": { "201": { "description": "Virtual card created" } }
+        "tags": [
+          "Virtual Cards"
+        ],
+        "responses": {
+          "201": {
+            "description": "Virtual card created"
+          }
+        }
       }
     },
     "/standards/validate-iban": {
       "post": {
         "summary": "Validate IBAN",
         "operationId": "validateIban",
-        "tags": ["Standards & Directory"],
-        "responses": { "200": { "description": "Validation result" } }
+        "tags": [
+          "Standards & Directory"
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation result"
+          }
+        }
       }
     },
     "/standards/validate-rib": {
       "post": {
         "summary": "Validate Cameroon RIB (23-digit)",
         "operationId": "validateRib",
-        "tags": ["Standards & Directory"],
-        "responses": { "200": { "description": "RIB validation result with computed IBAN" } }
+        "tags": [
+          "Standards & Directory"
+        ],
+        "responses": {
+          "200": {
+            "description": "RIB validation result with computed IBAN"
+          }
+        }
       }
     },
     "/standards/validate-account-identifier": {
       "post": {
         "summary": "Validate Account Identifier (RIB/IBAN/Local)",
         "operationId": "validateAccountIdentifier",
-        "tags": ["Standards & Directory"],
-        "responses": { "200": { "description": "Identifier validation with transfer rail recommendation" } }
+        "tags": [
+          "Standards & Directory"
+        ],
+        "responses": {
+          "200": {
+            "description": "Identifier validation with transfer rail recommendation"
+          }
+        }
       }
     },
     "/standards/directory-banks-cm": {
       "get": {
         "summary": "Cameroon Bank Directory (15 banks with SWIFT/BIC codes)",
         "operationId": "directoryBanksCm",
-        "tags": ["Standards & Directory"],
+        "tags": [
+          "Standards & Directory"
+        ],
         "security": [],
-        "responses": { "200": { "description": "Bank directory" } }
+        "responses": {
+          "200": {
+            "description": "Bank directory"
+          }
+        }
       }
     },
     "/kyc/submit": {
       "post": {
         "summary": "Submit KYC Documents",
         "operationId": "kycSubmit",
-        "tags": ["KYC & Compliance"],
-        "responses": { "201": { "description": "KYC submission accepted" } }
+        "tags": [
+          "KYC & Compliance"
+        ],
+        "responses": {
+          "201": {
+            "description": "KYC submission accepted"
+          }
+        }
       }
     },
     "/mobile-money/charge": {
       "post": {
         "summary": "Initiate Mobile Money Charge",
         "operationId": "mobileMoneyCharge",
-        "tags": ["Mobile Money"],
-        "responses": { "201": { "description": "Charge initiated" } }
+        "tags": [
+          "Mobile Money"
+        ],
+        "responses": {
+          "201": {
+            "description": "Charge initiated"
+          }
+        }
       }
     },
     "/certificates/upload": {
       "post": {
         "summary": "Upload mTLS Certificate",
         "operationId": "certificatesUpload",
-        "tags": ["Certificates"],
-        "responses": { "201": { "description": "Certificate uploaded" } }
+        "tags": [
+          "Certificates"
+        ],
+        "responses": {
+          "201": {
+            "description": "Certificate uploaded"
+          }
+        }
       }
     },
     "/credit/profile": {
       "get": {
         "summary": "Get Credit Profile & Score",
         "operationId": "creditProfileGet",
-        "tags": ["Credit Scoring"],
-        "responses": { "200": { "description": "Credit profile with score 300-850" } }
+        "tags": [
+          "Credit Scoring"
+        ],
+        "responses": {
+          "200": {
+            "description": "Credit profile with score 300-850"
+          }
+        }
       }
     },
     "/credit/explain": {
       "get": {
         "summary": "Explain Credit Score Factors",
         "operationId": "creditExplain",
-        "tags": ["Credit Scoring"],
-        "responses": { "200": { "description": "Score factor breakdown" } }
+        "tags": [
+          "Credit Scoring"
+        ],
+        "responses": {
+          "200": {
+            "description": "Score factor breakdown"
+          }
+        }
       }
     },
     "/banking/internal-transfer": {
       "post": {
         "summary": "Internal Account Transfer (KOB-to-KOB)",
         "operationId": "bankingInternalTransfer",
-        "tags": ["Banking Operations"],
-        "responses": { "200": { "description": "Transfer completed" } }
+        "tags": [
+          "Banking Operations"
+        ],
+        "responses": {
+          "200": {
+            "description": "Transfer completed"
+          }
+        }
       }
     },
     "/accounts/{accountId}/overdraft": {
       "get": {
         "summary": "Get Overdraft Profile",
         "operationId": "getOverdraftProfile",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
-          "200": { "description": "Overdraft profile with eligibility, limits, risk band, and score factors" },
-          "404": { "description": "Account not found" }
+          "200": {
+            "description": "Overdraft profile with eligibility, limits, risk band, and score factors"
+          },
+          "404": {
+            "description": "Account not found"
+          }
         }
       }
     },
@@ -589,10 +1232,24 @@
       "post": {
         "summary": "Recalculate Overdraft Eligibility",
         "operationId": "recalculateOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
-          "200": { "description": "Recalculated overdraft profile with 7-factor score breakdown" }
+          "200": {
+            "description": "Recalculated overdraft profile with 7-factor score breakdown"
+          }
         }
       }
     },
@@ -600,11 +1257,27 @@
       "post": {
         "summary": "Request Overdraft Facility",
         "operationId": "requestOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
-          "200": { "description": "Auto-approved overdraft" },
-          "202": { "description": "Overdraft request submitted for manual approval" }
+          "200": {
+            "description": "Auto-approved overdraft"
+          },
+          "202": {
+            "description": "Overdraft request submitted for manual approval"
+          }
         }
       }
     },
@@ -612,70 +1285,1497 @@
       "post": {
         "summary": "Approve Overdraft (Staff/Admin)",
         "operationId": "approveOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "200": { "description": "Overdraft approved with limit set" } }
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overdraft approved with limit set"
+          }
+        }
       }
     },
     "/accounts/{accountId}/overdraft/suspend": {
       "post": {
         "summary": "Suspend Overdraft Facility",
         "operationId": "suspendOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "200": { "description": "Overdraft suspended" } }
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overdraft suspended"
+          }
+        }
       }
     },
     "/accounts/{accountId}/overdraft/revoke": {
       "post": {
         "summary": "Revoke Overdraft Facility",
         "operationId": "revokeOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "200": { "description": "Overdraft revoked" } }
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overdraft revoked"
+          }
+        }
       }
     },
     "/accounts/{accountId}/overdraft/reinstate": {
       "post": {
         "summary": "Reinstate Overdraft Facility",
         "operationId": "reinstateOverdraft",
-        "tags": ["Overdraft"],
-        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "200": { "description": "Overdraft reinstated with new limit" } }
+        "tags": [
+          "Overdraft"
+        ],
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overdraft reinstated with new limit"
+          }
+        }
+      }
+    },
+    "/gateway/payouts/batch": {
+      "post": {
+        "summary": "Create Batch Payout",
+        "operationId": "createBatchPayout",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "currency"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "number"
+                        },
+                        "account_number": {
+                          "type": "string"
+                        },
+                        "bank_code": {
+                          "type": "string"
+                        },
+                        "beneficiary_name": {
+                          "type": "string"
+                        },
+                        "narration": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Batch payout created"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/gateway/payouts/instant": {
+      "post": {
+        "summary": "Create Instant Payout",
+        "operationId": "createInstantPayout",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency",
+                  "destination"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "example": 50000
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "destination": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "bank_account",
+                          "mobile_money",
+                          "paypal",
+                          "card"
+                        ]
+                      },
+                      "account_number": {
+                        "type": "string"
+                      },
+                      "bank_code": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Instant payout initiated"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/gateway/beneficiaries": {
+      "post": {
+        "summary": "Create Beneficiary",
+        "operationId": "createBeneficiary",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "account_number",
+                  "bank_code"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "account_number": {
+                    "type": "string"
+                  },
+                  "bank_code": {
+                    "type": "string"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Beneficiary created"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "get": {
+        "summary": "List Beneficiaries",
+        "operationId": "listBeneficiaries",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of beneficiaries"
+          }
+        }
+      }
+    },
+    "/gateway/beneficiaries/{beneficiaryId}": {
+      "delete": {
+        "summary": "Delete Beneficiary",
+        "operationId": "deleteBeneficiary",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "beneficiaryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Beneficiary deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/gateway/disputes/{disputeId}": {
+      "get": {
+        "summary": "Get Dispute Details",
+        "operationId": "getDispute",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "disputeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dispute details"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/gateway/disputes/{disputeId}/evidence": {
+      "post": {
+        "summary": "Submit Dispute Evidence",
+        "operationId": "submitDisputeEvidence",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "disputeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "evidence_type": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "file_urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evidence submitted"
+          }
+        }
+      }
+    },
+    "/gateway/merchants/{merchantId}/keys": {
+      "post": {
+        "summary": "Generate Merchant API Keys",
+        "operationId": "generateMerchantKeys",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "sandbox",
+                      "production"
+                    ]
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API keys generated (shown once)"
+          }
+        }
+      }
+    },
+    "/gateway/merchants/{merchantId}/kyb": {
+      "post": {
+        "summary": "Submit KYB Documents",
+        "operationId": "submitMerchantKYB",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KYB submission received"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get KYB Status",
+        "operationId": "getMerchantKYBStatus",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KYB status"
+          }
+        }
+      }
+    },
+    "/gateway/merchants/{merchantId}/webhooks": {
+      "post": {
+        "summary": "Register Webhook Endpoint",
+        "operationId": "createMerchantWebhook",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook endpoint created with signing secret"
+          }
+        }
+      },
+      "get": {
+        "summary": "List Webhook Endpoints",
+        "operationId": "listMerchantWebhooks",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhook endpoints"
+          }
+        }
+      }
+    },
+    "/gateway/merchants/{merchantId}/settlement-accounts": {
+      "post": {
+        "summary": "Add Settlement Account",
+        "operationId": "addSettlementAccount",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account_number",
+                  "bank_code"
+                ],
+                "properties": {
+                  "account_number": {
+                    "type": "string"
+                  },
+                  "bank_code": {
+                    "type": "string"
+                  },
+                  "account_name": {
+                    "type": "string"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "is_primary": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Settlement account added"
+          }
+        }
+      }
+    },
+    "/gateway/merchants/{merchantId}/statement": {
+      "get": {
+        "summary": "Get Merchant Statement",
+        "operationId": "getMerchantStatement",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "merchantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "2026-03"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statement data"
+          }
+        }
+      }
+    },
+    "/gateway/reports/transactions": {
+      "get": {
+        "summary": "Transaction Report",
+        "operationId": "getTransactionReport",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction report"
+          }
+        }
+      }
+    },
+    "/gateway/reports/fees": {
+      "get": {
+        "summary": "Fee Report",
+        "operationId": "getFeeReport",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee breakdown report"
+          }
+        }
+      }
+    },
+    "/gateway/exports": {
+      "post": {
+        "summary": "Export Transactions to CSV",
+        "operationId": "exportTransactions",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "charges",
+                      "payouts",
+                      "refunds",
+                      "settlements"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Export download URL"
+          }
+        }
+      }
+    },
+    "/gateway/compliance/screen": {
+      "post": {
+        "summary": "Pre-Payout Compliance Screening",
+        "operationId": "complianceScreen",
+        "tags": [
+          "KYC & Compliance"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screening result"
+          }
+        }
+      }
+    },
+    "/gateway/verify-bank-account": {
+      "post": {
+        "summary": "Verify Bank Account",
+        "operationId": "verifyBankAccount",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account_number",
+                  "bank_code"
+                ],
+                "properties": {
+                  "account_number": {
+                    "type": "string"
+                  },
+                  "bank_code": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result"
+          }
+        }
+      }
+    },
+    "/gateway/virtual-accounts": {
+      "post": {
+        "summary": "Create Virtual Account",
+        "operationId": "createVirtualAccount",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currency"
+                ],
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "customer": {
+                    "type": "object"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Virtual account created"
+          }
+        }
+      }
+    },
+    "/gateway/payment-plans": {
+      "post": {
+        "summary": "Create Payment Plan",
+        "operationId": "createPaymentPlan",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "amount",
+                  "interval",
+                  "currency"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "interval": {
+                    "type": "string",
+                    "enum": [
+                      "daily",
+                      "weekly",
+                      "monthly",
+                      "yearly"
+                    ]
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment plan created"
+          }
+        }
+      }
+    },
+    "/gateway/push-to-card": {
+      "post": {
+        "summary": "Push to Card Payout",
+        "operationId": "pushToCard",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency",
+                  "card_token"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "card_token": {
+                    "type": "string"
+                  },
+                  "narration": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Push to card initiated"
+          }
+        }
+      }
+    },
+    "/webhooks/flutterwave": {
+      "post": {
+        "summary": "Flutterwave Inbound Webhook",
+        "operationId": "handleFlutterwaveWebhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [],
+        "description": "Receives payment status updates from Flutterwave. Requires valid signature in verif-hash header.",
+        "parameters": [
+          {
+            "name": "verif-hash",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          },
+          "401": {
+            "description": "Invalid signature"
+          }
+        }
+      }
+    },
+    "/webhooks/stripe": {
+      "post": {
+        "summary": "Stripe Inbound Webhook",
+        "operationId": "handleStripeWebhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [],
+        "description": "Receives payment events from Stripe. Validates Stripe-Signature header.",
+        "parameters": [
+          {
+            "name": "Stripe-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          },
+          "401": {
+            "description": "Invalid signature"
+          }
+        }
+      }
+    },
+    "/webhooks/paypal": {
+      "post": {
+        "summary": "PayPal Inbound Webhook",
+        "operationId": "handlePayPalWebhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [],
+        "description": "Receives events from PayPal. Validates via PayPal verification API.",
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          },
+          "401": {
+            "description": "Invalid signature"
+          }
+        }
+      }
+    },
+    "/gateway/withdraw-to-paypal": {
+      "post": {
+        "summary": "Withdraw to PayPal",
+        "operationId": "withdrawToPaypal",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency",
+                  "paypal_email"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "XAF"
+                  },
+                  "paypal_email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "PayPal withdrawal initiated"
+          }
+        }
       }
     }
   },
+  "tags": [
+    {
+      "name": "System",
+      "description": "Health and status endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "OAuth 2.0, OIDC, DCR, PKCE"
+    },
+    {
+      "name": "AISP \u2014 Account Information",
+      "description": "Account information services (read-only)"
+    },
+    {
+      "name": "PISP \u2014 Payment Initiation",
+      "description": "Payment initiation services"
+    },
+    {
+      "name": "Payment Gateway",
+      "description": "Charges, payouts, refunds, disputes, settlements, payment links, subscriptions, split payments, tokenization, reconciliation"
+    },
+    {
+      "name": "Funding Intents",
+      "description": "Account funding lifecycle \u2014 MoMo, Card, PayPal, Bank Transfer with idempotent creation and webhook finalization"
+    },
+    {
+      "name": "Escrow & Treasury",
+      "description": "Escrow holds, treasury yield accounts"
+    },
+    {
+      "name": "Merchants",
+      "description": "Merchant registration, KYB, API keys, webhooks"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook endpoint management and delivery monitoring (24 event types)"
+    },
+    {
+      "name": "Loans",
+      "description": "Loan applications, approvals, disbursements, repayments"
+    },
+    {
+      "name": "Savings",
+      "description": "Savings products, accounts, deposits, withdrawals, interest"
+    },
+    {
+      "name": "Ledger",
+      "description": "Chart of accounts, journal entries, trial balance"
+    },
+    {
+      "name": "Virtual Cards",
+      "description": "Virtual card issuance, funding, transactions"
+    },
+    {
+      "name": "Mobile Money",
+      "description": "MTN and Orange Money charges and transfers"
+    },
+    {
+      "name": "Credit Scoring",
+      "description": "Credit profiles, scores (300-850), event-sourced credit history"
+    },
+    {
+      "name": "KYC & Compliance",
+      "description": "Identity verification, sanctions screening, CDD"
+    },
+    {
+      "name": "Standards & Directory",
+      "description": "IBAN/BIC/RIB validation, Cameroon bank directory, ISO 20022, SWIFT"
+    },
+    {
+      "name": "Banking Operations",
+      "description": "Internal transfers, facilitated transfers, exchange rates"
+    },
+    {
+      "name": "Certificates",
+      "description": "mTLS certificate management"
+    },
+    {
+      "name": "POS",
+      "description": "Point-of-sale commerce \u2014 catalog, inventory, orders, payments, refunds, QR payments, consumer marketplace, WooCommerce sync"
+    },
+    {
+      "name": "Consumer Tools",
+      "description": "Piggy Bank savings goals, Njangi group savings"
+    },
+    {
+      "name": "Identity",
+      "description": "Unified registration, login, MFA, session management \u2014 /v1/identity/*"
+    },
+    {
+      "name": "Onboarding",
+      "description": "KYB/KYC lifecycle, document upload, status tracking \u2014 /v1/onboarding/*"
+    },
+    {
+      "name": "Admin-Onboarding",
+      "description": "Admin review, approve/reject onboarding applications"
+    }
+  ],
+  "components": {
     "schemas": {
       "Error": {
         "type": "object",
-        "required": ["error", "error_code", "message", "error_id", "timestamp"],
+        "required": [
+          "error",
+          "error_code",
+          "message",
+          "error_id",
+          "timestamp"
+        ],
         "properties": {
-          "error": { "type": "string", "description": "Machine-readable error code (snake_case)", "example": "invalid_request" },
-          "error_code": { "type": "string", "description": "Domain-prefixed error code", "example": "AUTH_001" },
-          "message": { "type": "string", "description": "Human-readable description" },
-          "details": { "type": "object", "additionalProperties": true },
-          "error_id": { "type": "string", "example": "err_a1b2c3d4" },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code (snake_case)",
+            "example": "invalid_request"
+          },
+          "error_code": {
+            "type": "string",
+            "description": "Domain-prefixed error code",
+            "example": "AUTH_001"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "error_id": {
+            "type": "string",
+            "example": "err_a1b2c3d4"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "HealthStatus": {
         "type": "object",
         "properties": {
-          "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
-          "version": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "unhealthy"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "WebhookEventType": {
         "type": "string",
         "enum": [
-          "charge.created", "charge.processing", "charge.successful", "charge.failed",
-          "charge.cancelled", "charge.voided", "charge.captured", "charge.refunded",
-          "payout.created", "payout.processing", "payout.completed", "payout.failed",
-          "refund.created", "refund.completed", "refund.failed",
-          "dispute.created", "dispute.won", "dispute.lost",
+          "charge.created",
+          "charge.processing",
+          "charge.successful",
+          "charge.failed",
+          "charge.cancelled",
+          "charge.voided",
+          "charge.captured",
+          "charge.refunded",
+          "payout.created",
+          "payout.processing",
+          "payout.completed",
+          "payout.failed",
+          "refund.created",
+          "refund.completed",
+          "refund.failed",
+          "dispute.created",
+          "dispute.won",
+          "dispute.lost",
           "settlement.paid",
-          "consent.created", "consent.authorised", "consent.revoked", "consent.expired",
+          "consent.created",
+          "consent.authorised",
+          "consent.revoked",
+          "consent.expired",
           "account.updated"
         ],
         "description": "All 24 supported webhook event types"
@@ -716,31 +2816,5 @@
         "description": "mTLS client certificate authentication for FAPI 1.0 Advanced flows"
       }
     }
-  },
-  "tags": [
-    { "name": "System", "description": "Health and status endpoints" },
-    { "name": "Authentication", "description": "OAuth 2.0, OIDC, DCR, PKCE" },
-    { "name": "AISP — Account Information", "description": "Account information services (read-only)" },
-    { "name": "PISP — Payment Initiation", "description": "Payment initiation services" },
-    { "name": "Payment Gateway", "description": "Charges, payouts, refunds, disputes, settlements, payment links, subscriptions, split payments, tokenization, reconciliation" },
-    { "name": "Funding Intents", "description": "Account funding lifecycle — MoMo, Card, PayPal, Bank Transfer with idempotent creation and webhook finalization" },
-    { "name": "Escrow & Treasury", "description": "Escrow holds, treasury yield accounts" },
-    { "name": "Merchants", "description": "Merchant registration, KYB, API keys, webhooks" },
-    { "name": "Webhooks", "description": "Webhook endpoint management and delivery monitoring (24 event types)" },
-    { "name": "Loans", "description": "Loan applications, approvals, disbursements, repayments" },
-    { "name": "Savings", "description": "Savings products, accounts, deposits, withdrawals, interest" },
-    { "name": "Ledger", "description": "Chart of accounts, journal entries, trial balance" },
-    { "name": "Virtual Cards", "description": "Virtual card issuance, funding, transactions" },
-    { "name": "Mobile Money", "description": "MTN and Orange Money charges and transfers" },
-    { "name": "Credit Scoring", "description": "Credit profiles, scores (300-850), event-sourced credit history" },
-    { "name": "KYC & Compliance", "description": "Identity verification, sanctions screening, CDD" },
-    { "name": "Standards & Directory", "description": "IBAN/BIC/RIB validation, Cameroon bank directory, ISO 20022, SWIFT" },
-    { "name": "Banking Operations", "description": "Internal transfers, facilitated transfers, exchange rates" },
-    { "name": "Certificates", "description": "mTLS certificate management" },
-    { "name": "POS", "description": "Point-of-sale commerce — catalog, inventory, orders, payments, refunds, QR payments, consumer marketplace, WooCommerce sync" },
-    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" },
-    { "name": "Identity", "description": "Unified registration, login, MFA, session management — /v1/identity/*" },
-    { "name": "Onboarding", "description": "KYB/KYC lifecycle, document upload, status tracking — /v1/onboarding/*" },
-    { "name": "Admin-Onboarding", "description": "Admin review, approve/reject onboarding applications" }
-  ]
+  }
 }
