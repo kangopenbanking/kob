@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import yaml from 'js-yaml';
-import { supabase } from '@/integrations/supabase/client';
+
 
 const ApiExplorer = () => {
   const { toast } = useToast();
