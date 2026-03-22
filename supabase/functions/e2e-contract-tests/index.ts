@@ -274,6 +274,19 @@ async function suiteWebhookSecurity(): Promise<TestSuite> {
     assert(status >= 400, `Expected 4xx, got ${status}`);
   }));
 
+  tests.push(await runTest(suite, 'gateway-webhook-paypal: rejects missing signature headers', async () => {
+    const { status } = await invoke('gateway-webhook-paypal', 'POST', { event_type: 'PAYMENT.CAPTURE.COMPLETED', resource: {} });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  tests.push(await runTest(suite, 'gateway-webhook-paypal: rejects invalid signature', async () => {
+    const { status } = await invoke('gateway-webhook-paypal', 'POST',
+      { id: 'evt_test', event_type: 'PAYMENT.CAPTURE.COMPLETED', resource: {} },
+      { 'paypal-transmission-id': 'fake', 'paypal-transmission-sig': 'invalid', 'paypal-cert-url': 'https://fake', 'paypal-auth-algo': 'SHA256', 'paypal-transmission-time': '2026-01-01T00:00:00Z' }
+    );
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
   const passed = tests.filter(t => t.status === 'pass').length;
   const failed = tests.filter(t => t.status === 'fail').length;
   return { name: suite, tests, passed, failed, skipped: 0, duration_ms: tests.reduce((s, t) => s + t.duration_ms, 0) };
@@ -414,6 +427,32 @@ async function suiteMerchantOnboarding(): Promise<TestSuite> {
   // Query endpoints require auth
   tests.push(await runTest(suite, 'gateway-query: list-merchants rejects unauthenticated', async () => {
     const { status } = await invoke('gateway-query', 'POST', { action: 'list-merchants' });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // KYB review requires admin
+  tests.push(await runTest(suite, 'gateway-merchant-kyb-review: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-merchant-kyb-review', 'POST', {
+      action: 'review', merchant_id: 'fake', decision: 'approve',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Settlement accounts require auth
+  tests.push(await runTest(suite, 'gateway-merchant-settlement-accounts: rejects unauthenticated', async () => {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/gateway-merchant-settlement-accounts?merchant_id=fake`, {
+      method: 'GET',
+      headers: { 'apikey': ANON_KEY },
+    });
+    await res.text();
+    assert(res.status >= 400, `Expected 4xx, got ${res.status}`);
+  }));
+
+  // Merchant lifecycle requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-lifecycle: rejects unauthenticated create', async () => {
+    const { status } = await invoke('gateway-merchant-lifecycle', 'POST', {
+      action: 'create', business_name: 'Test',
+    });
     assert(status >= 400, `Expected 4xx, got ${status}`);
   }));
 
