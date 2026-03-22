@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import yaml from 'js-yaml';
-import { supabase } from '@/integrations/supabase/client';
+
 
 const ApiExplorer = () => {
   const { toast } = useToast();
@@ -21,8 +21,10 @@ const ApiExplorer = () => {
   useEffect(() => {
     const fetchSpec = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('public-api-spec');
-        if (error) throw error;
+        // Use stable static spec endpoint for reliability + caching
+        const res = await fetch('/openapi.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         setSpec(data);
         setFetchError(null);
       } catch (error) {
