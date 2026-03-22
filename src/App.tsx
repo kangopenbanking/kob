@@ -583,6 +583,7 @@ function App() {
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/store/:merchantId" element={<PublicStorefront />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
