@@ -88,7 +88,7 @@ const CustomerTravelAgencies: React.FC = () => {
 
       {/* ── Stats ── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}
-        className="flex items-center gap-2 px-5 mb-4">
+        className="flex items-center gap-2 px-5 mt-5 mb-4">
         <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
           <Route className="h-3.5 w-3.5" style={{ color: theme.color }} />
           <span className="text-[11px] font-bold text-[#0f1729]">{agencies.length} Agencies</span>
