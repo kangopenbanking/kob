@@ -807,11 +807,11 @@ paths['/v1/dcr/register'] = {
 };
 
 paths['/v1/oidc/.well-known/openid-configuration'] = {
-  get: { tags: ['OAuth'], summary: 'OIDC discovery', operationId: 'oidcConfig', security: [], responses: { '200': { description: 'OIDC configuration document' } } },
+  get: { tags: ['OAuth'], summary: 'OIDC discovery', operationId: 'oidcConfig', security: [], responses: { '200': { description: 'OIDC configuration document', content: { 'application/json': { schema: { type: 'object', properties: { issuer: { type: 'string' }, authorization_endpoint: { type: 'string' }, token_endpoint: { type: 'string' }, jwks_uri: { type: 'string' }, response_types_supported: { type: 'array', items: { type: 'string' } }, subject_types_supported: { type: 'array', items: { type: 'string' } }, id_token_signing_alg_values_supported: { type: 'array', items: { type: 'string' } } } } } } } } },
 };
 
 paths['/v1/jwks'] = {
-  get: { tags: ['OAuth'], summary: 'JSON Web Key Set', operationId: 'jwksEndpoint', security: [], responses: { '200': { description: 'Public keys for token verification' } } },
+  get: { tags: ['OAuth'], summary: 'JSON Web Key Set', operationId: 'jwksEndpoint', security: [], responses: { '200': { description: 'Public keys for token verification', content: { 'application/json': { schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'object', properties: { kty: { type: 'string' }, kid: { type: 'string' }, use: { type: 'string' }, n: { type: 'string' }, e: { type: 'string' } } } } } } } } } } },
 };
 
 // Phone Auth
