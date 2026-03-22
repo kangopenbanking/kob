@@ -139,7 +139,7 @@
     },
     {
       "name": "POS",
-      "description": "Point-of-sale commerce — catalog, orders, payments, refunds, inventory"
+      "description": "Point-of-sale commerce \u2014 catalog, orders, payments, refunds, inventory"
     },
     {
       "name": "Catalog",
@@ -171,19 +171,19 @@
     },
     {
       "name": "Payment Gateway",
-      "description": "Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation"
+      "description": "Unified payment gateway \u2014 charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation"
     },
     {
       "name": "Payment Facilitation",
-      "description": "White-label payment processing — facilitated charges, settlement calculation and processing"
+      "description": "White-label payment processing \u2014 facilitated charges, settlement calculation and processing"
     },
     {
       "name": "Merchant Onboarding",
-      "description": "Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks"
+      "description": "Merchant lifecycle \u2014 registration, KYB verification, API keys, settlement accounts, webhooks"
     },
     {
       "name": "Consumer Tools",
-      "description": "Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)"
+      "description": "Consumer financial tools \u2014 Piggy Bank (savings goals) and Njangi (group rotation savings)"
     },
     {
       "name": "Bank Directory",
@@ -195,11 +195,11 @@
     },
     {
       "name": "Interbank",
-      "description": "Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)"
+      "description": "Interbank payment engine \u2014 ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)"
     },
     {
       "name": "Pay by Bank",
-      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
+      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) \u2014 payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
     }
   ],
   "components": {
@@ -2463,7 +2463,16 @@
         ],
         "responses": {
           "302": {
-            "description": "Redirect to authorization page"
+            "description": "Redirect to authorization page",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "description": "Authorization page URL"
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -12748,7 +12757,45 @@
         },
         "responses": {
           "200": {
-            "description": "Parsed payment initiation"
+            "description": "Parsed payment initiation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_id": {
+                      "type": "string"
+                    },
+                    "creation_date": {
+                      "type": "string"
+                    },
+                    "payments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "end_to_end_id": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "creditor_name": {
+                            "type": "string"
+                          },
+                          "creditor_account": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -12855,7 +12902,48 @@
         },
         "responses": {
           "200": {
-            "description": "Parsed bank statement"
+            "description": "Parsed bank statement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statement_id": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "string"
+                    },
+                    "opening_balance": {
+                      "type": "number"
+                    },
+                    "closing_balance": {
+                      "type": "number"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "number"
+                          },
+                          "credit_debit": {
+                            "type": "string"
+                          },
+                          "booking_date": {
+                            "type": "string"
+                          },
+                          "reference": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -12974,7 +13062,25 @@
         },
         "responses": {
           "200": {
-            "description": "Generated FI-to-FI payment"
+            "description": "Generated FI-to-FI payment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "xml": {
+                      "type": "string"
+                    },
+                    "message_id": {
+                      "type": "string"
+                    },
+                    "transaction_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13093,7 +13199,25 @@
         },
         "responses": {
           "200": {
-            "description": "Generated payment status report"
+            "description": "Generated payment status report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "xml": {
+                      "type": "string"
+                    },
+                    "message_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13200,7 +13324,40 @@
         },
         "responses": {
           "200": {
-            "description": "Parsed SWIFT transfer"
+            "description": "Parsed SWIFT transfer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sender_bic": {
+                      "type": "string"
+                    },
+                    "receiver_bic": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "value_date": {
+                      "type": "string"
+                    },
+                    "reference": {
+                      "type": "string"
+                    },
+                    "beneficiary": {
+                      "type": "string"
+                    },
+                    "ordering_customer": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13307,7 +13464,48 @@
         },
         "responses": {
           "200": {
-            "description": "Parsed statement"
+            "description": "Parsed statement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "string"
+                    },
+                    "statement_number": {
+                      "type": "string"
+                    },
+                    "opening_balance": {
+                      "type": "number"
+                    },
+                    "closing_balance": {
+                      "type": "number"
+                    },
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "reference": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13426,7 +13624,22 @@
         },
         "responses": {
           "200": {
-            "description": "Generated MT103 message"
+            "description": "Generated MT103 message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mt103": {
+                      "type": "string"
+                    },
+                    "reference": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13538,7 +13751,34 @@
         },
         "responses": {
           "200": {
-            "description": "Validation result"
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "iban": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    },
+                    "bank_code": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -13649,7 +13889,34 @@
         },
         "responses": {
           "200": {
-            "description": "Validation result"
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "bic": {
+                      "type": "string"
+                    },
+                    "institution": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -15031,7 +15298,30 @@
         },
         "responses": {
           "201": {
-            "description": "User created"
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -15164,7 +15454,36 @@
         },
         "responses": {
           "201": {
-            "description": "Client created"
+            "description": "Client created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "Shown once"
+                    },
+                    "client_name": {
+                      "type": "string"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -15602,7 +15921,23 @@
         },
         "responses": {
           "200": {
-            "description": "Config updated"
+            "description": "System configuration updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -16598,7 +16933,23 @@
         },
         "responses": {
           "200": {
-            "description": "Staff assigned"
+            "description": "Staff assigned to branch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -16838,7 +17189,30 @@
         },
         "responses": {
           "201": {
-            "description": "Branch created"
+            "description": "Branch created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -16981,7 +17355,23 @@
         },
         "responses": {
           "200": {
-            "description": "Communication sent"
+            "description": "Communication sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -17100,7 +17490,26 @@
         },
         "responses": {
           "200": {
-            "description": "Bulk communication queued"
+            "description": "Bulk communication queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queued": {
+                      "type": "integer"
+                    },
+                    "batch_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "queued"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -17219,7 +17628,36 @@
         },
         "responses": {
           "201": {
-            "description": "Invoice generated"
+            "description": "Invoice generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "invoice_number": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -17338,7 +17776,30 @@
         },
         "responses": {
           "201": {
-            "description": "Institution registered"
+            "description": "Institution registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -17465,7 +17926,33 @@
         },
         "responses": {
           "201": {
-            "description": "Client created"
+            "description": "Client created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "Shown once"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -17592,7 +18079,28 @@
         },
         "responses": {
           "201": {
-            "description": "KYB submitted"
+            "description": "KYB submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "submission_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "pending_review"
+                    },
+                    "submitted_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -18154,7 +18662,26 @@
         },
         "responses": {
           "201": {
-            "description": "Code created"
+            "description": "Code created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "postiq_code": {
+                      "type": "string"
+                    },
+                    "full_address": {
+                      "type": "string"
+                    },
+                    "verified_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -19263,7 +19790,23 @@
         },
         "responses": {
           "200": {
-            "description": "Webhook processed"
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -19906,7 +20449,36 @@
         },
         "responses": {
           "201": {
-            "description": "App registered"
+            "description": "App registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "Shown once"
+                    },
+                    "app_name": {
+                      "type": "string"
+                    },
+                    "redirect_uris": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -21752,7 +22324,37 @@
         },
         "responses": {
           "201": {
-            "description": "Batch created"
+            "description": "Batch created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "pending"
+                    },
+                    "items_count": {
+                      "type": "integer"
+                    },
+                    "total_amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -23790,6 +24392,24 @@
               "text/csv": {
                 "schema": {
                   "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "download_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "row_count": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
@@ -25858,7 +26478,7 @@
                   },
                   "bank_name": {
                     "type": "string",
-                    "example": "Société Générale Cameroun"
+                    "example": "Soci\u00e9t\u00e9 G\u00e9n\u00e9rale Cameroun"
                   },
                   "amount": {
                     "type": "number",
@@ -26546,7 +27166,7 @@
           "Payment Gateway"
         ],
         "summary": "Score transaction risk",
-        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0–100 risk score, flags, and recommended action (allow | flag_for_review | block).",
+        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0\u2013100 risk score, flags, and recommended action (allow | flag_for_review | block).",
         "operationId": "gatewayRiskScore",
         "security": [
           {
@@ -32466,7 +33086,40 @@
         },
         "responses": {
           "201": {
-            "description": "Webhook registered"
+            "description": "Webhook registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "secret": {
+                      "type": "string",
+                      "description": "HMAC secret \u2014 shown once"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -32713,7 +33366,23 @@
         },
         "responses": {
           "200": {
-            "description": "Token revoked (or was already invalid)"
+            "description": "Token revoked (or was already invalid)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -32918,7 +33587,41 @@
         },
         "responses": {
           "201": {
-            "description": "Piggy bank created"
+            "description": "Piggy bank created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_amount": {
+                      "type": "number"
+                    },
+                    "current_amount": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "active"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -33052,7 +33755,23 @@
         },
         "responses": {
           "200": {
-            "description": "Payment recorded"
+            "description": "Payment recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -33211,7 +33930,44 @@
         },
         "responses": {
           "201": {
-            "description": "Njangi group created"
+            "description": "Njangi group created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "contribution_amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "frequency": {
+                      "type": "string"
+                    },
+                    "member_count": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "active"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -37745,10 +38501,42 @@
         },
         "responses": {
           "200": {
-            "description": "Auto-approved"
+            "description": "Overdraft auto-approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "202": {
-            "description": "Pending manager approval"
+            "description": "Pending manager approval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "pending_approval"
+                    },
+                    "overdraft_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -37887,7 +38675,23 @@
         },
         "responses": {
           "200": {
-            "description": "Overdraft approved and activated"
+            "description": "Overdraft approved and activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38012,7 +38816,23 @@
         },
         "responses": {
           "200": {
-            "description": "Overdraft suspended"
+            "description": "Overdraft suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38137,7 +38957,23 @@
         },
         "responses": {
           "200": {
-            "description": "Overdraft revoked"
+            "description": "Overdraft revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38271,7 +39107,23 @@
         },
         "responses": {
           "200": {
-            "description": "Overdraft reinstated"
+            "description": "Overdraft reinstated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38405,7 +39257,32 @@
         },
         "responses": {
           "201": {
-            "description": "Wallet created"
+            "description": "Wallet created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "available_balance": {
+                      "type": "number"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38817,7 +39694,23 @@
         },
         "responses": {
           "200": {
-            "description": "Wallet credited"
+            "description": "Wallet credited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -38959,7 +39852,23 @@
         },
         "responses": {
           "200": {
-            "description": "Wallet debited"
+            "description": "Wallet debited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -39091,7 +40000,23 @@
         },
         "responses": {
           "200": {
-            "description": "Wallet frozen/unfrozen"
+            "description": "Wallet frozen/unfrozen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -39441,7 +40366,33 @@
         },
         "responses": {
           "201": {
-            "description": "Escrow created"
+            "description": "Escrow created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "active"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -39781,7 +40732,23 @@
         },
         "responses": {
           "200": {
-            "description": "Escrow funded"
+            "description": "Escrow funded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -39917,7 +40884,23 @@
         },
         "responses": {
           "200": {
-            "description": "Escrow released"
+            "description": "Escrow released",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -40049,7 +41032,23 @@
         },
         "responses": {
           "200": {
-            "description": "Escrow refunded"
+            "description": "Escrow refunded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -40181,7 +41180,23 @@
         },
         "responses": {
           "200": {
-            "description": "Escrow frozen/unfrozen"
+            "description": "Escrow frozen/unfrozen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -40478,7 +41493,31 @@
         },
         "responses": {
           "201": {
-            "description": "SAR filed"
+            "description": "SAR filed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "filed"
+                    },
+                    "reference": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -40798,7 +41837,23 @@
         },
         "responses": {
           "200": {
-            "description": "SAR reviewed"
+            "description": "SAR reviewed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -43053,7 +44108,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "whsec_... — shown only on creation"
+                      "description": "whsec_... \u2014 shown only on creation"
                     },
                     "events": {
                       "type": "array",
