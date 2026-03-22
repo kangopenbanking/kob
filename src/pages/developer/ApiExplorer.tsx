@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +8,8 @@ import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal } from 
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { API_CONFIG } from '@/config/api';
 import yaml from 'js-yaml';
-
-
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,15 @@ const ApiExplorer = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Helmet>
+        <title>API Explorer — Kang Open Banking | Swagger UI</title>
+        <meta name="description" content="Interactive API Explorer for Kang Open Banking. Test 326+ endpoints for payments, accounts, transfers, and open banking services in Cameroon and CEMAC region." />
+        <meta property="og:title" content="Kang Open Banking API Explorer" />
+        <meta property="og:description" content="Interactive Swagger UI documentation for the KOB payment gateway and open banking platform." />
+        <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer" />
+      </Helmet>
+    <div className="container mx-auto px-4 py-8" data-testid="api-explorer-container">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">API Explorer</h1>
         <p className="text-lg text-muted-foreground mb-6">
@@ -260,6 +268,7 @@ grant_type=client_credentials
         )}
       </Card>
     </div>
+    </>
   );
 };
 

@@ -101,6 +101,17 @@ const RedocPage = () => {
             <li><a href="/openapi.yaml">Download OpenAPI YAML</a></li>
             <li><a href="/openapi-sandbox.json">Download Sandbox OpenAPI JSON</a></li>
           </ul>
+          <h2>API Endpoint Groups</h2>
+          <ul>
+            <li><strong>Gateway</strong> — /v1/gateway/charges, /v1/gateway/payouts, /v1/gateway/refunds, /v1/gateway/settlements</li>
+            <li><strong>Accounts (AISP)</strong> — /v1/aisp/accounts, /v1/aisp/balances, /v1/aisp/transactions</li>
+            <li><strong>Payments (PISP)</strong> — /v1/pisp/domestic-payments, /v1/pisp/international-payments</li>
+            <li><strong>Merchants</strong> — /v1/merchants, /v1/merchants/kyb, /v1/merchants/api-keys, /v1/merchants/webhooks</li>
+            <li><strong>Mobile Money</strong> — /v1/mobile-money/charge, /v1/mobile-money/disburse</li>
+            <li><strong>Webhooks</strong> — /v1/webhooks/inbound/stripe, /v1/webhooks/inbound/flutterwave, /v1/webhooks/inbound/paypal</li>
+            <li><strong>OAuth</strong> — /v1/oauth/token, /v1/oauth/authorize, /v1/dcr/register</li>
+            <li><strong>Sandbox</strong> — /v1/sandbox/simulate, /v1/sandbox/reset</li>
+          </ul>
           <p>Or view the <a href="/developer/api-explorer-static">static API reference</a>.</p>
         </div>
       </noscript>
@@ -126,7 +137,7 @@ const RedocPage = () => {
         </div>
       )}
 
-      <div ref={containerRef} id="redoc-container" />
+      <div ref={containerRef} id="redoc-container" data-testid="redoc-container" />
     </>
   );
 };

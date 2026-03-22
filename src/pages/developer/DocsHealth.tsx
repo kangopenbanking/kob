@@ -22,8 +22,11 @@ const DocsHealth = () => {
     { name: 'OpenAPI JSON (Sandbox)', url: '/openapi-sandbox.json' },
     { name: 'OpenAPI YAML (Sandbox)', url: '/openapi-sandbox.yaml' },
     { name: 'API Explorer', url: '/developer/api-explorer' },
+    { name: 'Swagger (alias)', url: '/developer/swagger' },
+    { name: 'OpenAPI Downloads', url: '/developer/openapi' },
     { name: 'Static Reference', url: '/developer/api-explorer-static' },
     { name: 'Redoc Docs', url: '/developer/redoc' },
+    { name: 'Redoc Reference (alias)', url: '/developer/reference' },
     { name: 'Developer Portal', url: '/developer' },
   ];
 
@@ -101,7 +104,7 @@ const DocsHealth = () => {
 
       <Card>
         <CardHeader><CardTitle>Endpoint Checks</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2" data-testid="docs-health-results">
           {checks.map(c => (
             <div key={c.name} className="flex items-center gap-3 p-3 rounded-lg border">
               {c.status === 'checking' && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}

@@ -157,6 +157,7 @@ const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
 const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic"));
 const RedocPage = lazy(() => import("./pages/developer/RedocPage"));
 const DocsHealth = lazy(() => import("./pages/developer/DocsHealth"));
+const OpenApiDownloads = lazy(() => import("./pages/developer/OpenApiDownloads"));
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
@@ -857,6 +858,11 @@ function App() {
               <Route path="redoc" element={<RedocPage />} />
               <Route path="redoc-sandbox" element={<RedocPage />} />
               <Route path="docs-health" element={<DocsHealth />} />
+              {/* Plug-and-play aliases for common developer paths */}
+              <Route path="swagger" element={<ApiExplorer />} />
+              <Route path="openapi" element={<OpenApiDownloads />} />
+              <Route path="reference" element={<RedocPage />} />
+              <Route path="docs" element={<Navigate to="/developer/getting-started" replace />} />
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
