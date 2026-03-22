@@ -29,6 +29,15 @@ const categories: BillCategory[] = [
   { id: 'insurance', name: 'Insurance', icon: <Shield className="h-5 w-5" strokeWidth={1.5} />, iconBg: 'bg-orange-500', billers: ['Activa', 'Chanas', 'SAAR'] },
 ];
 
+const cardColors: Record<string, string> = {
+  electricity: 'bg-amber-100 dark:bg-amber-900/40',
+  water: 'bg-sky-100 dark:bg-sky-900/40',
+  internet: 'bg-emerald-100 dark:bg-emerald-900/40',
+  tv: 'bg-violet-100 dark:bg-violet-900/40',
+  phone: 'bg-rose-100 dark:bg-rose-900/40',
+  insurance: 'bg-orange-100 dark:bg-orange-900/40',
+};
+
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
 const fadeUp = { initial: { opacity: 0, y: 14, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } } };
 
