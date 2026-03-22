@@ -84,6 +84,9 @@ Deno.serve(async (req) => {
         { key: 'client_id', value: 'YOUR_SANDBOX_CLIENT_ID', enabled: true },
         { key: 'client_secret', value: 'YOUR_SANDBOX_CLIENT_SECRET', enabled: true },
         { key: 'api_key', value: 'YOUR_SANDBOX_API_KEY', enabled: true },
+        { key: 'merchant_api_key', value: '', enabled: true },
+        { key: 'webhook_secret', value: '', enabled: true },
+        { key: 'idempotency_key_prefix', value: 'test_', enabled: true },
       ],
     },
     {
@@ -95,6 +98,9 @@ Deno.serve(async (req) => {
         { key: 'client_id', value: 'YOUR_PROD_CLIENT_ID', enabled: true },
         { key: 'client_secret', value: 'YOUR_PROD_CLIENT_SECRET', enabled: true },
         { key: 'api_key', value: 'YOUR_PROD_API_KEY', enabled: true },
+        { key: 'merchant_api_key', value: '', enabled: true },
+        { key: 'webhook_secret', value: '', enabled: true },
+        { key: 'idempotency_key_prefix', value: 'live_', enabled: true },
       ],
     },
   ];
