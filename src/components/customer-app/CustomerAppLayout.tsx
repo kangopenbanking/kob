@@ -36,6 +36,8 @@ const CustomerAppInner: React.FC = () => {
         '--pwa-font-multiplier': multiplier,
         '--pwa-heading-color': typo.global_heading_color || '#000000',
         '--pwa-body-color': typo.global_body_color || '#000000',
+        '--pwa-heading-color-dark': '#fafafa',
+        '--pwa-body-color-dark': '#cccccc',
       } as React.CSSProperties}
     >
       <PullToRefresh onRefresh={handleRefresh}>
