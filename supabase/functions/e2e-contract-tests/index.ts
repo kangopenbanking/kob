@@ -366,6 +366,112 @@ async function suiteSDKs(): Promise<TestSuite> {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SUITE 9: Merchant Onboarding Contract
+// ═══════════════════════════════════════════════════════════════
+
+async function suiteMerchantOnboarding(): Promise<TestSuite> {
+  const suite = 'Merchant Onboarding';
+  const tests: TestResult[] = [];
+
+  // Merchant creation requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-ops: rejects unauthenticated create', async () => {
+    const { status } = await invoke('gateway-merchant-ops', 'POST', {
+      action: 'create', business_name: 'Test Merchant', business_email: 'test@test.cm',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // KYB submission requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-kyb: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-merchant-kyb', 'POST', {
+      action: 'submit', merchant_id: 'fake',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // API key creation requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-keys: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-merchant-keys', 'POST', {
+      action: 'create', merchant_id: 'fake', environment: 'sandbox',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Merchant webhooks registration requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-webhooks: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-merchant-webhooks', 'POST', {
+      action: 'register', merchant_id: 'fake', url: 'https://example.com/wh',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Query endpoints require auth
+  tests.push(await runTest(suite, 'gateway-query: list-merchants rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-query', 'POST', { action: 'list-merchants' });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  const passed = tests.filter(t => t.status === 'pass').length;
+  const failed = tests.filter(t => t.status === 'fail').length;
+  return { name: suite, tests, passed, failed, skipped: 0, duration_ms: tests.reduce((s, t) => s + t.duration_ms, 0) };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 10: Dispute & Settlement Lifecycle
+// ═══════════════════════════════════════════════════════════════
+
+async function suiteDisputeSettlement(): Promise<TestSuite> {
+  const suite = 'Dispute & Settlement Lifecycle';
+  const tests: TestResult[] = [];
+
+  // Dispute evidence submission requires auth
+  tests.push(await runTest(suite, 'gateway-submit-dispute-evidence: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-submit-dispute-evidence', 'POST', {
+      dispute_id: 'fake', evidence: { text: 'test' },
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Dispute lifecycle requires auth
+  tests.push(await runTest(suite, 'dispute-lifecycle: rejects unauthenticated', async () => {
+    const { status } = await invoke('dispute-lifecycle', 'POST', {
+      action: 'get', dispute_id: 'fake',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Settlement cron protected
+  tests.push(await runTest(suite, 'gateway-settlement-cron: rejects without cron auth', async () => {
+    const { status } = await invoke('gateway-settlement-cron', 'POST', {});
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Reconciliation requires auth
+  tests.push(await runTest(suite, 'gateway-reconciliation: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-reconciliation', 'POST', {
+      action: 'run', merchant_id: 'fake', provider: 'flutterwave',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Query disputes requires auth
+  tests.push(await runTest(suite, 'gateway-query: list-disputes rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-query', 'POST', { action: 'list-disputes' });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Query settlements requires auth
+  tests.push(await runTest(suite, 'gateway-query: list-settlements rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-query', 'POST', { action: 'list-settlements' });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  const passed = tests.filter(t => t.status === 'pass').length;
+  const failed = tests.filter(t => t.status === 'fail').length;
+  return { name: suite, tests, passed, failed, skipped: 0, duration_ms: tests.reduce((s, t) => s + t.duration_ms, 0) };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN RUNNER
 // ═══════════════════════════════════════════════════════════════
 
