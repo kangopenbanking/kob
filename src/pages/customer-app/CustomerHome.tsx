@@ -78,6 +78,8 @@ const financialHealth: FeatureItem[] = [
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
+const staggerContainer = { animate: { transition: { staggerChildren: 0.06 } } };
+const staggerItem = { initial: { opacity: 0, y: 12, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1 } };
 
 const txIconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   transfer: { icon: ArrowUpRight, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
@@ -354,13 +356,17 @@ const CustomerHome: React.FC = () => {
       {visibleMoney.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Money Movement</p>
-          <div className="grid grid-cols-2 gap-3">
+          <motion.div className="grid grid-cols-2 gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleMoney.slice(0, 2).map((item) => {
-              // Extract border HSL to use as solid bg
               const solidBg = item.borderColor.replace('border-', 'bg-');
               return (
-                <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-start gap-3 rounded-3xl ${solidBg} p-5 text-left min-h-[140px]`}>
+                <motion.button
+                  key={item.path}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => go(item.path)}
+                  className={`flex flex-col items-start gap-3 rounded-3xl ${solidBg} p-5 text-left min-h-[140px] shadow-md transition-shadow active:shadow-sm`}
+                >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20">
                     <item.icon className="h-6 w-6 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
                   </div>
@@ -368,10 +374,10 @@ const CustomerHome: React.FC = () => {
                     <p className="text-sm font-bold text-[hsl(0,0%,100%)]">{item.label}</p>
                     <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{item.description}</p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -401,12 +407,16 @@ const CustomerHome: React.FC = () => {
       {visibleSavings.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Savings & Goals</p>
-          <div className="flex flex-col gap-3">
+          <motion.div className="flex flex-col gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleSavings[0] && (() => {
               const FirstIcon = visibleSavings[0].icon;
               return (
-                <button onClick={() => go(visibleSavings[0].path)}
-                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor}`}>
+                <motion.button
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => go(visibleSavings[0].path)}
+                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor} shadow-sm`}
+                >
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-background/50">
                     <FirstIcon className={`h-7 w-7 ${visibleSavings[0].iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -415,22 +425,27 @@ const CustomerHome: React.FC = () => {
                     <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{visibleSavings[0].description}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-                </button>
+                </motion.button>
               );
             })()}
             <div className="grid grid-cols-2 gap-3">
               {visibleSavings.slice(1).map((item) => (
-                <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor}`}>
+                <motion.button
+                  key={item.path}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => go(item.path)}
+                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor} shadow-sm`}
+                >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
                   <p className="text-xs font-bold text-foreground">{item.label}</p>
                   <p className="text-[10px] text-muted-foreground text-center">{item.description}</p>
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -497,9 +512,10 @@ const CustomerHome: React.FC = () => {
           const bgImg = tc.bg_image || travelCardBg;
           const btnSizeClass = tc.button_size === 'sm' ? 'px-3 py-2 text-xs' : tc.button_size === 'lg' ? 'px-5 py-4 text-base' : 'px-4 py-3 text-sm';
           return (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => go('travel')}
-              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
+              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
               <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
@@ -548,7 +564,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </button>
+            </motion.button>
           );
         })()}
       </motion.div>
@@ -583,7 +599,7 @@ const CustomerHome: React.FC = () => {
             <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <motion.div className="space-y-2" variants={staggerContainer} initial="initial" animate="animate">
             {recentTxns.map((tx: any) => {
               const isCredit = tx.credit_debit_indicator === 'Credit';
               const amount = tx.amount || 0;
@@ -592,7 +608,12 @@ const CustomerHome: React.FC = () => {
               const TxIcon = iconInfo.icon;
               const timeAgo = tx.booking_datetime ? formatDistanceToNow(new Date(tx.booking_datetime), { addSuffix: true }) : '';
               return (
-                <div key={tx.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                <motion.div
+                  key={tx.id}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm"
+                >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${iconInfo.color}`}>
                     <TxIcon className={`h-5 w-5 ${iconInfo.iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -603,10 +624,10 @@ const CustomerHome: React.FC = () => {
                   <p className={`text-sm font-bold tabular-nums ${isCredit ? 'text-[hsl(150,60%,40%)]' : 'text-foreground'}`}>
                     {isCredit ? '+' : '-'}{Math.abs(amount).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{tx.currency}</span>
                   </p>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </motion.div>
       </div>
