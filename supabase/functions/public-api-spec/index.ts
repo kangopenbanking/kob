@@ -1086,7 +1086,7 @@ paths['/v1/loans/{loanId}/repay'] = {
     tags: ['Loans'], summary: 'Make loan repayment', operationId: 'loanRepay', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 92500 }, payment_method: { type: 'string', enum: ['bank_transfer', 'mobile_money', 'savings_debit'] } } } } } },
-    responses: { '200': { description: 'Repayment recorded with schedule/ledger update' }, ...errorResponses },
+    responses: { '200': { description: 'Repayment recorded with schedule/ledger update', content: { 'application/json': { schema: { type: 'object', properties: { repayment_id: { type: 'string', format: 'uuid' }, amount_applied: { type: 'number' }, remaining_balance: { type: 'number' }, next_installment: { $ref: '#/components/schemas/LoanScheduleItem' } } } } } }, ...errorResponses },
   },
 };
 
