@@ -30,7 +30,7 @@ const categories = [
     iconFg: '#ffffff',
     stat: 'Top Rated',
     statIcon: Star,
-    features: ['Guided tours', 'Group discounts'],
+    features: ['Guides', 'Groups'],
   },
   {
     key: 'airlines',
