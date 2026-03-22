@@ -1,93 +1,213 @@
 import { SEO } from "@/components/SEO";
-import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 const GatewayQuickstart = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
-    <SEO title="Gateway API Quickstart | Kang Open Banking" description="Get started with the Kang Open Banking Payment Gateway API — create charges, payouts, and handle webhooks." />
+    <SEO title="Gateway Quickstart (10 min) | Kang Open Banking" description="Create a merchant, get API keys, accept your first payment, handle webhooks, and issue a refund — all in under 10 minutes." />
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
-      <h1 className="text-3xl font-bold">Gateway API Quickstart</h1>
-      <p className="text-muted-foreground mt-2">Accept payments via Mobile Money, Cards, and Bank Transfers using the unified <code>/v1/gateway/*</code> namespace.</p>
+      <h1 className="text-3xl font-bold">Gateway Quickstart</h1>
+      <p className="text-muted-foreground mt-2">Go from zero to your first payment in under 10 minutes. This guide uses the sandbox environment with test credentials.</p>
     </div>
 
-    <Card>
-      <CardHeader><CardTitle>1. Authenticate</CardTitle></CardHeader>
-      <CardContent>
-        <p className="mb-3 text-muted-foreground">All Gateway endpoints require a Bearer token from OAuth 2.0 token exchange.</p>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`POST /v1/oauth/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=client_credentials&client_id=YOUR_CLIENT_ID&client_secret=YOUR_SECRET&scope=gateway.charges gateway.payouts`}</code></pre>
+    <Card className="border-primary/30 bg-primary/5">
+      <CardContent className="pt-6">
+        <h3 className="font-semibold mb-2">📋 Prerequisites</h3>
+        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <li>A KOB developer account (<a href="/auth" className="text-primary underline">Sign up</a>)</li>
+          <li>Sandbox API credentials (available in your dashboard after signup)</li>
+          <li><code className="bg-muted px-1 rounded">curl</code> or any HTTP client (Postman, Insomnia)</li>
+        </ul>
       </CardContent>
     </Card>
 
     <Card>
-      <CardHeader><CardTitle>2. Create a Merchant</CardTitle></CardHeader>
-      <CardContent>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`POST /v1/gateway/merchants
+      <CardHeader><CardTitle>Step 1 — Authenticate</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">Exchange your sandbox client credentials for a Bearer token.</p>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/oauth/token \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "grant_type=client_credentials\\
+&client_id=sb_client_test_cm_001\\
+&client_secret=sb_secret_test_cm_001\\
+&scope=gateway.charges gateway.payouts gateway.merchants"
+
+# Response
 {
-  "business_name": "Acme Corp",
-  "business_email": "payments@acme.cm",
-  "environment": "sandbox"
+  "access_token": "eyJhbGciOi...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "gateway.charges gateway.payouts gateway.merchants"
+}`}</code></pre>
+        <p className="text-xs text-muted-foreground">💡 Save the <code className="bg-muted px-1 rounded">access_token</code> — you'll use it for all subsequent requests.</p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader><CardTitle>Step 2 — Create a Merchant</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: onboard-acme-001" \\
+  -d '{
+    "business_name": "Acme Cameroun SARL",
+    "business_email": "payments@acme.cm",
+    "country": "CM",
+    "currency": "XAF",
+    "environment": "sandbox"
+  }'
+
+# Response
+{
+  "id": "mch_test_abc123",
+  "business_name": "Acme Cameroun SARL",
+  "status": "active",
+  "environment": "sandbox",
+  "created_at": "2026-03-22T10:00:00Z"
 }`}</code></pre>
       </CardContent>
     </Card>
 
     <Card>
-      <CardHeader><CardTitle>3. Create Your First Charge</CardTitle></CardHeader>
-      <CardContent>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`POST /v1/gateway/charges
-Idempotency-Key: unique-key-123
+      <CardHeader><CardTitle>Step 3 — Create Your First Charge (Mobile Money)</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: charge-order-001" \\
+  -d '{
+    "merchant_id": "mch_test_abc123",
+    "amount": 5000,
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237677123456",
+    "tx_ref": "order_001",
+    "description": "Test payment - Quickstart"
+  }'
+
+# Response
 {
-  "merchant_id": "mch_uuid",
+  "id": "chg_test_xyz789",
+  "status": "processing",
   "amount": 5000,
   "currency": "XAF",
   "channel": "mobile_money",
-  "customer_phone": "237677123456",
+  "provider": "flutterwave",
+  "provider_ref": "FLW-MOCK-123456",
   "tx_ref": "order_001"
 }`}</code></pre>
-        <p className="mt-3 text-muted-foreground">Response returns a canonical charge object with <code>status: "processing"</code> and the provider reference.</p>
+        <p className="text-xs text-muted-foreground">In sandbox mode, Mobile Money charges auto-complete within seconds. In production, the customer receives a USSD/STK push on their phone.</p>
       </CardContent>
     </Card>
 
     <Card>
-      <CardHeader><CardTitle>4. Verify the Charge</CardTitle></CardHeader>
-      <CardContent>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`POST /v1/gateway/charges/{chargeId}/verify
+      <CardHeader><CardTitle>Step 4 — Verify the Charge</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/gateway/charges/chg_test_xyz789/verify \\
+  -H "Authorization: Bearer YOUR_TOKEN"
 
-// Response
+# Response
 {
-  "id": "chg_uuid",
+  "id": "chg_test_xyz789",
   "status": "successful",
-  "provider": "flutterwave",
-  "verified_at": "2026-02-21T10:05:00Z"
-}`}</code></pre>
-        <p className="mt-3 text-muted-foreground">Polls the provider (Flutterwave/Stripe) for real-time status and syncs the canonical charge record.</p>
-      </CardContent>
-    </Card>
-
-    <Card>
-      <CardHeader><CardTitle>5. Preview Fees (Optional)</CardTitle></CardHeader>
-      <CardContent>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`GET /v1/gateway/fee-estimate?amount=5000&channel=mobile_money&currency=XAF
-
-// Response
-{
+  "verified_at": "2026-03-22T10:00:05Z",
   "amount": 5000,
-  "fee_amount": 200,
-  "net_amount": 4800,
-  "fee_percentage": "3%",
-  "fixed_fee": 50
+  "currency": "XAF",
+  "provider": "flutterwave"
 }`}</code></pre>
+        <p className="text-xs text-muted-foreground">✅ <strong>Best practice</strong>: Don't rely only on polling — set up a webhook (Step 5) so KOB pushes the final status to you.</p>
       </CardContent>
     </Card>
 
     <Card>
-      <CardHeader><CardTitle>6. Set Up Webhooks</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Step 5 — Handle the Webhook</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">Register a webhook URL and KOB will POST events like <code className="bg-muted px-1 rounded">charge.successful</code> to your server in real time.</p>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`# Register webhook
+curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "merchant_id": "mch_test_abc123",
+    "url": "https://yourapp.com/webhooks/kob",
+    "events": ["charge.successful", "charge.failed", "payout.completed"],
+    "active": true
+  }'
+
+# You'll receive events like:
+POST https://yourapp.com/webhooks/kob
+X-KOB-Signature: hmac_sha256=a1b2c3...
+X-KOB-Timestamp: 1711100000
+{
+  "event_type": "charge.successful",
+  "event_id": "evt_abc123",
+  "data": { "id": "chg_test_xyz789", "status": "successful", ... }
+}`}</code></pre>
+        <p className="text-xs text-muted-foreground">See the full <a href="/developer/gateway/webhooks" className="text-primary underline">Webhook Guide</a> for signature verification code in Node.js, Python, and PHP.</p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader><CardTitle>Step 6 — Issue a Refund</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/gateway/refunds \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: refund-order-001" \\
+  -d '{
+    "charge_id": "chg_test_xyz789",
+    "amount": 5000,
+    "reason": "customer_request"
+  }'
+
+# Response
+{
+  "id": "ref_test_456",
+  "charge_id": "chg_test_xyz789",
+  "amount": 5000,
+  "currency": "XAF",
+  "status": "processing"
+}`}</code></pre>
+      </CardContent>
+    </Card>
+
+    <Separator />
+
+    <Card>
+      <CardHeader><CardTitle>Sandbox Test Values</CardTitle></CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">Configure your merchant's <code>webhook_url</code> to receive events like <code>charge.successful</code>, <code>payout.completed</code>, and <code>dispute.created</code>. All events are HMAC-SHA256 signed.</p>
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Mobile Money (Cameroon)</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b"><th className="text-left py-2">Phone</th><th className="text-left py-2">Result</th></tr></thead>
+                <tbody>
+                  <tr className="border-b"><td className="py-2 font-mono text-xs">+237677000001</td><td><Badge>successful</Badge></td></tr>
+                  <tr className="border-b"><td className="py-2 font-mono text-xs">+237677000002</td><td><Badge variant="destructive">failed</Badge></td></tr>
+                  <tr><td className="py-2 font-mono text-xs">+237677000003</td><td><Badge variant="secondary">processing (stays pending 60s)</Badge></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Test Cards</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b"><th className="text-left py-2">Card Number</th><th className="text-left py-2">Expiry</th><th className="text-left py-2">CVV</th><th className="text-left py-2">Result</th></tr></thead>
+                <tbody>
+                  <tr className="border-b"><td className="py-2 font-mono text-xs">4242 4242 4242 4242</td><td className="py-2 text-xs">12/28</td><td className="py-2 text-xs">123</td><td><Badge>successful</Badge></td></tr>
+                  <tr className="border-b"><td className="py-2 font-mono text-xs">4000 0000 0000 0002</td><td className="py-2 text-xs">12/28</td><td className="py-2 text-xs">123</td><td><Badge variant="destructive">declined</Badge></td></tr>
+                  <tr><td className="py-2 font-mono text-xs">4000 0025 0000 3155</td><td className="py-2 text-xs">12/28</td><td className="py-2 text-xs">123</td><td><Badge variant="outline">3D Secure required</Badge></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
 
@@ -96,18 +216,38 @@ Idempotency-Key: unique-key-123
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b"><th className="text-left py-2">Provider Status</th><th className="text-left py-2">Gateway Status</th></tr></thead>
+            <thead><tr className="border-b"><th className="text-left py-2">Provider Status</th><th className="text-left py-2">KOB Gateway Status</th></tr></thead>
             <tbody>
               <tr className="border-b"><td className="py-2">Flutterwave: successful</td><td><Badge>successful</Badge></td></tr>
               <tr className="border-b"><td className="py-2">Flutterwave: pending</td><td><Badge variant="secondary">processing</Badge></td></tr>
               <tr className="border-b"><td className="py-2">Stripe: succeeded</td><td><Badge>successful</Badge></td></tr>
               <tr className="border-b"><td className="py-2">Stripe: requires_action</td><td><Badge variant="outline">pending</Badge></td></tr>
-              <tr><td className="py-2">Stripe: canceled</td><td><Badge variant="destructive">cancelled</Badge></td></tr>
+              <tr className="border-b"><td className="py-2">Stripe: canceled</td><td><Badge variant="destructive">cancelled</Badge></td></tr>
+              <tr className="border-b"><td className="py-2">PayPal: COMPLETED</td><td><Badge>successful</Badge></td></tr>
+              <tr><td className="py-2">PayPal: DENIED</td><td><Badge variant="destructive">failed</Badge></td></tr>
             </tbody>
           </table>
         </div>
       </CardContent>
     </Card>
+
+    <Card>
+      <CardHeader><CardTitle>What's Next?</CardTitle></CardHeader>
+      <CardContent>
+        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+          <li><a href="/developer/gateway/webhooks" className="text-primary underline font-semibold">Webhook Guide</a> — Signature verification, retry policy, sample handlers in 3 languages</li>
+          <li><a href="/developer/gateway/payouts" className="text-primary underline font-semibold">Payouts</a> — Disburse funds via Mobile Money or bank transfer</li>
+          <li><a href="/developer/gateway/disputes" className="text-primary underline font-semibold">Disputes</a> — Handle chargebacks and evidence submission</li>
+          <li><a href="/developer/gateway/settlements" className="text-primary underline font-semibold">Settlements</a> — Configure settlement schedules and accounts</li>
+          <li><a href="/developer/api-explorer" className="text-primary underline font-semibold">Full API Reference</a> — Interactive explorer for all 300+ endpoints</li>
+        </ul>
+      </CardContent>
+    </Card>
+
+    <DocNavigation
+      previousPage={{ title: "Developer Home", path: "/developer" }}
+      nextPage={{ title: "Webhooks Guide", path: "/developer/gateway/webhooks" }}
+    />
   </div>
 );
 
