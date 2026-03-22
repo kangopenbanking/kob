@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { mapStripeStatus, mapStripeDisputeStatus } from "../_shared/gateway-adapters.ts";
+import { safeErrorResponse } from "../_shared/errors.ts";
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
@@ -53,11 +54,12 @@ serve(async (req) => {
     const eventId = event.id;
 
     // Dedupe
-    if (eventId) {
-      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', `stripe_${eventId}`).maybeSingle();
+    const dedupeKey = eventId ? `stripe_${eventId}` : null;
+    if (dedupeKey) {
+      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', dedupeKey).maybeSingle();
       if (existing) return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-      await supabase.from('webhook_inbox').insert({ event_id: `stripe_${eventId}`, provider: 'stripe', payload: event, status: 'processing' });
+      await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'stripe', event_type: event.type, payload: event, status: 'processing' });
     }
 
     const obj = event.data?.object;
@@ -193,9 +195,13 @@ serve(async (req) => {
       }
     }
 
+    // Mark webhook as processed
+    if (dedupeKey) {
+      await supabase.from('webhook_inbox').update({ status: 'processed' }).eq('event_id', dedupeKey);
+    }
+
     return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    console.error('Gateway Stripe webhook error:', err);
-    return new Response(JSON.stringify({ error: 'internal_error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeErrorResponse(err, corsHeaders, 'gateway-webhook-stripe');
   }
 });

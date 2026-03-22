@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyPayPalWebhookSignature, mapPayPalStatus } from "../_shared/gateway-adapters.ts";
+import { safeErrorResponse } from "../_shared/errors.ts";
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
@@ -40,11 +41,12 @@ serve(async (req) => {
     const eventId = event.id;
 
     // Deduplication via webhook_inbox
+    const dedupeKey = `paypal_${eventId}`;
     const { data: existing } = await supabase
       .from('webhook_inbox')
       .select('id')
-      .eq('event_id', eventId)
-      .single();
+      .eq('event_id', dedupeKey)
+      .maybeSingle();
 
     if (existing) {
       return new Response(JSON.stringify({ status: 'already_processed' }), {
@@ -55,10 +57,11 @@ serve(async (req) => {
 
     // Store in webhook_inbox
     await supabase.from('webhook_inbox').insert({
-      event_id: eventId,
+      event_id: dedupeKey,
       provider: 'paypal',
       event_type: eventType,
       payload: event,
+      status: 'processing',
     });
 
     // Handle payout events
@@ -199,16 +202,14 @@ serve(async (req) => {
       }
     }
 
+    // Mark webhook as processed
+    await supabase.from('webhook_inbox').update({ status: 'processed' }).eq('event_id', dedupeKey);
+
     return new Response(JSON.stringify({ status: 'processed' }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    const errorId = crypto.randomUUID().slice(0, 8);
-    console.error(`[${errorId}] PayPal webhook error:`, err);
-    return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return safeErrorResponse(err, corsHeaders, 'gateway-webhook-paypal');
   }
 });
