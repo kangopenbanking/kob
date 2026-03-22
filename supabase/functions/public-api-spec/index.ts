@@ -807,53 +807,56 @@ paths['/v1/dcr/register'] = {
 };
 
 paths['/v1/oidc/.well-known/openid-configuration'] = {
-  get: { tags: ['OAuth'], summary: 'OIDC discovery', operationId: 'oidcConfig', security: [], responses: { '200': { description: 'OIDC configuration document' } } },
+  get: { tags: ['OAuth'], summary: 'OIDC discovery', operationId: 'oidcConfig', security: [], responses: { '200': { description: 'OIDC configuration document', content: { 'application/json': { schema: { type: 'object', properties: { issuer: { type: 'string' }, authorization_endpoint: { type: 'string' }, token_endpoint: { type: 'string' }, jwks_uri: { type: 'string' }, response_types_supported: { type: 'array', items: { type: 'string' } }, subject_types_supported: { type: 'array', items: { type: 'string' } }, id_token_signing_alg_values_supported: { type: 'array', items: { type: 'string' } } } } } } } } },
 };
 
 paths['/v1/jwks'] = {
-  get: { tags: ['OAuth'], summary: 'JSON Web Key Set', operationId: 'jwksEndpoint', security: [], responses: { '200': { description: 'Public keys for token verification' } } },
+  get: { tags: ['OAuth'], summary: 'JSON Web Key Set', operationId: 'jwksEndpoint', security: [], responses: { '200': { description: 'Public keys for token verification', content: { 'application/json': { schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'object', properties: { kty: { type: 'string' }, kid: { type: 'string' }, use: { type: 'string' }, n: { type: 'string' }, e: { type: 'string' } } } } } } } } } } },
 };
 
 // Phone Auth
+const successResult = (desc: string) => ({ description: desc, content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean', example: true }, message: { type: 'string' } } } } } });
+const tokenResponse = { description: 'Authentication successful', content: { 'application/json': { schema: { type: 'object', properties: { access_token: { type: 'string' }, token_type: { type: 'string', example: 'Bearer' }, expires_in: { type: 'integer', example: 3600 }, refresh_token: { type: 'string' }, user_id: { type: 'string', format: 'uuid' } } } } } };
+
 paths['/v1/auth/phone/send-otp'] = {
-  post: { tags: ['Authentication'], summary: 'Send OTP to phone', operationId: 'phoneAuthSendOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number'], properties: { phone_number: { type: 'string', example: '+237670000000' } } } } } }, responses: { '200': { description: 'OTP sent' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Send OTP to phone', operationId: 'phoneAuthSendOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number'], properties: { phone_number: { type: 'string', example: '+237670000000' } } } } } }, responses: { '200': successResult('OTP sent'), ...errorResponses } },
 };
 
 paths['/v1/auth/phone/verify-otp'] = {
-  post: { tags: ['Authentication'], summary: 'Verify OTP', operationId: 'phoneAuthVerifyOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'otp_code'], properties: { phone_number: { type: 'string' }, otp_code: { type: 'string' } } } } } }, responses: { '200': { description: 'OTP verified, token issued' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Verify OTP', operationId: 'phoneAuthVerifyOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'otp_code'], properties: { phone_number: { type: 'string' }, otp_code: { type: 'string' } } } } } }, responses: { '200': tokenResponse, ...errorResponses } },
 };
 
 paths['/v1/auth/phone/pin-login'] = {
-  post: { tags: ['Authentication'], summary: 'Login with PIN', operationId: 'phoneAuthPinLogin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin'], properties: { phone_number: { type: 'string' }, pin: { type: 'string', minLength: 4, maxLength: 6 } } } } } }, responses: { '200': { description: 'Login successful' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Login with PIN', operationId: 'phoneAuthPinLogin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin'], properties: { phone_number: { type: 'string' }, pin: { type: 'string', minLength: 4, maxLength: 6 } } } } } }, responses: { '200': tokenResponse, ...errorResponses } },
 };
 
 paths['/v1/auth/pin/set'] = {
-  post: { tags: ['Authentication'], summary: 'Set PIN code', operationId: 'pinCodeSet', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': { description: 'PIN set' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Set PIN code', operationId: 'pinCodeSet', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': successResult('PIN set'), ...errorResponses } },
 };
 
 paths['/v1/auth/pin/verify'] = {
-  post: { tags: ['Authentication'], summary: 'Verify PIN code', operationId: 'pinCodeVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': { description: 'PIN verified' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Verify PIN code', operationId: 'pinCodeVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': successResult('PIN verified'), ...errorResponses } },
 };
 
 paths['/v1/auth/password/reset-with-pin'] = {
-  post: { tags: ['Authentication'], summary: 'Reset password with PIN', operationId: 'passwordResetWithPin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin', 'new_password'], properties: { phone_number: { type: 'string' }, pin: { type: 'string' }, new_password: { type: 'string' } } } } } }, responses: { '200': { description: 'Password reset' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Reset password with PIN', operationId: 'passwordResetWithPin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin', 'new_password'], properties: { phone_number: { type: 'string' }, pin: { type: 'string' }, new_password: { type: 'string' } } } } } }, responses: { '200': successResult('Password reset'), ...errorResponses } },
 };
 
 // Security
 paths['/v1/security/captcha/generate'] = {
-  post: { tags: ['Security'], summary: 'Generate CAPTCHA', operationId: 'captchaGenerate', security: [], responses: { '200': { description: 'CAPTCHA challenge' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Generate CAPTCHA', operationId: 'captchaGenerate', security: [], responses: { '200': { description: 'CAPTCHA challenge', content: { 'application/json': { schema: { type: 'object', properties: { challenge_id: { type: 'string', format: 'uuid' }, image_base64: { type: 'string' }, question: { type: 'string' }, expires_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/security/captcha/verify'] = {
-  post: { tags: ['Security'], summary: 'Verify CAPTCHA', operationId: 'captchaVerify', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': { description: 'Verification result' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Verify CAPTCHA', operationId: 'captchaVerify', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': successResult('CAPTCHA verified'), ...errorResponses } },
 };
 
 paths['/v1/security/sca/initiate'] = {
-  post: { tags: ['Security'], summary: 'Initiate SCA', operationId: 'scaInitiate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action_type'], properties: { action_type: { type: 'string', enum: ['payment', 'consent', 'account_update'] } } } } } }, responses: { '200': { description: 'SCA challenge issued' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Initiate SCA', operationId: 'scaInitiate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action_type'], properties: { action_type: { type: 'string', enum: ['payment', 'consent', 'account_update'] } } } } } }, responses: { '200': { description: 'SCA challenge issued', content: { 'application/json': { schema: { type: 'object', properties: { challenge_id: { type: 'string', format: 'uuid' }, challenge_type: { type: 'string', enum: ['otp', 'biometric', 'pin'] }, expires_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/security/sca/verify'] = {
-  post: { tags: ['Security'], summary: 'Verify SCA', operationId: 'scaVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': { description: 'SCA verified' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Verify SCA', operationId: 'scaVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': successResult('SCA verified'), ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -878,7 +881,7 @@ paths['/v1/certificates/revoke'] = {
     tags: ['Certificates'], summary: 'Revoke certificate', operationId: 'certificateRevoke', security: [{ bearerAuth: [] }],
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['certificate_id', 'reason'], properties: { certificate_id: { type: 'string' }, reason: { type: 'string', enum: ['key_compromise', 'ca_compromise', 'affiliation_changed', 'superseded', 'cessation_of_operation'] } } } } } },
-    responses: { '200': { description: 'Certificate revoked' }, ...errorResponses },
+    responses: { '200': successResult('Certificate revoked'), ...errorResponses },
   },
 };
 
@@ -941,15 +944,15 @@ paths['/v1/aisp/accounts/{accountId}/transactions'] = {
 };
 
 paths['/v1/aisp/accounts/{accountId}/beneficiaries'] = {
-  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Beneficiaries list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Beneficiaries list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayBeneficiary' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/standing-orders'] = {
-  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Standing orders list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Standing orders list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' }, frequency: { type: 'string' }, next_date: { type: 'string', format: 'date' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/direct-debits'] = {
-  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, amount: { type: 'number' }, status: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -992,11 +995,11 @@ paths['/v1/pisp/payments/{paymentId}'] = {
 
 // Consent management
 paths['/v1/consents/{consentId}/authorize'] = {
-  post: { tags: ['Consent Management'], summary: 'Authorize consent', operationId: 'consentAuthorize', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'Consent authorized' }, ...errorResponses } },
+  post: { tags: ['Consent Management'], summary: 'Authorize consent', operationId: 'consentAuthorize', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'Consent authorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Consent' } } } }, ...errorResponses } },
 };
 
 paths['/v1/consents/{consentId}/revoke'] = {
-  post: { tags: ['Consent Management'], summary: 'Revoke consent', operationId: 'consentRevoke', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Consent revoked' }, ...errorResponses } },
+  post: { tags: ['Consent Management'], summary: 'Revoke consent', operationId: 'consentRevoke', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Consent revoked', content: { 'application/json': { schema: { $ref: '#/components/schemas/Consent' } } } }, ...errorResponses } },
 };
 
 paths['/v1/consents'] = {
@@ -1012,22 +1015,22 @@ paths['/v1/credit/score'] = {
 };
 
 paths['/v1/credit/simulate'] = {
-  post: { tags: ['Credit Scoring'], summary: 'Simulate score impact', operationId: 'creditScoreSimulate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { action_type: { type: 'string', enum: ['pay_off_debt', 'new_credit', 'late_payment'] }, amount: { type: 'number', example: 100000 } } } } } }, responses: { '200': { description: 'Simulation result' }, ...errorResponses } },
+  post: { tags: ['Credit Scoring'], summary: 'Simulate score impact', operationId: 'creditScoreSimulate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { action_type: { type: 'string', enum: ['pay_off_debt', 'new_credit', 'late_payment'] }, amount: { type: 'number', example: 100000 } } } } } }, responses: { '200': { description: 'Simulation result', content: { 'application/json': { schema: { type: 'object', properties: { current_score: { type: 'integer' }, simulated_score: { type: 'integer' }, impact: { type: 'integer' }, grade_change: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/credit/tips'] = {
-  get: { tags: ['Credit Scoring'], summary: 'Get improvement tips', operationId: 'creditScoreTips', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Tips list' }, ...errorResponses } },
+  get: { tags: ['Credit Scoring'], summary: 'Get improvement tips', operationId: 'creditScoreTips', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Tips list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, description: { type: 'string' }, impact: { type: 'string', enum: ['high', 'medium', 'low'] } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/credit/report'] = {
-  post: { tags: ['Credit Scoring'], summary: 'Generate credit report', operationId: 'creditReportGenerate', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Report generated' }, ...errorResponses } },
+  post: { tags: ['Credit Scoring'], summary: 'Generate credit report', operationId: 'creditReportGenerate', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Report generated', content: { 'application/json': { schema: { type: 'object', properties: { report_id: { type: 'string', format: 'uuid' }, score: { $ref: '#/components/schemas/CreditScore' }, generated_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LOANS
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/loans/products'] = {
-  get: { tags: ['Loans'], summary: 'List loan products', operationId: 'loanProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Loan products' }, ...errorResponses } },
+  get: { tags: ['Loans'], summary: 'List loan products', operationId: 'loanProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Loan products', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, name: { type: 'string' }, min_amount: { type: 'number' }, max_amount: { type: 'number' }, interest_rate: { type: 'number' }, term_months_min: { type: 'integer' }, term_months_max: { type: 'integer' }, currency: { type: 'string', example: 'XAF' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/loans/apply'] = {
@@ -1052,7 +1055,7 @@ paths['/v1/loans/{loanId}/approve'] = {
     tags: ['Loans'], summary: 'Approve loan application', operationId: 'loanApprove', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { approved_amount: { type: 'number' }, approved_rate: { type: 'number' }, conditions: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Loan approved' }, ...errorResponses },
+    responses: { '200': { description: 'Loan approved', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoanApplication' } } } }, ...errorResponses },
   },
 };
 
@@ -1061,7 +1064,7 @@ paths['/v1/loans/{loanId}/disburse'] = {
     tags: ['Loans'], summary: 'Disburse loan', operationId: 'loanDisburse', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { disbursement_account: { type: 'string' }, disbursement_method: { type: 'string', enum: ['bank_transfer', 'mobile_money'] } } } } } },
-    responses: { '200': { description: 'Loan disbursed with ledger posting' }, ...errorResponses },
+    responses: { '200': { description: 'Loan disbursed with ledger posting', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoanApplication' } } } }, ...errorResponses },
   },
 };
 
@@ -1074,7 +1077,7 @@ paths['/v1/loans/{loanId}/schedule'] = {
   post: {
     tags: ['Loans'], summary: 'Generate repayment schedule', operationId: 'loanGenerateSchedule', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
-    responses: { '201': { description: 'Schedule generated' }, ...errorResponses },
+    responses: { '201': successResult('Schedule generated'), ...errorResponses },
   },
 };
 
@@ -1083,7 +1086,7 @@ paths['/v1/loans/{loanId}/repay'] = {
     tags: ['Loans'], summary: 'Make loan repayment', operationId: 'loanRepay', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 92500 }, payment_method: { type: 'string', enum: ['bank_transfer', 'mobile_money', 'savings_debit'] } } } } } },
-    responses: { '200': { description: 'Repayment recorded with schedule/ledger update' }, ...errorResponses },
+    responses: { '200': { description: 'Repayment recorded with schedule/ledger update', content: { 'application/json': { schema: { type: 'object', properties: { repayment_id: { type: 'string', format: 'uuid' }, amount_applied: { type: 'number' }, remaining_balance: { type: 'number' }, next_installment: { $ref: '#/components/schemas/LoanScheduleItem' } } } } } }, ...errorResponses },
   },
 };
 
@@ -1091,7 +1094,7 @@ paths['/v1/loans/{loanId}/repay'] = {
 // SAVINGS
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/savings/products'] = {
-  get: { tags: ['Savings'], summary: 'List savings products', operationId: 'savingsProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Savings products' }, ...errorResponses } },
+  get: { tags: ['Savings'], summary: 'List savings products', operationId: 'savingsProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Savings products', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, interest_rate: { type: 'number' }, min_deposit: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/savings/accounts'] = {
@@ -1108,7 +1111,7 @@ paths['/v1/savings/accounts/{accountId}/deposit'] = {
     tags: ['Savings'], summary: 'Deposit to savings', operationId: 'savingsDeposit', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 50000 }, source: { type: 'string', enum: ['bank_transfer', 'mobile_money'] } } } } } },
-    responses: { '200': { description: 'Deposit recorded' }, ...errorResponses },
+    responses: { '200': successResult('Deposit recorded'), ...errorResponses },
   },
 };
 
@@ -1117,7 +1120,7 @@ paths['/v1/savings/accounts/{accountId}/withdraw'] = {
     tags: ['Savings'], summary: 'Withdraw from savings', operationId: 'savingsWithdraw', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 25000 }, destination: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Withdrawal recorded' }, ...errorResponses },
+    responses: { '200': successResult('Withdrawal recorded'), ...errorResponses },
   },
 };
 
@@ -1127,7 +1130,7 @@ paths['/v1/savings/accrue-interest'] = {
     operationId: 'savingsAccrueInterest', security: [{ bearerAuth: [] }],
     parameters: [idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { accrual_date: { type: 'string', format: 'date' } } } } } },
-    responses: { '200': { description: 'Interest accrued' }, ...errorResponses },
+    responses: { '200': { description: 'Interest accrued', content: { 'application/json': { schema: { type: 'object', properties: { accounts_processed: { type: 'integer' }, total_interest: { type: 'number' }, accrual_date: { type: 'string', format: 'date' } } } } } }, ...errorResponses },
   },
 };
 
@@ -1180,7 +1183,7 @@ paths['/v1/mobile-money/transfer'] = {
     tags: ['Mobile Money'], summary: 'Transfer to mobile money', operationId: 'mobileMoneyTransfer', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount'], properties: { phone_number: { type: 'string' }, amount: { type: 'number', example: 10000 }, currency: { type: 'string', example: 'XAF' } } } } } },
-    responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
+    responses: { '200': { description: 'Transfer initiated', content: { 'application/json': { schema: { $ref: '#/components/schemas/MobileMoneyCharge' } } } }, ...errorResponses },
   },
 };
 
@@ -1193,7 +1196,7 @@ paths['/v1/mobile-money/to-bank'] = {
     tags: ['Mobile Money'], summary: 'Mobile money to bank transfer', operationId: 'mobileMoneyToBank', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount', 'bank_account'], properties: { phone_number: { type: 'string' }, amount: { type: 'number' }, bank_account: { type: 'string' }, bank_code: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
+    responses: { '200': successResult('Transfer initiated'), ...errorResponses },
   },
 };
 
@@ -1210,29 +1213,29 @@ paths['/v1/flutterwave/bank-transfer'] = {
 };
 
 paths['/v1/flutterwave/banks'] = {
-  get: { tags: ['Payments'], summary: 'List supported banks', operationId: 'flutterwaveListBanks', security: [{ bearerAuth: [] }], deprecated: true, parameters: [{ name: 'country', in: 'query', schema: { type: 'string', default: 'CM' } }], responses: { '200': { description: 'Banks list' }, ...errorResponses } },
+  get: { tags: ['Payments'], summary: 'List supported banks', operationId: 'flutterwaveListBanks', security: [{ bearerAuth: [] }], deprecated: true, parameters: [{ name: 'country', in: 'query', schema: { type: 'string', default: 'CM' } }], responses: { '200': { description: 'Banks list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { code: { type: 'string' }, name: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/flutterwave/verify-bank'] = {
-  post: { tags: ['Payments'], summary: 'Verify bank account', operationId: 'flutterwaveVerifyBank', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' } } } } } }, responses: { '200': { description: 'Account details' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Verify bank account', operationId: 'flutterwaveVerifyBank', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' } } } } } }, responses: { '200': { description: 'Account details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayBankVerification' } } } }, ...errorResponses } },
 };
 
 // Stripe
 paths['/v1/stripe/payment-intent'] = {
-  post: { tags: ['Payments'], summary: 'Create Stripe payment intent', operationId: 'stripePaymentIntent', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': { description: 'Payment intent created' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Create Stripe payment intent', operationId: 'stripePaymentIntent', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': successResult('Payment intent created'), ...errorResponses } },
 };
 
 paths['/v1/stripe/confirm-payment'] = {
-  post: { tags: ['Payments'], summary: 'Confirm Stripe payment', operationId: 'stripeConfirmPayment', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_intent_id'], properties: { payment_intent_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Payment confirmed' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Confirm Stripe payment', operationId: 'stripeConfirmPayment', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_intent_id'], properties: { payment_intent_id: { type: 'string' } } } } } }, responses: { '200': successResult('Payment confirmed'), ...errorResponses } },
 };
 
 // Bulk transfers
 paths['/v1/banking/bulk-transfers'] = {
-  post: { tags: ['Banking Operations'], summary: 'Initiate bulk transfers', operationId: 'bulkTransfers', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transfers'], properties: { transfers: { type: 'array', items: { type: 'object', properties: { account_number: { type: 'string' }, bank_code: { type: 'string' }, amount: { type: 'number' }, narration: { type: 'string' } } } } } } } } }, responses: { '200': { description: 'Bulk transfer initiated' }, ...errorResponses } },
+  post: { tags: ['Banking Operations'], summary: 'Initiate bulk transfers', operationId: 'bulkTransfers', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transfers'], properties: { transfers: { type: 'array', items: { type: 'object', properties: { account_number: { type: 'string' }, bank_code: { type: 'string' }, amount: { type: 'number' }, narration: { type: 'string' } } } } } } } } }, responses: { '200': successResult('Bulk transfer initiated'), ...errorResponses } },
 };
 
 paths['/v1/banking/exchange-rate'] = {
-  get: { tags: ['Banking Operations'], summary: 'Get exchange rate', operationId: 'exchangeRate', security: [{ bearerAuth: [] }], parameters: [{ name: 'from', in: 'query', required: true, schema: { type: 'string', example: 'XAF' } }, { name: 'to', in: 'query', required: true, schema: { type: 'string', example: 'USD' } }], responses: { '200': { description: 'Exchange rate' }, ...errorResponses } },
+  get: { tags: ['Banking Operations'], summary: 'Get exchange rate', operationId: 'exchangeRate', security: [{ bearerAuth: [] }], parameters: [{ name: 'from', in: 'query', required: true, schema: { type: 'string', example: 'XAF' } }, { name: 'to', in: 'query', required: true, schema: { type: 'string', example: 'USD' } }], responses: { '200': { description: 'Exchange rate', content: { 'application/json': { schema: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, rate: { type: 'number' }, timestamp: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1240,19 +1243,19 @@ paths['/v1/banking/exchange-rate'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/cards'] = {
   post: { tags: ['Virtual Cards'], summary: 'Create virtual card', operationId: 'virtualCardCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { currency: { type: 'string', example: 'USD' }, label: { type: 'string' } } } } } }, responses: { '201': { description: 'Card created', content: { 'application/json': { schema: { $ref: '#/components/schemas/VirtualCard' } } } }, ...errorResponses } },
-  get: { tags: ['Virtual Cards'], summary: 'List virtual cards', operationId: 'virtualCardList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Cards list' }, ...errorResponses } },
+  get: { tags: ['Virtual Cards'], summary: 'List virtual cards', operationId: 'virtualCardList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Cards list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/VirtualCard' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/cards/{cardId}/topup'] = {
-  post: { tags: ['Virtual Cards'], summary: 'Top up virtual card', operationId: 'virtualCardTopup', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'source_currency'], properties: { amount: { type: 'number', example: 50000 }, source_currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': { description: 'Card topped up' }, ...errorResponses } },
+  post: { tags: ['Virtual Cards'], summary: 'Top up virtual card', operationId: 'virtualCardTopup', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'source_currency'], properties: { amount: { type: 'number', example: 50000 }, source_currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': successResult('Card topped up'), ...errorResponses } },
 };
 
 paths['/v1/cards/{cardId}/transactions'] = {
-  get: { tags: ['Virtual Cards'], summary: 'Card transactions', operationId: 'virtualCardTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Card transactions' }, ...errorResponses } },
+  get: { tags: ['Virtual Cards'], summary: 'Card transactions', operationId: 'virtualCardTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Card transactions', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Transaction' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/cards/{cardId}/status'] = {
-  put: { tags: ['Virtual Cards'], summary: 'Update card status', operationId: 'virtualCardUpdateStatus', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['active', 'frozen', 'cancelled'] } } } } } }, responses: { '200': { description: 'Status updated' }, ...errorResponses } },
+  put: { tags: ['Virtual Cards'], summary: 'Update card status', operationId: 'virtualCardUpdateStatus', security: [{ bearerAuth: [] }], parameters: [{ name: 'cardId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['active', 'frozen', 'cancelled'] } } } } } }, responses: { '200': successResult('Status updated'), ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1275,15 +1278,15 @@ paths['/v1/directory/banks/cm'] = { get: { tags: ['Directory'], summary: 'List C
 // KYC & COMPLIANCE
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/kyc/submit'] = {
-  post: { tags: ['KYC & Compliance'], summary: 'Submit KYC documents', operationId: 'kycSubmit', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['document_type', 'document_number'], properties: { document_type: { type: 'string', enum: ['national_id', 'passport', 'drivers_license'] }, document_number: { type: 'string' }, document_front_url: { type: 'string' }, document_back_url: { type: 'string' } } } } } }, responses: { '201': { description: 'KYC submitted' }, ...errorResponses } },
+  post: { tags: ['KYC & Compliance'], summary: 'Submit KYC documents', operationId: 'kycSubmit', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['document_type', 'document_number'], properties: { document_type: { type: 'string', enum: ['national_id', 'passport', 'drivers_license'] }, document_number: { type: 'string' }, document_front_url: { type: 'string' }, document_back_url: { type: 'string' } } } } } }, responses: { '201': successResult('KYC submitted'), ...errorResponses } },
 };
 
 paths['/v1/kyc/sanctions-screen'] = {
-  post: { tags: ['KYC & Compliance'], summary: 'Sanctions screening', operationId: 'sanctionsScreen', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['full_name'], properties: { full_name: { type: 'string' }, date_of_birth: { type: 'string', format: 'date' }, nationality: { type: 'string' } } } } } }, responses: { '200': { description: 'Screening result' }, ...errorResponses } },
+  post: { tags: ['KYC & Compliance'], summary: 'Sanctions screening', operationId: 'sanctionsScreen', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['full_name'], properties: { full_name: { type: 'string' }, date_of_birth: { type: 'string', format: 'date' }, nationality: { type: 'string' } } } } } }, responses: { '200': { description: 'Screening result', content: { 'application/json': { schema: { type: 'object', properties: { match_found: { type: 'boolean' }, matches: { type: 'array', items: { type: 'object' } }, screened_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/kyc/data-export'] = {
-  get: { tags: ['KYC & Compliance'], summary: 'Export personal data (GDPR)', operationId: 'dataExport', security: [{ bearerAuth: [] }], responses: { '200': { description: 'User data export' }, ...errorResponses } },
+  get: { tags: ['KYC & Compliance'], summary: 'Export personal data (GDPR)', operationId: 'dataExport', security: [{ bearerAuth: [] }], responses: { '200': { description: 'User data export', content: { 'application/json': { schema: { type: 'object', properties: { user: { type: 'object' }, accounts: { type: 'array', items: { type: 'object' } }, transactions: { type: 'array', items: { type: 'object' } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1291,11 +1294,11 @@ paths['/v1/kyc/data-export'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/webhooks'] = {
   post: { tags: ['Webhooks'], summary: 'Register webhook', operationId: 'webhookRegister', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url', 'events'], properties: { url: { type: 'string', format: 'uri' }, events: { type: 'array', items: { type: 'string' } }, secret: { type: 'string' } } } } } }, responses: { '201': { description: 'Webhook registered', content: { 'application/json': { schema: { $ref: '#/components/schemas/Webhook' } } } }, ...errorResponses } },
-  get: { tags: ['Webhooks'], summary: 'List webhooks', operationId: 'webhookList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Webhooks list' }, ...errorResponses } },
+  get: { tags: ['Webhooks'], summary: 'List webhooks', operationId: 'webhookList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Webhooks list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Webhook' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/webhooks/{webhookId}/deliveries'] = {
-  get: { tags: ['Webhooks'], summary: 'List webhook deliveries', operationId: 'webhookDeliveries', security: [{ bearerAuth: [] }], parameters: [{ name: 'webhookId', in: 'path', required: true, schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Delivery history' }, ...errorResponses } },
+  get: { tags: ['Webhooks'], summary: 'List webhook deliveries', operationId: 'webhookDeliveries', security: [{ bearerAuth: [] }], parameters: [{ name: 'webhookId', in: 'path', required: true, schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Delivery history', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, event_type: { type: 'string' }, status: { type: 'string' }, response_code: { type: 'integer' }, delivered_at: { type: 'string', format: 'date-time' } } } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1310,24 +1313,24 @@ paths['/v1/admin/clients'] = {
 };
 
 paths['/v1/admin/metrics'] = {
-  get: { tags: ['Admin'], summary: 'Platform metrics', operationId: 'adminMetrics', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Metrics dashboard data' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'Platform metrics', operationId: 'adminMetrics', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Metrics dashboard data', content: { 'application/json': { schema: { type: 'object', properties: { total_users: { type: 'integer' }, total_transactions: { type: 'integer' }, total_volume: { type: 'number' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/admin/sandbox/accounts'] = {
-  get: { tags: ['Admin'], summary: 'List sandbox accounts', operationId: 'adminSandboxAccounts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Sandbox accounts' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'List sandbox accounts', operationId: 'adminSandboxAccounts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Sandbox accounts', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Account' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/admin/system-config'] = {
-  get: { tags: ['Admin'], summary: 'Get system configuration', operationId: 'adminSystemConfig', security: [{ bearerAuth: [] }], responses: { '200': { description: 'System config' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'Get system configuration', operationId: 'adminSystemConfig', security: [{ bearerAuth: [] }], responses: { '200': { description: 'System config', content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } } }, ...errorResponses } },
   put: { tags: ['Admin'], summary: 'Update system configuration', operationId: 'adminSystemConfigUpdate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } } }, responses: { '200': { description: 'Config updated' }, ...errorResponses } },
 };
 
 paths['/v1/admin/webhooks'] = {
-  get: { tags: ['Admin'], summary: 'List all webhooks (admin)', operationId: 'adminWebhooks', security: [{ bearerAuth: [] }], parameters: [...paginationParams], responses: { '200': { description: 'All webhooks' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'List all webhooks (admin)', operationId: 'adminWebhooks', security: [{ bearerAuth: [] }], parameters: [...paginationParams], responses: { '200': { description: 'All webhooks', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Webhook' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/admin/transactions/review'] = {
-  get: { tags: ['Admin'], summary: 'Review transactions', operationId: 'adminTransactionReview', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'status', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Transactions for review' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'Review transactions', operationId: 'adminTransactionReview', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'status', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Transactions for review', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Transaction' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/admin/loans'] = {
@@ -1347,7 +1350,7 @@ paths['/v1/admin/staff/assign'] = {
 };
 
 paths['/v1/admin/branches'] = {
-  get: { tags: ['Admin'], summary: 'List branches', operationId: 'adminManageBranches', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Branches list' }, ...errorResponses } },
+  get: { tags: ['Admin'], summary: 'List branches', operationId: 'adminManageBranches', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Branches list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, city: { type: 'string' } } } } } } } } }, ...errorResponses } },
   post: { tags: ['Admin'], summary: 'Create branch', operationId: 'adminCreateBranch', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '201': { description: 'Branch created' }, ...errorResponses } },
 };
 
@@ -1380,10 +1383,10 @@ paths['/v1/institutions/{institutionId}/kyb'] = {
 };
 
 // CrediQ
-paths['/v1/crediq/health-check'] = { get: { tags: ['CrediQ'], summary: 'CrediQ health check', operationId: 'crediqHealthCheck', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Health status' }, ...errorResponses } } };
-paths['/v1/crediq/baseline-score'] = { post: { tags: ['CrediQ'], summary: 'Generate baseline score', operationId: 'crediqBaselineScore', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Baseline score' }, ...errorResponses } } };
-paths['/v1/crediq/health-metrics'] = { post: { tags: ['CrediQ'], summary: 'Calculate health metrics', operationId: 'crediqHealthMetrics', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Health metrics' }, ...errorResponses } } };
-paths['/v1/crediq/action-plan'] = { post: { tags: ['CrediQ'], summary: 'Generate action plan', operationId: 'crediqActionPlan', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Action plan' }, ...errorResponses } } };
+paths['/v1/crediq/health-check'] = { get: { tags: ['CrediQ'], summary: 'CrediQ health check', operationId: 'crediqHealthCheck', security: [{ bearerAuth: [] }], responses: { '200': successResult('Health status'), ...errorResponses } } };
+paths['/v1/crediq/baseline-score'] = { post: { tags: ['CrediQ'], summary: 'Generate baseline score', operationId: 'crediqBaselineScore', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Baseline score', content: { 'application/json': { schema: { $ref: '#/components/schemas/CreditScore' } } } }, ...errorResponses } } };
+paths['/v1/crediq/health-metrics'] = { post: { tags: ['CrediQ'], summary: 'Calculate health metrics', operationId: 'crediqHealthMetrics', security: [{ bearerAuth: [] }], responses: { '200': successResult('Health metrics'), ...errorResponses } } };
+paths['/v1/crediq/action-plan'] = { post: { tags: ['CrediQ'], summary: 'Generate action plan', operationId: 'crediqActionPlan', security: [{ bearerAuth: [] }], responses: { '200': successResult('Action plan'), ...errorResponses } } };
 
 // PostiQ
 paths['/v1/postiq/codes'] = {
@@ -1391,7 +1394,7 @@ paths['/v1/postiq/codes'] = {
 };
 
 paths['/v1/postiq/codes/{code}'] = {
-  get: { tags: ['PostiQ'], summary: 'Lookup PostiQ code', operationId: 'postiqLookupCode', security: [], parameters: [{ name: 'code', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Address details' }, ...errorResponses } },
+  get: { tags: ['PostiQ'], summary: 'Lookup PostiQ code', operationId: 'postiqLookupCode', security: [], parameters: [{ name: 'code', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Address details', content: { 'application/json': { schema: { type: 'object', properties: { postiq_code: { type: 'string' }, full_address: { type: 'string' }, city: { type: 'string' }, country: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 // WooCommerce
@@ -1421,19 +1424,19 @@ paths['/v1/woocommerce/webhook'] = {
 
 // Sandbox
 paths['/v1/sandbox/accounts'] = {
-  post: { tags: ['Sandbox'], summary: 'Create sandbox account', operationId: 'sandboxCreateAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], responses: { '201': { description: 'Sandbox account created' }, ...errorResponses } },
+  post: { tags: ['Sandbox'], summary: 'Create sandbox account', operationId: 'sandboxCreateAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], responses: { '201': successResult('Sandbox account created'), ...errorResponses } },
 };
 
 paths['/v1/sandbox/api-keys'] = {
-  post: { tags: ['Sandbox'], summary: 'Create sandbox API key', operationId: 'sandboxCreateApiKey', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], responses: { '201': { description: 'API key created' }, ...errorResponses } },
+  post: { tags: ['Sandbox'], summary: 'Create sandbox API key', operationId: 'sandboxCreateApiKey', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], responses: { '201': { description: 'API key created', content: { 'application/json': { schema: { type: 'object', properties: { api_key: { type: 'string' }, secret: { type: 'string' }, environment: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/sandbox/data/generate'] = {
-  post: { tags: ['Sandbox'], summary: 'Generate test data', operationId: 'sandboxGenerateData', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Test data generated' }, ...errorResponses } },
+  post: { tags: ['Sandbox'], summary: 'Generate test data', operationId: 'sandboxGenerateData', security: [{ bearerAuth: [] }], responses: { '200': successResult('Test data generated'), ...errorResponses } },
 };
 
 paths['/v1/sandbox/webhooks'] = {
-  post: { tags: ['Sandbox'], summary: 'Register sandbox webhook', operationId: 'sandboxRegisterWebhook', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url', 'events'], properties: { url: { type: 'string' }, events: { type: 'array', items: { type: 'string' } } } } } } }, responses: { '201': { description: 'Webhook registered' }, ...errorResponses } },
+  post: { tags: ['Sandbox'], summary: 'Register sandbox webhook', operationId: 'sandboxRegisterWebhook', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url', 'events'], properties: { url: { type: 'string' }, events: { type: 'array', items: { type: 'string' } } } } } } }, responses: { '201': { description: 'Webhook registered', content: { 'application/json': { schema: { $ref: '#/components/schemas/Webhook' } } } }, ...errorResponses } },
 };
 
 // Developer
@@ -1488,7 +1491,7 @@ paths['/v1/gateway/payout-batches'] = {
 };
 
 paths['/v1/gateway/payout-batches/{batchId}'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Get payout batch', operationId: 'gatewayGetPayoutBatch', security: [{ bearerAuth: [] }], parameters: [{ name: 'batchId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Batch details' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Get payout batch', operationId: 'gatewayGetPayoutBatch', security: [{ bearerAuth: [] }], parameters: [{ name: 'batchId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Batch details', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'string' }, total_amount: { type: 'number' }, items_count: { type: 'integer' } } } } } }, ...errorResponses } },
 };
 
 // ─── PayPal Payouts ───
@@ -1530,11 +1533,11 @@ paths['/v1/gateway/beneficiaries/{beneficiaryId}'] = {
 };
 
 paths['/v1/gateway/reports/transactions'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Transaction report', operationId: 'gatewayReportTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Transaction report with summary' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Transaction report', operationId: 'gatewayReportTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Transaction report with summary', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayCharge' } }, summary: { type: 'object', properties: { total_volume: { type: 'number' }, total_count: { type: 'integer' }, total_fees: { type: 'number' } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/reports/settlements'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Settlement report', operationId: 'gatewayReportSettlements', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Settlement report with summary' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Settlement report', operationId: 'gatewayReportSettlements', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Settlement report with summary', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewaySettlement' } }, summary: { type: 'object', properties: { total_settled: { type: 'number' }, total_fees: { type: 'number' }, period: { type: 'string' } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/export/transactions'] = {
@@ -1726,7 +1729,7 @@ paths['/v1/gateway/reconciliation'] = {
 // REPORTS — FEES
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/gateway/reports/fees'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Fee report', operationId: 'gatewayReportFees', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Fee report with totals by channel' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Fee report', operationId: 'gatewayReportFees', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Fee report with totals by channel', content: { 'application/json': { schema: { type: 'object', properties: { total_fees: { type: 'number' }, by_channel: { type: 'object', additionalProperties: { type: 'number' } }, period: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1746,24 +1749,24 @@ paths['/v1/merchants'] = {
 };
 
 paths['/v1/merchants/kyb'] = {
-  post: { tags: ['Merchant Onboarding'], summary: 'Submit KYB verification', operationId: 'merchantSubmitKyb', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, registration_number: { type: 'string' }, tax_id: { type: 'string' }, documents: { type: 'array', items: { type: 'object' } } } } } } }, responses: { '200': { description: 'KYB submitted' }, ...errorResponses } },
-  get: { tags: ['Merchant Onboarding'], summary: 'Get KYB status', operationId: 'merchantGetKyb', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'KYB verification status' }, ...errorResponses } },
+  post: { tags: ['Merchant Onboarding'], summary: 'Submit KYB verification', operationId: 'merchantSubmitKyb', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, registration_number: { type: 'string' }, tax_id: { type: 'string' }, documents: { type: 'array', items: { type: 'object' } } } } } } }, responses: { '200': successResult('KYB submitted'), ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'Get KYB status', operationId: 'merchantGetKyb', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'KYB verification status', content: { 'application/json': { schema: { type: 'object', properties: { merchant_id: { type: 'string' }, kyb_status: { type: 'string', enum: ['not_submitted', 'pending', 'approved', 'rejected'] }, submitted_at: { type: 'string', format: 'date-time' }, reviewed_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/merchants/api-keys'] = {
-  post: { tags: ['Merchant Onboarding'], summary: 'Issue API key', operationId: 'merchantIssueApiKey', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, environment: { type: 'string', enum: ['sandbox', 'production'] } } } } } }, responses: { '201': { description: 'API key issued' }, ...errorResponses } },
-  get: { tags: ['Merchant Onboarding'], summary: 'List API keys', operationId: 'merchantListApiKeys', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'API keys list' }, ...errorResponses } },
+  post: { tags: ['Merchant Onboarding'], summary: 'Issue API key', operationId: 'merchantIssueApiKey', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, environment: { type: 'string', enum: ['sandbox', 'production'] } } } } } }, responses: { '201': { description: 'API key issued', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, public_key: { type: 'string' }, secret_key: { type: 'string', description: 'Shown only once' }, environment: { type: 'string' }, label: { type: 'string' } } } } } }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List API keys', operationId: 'merchantListApiKeys', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'API keys list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, public_key: { type: 'string' }, environment: { type: 'string' }, label: { type: 'string' }, is_active: { type: 'boolean' }, created_at: { type: 'string', format: 'date-time' } } } } } } } } }, ...errorResponses } },
   delete: { tags: ['Merchant Onboarding'], summary: 'Revoke API key', operationId: 'merchantRevokeApiKey', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['key_id'], properties: { key_id: { type: 'string' } } } } } }, responses: { '204': { description: 'API key revoked' }, ...errorResponses } },
 };
 
 paths['/v1/merchants/settlement-accounts'] = {
-  post: { tags: ['Merchant Onboarding'], summary: 'Add settlement account', operationId: 'merchantAddSettlementAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'account_number', 'bank_code'], properties: { merchant_id: { type: 'string' }, account_number: { type: 'string' }, bank_code: { type: 'string' }, bank_name: { type: 'string' }, currency: { type: 'string', default: 'XAF' } } } } } }, responses: { '201': { description: 'Settlement account added' }, ...errorResponses } },
-  get: { tags: ['Merchant Onboarding'], summary: 'List settlement accounts', operationId: 'merchantListSettlementAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Settlement accounts' }, ...errorResponses } },
+  post: { tags: ['Merchant Onboarding'], summary: 'Add settlement account', operationId: 'merchantAddSettlementAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'account_number', 'bank_code'], properties: { merchant_id: { type: 'string' }, account_number: { type: 'string' }, bank_code: { type: 'string' }, bank_name: { type: 'string' }, currency: { type: 'string', default: 'XAF' } } } } } }, responses: { '201': successResult('Settlement account added'), ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List settlement accounts', operationId: 'merchantListSettlementAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Settlement accounts', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, account_number: { type: 'string' }, bank_name: { type: 'string' }, currency: { type: 'string' }, is_primary: { type: 'boolean' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/merchants/webhooks'] = {
   post: { tags: ['Merchant Onboarding'], summary: 'Register merchant webhook', operationId: 'merchantRegisterWebhook', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'url', 'events'], properties: { merchant_id: { type: 'string' }, url: { type: 'string', format: 'uri' }, events: { type: 'array', items: { type: 'string' } } } } } } }, responses: { '201': { description: 'Webhook registered' }, ...errorResponses } },
-  get: { tags: ['Merchant Onboarding'], summary: 'List merchant webhooks', operationId: 'merchantListWebhooks', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Merchant webhooks' }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List merchant webhooks', operationId: 'merchantListWebhooks', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Merchant webhooks', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Webhook' } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2004,7 +2007,7 @@ paths['/v1/compliance/sar/{sarId}/submit'] = {
 // SAFEGUARDING (Phase 4)
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/safeguarding/reconcile'] = {
-  post: { tags: ['KYC & Compliance'], summary: 'Run safeguarding reconciliation', description: 'Reconcile total e-money liabilities against actual wallet and escrow balances.', operationId: 'safeguardingReconcile', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Reconciliation result with discrepancy details' }, ...errorResponses } },
+  post: { tags: ['KYC & Compliance'], summary: 'Run safeguarding reconciliation', description: 'Reconcile total e-money liabilities against actual wallet and escrow balances.', operationId: 'safeguardingReconcile', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Reconciliation result with discrepancy details', content: { 'application/json': { schema: { type: 'object', properties: { total_liabilities: { type: 'number' }, total_assets: { type: 'number' }, discrepancy: { type: 'number' }, status: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/safeguarding/snapshots'] = {
@@ -2034,7 +2037,7 @@ paths['/v1/payouts/{payoutId}/cancel'] = {
 // TREASURY (Phase 6)
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/treasury/float'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Get treasury float balance', description: 'Current float balances across all provider accounts.', operationId: 'treasuryFloat', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Float balances by provider and currency' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Get treasury float balance', description: 'Current float balances across all provider accounts.', operationId: 'treasuryFloat', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Float balances by provider and currency', content: { 'application/json': { schema: { type: 'object', properties: { balances: { type: 'array', items: { type: 'object', properties: { provider: { type: 'string' }, currency: { type: 'string' }, balance: { type: 'number' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/treasury/replenish'] = {
@@ -2080,7 +2083,7 @@ paths['/v1/webhooks/v2/deliveries'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/sandbox/payout-sim'] = {
   post: { tags: ['Sandbox'], summary: 'Simulate payout scenario', description: 'Run a payout through a pre-seeded sandbox scenario (e.g. insufficient_funds, network_timeout, reversed_after_success).', operationId: 'sandboxPayoutSim', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['scenario', 'amount', 'currency'], properties: { scenario: { type: 'string', enum: ['instant_success', 'delayed_success', 'insufficient_funds', 'network_timeout', 'compliance_hold', 'reversed_after_success', 'partial_failure'] }, amount: { type: 'number' }, currency: { type: 'string' }, merchant_id: { type: 'string', format: 'uuid' }, webhook_url: { type: 'string', format: 'uri' } } } } } }, responses: { '200': { description: 'Simulation result with timeline and webhook callbacks' }, ...errorResponses } },
-  get: { tags: ['Sandbox'], summary: 'List sandbox scenarios', operationId: 'sandboxScenarioList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Available sandbox payout scenarios' }, ...errorResponses } },
+  get: { tags: ['Sandbox'], summary: 'List sandbox scenarios', operationId: 'sandboxScenarioList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Available sandbox payout scenarios', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2157,7 +2160,7 @@ paths['/v1/interbank/payments/{paymentId}/submit'] = {
 };
 
 paths['/v1/interbank/participants'] = {
-  get: { tags: ['Interbank'], summary: 'List participants', operationId: 'interbankParticipantsList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Interbank participants list' }, ...errorResponses } },
+  get: { tags: ['Interbank'], summary: 'List participants', operationId: 'interbankParticipantsList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Interbank participants list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, swift_bic: { type: 'string' }, status: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/interbank/messages'] = {
@@ -2269,7 +2272,7 @@ paths['/v1/pay-by-bank/callback'] = {
     tags: ['Pay by Bank'], summary: 'Bank connector callback', description: 'Internal callback from bank connector confirming payment execution.', operationId: 'payByBankCallback',
     security: [{ mtls: [] }],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['intent_id', 'status'], properties: { intent_id: { type: 'string' }, status: { type: 'string', enum: ['completed', 'failed'] }, failure_reason: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Callback processed' }, ...errorResponses },
+    responses: { '200': successResult('Callback processed'), ...errorResponses },
   },
 };
 
