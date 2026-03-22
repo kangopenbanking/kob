@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { mapStripeStatus, mapStripeDisputeStatus } from "../_shared/gateway-adapters.ts";
+import { safeErrorResponse } from "../_shared/errors.ts";
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
