@@ -257,9 +257,13 @@ serve(async (req) => {
       }
     }
 
+    // Mark webhook as processed
+    if (dedupeKey) {
+      await supabase.from('webhook_inbox').update({ status: 'processed' }).eq('event_id', dedupeKey);
+    }
+
     return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    console.error('Gateway FLW webhook error:', err);
-    return new Response(JSON.stringify({ error: 'internal_error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeErrorResponse(err, corsHeaders, 'gateway-webhook-flutterwave');
   }
 });

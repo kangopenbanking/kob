@@ -202,16 +202,14 @@ serve(async (req) => {
       }
     }
 
+    // Mark webhook as processed
+    await supabase.from('webhook_inbox').update({ status: 'processed' }).eq('event_id', dedupeKey);
+
     return new Response(JSON.stringify({ status: 'processed' }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    const errorId = crypto.randomUUID().slice(0, 8);
-    console.error(`[${errorId}] PayPal webhook error:`, err);
-    return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return safeErrorResponse(err, corsHeaders, 'gateway-webhook-paypal');
   }
 });
