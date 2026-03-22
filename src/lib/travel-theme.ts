@@ -9,6 +9,8 @@ export interface TravelTheme {
   lightBg: string;      // light tint for page bg
   accentLight: string;  // light accent for chips/pills
   accentText: string;   // text on light accent
+  buttonBg: string;     // button background
+  buttonFg: string;     // button text
 }
 
 export const travelThemes: Record<string, TravelTheme> = {
