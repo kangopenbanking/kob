@@ -49730,7 +49730,7 @@
           "Provider Webhooks (Inbound)"
         ],
         "summary": "PayPal inbound webhook",
-        "description": "Receives PayPal webhook events. Verifies signature using PayPal's certificate-based verification API. Deduplicates by event ID. Maps PayPal events to internal charge/payout/dispute status updates.",
+        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API \u2014 not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` \u2192 funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` \u2192 auto-captures PayPal order\n- `PAYOUTS-ITEM.*` \u2192 payout status sync (succeeded/failed/reversed)",
         "operationId": "receivePaypalWebhook",
         "security": [],
         "requestBody": {
@@ -49799,7 +49799,60 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "paypal-auth-algo",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "SHA256withRSA"
+            },
+            "description": "Signature algorithm used by PayPal (e.g. SHA256withRSA)"
+          },
+          {
+            "name": "paypal-cert-url",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri",
+              "example": "https://api.paypal.com/v1/notifications/certs/CERT-360caa42-fca2a594"
+            },
+            "description": "URL to PayPal's signing certificate for this webhook"
+          },
+          {
+            "name": "paypal-transmission-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "69cd13f0-d67a-11e5-baa3-778b53f4ae55"
+            },
+            "description": "Unique transmission ID for this webhook delivery"
+          },
+          {
+            "name": "paypal-transmission-sig",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Base64-encoded RSA signature of the transmission"
+          },
+          {
+            "name": "paypal-transmission-time",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-03-22T10:00:00Z"
+            },
+            "description": "ISO 8601 timestamp of webhook transmission"
+          }
+        ]
       }
     },
     "/v1/gateway/merchants/webhooks/{webhookId}/rotate-secret": {
