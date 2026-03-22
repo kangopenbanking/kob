@@ -1064,7 +1064,7 @@ paths['/v1/loans/{loanId}/disburse'] = {
     tags: ['Loans'], summary: 'Disburse loan', operationId: 'loanDisburse', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { disbursement_account: { type: 'string' }, disbursement_method: { type: 'string', enum: ['bank_transfer', 'mobile_money'] } } } } } },
-    responses: { '200': { description: 'Loan disbursed with ledger posting' }, ...errorResponses },
+    responses: { '200': { description: 'Loan disbursed with ledger posting', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoanApplication' } } } }, ...errorResponses },
   },
 };
 
