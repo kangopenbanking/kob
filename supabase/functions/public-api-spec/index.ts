@@ -1111,7 +1111,7 @@ paths['/v1/savings/accounts/{accountId}/deposit'] = {
     tags: ['Savings'], summary: 'Deposit to savings', operationId: 'savingsDeposit', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number', example: 50000 }, source: { type: 'string', enum: ['bank_transfer', 'mobile_money'] } } } } } },
-    responses: { '200': { description: 'Deposit recorded' }, ...errorResponses },
+    responses: { '200': successResult('Deposit recorded'), ...errorResponses },
   },
 };
 
