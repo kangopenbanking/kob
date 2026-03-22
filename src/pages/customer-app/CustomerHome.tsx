@@ -78,6 +78,8 @@ const financialHealth: FeatureItem[] = [
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
+const staggerContainer = { animate: { transition: { staggerChildren: 0.06 } } };
+const staggerItem = { initial: { opacity: 0, y: 12, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1 } };
 
 const txIconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   transfer: { icon: ArrowUpRight, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
