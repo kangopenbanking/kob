@@ -1799,7 +1799,7 @@ paths['/v1/consumer/njangi'] = {
 };
 
 paths['/v1/consumer/njangi/join'] = {
-  post: { tags: ['Consumer Tools'], summary: 'Join Njangi group', operationId: 'njangiJoin', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' } } } } } }, responses: { '200': { description: 'Joined group' }, ...errorResponses } },
+  post: { tags: ['Consumer Tools'], summary: 'Join Njangi group', operationId: 'njangiJoin', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' } } } } } }, responses: { '200': successResult('Joined group'), ...errorResponses } },
 };
 
 paths['/v1/consumer/njangi/contribute'] = {
