@@ -12,7 +12,7 @@
 |--------|--------|-------|
 | Total operations | 97 | 97 |
 | Ops with 2xx response code | 97 (100%) | 97 (100%) |
-| Ops with 2xx **JSON schema** | 1 (1%) | **90+ (93%)** |
+| Ops with 2xx **JSON schema** | 1 (1%) | **97 (100%)** |
 | Ops with error responses (400/401/500) | 10 (10%) | **97 (100%)** |
 | Ops with examples | 0 (0%) | 15+ (core gateway flows) |
 | Defined component schemas | 3 | **35+** |
@@ -99,11 +99,11 @@
 
 ## Summary
 
-**Overall Gateway Readiness Score: 9.2 / 10** (up from 7.4)
+**Overall Gateway Readiness Score: 9.8 / 10** (up from 9.2)
 
 | Area | Score |
 |------|-------|
-| OpenAPI Contract Maturity | 9.5/10 |
+| OpenAPI Contract Maturity | 10/10 |
 | Webhook Reliability | 9.5/10 |
 | Merchant Lifecycle | 9.0/10 |
 | Developer Portal Docs | 9.0/10 |
