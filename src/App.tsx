@@ -48,6 +48,7 @@ const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PendingApproval = lazy(() => import("./pages/PendingApproval"));
 const Apps = lazy(() => import("./pages/Apps"));
 const PublicStorefront = lazy(() => import("./pages/PublicStorefront"));
@@ -582,6 +583,7 @@ function App() {
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/store/:merchantId" element={<PublicStorefront />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
