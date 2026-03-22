@@ -497,6 +497,8 @@ Deno.serve(async (req) => {
       'error_format': suiteErrorFormat,
       'payment_gateway': suitePaymentGateway,
       'sdks': suiteSDKs,
+      'merchant_onboarding': suiteMerchantOnboarding,
+      'dispute_settlement': suiteDisputeSettlement,
     };
 
     const runnersToExecute = suiteFilter && allRunners[suiteFilter]
