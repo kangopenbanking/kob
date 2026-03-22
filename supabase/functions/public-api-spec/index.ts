@@ -1094,7 +1094,7 @@ paths['/v1/loans/{loanId}/repay'] = {
 // SAVINGS
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/savings/products'] = {
-  get: { tags: ['Savings'], summary: 'List savings products', operationId: 'savingsProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Savings products' }, ...errorResponses } },
+  get: { tags: ['Savings'], summary: 'List savings products', operationId: 'savingsProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Savings products', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, interest_rate: { type: 'number' }, min_deposit: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/savings/accounts'] = {
