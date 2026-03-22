@@ -35,11 +35,12 @@ serve(async (req) => {
     const txRef = payload.data?.tx_ref || payload.tx_ref;
 
     // Dedupe
-    if (eventId) {
-      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', `flw_${eventId}`).maybeSingle();
+    const dedupeKey = eventId ? `flw_${eventId}` : null;
+    if (dedupeKey) {
+      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', dedupeKey).maybeSingle();
       if (existing) return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-      await supabase.from('webhook_inbox').insert({ event_id: `flw_${eventId}`, provider: 'flutterwave', payload, status: 'processing' });
+      await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'flutterwave', event_type: payload.event || 'charge.completed', payload, status: 'processing' });
     }
 
     // Find matching charge
