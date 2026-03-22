@@ -854,6 +854,9 @@ function App() {
               <Route path="guides/sdks" element={<SDKsPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="api-explorer-static" element={<ApiExplorerStatic />} />
+              <Route path="redoc" element={<RedocPage />} />
+              <Route path="redoc-sandbox" element={<RedocPage />} />
+              <Route path="docs-health" element={<DocsHealth />} />
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />

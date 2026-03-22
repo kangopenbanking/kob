@@ -78,19 +78,36 @@ const ApiExplorerStatic = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      {/* SEO-friendly noscript fallback */}
+      <noscript>
+        <div>
+          <h1>Kang Open Banking API Reference</h1>
+          <p>Download the full API specification:</p>
+          <ul>
+            <li><a href="/openapi.json">OpenAPI JSON</a></li>
+            <li><a href="/openapi.yaml">OpenAPI YAML</a></li>
+            <li><a href="/openapi-sandbox.json">Sandbox OpenAPI JSON</a></li>
+          </ul>
+        </div>
+      </noscript>
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold">API Reference (Static)</h1>
           <p className="text-muted-foreground mt-1">
             {spec?.info?.title} — {spec?.info?.version} · {operations.length} endpoints
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => handleDownload('json')}>
             <Download className="h-4 w-4 mr-1" /> JSON
           </Button>
           <Button variant="outline" size="sm" onClick={() => handleDownload('yaml')}>
             <Download className="h-4 w-4 mr-1" /> YAML
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href="/developer/redoc">
+              <ExternalLink className="h-4 w-4 mr-1" /> Redoc Docs
+            </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a href="/developer/api-explorer">

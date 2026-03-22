@@ -21,8 +21,10 @@ const ApiExplorer = () => {
   useEffect(() => {
     const fetchSpec = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('public-api-spec');
-        if (error) throw error;
+        // Use stable static spec endpoint for reliability + caching
+        const res = await fetch('/openapi.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         setSpec(data);
         setFetchError(null);
       } catch (error) {
