@@ -16,7 +16,7 @@ const categories = [
     iconFg: '#ffffff',
     stat: '50+ Routes',
     statIcon: MapPin,
-    features: ['Real-time tracking', 'Seat selection'],
+    features: ['Track Bus', 'Pick Seats'],
   },
   {
     key: 'tours',
@@ -30,7 +30,7 @@ const categories = [
     iconFg: '#ffffff',
     stat: 'Top Rated',
     statIcon: Star,
-    features: ['Guided tours', 'Group discounts'],
+    features: ['Guides', 'Groups'],
   },
   {
     key: 'airlines',
