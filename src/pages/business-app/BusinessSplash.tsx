@@ -86,7 +86,7 @@ const BusinessSplashInner: React.FC = () => {
       <SplashScreen
         onComplete={() => setPhase('walkthrough')}
         duration={2500}
-        name="KOB Business"
+        name="Kang Business"
         logoUrl={kobLogo}
         tagline="Run your business, your way"
       />
