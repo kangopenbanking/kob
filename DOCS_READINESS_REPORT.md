@@ -1,60 +1,60 @@
-# KOB Docs Readiness Report — Final
+# KOB Documentation Readiness Report
+**Date**: 2026-03-22
 
-**Date**: 2026-03-22  
-**Version**: v4.2.1
+## Developer Portal Content Pack
 
----
+| Section | Path | Status |
+|---------|------|--------|
+| README/Home | docs/developer-portal/README.md | ✅ |
+| Auth Overview | docs/developer-portal/auth/authentication-overview.md | ✅ |
+| API Keys Guide | docs/developer-portal/auth/api-keys.md | ✅ |
+| Merchant Onboarding | docs/developer-portal/merchants/merchant-onboarding.md | ✅ |
+| Unified Payments | docs/developer-portal/payments/unified-payments.md | ✅ |
+| Refunds | docs/developer-portal/payments/refunds.md | ✅ |
+| Payouts | docs/developer-portal/payments/payouts.md | ✅ |
+| Beneficiaries | docs/developer-portal/payments/beneficiaries.md | ✅ |
+| Disputes | docs/developer-portal/payments/disputes.md | ✅ |
+| Payment Methods | docs/developer-portal/payments/payment-methods.md | ✅ |
+| Webhooks Overview | docs/developer-portal/webhooks/webhooks-overview.md | ✅ |
+| Merchant Webhooks | docs/developer-portal/webhooks/merchant-webhooks.md | ✅ |
+| Provider Webhooks | docs/developer-portal/webhooks/provider-webhooks.md | ✅ |
+| Errors Reference | docs/developer-portal/reference/errors.md | ✅ |
+| Idempotency | docs/developer-portal/reference/idempotency.md | ✅ |
+| Rate Limits | docs/developer-portal/reference/rate-limits.md | ✅ |
+| Versioning/Changelog | docs/developer-portal/reference/versioning-and-changelog.md | ✅ |
+| Sandbox Overview | docs/developer-portal/sandbox/sandbox-overview.md | ✅ |
+| Test Cards/MoMo | docs/developer-portal/sandbox/test-cards-and-momo.md | ✅ |
+| Test Webhooks | docs/developer-portal/sandbox/test-webhooks.md | ✅ |
+| Settlements | docs/developer-portal/reporting/settlements.md | ✅ |
+| Reconciliation | docs/developer-portal/reporting/reconciliation.md | ✅ |
+| Transaction Reports | docs/developer-portal/reporting/transaction-reports.md | ✅ |
+| Quickstart Merchant | docs/developer-portal/quickstarts/quickstart-merchant.md | ✅ |
+| Quickstart Developer | docs/developer-portal/quickstarts/quickstart-developer-app.md | ✅ |
+| Quickstart Platform | docs/developer-portal/quickstarts/quickstart-platform.md | ✅ |
 
-## Portal Pages Inventory
+**Result: PASS** — 26/26 doc sections present.
 
-| Section | Files | Status |
-|---------|-------|--------|
-| Portal Home | README.md | ✅ |
-| Auth | authentication-overview.md, api-keys.md | ✅ |
-| Quickstarts | quickstart-merchant.md, quickstart-platform.md, quickstart-developer-app.md | ✅ |
-| Payments | unified-payments.md, payment-methods.md, refunds.md, payouts.md, beneficiaries.md, disputes.md | ✅ |
-| Webhooks | webhooks-overview.md, merchant-webhooks.md, provider-webhooks.md | ✅ |
-| Reporting | settlements.md, transaction-reports.md, reconciliation.md | ✅ |
-| Sandbox | sandbox-overview.md, test-cards-and-momo.md, test-webhooks.md | ✅ |
-| Reference | errors.md, idempotency.md, rate-limits.md, versioning-and-changelog.md | ✅ |
-| Merchants | merchant-onboarding.md | ✅ |
-| **Total Guides** | **22** | **✅ Complete** |
+## API Explorer & Spec Availability
 
----
+| Resource | Path | Status |
+|----------|------|--------|
+| Interactive Explorer (Swagger UI) | /developer/api-explorer | ✅ |
+| Static Explorer (Redoc fallback) | /developer/api-explorer-static | ✅ |
+| OpenAPI JSON (prod) | public/openapi.json | ✅ |
+| OpenAPI JSON (sandbox) | public/openapi-sandbox.json | ✅ |
+| Edge function spec | public-api-spec | ✅ |
+| OpenAPI JSON endpoint | openapi-json | ✅ |
 
-## API Reference & Downloads
+**Result: PASS**
 
-| Asset | URL | Status |
-|-------|-----|--------|
-| OpenAPI JSON (static) | `/openapi.json` | ✅ Synced (326 ops, 99.7% typed) |
-| OpenAPI Sandbox JSON | `/openapi-sandbox.json` | ✅ Synced |
-| OpenAPI JSON (edge fn) | `public-api-spec` function | ✅ Live |
-| OpenAPI JSON (dedicated) | `openapi-json` function | ✅ Live |
-| Postman collection | `postman-collection` function | ✅ Live |
-| Interactive Explorer | `/developer/api-explorer` | ✅ Swagger UI |
-| Static Explorer | `/developer/api-explorer-static` | ✅ |
+## SDK Ecosystem
 
----
+| SDK | Status |
+|-----|--------|
+| Node.js (@kangopenbanking/sdk) | ✅ v1.1.0 |
+| Python (kangopenbanking) | ✅ v1.1.0 |
+| PHP/Laravel | ✅ v1.1.0 |
 
-## Content Coverage vs Stripe/Flutterwave
+**Result: PASS**
 
-| Topic | Stripe | Flutterwave | KOB | Status |
-|-------|--------|-------------|-----|--------|
-| Quickstart guide | ✅ | ✅ | ✅ | ✅ |
-| Auth/API Keys docs | ✅ | ✅ | ✅ | ✅ |
-| Charges/Payments guide | ✅ | ✅ | ✅ | ✅ |
-| Refunds guide | ✅ | ✅ | ✅ | ✅ |
-| Payouts guide | ✅ | ✅ | ✅ | ✅ |
-| Disputes guide | ✅ | ✅ | ✅ | ✅ |
-| Webhooks (signing + retries) | ✅ | ✅ | ✅ | ✅ |
-| Error catalogue | ✅ | ✅ | ✅ | ✅ |
-| Idempotency guide | ✅ | ✅ | ✅ | ✅ |
-| Rate limits doc | ✅ | ✅ | ✅ | ✅ |
-| Sandbox/Test data | ✅ | ✅ | ✅ | ✅ |
-| Test webhooks guide | ✅ | ✅ | ✅ | ✅ |
-| Settlements/Reports | ✅ | ✅ | ✅ | ✅ |
-| OpenAPI download | ✅ | ✅ | ✅ | ✅ |
-| Postman collection | ✅ | ✅ | ✅ | ✅ |
-| Changelog | ✅ | ✅ | ✅ | ✅ |
-
-**Docs Parity Score: 16/16** ✅
+## Overall: ✅ DOCS READY
