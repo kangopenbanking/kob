@@ -1030,7 +1030,7 @@ paths['/v1/credit/report'] = {
 // LOANS
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/loans/products'] = {
-  get: { tags: ['Loans'], summary: 'List loan products', operationId: 'loanProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Loan products' }, ...errorResponses } },
+  get: { tags: ['Loans'], summary: 'List loan products', operationId: 'loanProducts', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Loan products', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, name: { type: 'string' }, min_amount: { type: 'number' }, max_amount: { type: 'number' }, interest_rate: { type: 'number' }, term_months_min: { type: 'integer' }, term_months_max: { type: 'integer' }, currency: { type: 'string', example: 'XAF' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/loans/apply'] = {
