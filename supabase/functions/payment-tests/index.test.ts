@@ -212,7 +212,44 @@ Deno.test("gateway-webhook-flutterwave: rejects invalid verif-hash", async () =>
 });
 
 // ═══════════════════════════════════════════════════
-// 8. gateway-settlement-cron: requires cron auth
+// 8. gateway-webhook-paypal: signature verification
+// ═══════════════════════════════════════════════════
+
+Deno.test("gateway-webhook-paypal: rejects missing signature headers", async () => {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/gateway-webhook-paypal`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({ event_type: "PAYMENT.CAPTURE.COMPLETED", resource: {} }),
+  });
+  const text = await res.text();
+  assertEquals(res.status >= 400, true);
+  assertExists(text);
+});
+
+Deno.test("gateway-webhook-paypal: rejects invalid signature", async () => {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/gateway-webhook-paypal`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "paypal-transmission-id": "fake-id",
+      "paypal-transmission-sig": "invalid-sig",
+      "paypal-cert-url": "https://fake.paypal.com/cert.pem",
+      "paypal-auth-algo": "SHA256withRSA",
+      "paypal-transmission-time": "2026-01-01T00:00:00Z",
+    },
+    body: JSON.stringify({ id: "evt_test", event_type: "PAYMENT.CAPTURE.COMPLETED", resource: {} }),
+  });
+  const text = await res.text();
+  assertEquals(res.status >= 400, true);
+  assertExists(text);
+});
+
+// ═══════════════════════════════════════════════════
+// 9. gateway-settlement-cron: requires cron auth
 // ═══════════════════════════════════════════════════
 
 Deno.test("gateway-settlement-cron: rejects without cron auth", async () => {
@@ -222,7 +259,7 @@ Deno.test("gateway-settlement-cron: rejects without cron auth", async () => {
 });
 
 // ═══════════════════════════════════════════════════
-// 9. gateway-reconcile-stuck: requires cron auth
+// 10. gateway-reconcile-stuck: requires cron auth
 // ═══════════════════════════════════════════════════
 
 Deno.test("gateway-reconcile-stuck: rejects without cron auth", async () => {
@@ -232,7 +269,7 @@ Deno.test("gateway-reconcile-stuck: rejects without cron auth", async () => {
 });
 
 // ═══════════════════════════════════════════════════
-// 10. gateway-verify-charge: requires auth
+// 11. gateway-verify-charge: requires auth
 // ═══════════════════════════════════════════════════
 
 Deno.test("gateway-verify-charge: rejects unauthenticated", async () => {
@@ -244,7 +281,7 @@ Deno.test("gateway-verify-charge: rejects unauthenticated", async () => {
 });
 
 // ═══════════════════════════════════════════════════
-// 11. gateway-preauth-charge: requires auth
+// 12. gateway-preauth-charge: requires auth
 // ═══════════════════════════════════════════════════
 
 Deno.test("gateway-preauth-charge: rejects unauthenticated", async () => {
@@ -259,7 +296,30 @@ Deno.test("gateway-preauth-charge: rejects unauthenticated", async () => {
 });
 
 // ═══════════════════════════════════════════════════
-// 12. CORS preflight
+// 13. Merchant lifecycle: auth guards
+// ═══════════════════════════════════════════════════
+
+Deno.test("gateway-merchant-lifecycle: rejects unauthenticated create", async () => {
+  const { status, data } = await invoke("gateway-merchant-lifecycle", {
+    action: "create",
+    business_name: "Test Merchant",
+  });
+  assertEquals(status >= 400, true);
+  assertExists(data.error || data.detail || data.title);
+});
+
+Deno.test("gateway-merchant-kyb-review: rejects unauthenticated", async () => {
+  const { status, data } = await invoke("gateway-merchant-kyb-review", {
+    action: "review",
+    merchant_id: "fake",
+    decision: "approve",
+  });
+  assertEquals(status >= 400, true);
+  assertExists(data.error || data.detail || data.title);
+});
+
+// ═══════════════════════════════════════════════════
+// 14. CORS preflight
 // ═══════════════════════════════════════════════════
 
 Deno.test("gateway-create-charge: CORS preflight returns 200", async () => {
