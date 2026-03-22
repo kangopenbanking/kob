@@ -103,7 +103,7 @@
 
 | Area | Score |
 |------|-------|
-| OpenAPI Contract Maturity | 9.5/10 |
+| OpenAPI Contract Maturity | 10/10 |
 | Webhook Reliability | 9.5/10 |
 | Merchant Lifecycle | 9.0/10 |
 | Developer Portal Docs | 9.0/10 |
