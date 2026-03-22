@@ -1130,7 +1130,7 @@ paths['/v1/savings/accrue-interest'] = {
     operationId: 'savingsAccrueInterest', security: [{ bearerAuth: [] }],
     parameters: [idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { accrual_date: { type: 'string', format: 'date' } } } } } },
-    responses: { '200': { description: 'Interest accrued' }, ...errorResponses },
+    responses: { '200': { description: 'Interest accrued', content: { 'application/json': { schema: { type: 'object', properties: { accounts_processed: { type: 'integer' }, total_interest: { type: 'number' }, accrual_date: { type: 'string', format: 'date' } } } } } }, ...errorResponses },
   },
 };
 
