@@ -32,7 +32,6 @@ function getEmbedUrl(item: MediaSection): string {
     case 'linkedin':
       return item.url;
     case 'custom':
-      return item.url;
     default:
       return item.url;
   }
@@ -73,6 +72,7 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
 
   const sorted = items && items.length > 0 ? [...items].sort((a, b) => a.position - b.position) : [];
   const itemCount = sorted.length;
+  const currentItem = sorted[currentIndex] as MediaSection | undefined;
 
   const goNext = useCallback(() => setCurrentIndex((i) => (i + 1) % Math.max(itemCount, 1)), [itemCount]);
   const goPrev = useCallback(() => setCurrentIndex((i) => (i - 1 + Math.max(itemCount, 1)) % Math.max(itemCount, 1)), [itemCount]);
@@ -102,27 +102,28 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
 
   // Auto-advance carousel
   useEffect(() => {
-    if (sorted.length <= 1) return;
-    if (!isInView) return;
-    // Don't auto-advance if current is a playing custom video
-    if (current.type === 'video' && current.provider === 'custom' && isPlaying) return;
-
+    if (itemCount <= 1 || !isInView) return;
+    if (currentItem?.type === 'video' && currentItem?.provider === 'custom' && isPlaying) return;
     timerRef.current = setInterval(goNext, AUTO_ADVANCE_MS);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [sorted.length, isInView, goNext, current.type, current.provider, isPlaying]);
+  }, [itemCount, isInView, goNext, currentItem?.type, currentItem?.provider, isPlaying]);
 
-  const handleImageClick = (item: MediaSection) => {
-    if (item.link_url) {
-      window.open(item.link_url, '_blank', 'noopener,noreferrer');
-    }
+  if (!currentItem) return null;
+
+  const current = currentItem;
+  const effectiveAspect = current.aspect || aspect || 'landscape';
+  const heightClass = effectiveAspect === 'portrait'
+    ? (cardSize === 'small' ? 'h-64' : cardSize === 'large' ? 'h-[480px]' : 'h-96')
+    : (cardSize === 'small' ? 'h-36' : cardSize === 'large' ? 'h-60' : 'h-48');
+
+  const handleImageClick = () => {
+    if (current.link_url) window.open(current.link_url, '_blank', 'noopener,noreferrer');
   };
-
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsMuted((m) => !m);
     if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
   };
-
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsPlaying((p) => !p);
@@ -146,7 +147,7 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
           {/* Image slide */}
           {current.type === 'image' && (
             <div
-              onClick={() => handleImageClick(current)}
+              onClick={handleImageClick}
               className={`h-full w-full ${current.link_url ? 'cursor-pointer' : ''}`}
             >
               <img
@@ -155,7 +156,6 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
                 className="h-full w-full object-cover"
                 loading="lazy"
               />
-              {/* Subtle gradient overlay for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
               {current.link_url && (
                 <div className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 shadow-md backdrop-blur-sm">
@@ -179,7 +179,6 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
                 onClick={togglePlay}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
-              {/* Video controls overlay */}
               <div className="absolute bottom-3 right-3 flex items-center gap-2">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
@@ -239,7 +238,6 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
         </motion.div>
       </AnimatePresence>
 
-      {/* Title */}
       {current.title && (
         <motion.p
           key={`title-${current.id}`}
@@ -251,7 +249,6 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
         </motion.p>
       )}
 
-      {/* Navigation + dots */}
       {sorted.length > 1 && (
         <>
           <motion.button
@@ -268,8 +265,6 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
           >
             <ChevronRight className="h-4 w-4 text-foreground" strokeWidth={2} />
           </motion.button>
-
-          {/* Progress dots */}
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
             {sorted.map((_, i) => (
               <motion.button
