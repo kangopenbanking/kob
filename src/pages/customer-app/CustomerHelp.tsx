@@ -84,13 +84,13 @@ const CustomerHelp: React.FC = () => {
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex flex-col gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact Us</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {contactOptions.map(opt => (
             <motion.button key={opt.label} whileTap={{ scale: 0.95 }} onClick={opt.action}
-              className="flex flex-col items-center gap-2 rounded-2xl border-2 p-4" style={{ backgroundColor: opt.color, borderColor: opt.color }}>
+              className="flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-4" style={{ backgroundColor: opt.color, borderColor: opt.color }}>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/60">{opt.icon}</div>
-              <span className="text-xs font-semibold text-foreground">{opt.label}</span>
-              <span className="text-[10px] text-foreground/60">{opt.desc}</span>
+              <span className="text-xs font-semibold text-foreground leading-tight">{opt.label}</span>
+              <span className="text-[9px] leading-tight text-foreground/60 break-words text-center w-full px-0.5">{opt.desc}</span>
             </motion.button>
           ))}
         </div>
