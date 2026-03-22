@@ -50,7 +50,7 @@ const CustomerTravelAgencies: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* ── Themed Header with Embedded Search ── */}
-      <div className="relative overflow-hidden px-5 pb-6 pt-4" style={{ backgroundColor: theme.color }}>
+      <div className="relative overflow-hidden px-5 pb-8 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-7">
@@ -79,16 +79,16 @@ const CustomerTravelAgencies: React.FC = () => {
           {/* ── Search Embedded in Banner ── */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.15 }}
             className="mt-5 flex items-center gap-2.5 rounded-2xl px-4 py-3" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }}>
-            <Search className="h-4.5 w-4.5 shrink-0 text-foreground/50" />
+            <Search className="h-4.5 w-4.5 shrink-0" style={{ color: theme.fg }} />
             <input type="text" placeholder={`Search ${theme.label.toLowerCase()} agencies...`} value={search} onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] font-medium text-foreground placeholder:text-foreground/40 outline-none" />
+              className="flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-white/50" style={{ color: theme.fg }} />
           </motion.div>
         </div>
       </div>
 
       {/* ── Stats ── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}
-        className="flex items-center gap-2 px-5 mb-4">
+        className="flex items-center gap-2 px-5 mt-5 mb-4">
         <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
           <Route className="h-3.5 w-3.5" style={{ color: theme.color }} />
           <span className="text-[11px] font-bold text-[#0f1729]">{agencies.length} Agencies</span>
