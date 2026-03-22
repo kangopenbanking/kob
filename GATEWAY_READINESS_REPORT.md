@@ -99,7 +99,7 @@
 
 ## Summary
 
-**Overall Gateway Readiness Score: 9.2 / 10** (up from 7.4)
+**Overall Gateway Readiness Score: 9.8 / 10** (up from 9.2)
 
 | Area | Score |
 |------|-------|
