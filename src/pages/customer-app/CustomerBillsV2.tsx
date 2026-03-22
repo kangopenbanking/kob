@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Search, ChevronRight, Loader2, CheckCircle2, Receipt,
   GraduationCap, Zap, Droplets, Wifi, Tv, Phone, Shield, Landmark,
-  MapPin, FileText, Share2, RotateCcw, Building2, Star
+  MapPin, FileText, Share2, RotateCcw, Building2, Clock, CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import {
   useBillCategories, useBillProviders, useBillLocations, useBillProducts,
   useCreateBillIntent, usePayBillIntent, useBillPayments,
 } from '@/hooks/useBillsV2';
+import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 // ─── Icon mapping ───
 const iconMap: Record<string, React.ElementType> = {
