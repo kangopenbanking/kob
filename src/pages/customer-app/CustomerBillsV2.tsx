@@ -174,67 +174,112 @@ const CustomerBillsV2: React.FC = () => {
     step === 'confirm' ? 'Confirm Payment' : 'Receipt';
 
   return (
-    <div className="flex flex-col gap-4 p-5 pb-28">
+    <div className="flex flex-col gap-0 pb-28">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={handleBack} className="rounded-xl p-1.5 transition-colors hover:bg-muted" aria-label="Go back">
-          <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-        </button>
-        <h1 className="text-lg font-bold text-foreground">{stepTitle}</h1>
+      <div className="relative overflow-hidden bg-primary px-5 pb-7 pt-5">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5" />
+        <div className="absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-center gap-3">
+          <motion.button whileTap={{ scale: 0.9 }} onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+            <ArrowLeft className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
+          </motion.button>
+          <div>
+            <h1 className="text-lg font-bold text-primary-foreground">{stepTitle}</h1>
+            <p className="text-xs text-primary-foreground/70">
+              {step === 'home' ? 'Quick & secure bill payments' : step === 'providers' ? 'Select a provider' : step === 'form' ? 'Enter payment details' : step === 'confirm' ? 'Review your payment' : ''}
+            </p>
+          </div>
+        </div>
+
+        {/* Wallet Balance Pill */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="relative z-10 mt-4 flex items-center gap-2.5 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+            <CreditCard className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/60">Available Balance</span>
+            <span className="text-base font-bold text-primary-foreground">{walletBalance.toLocaleString()} <span className="text-xs font-normal text-primary-foreground/70">XAF</span></span>
+          </div>
+        </motion.div>
       </div>
 
+      <div className="flex flex-col gap-5 px-5 pt-5">
       <AnimatePresence mode="wait">
         {/* ─── HOME ─── */}
         {step === 'home' && (
           <motion.div key="home" {...fadeIn} className="flex flex-col gap-5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-              <Input placeholder="Search categories..." value={search} onChange={e => setSearch(e.target.value)}
-                className="rounded-2xl border-border bg-muted/40 pl-10 h-11" />
-            </div>
+            <motion.div variants={fadeUp} initial="initial" animate="animate" className="relative">
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+              <Input placeholder="Search categories…" value={search} onChange={e => setSearch(e.target.value)}
+                className="h-11 rounded-2xl border-border/50 bg-muted/40 pl-10 text-sm shadow-sm" />
+            </motion.div>
 
-            {catLoading ? <SkeletonGrid /> : (
-              <div className="grid grid-cols-4 gap-2.5">
-                {filteredCategories.map((cat: any, i: number) => {
+            {catLoading ? <SkeletonList count={6} /> : (
+              <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-3">
+                {filteredCategories.map((cat: any) => {
                   const Icon = getIcon(cat.icon);
+                  const bgColor = catCardColor[cat.icon] || 'bg-muted';
+                  const iconColor = catIconBg[cat.icon] || 'bg-primary';
                   return (
-                    <motion.button key={cat.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.04 }} whileTap={{ scale: 0.93 }}
+                    <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.97 }}
                       onClick={() => selectCategory(cat.id)}
-                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-card p-3 transition-shadow hover:shadow-md">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: cat.color }}>
-                        <Icon className="h-5 w-5 text-foreground/80" strokeWidth={1.5} />
+                      className={`flex items-center gap-3.5 rounded-2xl ${bgColor} p-4 shadow-sm transition-shadow active:shadow-md`}>
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconColor} text-white shadow-sm`}>
+                        <Icon className="h-5 w-5" strokeWidth={1.5} />
                       </div>
-                      <span className="text-[11px] font-medium text-foreground leading-tight text-center">{cat.name}</span>
+                      <div className="flex flex-1 flex-col items-start">
+                        <span className="text-sm font-bold text-foreground">{cat.name}</span>
+                        {cat.description && <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">{cat.description}</span>}
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground/50" strokeWidth={1.5} />
                     </motion.button>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
 
             {/* Recent payments */}
-            <div className="flex flex-col gap-2.5">
-              <h2 className="text-sm font-semibold text-foreground">Recent Payments</h2>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                <h2 className="text-sm font-bold text-foreground">Recent Payments</h2>
+              </div>
               {recentLoading ? <SkeletonList count={3} /> : recentPayments.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">No recent bill payments</p>
-              ) : recentPayments.map((p: any, i: number) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                      {React.createElement(getIcon(p.bill_providers?.icon), { className: 'h-4 w-4 text-primary', strokeWidth: 1.5 })}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">{p.bill_providers?.name || 'Bill Payment'}</span>
-                      <span className="text-[11px] text-muted-foreground">{p.bill_products?.name} · {new Date(p.paid_at).toLocaleDateString()}</span>
-                    </div>
+                <motion.div variants={fadeUp} initial="initial" animate="animate"
+                  className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 py-10 ring-1 ring-border/30">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <Receipt className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-foreground">{Number(p.total_amount).toLocaleString()}</span>
-                    <span className="text-[10px] text-muted-foreground">XAF</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground">No recent bill payments</p>
                 </motion.div>
-              ))}
+              ) : (
+                <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-2.5">
+                  {recentPayments.map((p: any) => {
+                    const pIcon = p.bill_providers?.icon;
+                    const bgColor = catCardColor[pIcon] || 'bg-muted';
+                    const iconColor = catIconBg[pIcon] || 'bg-primary';
+                    return (
+                      <motion.div key={p.id} variants={fadeUp}
+                        className={`flex items-center gap-3 rounded-2xl ${bgColor} p-3.5 shadow-sm`}>
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconColor} text-white shadow-sm`}>
+                          {React.createElement(getIcon(pIcon), { className: 'h-4 w-4', strokeWidth: 1.5 })}
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <span className="truncate text-sm font-semibold text-foreground">{p.bill_providers?.name || 'Bill Payment'}</span>
+                          <span className="text-[11px] text-muted-foreground">{p.bill_products?.name} · {new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="text-sm font-bold text-foreground">{Number(p.total_amount).toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">XAF</span></span>
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-primary">
+                            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Paid
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
