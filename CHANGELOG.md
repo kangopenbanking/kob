@@ -1,0 +1,89 @@
+# Changelog
+
+All notable changes to the Kang Open Banking API will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [4.0.1] — 2026-03-22
+
+### Added — Gateway Readiness Upgrade (Phases 2–6)
+
+#### Phase 2: Spec & Postman Hardening
+- **Postman Collection v2.0.0**: Added pre-request auth script for auto-authentication, sandbox/production environments, collection variables for `client_id`/`client_secret`.
+- **OpenAPI v4.0.1**: Expanded from 60 to 83 paths. Added Payouts (batch, instant, push-to-card), Merchant lifecycle (API keys, KYB, Webhooks, Settlement accounts), Disputes (file/evidence), Beneficiaries, Reports (transactions/fees), Inbound Provider Webhooks (Stripe, Flutterwave, PayPal).
+- Added `Error` response schema on all mutating endpoints (400/401/403/404/409/429/500).
+
+#### Phase 3: Backend Gap Closure
+- **Gateway Disputes**: Full lifecycle via `dispute-lifecycle`, `gateway-submit-dispute-evidence`, `gateway-dispute-notify`, and provider-specific dispute sync (Stripe webhook auto-creates disputes).
+- **Gateway Reconciliation**: `gateway-reconciliation` edge function with mismatch detection and resolution workflow.
+- **E2E Contract Tests**: Expanded from 50 to 65+ tests across 9 suites including new Merchant Onboarding and Dispute Lifecycle suites.
+
+#### Phase 4: Developer Portal Enhancement
+- **Markdown docs**: Created `/docs/developer-portal/` with structured guides for Auth, Webhooks, Errors, Rate Limits, Idempotency, Sandbox, and Merchant Onboarding.
+- **Frontend portal**: 78+ developer guide pages at `/developer/*` covering Gateway, Pay by Bank, WooCommerce, POS, Compliance, Treasury, and more.
+
+#### Phase 5: E2E Testing
+- Added Suite 9 (Merchant Onboarding Contract) and Suite 10 (Dispute Lifecycle Contract) to `e2e-contract-tests`.
+- Verified all 8 existing suites pass (System Health, Auth Guards, CORS, Bank Connector, Webhook Security, RFC 7807 Errors, Payment Gateway, SDK Registry).
+
+#### Phase 6: Changelog & Versioning
+- Created `CHANGELOG.md` at repo root (this file).
+- Created `/docs/developer-portal/reference/versioning-and-changelog.md`.
+
+### Fixed
+- **OpenAPI `public/openapi.json`**: Fixed malformed tags that were outside the root JSON object.
+- **Postman Collection**: Bumped version to 2.0.0 with environments support.
+
+### Security
+- All webhook endpoints verify HMAC-SHA256 signatures before processing.
+- API keys stored as SHA-256 hashes; plaintext never persisted.
+- Idempotency keys enforced on all POST/PUT money-moving operations with 24h TTL.
+
+---
+
+## [4.0.0] — 2026-03-15
+
+### Added
+- UK Open Banking v4.0.1 compliance (FAPI headers, JWS signing, CBPII).
+- Bank Connector Layer v1.0.0 (File, DB, MQ, API Pull modes).
+- Bank Directory with interactive Onboarding Wizard.
+- Interbank Engine (pacs.008/pacs.002 ISO 20022).
+- Pay by Bank with SCA + redirect flow.
+- WooCommerce plugin with auto-install.
+- POS & Commerce module with marketplace.
+- Consumer tools: Piggy Bank, Njangi (tontine).
+- PostiQ address verification.
+- CrediQ credit scoring.
+- Remittance corridors (CEMAC, EU, US, UK).
+
+### Security
+- mTLS support for bank connectors.
+- CAPTCHA challenge system for non-Firebase auth.
+- Brute-force lockout (3 attempts / 30min).
+- Rate limiting with IP-based tracking.
+
+---
+
+## [3.0.0] — 2026-02-01
+
+### Added
+- Payment Gateway v1 with Flutterwave + Stripe adapters.
+- Merchant onboarding with KYB workflow.
+- Webhook governance (24 event types, HMAC signing, 7-attempt retry).
+- SDK ecosystem: Node.js, Python, PHP/Laravel.
+- Double-entry ledger with journal posting.
+- Mobile Money integration (MTN, Orange).
+- Settlement engine with auto-cron.
+- Sandbox with test data generator.
+
+---
+
+## Backward Compatibility
+
+All changes in v4.0.1 are **fully additive**. No existing endpoints, response formats, or database schemas have been modified or removed. Existing integrations continue to work without changes.
+
+### Migration Notes
+- No breaking changes. No migration required.
+- New Postman collection variables (`client_id`, `client_secret`) are optional — existing manual token flow still works.
+- New OpenAPI paths are additions only; existing paths unchanged.

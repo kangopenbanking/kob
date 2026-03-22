@@ -49,14 +49,75 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Postman test script helpers
+  const testStatus = (code: number) => `pm.test("Status is ${code}", function () { pm.response.to.have.status(${code}); });`;
+  const testJson = () => `pm.test("Body is JSON", function () { pm.response.to.be.json; });`;
+  const testHasField = (field: string) => `pm.test("Has '${field}' field", function () { var d = pm.response.json(); pm.expect(d).to.have.property('${field}'); });`;
+  const testSaveVar = (field: string, varName: string) => `var d = pm.response.json(); if (d.${field}) { pm.collectionVariables.set('${varName}', d.${field}); }`;
+
+  // Postman environments
+  const environments = [
+    {
+      name: 'KOB Sandbox',
+      values: [
+        { key: 'base_url', value: 'https://api.kangopenbanking.com', enabled: true },
+        { key: 'environment', value: 'sandbox', enabled: true },
+        { key: 'access_token', value: '', enabled: true },
+        { key: 'client_id', value: 'YOUR_SANDBOX_CLIENT_ID', enabled: true },
+        { key: 'client_secret', value: 'YOUR_SANDBOX_CLIENT_SECRET', enabled: true },
+        { key: 'api_key', value: 'YOUR_SANDBOX_API_KEY', enabled: true },
+      ],
+    },
+    {
+      name: 'KOB Production',
+      values: [
+        { key: 'base_url', value: 'https://api.kangopenbanking.com', enabled: true },
+        { key: 'environment', value: 'production', enabled: true },
+        { key: 'access_token', value: '', enabled: true },
+        { key: 'client_id', value: 'YOUR_PROD_CLIENT_ID', enabled: true },
+        { key: 'client_secret', value: 'YOUR_PROD_CLIENT_SECRET', enabled: true },
+        { key: 'api_key', value: 'YOUR_PROD_API_KEY', enabled: true },
+      ],
+    },
+  ];
+
+  // Pre-request script for auto-auth
+  const preRequestAuth = `
+// Auto-authenticate if access_token is empty or expired
+if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('access_token') === 'YOUR_ACCESS_TOKEN') {
+  const clientId = pm.environment.get('client_id') || pm.collectionVariables.get('client_id');
+  const clientSecret = pm.environment.get('client_secret') || pm.collectionVariables.get('client_secret');
+  if (clientId && clientSecret && clientId !== 'YOUR_SANDBOX_CLIENT_ID') {
+    pm.sendRequest({
+      url: pm.collectionVariables.get('base_url') + '/v1/oauth/token',
+      method: 'POST',
+      header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: { mode: 'urlencoded', urlencoded: [
+        { key: 'grant_type', value: 'client_credentials' },
+        { key: 'client_id', value: clientId },
+        { key: 'client_secret', value: clientSecret },
+        { key: 'scope', value: 'accounts payments' },
+      ]},
+    }, function (err, res) {
+      if (!err && res.code === 200) {
+        var body = res.json();
+        pm.collectionVariables.set('access_token', body.access_token);
+      }
+    });
+  }
+}`;
+
   const collection = {
     info: {
       name: 'Kang Open Banking API v1',
-      description: 'Complete Postman collection for the KOB API – aligned 1:1 with the OpenAPI 3.1 spec. COBAC & BEAC compliant.',
-      version: '1.0.0',
+      description: 'Complete Postman collection for the KOB API – aligned 1:1 with the OpenAPI 3.1 spec. COBAC & BEAC compliant.\n\n## Quick Start\n1. Import this collection\n2. Import the **KOB Sandbox** environment\n3. Set your `client_id` and `client_secret`\n4. Run the "Get Token (Client Credentials)" request\n5. All subsequent requests auto-authenticate via Bearer token\n\n## Environments\nUse `GET /v1/postman-environments` to download sandbox and production environment files.',
+      version: '2.0.0',
       schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
     },
     auth: { type: 'bearer', bearer: [{ key: 'token', value: '{{access_token}}', type: 'string' }] },
+    event: [
+      { listen: 'prerequest', script: { type: 'text/javascript', exec: preRequestAuth.split('\n') } },
+    ],
     variable: [
       { key: 'base_url', value: 'https://api.kangopenbanking.com', type: 'string' },
       { key: 'access_token', value: 'YOUR_ACCESS_TOKEN', type: 'string' },
@@ -82,6 +143,8 @@ Deno.serve(async (req) => {
       { key: 'bank_id', value: 'BANK_UUID', type: 'string' },
       { key: 'connector_id', value: 'CONNECTOR_UUID', type: 'string' },
       { key: 'intent_id', value: 'INTENT_UUID', type: 'string' },
+      { key: 'client_id', value: 'YOUR_CLIENT_ID', type: 'string' },
+      { key: 'client_secret', value: 'YOUR_CLIENT_SECRET', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
@@ -1222,6 +1285,19 @@ Deno.serve(async (req) => {
       },
     ],
   };
+
+  // Check if environments were requested
+  const url = new URL(req.url);
+  if (url.pathname.endsWith('/postman-environments') || url.searchParams.get('type') === 'environments') {
+    return new Response(JSON.stringify({ environments }, null, 2), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  }
 
   return new Response(JSON.stringify(collection, null, 2), {
     status: 200,
