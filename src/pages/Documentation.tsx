@@ -31,22 +31,28 @@ const Documentation = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const fallbackOpenApi = API_CONFIG.OPENAPI_SPEC.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
-    const fallbackPostman = API_CONFIG.POSTMAN_COLLECTION.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
 
     const check = async () => {
       setIsChecking(true);
       try {
+        // Try static files first (no cold-start), fall back to edge function
         const [specHead, postmanHead] = await Promise.allSettled([
-          fetch(API_CONFIG.OPENAPI_SPEC, { method: 'HEAD' }),
+          fetch('/openapi.json', { method: 'HEAD' }),
           fetch(API_CONFIG.POSTMAN_COLLECTION, { method: 'HEAD' }),
         ]);
+
+        const fallbackOpenApi = API_CONFIG.OPENAPI_SPEC.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
+        const fallbackPostman = API_CONFIG.POSTMAN_COLLECTION.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
+
         if (!cancelled) {
-          setOpenApiUrl(specHead.status === 'fulfilled' && specHead.value.ok ? API_CONFIG.OPENAPI_SPEC : fallbackOpenApi);
+          setOpenApiUrl(specHead.status === 'fulfilled' && specHead.value.ok ? '/openapi.json' : fallbackOpenApi);
           setPostmanUrl(postmanHead.status === 'fulfilled' && postmanHead.value.ok ? API_CONFIG.POSTMAN_COLLECTION : fallbackPostman);
         }
       } catch {
-        if (!cancelled) { setOpenApiUrl(fallbackOpenApi); setPostmanUrl(fallbackPostman); }
+        if (!cancelled) {
+          setOpenApiUrl('/openapi.json');
+          setPostmanUrl(API_CONFIG.POSTMAN_COLLECTION);
+        }
       } finally {
         if (!cancelled) setIsChecking(false);
       }

@@ -137,7 +137,7 @@ const RedocPage = () => {
         </div>
       )}
 
-      <div ref={containerRef} id="redoc-container" />
+      <div ref={containerRef} id="redoc-container" data-testid="redoc-container" />
     </>
   );
 };

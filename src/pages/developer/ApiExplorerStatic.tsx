@@ -190,6 +190,7 @@ const ApiExplorerStatic = () => {
         </Card>
       )}
     </div>
+    </>
   );
 };
 
