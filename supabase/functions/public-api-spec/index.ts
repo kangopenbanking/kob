@@ -1055,7 +1055,7 @@ paths['/v1/loans/{loanId}/approve'] = {
     tags: ['Loans'], summary: 'Approve loan application', operationId: 'loanApprove', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
     requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { approved_amount: { type: 'number' }, approved_rate: { type: 'number' }, conditions: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Loan approved' }, ...errorResponses },
+    responses: { '200': { description: 'Loan approved', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoanApplication' } } } }, ...errorResponses },
   },
 };
 
