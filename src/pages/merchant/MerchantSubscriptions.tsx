@@ -211,7 +211,7 @@ export default function MerchantSubscriptions() {
         <Card className="border-border/60">
           <CardContent className="p-0">
             {paged.length === 0 ? (
-              <EmptyState icon={<RefreshCw className="h-6 w-6 text-muted-foreground" />} title="No subscriptions found" description={search || statusFilter !== "all" ? "Adjust your filters" : "Subscriptions will appear when customers subscribe to your plans"} />
+              <EmptyState icon={<RefreshCw className="h-6 w-6 text-muted-foreground" />} title="No subscriptions found" description={search || statusFilter !== "all" ? "Adjust your filters" : "Subscriptions will appear when customers subscribe to your plans"} action={!(search || statusFilter !== "all") ? { label: "New Subscription", onClick: () => setCreateOpen(true) } : undefined} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

@@ -159,6 +159,9 @@ export default function Loans() {
               <CardContent className="empty-state">
                 <div className="empty-state-icon"><Wallet className="h-6 w-6 text-muted-foreground" /></div>
                 <p className="text-sm text-muted-foreground">You don't have any active loans.</p>
+                <Button variant="outline" size="sm" className="mt-3 rounded-full" onClick={() => document.querySelector<HTMLButtonElement>('[value="products"]')?.click()}>
+                  Browse Loan Products
+                </Button>
               </CardContent>
             </Card>
           )}

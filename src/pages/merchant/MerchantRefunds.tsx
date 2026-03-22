@@ -78,7 +78,7 @@ export default function MerchantRefunds() {
       <Card>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <EmptyState icon={<RotateCcw className="h-6 w-6 text-muted-foreground" />} title="No refunds found" description="Refunds will appear here when processed" />
+            <EmptyState icon={<RotateCcw className="h-6 w-6 text-muted-foreground" />} title="No refunds found" description="Refunds will appear here when processed" action={{ label: "View Transactions", onClick: () => window.location.href = "/merchant/transactions" }} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
