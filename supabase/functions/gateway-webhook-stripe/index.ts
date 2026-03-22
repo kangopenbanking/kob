@@ -54,11 +54,12 @@ serve(async (req) => {
     const eventId = event.id;
 
     // Dedupe
-    if (eventId) {
-      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', `stripe_${eventId}`).maybeSingle();
+    const dedupeKey = eventId ? `stripe_${eventId}` : null;
+    if (dedupeKey) {
+      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', dedupeKey).maybeSingle();
       if (existing) return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-      await supabase.from('webhook_inbox').insert({ event_id: `stripe_${eventId}`, provider: 'stripe', payload: event, status: 'processing' });
+      await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'stripe', event_type: event.type, payload: event, status: 'processing' });
     }
 
     const obj = event.data?.object;
