@@ -17,12 +17,14 @@ export const travelThemes: Record<string, TravelTheme> = {
   bus: {
     label: 'Bus Travel',
     icon: Bus,
-    color: '#c8102e',
+    color: '#003087',
     fg: '#ffffff',
-    headerBg: '#c8102e',
-    lightBg: '#fef2f2',
-    accentLight: '#fcdada',
-    accentText: '#9b1b30',
+    headerBg: '#003087',
+    lightBg: '#f0f3f8',
+    accentLight: '#d6e0f0',
+    accentText: '#003087',
+    buttonBg: '#c8102e',
+    buttonFg: '#ffffff',
   },
   tours: {
     label: 'Tours & Excursions',
@@ -33,6 +35,8 @@ export const travelThemes: Record<string, TravelTheme> = {
     lightBg: '#f6f0fc',
     accentLight: '#e8d5f5',
     accentText: '#4a1a7a',
+    buttonBg: '#f5b800',
+    buttonFg: '#1a1a1a',
   },
   airlines: {
     label: 'Airlines',
