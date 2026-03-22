@@ -622,6 +622,25 @@ const CustomerAuth: React.FC = () => {
                   </p>
                 </div>
                 <Button
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      const { error } = await supabase.auth.resend({ type: 'signup', email });
+                      if (error) throw error;
+                      toast.success('Verification email resent! Check your inbox.');
+                    } catch (err: any) {
+                      toast.error(err.message || 'Failed to resend verification email');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
+                >
+                  <Mail className="h-4 w-4" />
+                  {loading ? 'Sending...' : 'Resend Verification Email'}
+                </Button>
+                <Button
                   onClick={() => { setMode('input'); setIntent('signin'); }}
                   className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
                   variant="outline"

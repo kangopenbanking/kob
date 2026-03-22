@@ -658,6 +658,25 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                   </p>
                 </div>
                 <Button
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      const { error } = await supabase.auth.resend({ type: 'signup', email: form.email });
+                      if (error) throw error;
+                      toast({ title: 'Email Resent', description: 'Verification email resent! Check your inbox.' });
+                    } catch (err: any) {
+                      toast({ title: 'Error', description: err.message || 'Failed to resend', variant: 'destructive' });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
+                >
+                  <Mail className="h-4 w-4" />
+                  {loading ? 'Sending...' : 'Resend Verification Email'}
+                </Button>
+                <Button
                   onClick={() => { setStep('email'); setMode('login'); }}
                   className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
                   variant="outline"
