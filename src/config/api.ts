@@ -13,6 +13,11 @@ export const API_CONFIG = {
   EXPLORER_URL: 'https://kangopenbanking.com/developer/api-explorer',
   OPENAPI_SPEC: 'https://api.kangopenbanking.com/functions/v1/public-api-spec',
   POSTMAN_COLLECTION: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
+  /** Static spec files served from /public — no edge function cold-start */
+  OPENAPI_JSON: '/openapi.json',
+  OPENAPI_YAML: '/openapi.yaml',
+  OPENAPI_SANDBOX_JSON: '/openapi-sandbox.json',
+  OPENAPI_SANDBOX_YAML: '/openapi-sandbox.yaml',
 } as const;
 
 /**
