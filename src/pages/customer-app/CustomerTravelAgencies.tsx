@@ -81,7 +81,7 @@ const CustomerTravelAgencies: React.FC = () => {
             className="mt-5 flex items-center gap-2.5 rounded-2xl px-4 py-3" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }}>
             <Search className="h-4.5 w-4.5 shrink-0" style={{ color: theme.fg }} />
             <input type="text" placeholder={`Search ${theme.label.toLowerCase()} agencies...`} value={search} onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] font-medium outline-none" style={{ color: theme.fg }} />
+              className="flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-white/50" style={{ color: theme.fg }} />
           </motion.div>
         </div>
       </div>
