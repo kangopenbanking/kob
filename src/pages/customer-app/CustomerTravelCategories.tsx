@@ -16,7 +16,7 @@ const categories = [
     iconFg: '#ffffff',
     stat: '50+ Routes',
     statIcon: MapPin,
-    features: ['Real-time tracking', 'Seat selection'],
+    features: ['Track Bus', 'Pick Seats'],
   },
   {
     key: 'tours',
