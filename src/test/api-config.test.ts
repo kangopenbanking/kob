@@ -20,6 +20,14 @@ describe("API Configuration", () => {
     expect(API_CONFIG.EXPLORER_URL).toBeDefined();
   });
 
+  it("should have static spec file paths", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    expect(API_CONFIG.OPENAPI_JSON).toBe("/openapi.json");
+    expect(API_CONFIG.OPENAPI_YAML).toBe("/openapi.yaml");
+    expect(API_CONFIG.OPENAPI_SANDBOX_JSON).toBe("/openapi-sandbox.json");
+    expect(API_CONFIG.OPENAPI_SANDBOX_YAML).toBe("/openapi-sandbox.yaml");
+  });
+
   it("should have SITE_URL configured", async () => {
     const { API_CONFIG } = await import("@/config/api");
     expect(API_CONFIG.SITE_URL).toBe("https://kangopenbanking.com");
