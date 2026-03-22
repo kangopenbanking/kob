@@ -1286,6 +1286,19 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
     ],
   };
 
+  // Check if environments were requested
+  const url = new URL(req.url);
+  if (url.pathname.endsWith('/postman-environments') || url.searchParams.get('type') === 'environments') {
+    return new Response(JSON.stringify({ environments }, null, 2), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  }
+
   return new Response(JSON.stringify(collection, null, 2), {
     status: 200,
     headers: {
