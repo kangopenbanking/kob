@@ -253,7 +253,7 @@ const CustomerTravelBooking: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* Header */}
-      <div className="relative overflow-hidden px-5 pb-6 pt-4" style={{ backgroundColor: theme.color }}>
+      <div className="relative overflow-hidden px-5 pb-8 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
