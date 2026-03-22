@@ -1188,7 +1188,7 @@ paths['/v1/mobile-money/transfer'] = {
 };
 
 paths['/v1/mobile-money/verify'] = {
-  post: { tags: ['Mobile Money'], summary: 'Verify mobile money transaction', operationId: 'mobileMoneyVerify', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transaction_ref'], properties: { transaction_ref: { type: 'string' } } } } } }, responses: { '200': { description: 'Transaction status' }, ...errorResponses } },
+  post: { tags: ['Mobile Money'], summary: 'Verify mobile money transaction', operationId: 'mobileMoneyVerify', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transaction_ref'], properties: { transaction_ref: { type: 'string' } } } } } }, responses: { '200': { description: 'Transaction status', content: { 'application/json': { schema: { $ref: '#/components/schemas/MobileMoneyCharge' } } } }, ...errorResponses } },
 };
 
 paths['/v1/mobile-money/to-bank'] = {
