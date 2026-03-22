@@ -2007,7 +2007,7 @@ paths['/v1/compliance/sar/{sarId}/submit'] = {
 // SAFEGUARDING (Phase 4)
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/safeguarding/reconcile'] = {
-  post: { tags: ['KYC & Compliance'], summary: 'Run safeguarding reconciliation', description: 'Reconcile total e-money liabilities against actual wallet and escrow balances.', operationId: 'safeguardingReconcile', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Reconciliation result with discrepancy details' }, ...errorResponses } },
+  post: { tags: ['KYC & Compliance'], summary: 'Run safeguarding reconciliation', description: 'Reconcile total e-money liabilities against actual wallet and escrow balances.', operationId: 'safeguardingReconcile', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Reconciliation result with discrepancy details', content: { 'application/json': { schema: { type: 'object', properties: { total_liabilities: { type: 'number' }, total_assets: { type: 'number' }, discrepancy: { type: 'number' }, status: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/safeguarding/snapshots'] = {
@@ -2037,7 +2037,7 @@ paths['/v1/payouts/{payoutId}/cancel'] = {
 // TREASURY (Phase 6)
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/treasury/float'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Get treasury float balance', description: 'Current float balances across all provider accounts.', operationId: 'treasuryFloat', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Float balances by provider and currency' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Get treasury float balance', description: 'Current float balances across all provider accounts.', operationId: 'treasuryFloat', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Float balances by provider and currency', content: { 'application/json': { schema: { type: 'object', properties: { balances: { type: 'array', items: { type: 'object', properties: { provider: { type: 'string' }, currency: { type: 'string' }, balance: { type: 'number' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/treasury/replenish'] = {
@@ -2083,7 +2083,7 @@ paths['/v1/webhooks/v2/deliveries'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/sandbox/payout-sim'] = {
   post: { tags: ['Sandbox'], summary: 'Simulate payout scenario', description: 'Run a payout through a pre-seeded sandbox scenario (e.g. insufficient_funds, network_timeout, reversed_after_success).', operationId: 'sandboxPayoutSim', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['scenario', 'amount', 'currency'], properties: { scenario: { type: 'string', enum: ['instant_success', 'delayed_success', 'insufficient_funds', 'network_timeout', 'compliance_hold', 'reversed_after_success', 'partial_failure'] }, amount: { type: 'number' }, currency: { type: 'string' }, merchant_id: { type: 'string', format: 'uuid' }, webhook_url: { type: 'string', format: 'uri' } } } } } }, responses: { '200': { description: 'Simulation result with timeline and webhook callbacks' }, ...errorResponses } },
-  get: { tags: ['Sandbox'], summary: 'List sandbox scenarios', operationId: 'sandboxScenarioList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Available sandbox payout scenarios' }, ...errorResponses } },
+  get: { tags: ['Sandbox'], summary: 'List sandbox scenarios', operationId: 'sandboxScenarioList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Available sandbox payout scenarios', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2160,7 +2160,7 @@ paths['/v1/interbank/payments/{paymentId}/submit'] = {
 };
 
 paths['/v1/interbank/participants'] = {
-  get: { tags: ['Interbank'], summary: 'List participants', operationId: 'interbankParticipantsList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Interbank participants list' }, ...errorResponses } },
+  get: { tags: ['Interbank'], summary: 'List participants', operationId: 'interbankParticipantsList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Interbank participants list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, swift_bic: { type: 'string' }, status: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/interbank/messages'] = {
@@ -2272,7 +2272,7 @@ paths['/v1/pay-by-bank/callback'] = {
     tags: ['Pay by Bank'], summary: 'Bank connector callback', description: 'Internal callback from bank connector confirming payment execution.', operationId: 'payByBankCallback',
     security: [{ mtls: [] }],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['intent_id', 'status'], properties: { intent_id: { type: 'string' }, status: { type: 'string', enum: ['completed', 'failed'] }, failure_reason: { type: 'string' } } } } } },
-    responses: { '200': { description: 'Callback processed' }, ...errorResponses },
+    responses: { '200': successResult('Callback processed'), ...errorResponses },
   },
 };
 
