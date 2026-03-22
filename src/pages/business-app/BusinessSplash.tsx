@@ -86,7 +86,7 @@ const BusinessSplashInner: React.FC = () => {
       <SplashScreen
         onComplete={() => setPhase('walkthrough')}
         duration={2500}
-        name="KOB Business"
+        name="Kang Business"
         logoUrl={kobLogo}
         tagline="Run your business, your way"
       />
@@ -105,7 +105,7 @@ const BusinessSplashInner: React.FC = () => {
   return (
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
-      appName="KOB Business"
+      appName="Kang Business"
       logoUrl={kobLogo}
       tagline="Your business management app"
       appKey="kob-business"
