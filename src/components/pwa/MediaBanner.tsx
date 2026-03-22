@@ -71,22 +71,11 @@ export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'med
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
-  if (!items || items.length === 0) return null;
+  const sorted = items && items.length > 0 ? [...items].sort((a, b) => a.position - b.position) : [];
+  const itemCount = sorted.length;
 
-  const sorted = [...items].sort((a, b) => a.position - b.position);
-  const current = sorted[currentIndex];
-  const effectiveAspect = current.aspect || aspect || 'landscape';
-
-  const getHeightClass = () => {
-    if (effectiveAspect === 'portrait') {
-      return cardSize === 'small' ? 'h-64' : cardSize === 'large' ? 'h-[480px]' : 'h-96';
-    }
-    return cardSize === 'small' ? 'h-36' : cardSize === 'large' ? 'h-60' : 'h-48';
-  };
-  const heightClass = getHeightClass();
-
-  const goNext = useCallback(() => setCurrentIndex((i) => (i + 1) % sorted.length), [sorted.length]);
-  const goPrev = useCallback(() => setCurrentIndex((i) => (i - 1 + sorted.length) % sorted.length), [sorted.length]);
+  const goNext = useCallback(() => setCurrentIndex((i) => (i + 1) % Math.max(itemCount, 1)), [itemCount]);
+  const goPrev = useCallback(() => setCurrentIndex((i) => (i - 1 + Math.max(itemCount, 1)) % Math.max(itemCount, 1)), [itemCount]);
 
   // IntersectionObserver for autoplay
   useEffect(() => {
