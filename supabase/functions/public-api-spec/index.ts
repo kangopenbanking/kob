@@ -1183,7 +1183,7 @@ paths['/v1/mobile-money/transfer'] = {
     tags: ['Mobile Money'], summary: 'Transfer to mobile money', operationId: 'mobileMoneyTransfer', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount'], properties: { phone_number: { type: 'string' }, amount: { type: 'number', example: 10000 }, currency: { type: 'string', example: 'XAF' } } } } } },
-    responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
+    responses: { '200': { description: 'Transfer initiated', content: { 'application/json': { schema: { $ref: '#/components/schemas/MobileMoneyCharge' } } } }, ...errorResponses },
   },
 };
 
