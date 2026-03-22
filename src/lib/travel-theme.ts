@@ -47,6 +47,8 @@ export const travelThemes: Record<string, TravelTheme> = {
     lightBg: '#eef5fc',
     accentLight: '#cfe2f8',
     accentText: '#054da0',
+    buttonBg: '#0770E3',
+    buttonFg: '#ffffff',
   },
   trains: {
     label: 'Trains',
@@ -57,6 +59,8 @@ export const travelThemes: Record<string, TravelTheme> = {
     lightBg: '#f0f8f7',
     accentLight: '#ccece9',
     accentText: '#005c56',
+    buttonBg: '#00857C',
+    buttonFg: '#ffffff',
   },
 };
 
