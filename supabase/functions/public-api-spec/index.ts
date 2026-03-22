@@ -844,19 +844,19 @@ paths['/v1/auth/password/reset-with-pin'] = {
 
 // Security
 paths['/v1/security/captcha/generate'] = {
-  post: { tags: ['Security'], summary: 'Generate CAPTCHA', operationId: 'captchaGenerate', security: [], responses: { '200': { description: 'CAPTCHA challenge' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Generate CAPTCHA', operationId: 'captchaGenerate', security: [], responses: { '200': { description: 'CAPTCHA challenge', content: { 'application/json': { schema: { type: 'object', properties: { challenge_id: { type: 'string', format: 'uuid' }, image_base64: { type: 'string' }, question: { type: 'string' }, expires_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/security/captcha/verify'] = {
-  post: { tags: ['Security'], summary: 'Verify CAPTCHA', operationId: 'captchaVerify', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': { description: 'Verification result' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Verify CAPTCHA', operationId: 'captchaVerify', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': successResult('CAPTCHA verified'), ...errorResponses } },
 };
 
 paths['/v1/security/sca/initiate'] = {
-  post: { tags: ['Security'], summary: 'Initiate SCA', operationId: 'scaInitiate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action_type'], properties: { action_type: { type: 'string', enum: ['payment', 'consent', 'account_update'] } } } } } }, responses: { '200': { description: 'SCA challenge issued' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Initiate SCA', operationId: 'scaInitiate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action_type'], properties: { action_type: { type: 'string', enum: ['payment', 'consent', 'account_update'] } } } } } }, responses: { '200': { description: 'SCA challenge issued', content: { 'application/json': { schema: { type: 'object', properties: { challenge_id: { type: 'string', format: 'uuid' }, challenge_type: { type: 'string', enum: ['otp', 'biometric', 'pin'] }, expires_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/security/sca/verify'] = {
-  post: { tags: ['Security'], summary: 'Verify SCA', operationId: 'scaVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': { description: 'SCA verified' }, ...errorResponses } },
+  post: { tags: ['Security'], summary: 'Verify SCA', operationId: 'scaVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['challenge_id', 'response'], properties: { challenge_id: { type: 'string' }, response: { type: 'string' } } } } } }, responses: { '200': successResult('SCA verified'), ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
