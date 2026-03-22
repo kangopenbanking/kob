@@ -564,7 +564,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </button>
+            </motion.button>
           );
         })()}
       </motion.div>
