@@ -79,9 +79,9 @@ const CustomerTravelAgencies: React.FC = () => {
           {/* ── Search Embedded in Banner ── */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.15 }}
             className="mt-5 flex items-center gap-2.5 rounded-2xl px-4 py-3" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }}>
-            <Search className="h-4.5 w-4.5 shrink-0 text-foreground/50" />
+            <Search className="h-4.5 w-4.5 shrink-0" style={{ color: theme.fg }} />
             <input type="text" placeholder={`Search ${theme.label.toLowerCase()} agencies...`} value={search} onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] font-medium text-foreground placeholder:text-foreground/40 outline-none" />
+              className="flex-1 bg-transparent text-[14px] font-medium outline-none" style={{ color: theme.fg }} />
           </motion.div>
         </div>
       </div>
