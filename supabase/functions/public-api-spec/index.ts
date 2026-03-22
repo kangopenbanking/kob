@@ -1823,7 +1823,7 @@ paths['/v1/gateway/funding-intents/{intentId}'] = {
 };
 
 paths['/v1/gateway/funding-intents/{intentId}/cancel'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Cancel funding intent', operationId: 'gatewayCancelFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding intent cancelled' }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Cancel funding intent', operationId: 'gatewayCancelFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': successResult('Funding intent cancelled'), ...errorResponses } },
 };
 
 paths['/v1/gateway/funding-intents/{intentId}/confirm'] = {
