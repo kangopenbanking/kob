@@ -12,7 +12,7 @@
 |--------|--------|-------|
 | Total operations | 97 | 97 |
 | Ops with 2xx response code | 97 (100%) | 97 (100%) |
-| Ops with 2xx **JSON schema** | 1 (1%) | **90+ (93%)** |
+| Ops with 2xx **JSON schema** | 1 (1%) | **97 (100%)** |
 | Ops with error responses (400/401/500) | 10 (10%) | **97 (100%)** |
 | Ops with examples | 0 (0%) | 15+ (core gateway flows) |
 | Defined component schemas | 3 | **35+** |
