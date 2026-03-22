@@ -60,6 +60,7 @@ const fadeIn = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, 
 
 const CustomerBillsV2: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
   const [step, setStep] = useState<Step>('home');
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -80,6 +81,12 @@ const CustomerBillsV2: React.FC = () => {
   const { data: locations = [] } = useBillLocations(providerId || undefined);
   const { data: products = [], isLoading: prodLoading } = useBillProducts(providerId || undefined, locationId || undefined);
   const { data: recentPayments = [], isLoading: recentLoading } = useBillPayments(10);
+  const { data: accounts = [] } = useCustomerAccounts(user?.id);
+  const accountIds = accounts.map((a: any) => a.id);
+  const { data: balances = [] } = useAccountBalances(accountIds);
+  const primaryAccount = accounts[0] as any;
+  const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
+  const walletBalance = (primaryBalance?.amount as number) ?? 0;
 
   const createIntent = useCreateBillIntent();
   const payIntent = usePayBillIntent();
