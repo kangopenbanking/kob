@@ -356,13 +356,17 @@ const CustomerHome: React.FC = () => {
       {visibleMoney.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Money Movement</p>
-          <div className="grid grid-cols-2 gap-3">
+          <motion.div className="grid grid-cols-2 gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleMoney.slice(0, 2).map((item) => {
-              // Extract border HSL to use as solid bg
               const solidBg = item.borderColor.replace('border-', 'bg-');
               return (
-                <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-start gap-3 rounded-3xl ${solidBg} p-5 text-left min-h-[140px]`}>
+                <motion.button
+                  key={item.path}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => go(item.path)}
+                  className={`flex flex-col items-start gap-3 rounded-3xl ${solidBg} p-5 text-left min-h-[140px] shadow-md transition-shadow active:shadow-sm`}
+                >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20">
                     <item.icon className="h-6 w-6 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
                   </div>
@@ -370,10 +374,10 @@ const CustomerHome: React.FC = () => {
                     <p className="text-sm font-bold text-[hsl(0,0%,100%)]">{item.label}</p>
                     <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{item.description}</p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
