@@ -517,6 +517,135 @@ async function suiteDisputeSettlement(): Promise<TestSuite> {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SUITE 11: SPEC CONTRACT MATURITY
+// Validates OpenAPI spec structure: 2xx schemas, error refs,
+// idempotency headers, and regression guards.
+// ═══════════════════════════════════════════════════════════════
+
+async function suiteSpecMaturity(): Promise<TestSuite> {
+  const suite: TestSuite = { name: 'Spec Contract Maturity', tests: [], passed: 0, failed: 0, skipped: 0, duration_ms: 0 };
+  const suiteStart = Date.now();
+
+  let spec: any = null;
+
+  // Fetch the live OpenAPI spec
+  const t0 = Date.now();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/public-api-spec`);
+    const text = await res.text();
+    spec = JSON.parse(text);
+    suite.tests.push({ suite: suite.name, test: 'Fetch OpenAPI spec', status: 'pass', duration_ms: Date.now() - t0 });
+    suite.passed++;
+  } catch (e) {
+    suite.tests.push({ suite: suite.name, test: 'Fetch OpenAPI spec', status: 'fail', duration_ms: Date.now() - t0, error: (e as Error).message });
+    suite.failed++;
+    suite.duration_ms = Date.now() - suiteStart;
+    return suite;
+  }
+
+  // Test: spec has required top-level fields
+  const t1 = Date.now();
+  const hasTopLevel = spec.openapi && spec.info?.version && spec.paths;
+  suite.tests.push({ suite: suite.name, test: 'Spec has openapi, info.version, paths', status: hasTopLevel ? 'pass' : 'fail', duration_ms: Date.now() - t1, ...(hasTopLevel ? {} : { error: 'Missing top-level fields' }) });
+  hasTopLevel ? suite.passed++ : suite.failed++;
+
+  // Test: minimum path count (regression guard)
+  const t2 = Date.now();
+  const pathCount = Object.keys(spec.paths || {}).length;
+  const minPaths = 80;
+  const pathOk = pathCount >= minPaths;
+  suite.tests.push({ suite: suite.name, test: `Path count >= ${minPaths} (found ${pathCount})`, status: pathOk ? 'pass' : 'fail', duration_ms: Date.now() - t2, ...(pathOk ? {} : { error: `Only ${pathCount} paths` }) });
+  pathOk ? suite.passed++ : suite.failed++;
+
+  // Test: Error schema exists with required fields
+  const t3 = Date.now();
+  const errorSchema = spec.components?.schemas?.Error;
+  const errorFields = ['error', 'error_code', 'message', 'error_id', 'timestamp'];
+  const errorOk = errorSchema && errorFields.every((f: string) => errorSchema.properties?.[f]);
+  suite.tests.push({ suite: suite.name, test: 'Error schema has required fields', status: errorOk ? 'pass' : 'fail', duration_ms: Date.now() - t3, ...(errorOk ? {} : { error: 'Missing Error schema or fields' }) });
+  errorOk ? suite.passed++ : suite.failed++;
+
+  // Test: IdempotencyKey parameter exists
+  const t4 = Date.now();
+  const idemParam = spec.components?.parameters?.IdempotencyKey;
+  const idemOk = idemParam && idemParam.name === 'Idempotency-Key';
+  suite.tests.push({ suite: suite.name, test: 'IdempotencyKey parameter defined', status: idemOk ? 'pass' : 'fail', duration_ms: Date.now() - t4, ...(idemOk ? {} : { error: 'Missing IdempotencyKey parameter' }) });
+  idemOk ? suite.passed++ : suite.failed++;
+
+  // Test: Every 2xx response has content.schema
+  const t5 = Date.now();
+  const missing2xx: string[] = [];
+  for (const [path, methods] of Object.entries(spec.paths || {})) {
+    for (const [method, op] of Object.entries(methods as any)) {
+      if (!['get', 'post', 'put', 'patch', 'delete'].includes(method)) continue;
+      const responses = (op as any).responses || {};
+      for (const [code, resp] of Object.entries(responses)) {
+        if (code.startsWith('2') && !(resp as any).content?.['application/json']?.schema) {
+          // Allow 204 No Content
+          if (code === '204') continue;
+          missing2xx.push(`${method.toUpperCase()} ${path} → ${code}`);
+        }
+      }
+    }
+  }
+  const schema2xxOk = missing2xx.length === 0;
+  suite.tests.push({ suite: suite.name, test: `All 2xx responses have schema (${missing2xx.length} missing)`, status: schema2xxOk ? 'pass' : 'fail', duration_ms: Date.now() - t5, ...(schema2xxOk ? {} : { error: missing2xx.slice(0, 10).join('; '), details: `${missing2xx.length} total` }) });
+  schema2xxOk ? suite.passed++ : suite.failed++;
+
+  // Test: All 4xx responses reference Error schema
+  const t6 = Date.now();
+  const missing4xx: string[] = [];
+  for (const [path, methods] of Object.entries(spec.paths || {})) {
+    for (const [method, op] of Object.entries(methods as any)) {
+      if (!['get', 'post', 'put', 'patch', 'delete'].includes(method)) continue;
+      const responses = (op as any).responses || {};
+      for (const [code, resp] of Object.entries(responses)) {
+        if (code.startsWith('4')) {
+          const schema = (resp as any).content?.['application/json']?.schema;
+          const hasErrorRef = schema && (schema.$ref?.includes('Error') || schema.properties?.error);
+          if (!hasErrorRef) {
+            missing4xx.push(`${method.toUpperCase()} ${path} → ${code}`);
+          }
+        }
+      }
+    }
+  }
+  const error4xxOk = missing4xx.length === 0;
+  suite.tests.push({ suite: suite.name, test: `All 4xx responses use Error schema (${missing4xx.length} missing)`, status: error4xxOk ? 'pass' : 'fail', duration_ms: Date.now() - t6, ...(error4xxOk ? {} : { error: missing4xx.slice(0, 10).join('; '), details: `${missing4xx.length} total` }) });
+  error4xxOk ? suite.passed++ : suite.failed++;
+
+  // Test: All POST/PUT/PATCH have IdempotencyKey parameter
+  const t7 = Date.now();
+  const missingIdem: string[] = [];
+  for (const [path, methods] of Object.entries(spec.paths || {})) {
+    for (const [method, op] of Object.entries(methods as any)) {
+      if (!['post', 'put', 'patch'].includes(method)) continue;
+      const params = (op as any).parameters || [];
+      const hasIdem = params.some((p: any) => 
+        p.$ref?.includes('IdempotencyKey') || p.name === 'Idempotency-Key'
+      );
+      if (!hasIdem) {
+        missingIdem.push(`${method.toUpperCase()} ${path}`);
+      }
+    }
+  }
+  const idemCoverageOk = missingIdem.length === 0;
+  suite.tests.push({ suite: suite.name, test: `All write ops have IdempotencyKey (${missingIdem.length} missing)`, status: idemCoverageOk ? 'pass' : 'fail', duration_ms: Date.now() - t7, ...(idemCoverageOk ? {} : { error: missingIdem.slice(0, 10).join('; '), details: `${missingIdem.length} total` }) });
+  idemCoverageOk ? suite.passed++ : suite.failed++;
+
+  // Test: Spec version is semver
+  const t8 = Date.now();
+  const version = spec.info?.version || '';
+  const semverOk = /^\d+\.\d+\.\d+/.test(version);
+  suite.tests.push({ suite: suite.name, test: `Spec version is semver (${version})`, status: semverOk ? 'pass' : 'fail', duration_ms: Date.now() - t8, ...(semverOk ? {} : { error: `Invalid version: ${version}` }) });
+  semverOk ? suite.passed++ : suite.failed++;
+
+  suite.duration_ms = Date.now() - suiteStart;
+  return suite;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN RUNNER
 // ═══════════════════════════════════════════════════════════════
 
@@ -544,6 +673,7 @@ Deno.serve(async (req) => {
       'sdks': suiteSDKs,
       'merchant_onboarding': suiteMerchantOnboarding,
       'dispute_settlement': suiteDisputeSettlement,
+      'spec_maturity': suiteSpecMaturity,
     };
 
     const runnersToExecute = suiteFilter && allRunners[suiteFilter]
