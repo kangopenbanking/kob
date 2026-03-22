@@ -523,6 +523,7 @@ const CustomerBillsV2: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleConfirmPay} />
     </div>
