@@ -376,41 +376,22 @@ async function handleReviewApplication(req: Request, body: any) {
 
   // Send email notification via managed-send-email
   try {
-    const emailUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/managed-send-email`;
-    const emailHtml = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <h2 style="color:${isApproved ? '#16a34a' : '#dc2626'};margin:0;">
-            ${isApproved ? '✅ Application Approved' : '❌ Application Not Approved'}
-          </h2>
-        </div>
-        <p>Dear ${customerName},</p>
-        <p>${notifMessage}</p>
-        <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;">
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Product</td><td style="padding:4px 0;font-weight:600;text-align:right;">${productName}</td></tr>
-            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Amount</td><td style="padding:4px 0;font-weight:600;text-align:right;">${amountFormatted}</td></tr>
-            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Institution</td><td style="padding:4px 0;font-weight:600;text-align:right;">${institutionName}</td></tr>
-            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Decision</td><td style="padding:4px 0;font-weight:600;text-align:right;color:${isApproved ? '#16a34a' : '#dc2626'};">${isApproved ? 'Approved' : 'Declined'}</td></tr>
-          </table>
-        </div>
-        ${!isApproved && decline_reason ? `<p style="color:#6b7280;font-size:14px;"><strong>Reason:</strong> ${decline_reason}</p>` : ''}
-        <p style="color:#6b7280;font-size:13px;margin-top:24px;">This is an automated notification from Kang Open Banking.</p>
-      </div>
-    `;
-
-    await fetch(emailUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+    const emailKey = isApproved ? 'loan_approved_email' : 'loan_overdue_notice';
+    await serviceClient.functions.invoke('managed-send-email', {
+      body: {
+        email_key: emailKey,
+        recipient_email: customerProfile?.email || '',
+        institution_id: app.institution_id,
+        variables: {
+          customer_name: customerName,
+          product_name: productName,
+          amount: amountFormatted,
+          institution_name: institutionName,
+          decision: isApproved ? 'Approved' : 'Declined',
+          decline_reason: decline_reason || '',
+          application_number: application_id,
+        },
       },
-      body: JSON.stringify({
-        to: customerProfile?.email || '',
-        subject: notifTitle,
-        html: emailHtml,
-        tags: ['loan-application-decision'],
-      }),
     });
   } catch (_) { /* non-critical */ }
 
