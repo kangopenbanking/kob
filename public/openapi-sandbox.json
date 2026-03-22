@@ -196,6 +196,10 @@
     {
       "name": "Pay by Bank",
       "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) \u2014 payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
+    },
+    {
+      "name": "Provider Webhooks (Inbound)",
+      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification \u2014 no bearer auth required."
     }
   ],
   "components": {
@@ -49481,6 +49485,339 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/stripe": {
+      "post": {
+        "tags": [
+          "Provider Webhooks (Inbound)"
+        ],
+        "summary": "Stripe inbound webhook",
+        "description": "Receives Stripe webhook events. Verifies `stripe-signature` header using HMAC-SHA256. Deduplicates by event ID via `webhook_inbox` table. Maps Stripe events to internal charge/refund/dispute/payout status updates.",
+        "operationId": "receiveStripeWebhook",
+        "security": [],
+        "parameters": [
+          {
+            "name": "stripe-signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Stripe HMAC-SHA256 signature header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "evt_1234567890"
+                  },
+                  "type": {
+                    "type": "string",
+                    "example": "payment_intent.succeeded"
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "processed",
+                        "already_processed"
+                      ]
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/flutterwave": {
+      "post": {
+        "tags": [
+          "Provider Webhooks (Inbound)"
+        ],
+        "summary": "Flutterwave inbound webhook",
+        "description": "Receives Flutterwave webhook events. Verifies `verif-hash` header against configured secret. Deduplicates by event ID. Maps Flutterwave events to internal charge/payout/refund status updates.",
+        "operationId": "receiveFlutterwaveWebhook",
+        "security": [],
+        "parameters": [
+          {
+            "name": "verif-hash",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Flutterwave verification hash"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "example": "charge.completed"
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "processed",
+                        "already_processed"
+                      ]
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/paypal": {
+      "post": {
+        "tags": [
+          "Provider Webhooks (Inbound)"
+        ],
+        "summary": "PayPal inbound webhook",
+        "description": "Receives PayPal webhook events. Verifies signature using PayPal's certificate-based verification API. Deduplicates by event ID. Maps PayPal events to internal charge/payout/dispute status updates.",
+        "operationId": "receivePaypalWebhook",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "WH-1234567890"
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "example": "PAYMENT.CAPTURE.COMPLETED"
+                  },
+                  "resource": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "processed",
+                        "already_processed"
+                      ]
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gateway/merchants/webhooks/{webhookId}/rotate-secret": {
+      "post": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Rotate webhook signing secret",
+        "description": "Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once \u2014 store it securely.",
+        "operationId": "rotateMerchantWebhookSecret",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "merchant_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New secret generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "secret": {
+                          "type": "string",
+                          "description": "New webhook signing secret \u2014 shown once only"
+                        }
+                      }
+                    },
+                    "warning": {
+                      "type": "string",
+                      "example": "Store the new secret securely. It will not be shown again."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Webhook not found",
             "content": {
               "application/json": {
                 "schema": {

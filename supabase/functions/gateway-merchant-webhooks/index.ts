@@ -91,6 +91,22 @@ serve(async (req) => {
       }
     }
 
+    // Rotate webhook secret
+    if (method === 'POST' && action === 'rotate-secret' && webhookId) {
+      const { data: webhook } = await supabase.from('gateway_merchant_webhooks')
+        .select('id').eq('id', webhookId).eq('merchant_id', merchantId).single();
+      if (!webhook) return new Response(JSON.stringify({ error: 'webhook_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+      const newSecret = crypto.randomUUID() + '-' + crypto.randomUUID();
+      const { error } = await supabase.from('gateway_merchant_webhooks')
+        .update({ secret: newSecret }).eq('id', webhookId).eq('merchant_id', merchantId);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ data: { id: webhookId, secret: newSecret }, warning: 'Store the new secret securely. It will not be shown again.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Update webhook
     if (method === 'PATCH' && webhookId) {
       const body = await req.json();
