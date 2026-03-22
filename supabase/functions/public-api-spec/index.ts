@@ -1803,7 +1803,7 @@ paths['/v1/consumer/njangi/join'] = {
 };
 
 paths['/v1/consumer/njangi/contribute'] = {
-  post: { tags: ['Consumer Tools'], summary: 'Make Njangi contribution', description: 'Submit a contribution to the group pot. Late contributions are reported as negative credit events.', operationId: 'njangiContribute', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id', 'amount'], properties: { group_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 25000 } } } } } }, responses: { '200': { description: 'Contribution recorded' }, ...errorResponses } },
+  post: { tags: ['Consumer Tools'], summary: 'Make Njangi contribution', description: 'Submit a contribution to the group pot. Late contributions are reported as negative credit events.', operationId: 'njangiContribute', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id', 'amount'], properties: { group_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 25000 } } } } } }, responses: { '200': successResult('Contribution recorded'), ...errorResponses } },
 };
 
 paths['/v1/consumer/njangi/payout'] = {
