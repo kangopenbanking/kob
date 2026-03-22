@@ -169,6 +169,18 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
       { key: 'intent_id', value: 'INTENT_UUID', type: 'string' },
       { key: 'client_id', value: 'YOUR_CLIENT_ID', type: 'string' },
       { key: 'client_secret', value: 'YOUR_CLIENT_SECRET', type: 'string' },
+      { key: 'idempotency_key', value: '', type: 'string' },
+      { key: 'webhook_url', value: 'https://yourapp.com/webhooks/kob', type: 'string' },
+      { key: 'subscription_id', value: 'SUB_UUID', type: 'string' },
+      { key: 'payment_link_id', value: 'PL_UUID', type: 'string' },
+      { key: 'virtual_account_id', value: 'VA_UUID', type: 'string' },
+      { key: 'subaccount_id', value: 'SA_UUID', type: 'string' },
+      { key: 'customer_id', value: 'CUST_UUID', type: 'string' },
+      { key: 'token_id', value: 'TOKEN_UUID', type: 'string' },
+      { key: 'plan_id', value: 'PLAN_UUID', type: 'string' },
+      { key: 'reconciliation_run_id', value: 'RECON_UUID', type: 'string' },
+      { key: 'mismatch_id', value: 'MISMATCH_UUID', type: 'string' },
+      { key: 'escrow_id', value: 'ESCROW_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
