@@ -944,15 +944,15 @@ paths['/v1/aisp/accounts/{accountId}/transactions'] = {
 };
 
 paths['/v1/aisp/accounts/{accountId}/beneficiaries'] = {
-  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Beneficiaries list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Beneficiaries list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayBeneficiary' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/standing-orders'] = {
-  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Standing orders list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Standing orders list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' }, frequency: { type: 'string' }, next_date: { type: 'string', format: 'date' } } } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/direct-debits'] = {
-  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, amount: { type: 'number' }, status: { type: 'string' } } } } } } } } }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
