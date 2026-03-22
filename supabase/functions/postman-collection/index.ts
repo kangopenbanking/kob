@@ -8,6 +8,8 @@ const r = (name: string, method: string, path: string, opts?: {
   query?: { key: string; value: string }[];
   desc?: string;
   headers?: { key: string; value: string }[];
+  tests?: string[];
+  saveVar?: { field: string; varName: string };
 }) => {
   const item: Record<string, unknown> = {
     name,
@@ -40,6 +42,22 @@ const r = (name: string, method: string, path: string, opts?: {
       urlencoded: opts.urlencoded,
     };
   }
+
+  // Auto-inject test scripts
+  const testLines: string[] = [];
+  const expectedStatus = method === 'POST' ? 201 : method === 'DELETE' ? 204 : 200;
+  testLines.push(`pm.test("Status is 2xx", function () { pm.expect(pm.response.code).to.be.within(200, 299); });`);
+  if (method !== 'DELETE') {
+    testLines.push(`pm.test("Body is JSON", function () { pm.response.to.be.json; });`);
+  }
+  if (opts?.tests) testLines.push(...opts.tests);
+  if (opts?.saveVar) {
+    testLines.push(`var d = pm.response.json(); if (d.${opts.saveVar.field}) { pm.collectionVariables.set('${opts.saveVar.varName}', d.${opts.saveVar.field}); }`);
+  }
+
+  item.event = [
+    { listen: 'test', script: { type: 'text/javascript', exec: testLines } },
+  ];
 
   return item;
 };
