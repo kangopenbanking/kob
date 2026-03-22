@@ -599,7 +599,7 @@ const CustomerHome: React.FC = () => {
             <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <motion.div className="space-y-2" variants={staggerContainer} initial="initial" animate="animate">
             {recentTxns.map((tx: any) => {
               const isCredit = tx.credit_debit_indicator === 'Credit';
               const amount = tx.amount || 0;
@@ -608,7 +608,12 @@ const CustomerHome: React.FC = () => {
               const TxIcon = iconInfo.icon;
               const timeAgo = tx.booking_datetime ? formatDistanceToNow(new Date(tx.booking_datetime), { addSuffix: true }) : '';
               return (
-                <div key={tx.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                <motion.div
+                  key={tx.id}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm"
+                >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${iconInfo.color}`}>
                     <TxIcon className={`h-5 w-5 ${iconInfo.iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -619,10 +624,10 @@ const CustomerHome: React.FC = () => {
                   <p className={`text-sm font-bold tabular-nums ${isCredit ? 'text-[hsl(150,60%,40%)]' : 'text-foreground'}`}>
                     {isCredit ? '+' : '-'}{Math.abs(amount).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{tx.currency}</span>
                   </p>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </motion.div>
       </div>
