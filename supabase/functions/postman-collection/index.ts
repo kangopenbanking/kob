@@ -793,6 +793,8 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           r('Create Charge', 'POST', '/v1/gateway/charges', {
             body: { merchant_id: '{{merchant_id}}', amount: 5000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237677123456', tx_ref: 'order_001' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'charge_id' },
+            tests: [`pm.test("Has charge id", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
           }),
           r('Get Charge', 'GET', '/v1/gateway/charges/{{charge_id}}'),
           r('List Charges', 'GET', '/v1/gateway/charges', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
