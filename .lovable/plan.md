@@ -1,55 +1,62 @@
 
 
-# Plan: Close KOB Gap Analysis — OpenAPI Spec + Webhook Secret Rotation
+# Plan: Spec Contract Maturity — CI Enforcement + Gap Fixes
 
-## Summary of findings
+## Current State (from audit)
 
-| Gap | Code Status | Spec/Docs Status | Action Needed |
-|-----|-------------|-------------------|---------------|
-| A: Inbound provider webhooks | ✅ Fully implemented (3 edge functions + tests) | ❌ Not in OpenAPI spec | Add to openapi.json + openapi-sandbox.json |
-| B: Merchant lifecycle | ✅ Full state machine + key rotation + webhooks | ⚠️ Missing webhook secret rotation endpoint | Add rotate-secret action to gateway-merchant-webhooks |
-| C: Developer portal | ✅ Redoc + static + noscript fallbacks | ✅ Working | No changes needed |
+| Area | Status | Detail |
+|------|--------|--------|
+| Error schema (`$ref: Error`) | ✅ Strong | Standardized across 4xx/5xx; consistent `error_code` taxonomy |
+| 2xx response schemas | ✅ Strong | Sampled 20+ endpoints — all have `content.schema` on 200/201 |
+| Idempotency-Key on POST | ✅ 565 matches | Widely applied across write endpoints |
+| Idempotency-Key on PATCH/PUT | ❌ Missing | 5 PATCH + 7 PUT operations lack the header |
+| CI spec validation | ❌ Missing | No automated build-time check that enforces schema completeness |
+| E2E contract test: spec maturity suite | ❌ Missing | Existing runner has 10 suites but none validate spec structure |
 
-## Implementation
+## What to implement
 
-### 1. Add inbound provider webhook paths to OpenAPI specs
+### 1. Add Idempotency-Key to all PATCH and PUT operations in OpenAPI specs
 
-Add three new paths to both `public/openapi.json` and `public/openapi-sandbox.json` under a new tag "Provider Webhooks (Inbound)":
+Both `public/openapi.json` and `public/openapi-sandbox.json` have PATCH/PUT operations missing the `Idempotency-Key` parameter. Add `{"$ref": "#/components/parameters/IdempotencyKey"}` to parameters for:
 
-- `POST /webhooks/stripe` — Stripe inbound webhook receiver
-- `POST /webhooks/flutterwave` — Flutterwave inbound webhook receiver  
-- `POST /webhooks/paypal` — PayPal inbound webhook receiver
+**PATCH operations (5):**
+- `/v1/gateway/merchants/{merchantId}` (merchantUpdate)
+- `/v1/gateway/merchants/{merchantId}/operational-controls` 
+- `/v1/gateway/merchants/{merchantId}/risk-config`
+- `/v1/sla/incidents/{incidentId}`
+- `/v1/webhooks/v2/endpoints/{endpointId}`
 
-Each path will document:
-- No auth (secured by provider signature verification)
-- Request body schema matching provider payload formats
-- Response: 200 with `{status: "processed"}` or `{status: "already_processed"}`
-- 401 for invalid signatures, 429 for rate limits
-- Description covering signature verification, deduplication, and event types handled
+**PUT operations (7):**
+- `/v1/cards/{cardId}/status`
+- `/v1/admin/users/{userId}/status`
+- `/v1/gateway/payment-links/{linkId}`
+- `/v1/gateway/subscriptions/{subscriptionId}`
+- `/v1/gateway/invoices/{invoiceId}`
+- `/v1/gateway/products/{productId}`
+- `/v1/directory/banks/{bankId}`
 
-Also add the tag description to the tags array in both specs.
+### 2. Add "Spec Contract Maturity" suite to E2E contract test runner
 
-### 2. Add webhook secret rotation to gateway-merchant-webhooks
+Add **Suite 11** to `supabase/functions/e2e-contract-tests/index.ts` that fetches the live OpenAPI spec and validates:
 
-Add a new action branch in the existing `gateway-merchant-webhooks/index.ts` edge function:
+- Every path+method with 200/201/202 response has `content` with a `schema`
+- Every path+method with 4xx responses references the Error schema or has inline error schema
+- Every POST/PUT/PATCH operation includes an `Idempotency-Key` parameter
+- `components.schemas.Error` exists with required fields (error, error_code, message, error_id, timestamp)
+- `components.parameters.IdempotencyKey` exists
+- Spec has `info.version` and `openapi` fields
+- Total path count >= 300 (regression guard)
 
-When `method === 'POST'` and `action === 'rotate-secret'` and `webhookId`:
-- Look up the webhook by ID + merchant ownership
-- Generate a new secret (`crypto.randomUUID() + '-' + crypto.randomUUID()`)
-- Update the webhook's `secret` column
-- Return the new secret with the same "store securely, shown once" warning
-- Add audit logging
+This suite runs as part of the existing test runner and can be invoked with `{"suite": "spec_maturity"}`.
 
-### 3. Add webhook secret rotation to OpenAPI specs
+### 3. Bump spec version to 4.2.0
 
-Document the new operation:
-- `POST /v1/gateway/merchants/webhooks/{webhookId}/rotate-secret?merchant_id={id}`
-- Response: 200 with new secret + warning
+Update `info.version` in both specs to reflect the contract maturity enforcement milestone.
 
 ### Files to modify
-1. `public/openapi.json` — add 3 inbound webhook paths + 1 rotate-secret path + tag
-2. `public/openapi-sandbox.json` — same additions
-3. `supabase/functions/gateway-merchant-webhooks/index.ts` — add rotate-secret action
+1. `public/openapi.json` — add IdempotencyKey param to 12 PATCH/PUT operations + bump version
+2. `public/openapi-sandbox.json` — same changes
+3. `supabase/functions/e2e-contract-tests/index.ts` — add Suite 11: Spec Contract Maturity
 
-No existing routes, tables, or behaviors are changed.
+No existing routes, behaviors, or schemas change. Purely additive enforcement.
 
