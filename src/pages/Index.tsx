@@ -936,7 +936,7 @@ const Index = () => {
             {[
               { step: 1, icon: UserPlus, title: "Register", desc: "Create your account and complete KYC verification", bg: "hsl(var(--primary))", text: "hsl(var(--primary-foreground))", rotate: "-3deg", translateY: "0px" },
               { step: 2, icon: FlaskConical, title: "Test", desc: "Integrate using our sandbox environment and test APIs", bg: "hsl(var(--destructive))", text: "hsl(var(--destructive-foreground))", rotate: "2deg", translateY: "12px" },
-              { step: 3, icon: Rocket, title: "Deploy", desc: "Get production credentials and go live", bg: "hsl(var(--secondary))", text: "hsl(var(--secondary-foreground))", rotate: "-2deg", translateY: "4px" },
+              { step: 3, icon: Rocket, title: "Deploy", desc: "Get production credentials and go live", bg: "hsl(30, 90%, 50%)", text: "hsl(0, 0%, 100%)", rotate: "-2deg", translateY: "4px" },
               { step: 4, icon: TrendingUp, title: "Scale", desc: "Monitor, optimize, and grow your integration", bg: "hsl(var(--accent))", text: "hsl(var(--accent-foreground))", rotate: "3deg", translateY: "16px" },
             ].map((item, i) => (
               <ScrollReveal key={item.step} delay={i * 0.12}>
