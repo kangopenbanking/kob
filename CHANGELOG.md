@@ -5,6 +5,19 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.1] — 2026-03-22
+
+### Fixed — Pro Gateway Hardening
+- **Static OpenAPI sync**: `public/openapi.json` synced from edge function (was stale with 1/97 typed schemas, now 272/326)
+- **Static API Explorer**: Added `/developer/api-explorer-static` fallback route with tag filtering and download buttons
+- **Test Webhooks guide**: Created `docs/developer-portal/sandbox/test-webhooks.md` with signature verification examples (Node.js + Python)
+- **Baseline reports**: Generated 5 diagnostic reports (Gateway Readiness, Docs Readiness, Spec Parity, Code Parity, API Explorer Diagnosis)
+- **E2E verification**: 26 contract tests passing across System Health, Auth Guards, Webhook Security, and Payment Gateway suites
+
+### No Breaking Changes
+- All existing endpoints, schemas, and behavior preserved
+- Additive changes only
+
 ## [4.0.1] — 2026-03-22
 
 ### Added — Gateway Readiness Upgrade (Phases 2–6)
