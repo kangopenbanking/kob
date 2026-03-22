@@ -1323,6 +1323,47 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           }),
         ],
       },
+
+      // ── Smoke Test (E2E Chained Flow) ───────────────────────────────
+      {
+        name: 'Smoke Test (E2E)',
+        description: 'Chained sequence: health → auth → create charge → verify → refund → verify refund. Run in order.',
+        item: [
+          r('1. Health Check', 'GET', '/v1/health', {
+            tests: [`pm.test("API is healthy", function () { pm.response.to.have.status(200); });`],
+          }),
+          r('2. Get Auth Token', 'POST', '/v1/oauth/token', {
+            bodyMode: 'urlencoded',
+            urlencoded: [
+              { key: 'grant_type', value: 'client_credentials' },
+              { key: 'client_id', value: '{{client_id}}' },
+              { key: 'client_secret', value: '{{client_secret}}' },
+              { key: 'scope', value: 'accounts payments' },
+            ],
+            tests: [
+              `pm.test("Got access_token", function () { var d = pm.response.json(); pm.expect(d).to.have.property('access_token'); pm.collectionVariables.set('access_token', d.access_token); });`,
+            ],
+          }),
+          r('3. Create Charge', 'POST', '/v1/gateway/charges', {
+            body: { merchant_id: '{{merchant_id}}', amount: 1000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237650000000', tx_ref: 'smoke_{{$timestamp}}' },
+            headers: [{ key: 'Idempotency-Key', value: 'smoke_charge_{{$timestamp}}' }],
+            saveVar: { field: 'id', varName: 'charge_id' },
+            tests: [`pm.test("Charge created with id", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
+          }),
+          r('4. Get Charge', 'GET', '/v1/gateway/charges/{{charge_id}}', {
+            tests: [`pm.test("Charge retrieved", function () { pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('charge_id')); });`],
+          }),
+          r('5. Create Refund', 'POST', '/v1/gateway/refunds', {
+            body: { charge_id: '{{charge_id}}', amount: 1000, reason: 'Smoke test refund' },
+            headers: [{ key: 'Idempotency-Key', value: 'smoke_refund_{{$timestamp}}' }],
+            saveVar: { field: 'id', varName: 'refund_id' },
+            tests: [`pm.test("Refund created", function () { pm.expect(pm.response.json()).to.have.property('id'); });`],
+          }),
+          r('6. Get Refund', 'GET', '/v1/gateway/refunds/{{refund_id}}', {
+            tests: [`pm.test("Refund retrieved", function () { pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('refund_id')); });`],
+          }),
+        ],
+      },
     ],
   };
 
