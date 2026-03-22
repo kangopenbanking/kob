@@ -407,12 +407,16 @@ const CustomerHome: React.FC = () => {
       {visibleSavings.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Savings & Goals</p>
-          <div className="flex flex-col gap-3">
+          <motion.div className="flex flex-col gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleSavings[0] && (() => {
               const FirstIcon = visibleSavings[0].icon;
               return (
-                <button onClick={() => go(visibleSavings[0].path)}
-                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor}`}>
+                <motion.button
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => go(visibleSavings[0].path)}
+                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor} shadow-sm`}
+                >
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-background/50">
                     <FirstIcon className={`h-7 w-7 ${visibleSavings[0].iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -421,22 +425,27 @@ const CustomerHome: React.FC = () => {
                     <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{visibleSavings[0].description}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-                </button>
+                </motion.button>
               );
             })()}
             <div className="grid grid-cols-2 gap-3">
               {visibleSavings.slice(1).map((item) => (
-                <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor}`}>
+                <motion.button
+                  key={item.path}
+                  variants={staggerItem}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => go(item.path)}
+                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor} shadow-sm`}
+                >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
                   <p className="text-xs font-bold text-foreground">{item.label}</p>
                   <p className="text-[10px] text-muted-foreground text-center">{item.description}</p>
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
