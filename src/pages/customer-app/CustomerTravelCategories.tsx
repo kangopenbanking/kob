@@ -10,7 +10,7 @@ const categories = [
     desc: 'Intercity & local bus tickets across Cameroon',
     icon: Bus,
     active: true,
-    bg: '#c8102e',
+    bg: '#003087',
     fg: '#ffffff',
     iconBg: 'rgba(255,255,255,0.15)',
     iconFg: '#ffffff',
