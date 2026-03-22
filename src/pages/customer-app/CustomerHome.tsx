@@ -512,9 +512,10 @@ const CustomerHome: React.FC = () => {
           const bgImg = tc.bg_image || travelCardBg;
           const btnSizeClass = tc.button_size === 'sm' ? 'px-3 py-2 text-xs' : tc.button_size === 'lg' ? 'px-5 py-4 text-base' : 'px-4 py-3 text-sm';
           return (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => go('travel')}
-              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
+              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
               <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
