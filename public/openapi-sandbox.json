@@ -36700,7 +36700,44 @@
         },
         "responses": {
           "200": {
-            "description": "Request auto-approved and executed"
+            "description": "Request auto-approved and executed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "approved"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "example": 500000
+                    },
+                    "currency": {
+                      "type": "string",
+                      "example": "XAF"
+                    },
+                    "account_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "requires_approval": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
           },
           "202": {
             "description": "Request requires manager approval",
