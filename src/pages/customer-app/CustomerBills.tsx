@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Zap, Droplets, Wifi, Tv, Phone, Shield, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Zap, Droplets, Wifi, Tv, Phone, Shield, ChevronRight, CheckCircle2, Loader2, Receipt, Clock, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,27 +10,28 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances, useRecentBillPayments } from '@/hooks/useCustomerData';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 
 interface BillCategory {
   id: string;
   name: string;
   icon: React.ReactNode;
-  color: string;
+  gradient: string;
+  iconBg: string;
   billers: string[];
 }
 
 const categories: BillCategory[] = [
-  { id: 'electricity', name: 'Electricity', icon: <Zap className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(45,90%,88%)', billers: ['ENEO', 'AES SONEL', 'PowerCam'] },
-  { id: 'water', name: 'Water', icon: <Droplets className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(200,80%,90%)', billers: ['CamWater', 'SNEC'] },
-  { id: 'internet', name: 'Internet', icon: <Wifi className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(160,60%,88%)', billers: ['Camtel', 'MTN Fiber', 'Orange Fiber', 'YooMee'] },
-  { id: 'tv', name: 'TV', icon: <Tv className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(280,60%,90%)', billers: ['Canal+', 'DStv', 'StarTimes'] },
-  { id: 'phone', name: 'Phone', icon: <Phone className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(340,70%,90%)', billers: ['MTN', 'Orange', 'Nexttel'] },
-  { id: 'insurance', name: 'Insurance', icon: <Shield className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(25,80%,90%)', billers: ['Activa', 'Chanas', 'SAAR'] },
+  { id: 'electricity', name: 'Electricity', icon: <Zap className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-amber-400 to-orange-500', iconBg: 'bg-amber-500', billers: ['ENEO', 'AES SONEL', 'PowerCam'] },
+  { id: 'water', name: 'Water', icon: <Droplets className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-sky-400 to-blue-500', iconBg: 'bg-sky-500', billers: ['CamWater', 'SNEC'] },
+  { id: 'internet', name: 'Internet', icon: <Wifi className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-emerald-400 to-teal-500', iconBg: 'bg-emerald-500', billers: ['Camtel', 'MTN Fiber', 'Orange Fiber', 'YooMee'] },
+  { id: 'tv', name: 'TV', icon: <Tv className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-violet-400 to-purple-500', iconBg: 'bg-violet-500', billers: ['Canal+', 'DStv', 'StarTimes'] },
+  { id: 'phone', name: 'Phone', icon: <Phone className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-rose-400 to-pink-500', iconBg: 'bg-rose-500', billers: ['MTN', 'Orange', 'Nexttel'] },
+  { id: 'insurance', name: 'Insurance', icon: <Shield className="h-5 w-5" strokeWidth={1.5} />, gradient: 'from-orange-400 to-red-500', iconBg: 'bg-orange-500', billers: ['Activa', 'Chanas', 'SAAR'] },
 ];
 
-// Recent bills fetched from DB via useRecentBillPayments
-
-import { KANG_PLATFORM_ID } from '@/constants/platform';
+const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
+const fadeUp = { initial: { opacity: 0, y: 14, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } } };
 
 const CustomerBills: React.FC = () => {
   const navigate = useNavigate();
@@ -69,7 +70,6 @@ const CustomerBills: React.FC = () => {
   const handlePay = async () => {
     setPaying(true);
     try {
-      // 1. Create bill payment transaction
       const { error: txError } = await supabase.from('transactions').insert({
         user_id: user!.id,
         institution_id: KANG_PLATFORM_ID,
@@ -90,7 +90,6 @@ const CustomerBills: React.FC = () => {
       });
       if (txError) throw txError;
 
-      // 2. Deduct from wallet balance
       if (primaryAccount?.id && primaryBalance) {
         const newAmount = Math.max(walletBalance - amountNum, 0);
         await supabase.from('account_balances')
@@ -98,7 +97,6 @@ const CustomerBills: React.FC = () => {
           .eq('id', (primaryBalance as any).id);
       }
 
-      // 3. Invalidate caches
       queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
@@ -128,106 +126,207 @@ const CustomerBills: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 p-5 pb-28">
-      <div className="flex items-center gap-3">
-        <button onClick={handleBack}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground">
-          {selectedBiller ? selectedBiller : selectedCategory ? selectedCategory.name : 'Pay Bills'}
-        </h1>
+    <div className="flex flex-col gap-0 pb-28">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-5 pb-7 pt-5">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5" />
+        <div className="absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-center gap-3">
+          <motion.button whileTap={{ scale: 0.9 }} onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+            <ArrowLeft className="h-5 w-5 text-white" strokeWidth={1.5} />
+          </motion.button>
+          <div>
+            <h1 className="text-lg font-bold text-white">
+              {selectedBiller ? selectedBiller : selectedCategory ? selectedCategory.name : 'Pay Bills'}
+            </h1>
+            <p className="text-xs text-white/70">
+              {selectedBiller ? 'Enter payment details' : selectedCategory ? 'Select a biller' : 'Quick & secure bill payments'}
+            </p>
+          </div>
+        </div>
+
+        {/* Wallet Balance Pill */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="relative z-10 mt-4 flex items-center gap-2.5 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+            <CreditCard className="h-4.5 w-4.5 text-white" strokeWidth={1.5} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-white/60">Available Balance</span>
+            <span className="text-base font-bold text-white">{walletBalance.toLocaleString()} <span className="text-xs font-normal text-white/70">XAF</span></span>
+          </div>
+        </motion.div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {!selectedCategory && !selectedBiller && (
-          <motion.div key="main" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-              <Input placeholder="Search billers..." value={search} onChange={e => setSearch(e.target.value)} className="rounded-2xl border-border bg-muted/50 pl-10" />
-            </div>
+      <div className="flex flex-col gap-5 px-5 pt-5">
+        <AnimatePresence mode="wait">
+          {/* ── MAIN: Categories ── */}
+          {!selectedCategory && !selectedBiller && (
+            <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-5">
+              {/* Search */}
+              <motion.div variants={fadeUp} initial="initial" animate="animate" className="relative">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+                <Input placeholder="Search billers or categories…" value={search} onChange={e => setSearch(e.target.value)}
+                  className="h-11 rounded-2xl border-border/50 bg-muted/40 pl-10 text-sm shadow-sm focus-visible:ring-primary/30" />
+              </motion.div>
 
-            <div className="grid grid-cols-3 gap-3">
-              {filteredCategories.map(cat => (
-                <motion.button key={cat.id} whileTap={{ scale: 0.95 }} onClick={() => setSelectedCategory(cat)}
-                  className="flex flex-col items-center gap-2 rounded-3xl border-2 p-4" style={{ backgroundColor: cat.color, borderColor: cat.color }}>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/60">{cat.icon}</div>
-                  <span className="text-xs font-medium text-foreground">{cat.name}</span>
-                </motion.button>
-              ))}
-            </div>
+              {/* Category Grid */}
+              <motion.div variants={stagger} initial="initial" animate="animate" className="grid grid-cols-3 gap-3">
+                {filteredCategories.map(cat => (
+                  <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.93 }} onClick={() => setSelectedCategory(cat)}
+                    className="group flex flex-col items-center gap-2.5 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40 transition-shadow active:shadow-md">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${cat.gradient} text-white shadow-md`}>
+                      {cat.icon}
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">{cat.name}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
 
-            <div className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-foreground">Recent Payments</h2>
-              {billsLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-              ) : recentBills.length === 0 ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">No recent bill payments</p>
-              ) : recentBills.map((bill: any) => (
-                <motion.div key={bill.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium text-foreground">{bill.transaction_information || 'Bill Payment'}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(bill.booking_datetime).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{Number(bill.amount).toLocaleString()} {bill.currency}</span>
-                    <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              {/* Recent Payments */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <h2 className="text-sm font-bold text-foreground">Recent Payments</h2>
+                </div>
+                {billsLoading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                ) : recentBills.length === 0 ? (
+                  <motion.div variants={fadeUp} initial="initial" animate="animate"
+                    className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 py-10 ring-1 ring-border/30">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <Receipt className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">No recent bill payments</p>
+                  </motion.div>
+                ) : (
+                  <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-2.5">
+                    {recentBills.map((bill: any) => {
+                      const meta = bill.metadata as any;
+                      const cat = meta?.category ? categories.find(c => c.id === meta.category) : null;
+                      return (
+                        <motion.div key={bill.id} variants={fadeUp}
+                          className="flex items-center gap-3 rounded-2xl bg-card p-3.5 shadow-sm ring-1 ring-border/40">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${cat?.gradient || 'from-gray-400 to-gray-500'} text-white shadow-sm`}>
+                            {cat?.icon || <Receipt className="h-4 w-4" strokeWidth={1.5} />}
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-sm font-semibold text-foreground">{meta?.biller || bill.transaction_information || 'Bill Payment'}</span>
+                            <span className="text-[11px] text-muted-foreground">{new Date(bill.booking_datetime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className="text-sm font-bold text-foreground">{Number(bill.amount).toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">XAF</span></span>
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-primary">
+                              <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Paid
+                            </span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── BILLER LIST ── */}
+          {selectedCategory && !selectedBiller && (
+            <motion.div key="billers" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }} className="flex flex-col gap-3">
+              <p className="text-xs font-medium text-muted-foreground">Choose your provider</p>
+              <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-2.5">
+                {selectedCategory.billers.map(biller => (
+                  <motion.button key={biller} variants={fadeUp} whileTap={{ scale: 0.97 }} onClick={() => setSelectedBiller(biller)}
+                    className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40 transition-shadow active:shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${selectedCategory.gradient} text-white shadow-sm`}>
+                        {selectedCategory.icon}
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm font-semibold text-foreground">{biller}</span>
+                        <span className="text-[11px] text-muted-foreground capitalize">{selectedCategory.name}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/50" strokeWidth={1.5} />
+                  </motion.button>
+                ))}
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ── PAYMENT FORM ── */}
+          {selectedBiller && (
+            <motion.div key="form" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }} className="flex flex-col gap-5">
+              {paid ? (
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-br from-primary/5 to-primary/10 py-12 ring-1 ring-primary/20">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.15 }}
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-lg">
+                    <CheckCircle2 className="h-8 w-8 text-white" strokeWidth={1.5} />
+                  </motion.div>
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-base font-bold text-foreground">Payment Successful</p>
+                    <p className="text-xs text-muted-foreground">Your bill has been paid</p>
                   </div>
                 </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+              ) : (
+                <>
+                  {/* Biller Info Card */}
+                  <motion.div variants={fadeUp} initial="initial" animate="animate"
+                    className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/40">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${selectedCategory?.gradient} text-white shadow-md`}>
+                      {selectedCategory?.icon}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-foreground">{selectedBiller}</span>
+                      <span className="text-[11px] text-muted-foreground capitalize">{selectedCategory?.name} Payment</span>
+                    </div>
+                  </motion.div>
 
-        {selectedCategory && !selectedBiller && (
-          <motion.div key="billers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">Select a biller</p>
-            {selectedCategory.billers.map(biller => (
-              <motion.button key={biller} whileTap={{ scale: 0.97 }} onClick={() => setSelectedBiller(biller)}
-                className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: selectedCategory.color }}>
-                    {selectedCategory.icon}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{biller}</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-
-        {selectedBiller && (
-          <motion.div key="form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-5">
-            {paid ? (
-              <div className="flex flex-col items-center gap-4 py-10">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <CheckCircle2 className="h-8 w-8 text-primary" strokeWidth={1.5} />
-                </div>
-                <p className="text-base font-semibold text-foreground">Payment Successful</p>
-              </div>
-            ) : (
-              <>
-                <div className="rounded-3xl border border-border bg-card p-5">
-                  <div className="flex flex-col gap-4">
+                  {/* Form */}
+                  <motion.div variants={fadeUp} initial="initial" animate="animate" transition={{ delay: 0.08 }}
+                    className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/40">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Account / Meter Number</label>
-                      <Input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Enter account number" className="rounded-xl border-border" />
+                      <label className="text-xs font-semibold text-muted-foreground">Account / Meter Number</label>
+                      <Input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Enter account number"
+                        className="h-12 rounded-xl border-border/50 bg-muted/30 text-sm font-medium" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Amount (XAF)</label>
-                      <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" className="rounded-xl border-border text-lg font-semibold" />
+                      <label className="text-xs font-semibold text-muted-foreground">Amount (XAF)</label>
+                      <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+                        className="h-14 rounded-xl border-border/50 bg-muted/30 text-center text-2xl font-bold" />
                     </div>
-                  </div>
-                </div>
-                <Button onClick={handlePayRequest} disabled={paying} className="h-12 rounded-2xl text-base font-semibold">
-                  {paying ? (
-                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />Processing...</span>
-                  ) : 'Pay Now'}
-                </Button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+                    {/* Quick Amounts */}
+                    <div className="flex gap-2">
+                      {[5000, 10000, 25000, 50000].map(v => (
+                        <motion.button key={v} whileTap={{ scale: 0.93 }} onClick={() => setAmount(String(v))}
+                          className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-colors ${amountNum === v
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-muted/50 text-muted-foreground ring-1 ring-border/30'}`}>
+                          {(v / 1000)}k
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  <motion.div variants={fadeUp} initial="initial" animate="animate" transition={{ delay: 0.16 }}>
+                    <Button onClick={handlePayRequest} disabled={paying || !accountNumber || amountNum <= 0}
+                      className="h-13 w-full rounded-2xl bg-gradient-to-r from-primary to-primary/85 text-base font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                      {paying ? (
+                        <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />Processing…</span>
+                      ) : (
+                        <span>Pay {amountNum > 0 ? `${amountNum.toLocaleString()} XAF` : 'Now'}</span>
+                      )}
+                    </Button>
+                  </motion.div>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePay} />
     </div>
