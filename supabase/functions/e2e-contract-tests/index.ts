@@ -430,6 +430,32 @@ async function suiteMerchantOnboarding(): Promise<TestSuite> {
     assert(status >= 400, `Expected 4xx, got ${status}`);
   }));
 
+  // KYB review requires admin
+  tests.push(await runTest(suite, 'gateway-merchant-kyb-review: rejects unauthenticated', async () => {
+    const { status } = await invoke('gateway-merchant-kyb-review', 'POST', {
+      action: 'review', merchant_id: 'fake', decision: 'approve',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  // Settlement accounts require auth
+  tests.push(await runTest(suite, 'gateway-merchant-settlement-accounts: rejects unauthenticated', async () => {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/gateway-merchant-settlement-accounts?merchant_id=fake`, {
+      method: 'GET',
+      headers: { 'apikey': ANON_KEY },
+    });
+    await res.text();
+    assert(res.status >= 400, `Expected 4xx, got ${res.status}`);
+  }));
+
+  // Merchant lifecycle requires auth
+  tests.push(await runTest(suite, 'gateway-merchant-lifecycle: rejects unauthenticated create', async () => {
+    const { status } = await invoke('gateway-merchant-lifecycle', 'POST', {
+      action: 'create', business_name: 'Test',
+    });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
   const passed = tests.filter(t => t.status === 'pass').length;
   const failed = tests.filter(t => t.status === 'fail').length;
   return { name: suite, tests, passed, failed, skipped: 0, duration_ms: tests.reduce((s, t) => s + t.duration_ms, 0) };
