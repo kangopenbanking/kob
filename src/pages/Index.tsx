@@ -932,95 +932,50 @@ const Index = () => {
             </p>
           </div>
           </ScrollReveal>
-          <div className="grid md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] gap-6 md:gap-4 items-center">
-            {/* Step 1 */}
-            <ScrollReveal delay={0}>
-            <Card className="relative p-8 transition-all duration-500 group border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card hover:from-primary/10 hover:shadow-2xl hover:shadow-primary/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold flex items-center justify-center text-base shadow-lg relative z-10">
-                1
-              </div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-primary/20 relative z-10">
-                <UserPlus className="h-10 w-10 text-primary" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-primary relative z-10">Register</h3>
-              <p className="text-sm text-muted-foreground relative z-10">
-                Create your account and complete KYC verification
-              </p>
-            </Card>
-            </ScrollReveal>
-
-            <div className="hidden md:flex items-center justify-center">
-              <svg width="40" height="40" viewBox="0 0 40 40" className="text-primary/40">
-                <path d="M 5 20 Q 20 10, 35 20" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                <path d="M 35 20 L 30 17 M 35 20 L 30 23" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
-            </div>
-
-            {/* Step 2 */}
-            <ScrollReveal delay={0.15}>
-            <Card className="relative p-8 transition-all duration-500 group border-destructive/30 bg-gradient-to-br from-destructive/5 via-card to-card hover:from-destructive/10 hover:shadow-2xl hover:shadow-destructive/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-destructive to-destructive/60 text-destructive-foreground font-bold flex items-center justify-center text-base shadow-lg relative z-10">
-                2
-              </div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-destructive/20 to-destructive/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-destructive/20 relative z-10">
-                <FlaskConical className="h-10 w-10 text-destructive" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-destructive relative z-10">Test</h3>
-              <p className="text-sm text-muted-foreground relative z-10">
-                Integrate using our sandbox environment and test APIs
-              </p>
-            </Card>
-            </ScrollReveal>
-
-            <div className="hidden md:flex items-center justify-center">
-              <svg width="40" height="40" viewBox="0 0 40 40" className="text-destructive/40">
-                <path d="M 5 20 Q 20 10, 35 20" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                <path d="M 35 20 L 30 17 M 35 20 L 30 23" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
-            </div>
-
-            {/* Step 3 */}
-            <ScrollReveal delay={0.3}>
-            <Card className="relative p-8 transition-all duration-500 group border-secondary/30 bg-gradient-to-br from-secondary/5 via-card to-card hover:from-secondary/10 hover:shadow-2xl hover:shadow-secondary/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 text-secondary-foreground font-bold flex items-center justify-center text-base shadow-lg relative z-10">
-                3
-              </div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-secondary/20 relative z-10">
-                <Rocket className="h-10 w-10 text-secondary" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-secondary relative z-10">Deploy</h3>
-              <p className="text-sm text-muted-foreground relative z-10">
-                Get production credentials and go live
-              </p>
-            </Card>
-            </ScrollReveal>
-
-            <div className="hidden md:flex items-center justify-center">
-              <svg width="40" height="40" viewBox="0 0 40 40" className="text-secondary/40">
-                <path d="M 5 20 Q 20 10, 35 20" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                <path d="M 35 20 L 30 17 M 35 20 L 30 23" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
-            </div>
-
-            {/* Step 4 */}
-            <ScrollReveal delay={0.45}>
-            <Card className="relative p-8 transition-all duration-500 group border-accent/30 bg-gradient-to-br from-accent/5 via-card to-card hover:from-accent/10 hover:shadow-2xl hover:shadow-accent/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent/60 text-accent-foreground font-bold flex items-center justify-center text-base shadow-lg relative z-10">
-                4
-              </div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-accent/20 relative z-10">
-                <TrendingUp className="h-10 w-10 text-accent" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-accent relative z-10">Scale</h3>
-              <p className="text-sm text-muted-foreground relative z-10">
-                Monitor, optimize, and grow your integration
-              </p>
-            </Card>
-            </ScrollReveal>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6">
+            {[
+              { step: 1, icon: UserPlus, title: "Register", desc: "Create your account and complete KYC verification", bg: "hsl(var(--primary))", text: "hsl(var(--primary-foreground))", rotate: "-3deg", translateY: "0px" },
+              { step: 2, icon: FlaskConical, title: "Test", desc: "Integrate using our sandbox environment and test APIs", bg: "hsl(var(--destructive))", text: "hsl(var(--destructive-foreground))", rotate: "2deg", translateY: "12px" },
+              { step: 3, icon: Rocket, title: "Deploy", desc: "Get production credentials and go live", bg: "hsl(var(--secondary))", text: "hsl(var(--secondary-foreground))", rotate: "-2deg", translateY: "4px" },
+              { step: 4, icon: TrendingUp, title: "Scale", desc: "Monitor, optimize, and grow your integration", bg: "hsl(var(--accent))", text: "hsl(var(--accent-foreground))", rotate: "3deg", translateY: "16px" },
+            ].map((item, i) => (
+              <ScrollReveal key={item.step} delay={i * 0.12}>
+                <motion.div
+                  whileHover={{ rotate: "0deg", translateY: "-8px", scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  style={{ rotate: item.rotate, translateY: item.translateY }}
+                >
+                  <div
+                    className="relative rounded-3xl p-8 shadow-xl cursor-default overflow-hidden group"
+                    style={{ backgroundColor: item.bg, color: item.text }}
+                  >
+                    {/* Decorative circle */}
+                    <div
+                      className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20"
+                      style={{ backgroundColor: item.text }}
+                    />
+                    {/* Step number */}
+                    <div
+                      className="absolute top-4 right-4 w-10 h-10 rounded-full font-bold flex items-center justify-center text-base shadow-lg"
+                      style={{ backgroundColor: `${item.text}`, color: item.bg }}
+                    >
+                      {item.step}
+                    </div>
+                    {/* Icon */}
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-500"
+                      style={{ backgroundColor: `color-mix(in srgb, ${item.text} 20%, transparent)` }}
+                    >
+                      <item.icon className="h-8 w-8" style={{ color: item.text }} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2" style={{ color: item.text }}>{item.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: `color-mix(in srgb, ${item.text} 80%, transparent)` }}>
+                      {item.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              </ScrollReveal>
+            ))}
           </div>
           </div>
         </div>
