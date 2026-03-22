@@ -1077,7 +1077,7 @@ paths['/v1/loans/{loanId}/schedule'] = {
   post: {
     tags: ['Loans'], summary: 'Generate repayment schedule', operationId: 'loanGenerateSchedule', security: [{ bearerAuth: [] }],
     parameters: [{ name: 'loanId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader],
-    responses: { '201': { description: 'Schedule generated' }, ...errorResponses },
+    responses: { '201': successResult('Schedule generated'), ...errorResponses },
   },
 };
 
