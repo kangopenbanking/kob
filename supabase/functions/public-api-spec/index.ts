@@ -995,11 +995,11 @@ paths['/v1/pisp/payments/{paymentId}'] = {
 
 // Consent management
 paths['/v1/consents/{consentId}/authorize'] = {
-  post: { tags: ['Consent Management'], summary: 'Authorize consent', operationId: 'consentAuthorize', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'Consent authorized' }, ...errorResponses } },
+  post: { tags: ['Consent Management'], summary: 'Authorize consent', operationId: 'consentAuthorize', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'Consent authorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Consent' } } } }, ...errorResponses } },
 };
 
 paths['/v1/consents/{consentId}/revoke'] = {
-  post: { tags: ['Consent Management'], summary: 'Revoke consent', operationId: 'consentRevoke', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Consent revoked' }, ...errorResponses } },
+  post: { tags: ['Consent Management'], summary: 'Revoke consent', operationId: 'consentRevoke', security: [{ bearerAuth: [] }], parameters: [{ name: 'consentId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Consent revoked', content: { 'application/json': { schema: { $ref: '#/components/schemas/Consent' } } } }, ...errorResponses } },
 };
 
 paths['/v1/consents'] = {
