@@ -1512,7 +1512,7 @@ paths['/v1/gateway/disputes/{disputeId}'] = {
 };
 
 paths['/v1/gateway/disputes/{disputeId}/evidence'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Submit dispute evidence', operationId: 'gatewaySubmitDisputeEvidence', security: [{ bearerAuth: [] }], parameters: [{ name: 'disputeId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['evidence_text'], properties: { evidence_text: { type: 'string' }, evidence_type: { type: 'string' }, file_url: { type: 'string' } } } } } }, responses: { '200': { description: 'Evidence submitted' }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Submit dispute evidence', operationId: 'gatewaySubmitDisputeEvidence', security: [{ bearerAuth: [] }], parameters: [{ name: 'disputeId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['evidence_text'], properties: { evidence_text: { type: 'string' }, evidence_type: { type: 'string' }, file_url: { type: 'string' } } } } } }, responses: { '200': successResult('Evidence submitted'), ...errorResponses } },
 };
 
 paths['/v1/gateway/settlements'] = {
