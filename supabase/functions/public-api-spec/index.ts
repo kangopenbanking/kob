@@ -815,28 +815,31 @@ paths['/v1/jwks'] = {
 };
 
 // Phone Auth
+const successResult = (desc: string) => ({ description: desc, content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean', example: true }, message: { type: 'string' } } } } } });
+const tokenResponse = { description: 'Authentication successful', content: { 'application/json': { schema: { type: 'object', properties: { access_token: { type: 'string' }, token_type: { type: 'string', example: 'Bearer' }, expires_in: { type: 'integer', example: 3600 }, refresh_token: { type: 'string' }, user_id: { type: 'string', format: 'uuid' } } } } } };
+
 paths['/v1/auth/phone/send-otp'] = {
-  post: { tags: ['Authentication'], summary: 'Send OTP to phone', operationId: 'phoneAuthSendOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number'], properties: { phone_number: { type: 'string', example: '+237670000000' } } } } } }, responses: { '200': { description: 'OTP sent' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Send OTP to phone', operationId: 'phoneAuthSendOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number'], properties: { phone_number: { type: 'string', example: '+237670000000' } } } } } }, responses: { '200': successResult('OTP sent'), ...errorResponses } },
 };
 
 paths['/v1/auth/phone/verify-otp'] = {
-  post: { tags: ['Authentication'], summary: 'Verify OTP', operationId: 'phoneAuthVerifyOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'otp_code'], properties: { phone_number: { type: 'string' }, otp_code: { type: 'string' } } } } } }, responses: { '200': { description: 'OTP verified, token issued' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Verify OTP', operationId: 'phoneAuthVerifyOtp', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'otp_code'], properties: { phone_number: { type: 'string' }, otp_code: { type: 'string' } } } } } }, responses: { '200': tokenResponse, ...errorResponses } },
 };
 
 paths['/v1/auth/phone/pin-login'] = {
-  post: { tags: ['Authentication'], summary: 'Login with PIN', operationId: 'phoneAuthPinLogin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin'], properties: { phone_number: { type: 'string' }, pin: { type: 'string', minLength: 4, maxLength: 6 } } } } } }, responses: { '200': { description: 'Login successful' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Login with PIN', operationId: 'phoneAuthPinLogin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin'], properties: { phone_number: { type: 'string' }, pin: { type: 'string', minLength: 4, maxLength: 6 } } } } } }, responses: { '200': tokenResponse, ...errorResponses } },
 };
 
 paths['/v1/auth/pin/set'] = {
-  post: { tags: ['Authentication'], summary: 'Set PIN code', operationId: 'pinCodeSet', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': { description: 'PIN set' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Set PIN code', operationId: 'pinCodeSet', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': successResult('PIN set'), ...errorResponses } },
 };
 
 paths['/v1/auth/pin/verify'] = {
-  post: { tags: ['Authentication'], summary: 'Verify PIN code', operationId: 'pinCodeVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': { description: 'PIN verified' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Verify PIN code', operationId: 'pinCodeVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['pin'], properties: { pin: { type: 'string' } } } } } }, responses: { '200': successResult('PIN verified'), ...errorResponses } },
 };
 
 paths['/v1/auth/password/reset-with-pin'] = {
-  post: { tags: ['Authentication'], summary: 'Reset password with PIN', operationId: 'passwordResetWithPin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin', 'new_password'], properties: { phone_number: { type: 'string' }, pin: { type: 'string' }, new_password: { type: 'string' } } } } } }, responses: { '200': { description: 'Password reset' }, ...errorResponses } },
+  post: { tags: ['Authentication'], summary: 'Reset password with PIN', operationId: 'passwordResetWithPin', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'pin', 'new_password'], properties: { phone_number: { type: 'string' }, pin: { type: 'string' }, new_password: { type: 'string' } } } } } }, responses: { '200': successResult('Password reset'), ...errorResponses } },
 };
 
 // Security
