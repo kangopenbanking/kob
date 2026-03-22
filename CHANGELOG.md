@@ -5,6 +5,21 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] — 2026-03-22
+
+### Added — Postman Hardening + Playwright E2E + Empty State CTAs
+- **Postman**: Auto-injected test scripts on all 165+ requests (status + JSON assertions)
+- **Postman**: Variable chaining on Create Charge → `charge_id`, Create Refund → `refund_id`, Create Payout → `payout_id`, OAuth → `access_token`
+- **Postman**: 13 new collection variables (`subscription_id`, `customer_id`, `escrow_id`, etc.)
+- **Postman**: Enhanced environments with `merchant_api_key`, `webhook_secret`, `idempotency_key_prefix`
+- **Postman**: "Smoke Test (E2E)" folder — 6-step chained flow: health → auth → charge → verify → refund → verify
+- **Playwright**: Comprehensive E2E UI test plan (`docs/e2e/playwright-test-plan.md`) covering 200+ pages across 5 role-based projects
+- **Empty States**: Added actionable CTA buttons to 8 merchant/admin/consumer pages (MerchantTransactions, Settlements, Refunds, Payouts, Subscriptions, Escrow, Loans, AdminBankDirectory, AdminInterbankPayments)
+- **Reports**: Published `POSTMAN_E2E_REPORT.md`, `UI_E2E_REPORT.md`, `DOCS_EXPLORER_STABILITY_REPORT.md`
+
+### No Breaking Changes
+- All existing endpoints, schemas, and behavior preserved
+
 ## [4.1.1] — 2026-03-22
 
 ### Fixed — Pro Gateway Hardening
