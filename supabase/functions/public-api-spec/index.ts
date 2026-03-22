@@ -1827,7 +1827,7 @@ paths['/v1/gateway/funding-intents/{intentId}/cancel'] = {
 };
 
 paths['/v1/gateway/funding-intents/{intentId}/confirm'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Confirm funding intent', description: 'Confirm a funding intent after provider payment succeeds.', operationId: 'gatewayConfirmFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding confirmed and account credited' }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Confirm funding intent', description: 'Confirm a funding intent after provider payment succeeds.', operationId: 'gatewayConfirmFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': successResult('Funding confirmed and account credited'), ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
