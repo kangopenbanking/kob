@@ -78,8 +78,13 @@ const ApiExplorerStatic = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* SEO-friendly noscript fallback */}
+    <>
+      <Helmet>
+        <title>API Reference (Static) — Kang Open Banking</title>
+        <meta name="description" content="Static API reference listing all Kang Open Banking endpoints. Works without JavaScript for maximum compatibility." />
+        <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer-static" />
+      </Helmet>
+    <div className="max-w-6xl mx-auto p-6 space-y-6" data-testid="api-explorer-static-container">
       <noscript>
         <div>
           <h1>Kang Open Banking API Reference</h1>
