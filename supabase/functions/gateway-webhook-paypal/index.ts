@@ -41,11 +41,12 @@ serve(async (req) => {
     const eventId = event.id;
 
     // Deduplication via webhook_inbox
+    const dedupeKey = `paypal_${eventId}`;
     const { data: existing } = await supabase
       .from('webhook_inbox')
       .select('id')
-      .eq('event_id', eventId)
-      .single();
+      .eq('event_id', dedupeKey)
+      .maybeSingle();
 
     if (existing) {
       return new Response(JSON.stringify({ status: 'already_processed' }), {
@@ -56,10 +57,11 @@ serve(async (req) => {
 
     // Store in webhook_inbox
     await supabase.from('webhook_inbox').insert({
-      event_id: eventId,
+      event_id: dedupeKey,
       provider: 'paypal',
       event_type: eventType,
       payload: event,
+      status: 'processing',
     });
 
     // Handle payout events
