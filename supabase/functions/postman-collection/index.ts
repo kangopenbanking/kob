@@ -804,12 +804,14 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
           r('Create Refund', 'POST', '/v1/gateway/refunds', {
             body: { charge_id: '{{charge_id}}', amount: 5000, reason: 'Customer request' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'refund_id' },
           }),
           r('Get Refund', 'GET', '/v1/gateway/refunds/{{refund_id}}'),
           r('List Refunds', 'GET', '/v1/gateway/refunds', { query: [{ key: 'limit', value: '50' }] }),
           r('Create Payout', 'POST', '/v1/gateway/payouts', {
             body: { merchant_id: '{{merchant_id}}', amount: 10000, currency: 'XAF', channel: 'mobile_money', beneficiary_phone: '237677123456', beneficiary_name: 'Jean Dupont', tx_ref: 'pay_001' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            saveVar: { field: 'id', varName: 'payout_id' },
           }),
           r('Get Payout', 'GET', '/v1/gateway/payouts/{{payout_id}}'),
           r('List Payouts', 'GET', '/v1/gateway/payouts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
