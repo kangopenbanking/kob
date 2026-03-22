@@ -274,6 +274,19 @@ async function suiteWebhookSecurity(): Promise<TestSuite> {
     assert(status >= 400, `Expected 4xx, got ${status}`);
   }));
 
+  tests.push(await runTest(suite, 'gateway-webhook-paypal: rejects missing signature headers', async () => {
+    const { status } = await invoke('gateway-webhook-paypal', 'POST', { event_type: 'PAYMENT.CAPTURE.COMPLETED', resource: {} });
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
+  tests.push(await runTest(suite, 'gateway-webhook-paypal: rejects invalid signature', async () => {
+    const { status } = await invoke('gateway-webhook-paypal', 'POST',
+      { id: 'evt_test', event_type: 'PAYMENT.CAPTURE.COMPLETED', resource: {} },
+      { 'paypal-transmission-id': 'fake', 'paypal-transmission-sig': 'invalid', 'paypal-cert-url': 'https://fake', 'paypal-auth-algo': 'SHA256', 'paypal-transmission-time': '2026-01-01T00:00:00Z' }
+    );
+    assert(status >= 400, `Expected 4xx, got ${status}`);
+  }));
+
   const passed = tests.filter(t => t.status === 'pass').length;
   const failed = tests.filter(t => t.status === 'fail').length;
   return { name: suite, tests, passed, failed, skipped: 0, duration_ms: tests.reduce((s, t) => s + t.duration_ms, 0) };
