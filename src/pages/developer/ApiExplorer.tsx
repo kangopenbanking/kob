@@ -267,6 +267,39 @@ grant_type=client_credentials
           </div>
         )}
       </Card>
+
+      {/* SSR/Static fallback: visible content for crawlers, non-JS environments, and screen readers */}
+      <noscript>
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <h2 className="text-2xl font-bold mb-4">Kang Open Banking API — Quick Reference</h2>
+          <p className="mb-6 text-muted-foreground">
+            This page requires JavaScript for the interactive Swagger UI explorer. 
+            You can access the full API specification directly:
+          </p>
+          <ul className="list-disc list-inside space-y-2 mb-8">
+            <li><a href="/openapi.json" className="text-primary underline">Download OpenAPI JSON</a></li>
+            <li><a href="/openapi.yaml" className="text-primary underline">Download OpenAPI YAML</a></li>
+            <li><a href="/openapi-sandbox.json" className="text-primary underline">Sandbox OpenAPI JSON</a></li>
+            <li><a href="/developer/redoc" className="text-primary underline">Static API Reference (Redoc)</a></li>
+            <li><a href="/developer/redoc-sandbox" className="text-primary underline">Sandbox API Reference (Redoc)</a></li>
+          </ul>
+          <h3 className="text-xl font-semibold mb-3">Key API Domains</h3>
+          <ul className="list-disc list-inside space-y-1 text-sm">
+            <li><strong>/v1/accounts</strong> — Account management (AISP)</li>
+            <li><strong>/v1/payments</strong> — Payment initiation (PISP)</li>
+            <li><strong>/v1/gateway/charges</strong> — Payment gateway charges</li>
+            <li><strong>/v1/gateway/payouts</strong> — Disbursements &amp; payouts</li>
+            <li><strong>/v1/gateway/merchants</strong> — Merchant lifecycle &amp; KYB</li>
+            <li><strong>/v1/gateway/subscriptions</strong> — Recurring billing</li>
+            <li><strong>/v1/gateway/refunds</strong> — Refund processing</li>
+            <li><strong>/v1/gateway/disputes</strong> — Dispute management</li>
+            <li><strong>/v1/webhooks</strong> — Webhook management</li>
+          </ul>
+          <p className="mt-6 text-sm text-muted-foreground">
+            API Version: v4.2.0 · Default currency: XAF · 326+ operations
+          </p>
+        </div>
+      </noscript>
     </div>
     </>
   );
