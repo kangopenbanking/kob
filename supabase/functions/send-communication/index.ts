@@ -73,7 +73,7 @@ serve(async (req) => {
       } else {
         try {
           const resend = new Resend(resendApiKey);
-          const fromAddress = Deno.env.get('RESEND_FROM') || 'KOB Open Banking <onboarding@resend.dev>';
+          const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.api.kangopenbanking.com>';
           
           const { error: emailError } = await resend.emails.send({
             from: fromAddress,

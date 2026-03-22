@@ -172,8 +172,9 @@ serve(async (req) => {
           const subject = replaceVariables(template.subject || '', personalizedVars);
           const body = replaceVariables(template.body, personalizedVars);
 
+          const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.api.kangopenbanking.com>';
           const { error: emailError } = await resend.emails.send({
-            from: 'Open Banking Platform <onboarding@resend.dev>',
+            from: fromAddress,
             to: [email],
             subject: subject,
             html: body,
