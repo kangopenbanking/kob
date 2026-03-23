@@ -158,6 +158,8 @@ const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic
 const RedocPage = lazy(() => import("./pages/developer/RedocPage"));
 const DocsHealth = lazy(() => import("./pages/developer/DocsHealth"));
 const OpenApiDownloads = lazy(() => import("./pages/developer/OpenApiDownloads"));
+const RealWorldExamples = lazy(() => import("./pages/developer/RealWorldExamples"));
+const RealWorldExampleDetail = lazy(() => import("./pages/developer/RealWorldExampleDetail"));
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
@@ -850,6 +852,8 @@ function App() {
               <Route path="gateway/paypal" element={<PayPalIntegrationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="examples" element={<CodeExamples />} />
+              <Route path="examples/real-world" element={<RealWorldExamples />} />
+              <Route path="examples/:slug" element={<RealWorldExampleDetail />} />
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
               <Route path="guides/sdks" element={<SDKsPage />} />
