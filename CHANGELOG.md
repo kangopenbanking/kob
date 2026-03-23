@@ -5,6 +5,26 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.2] — 2026-03-23
+
+### Added — Developer Portal: Real-World Integration Examples (10 Guides)
+- **01**: Merchant Onboarding, KYB & API Keys
+- **02**: Accept Payments — Create a Charge
+- **03**: Add Money — Account Funding
+- **04**: Refunds (full & partial)
+- **05**: Payouts — Single, Bulk & PayPal
+- **06**: Webhooks — Merchant Setup, Deliveries & Secret Rotation
+- **07**: Settlements, Reporting & Reconciliation
+- **08**: Disputes & Chargebacks — Evidence Submission
+- **09**: Open Banking AISP — Consent, Accounts & Transactions
+- **10**: Open Banking PISP — Consent & Domestic Payment
+- Portal route: `/developer/examples/real-world` with individual guide pages
+- Each guide includes: mermaid diagrams, curl examples, webhook payloads, error examples
+- All examples aligned with deployed OpenAPI v4.3.1 (326 operations)
+
+### No Breaking Changes
+- All existing endpoints, schemas, routes, and behavior preserved
+
 ## [4.3.1] — 2026-03-22
 
 ### Fixed — Final Contract Maturity (100% Error Schema Coverage)
