@@ -125,6 +125,7 @@ const navSections = [
       { title: "API Playground", path: "/developer/api-playground" },
       { title: "API Testing", path: "/developer/api-testing" },
       { title: "Code Examples", path: "/developer/examples" },
+      { title: "Real-World Examples", path: "/developer/examples/real-world" },
       { title: "Data Generator", path: "/developer/sandbox/data-generator" },
       { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
       { title: "Payout Simulation", path: "/developer/sandbox/payout-simulation" },

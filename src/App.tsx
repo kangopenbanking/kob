@@ -852,6 +852,8 @@ function App() {
               <Route path="gateway/paypal" element={<PayPalIntegrationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="examples" element={<CodeExamples />} />
+              <Route path="examples/real-world" element={<RealWorldExamples />} />
+              <Route path="examples/:slug" element={<RealWorldExampleDetail />} />
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
               <Route path="guides/sdks" element={<SDKsPage />} />
