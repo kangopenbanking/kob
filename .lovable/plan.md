@@ -1,62 +1,56 @@
 
 
-# Plan: Spec Contract Maturity — CI Enforcement + Gap Fixes
+# Plan: Fix Developer Portal Blank Page for Non-JS Crawlers
 
-## Current State (from audit)
+## Problem
 
-| Area | Status | Detail |
-|------|--------|--------|
-| Error schema (`$ref: Error`) | ✅ Strong | Standardized across 4xx/5xx; consistent `error_code` taxonomy |
-| 2xx response schemas | ✅ Strong | Sampled 20+ endpoints — all have `content.schema` on 200/201 |
-| Idempotency-Key on POST | ✅ 565 matches | Widely applied across write endpoints |
-| Idempotency-Key on PATCH/PUT | ❌ Missing | 5 PATCH + 7 PUT operations lack the header |
-| CI spec validation | ❌ Missing | No automated build-time check that enforces schema completeness |
-| E2E contract test: spec maturity suite | ❌ Missing | Existing runner has 10 suites but none validate spec structure |
+`/developer` (and all SPA routes) return an empty `<div id="root"></div>` when fetched without JavaScript. This is inherent to Vite SPAs — crawlers, `curl`, and accessibility tools see no content.
 
-## What to implement
+## Root Cause
 
-### 1. Add Idempotency-Key to all PATCH and PUT operations in OpenAPI specs
+The app is a client-side React SPA. `index.html` has no server-side rendering or pre-rendered HTML. All content is injected by JavaScript at runtime.
 
-Both `public/openapi.json` and `public/openapi-sandbox.json` have PATCH/PUT operations missing the `Idempotency-Key` parameter. Add `{"$ref": "#/components/parameters/IdempotencyKey"}` to parameters for:
+## Solution: Two-Layer Fix
 
-**PATCH operations (5):**
-- `/v1/gateway/merchants/{merchantId}` (merchantUpdate)
-- `/v1/gateway/merchants/{merchantId}/operational-controls` 
-- `/v1/gateway/merchants/{merchantId}/risk-config`
-- `/v1/sla/incidents/{incidentId}`
-- `/v1/webhooks/v2/endpoints/{endpointId}`
+### 1. Rich `<noscript>` block in `index.html`
 
-**PUT operations (7):**
-- `/v1/cards/{cardId}/status`
-- `/v1/admin/users/{userId}/status`
-- `/v1/gateway/payment-links/{linkId}`
-- `/v1/gateway/subscriptions/{subscriptionId}`
-- `/v1/gateway/invoices/{invoiceId}`
-- `/v1/gateway/products/{productId}`
-- `/v1/directory/banks/{bankId}`
+Add a comprehensive `<noscript>` section inside `<body>` with:
+- Developer Portal heading and description
+- Links to all key developer pages (Getting Started, API Explorer, Examples, Webhooks, Quickstart)
+- Links to downloadable OpenAPI specs (`/openapi.json`, `/openapi.yaml`)
+- Structured text describing the API capabilities
+- This ensures crawlers and no-JS agents see meaningful content on every route
 
-### 2. Add "Spec Contract Maturity" suite to E2E contract test runner
+### 2. Pre-rendered static HTML pages for key developer routes
 
-Add **Suite 11** to `supabase/functions/e2e-contract-tests/index.ts` that fetches the live OpenAPI spec and validates:
+Install `vite-plugin-prerender` (or use a post-build script) to generate static HTML snapshots for critical developer portal routes at build time:
+- `/developer`
+- `/developer/getting-started`
+- `/developer/api-explorer`
+- `/developer/examples/real-world`
+- `/developer/gateway/quickstart`
+- `/developer/gateway/webhooks`
 
-- Every path+method with 200/201/202 response has `content` with a `schema`
-- Every path+method with 4xx responses references the Error schema or has inline error schema
-- Every POST/PUT/PATCH operation includes an `Idempotency-Key` parameter
-- `components.schemas.Error` exists with required fields (error, error_code, message, error_id, timestamp)
-- `components.parameters.IdempotencyKey` exists
-- Spec has `info.version` and `openapi` fields
-- Total path count >= 300 (regression guard)
+**However**, `vite-plugin-prerender` requires a headless browser (Puppeteer) which may not work reliably in Lovable's build environment. So the more robust approach is:
 
-This suite runs as part of the existing test runner and can be invoked with `{"suite": "spec_maturity"}`.
+### Revised approach: Static HTML fallback via `<noscript>` + enhanced `<head>` metadata
 
-### 3. Bump spec version to 4.2.0
+1. **`index.html`** — Add a `<noscript>` block with ~50 lines of semantic HTML covering the developer portal's key content, links, and API descriptions. This is what crawlers will index.
 
-Update `info.version` in both specs to reflect the contract maturity enforcement milestone.
+2. **`public/developer/index.html`** — Create a static HTML file specifically for `/developer` that contains full semantic content (headings, descriptions, navigation links, API feature list). Vite serves files from `public/` as-is, so `curl https://kangopenbanking.com/developer/` will return this file directly if the SPA hasn't loaded.
 
-### Files to modify
-1. `public/openapi.json` — add IdempotencyKey param to 12 PATCH/PUT operations + bump version
-2. `public/openapi-sandbox.json` — same changes
-3. `supabase/functions/e2e-contract-tests/index.ts` — add Suite 11: Spec Contract Maturity
+   **Important caveat**: Vite's SPA fallback (`navigateFallback` in service worker) may intercept this. The static file approach works for direct server hits but the service worker may override it. We'll configure the PWA plugin to exclude `/developer/index.html` from caching.
 
-No existing routes, behaviors, or schemas change. Purely additive enforcement.
+3. **E2E contract test** — Add a check in the e2e-contract-tests suite that fetches `/developer` and verifies HTML contains expected content strings.
+
+## Files to modify
+
+1. **`index.html`** — Add `<noscript>` block with developer portal content
+2. **`public/developer/index.html`** — New static HTML page with full developer portal content (SEO-friendly, no JS required)
+3. **`vite.config.ts`** — Ensure `public/developer/` is not interfered with by PWA plugin
+4. **`supabase/functions/e2e-contract-tests/index.ts`** — Add SSR visibility check to Suite 11
+
+## Technical detail
+
+The `public/developer/index.html` trick works because most static hosts (including Lovable's deployment) serve `public/developer/index.html` when `/developer/` is requested. The SPA router then hydrates on top. For `curl` requests (no JS), the static HTML is returned as-is with full content.
 
