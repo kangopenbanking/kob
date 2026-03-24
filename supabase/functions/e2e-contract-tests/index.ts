@@ -641,6 +641,24 @@ async function suiteSpecMaturity(): Promise<TestSuite> {
   suite.tests.push({ suite: suite.name, test: `Spec version is semver (${version})`, status: semverOk ? 'pass' : 'fail', duration_ms: Date.now() - t8, ...(semverOk ? {} : { error: `Invalid version: ${version}` }) });
   semverOk ? suite.passed++ : suite.failed++;
 
+  // Test: SSR/Static visibility — /developer returns meaningful HTML for non-JS clients
+  const t9 = Date.now();
+  let ssrOk = false;
+  let ssrError = '';
+  try {
+    const siteUrl = 'https://kangopenbanking.com';
+    const devRes = await fetch(`${siteUrl}/developer/`, { headers: { 'Accept': 'text/html' } });
+    const html = await devRes.text();
+    const hasTitle = html.includes('Developer Portal') || html.includes('Kang Open Banking');
+    const hasLinks = html.includes('/developer/getting-started') || html.includes('/openapi.json');
+    ssrOk = devRes.status === 200 && hasTitle && hasLinks;
+    if (!ssrOk) ssrError = `status=${devRes.status}, hasTitle=${hasTitle}, hasLinks=${hasLinks}`;
+  } catch (e) {
+    ssrError = `Fetch failed: ${(e as Error).message}`;
+  }
+  suite.tests.push({ suite: suite.name, test: 'Developer portal returns content for non-JS clients', status: ssrOk ? 'pass' : 'fail', duration_ms: Date.now() - t9, ...(ssrOk ? {} : { error: ssrError }) });
+  ssrOk ? suite.passed++ : suite.failed++;
+
   suite.duration_ms = Date.now() - suiteStart;
   return suite;
 }
