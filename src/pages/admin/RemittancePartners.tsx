@@ -9,17 +9,44 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/use-toast";
+import { StatCard } from "@/components/ui/stat-card";
+import { CorridorQuickSetup } from "@/components/admin/remittance/CorridorQuickSetup";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2, Plus, Edit, Globe, Banknote, ArrowRight, CheckCircle2, RefreshCw, Settings2,
+  Building2, Plus, Edit, Globe, ArrowRight, CheckCircle2, Settings2,
+  Zap, Activity, Clock, MapPin, Wifi, WifiOff, Signal,
 } from "lucide-react";
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  CM: "🇨🇲", FR: "🇫🇷", GB: "🇬🇧", US: "🇺🇸", DE: "🇩🇪", CA: "🇨🇦",
+  NG: "🇳🇬", GH: "🇬🇭", KE: "🇰🇪", SN: "🇸🇳", CI: "🇨🇮", ZA: "🇿🇦",
+  RW: "🇷🇼", TZ: "🇹🇿", UG: "🇺🇬", ML: "🇲🇱", BF: "🇧🇫", BJ: "🇧🇯",
+};
+
+const COUNTRY_NAMES: Record<string, string> = {
+  CM: "Cameroon", FR: "France", GB: "United Kingdom", US: "United States",
+  DE: "Germany", CA: "Canada", NG: "Nigeria", GH: "Ghana", KE: "Kenya",
+  SN: "Senegal", CI: "Côte d'Ivoire", ZA: "South Africa", RW: "Rwanda",
+};
+
+const PARTNER_COLORS: Record<string, string> = {
+  thunes: "bg-blue-500", terrapay: "bg-emerald-500", onafriq: "bg-amber-500",
+  kob_internal: "bg-primary", flutterwave: "bg-orange-500",
+};
+
+function formatDelivery(secs: number | null) {
+  if (!secs) return "—";
+  if (secs < 60) return `~${secs}s (instant)`;
+  if (secs < 3600) return `~${Math.round(secs / 60)} min`;
+  if (secs < 7200) return `~1 hr`;
+  return `~${Math.round(secs / 3600)} hrs`;
+}
 
 export default function RemittancePartners() {
   const queryClient = useQueryClient();
@@ -27,6 +54,7 @@ export default function RemittancePartners() {
   const [corridorDialog, setCorridorDialog] = useState<any>(null);
   const [partnerForm, setPartnerForm] = useState<any>({});
   const [corridorForm, setCorridorForm] = useState<any>({});
+  const [quickSetupOpen, setQuickSetupOpen] = useState(false);
 
   const { data: partners, isLoading } = useQuery({
     queryKey: ["admin-remittance-partners"],
@@ -42,7 +70,7 @@ export default function RemittancePartners() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("remittance_corridors")
-        .select("*, remittance_partners(id, name)")
+        .select("*, remittance_partners(id, name, display_name)")
         .order("from_country");
       if (error) throw error;
       return data;
@@ -137,73 +165,145 @@ export default function RemittancePartners() {
     setCorridorDialog("edit");
   };
 
+  // Stats
+  const totalPartners = partners?.length || 0;
+  const activePartners = partners?.filter(p => p.status === "active").length || 0;
+  const activeCorridors = corridors?.filter(c => c.is_active).length || 0;
+  const uniqueCountries = new Set([
+    ...(corridors?.map(c => c.from_country) || []),
+    ...(corridors?.map(c => c.to_country) || []),
+  ]).size;
+  const avgDelivery = corridors?.length
+    ? Math.round((corridors.reduce((s, c) => s + (c.est_delivery_seconds || 0), 0) / corridors.length) / 60)
+    : 0;
+
+  // Per-partner corridor counts
+  const partnerCorridorCounts: Record<string, number> = {};
+  corridors?.forEach(c => {
+    partnerCorridorCounts[c.partner_id] = (partnerCorridorCounts[c.partner_id] || 0) + 1;
+  });
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
         icon={Settings2}
         title="Remittance Partners & Corridors"
-        description="Manage remittance partner configurations, corridors, and fee models"
+        description="Manage remittance partner configurations, corridors, and fee models — Wise / WorldRemit grade"
       />
+
+      {/* Stats Row */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Partners" value={totalPartners} icon={<Building2 />} trend={activePartners > 0 ? { value: Math.round((activePartners / Math.max(totalPartners, 1)) * 100), label: "active" } : undefined} />
+        <StatCard title="Active Corridors" value={activeCorridors} icon={<Globe />} />
+        <StatCard title="Countries" value={uniqueCountries} icon={<MapPin />} />
+        <StatCard title="Avg Delivery" value={`${avgDelivery} min`} icon={<Clock />} />
+      </div>
 
       <Tabs defaultValue="partners" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="partners">Partners</TabsTrigger>
-          <TabsTrigger value="corridors">Corridors</TabsTrigger>
+          <TabsTrigger value="partners">Partners ({totalPartners})</TabsTrigger>
+          <TabsTrigger value="corridors">Corridors ({corridors?.length || 0})</TabsTrigger>
         </TabsList>
 
         {/* Partners Tab */}
         <TabsContent value="partners" className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setQuickSetupOpen(true)}>
+              <Zap className="h-4 w-4 mr-1" /> Quick Setup
+            </Button>
             <Button onClick={() => { setPartnerForm({}); setPartnerDialog("new"); }}>
               <Plus className="h-4 w-4 mr-1" /> Add Partner
             </Button>
           </div>
 
           {isLoading ? (
-            <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}</div>
+            <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}</div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <AnimatePresence>
-                {partners?.map((p, i) => (
-                  <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-primary" />
-                            {p.display_name || p.name}
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={p.status === "active" ? "default" : "secondary"}>{p.status}</Badge>
-                            <Button variant="ghost" size="icon" onClick={() => openEditPartner(p)}>
+                {partners?.map((p, i) => {
+                  const corridorCount = partnerCorridorCounts[p.id] || 0;
+                  const colorClass = PARTNER_COLORS[p.name] || "bg-primary";
+                  const isActive = p.status === "active";
+
+                  return (
+                    <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                      <Card className="hover:shadow-md transition-all duration-300 group relative overflow-hidden">
+                        {/* Color bar */}
+                        <div className={`absolute top-0 left-0 right-0 h-1 ${colorClass}`} />
+
+                        <CardHeader className="pb-2 pt-5">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`h-10 w-10 rounded-xl ${colorClass} flex items-center justify-center text-white font-bold text-sm`}>
+                                {(p.display_name || p.name).charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <CardTitle className="text-base">{p.display_name || p.name}</CardTitle>
+                                <p className="text-xs text-muted-foreground font-mono">{p.name}</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEditPartner(p)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm">
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Name</span><span className="font-mono">{p.name}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Environment</span>
-                          <Badge variant="outline" className="text-[10px]">{(p as any).api_environment || "sandbox"}</Badge>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Auto Settlement</span>
-                          <span>{(p as any).auto_settlement ? "Yes" : "No"}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Frequency</span>
-                          <span className="capitalize">{(p as any).settlement_frequency || "daily"}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+                        </CardHeader>
+
+                        <CardContent className="space-y-3 pb-4">
+                          {/* Status + Environment */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
+                              {isActive ? (
+                                <Signal className="h-3.5 w-3.5 text-emerald-500" />
+                              ) : (
+                                <WifiOff className="h-3.5 w-3.5 text-muted-foreground" />
+                              )}
+                              <Badge variant={isActive ? "default" : "secondary"} className="text-[10px]">
+                                {p.status}
+                              </Badge>
+                            </div>
+                            <Badge variant="outline" className="text-[10px]">
+                              {(p as any).api_environment || "sandbox"}
+                            </Badge>
+                          </div>
+
+                          {/* Metrics */}
+                          <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/30 p-2.5">
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-foreground">{corridorCount}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Corridors</p>
+                            </div>
+                            <div className="text-center border-x border-border/50">
+                              <p className="text-lg font-bold text-foreground capitalize">{(p as any).settlement_frequency || "daily"}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Settlement</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-foreground">{(p as any).auto_settlement ? "Auto" : "Manual"}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Mode</p>
+                            </div>
+                          </div>
+
+                          {/* API URL */}
+                          {(p as any).api_base_url && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                              <Wifi className="h-3 w-3 shrink-0" />
+                              <span className="truncate font-mono">{(p as any).api_base_url}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
               {(!partners || partners.length === 0) && (
-                <Card className="col-span-full"><CardContent className="py-12 text-center text-muted-foreground">No partners configured</CardContent></Card>
+                <Card className="col-span-full">
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">No partners configured</p>
+                    <p className="text-sm mt-1">Click "Quick Setup" to seed default international partners</p>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -211,7 +311,10 @@ export default function RemittancePartners() {
 
         {/* Corridors Tab */}
         <TabsContent value="corridors" className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setQuickSetupOpen(true)}>
+              <Zap className="h-4 w-4 mr-1" /> Quick Setup
+            </Button>
             <Button onClick={() => { setCorridorForm({}); setCorridorDialog("new"); }}>
               <Plus className="h-4 w-4 mr-1" /> Add Corridor
             </Button>
@@ -221,7 +324,7 @@ export default function RemittancePartners() {
             <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-14" />)}</div>
           ) : (
             <Card>
-              <ScrollArea className="h-[500px]">
+              <ScrollArea className="h-[560px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -229,9 +332,10 @@ export default function RemittancePartners() {
                       <TableHead>Route</TableHead>
                       <TableHead>Currency</TableHead>
                       <TableHead>FX Rate</TableHead>
-                      <TableHead>Fee %</TableHead>
-                      <TableHead>Min / Max</TableHead>
-                      <TableHead>KYC Level</TableHead>
+                      <TableHead>Fees</TableHead>
+                      <TableHead>Delivery</TableHead>
+                      <TableHead>Limits</TableHead>
+                      <TableHead>KYC</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
@@ -239,25 +343,60 @@ export default function RemittancePartners() {
                   <TableBody>
                     {corridors?.map((c, i) => {
                       const fees = (c.fees_model as any) || {};
+                      const partnerInfo = (c as any).remittance_partners;
+                      const partnerColor = partnerInfo ? PARTNER_COLORS[partnerInfo.name] || "bg-primary" : "bg-muted";
+
                       return (
-                        <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="border-b hover:bg-muted/50">
-                          <TableCell className="font-medium">{(c as any).remittance_partners?.name || "—"}</TableCell>
+                        <motion.tr
+                          key={c.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: i * 0.02 }}
+                          className="border-b hover:bg-muted/50"
+                        >
                           <TableCell>
-                            <div className="flex items-center gap-1 text-sm">
-                              {c.from_country} <ArrowRight className="h-3 w-3" /> {c.to_country}
+                            <div className="flex items-center gap-2">
+                              <div className={`h-2 w-2 rounded-full ${partnerColor}`} />
+                              <span className="font-medium text-sm">{partnerInfo?.display_name || partnerInfo?.name || "—"}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">{c.from_currency} → {c.to_currency}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <span>{COUNTRY_FLAGS[c.from_country] || ""}</span>
+                              <span className="font-medium">{COUNTRY_NAMES[c.from_country] || c.from_country}</span>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                              <span>{COUNTRY_FLAGS[c.to_country] || ""}</span>
+                              <span className="font-medium">{COUNTRY_NAMES[c.to_country] || c.to_country}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm font-mono">{c.from_currency} → {c.to_currency}</TableCell>
                           <TableCell className="font-mono text-sm">{fees.fx_rate || "—"}</TableCell>
-                          <TableCell className="text-sm">{fees.fee_percentage || 0}%</TableCell>
+                          <TableCell>
+                            <div className="text-xs space-y-0.5">
+                              <div>{fees.fee_percentage || 0}%</div>
+                              {fees.fixed_fee && (
+                                <div className="text-muted-foreground">+ {fees.fixed_fee} {fees.fee_currency || c.from_currency}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {formatDelivery(c.est_delivery_seconds)}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-xs">
-                            {Number(c.min_amount || 0).toLocaleString()} – {Number(c.max_amount || 0).toLocaleString()}
+                            <div>{Number(c.min_amount).toLocaleString()} – {Number(c.max_amount).toLocaleString()}</div>
+                            <div className="text-muted-foreground">{c.from_currency}</div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-[10px]">{(c as any).requires_kyc_level || "basic"}</Badge>
+                            <Badge variant="outline" className="text-[10px] capitalize">{(c as any).requires_kyc_level || "basic"}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Active" : "Inactive"}</Badge>
+                            <div className="flex items-center gap-1.5">
+                              <div className={`h-2 w-2 rounded-full ${c.is_active ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+                              <span className="text-xs">{c.is_active ? "Active" : "Inactive"}</span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Button variant="ghost" size="icon" onClick={() => openEditCorridor(c)}>
@@ -268,7 +407,13 @@ export default function RemittancePartners() {
                       );
                     })}
                     {(!corridors || corridors.length === 0) && (
-                      <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No corridors configured</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                          <Globe className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                          <p className="font-medium">No corridors configured</p>
+                          <p className="text-sm mt-1">Use "Quick Setup" to create corridors automatically</p>
+                        </TableCell>
+                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -277,6 +422,14 @@ export default function RemittancePartners() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Quick Setup */}
+      <CorridorQuickSetup
+        open={quickSetupOpen}
+        onOpenChange={setQuickSetupOpen}
+        partners={(partners || []).map(p => ({ id: p.id, name: p.name, display_name: p.display_name }))}
+        existingCorridors={(corridors || []).map(c => ({ from_country: c.from_country, to_country: c.to_country, partner_id: c.partner_id }))}
+      />
 
       {/* Partner Dialog */}
       <Dialog open={!!partnerDialog} onOpenChange={() => { setPartnerDialog(null); setPartnerForm({}); }}>
