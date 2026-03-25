@@ -5,6 +5,44 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] — 2026-03-25
+
+### Added — BaaS Remittance Module Enhancement
+
+#### Pay-in Intent Abstraction
+- **Edge Function**: `remittance-payin-intent` — Fund transfers via Stripe, PayPal, Flutterwave MoMo, or KOB Wallet
+- Actions: `create_stripe_intent`, `create_paypal_order`, `create_flw_momo`, `create_kob_wallet`, `confirm_payin`, `get_intent`, `list_intents`
+- Zero-decimal currency support (XAF, XOF, etc.)
+- Provider reference tracking and event timeline integration
+
+#### Client Remittance Webhooks
+- **Edge Function**: `remittance-client-webhooks` — Register, manage, and receive webhook notifications
+- Actions: `register`, `list`, `get_endpoint`, `rotate_secret`, `deactivate`, `list_deliveries`, `deliver`
+- 8 event types: `remittance.transfer.created`, `remittance.payin.succeeded/failed`, `remittance.payout.succeeded/failed`, `remittance.transfer.completed/cancelled/refunded`
+- HMAC-SHA256 signature verification
+- Delivery logs with retry tracking
+
+#### Database (Additive)
+- `remittance_payin_intents` — Pay-in funding attempts with provider refs
+- `remittance_client_webhook_endpoints` — Client webhook registrations
+- `remittance_client_webhook_deliveries` — Webhook delivery logs
+- All tables RLS-enabled (service_role only)
+
+#### Developer Portal Documentation (8 pages)
+- Remittance Overview — Architecture, Mermaid flow diagram, endpoint inventory
+- Corridors & Quotes — Corridor discovery, quote creation with curl examples
+- Create Transfer — State machine diagram, idempotency, compliance checks
+- Pay-in Methods — Stripe/PayPal/FLW/Wallet integration guide
+- Payout Methods — MoMo/Bank/PayPal/Wallet delivery guide
+- Webhooks — Registration, signature verification (Node.js + Python), delivery logs
+- Sandbox Testing — Full E2E test flow with test credentials
+- Error Reference — 15 remittance-specific error codes (REM_001–REM_015)
+
+### No Breaking Changes
+- All existing endpoints, schemas, routes, and behavior preserved
+- Navigation changes are append-only (new "Remittance API" section)
+- Zero existing files deleted or renamed
+
 ## [4.3.2] — 2026-03-23
 
 ### Added — Developer Portal: Real-World Integration Examples (10 Guides)

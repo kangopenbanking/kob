@@ -15856,6 +15856,96 @@ export type Database = {
         }
         Relationships: []
       }
+      remittance_client_webhook_deliveries: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          endpoint_id: string
+          event_type: string
+          http_status: number | null
+          id: string
+          last_attempt_at: string | null
+          payload: Json
+          remittance_id: string | null
+          status: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          endpoint_id: string
+          event_type: string
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          payload?: Json
+          remittance_id?: string | null
+          status?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          endpoint_id?: string
+          event_type?: string
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          payload?: Json
+          remittance_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_client_webhook_deliveries_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_client_webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittance_client_webhook_deliveries_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_client_webhook_endpoints: {
+        Row: {
+          client_id: string
+          created_at: string
+          events: string[]
+          id: string
+          is_active: boolean
+          secret_hash: string
+          secret_last_four: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret_hash: string
+          secret_last_four?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret_hash?: string
+          secret_last_four?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       remittance_compliance_checks: {
         Row: {
           check_type: string
@@ -16166,6 +16256,59 @@ export type Database = {
           webhook_secret_hash?: string | null
         }
         Relationships: []
+      }
+      remittance_payin_intents: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          method: string
+          provider: string
+          provider_ref: string | null
+          remittance_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          method: string
+          provider: string
+          provider_ref?: string | null
+          remittance_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          method?: string
+          provider?: string
+          provider_ref?: string | null
+          remittance_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_payin_intents_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       remittance_quotes: {
         Row: {
