@@ -163,6 +163,20 @@ const navSections = [
     ],
   },
   {
+    title: "Remittance API",
+    icon: Globe,
+    items: [
+      { title: "Overview", path: "/developer/remittance" },
+      { title: "Corridors & Quotes", path: "/developer/remittance/corridors-quotes" },
+      { title: "Create Transfer", path: "/developer/remittance/create-transfer" },
+      { title: "Pay-in Methods", path: "/developer/remittance/payin-methods" },
+      { title: "Payout Methods", path: "/developer/remittance/payout-methods" },
+      { title: "Webhooks", path: "/developer/remittance/webhooks" },
+      { title: "Sandbox Testing", path: "/developer/remittance/sandbox" },
+      { title: "Error Reference", path: "/developer/remittance/errors" },
+    ],
+  },
+  {
     title: "No-Code",
     icon: Puzzle,
     items: [

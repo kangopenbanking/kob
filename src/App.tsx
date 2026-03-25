@@ -292,6 +292,16 @@ const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
+
+// Remittance Developer Docs
+const DevRemittanceOverview = lazy(() => import("./pages/developer/remittance/RemittanceOverview"));
+const DevRemittanceCorridorsQuotes = lazy(() => import("./pages/developer/remittance/RemittanceCorridorsQuotes"));
+const DevRemittanceCreateTransfer = lazy(() => import("./pages/developer/remittance/RemittanceCreateTransfer"));
+const DevRemittancePayinMethods = lazy(() => import("./pages/developer/remittance/RemittancePayinMethods"));
+const DevRemittancePayoutMethods = lazy(() => import("./pages/developer/remittance/RemittancePayoutMethods"));
+const DevRemittanceWebhooks = lazy(() => import("./pages/developer/remittance/RemittanceWebhooks"));
+const DevRemittanceSandbox = lazy(() => import("./pages/developer/remittance/RemittanceSandboxTesting"));
+const DevRemittanceErrors = lazy(() => import("./pages/developer/remittance/RemittanceErrorReference"));
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
 const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
 const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
@@ -878,6 +888,15 @@ function App() {
               <Route path="compare" element={<CompetitiveComparison />} />
               <Route path="migrate" element={<MigrationGuide />} />
               <Route path="pay-by-bank" element={<PayByBankGuide />} />
+              {/* Remittance API Docs */}
+              <Route path="remittance" element={<DevRemittanceOverview />} />
+              <Route path="remittance/corridors-quotes" element={<DevRemittanceCorridorsQuotes />} />
+              <Route path="remittance/create-transfer" element={<DevRemittanceCreateTransfer />} />
+              <Route path="remittance/payin-methods" element={<DevRemittancePayinMethods />} />
+              <Route path="remittance/payout-methods" element={<DevRemittancePayoutMethods />} />
+              <Route path="remittance/webhooks" element={<DevRemittanceWebhooks />} />
+              <Route path="remittance/sandbox" element={<DevRemittanceSandbox />} />
+              <Route path="remittance/errors" element={<DevRemittanceErrors />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
 
