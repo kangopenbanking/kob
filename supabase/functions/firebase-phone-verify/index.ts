@@ -129,14 +129,28 @@ serve(async (req) => {
       .from('profiles')
       .upsert({ id: userId, phone_number: phoneNumber }, { onConflict: 'id' });
 
-    // Generate magic link for session
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+    // Generate magic link and verify server-side to get session tokens
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: userEmail,
     });
 
-    if (sessionError) {
-      console.error('Failed to generate session:', sessionError);
+    if (linkError) {
+      console.error('Failed to generate link:', linkError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create session' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    // Verify OTP server-side using hashed_token (same pattern as staff-pin-login)
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: 'magiclink',
+    });
+
+    if (sessionError || !sessionData.session) {
+      console.error('Failed to verify OTP server-side:', sessionError);
       return new Response(
         JSON.stringify({ error: 'Failed to create session' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -155,7 +169,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         user_id: userId,
-        magic_link: sessionData.properties.action_link,
+        session: {
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );

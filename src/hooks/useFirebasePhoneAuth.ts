@@ -82,21 +82,14 @@ export function useFirebasePhoneAuth() {
       if (fnError) throw fnError;
       if (!data?.success) throw new Error(data?.error || 'Verification failed');
 
-      // Use the magic link to create Supabase session
-      if (data.magic_link) {
-        const url = new URL(data.magic_link);
-        const token = url.searchParams.get('token');
-        const type = url.searchParams.get('type');
-        if (token && type) {
-          const { error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: type as any,
-          });
-          if (verifyError) throw verifyError;
-        }
+      // Set session using tokens returned by edge function (same pattern as PIN login)
+      if (data.session?.access_token && data.session?.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        if (sessionError) throw sessionError;
       }
-
-      await supabase.auth.refreshSession();
       toast.success('Verified successfully!');
       return true;
     } catch (err: any) {
