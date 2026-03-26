@@ -37,6 +37,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
+import { HeroSendForm } from "@/components/remittance/HeroSendForm";
 import youngWoman from "@/assets/remittance/young-woman.jpg";
 import familyHappy from "@/assets/remittance/family-happy.jpg";
 import womanCard from "@/assets/remittance/woman-card.jpg";
