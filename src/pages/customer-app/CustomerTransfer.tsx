@@ -202,11 +202,13 @@ const CustomerTransfer: React.FC = () => {
 
       setTransferResult(data);
 
-      // Invalidate caches
-      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
+      // Invalidate AND refetch balance caches so dashboard shows updated balance immediately
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+        queryClient.invalidateQueries({ queryKey: ['customer-transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['spending-summary'] }),
+      ]);
 
       setStep('success');
       toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
