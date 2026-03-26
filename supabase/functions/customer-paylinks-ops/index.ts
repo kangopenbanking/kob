@@ -82,6 +82,34 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'toggle') {
+      const { link_id } = body;
+      if (!link_id) {
+        return new Response(JSON.stringify({ error: 'link_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Fetch current state (ownership check)
+      const { data: existing, error: fetchErr } = await supabase.from('customer_pay_links')
+        .select('id, is_active')
+        .eq('id', link_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchErr || !existing) {
+        return new Response(JSON.stringify({ error: 'link_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const newActive = !existing.is_active;
+      const { error } = await supabase.from('customer_pay_links')
+        .update({ is_active: newActive })
+        .eq('id', link_id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ success: true, is_active: newActive }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     return new Response(JSON.stringify({ error: 'unknown action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {

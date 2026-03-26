@@ -90,14 +90,17 @@ const CustomerPayLinks: React.FC = () => {
   };
 
   const handleToggle = async (link: any) => {
-    const newActive = !link.is_active;
-    const { error } = await supabase
-      .from('customer_pay_links')
-      .update({ is_active: newActive })
-      .eq('id', link.id);
-    if (error) { toast.error('Failed to update'); return; }
-    queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
-    toast.success(newActive ? 'Link activated' : 'Link deactivated');
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-paylinks-ops', {
+        body: { action: 'toggle', link_id: link.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
+      toast.success(data?.is_active ? 'Link activated' : 'Link deactivated');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update');
+    }
   };
 
   const totalRevenue = links.reduce((s: number, l: any) => s + Number(l.total_collected || 0), 0);
