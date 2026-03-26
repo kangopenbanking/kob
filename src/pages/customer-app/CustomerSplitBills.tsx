@@ -119,52 +119,25 @@ const CustomerSplitBills: React.FC = () => {
 
     setSending(true);
     try {
-      // Insert split bill
-      const { data: bill, error: billError } = await supabase
-        .from('split_bills')
-        .insert({
-          user_id: user!.id,
-          title: title.trim(),
-          total_amount: totalNum,
-          split_mode: splitMode,
-          notes: notes || null,
-          status: 'pending',
-        })
-        .select()
-        .single();
-      if (billError) throw billError;
-
-      // Insert participants
-      const participantRows = participants.map((p, i) => ({
-        split_bill_id: bill.id,
+      const participantData = participants.map((p, i) => ({
         name: p.name,
         phone: p.phone || null,
         share_amount: shares[i],
         share_percent: splitMode === 'percentage' ? (i === 0 ? myAutoPercent : p.customPercent) : 0,
-        is_owner: i === 0,
-        paid: i === 0,
       }));
-      const { error: partError } = await supabase.from('split_bill_participants').insert(participantRows);
-      if (partError) throw partError;
 
-      // Notify participants via in-app notifications
-      for (let i = 1; i < participants.length; i++) {
-        const p = participants[i];
-        if (!p.phone) continue;
-        // Look up user by phone number
-        const { data: matchedProfile } = await supabase.rpc('search_profiles_by_name', { _query: p.phone, _limit: 1 });
-        const recipientId = matchedProfile?.[0]?.id;
-        if (recipientId) {
-          await supabase.from('app_notifications').insert({
-            user_id: recipientId,
-            type: 'info',
-            title: 'Split Bill Request',
-            message: `${participants[0].name} is requesting ${shares[i].toLocaleString()} XAF for "${title.trim()}"`,
-            icon: 'payment',
-            metadata: { split_bill_id: bill.id, amount: shares[i] } as any,
-          }); // Non-blocking
-        }
-      }
+      const { data, error } = await supabase.functions.invoke('split-bills-ops', {
+        body: {
+          action: 'create',
+          title: title.trim(),
+          total_amount: totalNum,
+          split_mode: splitMode,
+          notes: notes || null,
+          participants: participantData,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
       setShowCreate(false);

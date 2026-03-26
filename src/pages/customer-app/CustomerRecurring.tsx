@@ -77,19 +77,20 @@ const CustomerRecurring: React.FC = () => {
     setCreating(true);
     try {
       const nextDate = calculateNextDate(newStartDate, newFreq);
-      const { error } = await supabase.from('recurring_payments').insert({
-        user_id: user!.id,
-        name: newName.trim(),
-        category: newCategory,
-        amount: Number(newAmount),
-        frequency: newFreq,
-        start_date: newStartDate,
-        end_date: newEndDate || null,
-        next_payment_date: nextDate,
-        is_active: true,
-        notify: newNotify,
+      const { data, error } = await supabase.functions.invoke('recurring-payment-create', {
+        body: {
+          name: newName.trim(),
+          category: newCategory,
+          amount: Number(newAmount),
+          frequency: newFreq,
+          start_date: newStartDate,
+          end_date: newEndDate || null,
+          next_payment_date: nextDate,
+          notify: newNotify,
+        },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
       setShowCreate(false);
       resetForm();
