@@ -65,13 +65,13 @@ const defaultCurrencies = [
   { code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", rate: 0.39, fee_pct: 0.3 },
 ];
 
-const corridors = [
-  { from: "🇫🇷 France", to: "🇨🇲 Cameroon", rate: "1 EUR = 655.957 XAF", fee: "0.5%", time: "Instant" },
-  { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", rate: "1 USD = 605.22 XAF", fee: "0.8%", time: "< 30 sec" },
-  { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", rate: "1 GBP = 765.43 XAF", fee: "0.6%", time: "< 1 min" },
-  { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", rate: "1 CAD = 445.18 XAF", fee: "0.7%", time: "< 30 sec" },
-  { from: "🇩🇪 Germany", to: "🇨🇲 Cameroon", rate: "1 EUR = 655.957 XAF", fee: "0.5%", time: "Instant" },
-  { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", rate: "1 NGN = 0.39 XAF", fee: "0.3%", time: "Instant" },
+const defaultCorridors = [
+  { from: "🇫🇷 France", to: "🇨🇲 Cameroon", code: "EUR", rate: 655.957, fee: 0.5, time: "Instant" },
+  { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", code: "USD", rate: 605.22, fee: 0.8, time: "< 30 sec" },
+  { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", code: "GBP", rate: 765.43, fee: 0.6, time: "< 1 min" },
+  { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", code: "CAD", rate: 445.18, fee: 0.7, time: "< 30 sec" },
+  { from: "🇩🇪 Germany", to: "🇨🇲 Cameroon", code: "EUR", rate: 655.957, fee: 0.5, time: "Instant" },
+  { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", code: "NGN", rate: 0.39, fee: 0.3, time: "Instant" },
 ];
 
 const destinations = [
@@ -631,7 +631,7 @@ function SendForm() {
               <motion.button key={opt.key} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => { setDeliveryMethod(opt.key); if (stage === "details") setStage("calculate"); }}
                 className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 text-xs font-semibold border-2 transition-all duration-200 ${
-                  active ? "border-primary bg-primary/8 text-primary shadow-sm shadow-primary/10" : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                  active ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10" : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                 }`}>
                 <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
                 {opt.label}
