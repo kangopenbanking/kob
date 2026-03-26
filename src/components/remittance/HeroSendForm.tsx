@@ -701,7 +701,7 @@ export function HeroSendForm() {
               <div className="flex items-center rounded-2xl border-2 border-border/50 focus-within:border-primary/60 transition-colors overflow-hidden bg-background">
                 <Input
                   type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-                  className="border-0 text-2xl font-bold h-14 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent pl-5 flex-1"
+                  className="border-0 text-2xl font-bold h-14 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent pl-5 flex-1 min-w-0"
                   placeholder="0"
                 />
                 <CurrencyPicker
