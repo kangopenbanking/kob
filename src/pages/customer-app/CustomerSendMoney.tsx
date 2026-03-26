@@ -293,7 +293,7 @@ export default function CustomerSendMoney() {
           {/* Step Progress */}
           {activeTab === "send" && step !== "success" && (
             <div className="flex items-center gap-1 mt-2">
-              {stepLabels.slice(0, 4).map((label, i) => (
+              {stepLabels.map((label, i) => (
                 <div key={label} className="flex-1 flex flex-col items-center gap-1">
                   <div className={`h-1.5 w-full rounded-full transition-all duration-500 ${i <= stepIndex ? "bg-white" : "bg-white/20"}`} />
                   <span className={`text-[9px] font-medium transition-colors ${i <= stepIndex ? "text-white" : "text-white/40"}`}>{label}</span>
