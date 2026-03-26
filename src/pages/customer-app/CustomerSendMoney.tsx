@@ -627,7 +627,7 @@ export default function CustomerSendMoney() {
                       </div>
                       <span className="text-xs font-medium">1 {selectedCorridor.from_currency} = {selectedCorridor.to_currency}</span>
                     </div>
-                    <button onClick={() => setStep("corridors")} className="text-[10px] text-primary font-bold hover:underline">
+                    <button onClick={() => setStep("country")} className="text-[10px] text-primary font-bold hover:underline">
                       Change route
                     </button>
                   </div>
