@@ -330,9 +330,9 @@ export default function CustomerSendMoney() {
       {activeTab === "send" && (
         <AnimatePresence mode="wait">
 
-          {/* ═══ Step 1: Choose Corridor ═══════════════ */}
-          {step === "corridors" && (
-            <motion.div key="corridors" {...stepTransition} className="space-y-4">
+          {/* ═══ Step 1: Choose Destination Country ══════ */}
+          {step === "country" && (
+            <motion.div key="country" {...stepTransition} className="space-y-4">
               <HowItWorksFlow steps={HOW_IT_WORKS_STEPS} title="How international transfers work" />
 
               {/* Quick Stats */}
@@ -354,25 +354,20 @@ export default function CustomerSendMoney() {
                 ))}
               </div>
 
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                Where are you sending to?
+              </p>
+
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by country or currency..."
+                  placeholder="Search country or currency..."
                   value={countryFilter}
                   onChange={(e) => setCountryFilter(e.target.value)}
                   className="pl-10 rounded-2xl h-11 bg-muted/50 border-border/50"
                 />
               </div>
-
-              <p className="text-xs font-bold text-foreground px-1">
-                Available Destinations
-                {filteredCorridors.length > 0 && (
-                  <span className="ml-2 text-[10px] font-medium text-muted-foreground">
-                    {groupedCorridors.length} {groupedCorridors.length === 1 ? "country" : "countries"} · {filteredCorridors.length} {filteredCorridors.length === 1 ? "corridor" : "corridors"}
-                  </span>
-                )}
-              </p>
 
               {loadingCorridors ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -381,78 +376,33 @@ export default function CustomerSendMoney() {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-destructive/10">
                     <AlertTriangle className="h-8 w-8 text-destructive/70" />
                   </div>
-                  <p className="font-semibold text-foreground">Unable to load corridors</p>
+                  <p className="font-semibold text-foreground">Unable to load destinations</p>
                   <p className="text-xs text-muted-foreground mt-1">Please try again in a moment.</p>
                 </motion.div>
-              ) : filteredCorridors.length > 0 ? (
-                <div className="space-y-3">
-                  {groupedCorridors.map(([countryCode, countryCorridors], gi) => (
-                    <motion.div key={countryCode} custom={gi} variants={cardVariants} initial="hidden" animate="visible">
-                      {/* Country group header */}
-                      <div className="flex items-center gap-2 mb-2 px-1">
-                        <span className="text-lg">{getFlag(countryCode)}</span>
-                        <span className="text-xs font-bold text-foreground">{getCountryName(countryCode, countryCorridors[0]?.to_country_name)}</span>
-                        <span className="text-[10px] text-muted-foreground">({countryCode})</span>
+              ) : filteredCountries.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredCountries.map((country, i) => (
+                    <motion.button
+                      key={country.code}
+                      custom={i}
+                      variants={cardVariants}
+                      initial="hidden"
+                      animate="visible"
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => selectCountry(country.code)}
+                      className="flex flex-col items-center gap-2.5 rounded-2xl border-2 border-border/50 bg-card p-4 transition-all hover:border-primary/40 hover:shadow-lg active:bg-muted/30"
+                    >
+                      <span className="text-4xl">{country.flag}</span>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-foreground leading-tight">{country.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {country.currencies.join(", ")} · {country.corridorCount} {country.corridorCount === 1 ? "route" : "routes"}
+                        </p>
                       </div>
-                      <div className="space-y-2">
-                        {countryCorridors.map((c: any) => {
-                          const methods: string[] = c.delivery_methods || [];
-                          return (
-                            <Card
-                              key={c.id}
-                              className="cursor-pointer border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 active:scale-[0.98]"
-                              onClick={() => selectCorridor(c)}
-                            >
-                              <CardContent className="p-3.5">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    {/* From → To flags */}
-                                    <div className="flex items-center shrink-0">
-                                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-lg">
-                                        {getFlag(c.from_country)}
-                                      </div>
-                                      <ArrowRight className="h-3 w-3 text-muted-foreground mx-1 shrink-0" />
-                                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/60 text-lg">
-                                        {getFlag(c.to_country)}
-                                      </div>
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-bold text-foreground truncate">
-                                        {c.from_currency} → {c.to_currency}
-                                      </p>
-                                      <p className="text-[11px] text-muted-foreground truncate">
-                                        via {c.remittance_partners?.display_name || c.remittance_partners?.name || "Partner"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 shrink-0 ml-2">
-                                    <ArrowRight className="h-4 w-4 text-primary" />
-                                  </div>
-                                </div>
-
-                                {/* Delivery method pills */}
-                                {methods.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                    {methods.map((m) => {
-                                      const meta = getDeliveryMeta(m);
-                                      const MIcon = meta.icon;
-                                      return (
-                                        <span key={m} className="inline-flex items-center gap-1 text-[10px] font-medium rounded-lg px-2 py-1"
-                                          style={{ backgroundColor: meta.bgColor, color: meta.color }}
-                                        >
-                                          <MIcon className="h-2.5 w-2.5" />
-                                          {meta.label}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                        <ArrowRight className="h-3.5 w-3.5 text-primary" />
                       </div>
-                    </motion.div>
+                    </motion.button>
                   ))}
                 </div>
               ) : (
@@ -460,10 +410,171 @@ export default function CustomerSendMoney() {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-muted">
                     <Globe className="h-8 w-8 text-muted-foreground/40" />
                   </div>
-                  <p className="font-semibold text-foreground">No corridors available</p>
-                  <p className="text-xs text-muted-foreground mt-1">Contact support to enable new destinations</p>
+                  <p className="font-semibold text-foreground">No destinations found</p>
+                  <p className="text-xs text-muted-foreground mt-1">{countryFilter ? "Try a different search" : "Contact support to enable destinations"}</p>
                 </motion.div>
               )}
+            </motion.div>
+          )}
+
+          {/* ═══ Step 2: Choose Corridor (if multiple) ══ */}
+          {step === "corridor" && (
+            <motion.div key="corridor" {...stepTransition} className="space-y-4">
+              {/* Selected country header */}
+              <div className="flex items-center gap-3 rounded-2xl border border-primary/15 p-4"
+                style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.02))" }}
+              >
+                <span className="text-3xl">{getFlag(selectedCountry)}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground">{getCountryName(selectedCountry)}</p>
+                  <p className="text-[11px] text-muted-foreground">{countryCorridors.length} available {countryCorridors.length === 1 ? "route" : "routes"}</p>
+                </div>
+                <button onClick={() => setStep("country")} className="text-xs text-primary font-bold">Change</button>
+              </div>
+
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                Select a transfer route
+              </p>
+
+              <div className="space-y-2.5">
+                {countryCorridors.map((c: any, i: number) => {
+                  const methods: string[] = c.delivery_methods || [];
+                  return (
+                    <motion.div key={c.id} custom={i} variants={cardVariants} initial="hidden" animate="visible">
+                      <Card
+                        className="cursor-pointer border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 active:scale-[0.98]"
+                        onClick={() => selectCorridor(c)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex items-center shrink-0">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-lg">
+                                  {getFlag(c.from_country)}
+                                </div>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground mx-1.5 shrink-0" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/60 text-lg">
+                                  {getFlag(c.to_country)}
+                                </div>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-foreground truncate">
+                                  {c.from_currency} → {c.to_currency}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground truncate">
+                                  via {c.remittance_partners?.display_name || c.remittance_partners?.name || "Partner"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 shrink-0 ml-2">
+                              <ArrowRight className="h-4 w-4 text-primary" />
+                            </div>
+                          </div>
+                          {methods.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {methods.map((m) => {
+                                const meta = getDeliveryMeta(m);
+                                const MIcon = meta.icon;
+                                return (
+                                  <span key={m} className="inline-flex items-center gap-1 text-[10px] font-medium rounded-lg px-2 py-1"
+                                    style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                                  >
+                                    <MIcon className="h-2.5 w-2.5" />
+                                    {meta.label}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ═══ Step 3: Choose Delivery Method ═════════ */}
+          {step === "delivery" && selectedCorridor && (
+            <motion.div key="delivery" {...stepTransition} className="space-y-4">
+              {/* Route summary */}
+              <div className="flex items-center gap-3 rounded-2xl border border-primary/15 p-4"
+                style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.02))" }}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl">{getFlag(selectedCorridor.from_country)}</span>
+                  <ArrowRight className="h-3 w-3 text-primary" />
+                  <span className="text-2xl">{getFlag(selectedCorridor.to_country)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {getCountryName(selectedCorridor.from_country)} → {getCountryName(selectedCorridor.to_country)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">{selectedCorridor.from_currency} → {selectedCorridor.to_currency}</p>
+                </div>
+              </div>
+
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                How should they receive it?
+              </p>
+
+              <div className="space-y-3">
+                {availableDeliveryMethods.map((m, i) => {
+                  const meta = getDeliveryMeta(m);
+                  const MIcon = meta.icon;
+                  const selected = deliveryMethod === m;
+                  return (
+                    <motion.button
+                      key={m}
+                      custom={i}
+                      variants={cardVariants}
+                      initial="hidden"
+                      animate="visible"
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setDeliveryMethod(m)}
+                      className={`w-full flex items-center gap-4 rounded-2xl border-2 p-4 transition-all duration-200 text-left ${
+                        selected
+                          ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                          : "border-border/50 bg-card hover:border-primary/30"
+                      }`}
+                    >
+                      <div
+                        className="flex h-12 w-12 items-center justify-center rounded-xl shrink-0 transition-colors"
+                        style={{ backgroundColor: selected ? `${meta.color}20` : `${meta.color}10` }}
+                      >
+                        <MIcon className="h-6 w-6" style={{ color: meta.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {m === "bank_transfer" && "Direct to bank account"}
+                          {(m === "mobile_wallet" || m === "mobile_money") && "To mobile money wallet"}
+                          {m === "paypal" && "To PayPal account"}
+                          {m === "card" && "To debit/credit card"}
+                        </p>
+                      </div>
+                      {selected && (
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-primary shrink-0"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Button
+                  className="w-full h-13 rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+                  disabled={!deliveryMethod}
+                  onClick={selectDeliveryAndContinue}
+                >
+                  Continue <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </motion.div>
             </motion.div>
           )}
 
