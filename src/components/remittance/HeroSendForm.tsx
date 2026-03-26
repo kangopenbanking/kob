@@ -370,10 +370,10 @@ export function HeroSendForm() {
   }, [numAmt, fee, srcRate.rate, srcRate.code, destCur, currencies]);
 
   const rateLabel = useMemo(() => {
-    if (destCur === "XAF") return `1 ${src.code} = ${src.rate.toLocaleString()} XAF`;
+    if (destCur === "XAF") return `1 ${srcRate.code} = ${srcRate.rate.toLocaleString()} XAF`;
     const de = currencies.find((c) => c.code === destCur);
-    if (de && de.rate > 0) return `1 ${src.code} = ${(src.rate / de.rate).toFixed(4)} ${destCur}`;
-    return `1 ${src.code} = ${src.rate.toLocaleString()} XAF`;
+    if (de && de.rate > 0) return `1 ${srcRate.code} = ${(srcRate.rate / de.rate).toFixed(4)} ${destCur}`;
+    return `1 ${srcRate.code} = ${srcRate.rate.toLocaleString()} XAF`;
   }, [src, destCur, currencies]);
 
   const methods = useMemo(() => {
@@ -472,22 +472,22 @@ export function HeroSendForm() {
   // ── Actions ──
   const getQuote = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate(`/app/send-money?amount=${amount}&currency=${src.code}&dest=${method}`); return; }
+    if (!session) { navigate(`/app/send-money?amount=${amount}&currency=${srcRate.code}&dest=${method}`); return; }
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
         body: {
-          action: "get_quote", amount: numAmt, source_currency: src.code,
+          action: "get_quote", amount: numAmt, source_currency: srcRate.code,
           destination_currency: destCur, delivery_method: METHOD_MAP[method] || method,
           destination_country: dest.countryCode,
         },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      setQuote(data?.quote || { fee, rate: src.rate, receive_amount: converted, delivery_estimate: estDelivery });
+      setQuote(data?.quote || { fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery });
       setStep("review");
     } catch {
-      setQuote({ fee, rate: src.rate, receive_amount: converted, delivery_estimate: estDelivery, source: "estimate" });
+      setQuote({ fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery, source: "estimate" });
       setStep("review");
     } finally { setBusy(false); }
   };
@@ -504,7 +504,7 @@ export function HeroSendForm() {
       else { rd.purpose = billPurpose; rd.reference = billRef; }
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
         body: {
-          action: "send", amount: numAmt, source_currency: src.code,
+          action: "send", amount: numAmt, source_currency: srcRate.code,
           destination_currency: destCur, delivery_method: METHOD_MAP[method] || method,
           destination_country: dest.countryCode, recipient: rd,
         },
@@ -561,7 +561,7 @@ export function HeroSendForm() {
         </motion.div>
         <h3 className="text-2xl font-bold text-foreground mb-1">Transfer Initiated! 🎉</h3>
         <p className="text-muted-foreground text-sm mb-6">
-          <span className="font-bold text-foreground">{numAmt.toLocaleString()} {src.code}</span> is on its way
+          <span className="font-bold text-foreground">{numAmt.toLocaleString()} {srcRate.code}</span> is on its way
         </p>
         <div className="bg-muted/30 rounded-2xl p-5 mb-6 text-left space-y-3">
           {[
@@ -619,11 +619,11 @@ export function HeroSendForm() {
         <div className="rounded-2xl bg-muted/20 border border-border/30 p-5 space-y-3 mb-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">You send</span>
-            <span className="font-bold text-foreground">{numAmt.toLocaleString()} {src.code}</span>
+            <span className="font-bold text-foreground">{numAmt.toLocaleString()} {srcRate.code}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Fee ({src.fee_pct}%)</span>
-            <span className="font-semibold text-foreground">{(quote.fee || fee).toFixed(2)} {src.code}</span>
+            <span className="text-muted-foreground">Fee ({srcRate.fee_pct}%)</span>
+            <span className="font-semibold text-foreground">{(quote.fee || fee).toFixed(2)} {srcRate.code}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Rate</span>
@@ -760,7 +760,7 @@ export function HeroSendForm() {
               {/* Fee tag */}
               <div className="flex items-center gap-2 mt-2.5 text-xs text-muted-foreground">
                 <Banknote className="h-3 w-3" />
-                <span>Fee: <strong className="text-foreground">{fee.toFixed(2)} {src.code}</strong> ({src.fee_pct}%)</span>
+                <span>Fee: <strong className="text-foreground">{fee.toFixed(2)} {srcRate.code}</strong> ({srcRate.fee_pct}%)</span>
               </div>
             </div>
 
@@ -810,8 +810,8 @@ export function HeroSendForm() {
             {/* Transfer summary chip */}
             <div className="flex items-center justify-between bg-primary/5 rounded-2xl px-4 py-3 mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{src.flag}</span>
-                <span className="font-bold text-sm text-foreground">{numAmt.toLocaleString()} {src.code}</span>
+                <span className="text-lg">{srcRate.flag}</span>
+                <span className="font-bold text-sm text-foreground">{numAmt.toLocaleString()} {srcRate.code}</span>
               </div>
               <ArrowRight className="h-4 w-4 text-primary" />
               <div className="flex items-center gap-2">
