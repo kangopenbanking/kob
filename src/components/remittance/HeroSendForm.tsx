@@ -810,7 +810,7 @@ export function HeroSendForm() {
             {/* Transfer summary chip */}
             <div className="flex items-center justify-between bg-primary/5 rounded-2xl px-4 py-3 mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{srcRate.flag}</span>
+                <span className="text-lg">{srcCountry?.flag || "🌍"}</span>
                 <span className="font-bold text-sm text-foreground">{numAmt.toLocaleString()} {srcRate.code}</span>
               </div>
               <ArrowRight className="h-4 w-4 text-primary" />
