@@ -409,7 +409,13 @@ export default function Auth() {
     if (firebaseOtpCode.length !== 6) return;
     const ok = await firebasePhone.verifyOTP(firebaseOtpCode);
     if (ok) {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Retry session retrieval to handle propagation delay
+      let session = null;
+      for (let i = 0; i < 3; i++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) { session = data.session; break; }
+        await new Promise(r => setTimeout(r, 500));
+      }
       if (session) await enforceSingleSession(session.access_token);
       // Check if user needs PIN setup
       if (session) {
