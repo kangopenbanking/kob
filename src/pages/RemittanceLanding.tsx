@@ -1,40 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useMemo, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useSupportedCountries } from "@/hooks/useSupportedCountries";
 import {
-  ArrowRight,
-  Shield,
-  Zap,
-  Globe,
-  Building2,
-  Smartphone,
-  Users,
-  CheckCircle2,
-  Clock,
-  Banknote,
-  TrendingUp,
-  Lock,
-  HeartHandshake,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Landmark,
-  Receipt,
-  ChevronDown,
-  Star,
-  Repeat,
-  Send,
-  Loader2,
-  CheckCircle,
-  ArrowLeft,
+  ArrowRight, Shield, Zap, Globe, Building2, Smartphone, Users,
+  TrendingUp, Lock, HeartHandshake, ArrowDownLeft, ArrowUpRight,
+  Landmark, Receipt, Star, Repeat,
 } from "lucide-react";
 
 import { HeroSendForm } from "@/components/remittance/HeroSendForm";
