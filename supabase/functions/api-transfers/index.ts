@@ -196,11 +196,11 @@ serve(async (req) => {
     // Tier 3c: Try by name lookup via profiles or accounts table
     if (!destAccount && identifier_type === 'NAME') {
       const searchName = destination_account_id.trim();
-      // Try account_holder_name on accounts table (case-insensitive)
+      // Try account_holder_name on accounts table (case-insensitive, partial match)
       const { data: nameAccounts } = await supabase
         .from('accounts')
         .select('id, account_holder_name, user_id, institution_id, identification_scheme')
-        .ilike('account_holder_name', searchName)
+        .ilike('account_holder_name', `%${searchName}%`)
         .eq('is_active', true)
         .neq('user_id', user.id)
         .limit(1)
@@ -209,11 +209,11 @@ serve(async (req) => {
       if (nameAccounts) {
         destAccount = nameAccounts;
       } else {
-        // Try profiles.full_name
+        // Try profiles.full_name (partial match)
         const { data: nameProfiles } = await supabase
           .from('profiles')
           .select('id')
-          .ilike('full_name', searchName)
+          .ilike('full_name', `%${searchName}%`)
           .neq('id', user.id)
           .limit(1)
           .maybeSingle();
