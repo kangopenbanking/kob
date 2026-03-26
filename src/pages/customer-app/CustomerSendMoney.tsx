@@ -90,7 +90,8 @@ const stepTransition = {
 export default function CustomerSendMoney() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("send");
-  const [step, setStep] = useState<Step>("corridors");
+  const [step, setStep] = useState<Step>("country");
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedCorridor, setSelectedCorridor] = useState<any>(null);
   const [amount, setAmount] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
@@ -177,51 +178,92 @@ export default function CustomerSendMoney() {
     onSuccess: (data) => setTrackingDialog(data),
   });
 
-  /* ── Filtered corridors ─────────────────────────── */
-  const filteredCorridors = corridors?.filter((c: any) => {
-    if (!countryFilter) return true;
-    const haystack = [
-      c.to_country_name, getCountryName(c.to_country), c.to_country, c.to_currency,
-      c.remittance_partners?.display_name, c.remittance_partners?.name,
-    ].filter(Boolean).join(" ").toLowerCase();
-    return haystack.includes(countryFilter.toLowerCase());
-  }) || [];
-
-  /* ── Grouped corridors by destination country ───── */
-  const groupedCorridors = useMemo(() => {
-    const map = new Map<string, any[]>();
-    filteredCorridors.forEach((c: any) => {
+  /* ── Unique destination countries ───────────────── */
+  const destinationCountries = useMemo(() => {
+    if (!corridors) return [];
+    const map = new Map<string, { code: string; name: string; flag: string; currencies: string[]; corridorCount: number }>();
+    (corridors as any[]).forEach((c: any) => {
       const key = c.to_country;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(c);
+      if (!map.has(key)) {
+        map.set(key, { code: key, name: getCountryName(key, c.to_country_name), flag: getFlag(key), currencies: [], corridorCount: 0 });
+      }
+      const entry = map.get(key)!;
+      entry.corridorCount++;
+      if (!entry.currencies.includes(c.to_currency)) entry.currencies.push(c.to_currency);
     });
-    return Array.from(map.entries());
-  }, [filteredCorridors]);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [corridors]);
+
+  /* ── Filtered countries ─────────────────────────── */
+  const filteredCountries = useMemo(() => {
+    if (!countryFilter) return destinationCountries;
+    const q = countryFilter.toLowerCase();
+    return destinationCountries.filter((c) =>
+      c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.currencies.some((cur) => cur.toLowerCase().includes(q))
+    );
+  }, [destinationCountries, countryFilter]);
+
+  /* ── Corridors for selected country ─────────────── */
+  const countryCorridors = useMemo(() => {
+    if (!selectedCountry || !corridors) return [];
+    return (corridors as any[]).filter((c: any) => c.to_country === selectedCountry);
+  }, [corridors, selectedCountry]);
 
   const resetForm = () => {
-    setStep("corridors"); setSelectedCorridor(null); setAmount(""); setDeliveryMethod("");
+    setStep("country"); setSelectedCountry(""); setSelectedCorridor(null); setAmount(""); setDeliveryMethod("");
     setReceiverName(""); setReceiverPhone(""); setReceiverEmail(""); setReceiverBankName("");
     setReceiverBankCode(""); setReceiverAccountNumber(""); setReceiverMobileWallet("");
-    setQuote(null); setResult(null); setNarration("");
+    setQuote(null); setResult(null); setNarration(""); setCountryFilter("");
   };
 
   const goBack = () => {
-    if (step === "corridors") navigate(-1);
-    else if (step === "form") setStep("corridors");
+    if (step === "country") navigate(-1);
+    else if (step === "corridor") setStep("country");
+    else if (step === "delivery") setStep("corridor");
+    else if (step === "form") setStep("delivery");
     else if (step === "quote") setStep("form");
     else if (step === "confirm") setStep("quote");
-    else setStep("corridors");
+    else setStep("country");
+  };
+
+  const selectCountry = (code: string) => {
+    setSelectedCountry(code);
+    setCountryFilter("");
+    // If only one corridor for this country, auto-select it
+    const matching = (corridors as any[] || []).filter((c: any) => c.to_country === code);
+    if (matching.length === 1) {
+      setSelectedCorridor(matching[0]);
+      const methods: string[] = matching[0].delivery_methods || [];
+      setDeliveryMethod(methods[0] || "bank_transfer");
+      // If only one delivery method, skip delivery step
+      if (methods.length <= 1) {
+        setStep("form");
+      } else {
+        setStep("delivery");
+      }
+    } else {
+      setStep("corridor");
+    }
   };
 
   const selectCorridor = (c: any) => {
     setSelectedCorridor(c);
     const methods: string[] = c.delivery_methods || [];
     setDeliveryMethod(methods[0] || "bank_transfer");
+    if (methods.length <= 1) {
+      setStep("form");
+    } else {
+      setStep("delivery");
+    }
+  };
+
+  const selectDeliveryAndContinue = () => {
     setStep("form");
   };
 
-  const stepIndex = ["corridors", "form", "quote", "confirm", "success"].indexOf(step);
-  const stepLabels = ["Destination", "Details", "Quote", "Confirm", "Done"];
+  const ALL_STEPS: Step[] = ["country", "corridor", "delivery", "form", "quote", "confirm", "success"];
+  const stepIndex = ALL_STEPS.indexOf(step);
+  const stepLabels = ["Country", "Route", "Method", "Details", "Quote", "Confirm"];
 
   return (
     <div className="max-w-lg mx-auto pb-24 px-4">
