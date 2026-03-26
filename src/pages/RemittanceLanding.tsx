@@ -65,13 +65,13 @@ const defaultCurrencies = [
   { code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", rate: 0.39, fee_pct: 0.3 },
 ];
 
-const corridors = [
-  { from: "🇫🇷 France", to: "🇨🇲 Cameroon", rate: "1 EUR = 655.957 XAF", fee: "0.5%", time: "Instant" },
-  { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", rate: "1 USD = 605.22 XAF", fee: "0.8%", time: "< 30 sec" },
-  { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", rate: "1 GBP = 765.43 XAF", fee: "0.6%", time: "< 1 min" },
-  { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", rate: "1 CAD = 445.18 XAF", fee: "0.7%", time: "< 30 sec" },
-  { from: "🇩🇪 Germany", to: "🇨🇲 Cameroon", rate: "1 EUR = 655.957 XAF", fee: "0.5%", time: "Instant" },
-  { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", rate: "1 NGN = 0.39 XAF", fee: "0.3%", time: "Instant" },
+const defaultCorridors = [
+  { from: "🇫🇷 France", to: "🇨🇲 Cameroon", code: "EUR", rate: 655.957, fee: 0.5, time: "Instant" },
+  { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", code: "USD", rate: 605.22, fee: 0.8, time: "< 30 sec" },
+  { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", code: "GBP", rate: 765.43, fee: 0.6, time: "< 1 min" },
+  { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", code: "CAD", rate: 445.18, fee: 0.7, time: "< 30 sec" },
+  { from: "🇩🇪 Germany", to: "🇨🇲 Cameroon", code: "EUR", rate: 655.957, fee: 0.5, time: "Instant" },
+  { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", code: "NGN", rate: 0.39, fee: 0.3, time: "Instant" },
 ];
 
 const destinations = [
@@ -631,7 +631,7 @@ function SendForm() {
               <motion.button key={opt.key} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => { setDeliveryMethod(opt.key); if (stage === "details") setStage("calculate"); }}
                 className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 text-xs font-semibold border-2 transition-all duration-200 ${
-                  active ? "border-primary bg-primary/8 text-primary shadow-sm shadow-primary/10" : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                  active ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10" : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                 }`}>
                 <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
                 {opt.label}
@@ -799,6 +799,43 @@ function FlagRow() {
 }
 
 export default function RemittanceLanding() {
+  const adminCurrencies = useAdminRates();
+
+  // Build live corridor cards from admin rates
+  const corridors = useMemo(() => {
+    const corridorMap: Record<string, { from: string; to: string; code: string; time: string }> = {
+      EUR: { from: "🇫🇷 France", to: "🇨🇲 Cameroon", code: "EUR", time: "Instant" },
+      USD: { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", code: "USD", time: "< 30 sec" },
+      GBP: { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", code: "GBP", time: "< 1 min" },
+      CAD: { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", code: "CAD", time: "< 30 sec" },
+      NGN: { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", code: "NGN", time: "Instant" },
+    };
+    // Also add Germany as EUR duplicate
+    const result = adminCurrencies
+      .filter((c) => corridorMap[c.code])
+      .map((c) => ({
+        from: corridorMap[c.code].from,
+        to: corridorMap[c.code].to,
+        rate: `1 ${c.code} = ${c.rate.toLocaleString()} XAF`,
+        fee: `${c.fee_pct}%`,
+        time: corridorMap[c.code].time,
+      }));
+    // Add Germany corridor (same EUR rate)
+    const eurRate = adminCurrencies.find((c) => c.code === "EUR");
+    if (eurRate && !result.find((r) => r.from.includes("Germany"))) {
+      result.push({
+        from: "🇩🇪 Germany", to: "🇨🇲 Cameroon",
+        rate: `1 EUR = ${eurRate.rate.toLocaleString()} XAF`,
+        fee: `${eurRate.fee_pct}%`, time: "Instant",
+      });
+    }
+    return result.length > 0 ? result : defaultCorridors.map((c) => ({
+      from: c.from, to: c.to,
+      rate: `1 ${c.code} = ${c.rate.toLocaleString()} XAF`,
+      fee: `${c.fee}%`, time: c.time,
+    }));
+  }, [adminCurrencies]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ══════════ HERO ══════════ */}
