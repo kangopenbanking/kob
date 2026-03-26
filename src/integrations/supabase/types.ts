@@ -15682,6 +15682,53 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_payment_executions: {
+        Row: {
+          amount: number
+          created_at: string
+          error_message: string | null
+          executed_at: string
+          id: string
+          payment_ref: string | null
+          payment_type: string | null
+          recurring_payment_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          payment_ref?: string | null
+          payment_type?: string | null
+          recurring_payment_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          payment_ref?: string | null
+          payment_type?: string | null
+          recurring_payment_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_payment_executions_recurring_payment_id_fkey"
+            columns: ["recurring_payment_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_payments: {
         Row: {
           amount: number
