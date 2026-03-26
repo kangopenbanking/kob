@@ -1,64 +1,46 @@
 
 
-# Plan: Professional Remittance Partners & Corridors — International-Grade Admin UI + Auto-Seeding
+# Plan: Add PayPal as a Remittance Partner with Automated Corridors
 
-## What You're Seeing Now
+## What We'll Do
 
-The `remittance_partners` and `remittance_corridors` tables exist but are **empty**. The admin page works (create/edit dialogs are functional) but the UI is basic and there's no automation for seeding standard international corridors.
+### 1. Seed PayPal as a Remittance Partner (Database Insert)
 
-## What We'll Build
+Insert a new partner into `remittance_partners`:
 
-### 1. Auto-Seed Default Partners & Corridors (Database Insert)
+| Field | Value |
+|---|---|
+| name | `paypal` |
+| display_name | PayPal |
+| status | `active` |
+| api_config | `{"adapter": "gateway-create-paypal-payout", "payout_method": "paypal_email"}` |
 
-Populate the database with production-ready default partners and corridors matching international remittance standards:
+### 2. Seed PayPal Corridors (Database Insert)
 
-**Partners** (5):
-| Name | Display Name | Type |
-|---|---|---|
-| `thunes` | Thunes | Cross-border aggregator |
-| `terrapay` | TerraPay | Mobile wallet network |
-| `onafriq` | Onafriq (MFS Africa) | Pan-African mobile money |
-| `kob_internal` | KOB Internal | Internal wallet-to-wallet |
-| `flutterwave` | Flutterwave | Card/bank collections |
+Insert corridors into `remittance_corridors` linked to the PayPal partner:
 
-**Corridors** (12+ routes, Cameroon-first):
-- FR→CM, GB→CM, US→CM, DE→CM, CA→CM (diaspora inbound)
-- CM→CM (domestic wallet-to-wallet)
-- NG→CM, GH→CM, KE→CM (Pan-African)
-- CM→NG, CM→SN, CM→CI (outbound)
+| Route | FX Rate | Fee | Delivery | Methods |
+|---|---|---|---|---|
+| US → CM | 605.50 USD/XAF | 2.5% + $4.99 | ~30 min | `paypal_email` |
+| FR → CM | 655.957 EUR/XAF | 2.0% + €3.99 | ~30 min | `paypal_email` |
+| GB → CM | 765.50 GBP/XAF | 2.0% + £3.49 | ~30 min | `paypal_email` |
+| DE → CM | 655.957 EUR/XAF | 2.0% + €3.99 | ~30 min | `paypal_email` |
+| CA → CM | 445.20 CAD/XAF | 2.5% + C$4.99 | ~45 min | `paypal_email` |
 
-Each corridor includes realistic fee models (percentage + fixed), min/max amounts, delivery estimates, and KYC levels matching Wise/WorldRemit standards.
+### 3. Update UI Constants (2 files)
 
-### 2. Redesign Admin Page — International-Grade UI
+**`src/pages/admin/RemittancePartners.tsx`**: Add `paypal: "bg-[#0070BA]"` to `PARTNER_COLORS`.
 
-Transform `RemittancePartners.tsx` into a professional dashboard matching Wise/Flutterwave admin panels:
+**`src/components/admin/remittance/CorridorQuickSetup.tsx`**: Add `paypal` entry to `PARTNER_CORRIDOR_TEMPLATES` so PayPal corridors appear in the Quick Setup wizard.
 
-- **Stats bar**: Total partners, active corridors, coverage countries, avg delivery time
-- **Partner cards**: Enhanced with logo placeholders, connection status indicator (green/amber/red), corridor count badge, last health check timestamp, and quick-action buttons (test connection, view corridors, toggle status)
-- **Corridor table**: Enhanced with country flag emojis, delivery time in human-readable format ("~15 min", "1-2 hrs"), fee breakdown display, volume indicators, and inline toggle for active/inactive
-- **Bulk actions**: "Seed Default Corridors" button for one-click setup
-- **Partner detail drawer**: Shows API config, health history, linked corridors, and transaction volume
-- **Corridor creation**: Smart defaults based on selected partner, country picker with flags instead of raw ISO codes, fee calculator preview showing "Customer sends €100 → Recipient gets 63,250 XAF"
+### 4. Navigate and Verify
 
-### 3. Corridor Auto-Configuration Logic
+Browse to `/admin/remittance-partners` to confirm PayPal appears as a partner card with its corridors in the table.
 
-Add a "Quick Setup" flow in the admin UI:
-- Select partner → auto-suggests supported corridors based on partner type
-- Pre-fills fee models, delivery times, and limits based on industry standards
-- Bulk-create corridors with one click
-- Toggle "Auto-sync FX rates" flag (stored in corridor metadata for future cron integration)
+## Technical Detail
 
-### Technical Details
-
-**Files Modified (2):**
-- `src/pages/admin/RemittancePartners.tsx` — Complete UI redesign (additive enhancement, same file)
-
-**Files Created (1):**
-- `src/components/admin/remittance/CorridorQuickSetup.tsx` — Quick setup wizard component
-
-**Database (Data insert only, no schema changes):**
-- INSERT 5 partners into `remittance_partners`
-- INSERT 12+ corridors into `remittance_corridors`
-
-**No schema changes. No existing files deleted. No routes changed.**
+- **No schema changes** — uses existing `remittance_partners` and `remittance_corridors` tables
+- **No existing data modified** — additive inserts only
+- **Wiring**: The `api_config` metadata on the partner references `gateway-create-paypal-payout`, which already handles PayPal batch payouts via email/phone/ID
+- **Files modified (2)**: `RemittancePartners.tsx` (1 line), `CorridorQuickSetup.tsx` (~8 lines)
 
