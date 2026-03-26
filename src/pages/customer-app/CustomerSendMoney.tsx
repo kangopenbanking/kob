@@ -66,10 +66,12 @@ export default function CustomerSendMoney() {
   const [trackingDialog, setTrackingDialog] = useState<any>(null);
   const [countryFilter, setCountryFilter] = useState("");
 
-  const { data: corridors, isLoading: loadingCorridors } = useQuery({
+  const { data: corridors, isLoading: loadingCorridors, error: corridorsError } = useQuery({
     queryKey: ["outbound-corridors"],
     queryFn: async () => {
       const res = await supabase.functions.invoke("remittance-outbound", { body: { action: "get_corridors" } });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
       return res.data?.corridors || [];
     },
   });
@@ -123,7 +125,21 @@ export default function CustomerSendMoney() {
     onSuccess: (data) => setTrackingDialog(data),
   });
 
-  const filteredCorridors = corridors?.filter((c: any) => !countryFilter || c.to_country?.toLowerCase().includes(countryFilter.toLowerCase())) || [];
+  const filteredCorridors = corridors?.filter((c: any) => {
+    if (!countryFilter) return true;
+    const haystack = [
+      c.to_country_name,
+      c.to_country,
+      c.to_currency,
+      c.remittance_partners?.display_name,
+      c.remittance_partners?.name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(countryFilter.toLowerCase());
+  }) || [];
 
   const resetForm = () => {
     setStep("corridors"); setSelectedCorridor(null); setAmount(""); setReceiverName("");
@@ -252,6 +268,14 @@ export default function CustomerSendMoney() {
 
               {loadingCorridors ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              ) : corridorsError ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-destructive/10">
+                    <AlertTriangle className="h-8 w-8 text-destructive/70" />
+                  </div>
+                  <p className="font-semibold text-foreground">Unable to load corridors</p>
+                  <p className="text-xs text-muted-foreground mt-1">Please try again in a moment.</p>
+                </motion.div>
               ) : filteredCorridors.length > 0 ? (
                 <div className="space-y-2">
                   {filteredCorridors.map((c: any, i: number) => (
@@ -273,7 +297,7 @@ export default function CustomerSendMoney() {
                             </div>
                             <div>
                               <p className="text-sm font-bold text-foreground">{c.from_country} → {c.to_country}</p>
-                              <p className="text-[11px] text-muted-foreground">{c.from_currency} → {c.to_currency} · {c.remittance_partners?.name || "Partner"}</p>
+                              <p className="text-[11px] text-muted-foreground">{c.from_currency} → {c.to_currency} · {c.remittance_partners?.display_name || c.remittance_partners?.name || "Partner"}</p>
                             </div>
                           </div>
                           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/5">

@@ -64,7 +64,7 @@ async function getCorridors(supabase: any, body: any) {
   let query = supabase
     .from("remittance_corridors")
     .select("*, remittance_partners(name, status), remittance_corridor_limits(*)")
-    .eq("status", "active")
+    .eq("is_active", true)
     .eq("from_country", "CM")
     .in("direction", ["outbound", "bidirectional"]);
 
@@ -72,7 +72,9 @@ async function getCorridors(supabase: any, body: any) {
 
   const { data, error } = await query;
   if (error) return json({ error: error.message }, 500);
-  return json({ corridors: data });
+
+  const corridors = (data || []).filter((corridor: any) => corridor.remittance_partners?.status === "active");
+  return json({ corridors });
 }
 
 // ─── Get a quote for outbound transfer ───────────────────────
