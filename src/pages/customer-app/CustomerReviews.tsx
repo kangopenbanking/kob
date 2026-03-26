@@ -79,6 +79,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
 }
 
 export function CustomerReviews() {
+  const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [showReviewForm, setShowReviewForm] = useState<string | null>(null);
 
