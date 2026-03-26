@@ -220,7 +220,13 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     }
     const success = await firebasePhone.verifyOTP(otpCode);
     if (success) {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Retry session retrieval to handle propagation delay
+      let session = null;
+      for (let i = 0; i < 3; i++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) { session = data.session; break; }
+        await new Promise(r => setTimeout(r, 500));
+      }
       if (session) await enforceSingleSession(session.access_token);
       // Check if user has a PIN set — if not, require setup
       const { data: profile } = await supabase

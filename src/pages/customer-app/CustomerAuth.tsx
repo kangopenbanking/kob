@@ -76,20 +76,37 @@ const CustomerAuth: React.FC = () => {
   }, [pin, mode]);
 
   const navigateAfterAuth = async (userId?: string) => {
-    const id = userId || (await supabase.auth.getUser()).data.user?.id;
+    // Retry getUser up to 3 times to handle session propagation delay
+    let id = userId;
+    if (!id) {
+      for (let i = 0; i < 3; i++) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) { id = user.id; break; }
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
     if (!id) { navigate('/app/register', { replace: true }); return; }
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('linked_account_type')
+      .select('linked_account_type, pin_code_hash')
       .eq('id', id)
       .maybeSingle();
+
+    if (!profile) { navigate('/app/register', { replace: true }); return; }
+
+    // Check if user needs PIN setup
+    if (!(profile as any)?.pin_code_hash) {
+      setMode('setup-pin');
+      return;
+    }
+
     const lat = (profile as any)?.linked_account_type;
     if (lat && lat !== 'none') {
       navigate('/app/home', { replace: true });
-    } else if (lat === 'none') {
-      navigate('/app/onboarding', { replace: true });
     } else {
-      navigate('/app/register', { replace: true });
+      // null or 'none' — user needs onboarding
+      navigate('/app/onboarding', { replace: true });
     }
   };
 
@@ -186,11 +203,9 @@ const CustomerAuth: React.FC = () => {
     const success = await verifyOTP(code);
     if (success) {
       toast.success('Verified!');
-      if (intent === 'signup') {
-        setMode('setup-pin');
-      } else {
-        await navigateAfterAuth();
-      }
+      // Both signup and signin flow through navigateAfterAuth
+      // which handles PIN check and linked_account_type routing
+      await navigateAfterAuth();
     }
   };
 
