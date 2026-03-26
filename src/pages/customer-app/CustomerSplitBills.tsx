@@ -147,6 +147,25 @@ const CustomerSplitBills: React.FC = () => {
       const { error: partError } = await supabase.from('split_bill_participants').insert(participantRows);
       if (partError) throw partError;
 
+      // Notify participants via in-app notifications
+      for (let i = 1; i < participants.length; i++) {
+        const p = participants[i];
+        if (!p.phone) continue;
+        // Look up user by phone number
+        const { data: matchedProfile } = await supabase.rpc('search_profiles_by_name', { _query: p.phone, _limit: 1 });
+        const recipientId = matchedProfile?.[0]?.id;
+        if (recipientId) {
+          await supabase.from('app_notifications').insert({
+            user_id: recipientId,
+            type: 'info',
+            title: 'Split Bill Request',
+            message: `${participants[0].name} is requesting ${shares[i].toLocaleString()} XAF for "${title.trim()}"`,
+            icon: 'payment',
+            metadata: { split_bill_id: bill.id, amount: shares[i] },
+          }).catch(() => {}); // Non-blocking
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
       setShowCreate(false);
       resetForm();
