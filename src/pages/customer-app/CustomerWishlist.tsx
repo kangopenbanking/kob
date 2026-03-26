@@ -4,7 +4,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Heart, Store, Package, Trash2, ShoppingCart } from 'lucide-react';
+import { Heart, Store, Package, Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,9 +121,12 @@ export function CustomerWishlist() {
   return (
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">My Wishlist</h1>
-          <p className="text-muted-foreground">Saved stores and products</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
+          <div>
+            <h1 className="text-2xl font-bold">My Wishlist</h1>
+            <p className="text-muted-foreground">Saved stores and products</p>
+          </div>
         </div>
 
         <Tabs defaultValue="products" className="w-full">

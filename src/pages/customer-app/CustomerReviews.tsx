@@ -5,7 +5,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, ThumbsUp, MessageCircle } from 'lucide-react';
+import { Star, ThumbsUp, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -172,9 +172,12 @@ export function CustomerReviews() {
   return (
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Reviews & Ratings</h1>
-          <p className="text-muted-foreground">Share your shopping experiences</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
+          <div>
+            <h1 className="text-2xl font-bold">Reviews & Ratings</h1>
+            <p className="text-muted-foreground">Share your shopping experiences</p>
+          </div>
         </div>
 
         {pendingReviews && pendingReviews.length > 0 && (

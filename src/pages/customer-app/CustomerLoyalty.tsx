@@ -4,7 +4,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Gift, TrendingUp, Award, Star, ArrowRight, Sparkles } from 'lucide-react';
+import { Gift, TrendingUp, Award, Star, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -80,9 +80,12 @@ export function CustomerLoyalty() {
   return (
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Loyalty Rewards</h1>
-          <p className="text-muted-foreground">Earn points on every purchase</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
+          <div>
+            <h1 className="text-2xl font-bold">Loyalty Rewards</h1>
+            <p className="text-muted-foreground">Earn points on every purchase</p>
+          </div>
         </div>
 
         {/* Points Balance */}
