@@ -5,7 +5,7 @@ import { SearchFilter } from '@/components/SearchFilter';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, MapPin, Store, Heart, Share2, Package } from 'lucide-react';
+import { Star, MapPin, Store, Heart, Share2, Package, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { SocialShare } from '@/components/customer-app/SocialShare';
@@ -76,9 +76,12 @@ export function CustomerMarketplace() {
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Discover Stores</h1>
-          <p className="text-muted-foreground">Browse local merchants and shops</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
+          <div>
+            <h1 className="text-2xl font-bold">Discover Stores</h1>
+            <p className="text-muted-foreground">Browse local merchants and shops</p>
+          </div>
         </div>
 
         {/* Search & Filters */}
