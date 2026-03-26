@@ -425,6 +425,7 @@ const BankCards = lazy(() => import("./pages/banking-app/BankCards"));
 const BankHistory = lazy(() => import("./pages/banking-app/BankHistory"));
 const BankMore = lazy(() => import("./pages/banking-app/BankMore"));
 const BankSendMoney = lazy(() => import("./pages/banking-app/BankSendMoney"));
+const BankSendAbroad = lazy(() => import("./pages/banking-app/BankSendAbroad"));
 const BankFundAccount = lazy(() => import("./pages/banking-app/BankFundAccount"));
 const BankQRPay = lazy(() => import("./pages/banking-app/BankQRPay"));
 const BankMobileMoney = lazy(() => import("./pages/banking-app/BankMobileMoney"));
@@ -1057,6 +1058,7 @@ function App() {
               <Route path="home" element={<BankHome />} />
               <Route path="payments" element={<BankPayments />} />
               <Route path="payments/send" element={<BankSendMoney />} />
+              <Route path="payments/send-abroad" element={<BankSendAbroad />} />
               <Route path="payments/qr" element={<FeatureGate featureKey="qr_payments"><BankQRPay /></FeatureGate>} />
               <Route path="payments/mobile-money" element={<FeatureGate featureKey="mobile_money"><BankMobileMoney /></FeatureGate>} />
               <Route path="payments/bills" element={<FeatureGate featureKey="bill_payments"><BankBills /></FeatureGate>} />
