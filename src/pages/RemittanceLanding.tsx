@@ -799,6 +799,43 @@ function FlagRow() {
 }
 
 export default function RemittanceLanding() {
+  const adminCurrencies = useAdminRates();
+
+  // Build live corridor cards from admin rates
+  const corridors = useMemo(() => {
+    const corridorMap: Record<string, { from: string; to: string; code: string; time: string }> = {
+      EUR: { from: "🇫🇷 France", to: "🇨🇲 Cameroon", code: "EUR", time: "Instant" },
+      USD: { from: "🇺🇸 USA", to: "🇨🇲 Cameroon", code: "USD", time: "< 30 sec" },
+      GBP: { from: "🇬🇧 UK", to: "🇨🇲 Cameroon", code: "GBP", time: "< 1 min" },
+      CAD: { from: "🇨🇦 Canada", to: "🇨🇲 Cameroon", code: "CAD", time: "< 30 sec" },
+      NGN: { from: "🇳🇬 Nigeria", to: "🇨🇲 Cameroon", code: "NGN", time: "Instant" },
+    };
+    // Also add Germany as EUR duplicate
+    const result = adminCurrencies
+      .filter((c) => corridorMap[c.code])
+      .map((c) => ({
+        from: corridorMap[c.code].from,
+        to: corridorMap[c.code].to,
+        rate: `1 ${c.code} = ${c.rate.toLocaleString()} XAF`,
+        fee: `${c.fee_pct}%`,
+        time: corridorMap[c.code].time,
+      }));
+    // Add Germany corridor (same EUR rate)
+    const eurRate = adminCurrencies.find((c) => c.code === "EUR");
+    if (eurRate && !result.find((r) => r.from.includes("Germany"))) {
+      result.push({
+        from: "🇩🇪 Germany", to: "🇨🇲 Cameroon",
+        rate: `1 EUR = ${eurRate.rate.toLocaleString()} XAF`,
+        fee: `${eurRate.fee_pct}%`, time: "Instant",
+      });
+    }
+    return result.length > 0 ? result : defaultCorridors.map((c) => ({
+      from: c.from, to: c.to,
+      rate: `1 ${c.code} = ${c.rate.toLocaleString()} XAF`,
+      fee: `${c.fee}%`, time: c.time,
+    }));
+  }, [adminCurrencies]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ══════════ HERO ══════════ */}
