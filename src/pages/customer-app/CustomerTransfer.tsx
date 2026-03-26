@@ -182,14 +182,17 @@ const CustomerTransfer: React.FC = () => {
   const handleSend = async () => {
     setSending(true);
     try {
-      const cleanRecipient = recipient.replace(/[\s\-]/g, '');
+      // For name-based transfers, preserve spaces; for others, strip formatting
+      const cleanRecipient = recipientType === 'name'
+        ? recipient.trim()
+        : recipient.replace(/[\s\-]/g, '');
       const { data, error } = await supabase.functions.invoke('api-transfers', {
         body: {
           source_account_id: selectedAccount?.id,
           destination_account_id: cleanRecipient,
           amount: amountNum,
           currency,
-          description: `Transfer to ${recipient}${note ? ` - ${note}` : ''}`,
+          description: `Transfer to ${selectedRecipientName || recipient}${note ? ` - ${note}` : ''}`,
           identifier_type: getIdentifierType(),
         },
       });
@@ -488,7 +491,8 @@ const CustomerTransfer: React.FC = () => {
                         className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/50 transition-colors text-left"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
-                          setRecipient(s.name);
+                          // Use accountId (UUID) if available for direct resolution
+                          setRecipient(s.accountId || s.name);
                           setSelectedRecipientName(s.name);
                           setShowSuggestions(false);
                         }}
