@@ -21347,6 +21347,10 @@ export type Database = {
         Args: { _ip_address: unknown; _user_agent: string; _user_id: string }
         Returns: Json
       }
+      check_transfer_idempotency: {
+        Args: { _idempotency_key: string; _user_id: string }
+        Returns: Json
+      }
       check_webhook_rate_limit: {
         Args: {
           _max_requests?: number
@@ -21393,6 +21397,15 @@ export type Database = {
           _currency?: string
           _institution_id: string
           _staff_user_id: string
+        }
+        Returns: Json
+      }
+      execute_atomic_transfer: {
+        Args: {
+          _amount: number
+          _currency?: string
+          _dest_account_id: string
+          _source_balance_id: string
         }
         Returns: Json
       }
