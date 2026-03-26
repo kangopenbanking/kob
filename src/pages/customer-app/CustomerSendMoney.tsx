@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,24 +15,58 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Globe, ArrowRight, Banknote, Clock, CheckCircle2, ChevronLeft,
   Building2, Smartphone, Loader2, AlertTriangle, Search, History,
-  TrendingUp, ShieldCheck, Zap, ArrowUpRight, Eye,
+  TrendingUp, ShieldCheck, Zap, ArrowUpRight, Eye, Wallet, CreditCard,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+/* ── Country flag helper ──────────────────────────── */
+const COUNTRY_FLAG: Record<string, string> = {
+  CM: "🇨🇲", NG: "🇳🇬", GH: "🇬🇭", KE: "🇰🇪", ZA: "🇿🇦", US: "🇺🇸", GB: "🇬🇧",
+  FR: "🇫🇷", DE: "🇩🇪", SN: "🇸🇳", CI: "🇨🇮", GA: "🇬🇦", TD: "🇹🇩", CF: "🇨🇫",
+  CG: "🇨🇬", CD: "🇨🇩", BJ: "🇧🇯", TG: "🇹🇬", ML: "🇲🇱", BF: "🇧🇫", NE: "🇳🇪",
+  GN: "🇬🇳", RW: "🇷🇼", UG: "🇺🇬", TZ: "🇹🇿", ET: "🇪🇹", EG: "🇪🇬", MA: "🇲🇦",
+  TN: "🇹🇳", IN: "🇮🇳", CN: "🇨🇳", JP: "🇯🇵", CA: "🇨🇦", AU: "🇦🇺", BR: "🇧🇷",
+};
+const getFlag = (code: string) => COUNTRY_FLAG[code] || "🌍";
+
+/* ── Country name helper ──────────────────────────── */
+const COUNTRY_NAME: Record<string, string> = {
+  CM: "Cameroon", NG: "Nigeria", GH: "Ghana", KE: "Kenya", ZA: "South Africa",
+  US: "United States", GB: "United Kingdom", FR: "France", DE: "Germany",
+  SN: "Senegal", CI: "Ivory Coast", GA: "Gabon", TD: "Chad", CF: "Central African Republic",
+  CG: "Congo", CD: "DR Congo", BJ: "Benin", TG: "Togo", ML: "Mali", BF: "Burkina Faso",
+  NE: "Niger", GN: "Guinea", RW: "Rwanda", UG: "Uganda", TZ: "Tanzania",
+  ET: "Ethiopia", EG: "Egypt", MA: "Morocco", TN: "Tunisia", IN: "India",
+  CN: "China", JP: "Japan", CA: "Canada", AU: "Australia", BR: "Brazil",
+};
+const getCountryName = (code: string, fallback?: string) => COUNTRY_NAME[code] || fallback || code;
+
+/* ── Delivery method meta ─────────────────────────── */
+const DELIVERY_META: Record<string, { label: string; icon: typeof Building2; color: string; bgColor: string }> = {
+  bank_transfer: { label: "Bank Transfer", icon: Building2, color: "hsl(217,91%,55%)", bgColor: "hsl(217,85%,95%)" },
+  mobile_money: { label: "Mobile Money", icon: Smartphone, color: "hsl(142,76%,36%)", bgColor: "hsl(142,70%,93%)" },
+  mobile_wallet: { label: "Mobile Wallet", icon: Wallet, color: "hsl(142,76%,36%)", bgColor: "hsl(142,70%,93%)" },
+  paypal: { label: "PayPal", icon: CreditCard, color: "hsl(217,91%,45%)", bgColor: "hsl(217,85%,93%)" },
+  card: { label: "Card", icon: CreditCard, color: "hsl(258,80%,50%)", bgColor: "hsl(258,75%,93%)" },
+};
+const getDeliveryMeta = (key: string) =>
+  DELIVERY_META[key] || { label: key.replace(/_/g, " "), icon: Banknote, color: "hsl(0,0%,50%)", bgColor: "hsl(0,0%,95%)" };
+
+/* ── Status map ───────────────────────────────────── */
 const STATUS_MAP: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   created: { label: "Submitted", color: "bg-muted text-muted-foreground", icon: Clock },
-  pending: { label: "Processing", color: "bg-amber-100 text-amber-800", icon: Loader2 },
-  received: { label: "In Transit", color: "bg-blue-100 text-blue-800", icon: TrendingUp },
-  credited: { label: "Delivered", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-  settled: { label: "Settled", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+  pending: { label: "Processing", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Loader2 },
+  received: { label: "In Transit", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: TrendingUp },
+  credited: { label: "Delivered", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
+  settled: { label: "Settled", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
   failed: { label: "Failed", color: "bg-destructive/10 text-destructive", icon: AlertTriangle },
 };
 
 const HOW_IT_WORKS_STEPS: FlowStep[] = [
-  { icon: Globe, title: "Choose Destination", description: "Select the country and currency corridor for your transfer", color: "hsl(217,85%,93%)", iconColor: "hsl(217,91%,35%)" },
-  { icon: Banknote, title: "Enter Amount & Details", description: "Specify how much to send and provide receiver information", color: "hsl(142,70%,90%)", iconColor: "hsl(142,76%,36%)" },
-  { icon: Eye, title: "Review Quote", description: "See the exact FX rate, fees, and amount the receiver gets", color: "hsl(38,90%,90%)", iconColor: "hsl(38,92%,40%)" },
-  { icon: Send, title: "Confirm & Send", description: "Approve the transfer — funds are delivered within hours", color: "hsl(258,75%,92%)", iconColor: "hsl(258,80%,50%)" },
+  { icon: Globe, title: "Choose Destination", description: "Select the country and currency corridor", color: "hsl(217,85%,93%)", iconColor: "hsl(217,91%,35%)" },
+  { icon: Banknote, title: "Enter Amount", description: "Specify amount and receiver details", color: "hsl(142,70%,90%)", iconColor: "hsl(142,76%,36%)" },
+  { icon: Eye, title: "Review Quote", description: "See FX rate, fees, and delivery time", color: "hsl(38,90%,90%)", iconColor: "hsl(38,92%,40%)" },
+  { icon: Send, title: "Confirm & Send", description: "Approve — funds delivered within hours", color: "hsl(258,75%,92%)", iconColor: "hsl(258,80%,50%)" },
 ];
 
 type Step = "corridors" | "form" | "quote" | "confirm" | "success";
@@ -40,10 +74,18 @@ type Tab = "send" | "history";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16, scale: 0.98 },
-  visible: (i: number) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const } }),
+  visible: (i: number) => ({
+    opacity: 1, y: 0, scale: 1,
+    transition: { delay: i * 0.05, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
+  }),
 };
 
-const stepTransition = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -30 }, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } };
+const stepTransition = {
+  initial: { opacity: 0, x: 24 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -24 },
+  transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const },
+};
 
 export default function CustomerSendMoney() {
   const navigate = useNavigate();
@@ -51,7 +93,7 @@ export default function CustomerSendMoney() {
   const [step, setStep] = useState<Step>("corridors");
   const [selectedCorridor, setSelectedCorridor] = useState<any>(null);
   const [amount, setAmount] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState("bank_transfer");
+  const [deliveryMethod, setDeliveryMethod] = useState("");
   const [receiverName, setReceiverName] = useState("");
   const [receiverPhone, setReceiverPhone] = useState("");
   const [receiverEmail, setReceiverEmail] = useState("");
@@ -66,6 +108,7 @@ export default function CustomerSendMoney() {
   const [trackingDialog, setTrackingDialog] = useState<any>(null);
   const [countryFilter, setCountryFilter] = useState("");
 
+  /* ── Data fetching ──────────────────────────────── */
   const { data: corridors, isLoading: loadingCorridors, error: corridorsError } = useQuery({
     queryKey: ["outbound-corridors"],
     queryFn: async () => {
@@ -84,6 +127,15 @@ export default function CustomerSendMoney() {
     },
   });
 
+  /* ── Derived: available delivery methods for selected corridor ─ */
+  const availableDeliveryMethods = useMemo(() => {
+    if (!selectedCorridor) return [];
+    const methods: string[] = selectedCorridor.delivery_methods || [];
+    if (methods.length === 0) return ["bank_transfer", "mobile_wallet"];
+    return methods;
+  }, [selectedCorridor]);
+
+  /* ── Mutations ──────────────────────────────────── */
   const quoteMutation = useMutation({
     mutationFn: async () => {
       const res = await supabase.functions.invoke("remittance-outbound", {
@@ -125,26 +177,32 @@ export default function CustomerSendMoney() {
     onSuccess: (data) => setTrackingDialog(data),
   });
 
+  /* ── Filtered corridors ─────────────────────────── */
   const filteredCorridors = corridors?.filter((c: any) => {
     if (!countryFilter) return true;
     const haystack = [
-      c.to_country_name,
-      c.to_country,
-      c.to_currency,
-      c.remittance_partners?.display_name,
-      c.remittance_partners?.name,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
+      c.to_country_name, getCountryName(c.to_country), c.to_country, c.to_currency,
+      c.remittance_partners?.display_name, c.remittance_partners?.name,
+    ].filter(Boolean).join(" ").toLowerCase();
     return haystack.includes(countryFilter.toLowerCase());
   }) || [];
 
+  /* ── Grouped corridors by destination country ───── */
+  const groupedCorridors = useMemo(() => {
+    const map = new Map<string, any[]>();
+    filteredCorridors.forEach((c: any) => {
+      const key = c.to_country;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    });
+    return Array.from(map.entries());
+  }, [filteredCorridors]);
+
   const resetForm = () => {
-    setStep("corridors"); setSelectedCorridor(null); setAmount(""); setReceiverName("");
-    setReceiverPhone(""); setReceiverEmail(""); setReceiverBankName(""); setReceiverBankCode("");
-    setReceiverAccountNumber(""); setReceiverMobileWallet(""); setQuote(null); setResult(null); setNarration("");
+    setStep("corridors"); setSelectedCorridor(null); setAmount(""); setDeliveryMethod("");
+    setReceiverName(""); setReceiverPhone(""); setReceiverEmail(""); setReceiverBankName("");
+    setReceiverBankCode(""); setReceiverAccountNumber(""); setReceiverMobileWallet("");
+    setQuote(null); setResult(null); setNarration("");
   };
 
   const goBack = () => {
@@ -155,6 +213,13 @@ export default function CustomerSendMoney() {
     else setStep("corridors");
   };
 
+  const selectCorridor = (c: any) => {
+    setSelectedCorridor(c);
+    const methods: string[] = c.delivery_methods || [];
+    setDeliveryMethod(methods[0] || "bank_transfer");
+    setStep("form");
+  };
+
   const stepIndex = ["corridors", "form", "quote", "confirm", "success"].indexOf(step);
   const stepLabels = ["Destination", "Details", "Quote", "Confirm", "Done"];
 
@@ -162,7 +227,7 @@ export default function CustomerSendMoney() {
     <div className="max-w-lg mx-auto pb-24 px-4">
       {/* ─── Hero Header ───────────────────────────── */}
       <div className="relative -mx-4 overflow-hidden rounded-b-3xl" style={{ background: "var(--gradient-hero)" }}>
-        <div className="absolute inset-0 opacity-10">
+        <div className="pointer-events-none absolute inset-0 opacity-10">
           <div className="absolute top-4 right-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
           <div className="absolute bottom-2 left-4 h-20 w-20 rounded-full bg-white/15 blur-xl" />
         </div>
@@ -177,19 +242,18 @@ export default function CustomerSendMoney() {
             </div>
             <motion.div
               className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm"
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Globe className="h-5 w-5 text-white" />
             </motion.div>
           </div>
 
-          {/* Step Indicator */}
+          {/* Step Progress */}
           {activeTab === "send" && step !== "success" && (
             <div className="flex items-center gap-1 mt-2">
               {stepLabels.slice(0, 4).map((label, i) => (
                 <div key={label} className="flex-1 flex flex-col items-center gap-1">
-                  <div className={`h-1 w-full rounded-full transition-all duration-500 ${i <= stepIndex ? "bg-white" : "bg-white/20"}`} />
+                  <div className={`h-1.5 w-full rounded-full transition-all duration-500 ${i <= stepIndex ? "bg-white" : "bg-white/20"}`} />
                   <span className={`text-[9px] font-medium transition-colors ${i <= stepIndex ? "text-white" : "text-white/40"}`}>{label}</span>
                 </div>
               ))}
@@ -200,10 +264,10 @@ export default function CustomerSendMoney() {
 
       {/* ─── Tab Switcher ──────────────────────────── */}
       <div className="flex gap-2 mt-5 mb-4">
-        {[
+        {([
           { key: "send" as Tab, label: "Send Money", icon: Send },
           { key: "history" as Tab, label: "History", icon: History },
-        ].map(({ key, label, icon: Icon }) => (
+        ]).map(({ key, label, icon: Icon }) => (
           <motion.button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -223,10 +287,10 @@ export default function CustomerSendMoney() {
       {/* ─── SEND TAB ──────────────────────────────── */}
       {activeTab === "send" && (
         <AnimatePresence mode="wait">
-          {/* Step 1: Choose Corridor */}
+
+          {/* ═══ Step 1: Choose Corridor ═══════════════ */}
           {step === "corridors" && (
             <motion.div key="corridors" {...stepTransition} className="space-y-4">
-              {/* How it works */}
               <HowItWorksFlow steps={HOW_IT_WORKS_STEPS} title="How international transfers work" />
 
               {/* Quick Stats */}
@@ -236,12 +300,7 @@ export default function CustomerSendMoney() {
                   { icon: ShieldCheck, label: "Secure", sub: "Encrypted", color: "hsl(142,76%,36%)" },
                   { icon: TrendingUp, label: "Low Fees", sub: "From 1%", color: "hsl(217,91%,55%)" },
                 ].map((stat, i) => (
-                  <motion.div
-                    key={stat.label}
-                    custom={i}
-                    variants={cardVariants}
-                    initial="hidden"
-                    animate="visible"
+                  <motion.div key={stat.label} custom={i} variants={cardVariants} initial="hidden" animate="visible"
                     className="rounded-2xl border border-border/50 bg-card p-3 text-center"
                   >
                     <div className="mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: `${stat.color}15` }}>
@@ -257,14 +316,21 @@ export default function CustomerSendMoney() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by country name..."
+                  placeholder="Search by country or currency..."
                   value={countryFilter}
                   onChange={(e) => setCountryFilter(e.target.value)}
                   className="pl-10 rounded-2xl h-11 bg-muted/50 border-border/50"
                 />
               </div>
 
-              <p className="text-xs font-bold text-foreground px-1">Available Corridors</p>
+              <p className="text-xs font-bold text-foreground px-1">
+                Available Destinations
+                {filteredCorridors.length > 0 && (
+                  <span className="ml-2 text-[10px] font-medium text-muted-foreground">
+                    {groupedCorridors.length} {groupedCorridors.length === 1 ? "country" : "countries"} · {filteredCorridors.length} {filteredCorridors.length === 1 ? "corridor" : "corridors"}
+                  </span>
+                )}
+              </p>
 
               {loadingCorridors ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -277,34 +343,73 @@ export default function CustomerSendMoney() {
                   <p className="text-xs text-muted-foreground mt-1">Please try again in a moment.</p>
                 </motion.div>
               ) : filteredCorridors.length > 0 ? (
-                <div className="space-y-2">
-                  {filteredCorridors.map((c: any, i: number) => (
-                    <motion.div
-                      key={c.id}
-                      custom={i}
-                      variants={cardVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      <Card
-                        className="cursor-pointer border-border/50 hover:border-primary/40 hover:shadow-md transition-all duration-300 active:scale-[0.98]"
-                        onClick={() => { setSelectedCorridor(c); setStep("form"); }}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-                              <Globe className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-foreground">{c.from_country} → {c.to_country}</p>
-                              <p className="text-[11px] text-muted-foreground">{c.from_currency} → {c.to_currency} · {c.remittance_partners?.display_name || c.remittance_partners?.name || "Partner"}</p>
-                            </div>
-                          </div>
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/5">
-                            <ArrowRight className="h-4 w-4 text-primary" />
-                          </div>
-                        </CardContent>
-                      </Card>
+                <div className="space-y-3">
+                  {groupedCorridors.map(([countryCode, countryCorridors], gi) => (
+                    <motion.div key={countryCode} custom={gi} variants={cardVariants} initial="hidden" animate="visible">
+                      {/* Country group header */}
+                      <div className="flex items-center gap-2 mb-2 px-1">
+                        <span className="text-lg">{getFlag(countryCode)}</span>
+                        <span className="text-xs font-bold text-foreground">{getCountryName(countryCode, countryCorridors[0]?.to_country_name)}</span>
+                        <span className="text-[10px] text-muted-foreground">({countryCode})</span>
+                      </div>
+                      <div className="space-y-2">
+                        {countryCorridors.map((c: any) => {
+                          const methods: string[] = c.delivery_methods || [];
+                          return (
+                            <Card
+                              key={c.id}
+                              className="cursor-pointer border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 active:scale-[0.98]"
+                              onClick={() => selectCorridor(c)}
+                            >
+                              <CardContent className="p-3.5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    {/* From → To flags */}
+                                    <div className="flex items-center shrink-0">
+                                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-lg">
+                                        {getFlag(c.from_country)}
+                                      </div>
+                                      <ArrowRight className="h-3 w-3 text-muted-foreground mx-1 shrink-0" />
+                                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/60 text-lg">
+                                        {getFlag(c.to_country)}
+                                      </div>
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold text-foreground truncate">
+                                        {c.from_currency} → {c.to_currency}
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground truncate">
+                                        via {c.remittance_partners?.display_name || c.remittance_partners?.name || "Partner"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 shrink-0 ml-2">
+                                    <ArrowRight className="h-4 w-4 text-primary" />
+                                  </div>
+                                </div>
+
+                                {/* Delivery method pills */}
+                                {methods.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                    {methods.map((m) => {
+                                      const meta = getDeliveryMeta(m);
+                                      const MIcon = meta.icon;
+                                      return (
+                                        <span key={m} className="inline-flex items-center gap-1 text-[10px] font-medium rounded-lg px-2 py-1"
+                                          style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                                        >
+                                          <MIcon className="h-2.5 w-2.5" />
+                                          {meta.label}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
                     </motion.div>
                   ))}
                 </div>
@@ -320,30 +425,38 @@ export default function CustomerSendMoney() {
             </motion.div>
           )}
 
-          {/* Step 2: Receiver Details */}
+          {/* ═══ Step 2: Receiver Details ══════════════ */}
           {step === "form" && selectedCorridor && (
             <motion.div key="form" {...stepTransition} className="space-y-4">
               {/* Corridor Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 rounded-2xl bg-primary/5 border border-primary/10 p-3"
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 rounded-2xl border border-primary/15 p-3"
+                style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.02))" }}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <Globe className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-1">
+                  <span className="text-xl">{getFlag(selectedCorridor.from_country)}</span>
+                  <ArrowRight className="h-3 w-3 text-primary" />
+                  <span className="text-xl">{getFlag(selectedCorridor.to_country)}</span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">{selectedCorridor.from_country} → {selectedCorridor.to_country}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {getCountryName(selectedCorridor.from_country)} → {getCountryName(selectedCorridor.to_country)}
+                  </p>
                   <p className="text-[11px] text-muted-foreground">{selectedCorridor.from_currency} → {selectedCorridor.to_currency}</p>
                 </div>
-                <button onClick={() => setStep("corridors")} className="text-xs text-primary font-semibold">Change</button>
+                <button onClick={() => setStep("corridors")} className="text-xs text-primary font-semibold shrink-0">Change</button>
               </motion.div>
 
-              {/* Amount */}
-              <Card className="border-border/50 shadow-sm">
+              {/* Amount Card */}
+              <Card className="border-border/50 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Banknote className="h-3.5 w-3.5 text-primary" /> Amount & Delivery
+                  </p>
+                </div>
                 <CardContent className="p-4 space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">Amount ({selectedCorridor.from_currency})</Label>
+                    <Label className="text-xs font-bold text-foreground">You Send ({selectedCorridor.from_currency})</Label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">{selectedCorridor.from_currency}</span>
                       <Input
@@ -354,57 +467,69 @@ export default function CustomerSendMoney() {
                         className="pl-16 text-xl font-bold h-14 rounded-2xl border-border/50 bg-muted/30"
                       />
                     </div>
-                    {/* Amount presets */}
                     <div className="flex gap-2">
                       {[50000, 100000, 250000, 500000].map((p) => (
-                        <button
+                        <motion.button
                           key={p}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => setAmount(String(p))}
-                          className={`flex-1 rounded-xl py-1.5 text-[10px] font-semibold border transition-all ${
+                          className={`flex-1 rounded-xl py-2 text-[11px] font-semibold border transition-all ${
                             Number(amount) === p
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border/50 text-muted-foreground hover:border-primary/30"
                           }`}
                         >
                           {(p / 1000).toFixed(0)}K
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   </div>
 
+                  {/* Dynamic Delivery Methods */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">Delivery Method</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { value: "bank_transfer", label: "Bank Transfer", icon: Building2, color: "hsl(217,91%,55%)" },
-                        { value: "mobile_wallet", label: "Mobile Wallet", icon: Smartphone, color: "hsl(142,76%,36%)" },
-                      ].map((m) => (
-                        <motion.button
-                          key={m.value}
-                          onClick={() => setDeliveryMethod(m.value)}
-                          whileTap={{ scale: 0.97 }}
-                          className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition-all ${
-                            deliveryMethod === m.value
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border/50 bg-card"
-                          }`}
-                        >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: `${m.color}15` }}>
-                            <m.icon className="h-4 w-4" style={{ color: m.color }} />
-                          </div>
-                          <span className="text-[11px] font-semibold text-foreground">{m.label}</span>
-                        </motion.button>
-                      ))}
+                    <Label className="text-xs font-bold text-foreground">How should they receive it?</Label>
+                    <div className={`grid gap-2 ${availableDeliveryMethods.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                      {availableDeliveryMethods.map((m) => {
+                        const meta = getDeliveryMeta(m);
+                        const MIcon = meta.icon;
+                        const selected = deliveryMethod === m;
+                        return (
+                          <motion.button
+                            key={m}
+                            onClick={() => setDeliveryMethod(m)}
+                            whileTap={{ scale: 0.95 }}
+                            className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 transition-all ${
+                              selected
+                                ? "border-primary shadow-md"
+                                : "border-border/50 bg-card hover:border-primary/30"
+                            }`}
+                            style={selected ? { backgroundColor: meta.bgColor } : undefined}
+                          >
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: selected ? `${meta.color}20` : `${meta.color}10` }}>
+                              <MIcon className="h-4 w-4" style={{ color: meta.color }} />
+                            </div>
+                            <span className="text-[10px] font-semibold text-foreground leading-tight text-center">{meta.label}</span>
+                            {selected && (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                className="h-1.5 w-1.5 rounded-full bg-primary"
+                              />
+                            )}
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Receiver Info */}
-              <Card className="border-border/50 shadow-sm">
+              <Card className="border-border/50 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Send className="h-3.5 w-3.5 text-primary" /> Receiver Information
+                  </p>
+                </div>
                 <CardContent className="p-4 space-y-3">
-                  <p className="text-xs font-bold text-foreground">Receiver Information</p>
-
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground">Full Name *</Label>
                     <Input placeholder="As it appears on ID" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} className="rounded-xl h-11 border-border/50" />
@@ -420,6 +545,7 @@ export default function CustomerSendMoney() {
                     </div>
                   </div>
 
+                  {/* Conditional fields based on delivery method */}
                   {deliveryMethod === "bank_transfer" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3 pt-1">
                       <div className="space-y-1.5">
@@ -439,17 +565,29 @@ export default function CustomerSendMoney() {
                     </motion.div>
                   )}
 
-                  {deliveryMethod === "mobile_wallet" && (
+                  {(deliveryMethod === "mobile_wallet" || deliveryMethod === "mobile_money") && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-1.5 pt-1">
                       <Label className="text-[11px] text-muted-foreground">Mobile Wallet Number *</Label>
-                      <Input placeholder="+234..." value={receiverMobileWallet} onChange={(e) => setReceiverMobileWallet(e.target.value)} className="rounded-xl h-11 border-border/50" />
+                      <Input placeholder="+237..." value={receiverMobileWallet} onChange={(e) => setReceiverMobileWallet(e.target.value)} className="rounded-xl h-11 border-border/50" />
+                    </motion.div>
+                  )}
+
+                  {deliveryMethod === "paypal" && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-1.5 pt-1">
+                      <Label className="text-[11px] text-muted-foreground">PayPal Email *</Label>
+                      <Input placeholder="paypal@email.com" value={receiverEmail} onChange={(e) => setReceiverEmail(e.target.value)} className="rounded-xl h-11 border-border/50" />
                     </motion.div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Purpose & Note */}
-              <Card className="border-border/50 shadow-sm">
+              {/* Purpose */}
+              <Card className="border-border/50 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Purpose & Notes
+                  </p>
+                </div>
                 <CardContent className="p-4 space-y-3">
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground">Purpose of Transfer</Label>
@@ -485,11 +623,13 @@ export default function CustomerSendMoney() {
             </motion.div>
           )}
 
-          {/* Step 3: Quote Review */}
+          {/* ═══ Step 3: Quote Review ═════════════════ */}
           {step === "quote" && quote && (
             <motion.div key="quote" {...stepTransition} className="space-y-4">
               <Card className="border-primary/20 shadow-lg overflow-hidden">
-                <div className="bg-primary/5 px-4 py-3 border-b border-primary/10">
+                <div className="px-4 py-3 border-b border-primary/10"
+                  style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.02))" }}
+                >
                   <p className="text-sm font-bold text-foreground flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-primary" />
                     Transfer Quote
@@ -498,19 +638,22 @@ export default function CustomerSendMoney() {
                 </div>
                 <CardContent className="p-4 space-y-4">
                   {/* Big amount display */}
-                  <div className="text-center py-3">
+                  <div className="text-center py-4 rounded-2xl bg-muted/30 border border-border/30">
                     <p className="text-[11px] text-muted-foreground mb-1">Receiver Gets</p>
-                    <motion.p
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-3xl font-extrabold text-secondary"
+                    <motion.p initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      className="text-3xl font-extrabold text-primary"
                     >
-                      {(quote.amount_out || 0).toLocaleString()} <span className="text-lg">{quote.currency_out}</span>
+                      {(quote.amount_out || 0).toLocaleString()} <span className="text-lg text-muted-foreground">{quote.currency_out}</span>
                     </motion.p>
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <span className="text-lg">{getFlag(selectedCorridor?.from_country)}</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-lg">{getFlag(selectedCorridor?.to_country)}</span>
+                    </div>
                   </div>
 
                   {/* Breakdown */}
-                  <div className="rounded-2xl bg-muted/40 border border-border/30 p-4 space-y-3">
+                  <div className="rounded-2xl bg-card border border-border/50 p-4 space-y-3">
                     {[
                       { label: "You Send", value: `${(quote.amount_in || 0).toLocaleString()} ${quote.currency_in}`, bold: true },
                       { label: "Transfer Fee", value: `-${(quote.fee_total || 0).toLocaleString()} ${quote.currency_in}`, color: "text-destructive" },
@@ -523,7 +666,6 @@ export default function CustomerSendMoney() {
                     ))}
                   </div>
 
-                  {/* Meta */}
                   <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                     <div className="flex items-center gap-1"><Globe className="h-3 w-3" /> {quote.corridor}</div>
                     {quote.delivery_estimate_seconds && (
@@ -535,7 +677,7 @@ export default function CustomerSendMoney() {
                   <div className="flex gap-3">
                     <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setStep("form")}>Edit Details</Button>
                     <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
-                      <Button className="w-full rounded-xl h-11" onClick={() => setStep("confirm")}>
+                      <Button className="w-full rounded-xl h-11 font-bold" onClick={() => setStep("confirm")}>
                         <Send className="h-4 w-4 mr-2" /> Continue
                       </Button>
                     </motion.div>
@@ -545,18 +687,28 @@ export default function CustomerSendMoney() {
             </motion.div>
           )}
 
-          {/* Step 4: Confirmation */}
+          {/* ═══ Step 4: Confirmation ═════════════════ */}
           {step === "confirm" && (
             <motion.div key="confirm" {...stepTransition} className="space-y-4">
-              <Card className="border-fi-amber/20 overflow-hidden shadow-md">
-                <div className="bg-fi-amber/5 px-4 py-3 border-b border-fi-amber/10 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-fi-amber" />
+              <Card className="border-border/50 overflow-hidden shadow-md">
+                <div className="px-4 py-3 border-b border-border/30 bg-muted/20 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
                   <p className="text-sm font-bold text-foreground">Confirm Transfer</p>
                 </div>
                 <CardContent className="p-4 space-y-4">
-                  <div className="rounded-2xl bg-muted/30 border border-border/30 p-4 space-y-2 text-sm">
+                  {/* Receiver summary */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30 border border-border/30">
+                    <span className="text-2xl">{getFlag(selectedCorridor?.to_country)}</span>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{receiverName}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {getCountryName(selectedCorridor?.to_country)} · {getDeliveryMeta(deliveryMethod).label}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-card border border-border/50 p-4 space-y-2 text-sm">
                     {[
-                      { label: "To", value: `${receiverName} (${selectedCorridor?.to_country})` },
                       { label: "Amount", value: `${(quote?.amount_out || 0).toLocaleString()} ${quote?.currency_out}` },
                       { label: "Fee", value: `${(quote?.fee_total || 0).toLocaleString()} ${quote?.currency_in}` },
                       { label: "Total Debit", value: `${(quote?.amount_in || 0).toLocaleString()} ${quote?.currency_in}` },
@@ -589,18 +741,21 @@ export default function CustomerSendMoney() {
             </motion.div>
           )}
 
-          {/* Step 5: Success */}
+          {/* ═══ Step 5: Success ══════════════════════ */}
           {step === "success" && result && (
-            <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 25 }} className="space-y-4">
-              <Card className="border-secondary/20 overflow-hidden shadow-lg">
-                <div className="bg-secondary/5 px-4 py-8 text-center">
+            <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }} className="space-y-4"
+            >
+              <Card className="border-border/50 overflow-hidden shadow-lg">
+                <div className="py-8 text-center"
+                  style={{ background: "linear-gradient(135deg, hsl(142 70% 95%), hsl(142 70% 90%))" }}
+                >
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
+                    initial={{ scale: 0 }} animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
-                    className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/10"
+                    className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-md"
                   >
-                    <CheckCircle2 className="h-8 w-8 text-secondary" />
+                    <CheckCircle2 className="h-8 w-8" style={{ color: "hsl(142,76%,36%)" }} />
                   </motion.div>
                   <h2 className="text-xl font-extrabold text-foreground">Transfer Submitted!</h2>
                   <p className="text-xs text-muted-foreground mt-1">You'll receive notifications on status updates</p>
@@ -640,26 +795,19 @@ export default function CustomerSendMoney() {
               const st = STATUS_MAP[t.status] || { label: t.status, color: "bg-muted text-muted-foreground", icon: Clock };
               const StIcon = st.icon;
               return (
-                <motion.div
-                  key={t.id}
-                  custom={i}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <Card
-                    className="cursor-pointer border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300 active:scale-[0.98]"
+                <motion.div key={t.id} custom={i} variants={cardVariants} initial="hidden" animate="visible">
+                  <Card className="cursor-pointer border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300 active:scale-[0.98]"
                     onClick={() => trackMutation.mutate(t.id)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
-                            <Send className="h-4 w-4 text-primary" />
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg">
+                            {getFlag(t.receiver_country)}
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{t.receiver_name}</p>
-                            <p className="text-[11px] text-muted-foreground">{t.receiver_country} · {(t.delivery_method || "").replace(/_/g, " ")}</p>
+                            <p className="text-[11px] text-muted-foreground">{getCountryName(t.receiver_country)} · {getDeliveryMeta(t.delivery_method || "").label}</p>
                           </div>
                         </div>
                         <div className="text-right">
