@@ -7,8 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight, Shield, Zap, Globe, Building2, Smartphone, Users,
   TrendingUp, Lock, HeartHandshake, ArrowDownLeft, ArrowUpRight,
-  Landmark, Receipt, Star, Repeat,
+  Landmark, Receipt, Star, Repeat, Banknote, CheckCircle2,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 import { HeroSendForm } from "@/components/remittance/HeroSendForm";
 import youngWoman from "@/assets/remittance/young-woman.jpg";
