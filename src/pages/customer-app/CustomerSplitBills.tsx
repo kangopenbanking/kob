@@ -161,8 +161,8 @@ const CustomerSplitBills: React.FC = () => {
             title: 'Split Bill Request',
             message: `${participants[0].name} is requesting ${shares[i].toLocaleString()} XAF for "${title.trim()}"`,
             icon: 'payment',
-            metadata: { split_bill_id: bill.id, amount: shares[i] },
-          }).catch(() => {}); // Non-blocking
+            metadata: { split_bill_id: bill.id, amount: shares[i] } as any,
+          }); // Non-blocking
         }
       }
 
