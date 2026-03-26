@@ -300,40 +300,74 @@ export function HeroSendForm() {
   const [busy, setBusy] = useState(false);
   const [txRef, setTxRef] = useState("");
 
-  // ── Derived ──
-  const src = currencies[srcIdx] || currencies[0];
-  const numAmt = parseFloat(amount) || 0;
-  const feePct = (src.fee_pct || 0.5) / 100;
-  const fee = Math.round(numAmt * feePct * 100) / 100;
-
-  const destCountries = useMemo<DestOption[]>(() => {
+  // ── Derived: Source countries from corridors ──
+  const srcCountries = useMemo<DestOption[]>(() => {
     if (!corridors?.length) return [];
     const seen = new Set<string>();
     const res: DestOption[] = [];
     corridors.forEach((c) => {
-      const k = `${c.to_country}-${c.to_currency}`;
+      const k = `${c.from_country}-${c.from_currency}`;
       if (seen.has(k)) return;
       seen.add(k);
-      const m = COUNTRY_META[c.to_country];
-      res.push({ currency: c.to_currency, country: m?.name || c.to_country, flag: m?.flag || "🌍", countryCode: c.to_country });
+      const m = COUNTRY_META[c.from_country];
+      res.push({ currency: c.from_currency, country: m?.name || c.from_country, flag: m?.flag || "🌍", countryCode: c.from_country });
     });
     return res;
   }, [corridors]);
 
-  const dest = destCountries[destIdx] || destCountries[0];
+  // Reset srcIdx if out of bounds
+  const safeSrcIdx = srcIdx < srcCountries.length ? srcIdx : 0;
+  const srcCountry = srcCountries[safeSrcIdx];
+  const srcCur = srcCountry?.currency || "EUR";
+  const srcFlag = srcCountry?.flag || "🌍";
+
+  // Find matching rate for source currency
+  const srcRate = useMemo(() => {
+    const entry = currencies.find((c) => c.code === srcCur);
+    return entry || { code: srcCur, name: srcCur, flag: srcFlag, rate: 1, fee_pct: 0.5 };
+  }, [currencies, srcCur, srcFlag]);
+
+  const numAmt = parseFloat(amount) || 0;
+  const feePct = (srcRate.fee_pct || 0.5) / 100;
+  const fee = Math.round(numAmt * feePct * 100) / 100;
+
+  // Destination countries filtered by selected source country
+  const destCountries = useMemo<DestOption[]>(() => {
+    if (!corridors?.length || !srcCountry) return [];
+    const seen = new Set<string>();
+    const res: DestOption[] = [];
+    corridors
+      .filter((c) => c.from_country === srcCountry.countryCode)
+      .forEach((c) => {
+        const k = `${c.to_country}-${c.to_currency}`;
+        if (seen.has(k)) return;
+        seen.add(k);
+        const m = COUNTRY_META[c.to_country];
+        res.push({ currency: c.to_currency, country: m?.name || c.to_country, flag: m?.flag || "🌍", countryCode: c.to_country });
+      });
+    return res;
+  }, [corridors, srcCountry]);
+
+  // Reset destIdx when source changes
+  useEffect(() => {
+    setDestIdx(0);
+  }, [safeSrcIdx]);
+
+  const safeDestIdx = destIdx < destCountries.length ? destIdx : 0;
+  const dest = destCountries[safeDestIdx];
   const destCur = dest?.currency || "XAF";
   const destFlag = dest?.flag || "🇨🇲";
 
   const converted = useMemo(() => {
     const net = numAmt - fee;
     if (net <= 0) return 0;
-    const toXaf = src.rate;
+    const toXaf = srcRate.rate;
     if (destCur === "XAF") return Math.round(net * toXaf);
     const destEntry = currencies.find((c) => c.code === destCur);
     if (destEntry && destEntry.rate > 0) return Math.round(net * (toXaf / destEntry.rate) * 100) / 100;
-    if (src.code === destCur) return Math.round(net * 100) / 100;
+    if (srcRate.code === destCur) return Math.round(net * 100) / 100;
     return Math.round(net * toXaf);
-  }, [numAmt, fee, src.rate, src.code, destCur, currencies]);
+  }, [numAmt, fee, srcRate.rate, srcRate.code, destCur, currencies]);
 
   const rateLabel = useMemo(() => {
     if (destCur === "XAF") return `1 ${src.code} = ${src.rate.toLocaleString()} XAF`;
