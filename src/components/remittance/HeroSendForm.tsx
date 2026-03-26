@@ -242,7 +242,7 @@ function CurrencyPicker({ items, selectedIdx, onSelect, open, onToggle }: {
             className="absolute right-0 top-[calc(100%+6px)] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 min-w-[250px] max-h-[300px] overflow-y-auto p-1"
           >
             {items.map((item, i) => (
-              <button key={item.code}
+              <button key={`${item.code}-${item.name}-${i}`}
                 onClick={() => { onSelect(i); onToggle(); }}
                 className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm transition-colors ${
                   i === selectedIdx ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted/50 text-foreground"
