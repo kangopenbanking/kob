@@ -69,7 +69,7 @@ const HOW_IT_WORKS_STEPS: FlowStep[] = [
   { icon: Send, title: "Confirm & Send", description: "Approve — funds delivered within hours", color: "hsl(258,75%,92%)", iconColor: "hsl(258,80%,50%)" },
 ];
 
-type Step = "corridors" | "form" | "quote" | "confirm" | "success";
+type Step = "country" | "corridor" | "delivery" | "form" | "quote" | "confirm" | "success";
 type Tab = "send" | "history";
 
 const cardVariants = {
