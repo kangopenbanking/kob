@@ -38,7 +38,7 @@ const CustomerPayLinks: React.FC = () => {
   const [newExpiry, setNewExpiry] = useState('');
   const [isOpenAmount, setIsOpenAmount] = useState(false);
 
-  const generateSlug = () => `pay-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
+  
 
   const handleCreate = async () => {
     if (!newName.trim()) { toast.error('Enter a link name'); return; }
