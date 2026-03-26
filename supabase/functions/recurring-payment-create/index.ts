@@ -18,7 +18,41 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { name, category, amount, frequency, start_date, end_date, next_payment_date, notify } = await req.json();
+    const body = await req.json();
+    const action = body.action || 'create';
+
+    if (action === 'toggle') {
+      const { payment_id } = body;
+      if (!payment_id) {
+        return new Response(JSON.stringify({ error: 'payment_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Verify ownership
+      const { data: existing, error: fetchErr } = await supabase.from('recurring_payments')
+        .select('id, is_active')
+        .eq('id', payment_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchErr || !existing) {
+        return new Response(JSON.stringify({ error: 'payment not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const newActive = !existing.is_active;
+      const { data, error } = await supabase.from('recurring_payments')
+        .update({ is_active: newActive })
+        .eq('id', payment_id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ payment: data }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Default: create action
+    const { name, category, amount, frequency, start_date, end_date, next_payment_date, notify } = body;
 
     if (!name || !amount || amount <= 0) {
       return new Response(JSON.stringify({ error: 'name and valid amount required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
