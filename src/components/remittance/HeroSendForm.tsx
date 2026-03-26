@@ -374,7 +374,7 @@ export function HeroSendForm() {
     const de = currencies.find((c) => c.code === destCur);
     if (de && de.rate > 0) return `1 ${srcRate.code} = ${(srcRate.rate / de.rate).toFixed(4)} ${destCur}`;
     return `1 ${srcRate.code} = ${srcRate.rate.toLocaleString()} XAF`;
-  }, [src, destCur, currencies]);
+  }, [srcRate, destCur, currencies]);
 
   const methods = useMemo(() => {
     if (!corridors || !dest) return [];
