@@ -101,26 +101,23 @@ const CustomerInvoices: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const invoiceNumber = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Date.now()).slice(-6)}`;
-
-      const { data: invoice, error } = await supabase
-        .from('customer_invoices')
-        .insert({
-          user_id: user.id,
-          invoice_number: invoiceNumber,
+      // Create invoice via edge function (server-side validation + insert)
+      const { data: createData, error: createError } = await supabase.functions.invoke('customer-invoice-create', {
+        body: {
           client_name: newClient.trim(),
           client_email: newClientEmail.trim(),
-          amount: totalAmount,
-          currency: 'XAF',
-          status: 'pending',
           due_date: newDueDate,
-          items: newItems as any,
+          items: newItems,
           notes: newNotes || null,
-        })
-        .select()
-        .single();
+          currency: 'XAF',
+        },
+      });
 
-      if (error) throw error;
+      if (createError) throw createError;
+      if (createData?.error) throw new Error(createData.error);
+
+      const invoice = createData.invoice;
+      const invoiceNumber = invoice.invoice_number;
 
       // Send invoice email via edge function
       const { error: sendError } = await supabase.functions.invoke('send-customer-invoice', {

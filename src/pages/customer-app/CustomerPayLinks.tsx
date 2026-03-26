@@ -46,16 +46,18 @@ const CustomerPayLinks: React.FC = () => {
     if (!isOpenAmount && (!newAmount || Number(newAmount) <= 0)) { toast.error('Enter a valid amount or enable open amount'); return; }
     setCreating(true);
     try {
-      const { error } = await supabase.from('customer_pay_links').insert({
-        user_id: user!.id,
-        slug: generateSlug(),
-        name: newName.trim(),
-        description: newDescription.trim(),
-        amount: isOpenAmount ? null : Number(newAmount),
-        is_open_amount: isOpenAmount,
-        expires_at: newExpiry ? new Date(newExpiry).toISOString() : null,
+      const { data, error } = await supabase.functions.invoke('customer-paylinks-ops', {
+        body: {
+          action: 'create',
+          name: newName.trim(),
+          description: newDescription.trim(),
+          amount: isOpenAmount ? null : Number(newAmount),
+          is_open_amount: isOpenAmount,
+          expires_at: newExpiry ? new Date(newExpiry).toISOString() : null,
+        },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
       setShowCreate(false);
       resetForm();

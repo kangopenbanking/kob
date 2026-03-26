@@ -60,14 +60,18 @@ const CustomerRecurring: React.FC = () => {
   const [newNotify, setNewNotify] = useState(true);
 
   const handleToggle = async (payment: any) => {
-    const newActive = !payment.is_active;
-    const { error } = await supabase
-      .from('recurring_payments')
-      .update({ is_active: newActive })
-      .eq('id', payment.id);
-    if (error) { toast.error('Could not update payment status. Please try again.'); return; }
-    queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
-    toast.success(newActive ? `"${payment.name}" has been resumed and will process on the next scheduled date` : `"${payment.name}" has been paused. No future payments will be processed until resumed.`);
+    try {
+      const { data, error } = await supabase.functions.invoke('recurring-payment-create', {
+        body: { action: 'toggle', payment_id: payment.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const newActive = data?.payment?.is_active ?? !payment.is_active;
+      queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
+      toast.success(newActive ? `"${payment.name}" has been resumed and will process on the next scheduled date` : `"${payment.name}" has been paused. No future payments will be processed until resumed.`);
+    } catch {
+      toast.error('Could not update payment status. Please try again.');
+    }
   };
 
   const handleCreate = async () => {
