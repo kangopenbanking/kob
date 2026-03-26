@@ -208,8 +208,6 @@ function CurrencyPicker({ items, selectedIdx, onSelect }: {
   items: { flag: string; code: string; name: string }[];
   selectedIdx: number;
   onSelect: (i: number) => void;
-  open: boolean;
-  onToggle: () => void;
 }) {
   const safeIndex = selectedIdx >= 0 && selectedIdx < items.length ? selectedIdx : 0;
   const selected = items[safeIndex];
