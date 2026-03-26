@@ -222,7 +222,8 @@ function CurrencyPicker({ items, selectedIdx, onSelect, open, onToggle }: {
     return () => document.removeEventListener("mousedown", handler);
   }, [open, onToggle]);
 
-  const sel = items[selectedIdx];
+  const sel = items[selectedIdx] || items[0];
+  if (!sel) return <div className="flex items-center px-4 h-14 rounded-r-2xl bg-muted/50 min-w-[120px] justify-center"><span className="text-xs text-muted-foreground">Loading…</span></div>;
   return (
     <div className="relative" ref={ref}>
       <button onClick={onToggle}
