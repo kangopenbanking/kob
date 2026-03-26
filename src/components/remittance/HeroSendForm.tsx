@@ -263,8 +263,6 @@ export function HeroSendForm() {
   const [amount, setAmount] = useState("1000");
   const [srcIdx, setSrcIdx] = useState(0);
   const [destIdx, setDestIdx] = useState(0);
-  const [srcOpen, setSrcOpen] = useState(false);
-  const [destOpen, setDestOpen] = useState(false);
   const [method, setMethod] = useState("");
 
   const [recipientName, setRecipientName] = useState("");
