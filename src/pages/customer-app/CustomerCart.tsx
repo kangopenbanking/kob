@@ -54,9 +54,13 @@ const CustomerCart: React.FC = () => {
   const updateQuantity = async (itemId: string, newQty: number) => {
     try {
       if (newQty <= 0) {
-        await supabase.from('pos_consumer_cart_items').delete().eq('id', itemId);
+        await supabase.functions.invoke('pos-consumer-cart', {
+          body: { action: 'remove', item_id: itemId },
+        });
       } else {
-        await supabase.from('pos_consumer_cart_items').update({ quantity: newQty }).eq('id', itemId);
+        await supabase.functions.invoke('pos-consumer-cart', {
+          body: { action: 'update_quantity', item_id: itemId, quantity: newQty },
+        });
       }
       fetchCart();
     } catch {
@@ -71,7 +75,7 @@ const CustomerCart: React.FC = () => {
     try {
       const { data, error } = await supabase.functions.invoke('pos-consumer-checkout', {
         body: { cart_id: cart.id },
-        headers: { 'Idempotency-Key': `checkout_${cart.id}_${Date.now()}` },
+        headers: { 'Idempotency-Key': `checkout_${cart.id}` },
       });
       if (error) throw error;
       if (data?.error) {
