@@ -213,14 +213,17 @@ function CurrencyPicker({ items, selectedIdx, onSelect, open, onToggle }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  const onToggleRef = useRef(onToggle);
+  onToggleRef.current = onToggle;
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onToggle();
+      if (ref.current && !ref.current.contains(e.target as Node)) onToggleRef.current();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [open, onToggle]);
+  }, [open]);
 
   const sel = items[selectedIdx] || items[0];
   if (!sel) return <div className="flex items-center px-4 h-14 rounded-r-2xl bg-muted/50 min-w-[120px] justify-center"><span className="text-xs text-muted-foreground">Loading…</span></div>;
