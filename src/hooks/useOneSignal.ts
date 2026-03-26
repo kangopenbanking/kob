@@ -26,7 +26,7 @@ export function useOneSignal(institutionId?: string) {
       window.OneSignalDeferred.push(async (OneSignal: any) => {
         try {
           // Guard: SDK may not be fully initialized
-          if (!OneSignal || typeof OneSignal.login !== 'function') {
+          if (!OneSignal || typeof OneSignal?.login !== 'function') {
             console.warn('[OneSignal] SDK not ready, skipping registration');
             return;
           }
