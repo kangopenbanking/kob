@@ -58,6 +58,13 @@ const PARTNER_CORRIDOR_TEMPLATES: Record<string, Array<{
     { from: "NG", to: "CM", fx_rate: 0.403, fee_pct: 1.8, fixed_fee: 300, fee_currency: "NGN", delivery_secs: 3600, kyc: "basic", methods: ["mobile_money"], direction: "inbound", min: 5000, max: 5000000 },
     { from: "GH", to: "CM", fx_rate: 41.50, fee_pct: 1.8, fixed_fee: 3, fee_currency: "GHS", delivery_secs: 3600, kyc: "basic", methods: ["mobile_money"], direction: "inbound", min: 20, max: 50000 },
   ],
+  paypal: [
+    { from: "US", to: "CM", fx_rate: 605.50, fee_pct: 2.5, fixed_fee: 4.99, fee_currency: "USD", delivery_secs: 1800, kyc: "basic", methods: ["paypal_email"], direction: "inbound", min: 10, max: 10000 },
+    { from: "FR", to: "CM", fx_rate: 655.957, fee_pct: 2.0, fixed_fee: 3.99, fee_currency: "EUR", delivery_secs: 1800, kyc: "basic", methods: ["paypal_email"], direction: "inbound", min: 10, max: 5000 },
+    { from: "GB", to: "CM", fx_rate: 765.50, fee_pct: 2.0, fixed_fee: 3.49, fee_currency: "GBP", delivery_secs: 1800, kyc: "basic", methods: ["paypal_email"], direction: "inbound", min: 10, max: 5000 },
+    { from: "DE", to: "CM", fx_rate: 655.957, fee_pct: 2.0, fixed_fee: 3.99, fee_currency: "EUR", delivery_secs: 1800, kyc: "basic", methods: ["paypal_email"], direction: "inbound", min: 10, max: 5000 },
+    { from: "CA", to: "CM", fx_rate: 445.20, fee_pct: 2.5, fixed_fee: 4.99, fee_currency: "CAD", delivery_secs: 2700, kyc: "basic", methods: ["paypal_email"], direction: "inbound", min: 15, max: 7500 },
+  ],
 };
 
 interface Props {

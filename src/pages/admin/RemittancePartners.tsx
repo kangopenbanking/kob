@@ -37,7 +37,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 
 const PARTNER_COLORS: Record<string, string> = {
   thunes: "bg-blue-500", terrapay: "bg-emerald-500", onafriq: "bg-amber-500",
-  kob_internal: "bg-primary", flutterwave: "bg-orange-500",
+  kob_internal: "bg-primary", flutterwave: "bg-orange-500", paypal: "bg-[#0070BA]",
 };
 
 function formatDelivery(secs: number | null) {
