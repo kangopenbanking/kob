@@ -222,20 +222,20 @@ function CurrencyPicker({ items, selectedIdx, onSelect }: {
 
   return (
     <Select value={String(safeIndex)} onValueChange={(value) => onSelect(Number(value))}>
-      <SelectTrigger className="h-14 min-w-[140px] rounded-none rounded-r-2xl border-0 border-l border-border/30 bg-muted/50 px-4 font-semibold text-sm shadow-none focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="h-14 w-[110px] shrink-0 rounded-none rounded-r-2xl border-0 border-l border-border/30 bg-muted/50 px-3 font-semibold text-sm shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:ml-0 [&>svg]:shrink-0">
         <SelectValue>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{selected.flag}</span>
-            <span className="font-bold">{selected.code}</span>
-          </div>
+          <span className="flex items-center gap-1.5">
+            <span className="text-base">{selected.flag}</span>
+            <span className="font-bold text-xs">{selected.code}</span>
+          </span>
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="rounded-2xl border-border/50 bg-background/95 backdrop-blur-xl">
         {items.map((item, index) => (
-          <SelectItem key={`${item.code}-${item.name}-${index}`} value={String(index)} className="rounded-xl py-3">
-            <div className="flex items-center gap-3 pr-6">
-              <span className="text-lg">{item.flag}</span>
-              <span className="font-semibold">{item.code}</span>
+          <SelectItem key={`${item.code}-${item.name}-${index}`} value={String(index)} className="rounded-xl py-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">{item.flag}</span>
+              <span className="font-semibold text-sm">{item.code}</span>
               <span className="text-muted-foreground text-xs">{item.name}</span>
             </div>
           </SelectItem>
