@@ -753,7 +753,7 @@ export function HeroSendForm() {
                 </div>
                 <CurrencyPicker
                   items={destCountries.map((d) => ({ flag: d.flag, code: d.currency, name: d.country }))}
-                  selectedIdx={destIdx} onSelect={setDestIdx}
+                  selectedIdx={safeDestIdx} onSelect={setDestIdx}
                   open={destOpen} onToggle={() => destCountries.length > 1 ? setDestOpen(!destOpen) : undefined}
                 />
               </div>
