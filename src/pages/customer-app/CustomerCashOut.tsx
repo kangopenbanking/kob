@@ -200,8 +200,8 @@ const CustomerCashOut: React.FC = () => {
       if (result?.error) throw new Error(result.message || result.error);
 
       // Invalidate caches
-      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
+      queryClient.refetchQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['customer-spending-summary'] });
 
