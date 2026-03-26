@@ -78,31 +78,22 @@ const CustomerBills: React.FC = () => {
   const handlePay = async () => {
     setPaying(true);
     try {
-      const { error: txError } = await supabase.from('transactions').insert({
-        user_id: user!.id,
-        institution_id: KANG_PLATFORM_ID,
-        account_id: primaryAccount?.id || null,
-        transaction_type: 'bill_payment',
-        amount: amountNum,
-        currency: 'XAF',
-        status: 'completed',
-        credit_debit_indicator: 'Debit',
-        transaction_information: `${selectedBiller} - ${selectedCategory?.name} bill (Acct: ${accountNumber})`,
-        booking_datetime: new Date().toISOString(),
-        value_datetime: new Date().toISOString(),
-        metadata: {
-          biller: selectedBiller,
-          category: selectedCategory?.id,
-          meter_account: accountNumber,
+      const { data, error } = await supabase.functions.invoke('api-bills', {
+        body: {
+          account_id: primaryAccount?.id,
+          biller_name: selectedBiller,
+          biller_code: selectedCategory?.id?.toUpperCase(),
+          bill_reference: accountNumber,
+          amount: amountNum,
+          currency: 'XAF',
+          bill_type: selectedCategory?.id || 'utility',
+          description: `${selectedBiller} - ${selectedCategory?.name} bill (Acct: ${accountNumber})`,
         },
       });
-      if (txError) throw txError;
-
-      if (primaryAccount?.id && primaryBalance) {
-        const newAmount = Math.max(walletBalance - amountNum, 0);
-        await supabase.from('account_balances')
-          .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
-          .eq('id', (primaryBalance as any).id);
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error === 'Insufficient funds' ? 'Insufficient balance' : data.error);
+        return;
       }
 
       queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });

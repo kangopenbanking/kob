@@ -39,19 +39,35 @@ export default function CustomerDisputes() {
   const [submitting, setSubmitting] = useState(false);
 
   // Fetch recent transactions for selector
-  const { data: recentTxns = [] } = useQuery({
-    queryKey: ["customer-recent-txns", user?.id],
+  // Fetch user's account IDs first
+  const { data: userAccounts = [] } = useQuery({
+    queryKey: ["customer-accounts-for-disputes", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const { data } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("user_id", user.id);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const userAccountIds = userAccounts.map((a: any) => a.id);
+
+  const { data: recentTxns = [] } = useQuery({
+    queryKey: ["customer-recent-txns", user?.id, userAccountIds],
+    queryFn: async () => {
+      if (!user?.id || userAccountIds.length === 0) return [];
+      const { data } = await supabase
         .from("transactions")
         .select("id, amount, currency, transaction_information, booking_datetime, account_id")
-        .eq("account_id", user.id)
+        .in("account_id", userAccountIds)
         .order("booking_datetime", { ascending: false })
         .limit(20);
       return data || [];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && userAccountIds.length > 0,
   });
 
   // Fetch linked institutions
