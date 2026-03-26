@@ -425,49 +425,30 @@ export default function CustomerSendMoney() {
             </motion.div>
           )}
 
-          {/* ═══ Step 2: Receiver Details ══════════════ */}
+          {/* ═══ Step 2: Amount & Receiver ═════════════ */}
           {step === "form" && selectedCorridor && (
             <motion.div key="form" {...stepTransition} className="space-y-4">
-              {/* Corridor Badge */}
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 rounded-2xl border border-primary/15 p-3"
-                style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.02))" }}
-              >
-                <div className="flex items-center gap-1">
-                  <span className="text-xl">{getFlag(selectedCorridor.from_country)}</span>
-                  <ArrowRight className="h-3 w-3 text-primary" />
-                  <span className="text-xl">{getFlag(selectedCorridor.to_country)}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">
-                    {getCountryName(selectedCorridor.from_country)} → {getCountryName(selectedCorridor.to_country)}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">{selectedCorridor.from_currency} → {selectedCorridor.to_currency}</p>
-                </div>
-                <button onClick={() => setStep("corridors")} className="text-xs text-primary font-semibold shrink-0">Change</button>
-              </motion.div>
-
-              {/* Amount Card */}
-              <Card className="border-border/50 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <Banknote className="h-3.5 w-3.5 text-primary" /> Amount & Delivery
-                  </p>
-                </div>
-                <CardContent className="p-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">You Send ({selectedCorridor.from_currency})</Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">{selectedCorridor.from_currency}</span>
+              {/* Unified Transfer Card */}
+              <Card className="border-border/50 shadow-lg overflow-hidden">
+                <CardContent className="p-0">
+                  {/* ── You Send ── */}
+                  <div className="px-5 pt-5 pb-3">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">You send</label>
+                    <div className="flex items-center rounded-2xl border-2 border-border/50 focus-within:border-primary/60 transition-colors overflow-hidden bg-background">
                       <Input
                         type="number"
                         placeholder="0"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="pl-16 text-xl font-bold h-14 rounded-2xl border-border/50 bg-muted/30"
+                        className="border-0 text-2xl font-bold h-14 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent pl-5 flex-1 min-w-0"
                       />
+                      <div className="flex items-center gap-2 px-4 h-14 bg-muted/40 border-l border-border/30 shrink-0">
+                        <span className="text-lg">{getFlag(selectedCorridor.from_country)}</span>
+                        <span className="text-xs font-bold text-foreground">{selectedCorridor.from_currency}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    {/* Quick amount presets */}
+                    <div className="flex gap-2 mt-2.5">
                       {[50000, 100000, 250000, 500000].map((p) => (
                         <motion.button
                           key={p}
@@ -485,62 +466,103 @@ export default function CustomerSendMoney() {
                     </div>
                   </div>
 
-                  {/* Dynamic Delivery Methods */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">How should they receive it?</Label>
-                    <div className={`grid gap-2 ${availableDeliveryMethods.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                      {availableDeliveryMethods.map((m) => {
-                        const meta = getDeliveryMeta(m);
-                        const MIcon = meta.icon;
-                        const selected = deliveryMethod === m;
-                        return (
-                          <motion.button
-                            key={m}
-                            onClick={() => setDeliveryMethod(m)}
-                            whileTap={{ scale: 0.95 }}
-                            className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 transition-all ${
-                              selected
-                                ? "border-primary shadow-md"
-                                : "border-border/50 bg-card hover:border-primary/30"
-                            }`}
-                            style={selected ? { backgroundColor: meta.bgColor } : undefined}
-                          >
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: selected ? `${meta.color}20` : `${meta.color}10` }}>
-                              <MIcon className="h-4 w-4" style={{ color: meta.color }} />
-                            </div>
-                            <span className="text-[10px] font-semibold text-foreground leading-tight text-center">{meta.label}</span>
-                            {selected && (
-                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                className="h-1.5 w-1.5 rounded-full bg-primary"
-                              />
-                            )}
-                          </motion.button>
-                        );
-                      })}
+                  {/* ── Live Rate Strip ── */}
+                  <div className="flex items-center justify-between px-5 py-3 bg-muted/20 border-y border-border/30">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <span className="text-xs font-medium">1 {selectedCorridor.from_currency} = {selectedCorridor.to_currency}</span>
+                    </div>
+                    <button onClick={() => setStep("corridors")} className="text-[10px] text-primary font-bold hover:underline">
+                      Change route
+                    </button>
+                  </div>
+
+                  {/* ── They Receive ── */}
+                  <div className="px-5 pt-3 pb-4">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">They receive</label>
+                    <div className="flex items-center rounded-2xl border-2 border-border/50 overflow-hidden bg-muted/5">
+                      <div className="flex-1 pl-5 py-3.5">
+                        <motion.span
+                          key={amount}
+                          initial={{ opacity: 0.5, y: 2 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-2xl font-bold text-foreground"
+                        >
+                          {Number(amount) > 0 ? "—" : "0"}
+                        </motion.span>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Amount calculated after quote</p>
+                      </div>
+                      <div className="flex items-center gap-2 px-4 h-14 bg-muted/40 border-l border-border/30 shrink-0">
+                        <span className="text-lg">{getFlag(selectedCorridor.to_country)}</span>
+                        <span className="text-xs font-bold text-foreground">{selectedCorridor.to_currency}</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Receiver Info */}
+              {/* ── Receiving Method ── */}
               <Card className="border-border/50 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <Send className="h-3.5 w-3.5 text-primary" /> Receiver Information
+                <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Receiving method
+                  </p>
+                </div>
+                <CardContent className="p-4">
+                  <div className={`grid gap-2.5 ${availableDeliveryMethods.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                    {availableDeliveryMethods.map((m) => {
+                      const meta = getDeliveryMeta(m);
+                      const MIcon = meta.icon;
+                      const selected = deliveryMethod === m;
+                      return (
+                        <motion.button
+                          key={m}
+                          onClick={() => setDeliveryMethod(m)}
+                          whileTap={{ scale: 0.95 }}
+                          className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-3.5 transition-all duration-200 ${
+                            selected
+                              ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                              : "border-border/50 bg-card hover:border-primary/30"
+                          }`}
+                        >
+                          <div
+                            className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors"
+                            style={{ backgroundColor: selected ? `${meta.color}20` : `${meta.color}10` }}
+                          >
+                            <MIcon className="h-5 w-5" style={{ color: meta.color }} />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight text-center">{meta.label}</span>
+                          {selected && (
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-1.5 w-6 rounded-full bg-primary" />
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* ── Receiver Information ── */}
+              <Card className="border-border/50 shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                    <Send className="h-3 w-3 text-primary" /> Receiver details
                   </p>
                 </div>
                 <CardContent className="p-4 space-y-3">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">Full Name *</Label>
+                    <Label className="text-[11px] font-semibold text-muted-foreground">Full Name *</Label>
                     <Input placeholder="As it appears on ID" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} className="rounded-xl h-11 border-border/50" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] text-muted-foreground">Phone</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Phone</Label>
                       <Input placeholder="+234..." value={receiverPhone} onChange={(e) => setReceiverPhone(e.target.value)} className="rounded-xl h-11 border-border/50" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] text-muted-foreground">Email</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Email</Label>
                       <Input placeholder="email@..." value={receiverEmail} onChange={(e) => setReceiverEmail(e.target.value)} className="rounded-xl h-11 border-border/50" />
                     </div>
                   </div>
@@ -549,16 +571,16 @@ export default function CustomerSendMoney() {
                   {deliveryMethod === "bank_transfer" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3 pt-1">
                       <div className="space-y-1.5">
-                        <Label className="text-[11px] text-muted-foreground">Bank Name</Label>
+                        <Label className="text-[11px] font-semibold text-muted-foreground">Bank Name</Label>
                         <Input placeholder="Receiver's bank" value={receiverBankName} onChange={(e) => setReceiverBankName(e.target.value)} className="rounded-xl h-11 border-border/50" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">SWIFT/BIC Code</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">SWIFT/BIC Code</Label>
                           <Input placeholder="SWIFT code" value={receiverBankCode} onChange={(e) => setReceiverBankCode(e.target.value)} className="rounded-xl h-11 border-border/50" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Account / IBAN *</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">Account / IBAN *</Label>
                           <Input placeholder="Account number" value={receiverAccountNumber} onChange={(e) => setReceiverAccountNumber(e.target.value)} className="rounded-xl h-11 border-border/50" />
                         </div>
                       </div>
@@ -567,30 +589,30 @@ export default function CustomerSendMoney() {
 
                   {(deliveryMethod === "mobile_wallet" || deliveryMethod === "mobile_money") && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-1.5 pt-1">
-                      <Label className="text-[11px] text-muted-foreground">Mobile Wallet Number *</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Mobile Wallet Number *</Label>
                       <Input placeholder="+237..." value={receiverMobileWallet} onChange={(e) => setReceiverMobileWallet(e.target.value)} className="rounded-xl h-11 border-border/50" />
                     </motion.div>
                   )}
 
                   {deliveryMethod === "paypal" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-1.5 pt-1">
-                      <Label className="text-[11px] text-muted-foreground">PayPal Email *</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">PayPal Email *</Label>
                       <Input placeholder="paypal@email.com" value={receiverEmail} onChange={(e) => setReceiverEmail(e.target.value)} className="rounded-xl h-11 border-border/50" />
                     </motion.div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Purpose */}
+              {/* ── Purpose & Notes ── */}
               <Card className="border-border/50 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Purpose & Notes
+                <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                    <ShieldCheck className="h-3 w-3 text-primary" /> Purpose & notes
                   </p>
                 </div>
                 <CardContent className="p-4 space-y-3">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">Purpose of Transfer</Label>
+                    <Label className="text-[11px] font-semibold text-muted-foreground">Purpose of Transfer</Label>
                     <Select value={purpose} onValueChange={setPurpose}>
                       <SelectTrigger className="rounded-xl h-11 border-border/50"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -604,19 +626,20 @@ export default function CustomerSendMoney() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">Note (optional)</Label>
+                    <Label className="text-[11px] font-semibold text-muted-foreground">Note (optional)</Label>
                     <Textarea placeholder="Any additional details..." value={narration} onChange={(e) => setNarration(e.target.value)} rows={2} className="rounded-xl border-border/50 resize-none" />
                   </div>
                 </CardContent>
               </Card>
 
+              {/* ── Get Quote CTA ── */}
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Button
-                  className="w-full h-12 rounded-2xl text-sm font-bold shadow-md"
+                  className="w-full h-13 rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl transition-all"
                   disabled={!amount || !receiverName || quoteMutation.isPending}
                   onClick={() => quoteMutation.mutate()}
                 >
-                  {quoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Banknote className="h-4 w-4 mr-2" />}
+                  {quoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRight className="h-4 w-4 mr-2" />}
                   Get Quote
                 </Button>
               </motion.div>
