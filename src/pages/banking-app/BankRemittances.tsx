@@ -78,7 +78,7 @@ const BankRemittances: React.FC = () => {
           <h1 className="text-xl font-bold text-foreground">Remittances</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{institution?.institution_name || 'Your institution'}</p>
         </div>
-        <Button size="sm" onClick={() => navigate(`/app/send-money`)} className="gap-1.5">
+        <Button size="sm" onClick={() => navigate(`/bank/${institutionId}/payments/send-abroad`)} className="gap-1.5">
           <Send className="h-3.5 w-3.5" /> Send Abroad
         </Button>
       </div>
