@@ -204,62 +204,44 @@ function StepIndicator({ current, steps }: { current: number; steps: string[] })
   );
 }
 
-function CurrencyPicker({ items, selectedIdx, onSelect, open, onToggle }: {
+function CurrencyPicker({ items, selectedIdx, onSelect }: {
   items: { flag: string; code: string; name: string }[];
   selectedIdx: number;
   onSelect: (i: number) => void;
-  open: boolean;
-  onToggle: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const safeIndex = selectedIdx >= 0 && selectedIdx < items.length ? selectedIdx : 0;
+  const selected = items[safeIndex];
 
-  const onToggleRef = useRef(onToggle);
-  onToggleRef.current = onToggle;
+  if (!selected) {
+    return (
+      <div className="flex items-center px-4 h-14 rounded-r-2xl bg-muted/50 min-w-[140px] justify-center border-l border-border/30">
+        <span className="text-xs text-muted-foreground">Loading…</span>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onToggleRef.current();
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  const sel = items[selectedIdx] || items[0];
-  if (!sel) return <div className="flex items-center px-4 h-14 rounded-r-2xl bg-muted/50 min-w-[120px] justify-center"><span className="text-xs text-muted-foreground">Loading…</span></div>;
   return (
-    <div className="relative" ref={ref}>
-      <button onClick={onToggle}
-        className="flex items-center gap-2 px-4 h-14 rounded-r-2xl bg-muted/50 hover:bg-muted/70 transition-all font-semibold text-sm min-w-[120px] justify-center border-l border-border/30">
-        <span className="text-lg">{sel.flag}</span>
-        <span className="font-bold">{sel.code}</span>
-        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96 }}
-            transition={{ duration: 0.18, ease }}
-            className="absolute right-0 top-[calc(100%+6px)] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 min-w-[250px] max-h-[300px] overflow-y-auto p-1"
-          >
-            {items.map((item, i) => (
-              <button key={`${item.code}-${item.name}-${i}`}
-                onClick={() => { onSelect(i); onToggle(); }}
-                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm transition-colors ${
-                  i === selectedIdx ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted/50 text-foreground"
-                }`}>
-                <span className="text-lg">{item.flag}</span>
-                <span className="font-semibold">{item.code}</span>
-                <span className="text-muted-foreground text-xs ml-auto truncate max-w-[100px]">{item.name}</span>
-                {i === selectedIdx && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <Select value={String(safeIndex)} onValueChange={(value) => onSelect(Number(value))}>
+      <SelectTrigger className="h-14 min-w-[140px] rounded-none rounded-r-2xl border-0 border-l border-border/30 bg-muted/50 px-4 font-semibold text-sm shadow-none focus:ring-0 focus:ring-offset-0">
+        <SelectValue>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{selected.flag}</span>
+            <span className="font-bold">{selected.code}</span>
+          </div>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent className="rounded-2xl border-border/50 bg-background/95 backdrop-blur-xl">
+        {items.map((item, index) => (
+          <SelectItem key={`${item.code}-${item.name}-${index}`} value={String(index)} className="rounded-xl py-3">
+            <div className="flex items-center gap-3 pr-6">
+              <span className="text-lg">{item.flag}</span>
+              <span className="font-semibold">{item.code}</span>
+              <span className="text-muted-foreground text-xs">{item.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -279,8 +261,6 @@ export function HeroSendForm() {
   const [amount, setAmount] = useState("1000");
   const [srcIdx, setSrcIdx] = useState(0);
   const [destIdx, setDestIdx] = useState(0);
-  const [srcOpen, setSrcOpen] = useState(false);
-  const [destOpen, setDestOpen] = useState(false);
   const [method, setMethod] = useState("");
 
   const [recipientName, setRecipientName] = useState("");
@@ -727,7 +707,6 @@ export function HeroSendForm() {
                 <CurrencyPicker
                   items={srcCountries.map((c) => ({ flag: c.flag, code: c.currency, name: c.country }))}
                   selectedIdx={safeSrcIdx} onSelect={setSrcIdx}
-                  open={srcOpen} onToggle={() => setSrcOpen(o => !o)}
                 />
               </div>
             </div>
@@ -757,7 +736,6 @@ export function HeroSendForm() {
                 <CurrencyPicker
                   items={destCountries.map((d) => ({ flag: d.flag, code: d.currency, name: d.country }))}
                   selectedIdx={safeDestIdx} onSelect={setDestIdx}
-                  open={destOpen} onToggle={() => setDestOpen(o => !o)}
                 />
               </div>
               {/* Fee tag */}
