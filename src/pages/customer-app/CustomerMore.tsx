@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe
+  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe, Heart, Star, Store, MessageCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
@@ -23,6 +23,10 @@ const allQuickActions = [
 const utilityItems = [
   { label: 'Send Abroad', icon: Globe, path: 'send-money', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { label: 'Remittances', icon: Download, path: 'remittances', color: 'bg-[hsl(150,50%,90%)]', iconColor: 'text-[hsl(150,45%,35%)]' },
+  { label: 'Marketplace', icon: Store, path: 'marketplace', color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
+  { label: 'Loyalty', icon: Gift, path: 'loyalty', color: 'bg-[hsl(320,60%,92%)]', iconColor: 'text-[hsl(320,50%,45%)]' },
+  { label: 'Wishlist', icon: Heart, path: 'wishlist', color: 'bg-[hsl(350,70%,92%)]', iconColor: 'text-[hsl(350,55%,45%)]' },
+  { label: 'Reviews', icon: Star, path: 'reviews', color: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(45,70%,35%)]' },
   { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
   { label: 'Disputes', icon: ShieldAlert, path: 'disputes', color: 'bg-[hsl(0,60%,92%)]', iconColor: 'text-[hsl(0,50%,45%)]' },
   { label: 'Support Chat', icon: HelpCircle, path: 'support', color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,50%,45%)]' },

@@ -485,6 +485,10 @@ const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
 const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
 const CustomerSendMoney = lazy(() => import("./pages/customer-app/CustomerSendMoney"));
 const CustomerRemittances = lazy(() => import("./pages/customer-app/CustomerRemittances"));
+const CustomerLoyalty = lazy(() => import("./pages/customer-app/CustomerLoyalty").then(m => ({ default: m.CustomerLoyalty })));
+const CustomerMarketplace = lazy(() => import("./pages/customer-app/CustomerMarketplace").then(m => ({ default: m.CustomerMarketplace })));
+const CustomerReviews = lazy(() => import("./pages/customer-app/CustomerReviews").then(m => ({ default: m.CustomerReviews })));
+const CustomerWishlist = lazy(() => import("./pages/customer-app/CustomerWishlist").then(m => ({ default: m.CustomerWishlist })));
 
 // Business App PWA
 const BusinessSplash = lazy(() => import("./pages/business-app/BusinessSplash"));
@@ -1128,6 +1132,10 @@ function App() {
               <Route path="remittances" element={<CustomerRemittances />} />
               <Route path="authorize-payment/:intentId" element={<PayByBankApproval />} />
               <Route path="support" element={<CustomerSupport />} />
+              <Route path="loyalty" element={<CustomerLoyalty />} />
+              <Route path="marketplace" element={<CustomerMarketplace />} />
+              <Route path="reviews" element={<CustomerReviews />} />
+              <Route path="wishlist" element={<CustomerWishlist />} />
             </Route>
 
             {/* Business App PWA Routes */}
