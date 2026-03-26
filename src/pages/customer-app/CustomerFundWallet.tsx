@@ -78,8 +78,8 @@ const CustomerFundWallet: React.FC = () => {
   useEffect(() => {
     const status = searchParams.get('status') || searchParams.get('transaction_status');
     if (status) {
-      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
+      queryClient.refetchQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
       toast.info('Checking payment status...');
     }
@@ -222,8 +222,8 @@ const CustomerFundWallet: React.FC = () => {
   };
 
   const handleSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
-    queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+    queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
+    queryClient.refetchQueries({ queryKey: ['account-balances'] });
     queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
     queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
     queryClient.invalidateQueries({ queryKey: ['customer-bill-payments'] });

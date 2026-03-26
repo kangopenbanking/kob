@@ -31,9 +31,11 @@ export function useRealtimeBalanceSync(userId?: string, institutionId?: string) 
       }
 
       const { data } = await query;
-      // Exclude Customer App wallet accounts (KANG- prefix) from banking realtime sync
+      // When scoped to a banking institution, exclude wallet (KANG-) accounts.
+      // When used by the consumer app (no institutionId), track ALL accounts
+      // so wallet balance changes also trigger a refetch.
       accountIds = (data || [])
-        .filter((a) => !a.account_id?.startsWith('KANG-'))
+        .filter((a) => institutionId ? !a.account_id?.startsWith('KANG-') : true)
         .map((a) => a.id);
 
       

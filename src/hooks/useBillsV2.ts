@@ -86,8 +86,8 @@ export function usePayBillIntent() {
     mutationFn: (intentId: string) => invoke('pay_intent', { intent_id: intentId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['bill-payments'] });
-      qc.invalidateQueries({ queryKey: ['customer-accounts'] });
-      qc.invalidateQueries({ queryKey: ['account-balances'] });
+      qc.refetchQueries({ queryKey: ['customer-accounts'] });
+      qc.refetchQueries({ queryKey: ['account-balances'] });
       qc.invalidateQueries({ queryKey: ['customer-transactions'] });
       qc.invalidateQueries({ queryKey: ['spending-summary'] });
     },

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, ChevronDown, ChevronUp, Plus, Trash2, X, Loader2, RefreshCw, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,9 +50,14 @@ const CustomerBank: React.FC = () => {
     return key ? bankColors[key] : bankColors.default;
   };
 
+  const queryClient = useQueryClient();
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([
+      refetch(),
+      queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+    ]);
     setRefreshing(false);
     toast.success('Accounts refreshed');
   };
