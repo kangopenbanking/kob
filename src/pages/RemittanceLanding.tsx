@@ -616,7 +616,16 @@ function SendForm() {
       <motion.div layout className="space-y-2 py-3.5 border-y border-border/40 mb-5 text-sm">
         {[
           { icon: Banknote, label: `Fee (${selectedCurrency.fee_pct}%)`, value: `${fee.toFixed(2)} ${selectedCurrency.code}` },
-          { icon: Repeat, label: "Rate", value: `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} ${destCurrLabel}` },
+          { icon: Repeat, label: "Rate", value: (() => {
+            if (destCurrLabel === "XAF") return `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} XAF`;
+            const destEntry = currencies.find((c) => c.code === destCurrLabel);
+            if (destEntry && destEntry.rate > 0) {
+              const crossRate = (selectedCurrency.rate / destEntry.rate).toFixed(4);
+              return `1 ${selectedCurrency.code} = ${crossRate} ${destCurrLabel}`;
+            }
+            if (selectedCurrency.code === destCurrLabel) return `1 ${selectedCurrency.code} = 1 ${destCurrLabel}`;
+            return `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} XAF`;
+          })() },
           { icon: Clock, label: "Delivery", value: "Instant", hl: true },
         ].map((r) => (
           <div key={r.label} className="flex items-center justify-between">
