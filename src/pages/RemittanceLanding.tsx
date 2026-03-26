@@ -329,12 +329,40 @@ function SendForm() {
   }, [recipientName]);
 
   const selectedCurrency = currencies[selectedIdx] || currencies[0];
-  const destCurrLabel = destCountries[selectedDestIdx]?.currency || "XAF";
-  const destFlag = destCountries[selectedDestIdx]?.flag || "🇨🇲";
+  const destCountry = destCountries[selectedDestIdx] || destCountries[0];
+  const destCurrLabel = destCountry?.currency || "XAF";
+  const destFlag = destCountry?.flag || "🇨🇲";
   const numericAmount = parseFloat(amount) || 0;
   const feePercent = (selectedCurrency.fee_pct || 0.5) / 100;
   const fee = Math.round(numericAmount * feePercent * 100) / 100;
-  const convertedAmount = useMemo(() => Math.round((numericAmount - fee) * selectedCurrency.rate), [numericAmount, fee, selectedCurrency.rate]);
+
+  // Compute conversion: source→XAF is selectedCurrency.rate
+  // If dest is XAF, use directly. Otherwise compute cross-rate via XAF.
+  const convertedAmount = useMemo(() => {
+    const netAmount = numericAmount - fee;
+    if (netAmount <= 0) return 0;
+    const sourceToXaf = selectedCurrency.rate; // e.g. 1 EUR = 655.957 XAF
+
+    if (destCurrLabel === "XAF") {
+      return Math.round(netAmount * sourceToXaf);
+    }
+
+    // For non-XAF destinations, find the dest currency's rate to XAF
+    const destCurrencyEntry = currencies.find((c) => c.code === destCurrLabel);
+    if (destCurrencyEntry && destCurrencyEntry.rate > 0) {
+      // sourceToXaf / destToXaf = source-to-dest rate
+      const crossRate = sourceToXaf / destCurrencyEntry.rate;
+      return Math.round(netAmount * crossRate * 100) / 100;
+    }
+
+    // If same currency (e.g. EUR → EUR), 1:1
+    if (selectedCurrency.code === destCurrLabel) {
+      return Math.round(netAmount * 100) / 100;
+    }
+
+    // Fallback: show XAF conversion
+    return Math.round(netAmount * sourceToXaf);
+  }, [numericAmount, fee, selectedCurrency.rate, selectedCurrency.code, destCurrLabel, currencies]);
 
   const deliveryOptions = [
     { key: "wallet" as const, label: "KOB Wallet", icon: Smartphone },
@@ -588,7 +616,16 @@ function SendForm() {
       <motion.div layout className="space-y-2 py-3.5 border-y border-border/40 mb-5 text-sm">
         {[
           { icon: Banknote, label: `Fee (${selectedCurrency.fee_pct}%)`, value: `${fee.toFixed(2)} ${selectedCurrency.code}` },
-          { icon: Repeat, label: "Rate", value: `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} ${destCurrLabel}` },
+          { icon: Repeat, label: "Rate", value: (() => {
+            if (destCurrLabel === "XAF") return `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} XAF`;
+            const destEntry = currencies.find((c) => c.code === destCurrLabel);
+            if (destEntry && destEntry.rate > 0) {
+              const crossRate = (selectedCurrency.rate / destEntry.rate).toFixed(4);
+              return `1 ${selectedCurrency.code} = ${crossRate} ${destCurrLabel}`;
+            }
+            if (selectedCurrency.code === destCurrLabel) return `1 ${selectedCurrency.code} = 1 ${destCurrLabel}`;
+            return `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} XAF`;
+          })() },
           { icon: Clock, label: "Delivery", value: "Instant", hl: true },
         ].map((r) => (
           <div key={r.label} className="flex items-center justify-between">
