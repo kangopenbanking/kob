@@ -44,10 +44,12 @@ const BankSendAbroad: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [countryFilter, setCountryFilter] = useState('');
 
-  const { data: corridors, isLoading: loadingCorridors } = useQuery({
+  const { data: corridors, isLoading: loadingCorridors, error: corridorsError } = useQuery({
     queryKey: ['bank-outbound-corridors'],
     queryFn: async () => {
       const res = await supabase.functions.invoke('remittance-outbound', { body: { action: 'get_corridors' } });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
       return res.data?.corridors || [];
     },
   });
@@ -84,9 +86,21 @@ const BankSendAbroad: React.FC = () => {
     onError: (err: any) => toast({ title: 'Transfer Failed', description: err.message, variant: 'destructive' }),
   });
 
-  const filteredCorridors = corridors?.filter((c: any) =>
-    !countryFilter || c.to_country?.toLowerCase().includes(countryFilter.toLowerCase())
-  ) || [];
+  const filteredCorridors = corridors?.filter((c: any) => {
+    if (!countryFilter) return true;
+    const haystack = [
+      c.to_country_name,
+      c.to_country,
+      c.to_currency,
+      c.remittance_partners?.display_name,
+      c.remittance_partners?.name,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(countryFilter.toLowerCase());
+  }) || [];
 
   const goBack = () => {
     if (step === 'corridors') navigate(`/bank/${institutionId}/payments`);
@@ -163,6 +177,12 @@ const BankSendAbroad: React.FC = () => {
 
             {loadingCorridors ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            ) : corridorsError ? (
+              <div className="text-center py-16">
+                <AlertTriangle className="h-8 w-8 text-destructive/70 mx-auto mb-3" />
+                <p className="font-semibold text-foreground">Unable to load corridors</p>
+                <p className="text-xs text-muted-foreground mt-1">Please try again in a moment.</p>
+              </div>
             ) : filteredCorridors.length > 0 ? (
               <div className="space-y-2">
                 {filteredCorridors.map((c: any) => (
@@ -175,7 +195,7 @@ const BankSendAbroad: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-foreground">{c.from_country} → {c.to_country}</p>
-                          <p className="text-[11px] text-muted-foreground">{c.from_currency} → {c.to_currency} · {c.remittance_partners?.name || 'Partner'}</p>
+                          <p className="text-[11px] text-muted-foreground">{c.from_currency} → {c.to_currency} · {c.remittance_partners?.display_name || c.remittance_partners?.name || 'Partner'}</p>
                         </div>
                       </div>
                       <ArrowRight className="h-4 w-4 text-primary" />
