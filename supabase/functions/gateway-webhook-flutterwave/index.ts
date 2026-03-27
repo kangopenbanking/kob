@@ -222,6 +222,41 @@ serve(async (req) => {
           });
         }
       }
+
+      // ─── Remittance status sync: finalize remittance on payout completion ───
+      if (payout.metadata?.remittance_id) {
+        const remittanceId = payout.metadata.remittance_id;
+        const remittanceStatus = newStatus === 'successful' ? 'credited' : newStatus === 'failed' ? 'failed' : null;
+        if (remittanceStatus) {
+          await supabase.from('remittances').update({
+            status: remittanceStatus,
+            ...(remittanceStatus === 'credited' ? { completed_at: new Date().toISOString() } : {}),
+            ...(remittanceStatus === 'failed' ? { cancellation_reason: `Flutterwave payout ${payload.data?.status}`, cancelled_at: new Date().toISOString() } : {}),
+          }).eq('id', remittanceId);
+
+          await supabase.from('remittance_events').insert({
+            remittance_id: remittanceId,
+            event_type: remittanceStatus === 'credited' ? 'transfer_delivered' : 'transfer_failed',
+            payload_raw: JSON.stringify({ provider: 'flutterwave', payout_id: payout.id, tx_ref: payout.tx_ref, status: newStatus }),
+            signature_valid: true,
+          });
+
+          // Notify sender
+          const { data: remData } = await supabase.from('remittances').select('sender_user_id, receiver_name, amount_out, currency_out').eq('id', remittanceId).maybeSingle();
+          if (remData?.sender_user_id) {
+            await supabase.from('app_notifications').insert({
+              user_id: remData.sender_user_id,
+              type: remittanceStatus === 'credited' ? 'success' : 'warning',
+              title: remittanceStatus === 'credited' ? 'Transfer Delivered!' : 'Transfer Failed',
+              message: remittanceStatus === 'credited'
+                ? `Your transfer of ${remData.amount_out?.toLocaleString()} ${remData.currency_out} to ${remData.receiver_name} has been delivered.`
+                : `Your transfer to ${remData.receiver_name} failed. Please contact support.`,
+              icon: remittanceStatus === 'credited' ? 'check-circle' : 'x-circle',
+              metadata: { remittance_id: remittanceId },
+            });
+          }
+        }
+      }
     }
 
     // Handle virtual account credit events

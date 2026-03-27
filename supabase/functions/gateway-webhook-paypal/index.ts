@@ -92,7 +92,6 @@ serve(async (req) => {
         // Handle withdrawal reversal on failure (H2 fix: check both balance types)
         if (kobStatus === 'failed' && payoutRecord.metadata?.withdrawal_account_id) {
           const accountId = payoutRecord.metadata.withdrawal_account_id;
-          // Try ClosingAvailable first (primary), then InterimAvailable
           let balance = null;
           const { data: closingBal } = await supabase
             .from('account_balances')
@@ -120,13 +119,46 @@ serve(async (req) => {
               .update({ amount: balance.amount + payoutRecord.amount })
               .eq('id', balance.id);
           } else {
-            // Create new balance record if neither exists
             await supabase.from('account_balances').insert({
               account_id: accountId, balance_type: 'ClosingAvailable',
               credit_debit_indicator: 'Credit', amount: payoutRecord.amount,
               currency: payoutRecord.currency || 'USD',
               balance_datetime: new Date().toISOString(),
             });
+          }
+        }
+
+        // ─── Remittance status sync: finalize remittance on PayPal payout completion ───
+        if (payoutRecord.metadata?.remittance_id) {
+          const remittanceId = payoutRecord.metadata.remittance_id;
+          const remittanceStatus = kobStatus === 'successful' ? 'credited' : kobStatus === 'failed' ? 'failed' : null;
+          if (remittanceStatus) {
+            await supabase.from('remittances').update({
+              status: remittanceStatus,
+              ...(remittanceStatus === 'credited' ? { completed_at: new Date().toISOString() } : {}),
+              ...(remittanceStatus === 'failed' ? { cancellation_reason: `PayPal: ${transactionStatus}`, cancelled_at: new Date().toISOString() } : {}),
+            }).eq('id', remittanceId);
+
+            await supabase.from('remittance_events').insert({
+              remittance_id: remittanceId,
+              event_type: remittanceStatus === 'credited' ? 'transfer_delivered' : 'transfer_failed',
+              payload_raw: JSON.stringify({ provider: 'paypal', payout_id: payoutRecord.id, batch_id: paypalBatchId, status: kobStatus }),
+              signature_valid: true,
+            });
+
+            const { data: remData } = await supabase.from('remittances').select('sender_user_id, receiver_name, amount_out, currency_out').eq('id', remittanceId).maybeSingle();
+            if (remData?.sender_user_id) {
+              await supabase.from('app_notifications').insert({
+                user_id: remData.sender_user_id,
+                type: remittanceStatus === 'credited' ? 'success' : 'warning',
+                title: remittanceStatus === 'credited' ? 'Transfer Delivered!' : 'Transfer Failed',
+                message: remittanceStatus === 'credited'
+                  ? `Your transfer of ${remData.amount_out?.toLocaleString()} ${remData.currency_out} to ${remData.receiver_name} has been delivered.`
+                  : `Your transfer to ${remData.receiver_name} failed. Please contact support.`,
+                icon: remittanceStatus === 'credited' ? 'check-circle' : 'x-circle',
+                metadata: { remittance_id: remittanceId },
+              });
+            }
           }
         }
 
