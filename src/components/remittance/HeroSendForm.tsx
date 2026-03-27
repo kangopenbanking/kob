@@ -468,18 +468,21 @@ export function HeroSendForm() {
   const getQuote = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate(`/app/send-money?amount=${amount}&currency=${srcRate.code}&dest=${method}`); return; }
-    setBusy(true);
+     setBusy(true);
     try {
+      const corridorId = matchedCorridor?.id;
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
         body: {
           action: "get_quote", amount: numAmt, source_currency: srcRate.code,
+          corridor_id: corridorId,
+          currency_in: srcRate.code,
           destination_currency: destCur, delivery_method: METHOD_MAP[method] || method,
           destination_country: dest.countryCode,
         },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      setQuote(data?.quote || { fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery });
+      setQuote(data || { fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery });
       setStep("review");
     } catch {
       setQuote({ fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery, source: "estimate" });
