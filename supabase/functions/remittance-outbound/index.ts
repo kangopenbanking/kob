@@ -202,7 +202,7 @@ async function sendRemittance(supabase: any, user: any, body: any) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, phone")
+    .select("full_name, email, phone_number")
     .eq("id", user.id)
     .single();
 
@@ -219,14 +219,13 @@ async function sendRemittance(supabase: any, user: any, body: any) {
       corridor_id,
       sender_name: profile?.full_name || user.email,
       sender_country: "CM",
-      sender_phone: profile?.phone || null,
+      sender_phone: profile?.phone_number || null,
       sender_email: profile?.email || user.email,
       sender_user_id: user.id,
       receiver_name,
       receiver_phone: receiver_phone || null,
       receiver_email: receiver_email || null,
       receiver_country: receiver_country || corridor.to_country,
-      receiver_id: null,
       receiver_bank_name: receiver_bank_name || null,
       receiver_bank_code: receiver_bank_code || null,
       receiver_account_number: receiver_account_number || null,
