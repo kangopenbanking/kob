@@ -332,6 +332,22 @@ export default function CustomerSendMoney() {
   const { data: supportedCountries } = useSupportedCountries("consumer");
   const { data: corridors, isLoading: loadingCorridors, isError: errorCorridors } = useCorridors();
 
+  /* ── KOB v1 API Institutions (Credit Unions & Financial Institutions) ── */
+  const { data: kobInstitutions } = useQuery({
+    queryKey: ["kob-v1-institutions"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institutions" as any)
+        .select("id, institution_name, institution_type, swift_bic_code, country, status")
+        .eq("is_active", true)
+        .in("institution_type", ["credit_union", "bank", "fintech"])
+        .eq("status", "active")
+        .order("institution_name");
+      return (data || []) as { id: string; institution_name: string; institution_type: string; swift_bic_code?: string; country?: string }[];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   const [tab, setTab] = useState<Tab>("send");
   const [step, setStep] = useState<Step>("amount");
   const [dir, setDir] = useState(1);
