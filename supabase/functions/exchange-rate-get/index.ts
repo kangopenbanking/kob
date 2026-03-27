@@ -145,11 +145,25 @@ serve(async (req) => {
 async function fetchFrankfurter(from: string, to: string): Promise<{ rate: number; date: string } | null> {
   try {
     const response = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+    if (!response.ok) throw new Error('frankfurter_unsupported');
+    const data = await response.json();
+    const rate = data.rates?.[to];
+    if (!rate) throw new Error('frankfurter_no_rate');
+    return { rate, date: data.date };
+  } catch {
+    // Fallback to open.er-api.com for currencies not in ECB/Frankfurter
+    return fetchOpenErApi(from, to);
+  }
+}
+
+async function fetchOpenErApi(from: string, to: string): Promise<{ rate: number; date: string } | null> {
+  try {
+    const response = await fetch(`https://open.er-api.com/v6/latest/${from}`);
     if (!response.ok) return null;
     const data = await response.json();
     const rate = data.rates?.[to];
     if (!rate) return null;
-    return { rate, date: data.date };
+    return { rate, date: data.time_last_update_utc?.slice(0, 10) || new Date().toISOString().slice(0, 10) };
   } catch {
     return null;
   }
