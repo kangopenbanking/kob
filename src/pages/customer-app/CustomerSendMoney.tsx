@@ -23,7 +23,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { CM_BANKS } from "@/constants/cameroon-banks";
+/* CM_BANKS removed — local_bank_transfer now uses KOB v1 institutions from DB */
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
 
@@ -839,7 +839,7 @@ export default function CustomerSendMoney() {
                       </div>
                       <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
                         <Banknote className="h-3 w-3" />
-                        <span>Fee: <strong className="text-foreground">{fee.toFixed(2)} {srcRate.code}</strong> ({srcRate.fee_pct}%)</span>
+                        <span>Fee: <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
                       </div>
                     </div>
                   </CardContent>
@@ -1134,7 +1134,7 @@ export default function CustomerSendMoney() {
                     <div className="rounded-2xl bg-muted/20 border border-border/30 p-3.5 space-y-2.5">
                       {[
                         { l: "You Send", v: `${numAmt.toLocaleString()} ${srcRate.code}` },
-                        { l: `Fee (${srcRate.fee_pct}%)`, v: `${(quote.fee_total || quote.fee || fee).toFixed(2)} ${srcRate.code}`, color: "text-destructive" },
+                        { l: `Fee (${(feePct * 100).toFixed(1)}%)`, v: `${(quote.fee_total || quote.fee || fee).toFixed(0)} ${srcRate.code}`, color: "text-destructive" },
                         { l: "Rate", v: rateLabel },
                         { l: "Delivery", v: estDelivery },
                       ].map((row) => (
