@@ -338,7 +338,7 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     currency_out: corridor.to_currency,
     fee_total: feeTotal,
     fx_rate: fxRate,
-  }, 201);
+  });
 }
 
 // ─── Cancel outbound remittance ──────────────────────────────
