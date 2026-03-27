@@ -80,10 +80,14 @@ serve(async (req) => {
       }
     } else if (fromPegged && fromPegged > 0) {
       // Source is pegged (e.g., XAF → GBP): get EUR→GBP, then divide by peg
-      const eurRate = await fetchFrankfurter('EUR', to);
-      if (eurRate) {
-        rate = eurRate.rate / fromPegged;
-        apiDate = eurRate.date;
+      if (to === 'EUR') {
+        rate = 1 / fromPegged;
+      } else {
+        const eurRate = await fetchFrankfurter('EUR', to);
+        if (eurRate) {
+          rate = eurRate.rate / fromPegged;
+          apiDate = eurRate.date;
+        }
       }
     } else {
       // Neither is pegged — direct Frankfurter lookup
