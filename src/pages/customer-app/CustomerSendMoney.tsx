@@ -525,6 +525,7 @@ export default function CustomerSendMoney() {
     if (!recipientName.trim()) return false;
     if (method === "mobile_money" || method === "wallet" || method === "mobile_wallet") return /^\d{6,12}$/.test(recipientPhone.replace(/\s/g, ""));
     if (method === "bank_transfer") return !!(bankCode && accountNumber.trim());
+    if (method === "local_bank_transfer") return !!(bankCode && accountNumber.trim());
     if (method === "bill_payment") return !!(billPurpose && billRef.trim());
     if (method === "paypal_email" || method === "paypal") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
     return true;
@@ -577,8 +578,8 @@ export default function CustomerSendMoney() {
           destination_country: dest?.countryCode,
           receiver_name: recipientName, receiver_phone: recPhone,
           receiver_email: (method === "paypal_email" || method === "paypal") ? recipientEmail : undefined,
-          receiver_bank_code: method === "bank_transfer" ? bankCode : undefined,
-          receiver_account_number: method === "bank_transfer" ? accountNumber : undefined,
+          receiver_bank_code: (method === "bank_transfer" || method === "local_bank_transfer") ? bankCode : undefined,
+          receiver_account_number: (method === "bank_transfer" || method === "local_bank_transfer") ? accountNumber : undefined,
           receiver_mobile_wallet: recPhone, receiver_country: dest?.countryCode,
           purpose_code: method === "bill_payment" ? billPurpose : "personal",
           narration: method === "bill_payment" ? `${billPurpose} - ${billRef}` : narration || undefined,
