@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { CM_BANKS } from "@/constants/cameroon-banks";
+/* CM_BANKS removed — local_bank_transfer now uses KOB v1 institutions from DB */
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
 
@@ -100,8 +101,8 @@ const METHOD_META: Record<string, { label: string; icon: typeof Smartphone; desc
   mobile_money: { label: "Mobile Money", icon: Smartphone, desc: "To mobile wallet" },
   wallet: { label: "KOB Wallet", icon: Smartphone, desc: "To KOB wallet" },
   mobile_wallet: { label: "Mobile Wallet", icon: Wallet, desc: "To mobile wallet" },
-  bank_transfer: { label: "Int'l Bank Transfer", icon: Landmark, desc: "SWIFT/BIC international" },
-  local_bank_transfer: { label: "Local Bank", icon: Landmark, desc: "Cameroon local bank" },
+  bank_transfer: { label: "Bank Transfer", icon: Landmark, desc: "Flutterwave banking" },
+  local_bank_transfer: { label: "Credit Unions", icon: Building2, desc: "KOB v1 API institutions" },
   bill_payment: { label: "Bills & Fees", icon: Receipt, desc: "Pay bills directly" },
   paypal_email: { label: "PayPal", icon: Mail, desc: "To PayPal account" },
   paypal: { label: "PayPal", icon: CreditCard, desc: "To PayPal account" },
@@ -112,6 +113,18 @@ const dm = (k: string) => METHOD_META[k] || { label: k.replace(/_/g, " "), icon:
 const METHOD_MAP: Record<string, string> = {
   mobile_money: "mobile_wallet", wallet: "mobile_wallet",
   bank_transfer: "bank_transfer", local_bank_transfer: "local_bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
+};
+
+/** Map delivery method to the correct fee_structures transaction_type */
+const METHOD_TO_FEE_CHANNEL: Record<string, string> = {
+  mobile_money: "remittance_outbound",
+  wallet: "remittance_wallet_credit",
+  mobile_wallet: "remittance_outbound",
+  bank_transfer: "remittance_bank_credit",
+  local_bank_transfer: "remittance_bank_credit",
+  bill_payment: "remittance_bill_payment",
+  paypal_email: "remittance_outbound",
+  paypal: "remittance_outbound",
 };
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -319,6 +332,19 @@ export default function CustomerSendMoney() {
   const { data: supportedCountries } = useSupportedCountries("consumer");
   const { data: corridors, isLoading: loadingCorridors, isError: errorCorridors } = useCorridors();
 
+  const { data: kobInstitutions } = useQuery({
+    queryKey: ["kob-v1-institutions"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institutions" as any)
+        .select("id, institution_name, institution_type, country, status")
+        .eq("status", "active")
+        .order("institution_name") as { data: any[] | null };
+      return (data || []).filter((i: any) => ["credit_union", "bank", "fintech"].includes(i.institution_type)) as { id: string; institution_name: string; institution_type: string; country?: string }[];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   const [tab, setTab] = useState<Tab>("send");
   const [step, setStep] = useState<Step>("amount");
   const [dir, setDir] = useState(1);
@@ -379,8 +405,17 @@ export default function CustomerSendMoney() {
   }, [currencies, srcCur, srcFlag]);
 
   const numAmt = parseFloat(amount) || 0;
-  const feePct = (srcRate.fee_pct || 0.5) / 100;
-  const fee = Math.round(numAmt * feePct * 100) / 100;
+
+  /* ── Dynamic fee from fee_structures (delivery-method aware) ── */
+  const feeChannel = METHOD_TO_FEE_CHANNEL[method] || "remittance_outbound";
+  const { fee: feeEstimate, isLoading: feeLoading } = useFeeEstimate({
+    channel: feeChannel,
+    amount: numAmt,
+    enabled: numAmt > 0 && !!method,
+  });
+  const feePct = feeEstimate.feePercent;
+  const fee = feeEstimate.totalFee;
+  const feeSource = feeEstimate.source;
 
   /* ── Destination countries filtered by source ── */
   const destCountries = useMemo<DestOption[]>(() => {
@@ -804,7 +839,7 @@ export default function CustomerSendMoney() {
                       </div>
                       <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
                         <Banknote className="h-3 w-3" />
-                        <span>Fee: <strong className="text-foreground">{fee.toFixed(2)} {srcRate.code}</strong> ({srcRate.fee_pct}%)</span>
+                        <span>Fee: <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
                       </div>
                     </div>
                   </CardContent>
@@ -968,19 +1003,50 @@ export default function CustomerSendMoney() {
                       {method === "local_bank_transfer" && (
                         <motion.div key="local-bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bank *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                              <Building2 className="h-3 w-3" /> Credit Union / Financial Institution *
+                            </Label>
                             <Select value={bankCode} onValueChange={setBankCode}>
-                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select institution" /></SelectTrigger>
                               <SelectContent className="max-h-60">
-                                {CM_BANKS.map((b) => (
-                                  <SelectItem key={b.code} value={b.code} className="text-xs">{b.name}</SelectItem>
-                                ))}
+                                {kobInstitutions && kobInstitutions.length > 0 ? (
+                                  <>
+                                    {kobInstitutions.filter(i => i.institution_type === "credit_union").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credit Unions</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "credit_union").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">
+                                        <span className="flex items-center gap-2">
+                                          {inst.institution_name}
+                                          <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">CU</span>
+                                        </span>
+                                      </SelectItem>
+                                    ))}
+                                    {kobInstitutions.filter(i => i.institution_type === "bank").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Banks</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "bank").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
+                                    ))}
+                                    {kobInstitutions.filter(i => i.institution_type === "fintech").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fintech</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "fintech").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
+                                    ))}
+                                  </>
+                                ) : (
+                                  <div className="py-3 text-center text-xs text-muted-foreground">No KOB institutions available</div>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Account Number *</Label>
-                            <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">RIB / Account Number *</Label>
+                            <Input placeholder="23-digit RIB (e.g. 10005 00001 12345678901 23)" value={accountNumber}
+                              onChange={(e) => setAccountNumber(e.target.value)}
+                              className="h-11 rounded-xl border-border/40 font-mono tracking-wide" maxLength={27} />
+                            <p className="text-[9px] text-muted-foreground">Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)</p>
                           </div>
                         </motion.div>
                       )}
@@ -1068,7 +1134,7 @@ export default function CustomerSendMoney() {
                     <div className="rounded-2xl bg-muted/20 border border-border/30 p-3.5 space-y-2.5">
                       {[
                         { l: "You Send", v: `${numAmt.toLocaleString()} ${srcRate.code}` },
-                        { l: `Fee (${srcRate.fee_pct}%)`, v: `${(quote.fee_total || quote.fee || fee).toFixed(2)} ${srcRate.code}`, color: "text-destructive" },
+                        { l: `Fee (${(feePct * 100).toFixed(1)}%)`, v: `${(quote.fee_total || quote.fee || fee).toFixed(0)} ${srcRate.code}`, color: "text-destructive" },
                         { l: "Rate", v: rateLabel },
                         { l: "Delivery", v: estDelivery },
                       ].map((row) => (
