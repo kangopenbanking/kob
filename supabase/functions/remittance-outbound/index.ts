@@ -272,6 +272,15 @@ async function sendRemittance(supabase: any, user: any, body: any) {
       status: "approved",
       resolved_at: new Date().toISOString(),
     }).eq("remittance_id", remittance.id);
+
+    // Auto-fulfill: trigger payout rail immediately
+    try {
+      await supabase.functions.invoke("remittance-fulfill", {
+        body: { remittance_id: remittance.id },
+      });
+    } catch (fulfillErr: any) {
+      console.error("Auto-fulfill failed (non-blocking):", fulfillErr?.message);
+    }
   }
 
   // Log event
@@ -473,6 +482,15 @@ async function complianceDecision(supabase: any, user: any, body: any) {
       compliance_status: "cleared",
       compliance_cleared_at: new Date().toISOString(),
     }).eq("id", remittance_id);
+
+    // Trigger fulfillment after compliance approval
+    try {
+      await supabase.functions.invoke("remittance-fulfill", {
+        body: { remittance_id },
+      });
+    } catch (fulfillErr: any) {
+      console.error("Post-compliance fulfill failed (non-blocking):", fulfillErr?.message);
+    }
   } else {
     await supabase.from("remittances").update({
       status: "failed",

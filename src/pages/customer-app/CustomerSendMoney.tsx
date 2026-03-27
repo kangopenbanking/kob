@@ -115,7 +115,7 @@ const METHOD_MAP: Record<string, string> = {
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   created: { label: "Submitted", color: "bg-muted text-muted-foreground", icon: Clock },
   pending: { label: "Processing", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Loader2 },
-  received: { label: "In Transit", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: TrendingUp },
+  received: { label: "Funds on the way", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: TrendingUp },
   credited: { label: "Delivered", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
   settled: { label: "Settled", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
   failed: { label: "Failed", color: "bg-destructive/10 text-destructive", icon: AlertTriangle },
@@ -345,7 +345,9 @@ export default function CustomerSendMoney() {
   const [quote, setQuote] = useState<any>(null);
   const [txRef, setTxRef] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [liveStatus, setLiveStatus] = useState<string>("pending");
   const [trackDialog, setTrackDialog] = useState<any>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((s: Step, d = 1) => { setDir(d); setStep(s); }, []);
 
@@ -599,8 +601,54 @@ export default function CustomerSendMoney() {
     onSuccess: (data) => {
       setResult(data);
       setTxRef(data?.partner_reference || data?.remittance_id || "TX-" + Date.now().toString(36).toUpperCase());
-      goTo("success");
-      refetchTransfers();
+      setLiveStatus(data?.status || "pending");
+      const remId = data?.remittance_id;
+
+      // If wallet (instant), skip polling and go straight to success
+      if (data?.status === "credited" || data?.status === "delivered") {
+        setLiveStatus("credited");
+        goTo("success");
+        refetchTransfers();
+        return;
+      }
+
+      // Start polling for status updates
+      goTo("sending");
+      if (remId) {
+        pollingRef.current = setInterval(async () => {
+          try {
+            const res = await supabase.functions.invoke("remittance-outbound", {
+              body: { action: "track", remittance_id: remId },
+            });
+            const st = res.data?.remittance?.status;
+            if (st) setLiveStatus(st);
+            if (st === "credited" || st === "settled") {
+              if (pollingRef.current) clearInterval(pollingRef.current);
+              pollingRef.current = null;
+              goTo("success");
+              refetchTransfers();
+            } else if (st === "failed") {
+              if (pollingRef.current) clearInterval(pollingRef.current);
+              pollingRef.current = null;
+              toast.error("Transfer failed", { description: res.data?.remittance?.cancellation_reason || "Please try again" });
+              goTo("review", -1);
+            }
+          } catch { /* silent */ }
+        }, 4000);
+
+        // Auto-stop polling after 2 minutes and show success anyway
+        setTimeout(() => {
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+            goTo("success");
+            refetchTransfers();
+          }
+        }, 120000);
+      } else {
+        // No remittance_id — fallback to success after delay
+        setTimeout(() => { goTo("success"); refetchTransfers(); }, 3000);
+      }
     },
     onError: (e: any) => {
       console.error("Send transfer error:", e);
@@ -622,10 +670,11 @@ export default function CustomerSendMoney() {
   const confirmAndSend = () => { goTo("sending"); sendMut.mutate(); };
 
   const reset = () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
     setStep("amount"); setRecipientName(""); setRecipientPhone(""); setRecipientEmail("");
     setDialCode("+237"); setBankCode(""); setAccountNumber(""); setBillPurpose(""); setBillRef("");
     setQuote(null); setTxRef(""); setResult(null); setNarration(""); setSuggestions([]); setShowSugg(false);
-    setDir(1);
+    setLiveStatus("pending"); setDir(1);
   };
 
   const goBack = () => {
@@ -1037,7 +1086,7 @@ export default function CustomerSendMoney() {
               </motion.div>
             )}
 
-            {/* ═══ SENDING ═══ */}
+            {/* ═══ SENDING (live status) ═══ */}
             {step === "sending" && (
               <motion.div key="sending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center py-20 gap-6">
@@ -1046,12 +1095,36 @@ export default function CustomerSendMoney() {
                   <Send className="h-8 w-8 text-primary" />
                 </motion.div>
                 <div className="text-center">
-                  <h2 className="text-lg font-bold text-foreground">Processing Transfer</h2>
-                  <p className="text-xs text-muted-foreground mt-1">Securing your funds…</p>
+                  <h2 className="text-lg font-bold text-foreground">
+                    {liveStatus === "received" ? "Funds on the Way" : liveStatus === "credited" ? "Delivered!" : "Processing Transfer"}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {liveStatus === "received" ? "Your money is being delivered to the recipient…" : liveStatus === "pending" ? "Initiating payout…" : "Securing your funds…"}
+                  </p>
+                </div>
+                {/* Status dots */}
+                <div className="flex items-center gap-3">
+                  {["pending", "received", "credited"].map((s, i) => {
+                    const reached = ["pending", "received", "credited"].indexOf(liveStatus) >= i;
+                    return (
+                      <div key={s} className="flex items-center gap-1.5">
+                        <motion.div
+                          className={`h-3 w-3 rounded-full ${reached ? "bg-primary" : "bg-muted"}`}
+                          animate={s === liveStatus ? { scale: [1, 1.3, 1] } : {}}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                        />
+                        <span className={`text-[10px] font-medium ${reached ? "text-foreground" : "text-muted-foreground"}`}>
+                          {s === "pending" ? "Processing" : s === "received" ? "In Transit" : "Delivered"}
+                        </span>
+                        {i < 2 && <div className={`w-6 h-0.5 ${reached ? "bg-primary/40" : "bg-muted"}`} />}
+                      </div>
+                    );
+                  })}
                 </div>
                 <motion.div className="w-48 h-1.5 rounded-full bg-muted overflow-hidden">
                   <motion.div className="h-full bg-primary rounded-full" initial={{ width: "0%" }}
-                    animate={{ width: "100%" }} transition={{ duration: 3, ease: "easeInOut" }} />
+                    animate={{ width: liveStatus === "credited" ? "100%" : liveStatus === "received" ? "66%" : "33%" }}
+                    transition={{ duration: 1, ease: "easeInOut" }} />
                 </motion.div>
               </motion.div>
             )}
