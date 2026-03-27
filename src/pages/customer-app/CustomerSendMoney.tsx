@@ -99,7 +99,8 @@ const METHOD_META: Record<string, { label: string; icon: typeof Smartphone; desc
   mobile_money: { label: "Mobile Money", icon: Smartphone, desc: "To mobile wallet" },
   wallet: { label: "KOB Wallet", icon: Smartphone, desc: "To KOB wallet" },
   mobile_wallet: { label: "Mobile Wallet", icon: Wallet, desc: "To mobile wallet" },
-  bank_transfer: { label: "Bank Transfer", icon: Landmark, desc: "Direct to bank account" },
+  bank_transfer: { label: "Int'l Bank Transfer", icon: Landmark, desc: "SWIFT/BIC international" },
+  local_bank_transfer: { label: "Local Bank", icon: Landmark, desc: "Cameroon local bank" },
   bill_payment: { label: "Bills & Fees", icon: Receipt, desc: "Pay bills directly" },
   paypal_email: { label: "PayPal", icon: Mail, desc: "To PayPal account" },
   paypal: { label: "PayPal", icon: CreditCard, desc: "To PayPal account" },
@@ -109,7 +110,7 @@ const dm = (k: string) => METHOD_META[k] || { label: k.replace(/_/g, " "), icon:
 
 const METHOD_MAP: Record<string, string> = {
   mobile_money: "mobile_wallet", wallet: "mobile_wallet",
-  bank_transfer: "bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
+  bank_transfer: "bank_transfer", local_bank_transfer: "local_bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
 };
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
