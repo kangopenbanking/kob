@@ -68,10 +68,15 @@ serve(async (req) => {
       rate = toPegged / fromPegged;
     } else if (toPegged && toPegged > 0) {
       // Target is pegged (e.g., GBP → XAF): get GBP→EUR, then multiply by peg
-      const eurRate = await fetchFrankfurter(from, 'EUR');
-      if (eurRate) {
-        rate = eurRate.rate * toPegged;
-        apiDate = eurRate.date;
+      if (from === 'EUR') {
+        // EUR → XAF: just use the peg directly
+        rate = toPegged;
+      } else {
+        const eurRate = await fetchFrankfurter(from, 'EUR');
+        if (eurRate) {
+          rate = eurRate.rate * toPegged;
+          apiDate = eurRate.date;
+        }
       }
     } else if (fromPegged && fromPegged > 0) {
       // Source is pegged (e.g., XAF → GBP): get EUR→GBP, then divide by peg
