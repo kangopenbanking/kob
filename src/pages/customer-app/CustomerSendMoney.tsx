@@ -115,7 +115,7 @@ const METHOD_MAP: Record<string, string> = {
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   created: { label: "Submitted", color: "bg-muted text-muted-foreground", icon: Clock },
   pending: { label: "Processing", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Loader2 },
-  received: { label: "In Transit", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: TrendingUp },
+  received: { label: "Funds on the way", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: TrendingUp },
   credited: { label: "Delivered", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
   settled: { label: "Settled", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle2 },
   failed: { label: "Failed", color: "bg-destructive/10 text-destructive", icon: AlertTriangle },
@@ -345,7 +345,9 @@ export default function CustomerSendMoney() {
   const [quote, setQuote] = useState<any>(null);
   const [txRef, setTxRef] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [liveStatus, setLiveStatus] = useState<string>("pending");
   const [trackDialog, setTrackDialog] = useState<any>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((s: Step, d = 1) => { setDir(d); setStep(s); }, []);
 
@@ -599,8 +601,54 @@ export default function CustomerSendMoney() {
     onSuccess: (data) => {
       setResult(data);
       setTxRef(data?.partner_reference || data?.remittance_id || "TX-" + Date.now().toString(36).toUpperCase());
-      goTo("success");
-      refetchTransfers();
+      setLiveStatus(data?.status || "pending");
+      const remId = data?.remittance_id;
+
+      // If wallet (instant), skip polling and go straight to success
+      if (data?.status === "credited" || data?.status === "delivered") {
+        setLiveStatus("credited");
+        goTo("success");
+        refetchTransfers();
+        return;
+      }
+
+      // Start polling for status updates
+      goTo("sending");
+      if (remId) {
+        pollingRef.current = setInterval(async () => {
+          try {
+            const res = await supabase.functions.invoke("remittance-outbound", {
+              body: { action: "track", remittance_id: remId },
+            });
+            const st = res.data?.remittance?.status;
+            if (st) setLiveStatus(st);
+            if (st === "credited" || st === "settled") {
+              if (pollingRef.current) clearInterval(pollingRef.current);
+              pollingRef.current = null;
+              goTo("success");
+              refetchTransfers();
+            } else if (st === "failed") {
+              if (pollingRef.current) clearInterval(pollingRef.current);
+              pollingRef.current = null;
+              toast.error("Transfer failed", { description: res.data?.remittance?.cancellation_reason || "Please try again" });
+              goTo("review", -1);
+            }
+          } catch { /* silent */ }
+        }, 4000);
+
+        // Auto-stop polling after 2 minutes and show success anyway
+        setTimeout(() => {
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+            goTo("success");
+            refetchTransfers();
+          }
+        }, 120000);
+      } else {
+        // No remittance_id — fallback to success after delay
+        setTimeout(() => { goTo("success"); refetchTransfers(); }, 3000);
+      }
     },
     onError: (e: any) => {
       console.error("Send transfer error:", e);
