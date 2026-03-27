@@ -182,6 +182,48 @@ serve(async (req) => {
       }
     }
 
+    // ─── LOCAL BANK TRANSFER (KOB v1 → Flutterwave) ─────────
+    else if (method === "local_bank_transfer") {
+      rail = "kob_local_bank";
+      try {
+        const flutterwaveSecretKey = Deno.env.get("FLUTTERWAVE_SECRET_KEY");
+        if (!flutterwaveSecretKey) throw new Error("Flutterwave not configured");
+
+        const flwRes = await fetch("https://api.flutterwave.com/v3/transfers", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${flutterwaveSecretKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            account_bank: rem.receiver_bank_code,
+            account_number: rem.receiver_account_number || rem.destination_ref,
+            amount: rem.amount_out,
+            currency: rem.currency_out || "XAF",
+            narration: rem.narration || `KOB transfer to ${rem.receiver_name}`,
+            reference: txRef,
+            debit_currency: rem.currency_out || "XAF",
+            beneficiary_name: rem.receiver_name,
+            meta: {
+              remittance_id: rem.id,
+              rail: "kob_local_bank",
+              sender_user_id: rem.sender_user_id,
+            },
+          }),
+        });
+
+        const flwData = await flwRes.json();
+        if (flwData.status !== "success") {
+          throw new Error(flwData.message || "Flutterwave local bank transfer failed");
+        }
+        providerRef = String(flwData.data?.id || txRef);
+        payoutResult = { provider_ref: providerRef, provider_raw: flwData.data };
+      } catch (e: any) {
+        await failRemittance(supabase, rem, `Local Bank: ${e.message}`);
+        return json({ error: e.message }, 502);
+      }
+    }
+
     // ─── PAYPAL ──────────────────────────────────────────────
     else if (method === "paypal" || method === "paypal_email") {
       rail = "paypal";

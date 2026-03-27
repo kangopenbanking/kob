@@ -22,6 +22,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { CM_BANKS } from "@/constants/cameroon-banks";
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
 
@@ -99,7 +100,8 @@ const METHOD_META: Record<string, { label: string; icon: typeof Smartphone; desc
   mobile_money: { label: "Mobile Money", icon: Smartphone, desc: "To mobile wallet" },
   wallet: { label: "KOB Wallet", icon: Smartphone, desc: "To KOB wallet" },
   mobile_wallet: { label: "Mobile Wallet", icon: Wallet, desc: "To mobile wallet" },
-  bank_transfer: { label: "Bank Transfer", icon: Landmark, desc: "Direct to bank account" },
+  bank_transfer: { label: "Int'l Bank Transfer", icon: Landmark, desc: "SWIFT/BIC international" },
+  local_bank_transfer: { label: "Local Bank", icon: Landmark, desc: "Cameroon local bank" },
   bill_payment: { label: "Bills & Fees", icon: Receipt, desc: "Pay bills directly" },
   paypal_email: { label: "PayPal", icon: Mail, desc: "To PayPal account" },
   paypal: { label: "PayPal", icon: CreditCard, desc: "To PayPal account" },
@@ -109,7 +111,7 @@ const dm = (k: string) => METHOD_META[k] || { label: k.replace(/_/g, " "), icon:
 
 const METHOD_MAP: Record<string, string> = {
   mobile_money: "mobile_wallet", wallet: "mobile_wallet",
-  bank_transfer: "bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
+  bank_transfer: "bank_transfer", local_bank_transfer: "local_bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
 };
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -523,6 +525,7 @@ export default function CustomerSendMoney() {
     if (!recipientName.trim()) return false;
     if (method === "mobile_money" || method === "wallet" || method === "mobile_wallet") return /^\d{6,12}$/.test(recipientPhone.replace(/\s/g, ""));
     if (method === "bank_transfer") return !!(bankCode && accountNumber.trim());
+    if (method === "local_bank_transfer") return !!(bankCode && accountNumber.trim());
     if (method === "bill_payment") return !!(billPurpose && billRef.trim());
     if (method === "paypal_email" || method === "paypal") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
     return true;
@@ -575,8 +578,8 @@ export default function CustomerSendMoney() {
           destination_country: dest?.countryCode,
           receiver_name: recipientName, receiver_phone: recPhone,
           receiver_email: (method === "paypal_email" || method === "paypal") ? recipientEmail : undefined,
-          receiver_bank_code: method === "bank_transfer" ? bankCode : undefined,
-          receiver_account_number: method === "bank_transfer" ? accountNumber : undefined,
+          receiver_bank_code: (method === "bank_transfer" || method === "local_bank_transfer") ? bankCode : undefined,
+          receiver_account_number: (method === "bank_transfer" || method === "local_bank_transfer") ? accountNumber : undefined,
           receiver_mobile_wallet: recPhone, receiver_country: dest?.countryCode,
           purpose_code: method === "bill_payment" ? billPurpose : "personal",
           narration: method === "bill_payment" ? `${billPurpose} - ${billRef}` : narration || undefined,
@@ -958,6 +961,26 @@ export default function CustomerSendMoney() {
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-semibold text-muted-foreground">Account / IBAN *</Label>
                             <Input placeholder="Account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {method === "local_bank_transfer" && (
+                        <motion.div key="local-bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-semibold text-muted-foreground">Bank *</Label>
+                            <Select value={bankCode} onValueChange={setBankCode}>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {CM_BANKS.map((b) => (
+                                  <SelectItem key={b.code} value={b.code} className="text-xs">{b.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-semibold text-muted-foreground">Account Number *</Label>
+                            <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
                       )}
