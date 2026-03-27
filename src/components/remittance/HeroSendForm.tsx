@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSupportedCountries } from "@/hooks/useSupportedCountries";
+import { formatErrorForToast } from "@/lib/error-handler";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight, Shield, Zap, Smartphone, CheckCircle2, Clock, Banknote,
@@ -360,12 +361,14 @@ export function HeroSendForm() {
   }, [srcRate, destCur, currencies]);
 
   const methods = useMemo(() => {
-    if (!corridors || !dest) return [];
+    if (!corridors || !dest || !srcCountry) return [];
     const matching = corridors.filter((c) => c.to_country === dest.countryCode && c.to_currency === dest.currency);
     const set = new Set<string>();
-    matching.forEach((c) => (c.delivery_methods || []).forEach((m: string) => set.add(m)));
+    matching
+      .filter((c) => c.from_country === srcCountry.countryCode && c.from_currency === srcCur)
+      .forEach((c) => (c.delivery_methods || []).forEach((m: string) => set.add(m)));
     return Array.from(set);
-  }, [corridors, dest]);
+  }, [corridors, dest, srcCountry, srcCur]);
 
   // Resolve the best-matching corridor for the current destination + method
   const matchedCorridor = useMemo(() => {
@@ -385,6 +388,8 @@ export function HeroSendForm() {
 
     return corridors.find((c) => corridorMatchesRoute(c)) || null;
   }, [corridors, dest, method, srcCountry, srcCur]);
+
+  const canSubmitRoute = Boolean(method && matchedCorridor);
 
   const estDelivery = useMemo(() => {
     if (!corridors || !dest || !srcCountry) return "Instant";
@@ -481,7 +486,11 @@ export function HeroSendForm() {
   const getQuote = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate(`/app/send-money?amount=${amount}&currency=${srcRate.code}&dest=${method}`); return; }
-     setBusy(true);
+    if (!matchedCorridor?.id) {
+      toast.error("This delivery route is not available for the selected countries and currency.");
+      return;
+    }
+    setBusy(true);
     try {
       const corridorId = matchedCorridor?.id;
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
@@ -493,19 +502,23 @@ export function HeroSendForm() {
           destination_country: dest.countryCode,
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setQuote(data || { fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery });
+      setQuote(data || { fee_total: fee, fx_rate: srcRate.rate, amount_out: converted, delivery_estimate_seconds: estDelivery });
       setStep("review");
-    } catch {
-      setQuote({ fee, rate: srcRate.rate, receive_amount: converted, delivery_estimate: estDelivery, source: "estimate" });
-      setStep("review");
+    } catch (error: any) {
+      const { title, description } = formatErrorForToast(error);
+      toast.error(title, { description });
     } finally { setBusy(false); }
   };
 
   const confirmSend = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/app/send-money"); return; }
+    if (!matchedCorridor?.id) {
+      toast.error("This delivery route is not available for the selected countries and currency.");
+      return;
+    }
     setStep("sending");
     try {
       const corridorId = matchedCorridor?.id;
@@ -540,12 +553,13 @@ export function HeroSendForm() {
           quote_id: quote?.quote_id || null,
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setTxRef(data?.partner_reference || data?.remittance_id || data?.reference || data?.id || "TX-" + Date.now().toString(36).toUpperCase());
       setStep("done");
     } catch (err: any) {
-      toast.error(err.message || "Transfer failed");
+      const { title, description } = formatErrorForToast(err);
+      toast.error(title, { description });
       setStep("review");
     }
   };
@@ -682,13 +696,8 @@ export function HeroSendForm() {
           </div>
         </div>
 
-        {quote.source === "estimate" && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl p-3 text-center mb-4 flex items-center justify-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" /> Estimated quote — final amounts may vary slightly.
-          </p>
-        )}
-
         <Button onClick={confirmSend}
+          disabled={!canSubmitRoute}
           className="w-full h-14 rounded-2xl text-base font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all gap-2" size="lg">
           <Send className="h-5 w-5" /> Confirm & Send
         </Button>
@@ -819,12 +828,20 @@ export function HeroSendForm() {
               </div>
             )}
 
+            {destCountries.length > 0 && methods.length === 0 && (
+              <div className="mb-6 rounded-2xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>No receiving method is available yet for this source, destination, and currency combination.</span>
+              </div>
+            )}
+
             <Button onClick={() => {
               if (numAmt <= 0) { toast.error("Enter an amount to send"); return; }
               if (!method) { toast.error("Select a delivery method"); return; }
+              if (!matchedCorridor) { toast.error("This delivery route is not available right now."); return; }
               setStep("recipient");
             }}
-              disabled={destCountries.length === 0}
+              disabled={destCountries.length === 0 || !canSubmitRoute}
               className="w-full h-14 rounded-2xl text-base font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all gap-2" size="lg">
               Continue <ArrowRight className="h-5 w-5" />
             </Button>
