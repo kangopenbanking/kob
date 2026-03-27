@@ -985,6 +985,7 @@ export default function CustomerSendMoney() {
                         </motion.div>
                       )}
 
+                      {method === "bill_payment" && (
                         <motion.div key="bill" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-semibold text-muted-foreground">Bill Type *</Label>
