@@ -1003,19 +1003,50 @@ export default function CustomerSendMoney() {
                       {method === "local_bank_transfer" && (
                         <motion.div key="local-bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bank *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                              <Building2 className="h-3 w-3" /> Credit Union / Financial Institution *
+                            </Label>
                             <Select value={bankCode} onValueChange={setBankCode}>
-                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select institution" /></SelectTrigger>
                               <SelectContent className="max-h-60">
-                                {CM_BANKS.map((b) => (
-                                  <SelectItem key={b.code} value={b.code} className="text-xs">{b.name}</SelectItem>
-                                ))}
+                                {kobInstitutions && kobInstitutions.length > 0 ? (
+                                  <>
+                                    {kobInstitutions.filter(i => i.institution_type === "credit_union").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credit Unions</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "credit_union").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">
+                                        <span className="flex items-center gap-2">
+                                          {inst.institution_name}
+                                          <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">CU</span>
+                                        </span>
+                                      </SelectItem>
+                                    ))}
+                                    {kobInstitutions.filter(i => i.institution_type === "bank").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Banks</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "bank").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
+                                    ))}
+                                    {kobInstitutions.filter(i => i.institution_type === "fintech").length > 0 && (
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fintech</div>
+                                    )}
+                                    {kobInstitutions.filter(i => i.institution_type === "fintech").map((inst) => (
+                                      <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
+                                    ))}
+                                  </>
+                                ) : (
+                                  <div className="py-3 text-center text-xs text-muted-foreground">No KOB institutions available</div>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Account Number *</Label>
-                            <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">RIB / Account Number *</Label>
+                            <Input placeholder="23-digit RIB (e.g. 10005 00001 12345678901 23)" value={accountNumber}
+                              onChange={(e) => setAccountNumber(e.target.value)}
+                              className="h-11 rounded-xl border-border/40 font-mono tracking-wide" maxLength={27} />
+                            <p className="text-[9px] text-muted-foreground">Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)</p>
                           </div>
                         </motion.div>
                       )}
