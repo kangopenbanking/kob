@@ -369,25 +369,38 @@ export function HeroSendForm() {
 
   // Resolve the best-matching corridor for the current destination + method
   const matchedCorridor = useMemo(() => {
-    if (!corridors || !dest) return null;
-    // Prefer corridor whose delivery_methods includes the selected method
+    if (!corridors || !dest || !srcCountry) return null;
+
+    const corridorMatchesRoute = (c: CorridorRow) => (
+      c.from_country === srcCountry.countryCode
+      && c.from_currency === srcCur
+      && c.to_country === dest.countryCode
+      && c.to_currency === dest.currency
+    );
+
     const withMethod = corridors.find(
-      (c) => c.to_country === dest.countryCode && c.to_currency === dest.currency && (c.delivery_methods || []).includes(method)
+      (c) => corridorMatchesRoute(c) && (c.delivery_methods || []).includes(method)
     );
     if (withMethod) return withMethod;
-    // Fallback: any corridor to same destination
-    return corridors.find((c) => c.to_country === dest.countryCode && c.to_currency === dest.currency) || null;
-  }, [corridors, dest, method]);
+
+    return corridors.find((c) => corridorMatchesRoute(c)) || null;
+  }, [corridors, dest, method, srcCountry, srcCur]);
 
   const estDelivery = useMemo(() => {
-    if (!corridors || !dest) return "Instant";
-    const match = corridors.find((c) => c.to_country === dest.countryCode && (c.delivery_methods || []).includes(method));
+    if (!corridors || !dest || !srcCountry) return "Instant";
+    const match = corridors.find(
+      (c) => c.from_country === srcCountry.countryCode
+        && c.from_currency === srcCur
+        && c.to_country === dest.countryCode
+        && c.to_currency === dest.currency
+        && (c.delivery_methods || []).includes(method)
+    );
     if (!match?.est_delivery_seconds) return "Instant";
     const s = match.est_delivery_seconds;
     if (s < 60) return "Instant";
     if (s < 3600) return `~${Math.round(s / 60)} min`;
     return `~${Math.round(s / 3600)}h`;
-  }, [corridors, dest, method]);
+  }, [corridors, dest, method, srcCountry, srcCur]);
 
   // Auto-select method
   useEffect(() => {

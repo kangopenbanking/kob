@@ -3,7 +3,7 @@
 ## Baseline Fingerprint
 - **Git commit hash:** `5554bc83033a044db3bccdfd05afa6cbee204442`
 - **Context ID:** `8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B`
-- **Current issue:** Send Money Abroad surfaces **"No corridors available"** despite corridor records existing in the backend.
+- **Current issue:** Public remittance send confirmation fails with **"Edge Function returned a non-2xx status code"** when submitting a transfer from the `/remittance` flow.
 
 ## Existing Routes (summary)
 - **Public remittance:** `/remittance`
@@ -28,21 +28,19 @@
 ## Scope of Work (Explicit)
 
 ### Feature name
-Send Abroad corridor availability restoration
+Public remittance send confirmation fix
 
 ### Why needed
-The customer and banking Send Money Abroad flows show an empty corridor state even though corridor data exists in the database, blocking outbound remittance initiation.
+Users can reach the transfer confirmation step but the transfer submission fails because the remittance backend send path is using an invalid insert payload and the client can resolve a corridor too loosely for the chosen source/destination pair.
 
 ### Exact modules impacted
 - `supabase/functions/remittance-outbound/index.ts`
-- `src/pages/customer-app/CustomerSendMoney.tsx`
-- `src/pages/banking-app/BankSendAbroad.tsx`
+- `src/components/remittance/HeroSendForm.tsx`
 
 ### Exact files expected to change/add
 **Change:**
 - `supabase/functions/remittance-outbound/index.ts`
-- `src/pages/customer-app/CustomerSendMoney.tsx`
-- `src/pages/banking-app/BankSendAbroad.tsx`
+- `src/components/remittance/HeroSendForm.tsx`
 
 **Add:**
 - `docs/governance/CHANGE_MANIFEST.md`
@@ -56,8 +54,7 @@ The customer and banking Send Money Abroad flows show an empty corridor state ev
 
 ### Dashboard pages impacted/added
 - Impacted only:
-  - Customer Send Money Abroad flow
-  - Banking Send Abroad flow
+  - Public `/remittance` send-money hero flow
 
 ### Docs pages added/updated
 - Add release report documenting audit results and fix evidence.
@@ -67,10 +64,9 @@ The customer and banking Send Money Abroad flows show an empty corridor state ev
 - E2E verification will be run against the affected backend function and UI flows.
 
 ### Acceptance criteria
-- `remittance-outbound` returns outbound corridors when active corridors exist.
-- Customer app Send Money Abroad no longer shows false empty-state for available corridors.
-- Banking app Send Abroad no longer shows false empty-state for available corridors.
-- Corridor filtering/search still works.
+- Confirming a transfer from `/remittance` no longer returns a non-2xx edge function response for a valid authenticated request.
+- `remittance-outbound` inserts remittance records using only valid schema fields.
+- The client resolves the corridor using the selected source country/currency and destination country/currency, not destination alone.
 - No existing endpoint response shape changes.
 
 ### Rollback strategy
@@ -87,19 +83,18 @@ The customer and banking Send Money Abroad flows show an empty corridor state ev
 ## E2E Test Gates
 
 ### API E2E tests
-- Invoke `remittance-outbound` `get_corridors` path with authenticated context and verify non-empty outbound result set.
-- Verify response objects still contain corridor identifiers and partner metadata expected by current clients.
+- Invoke `remittance-outbound` `send` with an authenticated request and a valid corridor to verify a successful non-2xx regression fix.
+- Verify response objects still contain remittance identifier and partner reference fields expected by the client.
 
 ### UI E2E tests
-- Verify customer Send Money Abroad corridor list renders available destinations.
-- Verify banking Send Abroad corridor list renders available destinations.
-- Verify search/filter does not incorrectly hide all results for valid destinations.
+- Verify `/remittance` resolves the correct corridor for the selected source, destination, and method.
+- Verify the confirm action no longer fails for a valid transfer path.
 
 ### Webhook tests
 - Not applicable for this scoped fix.
 
 ### Admin workflow test
-- Verify admin-seeded corridors remain visible in app flows via backend fetch.
+- Verify admin-seeded corridors remain selectable in the `/remittance` flow through backend-backed corridor resolution.
 
 ### Docs validation test
 - Ensure release report is generated and references the audited route/function pair.
