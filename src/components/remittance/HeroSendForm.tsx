@@ -367,6 +367,18 @@ export function HeroSendForm() {
     return Array.from(set);
   }, [corridors, dest]);
 
+  // Resolve the best-matching corridor for the current destination + method
+  const matchedCorridor = useMemo(() => {
+    if (!corridors || !dest) return null;
+    // Prefer corridor whose delivery_methods includes the selected method
+    const withMethod = corridors.find(
+      (c) => c.to_country === dest.countryCode && c.to_currency === dest.currency && (c.delivery_methods || []).includes(method)
+    );
+    if (withMethod) return withMethod;
+    // Fallback: any corridor to same destination
+    return corridors.find((c) => c.to_country === dest.countryCode && c.to_currency === dest.currency) || null;
+  }, [corridors, dest, method]);
+
   const estDelivery = useMemo(() => {
     if (!corridors || !dest) return "Instant";
     const match = corridors.find((c) => c.to_country === dest.countryCode && (c.delivery_methods || []).includes(method));
