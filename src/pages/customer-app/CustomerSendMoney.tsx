@@ -494,15 +494,20 @@ export default function CustomerSendMoney() {
 
   const numAmt = parseFloat(amount) || 0;
 
-  /* ── Dynamic fee from fee_structures (delivery-method aware) ── */
+  /* ── Dynamic fee from fee_structures (delivery-method aware) ──
+     Fee structures store amounts in XAF. We need to convert the send amount
+     to XAF first, calculate the fee in XAF, then derive the net in XAF. */
   const feeChannel = METHOD_TO_FEE_CHANNEL[method] || "remittance_outbound";
+  const sendAmountXAF = useMemo(() => Math.round(numAmt * srcRate.rate), [numAmt, srcRate.rate]);
   const { fee: feeEstimate, isLoading: feeLoading } = useFeeEstimate({
     channel: feeChannel,
-    amount: numAmt,
-    enabled: numAmt > 0 && !!method,
+    amount: sendAmountXAF, // Pass XAF-equivalent so fixed fees are correct
+    enabled: sendAmountXAF > 0 && !!method,
   });
   const feePct = feeEstimate.feePercent;
-  const fee = feeEstimate.totalFee;
+  const feeXAF = feeEstimate.totalFee; // fee in XAF
+  // Convert fee back to source currency for display
+  const fee = srcRate.rate > 0 ? Math.round(feeXAF / srcRate.rate * 100) / 100 : 0;
   const feeSource = feeEstimate.source;
 
   /* ── Destination countries filtered by source ── */
@@ -529,17 +534,20 @@ export default function CustomerSendMoney() {
   const destCur = dest?.currency || "XAF";
   const destFlag = dest?.flag || "🇨🇲";
 
-  /* ── Converted amount ── */
+  /* ── Converted amount ──
+     1. Convert full send amount to XAF: sendAmountXAF
+     2. Subtract fee (in XAF): netXAF
+     3. Convert netXAF to destination currency */
   const converted = useMemo(() => {
-    const net = numAmt - fee;
-    if (net <= 0) return 0;
-    const toXaf = srcRate.rate;
-    if (destCur === "XAF") return Math.round(net * toXaf);
+    const netXAF = sendAmountXAF - feeXAF;
+    if (netXAF <= 0) return 0;
+    if (destCur === "XAF" || destCur === "XOF") return Math.round(netXAF); // XOF = XAF (CEMAC/UEMOA parity)
     const destEntry = currencies.find((c) => c.code === destCur);
-    if (destEntry && destEntry.rate > 0) return Math.round(net * (toXaf / destEntry.rate) * 100) / 100;
-    if (srcRate.code === destCur) return Math.round(net * 100) / 100;
-    return Math.round(net * toXaf);
-  }, [numAmt, fee, srcRate.rate, srcRate.code, destCur, currencies]);
+    if (destEntry && destEntry.rate > 0) return Math.round(netXAF / destEntry.rate * 100) / 100;
+    // Same currency as source (e.g., GBP→GBP)
+    if (srcRate.code === destCur && srcRate.rate > 0) return Math.round(netXAF / srcRate.rate * 100) / 100;
+    return Math.round(netXAF);
+  }, [sendAmountXAF, feeXAF, destCur, currencies, srcRate.code, srcRate.rate]);
 
   const rateLabel = useMemo(() => {
     if (destCur === "XAF") return `1 ${srcRate.code} = ${srcRate.rate.toLocaleString()} XAF`;
