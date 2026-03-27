@@ -495,21 +495,41 @@ export function HeroSendForm() {
     if (!session) { navigate("/app/send-money"); return; }
     setStep("sending");
     try {
-      const rd: any = { name: recipientName };
-      if (method === "mobile_money" || method === "wallet") rd.phone = `${dialCode}${recipientPhone.replace(/\s/g, "")}`;
-      else if (method === "bank_transfer") { rd.bank_code = bankCode; rd.account_number = accountNumber; }
-      else if (method === "paypal_email") rd.email = recipientEmail;
-      else { rd.purpose = billPurpose; rd.reference = billRef; }
+      const corridorId = matchedCorridor?.id;
+      // Build flat receiver fields matching remittance-outbound expected shape
+      const receiverPhone = (method === "mobile_money" || method === "wallet")
+        ? `${dialCode}${recipientPhone.replace(/\s/g, "")}` : undefined;
+      const receiverBankCode = method === "bank_transfer" ? bankCode : undefined;
+      const receiverAccountNumber = method === "bank_transfer" ? accountNumber : undefined;
+      const receiverEmail = method === "paypal_email" ? recipientEmail : undefined;
+      const receiverMobileWallet = (method === "mobile_money" || method === "wallet")
+        ? `${dialCode}${recipientPhone.replace(/\s/g, "")}` : undefined;
+
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
         body: {
-          action: "send", amount: numAmt, source_currency: srcRate.code,
-          destination_currency: destCur, delivery_method: METHOD_MAP[method] || method,
-          destination_country: dest.countryCode, recipient: rd,
+          action: "send",
+          amount: numAmt,
+          corridor_id: corridorId,
+          currency_in: srcRate.code,
+          source_currency: srcRate.code,
+          destination_currency: destCur,
+          delivery_method: METHOD_MAP[method] || method,
+          destination_country: dest.countryCode,
+          receiver_name: recipientName,
+          receiver_phone: receiverPhone,
+          receiver_email: receiverEmail,
+          receiver_bank_code: receiverBankCode,
+          receiver_account_number: receiverAccountNumber,
+          receiver_mobile_wallet: receiverMobileWallet,
+          receiver_country: dest.countryCode,
+          purpose_code: method === "bill_payment" ? billPurpose : "personal",
+          narration: method === "bill_payment" ? `${billPurpose} - ${billRef}` : undefined,
+          quote_id: quote?.quote_id || null,
         },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      setTxRef(data?.reference || data?.id || "TX-" + Date.now().toString(36).toUpperCase());
+      setTxRef(data?.partner_reference || data?.remittance_id || data?.reference || data?.id || "TX-" + Date.now().toString(36).toUpperCase());
       setStep("done");
     } catch (err: any) {
       toast.error(err.message || "Transfer failed");
