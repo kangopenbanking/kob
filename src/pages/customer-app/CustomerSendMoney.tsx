@@ -324,18 +324,12 @@ function useRates(): CurrencyOption[] {
         // 3) Fetch live rates from edge function for missing currencies
         const liveMap = new Map<string, number>();
         if (needLive.length > 0) {
-          // Fetch rates in parallel (max 6 at a time to avoid rate limits)
           const batches: string[][] = [];
           for (let i = 0; i < needLive.length; i += 6) batches.push(needLive.slice(i, i + 6));
 
           for (const batch of batches) {
             const results = await Promise.allSettled(
               batch.map(async (code) => {
-                const { data, error } = await supabase.functions.invoke("exchange-rate-get", {
-                  body: {},
-                  method: "GET",
-                });
-                // Use query params via URL
                 const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "wdzkzeahdtxlynetndqw";
                 const url = `https://${projectId}.supabase.co/functions/v1/exchange-rate-get?from=${code}&to=XAF`;
                 const res = await fetch(url, {
@@ -343,7 +337,7 @@ function useRates(): CurrencyOption[] {
                 });
                 if (!res.ok) return null;
                 const d = await res.json();
-                return { code, rate: d.rate as number };
+                return d.rate ? { code, rate: d.rate as number } : null;
               })
             );
             results.forEach(r => {
