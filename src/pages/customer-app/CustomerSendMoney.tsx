@@ -158,13 +158,13 @@ const pageVariants = {
     x: 0,
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
   exit: (dir: number) => ({
     x: dir > 0 ? -60 : 60,
     opacity: 0,
     scale: 0.97,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
   }),
 };
 
@@ -172,7 +172,7 @@ const stagger = {
   hidden: { opacity: 0, y: 12 },
   show: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
   }),
 };
 
