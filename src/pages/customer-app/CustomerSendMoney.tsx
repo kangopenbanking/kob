@@ -392,8 +392,17 @@ export default function CustomerSendMoney() {
   }, [currencies, srcCur, srcFlag]);
 
   const numAmt = parseFloat(amount) || 0;
-  const feePct = (srcRate.fee_pct || 0.5) / 100;
-  const fee = Math.round(numAmt * feePct * 100) / 100;
+
+  /* ── Dynamic fee from fee_structures (delivery-method aware) ── */
+  const feeChannel = METHOD_TO_FEE_CHANNEL[method] || "remittance_outbound";
+  const { fee: feeEstimate, isLoading: feeLoading } = useFeeEstimate({
+    channel: feeChannel,
+    amount: numAmt,
+    enabled: numAmt > 0 && !!method,
+  });
+  const feePct = feeEstimate.feePercent;
+  const fee = feeEstimate.totalFee;
+  const feeSource = feeEstimate.source;
 
   /* ── Destination countries filtered by source ── */
   const destCountries = useMemo<DestOption[]>(() => {
