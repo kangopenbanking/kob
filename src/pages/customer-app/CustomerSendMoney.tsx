@@ -101,8 +101,8 @@ const METHOD_META: Record<string, { label: string; icon: typeof Smartphone; desc
   mobile_money: { label: "Mobile Money", icon: Smartphone, desc: "To mobile wallet" },
   wallet: { label: "KOB Wallet", icon: Smartphone, desc: "To KOB wallet" },
   mobile_wallet: { label: "Mobile Wallet", icon: Wallet, desc: "To mobile wallet" },
-  bank_transfer: { label: "Int'l Bank Transfer", icon: Landmark, desc: "SWIFT/BIC international" },
-  local_bank_transfer: { label: "Local Bank", icon: Landmark, desc: "Cameroon local bank" },
+  bank_transfer: { label: "Bank Transfer", icon: Landmark, desc: "Flutterwave banking" },
+  local_bank_transfer: { label: "Credit Unions", icon: Building2, desc: "KOB v1 API institutions" },
   bill_payment: { label: "Bills & Fees", icon: Receipt, desc: "Pay bills directly" },
   paypal_email: { label: "PayPal", icon: Mail, desc: "To PayPal account" },
   paypal: { label: "PayPal", icon: CreditCard, desc: "To PayPal account" },
@@ -113,6 +113,18 @@ const dm = (k: string) => METHOD_META[k] || { label: k.replace(/_/g, " "), icon:
 const METHOD_MAP: Record<string, string> = {
   mobile_money: "mobile_wallet", wallet: "mobile_wallet",
   bank_transfer: "bank_transfer", local_bank_transfer: "local_bank_transfer", bill_payment: "bill_payment", paypal_email: "paypal_email",
+};
+
+/** Map delivery method to the correct fee_structures transaction_type */
+const METHOD_TO_FEE_CHANNEL: Record<string, string> = {
+  mobile_money: "remittance_outbound",
+  wallet: "remittance_wallet_credit",
+  mobile_wallet: "remittance_outbound",
+  bank_transfer: "remittance_bank_credit",
+  local_bank_transfer: "remittance_bank_credit",
+  bill_payment: "remittance_bill_payment",
+  paypal_email: "remittance_outbound",
+  paypal: "remittance_outbound",
 };
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
