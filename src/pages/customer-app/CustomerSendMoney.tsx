@@ -267,41 +267,129 @@ function useCorridors() {
 }
 
 function useRates(): CurrencyOption[] {
-  const [currencies, setCurrencies] = useState<CurrencyOption[]>([
+  const FLAG_MAP: Record<string, { flag: string; name: string }> = {
+    EUR: { flag: "🇪🇺", name: "Euro" }, USD: { flag: "🇺🇸", name: "US Dollar" },
+    GBP: { flag: "🇬🇧", name: "British Pound" }, CAD: { flag: "🇨🇦", name: "Canadian Dollar" },
+    CHF: { flag: "🇨🇭", name: "Swiss Franc" }, XAF: { flag: "🇨🇲", name: "CFA Franc" },
+    NGN: { flag: "🇳🇬", name: "Nigerian Naira" }, GHS: { flag: "🇬🇭", name: "Ghanaian Cedi" },
+    KES: { flag: "🇰🇪", name: "Kenyan Shilling" }, ZAR: { flag: "🇿🇦", name: "South African Rand" },
+    XOF: { flag: "🇸🇳", name: "CFA Franc BCEAO" }, AUD: { flag: "🇦🇺", name: "Australian Dollar" },
+    INR: { flag: "🇮🇳", name: "Indian Rupee" }, CNY: { flag: "🇨🇳", name: "Chinese Yuan" },
+    JPY: { flag: "🇯🇵", name: "Japanese Yen" }, BRL: { flag: "🇧🇷", name: "Brazilian Real" },
+    MAD: { flag: "🇲🇦", name: "Moroccan Dirham" }, TND: { flag: "🇹🇳", name: "Tunisian Dinar" },
+    EGP: { flag: "🇪🇬", name: "Egyptian Pound" }, RWF: { flag: "🇷🇼", name: "Rwandan Franc" },
+    UGX: { flag: "🇺🇬", name: "Ugandan Shilling" }, TZS: { flag: "🇹🇿", name: "Tanzanian Shilling" },
+    ETB: { flag: "🇪🇹", name: "Ethiopian Birr" }, CDF: { flag: "🇨🇩", name: "Congolese Franc" },
+    GNF: { flag: "🇬🇳", name: "Guinean Franc" },
+  };
+
+  const DEFAULTS: CurrencyOption[] = [
     { code: "EUR", name: "Euro", flag: "🇪🇺", rate: 655.957, fee_pct: 0.5 },
     { code: "USD", name: "US Dollar", flag: "🇺🇸", rate: 605.22, fee_pct: 0.8 },
     { code: "GBP", name: "British Pound", flag: "🇬🇧", rate: 765.43, fee_pct: 0.6 },
     { code: "CAD", name: "Canadian Dollar", flag: "🇨🇦", rate: 445.18, fee_pct: 0.7 },
     { code: "CHF", name: "Swiss Franc", flag: "🇨🇭", rate: 680.50, fee_pct: 0.5 },
     { code: "XAF", name: "CFA Franc", flag: "🇨🇲", rate: 1, fee_pct: 0.5 },
-  ]);
+  ];
+
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>(DEFAULTS);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase
+        // 1) Load admin-set rates (authoritative)
+        const { data: adminData } = await supabase
           .from("admin_exchange_rates")
           .select("base_currency, rate, effective_rate, margin_percentage")
           .eq("is_active", true)
           .eq("target_currency", "XAF");
-        if (!data?.length) return;
-        const flagMap: Record<string, { flag: string; name: string }> = {
-          EUR: { flag: "🇪🇺", name: "Euro" }, USD: { flag: "🇺🇸", name: "US Dollar" },
-          GBP: { flag: "🇬🇧", name: "British Pound" }, CAD: { flag: "🇨🇦", name: "Canadian Dollar" },
-          CHF: { flag: "🇨🇭", name: "Swiss Franc" }, XAF: { flag: "🇨🇲", name: "CFA Franc" },
-        };
-        const merged = currencies.map((dc) => {
-          const admin = data.find((d: any) => d.base_currency === dc.code);
-          return admin ? { ...dc, rate: Number(admin.effective_rate || admin.rate), fee_pct: Number(admin.margin_percentage) || dc.fee_pct } : dc;
+
+        const adminMap = new Map<string, { rate: number; fee_pct: number }>();
+        (adminData || []).forEach((d: any) => {
+          adminMap.set(d.base_currency, {
+            rate: Number(d.effective_rate || d.rate),
+            fee_pct: Number(d.margin_percentage) || 0,
+          });
         });
-        data.forEach((d: any) => {
-          if (!merged.find((m) => m.code === d.base_currency)) {
-            const info = flagMap[d.base_currency] || { flag: "🌍", name: d.base_currency };
-            merged.push({ code: d.base_currency, name: info.name, flag: info.flag, rate: Number(d.effective_rate || d.rate), fee_pct: Number(d.margin_percentage) || 0.5 });
+
+        // 2) Identify currencies that need live rates (not in admin table & not XAF)
+        const allCodes = new Set<string>();
+        DEFAULTS.forEach(c => allCodes.add(c.code));
+        Object.values(COUNTRY_META).forEach(m => allCodes.add(m.currency));
+        allCodes.delete("XAF"); // XAF is always 1
+
+        const needLive: string[] = [];
+        allCodes.forEach(code => { if (!adminMap.has(code)) needLive.push(code); });
+
+        // 3) Fetch live rates from edge function for missing currencies
+        const liveMap = new Map<string, number>();
+        if (needLive.length > 0) {
+          // Fetch rates in parallel (max 6 at a time to avoid rate limits)
+          const batches: string[][] = [];
+          for (let i = 0; i < needLive.length; i += 6) batches.push(needLive.slice(i, i + 6));
+
+          for (const batch of batches) {
+            const results = await Promise.allSettled(
+              batch.map(async (code) => {
+                const { data, error } = await supabase.functions.invoke("exchange-rate-get", {
+                  body: {},
+                  method: "GET",
+                });
+                // Use query params via URL
+                const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "wdzkzeahdtxlynetndqw";
+                const url = `https://${projectId}.supabase.co/functions/v1/exchange-rate-get?from=${code}&to=XAF`;
+                const res = await fetch(url, {
+                  headers: { "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "" },
+                });
+                if (!res.ok) return null;
+                const d = await res.json();
+                return { code, rate: d.rate as number };
+              })
+            );
+            results.forEach(r => {
+              if (r.status === "fulfilled" && r.value?.rate) {
+                liveMap.set(r.value.code, r.value.rate);
+              }
+            });
+          }
+        }
+
+        // 4) Merge all sources: admin > live > hardcoded defaults
+        const finalMap = new Map<string, CurrencyOption>();
+
+        // Start with defaults
+        DEFAULTS.forEach(d => finalMap.set(d.code, { ...d }));
+
+        // Apply live rates
+        liveMap.forEach((rate, code) => {
+          const info = FLAG_MAP[code] || { flag: "🌍", name: code };
+          const existing = finalMap.get(code);
+          finalMap.set(code, { code, name: info.name, flag: info.flag, rate, fee_pct: existing?.fee_pct ?? 0.5 });
+        });
+
+        // Apply admin rates (highest priority)
+        adminMap.forEach((val, code) => {
+          const info = FLAG_MAP[code] || { flag: "🌍", name: code };
+          const existing = finalMap.get(code);
+          finalMap.set(code, { code, name: existing?.name || info.name, flag: existing?.flag || info.flag, rate: val.rate, fee_pct: val.fee_pct });
+        });
+
+        // Ensure XAF is always 1
+        finalMap.set("XAF", { code: "XAF", name: "CFA Franc", flag: "🇨🇲", rate: 1, fee_pct: 0 });
+
+        // Add any corridor currencies not yet present
+        allCodes.forEach(code => {
+          if (!finalMap.has(code)) {
+            const info = FLAG_MAP[code] || { flag: "🌍", name: code };
+            finalMap.set(code, { code, name: info.name, flag: info.flag, rate: 0, fee_pct: 0.5 });
           }
         });
-        setCurrencies(merged);
-      } catch { /* fallback */ }
+
+        setCurrencies(Array.from(finalMap.values()));
+      } catch (e) {
+        console.error("Failed to load exchange rates:", e);
+        /* keep defaults */
+      }
     })();
   }, []);
   return currencies;
