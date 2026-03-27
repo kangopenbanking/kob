@@ -965,7 +965,26 @@ export default function CustomerSendMoney() {
                         </motion.div>
                       )}
 
-                      {method === "bill_payment" && (
+                      {method === "local_bank_transfer" && (
+                        <motion.div key="local-bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-semibold text-muted-foreground">Bank *</Label>
+                            <Select value={bankCode} onValueChange={setBankCode}>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {CM_BANKS.map((b) => (
+                                  <SelectItem key={b.code} value={b.code} className="text-xs">{b.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-semibold text-muted-foreground">Account Number *</Label>
+                            <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                          </div>
+                        </motion.div>
+                      )}
+
                         <motion.div key="bill" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-semibold text-muted-foreground">Bill Type *</Label>
