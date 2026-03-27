@@ -22,6 +22,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { CM_BANKS } from "@/constants/cameroon-banks";
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
 
