@@ -911,7 +911,7 @@ export default function CustomerSendMoney() {
 
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                       <h2 className="text-xl font-extrabold text-foreground flex items-center justify-center gap-2">
-                        Transfer Sent! <PartyPopper className="h-5 w-5 text-amber-500" />
+                        Transfer Sent! <PartyPopper className="h-5 w-5" style={{ color: "hsl(38 92% 50%)" }} />
                       </h2>
                       <p className="text-xs text-muted-foreground mt-1">Your money is on its way</p>
                     </motion.div>
