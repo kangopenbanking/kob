@@ -581,7 +581,18 @@ export default function CustomerSendMoney() {
           quote_id: quote?.quote_id || null,
         },
       });
-      if (error) throw error;
+
+      // supabase.functions.invoke may return error for non-2xx OR embed result in error.context
+      if (error) {
+        // Check if the response body actually contains a successful result (e.g. 201 treated as error)
+        let body: any = null;
+        try {
+          const raw = error?.context?.body;
+          body = typeof raw === "string" ? JSON.parse(raw) : raw;
+        } catch { /* ignore */ }
+        if (body?.remittance_id) return body; // It was actually successful
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -592,6 +603,7 @@ export default function CustomerSendMoney() {
       refetchTransfers();
     },
     onError: (e: any) => {
+      console.error("Send transfer error:", e);
       const { title, description } = formatErrorForToast(e);
       toast.error(title, { description });
       goTo("review", -1);
