@@ -1,88 +1,86 @@
 
 
-# Fix: Remittance Backend Completion Pipeline
+# Plan: Apply 25 Standards Fixes to OpenAPI Spec (v4.2.0 → v4.3.0)
 
-## Problem
+## Overview
 
-The remittance system has a **critical gap**: after a transfer is created (`status: "created"` or `"pending"`), there is **no backend logic** to:
-1. Initiate the actual payout via Flutterwave MoMo, PayPal, or KOB Wallet
-2. Transition the remittance through `in_transit` → `delivered`
-3. Handle webhook callbacks from providers to finalize the transfer
+Apply all 25 non-conformance fixes from the Standards Analysis Report to the OpenAPI specification at `public/openapi.json` (49,944 lines). The uploaded file is identical to the existing project file. A matching update will be applied to `public/openapi-sandbox.json`.
 
-The `sendRemittance` function creates the record and stops. The existing webhook handlers (`gateway-webhook-flutterwave`, `gateway-webhook-paypal`) handle `gateway_charges` and `gateway_payouts` but have **no awareness of the `remittances` table**.
+## Approach
 
-## Architecture
+Due to the file size (50K lines) and the number of changes (25 fixes touching hundreds of locations), this will be implemented as a **script-based transformation**. A Node.js script will:
 
-```text
-Current flow (broken):
-  Client → remittance-outbound(send) → INSERT remittance (status: pending) → STOP
+1. Parse the JSON spec into memory
+2. Apply all 25 fixes programmatically in sequence
+3. Write the updated spec back to `public/openapi.json`
+4. Also update `public/openapi-sandbox.json` with the same fixes
 
-Required flow:
-  Client → remittance-outbound(send) → INSERT remittance (pending)
-                                      → Auto-execute payout rail
-                                      → Status: in_transit
-                                      → Provider webhook → Status: delivered ✅
-                                      → Client polls track → sees delivered → celebration 🎉
-```
+This is the only reliable approach for a file this size with changes spanning hundreds of locations (FIX 4 amount fields, FIX 5 currency enums, FIX 7 response headers on every 200/201 response, FIX 16 pagination on 17 endpoints, etc.).
 
-## Plan
+## Detailed Fix Summary
 
-### 1. Add `remittance-fulfill` edge function (new)
+### Phase 1 — Critical (Fixes 1-6)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 1 | PISP domestic-payment: add 3 fields to `required[]` | 1 schema (line ~6445) |
+| 2 | Sandbox server URL: add `/v1` suffix | 1 location (line 26) |
+| 3 | Move 3 webhook paths under `/v1/webhooks/providers/` | 3 path keys + 1 tag description |
+| 4 | Amount fields: `number` → `string` + pattern | ~30-50 fields across schemas |
+| 5 | Currency fields: add enum constraint | ~30-50 fields across schemas |
+| 6 | Add 4 new wrapper schemas (StandardResponse, PaginatedResponse, ResponseMeta, Pagination) + description notes on 4 endpoints | 4 new schemas + 4 description updates |
 
-A new function that executes the actual payout based on delivery method. Called inline by `sendRemittance` after compliance clears (for low-risk), or by admin compliance approval.
+### Phase 2 — Security (Fixes 7-11)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 7 | Add FAPI parameters + response headers | 3 new params, 5 new headers, 12 endpoints get params, all 200/201 responses get headers |
+| 8 | Add 429 response to 7 endpoints | 7 operations |
+| 9 | Add Idempotency-Key to 5 endpoints | 5 operations |
+| 10 | Add 400 response to 3 provider webhook endpoints | 3 operations |
+| 11 | rotate-secret: explicit security + 400 | 1 operation |
 
-Actions:
-- **For Mobile Money (Flutterwave)**: Call Flutterwave transfer API to send funds to recipient phone
-- **For PayPal**: Call PayPal payout API to send funds to recipient email
-- **For Wallet Balance (KOB internal)**: Debit sender wallet, credit receiver wallet atomically
-- **For Bank Transfer**: Call Flutterwave bank transfer API
+### Phase 3 — OAuth/OIDC (Fixes 12-13)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 12 | Add refreshUrl + 4 scopes to OAuth2 flow | 1 security scheme |
+| 13 | Add 10 OIDC discovery fields | 1 response schema |
 
-Each rail:
-1. Creates a `gateway_payouts` record linking `remittance_id` in metadata
-2. Updates remittance status to `in_transit`
-3. Logs `payout_initiated` event in `remittance_events`
-4. Returns immediately (webhook handles finality)
+### Phase 4 — Structure/Tags (Fixes 14-17)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 14 | Add 4 undeclared tags | tags array |
+| 15 | Remove 6 unused POS tags + add description note | tags array + info.description |
+| 16 | Add pagination params to 17 list endpoints | 3 new params + 17 operations |
+| 17 | Add 2 new savings GET endpoints + SavingsAccount schema | 2 new paths + 1 new schema |
 
-For **Wallet Balance**: completes synchronously — sets status to `delivered` immediately.
+### Phase 5 — Compliance (Fixes 18-19)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 18 | KYC schema: add 7 FATF fields + 2 required | 1 request schema |
+| 19 | Webhook events: add enum with 50+ event types | 2 webhook schemas |
 
-### 2. Update `remittance-outbound` `sendRemittance` (additive)
+### Phase 6 — Deprecation/Cleanup (Fixes 20-25)
+| Fix | What Changes | Locations |
+|-----|-------------|-----------|
+| 20 | SWIFT MT: deprecation + sunset + x-replaced-by | 3 operations |
+| 21 | Legacy payments: sunset + x-replaced-by + description | 9 operations |
+| 22 | DCR: add grant_types enum + auth method fields | 1 request schema |
+| 23 | Escrow: release_conditions → structured object | 1 schema property |
+| 24 | WooCommerce download: add auth + 401 | 1 operation |
+| 25 | Version bump 4.2.0 → 4.3.0 + changelog in description | info object |
 
-After the compliance auto-approve block (line ~264-275), add a call to the fulfillment logic:
-- If `compliance_status === "cleared"`, invoke `fulfillRemittance()` inline
-- This triggers the payout rail and moves status to `in_transit`
-
-After admin compliance approval (`complianceDecision` with `approved`), also trigger fulfillment.
-
-### 3. Update `gateway-webhook-flutterwave` (additive)
-
-Add a block after existing payout processing (~line 158-224) to check if the payout's metadata contains a `remittance_id`. If so:
-- Update `remittances.status` to `delivered` (on success) or `failed` (on failure)
-- Insert `remittance_events` entry (`transfer_delivered` or `transfer_failed`)
-- Send notification + email to sender
-- Fire outbound client webhook via `remittance-client-webhooks`
-
-### 4. Update `gateway-webhook-paypal` (additive)
-
-Same pattern: after payout status update, check for `remittance_id` in payout metadata and update remittance status accordingly.
-
-### 5. Update frontend polling in `CustomerSendMoney.tsx`
-
-After `sendMut.onSuccess`, add a polling interval that calls `track` every 5 seconds until status reaches `delivered` or `failed`. Update the success screen to show real-time status progression:
-- `pending` → "Processing..."
-- `in_transit` → "Funds on the way..."
-- `delivered` → Confetti celebration
-
-## Files Changed
+## Files Modified
 
 | File | Change Type |
-|---|---|
-| `supabase/functions/remittance-fulfill/index.ts` | **NEW** — Payout execution engine |
-| `supabase/functions/remittance-outbound/index.ts` | **ADDITIVE** — Call fulfillment after compliance clear |
-| `supabase/functions/gateway-webhook-flutterwave/index.ts` | **ADDITIVE** — Remittance status sync on payout completion |
-| `supabase/functions/gateway-webhook-paypal/index.ts` | **ADDITIVE** — Remittance status sync on payout completion |
-| `src/pages/customer-app/CustomerSendMoney.tsx` | **ADDITIVE** — Status polling + animated progress |
+|------|-------------|
+| `public/openapi.json` | **MODIFIED** — all 25 fixes applied |
+| `public/openapi-sandbox.json` | **MODIFIED** — mirror same fixes |
 
-## No Database Changes Required
+## Implementation Notes
 
-The existing `remittances`, `remittance_events`, `gateway_payouts`, and `remittance_payin_intents` tables already support all needed fields. The `remittances.status` column already accepts `in_transit` and `delivered` values.
+- The transformation script will be written to `/tmp/` and run via `code--exec`
+- Each fix will be applied as a distinct function for traceability
+- The script will output confirmation for each fix (`✅ FIX [N] COMPLETE`)
+- Final output includes verification checklist and operation/path counts
+- No existing operationIds, paths (except 3 renames), or schema names will be removed
+- Zero backend, frontend, or edge function changes — spec-only
 
