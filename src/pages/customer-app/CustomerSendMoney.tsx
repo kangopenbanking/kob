@@ -1483,6 +1483,8 @@ export default function CustomerSendMoney() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeSend} />
     </div>
   );
 }
