@@ -22,12 +22,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 async function invokeKeysFunction(body: Record<string, unknown>) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error("Not authenticated");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data, error } = await supabase.functions.invoke("gateway-merchant-keys", {
     body,
-    headers: { Authorization: `Bearer ${session.access_token}` },
   });
 
   if (error) throw new Error(error.message || "Edge function error");

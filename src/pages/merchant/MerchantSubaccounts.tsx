@@ -55,13 +55,15 @@ export default function MerchantSubaccounts() {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("gateway_subaccounts").update({ is_active: !current }).eq("id", id);
+    const { error } = await supabase.from("gateway_subaccounts").update({ is_active: !current }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
     toast.success(`Subaccount ${current ? "disabled" : "enabled"}`);
     loadData();
   };
 
   const deleteSubaccount = async (id: string) => {
-    await supabase.from("gateway_subaccounts").delete().eq("id", id);
+    const { error } = await supabase.from("gateway_subaccounts").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
     toast.success("Subaccount deleted");
     loadData();
   };

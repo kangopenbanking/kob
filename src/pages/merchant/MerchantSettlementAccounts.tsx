@@ -247,8 +247,10 @@ export default function MerchantSettlementAccounts() {
 
   const setDefault = async (id: string) => {
     if (!merchantId) return;
-    await supabase.from("gateway_merchant_settlement_accounts").update({ is_default: false }).eq("merchant_id", merchantId);
-    await supabase.from("gateway_merchant_settlement_accounts").update({ is_default: true }).eq("id", id);
+    const { error: clearErr } = await supabase.from("gateway_merchant_settlement_accounts").update({ is_default: false }).eq("merchant_id", merchantId);
+    if (clearErr) { toast.error("Failed to update default account"); return; }
+    const { error: setErr } = await supabase.from("gateway_merchant_settlement_accounts").update({ is_default: true }).eq("id", id);
+    if (setErr) { toast.error("Failed to set default account"); return; }
     toast.success("Default settlement account updated");
     loadData();
   };
