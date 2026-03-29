@@ -33,6 +33,7 @@ const CustomerSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   // Security
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPin, setNewPin] = useState('');
