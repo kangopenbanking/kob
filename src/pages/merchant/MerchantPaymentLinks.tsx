@@ -76,13 +76,15 @@ export default function MerchantPaymentLinks() {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("gateway_payment_links").update({ status: current ? "inactive" : "active" }).eq("id", id);
+    const { error } = await supabase.from("gateway_payment_links").update({ status: current ? "inactive" : "active" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
     toast.success(`Link ${current ? "deactivated" : "activated"}`);
     loadData();
   };
 
   const deleteLink = async (id: string) => {
-    await supabase.from("gateway_payment_links").delete().eq("id", id);
+    const { error } = await supabase.from("gateway_payment_links").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
     toast.success("Payment link deleted");
     loadData();
   };

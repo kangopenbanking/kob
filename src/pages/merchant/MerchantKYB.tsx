@@ -145,7 +145,6 @@ export default function MerchantKYB() {
     }
     setSubmitting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("gateway-merchant-kyb", {
         body: {
           merchant_id: merchant.id,
@@ -159,7 +158,6 @@ export default function MerchantKYB() {
           bank_statement_url: docs.bank_statement || null,
           director_id_document_url: docs.director_id_document || null,
         },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (res.error) {
         throw new Error(res.error.message || 'Failed to submit KYB. Please try again.');

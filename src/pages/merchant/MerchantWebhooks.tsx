@@ -42,15 +42,16 @@ export default function MerchantWebhooks() {
     if (!merchantId || !form.url) return;
     setSaving(true);
     try {
-      const secret = `whsec_${Array.from(crypto.getRandomValues(new Uint8Array(24)), b => b.toString(16).padStart(2, "0")).join("")}`;
-      const { error } = await supabase.from("gateway_merchant_webhooks").insert([{
-        merchant_id: merchantId,
-        url: form.url,
-        secret,
-        events: form.events.split(",").map(e => e.trim()),
-        is_active: true,
-      }]);
+      const { data, error } = await supabase.functions.invoke("gateway-webhook-endpoints", {
+        body: {
+          action: "create",
+          merchant_id: merchantId,
+          url: form.url,
+          events: form.events.split(",").map(e => e.trim()),
+        },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success("Webhook endpoint added");
       setDialogOpen(false);
       setForm({ url: "", events: "charge.success" });
