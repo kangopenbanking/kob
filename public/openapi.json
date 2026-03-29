@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.4.0",
+    "version": "4.5.0",
     "summary": "Unified Open Banking API for Cameroon",
-    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes.",
+    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
     "contact": {
       "name": "Kang Open Banking Support",
@@ -196,6 +196,10 @@
     {
       "name": "Operational Controls",
       "description": "Internal operational controls — teller transactions, withdrawal policies, and staff authorisations"
+    },
+    {
+      "name": "Standards - ISO 20022",
+      "description": "ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows."
     }
   ],
   "components": {
@@ -439,7 +443,8 @@
           "account_subtype",
           "currency",
           "identification_scheme",
-          "identification_value"
+          "identification_value",
+          "status"
         ]
       },
       "Balance": {
@@ -595,6 +600,21 @@
             "type": "string",
             "format": "date-time",
             "description": "OBIE alias for value_date."
+          },
+          "TransactionInformation": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction.",
+            "example": "Payment for Invoice INV-2025-001 — Professional Services"
+          },
+          "Status": {
+            "type": "string",
+            "enum": [
+              "Booked",
+              "Pending",
+              "Rejected"
+            ],
+            "description": "OBIE OBTransaction6 transaction status. Booked = settled, Pending = authorised but not yet settled, Rejected = declined or failed."
           }
         },
         "x-obie-mapping": {
@@ -605,7 +625,14 @@
           "CreditDebitIndicator": "type",
           "BookingDateTime": "booking_date",
           "ValueDateTime": "value_date"
-        }
+        },
+        "required": [
+          "transaction_id",
+          "amount",
+          "currency",
+          "type",
+          "timestamp"
+        ]
       },
       "Payment": {
         "type": "object",
@@ -1504,7 +1531,16 @@
             "type": "string",
             "description": "Human-readable failure message for display to the merchant"
           }
-        }
+        },
+        "required": [
+          "id",
+          "merchant_id",
+          "amount",
+          "currency",
+          "channel",
+          "status",
+          "created_at"
+        ]
       },
       "GatewayPayout": {
         "type": "object",
@@ -2164,8 +2200,62 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "trial_start": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "UTC datetime when the trial period started. Null if no trial was applied to this subscription.",
+            "example": "2025-03-01T00:00:00Z"
+          },
+          "trial_end": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "UTC datetime when the trial period ends or ended. After this datetime, regular billing resumes. Null if no trial was applied.",
+            "example": "2025-03-15T00:00:00Z"
+          },
+          "cancel_at_period_end": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, the subscription is scheduled to cancel at the end of the current billing period (current_period_end) rather than immediately. The status remains 'active' until then.",
+            "example": false
+          },
+          "cancelled_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "UTC datetime when the subscription was cancelled (either immediately or when a scheduled end-of-period cancellation took effect). Null if subscription is still active.",
+            "example": "2025-04-01T00:00:00Z"
+          },
+          "billing_cycle_anchor": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "UTC datetime that defines the billing cycle. Future billing dates are calculated relative to this anchor. Useful for aligning subscription billing to a fixed day of the month.",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 20,
+            "description": "Arbitrary key-value metadata attached to this subscription. Keys and values must be strings. Maximum 20 pairs.",
+            "example": {
+              "customer_ref": "CUST-001",
+              "plan_tier": "professional"
+            }
           }
-        }
+        },
+        "required": [
+          "id",
+          "plan_id",
+          "status",
+          "current_period_start",
+          "current_period_end",
+          "created_at"
+        ]
       },
       "GatewaySubaccount": {
         "type": "object",
@@ -2783,6 +2873,17 @@
                 }
               }
             }
+          },
+          "error_id": {
+            "type": "string",
+            "description": "Kang-specific trace correlation identifier. Reference this ID when contacting support. Matches the error_id field in the standard Error schema for cross-format correlation.",
+            "example": "err_a1b2c3d4e5f6"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC ISO 8601 datetime when this error occurred. Useful for correlating with server logs.",
+            "example": "2025-03-27T14:32:00Z"
           }
         }
       }
@@ -3239,8 +3340,8 @@
           {
             "name": "nonce",
             "in": "query",
-            "required": false,
-            "description": "FAPI 1.0 Advanced: Opaque value binding the ID Token to the client session. REQUIRED for code id_token response type.",
+            "required": true,
+            "description": "Cryptographically random nonce value associating the client session with the ID Token and preventing replay attacks. REQUIRED by FAPI 1.0 Advanced Section 5.2.2-14 for all authorization requests. Must be unique per request with at least 128 bits of entropy (minimum 22 Base64url characters). The server MUST include the nonce claim in the issued ID Token.",
             "schema": {
               "type": "string"
             }
@@ -3386,6 +3487,7 @@
         "summary": "Exchange authorization code for token",
         "operationId": "oauthToken",
         "security": [
+          {},
           {
             "mtls": []
           }
@@ -3573,7 +3675,7 @@
             }
           }
         },
-        "description": " Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
+        "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
       }
     },
     "/v1/oauth/introspect": {
@@ -6775,7 +6877,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Account"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Account"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -7132,18 +7246,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Transaction"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Transaction"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -15491,7 +15609,8 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "pain.001.001.09"
       }
     },
     "/v1/standards/iso20022/camt053/parse": {
@@ -15655,7 +15774,8 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "camt.053.001.08"
       }
     },
     "/v1/standards/iso20022/pacs008/generate": {
@@ -15806,7 +15926,8 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "pacs.008.001.08"
       }
     },
     "/v1/standards/iso20022/pacs002/generate": {
@@ -15957,7 +16078,8 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "pacs.002.001.10"
       }
     },
     "/v1/standards/swift/mt103/parse": {
@@ -17360,6 +17482,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -24605,7 +24732,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GatewayCharge"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/GatewayCharge"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -57505,7 +57644,7 @@
           "Provider Webhooks (Inbound)"
         ],
         "summary": "PayPal inbound webhook",
-        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post",
+        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post\n\n**PayPal Webhook Request Headers (present on every delivery):**\n\n| Header | Description |\n|--------|-------------|\n| `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |\n| `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |\n| `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |\n| `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |\n| `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |\n\n**Manual Verification Algorithm (alternative to API-based verification):**\n1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)\n2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`\n3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`\n4. Reject any request where verification fails — return HTTP 400 to halt retries\n5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically",
         "operationId": "receivePaypalWebhook",
         "security": [],
         "requestBody": {
@@ -57759,7 +57898,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SavingsAccount"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SavingsAccount"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -58102,11 +58253,11 @@
         }
       }
     },
-    "/v1/standards/iso20022/camt052/generate": {
+    "/v1/standards/iso20022/camt056/generate": {
       "post": {
-        "operationId": "generateCamt052",
-        "summary": "Generate camt.052 (BankToCustomerAccountReport)",
-        "description": "Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.",
+        "operationId": "generateCamt056",
+        "summary": "Generate camt.056 (FIToFIPaymentCancellationRequest)",
+        "description": "Generate an ISO 20022 camt.056.001.10 payment cancellation request for recalling an interbank payment before settlement.",
         "tags": [
           "Standards - ISO 20022"
         ],
@@ -58115,7 +58266,157 @@
             "bearerAuth": []
           }
         ],
-        "x-iso20022-message": "camt.052.001.10",
+        "x-iso20022-message": "camt.056.001.10",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for camt.056.001.10 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated camt.056.001.10 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "camt.056.001.10"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/camt052/parse": {
+      "post": {
+        "operationId": "parseISO20022Camt052",
+        "summary": "Parse ISO 20022 camt.052 Bank-to-Customer Account Report",
+        "description": "Parse and validate an inbound ISO 20022 camt.052.001.08 (Bank-to-Customer Account Report) XML message. This intraday report is sent BY the bank TO the platform to report account balances and transactions during the business day. Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "camt.052.001.08",
         "parameters": [
           {
             "$ref": "#/components/parameters/XFapiInteractionId"
@@ -58252,11 +58553,11 @@
         }
       }
     },
-    "/v1/standards/iso20022/camt054/generate": {
+    "/v1/standards/iso20022/camt054/parse": {
       "post": {
-        "operationId": "generateCamt054",
-        "summary": "Generate camt.054 (BankToCustomerDebitCreditNotification)",
-        "description": "Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.",
+        "operationId": "parseISO20022Camt054",
+        "summary": "Parse ISO 20022 camt.054 Bank-to-Customer Debit Credit Notification",
+        "description": "Parse and validate an inbound ISO 20022 camt.054.001.08 (Bank-to-Customer Debit/Credit Notification) XML message. This notification is sent BY the bank TO the platform to report a specific debit or credit to a customer account in real time. Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.",
         "tags": [
           "Standards - ISO 20022"
         ],
@@ -58265,7 +58566,7 @@
             "bearerAuth": []
           }
         ],
-        "x-iso20022-message": "camt.054.001.10",
+        "x-iso20022-message": "camt.054.001.08",
         "parameters": [
           {
             "$ref": "#/components/parameters/XFapiInteractionId"
@@ -58335,156 +58636,6 @@
                     "message_type": {
                       "type": "string",
                       "example": "camt.054.001.10"
-                    },
-                    "xml_content": {
-                      "type": "string",
-                      "description": "The generated ISO 20022 XML message"
-                    },
-                    "validation_result": {
-                      "type": "object",
-                      "properties": {
-                        "valid": {
-                          "type": "boolean"
-                        },
-                        "errors": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request — invalid input data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              },
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "headers": {
-              "Retry-After": {
-                "$ref": "#/components/headers/RetryAfter"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/standards/iso20022/camt056/generate": {
-      "post": {
-        "operationId": "generateCamt056",
-        "summary": "Generate camt.056 (FIToFIPaymentCancellationRequest)",
-        "description": "Generate an ISO 20022 camt.056.001.10 payment cancellation request for recalling an interbank payment before settlement.",
-        "tags": [
-          "Standards - ISO 20022"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "x-iso20022-message": "camt.056.001.10",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XFapiInteractionId"
-          },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "description": "Client-generated UUID for idempotent request deduplication.",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "description": "Input fields for camt.056.001.10 message generation",
-                "properties": {
-                  "source_data": {
-                    "type": "object",
-                    "description": "Business data to be mapped into the ISO 20022 message structure"
-                  },
-                  "output_format": {
-                    "type": "string",
-                    "enum": [
-                      "xml",
-                      "json"
-                    ],
-                    "default": "xml",
-                    "description": "Output format for the generated message"
-                  }
-                },
-                "required": [
-                  "source_data"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Generated camt.056.001.10 message",
-            "headers": {
-              "x-fapi-interaction-id": {
-                "$ref": "#/components/headers/XFapiInteractionIdResponse"
-              },
-              "X-RateLimit-Limit": {
-                "$ref": "#/components/headers/XRateLimitLimit"
-              },
-              "X-RateLimit-Remaining": {
-                "$ref": "#/components/headers/XRateLimitRemaining"
-              },
-              "X-RateLimit-Reset": {
-                "$ref": "#/components/headers/XRateLimitReset"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message_type": {
-                      "type": "string",
-                      "example": "camt.056.001.10"
                     },
                     "xml_content": {
                       "type": "string",
