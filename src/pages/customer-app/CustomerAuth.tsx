@@ -576,8 +576,9 @@ const CustomerAuth: React.FC = () => {
                     variant="ghost"
                     onClick={async () => {
                       setPin(''); setPinError(null);
+                      setPendingPinReset(true);
                       await sendOTP(fullPhone);
-                      setMode('reset-pin');
+                      setMode('otp');
                     }}
                     className="w-full gap-2 text-sm text-destructive"
                   >
