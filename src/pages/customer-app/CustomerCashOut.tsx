@@ -224,8 +224,6 @@ const CustomerCashOut: React.FC = () => {
       );
 
       // Notification is handled server-side by the edge function/DB trigger
-        });
-      }
 
       // Send confirmation email (non-blocking)
       supabase.functions.invoke('send-communication', {
