@@ -47,17 +47,19 @@ const CustomerTransfer: React.FC = () => {
     }
     setNameSearching(true);
     try {
-      // Search profiles by full_name
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone_number')
-        .ilike('full_name', `%${query}%`)
-        .neq('id', user.id)
-        .limit(5);
+      // Use the search_profiles_by_name RPC which masks phone numbers for privacy
+      const { data: profiles, error: rpcError } = await supabase
+        .rpc('search_profiles_by_name', { _query: query, _limit: 6 });
+
+      if (rpcError) {
+        console.error('Name search RPC error:', rpcError);
+        setNameSuggestions([]);
+        return;
+      }
 
       if (profiles && profiles.length > 0) {
-        // Get accounts for these users
-        const userIds = profiles.map(p => p.id);
+        // Get accounts for these users to ensure they can receive transfers
+        const userIds = profiles.map((p: any) => p.id);
         const { data: accts } = await supabase
           .from('accounts')
           .select('id, account_holder_name, user_id')
@@ -65,32 +67,16 @@ const CustomerTransfer: React.FC = () => {
           .eq('is_active', true);
 
         const suggestions = profiles
-          .filter(p => accts?.some(a => a.user_id === p.id))
-          .map(p => ({
+          .filter((p: any) => accts?.some(a => a.user_id === p.id))
+          .map((p: any) => ({
             userId: p.id,
             name: p.full_name,
-            phone: p.phone_number,
+            phone: p.phone_masked, // Already masked by RPC (e.g. +237677****)
             accountId: accts?.find(a => a.user_id === p.id)?.id,
           }));
         setNameSuggestions(suggestions);
       } else {
-        // Also search accounts.account_holder_name
-        const { data: holderAccts } = await supabase
-          .from('accounts')
-          .select('id, account_holder_name, user_id')
-          .ilike('account_holder_name', `%${query}%`)
-          .neq('user_id', user.id)
-          .eq('is_active', true)
-          .limit(5);
-
-        setNameSuggestions(
-          (holderAccts || []).map(a => ({
-            userId: a.user_id,
-            name: a.account_holder_name,
-            phone: null,
-            accountId: a.id,
-          }))
-        );
+        setNameSuggestions([]);
       }
       setShowSuggestions(true);
     } catch (err) {
