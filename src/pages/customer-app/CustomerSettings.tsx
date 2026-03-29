@@ -372,6 +372,10 @@ const CustomerSettings: React.FC = () => {
               <h3 className="mb-3 text-sm font-bold text-foreground">Change Password</h3>
               <div className="flex flex-col gap-3">
                 <div className="space-y-1">
+                  <Label className="text-xs">Current Password</Label>
+                  <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="rounded-xl" />
+                </div>
+                <div className="space-y-1">
                   <Label className="text-xs">New Password</Label>
                   <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" className="rounded-xl" />
                 </div>
@@ -379,7 +383,7 @@ const CustomerSettings: React.FC = () => {
                   <Label className="text-xs">Confirm Password</Label>
                   <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="rounded-xl" />
                 </div>
-                <Button onClick={handleChangePassword} disabled={saving || !newPassword} size="sm" variant="outline" className="gap-2 rounded-xl">
+                <Button onClick={handleChangePassword} disabled={saving || !currentPassword || !newPassword} size="sm" variant="outline" className="gap-2 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                   Update Password
                 </Button>
