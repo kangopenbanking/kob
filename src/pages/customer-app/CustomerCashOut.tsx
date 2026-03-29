@@ -226,6 +226,7 @@ const CustomerCashOut: React.FC = () => {
       // Notification is handled server-side by the edge function/DB trigger
 
       // Send confirmation email (non-blocking)
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       supabase.functions.invoke('send-communication', {
         body: {
           type: 'email',
