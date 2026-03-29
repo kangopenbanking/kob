@@ -79,7 +79,6 @@ export default function RemittancePartners() {
 
   const partnerMutation = useMutation({
     mutationFn: async (form: any) => {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("remittance-engine", {
         body: {
           action: "admin_manage_partner",
@@ -96,7 +95,6 @@ export default function RemittancePartners() {
             settlement_frequency: form.settlement_frequency || "daily",
           },
         },
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
       if (res.error) throw res.error;
       return res.data;
