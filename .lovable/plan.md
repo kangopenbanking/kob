@@ -1,158 +1,154 @@
 
+# Full System Audit Report -- Edge Cases, Invalid Inputs, and Breakability Analysis
 
-# Customer App (/app) End-to-End Audit Plan
+## Methodology
 
-## Scope
-
-47 routes across 8 functional domains within the Customer PWA. The audit covers broken forms/CTAs, API connection gaps, auth/security gaps, and data flow bugs.
-
-## Audit Methodology
-
-Execute in 8 batches. Each batch: read all component code, trace every form/CTA to its edge function or DB call, flag gaps, fix, verify.
+Read all critical customer-app pages, auth guards, merchant pages, institution pages, and shared components. Traced every form/CTA to its backend call. Focused on: stale session exploits, PIN bypass vectors, direct DB writes for financial data, amount validation gaps, XSS vectors, missing error handling.
 
 ---
 
-## Batch 1 — Auth and Session (Critical Path)
+## FINDINGS
 
-**Files:** `CustomerAuth.tsx` (795 lines), `CustomerRegister.tsx`, `CustomerOnboarding.tsx`, `CustomerSplash.tsx`, `CustomerAppAuthGuard.tsx`, `SessionGuard.tsx`, `useCustomerAuth.ts`, `useFirebasePhoneAuth.ts`, `MandatoryPinSetupStep.tsx`
+### HIGH SEVERITY
 
-**Audit targets:**
-- Phone OTP flow: send OTP -> verify OTP -> PIN setup -> dashboard redirect
-- Email sign-up/sign-in: validation, error handling, email verification
-- PIN login: brute-force lockout (3 attempts/30m), error messages
-- Forgot password and PIN reset flows
-- Session guard: 5-min inactivity timeout, single-session enforcement
-- Auth state race condition: verify 3-attempt retry loop for getUser/getSession
-- Guard bypass: confirm unauthenticated users cannot reach /app/home directly
+**H1. PayByBankApproval uses `getSession()` -- stale session exploit**
+- File: `src/pages/customer-app/PayByBankApproval.tsx` (lines 38, 55, 74)
+- Three calls to `supabase.auth.getSession()` which reads from localStorage and can be stale/spoofed
+- On line 59, `session.user.id` is passed directly to the edge function as `user_id` -- if session is stale, a different user could authorize payments
+- On line 76, `session?.user?.id` is used without null check -- if session is null, `undefined` is sent as user_id to reject flow
+- **Fix:** Replace all 3 with `supabase.auth.getUser()`, add null guard on reject path
 
-**Known risk:** `useCustomerAuth` uses `getSession()` instead of `getUser()` for initial load — potential stale session issue.
+**H2. MerchantPayByBank uses `getSession()` to resolve merchant identity**
+- File: `src/pages/merchant/MerchantPayByBank.tsx` (line 22)
+- Uses `session.user.id` to query `gateway_merchants` -- stale session could show wrong merchant's intents
+- **Fix:** Replace with `getUser()`
 
----
+**H3. MerchantWooSync uses `getSession()` for auth check**
+- File: `src/pages/merchant/MerchantWooSync.tsx` (line 69)
+- `getSession()` check before invoking `pos-inventory-sync` -- stale token could fail silently
+- **Fix:** Replace with `getUser()`
 
-## Batch 2 — Wallet and Money Movement (Financial Core)
+**H4. InstitutionApiClients uses `getSession()` + manual Authorization header**
+- File: `src/pages/institution/InstitutionApiClients.tsx` (line 75)
+- Extracts `session.access_token` manually and passes as Authorization header -- redundant and stale-prone since Supabase SDK auto-attaches the JWT
+- **Fix:** Replace with `getUser()`, remove manual header
 
-**Files:** `CustomerHome.tsx` (638 lines), `CustomerFundWallet.tsx` (514 lines), `CustomerTransfer.tsx` (605 lines), `CustomerCashOut.tsx` (588 lines)
+**H5. MermaidDiagram -- unsanitized `dangerouslySetInnerHTML`**
+- File: `src/components/developer/MermaidDiagram.tsx` (line 72)
+- The `chart` prop is rendered through Mermaid which produces SVG. Mermaid's output is injected via `dangerouslySetInnerHTML` without DOMPurify sanitization. If a developer portal user can control the diagram definition (e.g. from API spec or user-generated docs), this is an XSS vector.
+- **Fix:** Wrap Mermaid SVG output with `DOMPurify.sanitize(svg)` before injection
 
-**Audit targets:**
-- Home: balance display, animated counter, account data hooks
-- Fund Wallet: provider selection -> amount -> PIN confirm -> edge function call (`gateway-create-funding-intent` or `gateway-confirm-funding`), fee estimate integration, success/error handling
-- Transfer: 5 recipient types (phone/account/name/RIB/IBAN), name search via `search_profiles_by_name` RPC, `api-transfers` edge function call, idempotency key format, PIN confirmation, insufficient funds handling
-- Cash Out: destination selection -> amount -> PIN -> `gateway-process-withdrawal` or equivalent, balance validation, admin config loading from `institutions.app_config`
+### MEDIUM SEVERITY
 
-**Critical checks:** Every financial mutation must go through an edge function (not direct DB write). Verify idempotency keys, PIN verification, and atomic balance updates.
+**M1. CustomerTransfer -- no idempotency key on `api-transfers` call**
+- File: `src/pages/customer-app/CustomerTransfer.tsx` (line 175)
+- The `api-transfers` edge function is called without an `idempotency_key` in the body. If user double-taps "Confirm & Send" or network retries, duplicate transfers could occur.
+- The `sending` state disables the button, but network-level retries bypass this
+- **Fix:** Generate `transfer_${sourceAccountId}_${Date.now()}` idempotency key and include in the request body
 
----
+**M2. CustomerTransfer -- amount allows pasting non-numeric via programmatic paste**
+- File: `src/pages/customer-app/CustomerTransfer.tsx` (line 361)
+- `onChange` strips non-digits with `.replace(/\D/g, '')`, but `amount` is stored as string and converted via `Number(amount || 0)`. Pasting "0000" produces amount=0 which passes the `amountNum <= 0` check but creates a 0-value transfer request. The edge function should reject, but the UI should validate `amountNum >= minimum_amount` (e.g., 100 XAF).
+- **Fix:** Add minimum amount validation (e.g., `amountNum < 100`)
 
-## Batch 3 — Payments and Bills
+**M3. CustomerCashOut -- direct `app_notifications` insert is non-critical but bypasses edge function pattern**
+- File: `src/pages/customer-app/CustomerCashOut.tsx` (line 229)
+- After successful withdrawal, inserts directly into `app_notifications`. While this is a non-financial write (notification only), it breaks the "all writes through edge functions" pattern. If RLS changes, this could silently fail.
+- **Fix:** Move notification creation into the `gateway-process-withdrawal` edge function itself
 
-**Files:** `CustomerBillsV2.tsx` (572 lines), `CustomerInvoices.tsx`, `CustomerPayLinks.tsx`, `CustomerRecurring.tsx`, `CustomerSplitBills.tsx`
+**M4. CustomerOnboarding -- direct `customer_linked_accounts` insert without server-side validation**
+- File: `src/pages/customer-app/CustomerOnboarding.tsx` (line 219)
+- Account linking during onboarding inserts directly into `customer_linked_accounts`. No server-side validation of the account number format, no duplicate check. A user could link multiple accounts rapidly or inject malformed metadata.
+- **Fix:** Route through an edge function (e.g., `customer-link-account`) that validates and deduplicates
 
-**Audit targets:**
-- Bills: category -> provider -> product -> form -> PIN confirm -> `api-bills-v2` edge function. Verify hooks: `useBillCategories`, `useBillProviders`, `useBillProducts`, `useCreateBillIntent`, `usePayBillIntent`
-- Invoices: create via `customer-invoice-create`, list/display, email dispatch
-- Pay Links: `customer-paylinks-ops` with create/deactivate/toggle actions
-- Recurring Payments: `recurring-payment-create` with toggle action
-- Split Bills: `split-bills-ops` for creation, settlement, reminders
+**M5. CustomerRegister -- direct `kyc_verifications` insert**
+- File: `src/pages/customer-app/CustomerRegister.tsx` (line 161)
+- KYC verification record is inserted directly from the client. While the `status: 'pending'` is hardcoded (user can't mark themselves as verified), a malicious client could insert multiple pending records or manipulate fields like `document_type`.
+- **Fix:** Route KYC submission through an edge function that enforces rate limits and validates document types
 
-**Critical checks:** All 5 modules must route through their respective edge functions. No direct supabase inserts for financial records.
+**M6. CustomerLinkedAccounts -- direct `customer_linked_accounts` insert and soft-delete**
+- File: `src/pages/customer-app/CustomerLinkedAccounts.tsx` (lines 655, 684)
+- Both add and remove operations are direct DB writes. The remove sets `is_active: false` and calls `increment_removal_count` RPC. However, there's no server-side limit on how many accounts a user can link.
+- **Fix:** Enforce max linked accounts via edge function or DB trigger
 
----
+### LOW SEVERITY
 
-## Batch 4 — Remittances (Send Money)
+**L1. CustomerSettings -- password change has no old password verification**
+- File: `src/pages/customer-app/CustomerSettings.tsx` (line 120)
+- Uses `supabase.auth.updateUser({ password: newPassword })` which only requires an active session. If a session is hijacked, the attacker can change the password without knowing the old one.
+- Note: Supabase's `updateUser` does require a valid JWT, so this is partially mitigated. But adding old password verification is a defense-in-depth measure.
 
-**Files:** `CustomerSendMoney.tsx` (1485 lines — largest component), `CustomerRemittances.tsx`
+**L2. CustomerHelp -- direct `app_notifications` insert for support requests**
+- File: `src/pages/customer-app/CustomerHelp.tsx` (line 114)
+- Support form submissions are stored as notifications, not via a proper support ticket edge function. This limits traceability.
 
-**Audit targets:**
-- 6-step wizard: amount -> recipient -> review -> sending -> success
-- Corridor loading from `remittance_corridors` with partner join
-- Exchange rate fetching via `exchange-rate-get` edge function
-- Fee calculation from corridor `fees_model`
-- Delivery methods: mobile_money, bank_transfer (Flutterwave), local_bank_transfer (KOB v1 Credit Unions)
-- Credit Union display: only show institutions with `institution_type = 'credit_union'` or using KOB v1 API
-- 23-digit RIB format validation for local bank transfers
-- `remittance-engine` edge function call with proper payload
-- History tab: fetch from `remittance_transfers` table
-- Real-time status polling (Processing -> In Transit -> Delivered)
-
-**Known issue from recent work:** Exchange rate edge function was returning errors for some currency pairs (e.g., TND to XAF). Verify the fallback chain works.
-
----
-
-## Batch 5 — Savings and Consumer Tools
-
-**Files:** `CustomerPiggyBank.tsx`, `CustomerNjangi.tsx`, `CustomerCreditScore.tsx`, `CustomerRentReporting.tsx`, `CustomerRewards.tsx`, `CustomerLoyalty.tsx`
-
-**Audit targets:**
-- PiggyBank: `piggybank` edge function for goals CRUD
-- Njangi: `njangi-ops` edge function, group membership via `is_njangi_group_member` RPC
-- Credit Score: `credit-score-fetch` or `credit-score-calculate`, display formatting
-- Rent Reporting: form submission, data persistence
-- Rewards/Loyalty: point accrual, redemption flows
-
----
-
-## Batch 6 — Marketplace and Commerce
-
-**Files:** `CustomerStores.tsx`, `CustomerStoreDetail.tsx`, `CustomerCart.tsx`, `CustomerOrderTracking.tsx`, `CustomerMarketplace.tsx`, `CustomerWishlist.tsx`, `CustomerReviews.tsx`, `CustomerScan.tsx`
-
-**Audit targets:**
-- Store browsing: fetch from `pos_store_profiles` where `is_published = true`
-- Cart: `pos-consumer-cart` edge function, idempotency key format `checkout_${cart.id}`
-- QR scanning: `kob_pos_pay` and `kob_store` QR type detection
-- Order tracking: consumer_user_id metadata matching
-- Wishlist/Reviews: CRUD operations, RLS policy verification
+**L3. Amount inputs accept leading zeros**
+- Multiple files (Transfer, CashOut, FundWallet, SplitBills)
+- Entering "0001000" produces amount 1000 (correct), but the display is ugly. Minor UX issue.
 
 ---
 
-## Batch 7 — Travel and Support
+## SUMMARY TABLE
 
-**Files:** `CustomerTravelCategories.tsx`, `CustomerTravelAgencies.tsx`, `CustomerTravelTrips.tsx`, `CustomerTravelBooking.tsx`, `CustomerTravelTicket.tsx`, `CustomerTravelHistory.tsx`, `CustomerSupport.tsx`, `CustomerDisputes.tsx`, `CustomerHelp.tsx`
-
-**Audit targets:**
-- Travel flow: category -> agencies -> trips -> booking -> ticket
-- `travel-book-and-pay` edge function integration
-- Support chat: real-time messaging, department routing
-- Disputes: lifecycle management, Kanban board status transitions
-
----
-
-## Batch 8 — Settings, Alerts, and Edge Cases
-
-**Files:** `CustomerSettings.tsx`, `CustomerAlerts.tsx`, `CustomerLinkedAccounts.tsx`, `CustomerBank.tsx`, `CustomerCards.tsx`
-
-**Audit targets:**
-- Settings: profile update, PIN change, notification preferences
-- Alerts: `app_notifications` fetch, mark-as-read
-- Linked Accounts: account linking flow, `customer_linked_accounts` table
-- Bank connections: `bank_connections` table, sync status
-- Virtual Cards: `virtual-cards` edge function
+| # | Severity | File | Issue | Fix |
+|---|----------|------|-------|-----|
+| H1 | HIGH | PayByBankApproval.tsx | `getSession()` -- stale session in payment authorization | Replace with `getUser()` |
+| H2 | HIGH | MerchantPayByBank.tsx | `getSession()` -- stale merchant identity | Replace with `getUser()` |
+| H3 | HIGH | MerchantWooSync.tsx | `getSession()` -- stale auth check | Replace with `getUser()` |
+| H4 | HIGH | InstitutionApiClients.tsx | `getSession()` + manual auth header | Replace with `getUser()`, remove manual header |
+| H5 | HIGH | MermaidDiagram.tsx | Unsanitized `dangerouslySetInnerHTML` (XSS) | Add `DOMPurify.sanitize()` |
+| M1 | MEDIUM | CustomerTransfer.tsx | No idempotency key on transfer API call | Add idempotency key |
+| M2 | MEDIUM | CustomerTransfer.tsx | Amount allows 0 value past UI validation | Add minimum amount check |
+| M3 | MEDIUM | CustomerCashOut.tsx | Direct `app_notifications` insert | Move to edge function |
+| M4 | MEDIUM | CustomerOnboarding.tsx | Direct `customer_linked_accounts` insert | Route through edge function |
+| M5 | MEDIUM | CustomerRegister.tsx | Direct `kyc_verifications` insert | Route through edge function |
+| M6 | MEDIUM | CustomerLinkedAccounts.tsx | Direct insert/update without server-side limits | Add max account limit |
+| L1 | LOW | CustomerSettings.tsx | No old password verification | Add old password field |
+| L2 | LOW | CustomerHelp.tsx | Support via notifications, not tickets | Improve traceability |
+| L3 | LOW | Multiple | Leading zeros in amount inputs | Strip leading zeros |
 
 ---
 
-## Cross-Cutting Checks (Applied to Every Batch)
+## IMPLEMENTATION PLAN
 
-| Check | Method |
-|-------|--------|
-| Forms submit to edge functions, not direct DB | Trace every `supabase.functions.invoke` and `supabase.from().insert/update` |
-| Error handling exists on every API call | Verify `.catch` or error toast for every mutation |
-| PIN verification before financial ops | Confirm `PinConfirmDialog` gates transfers, payments, cashout |
-| Loading states on all async operations | Verify `Loader2` or equivalent during API calls |
-| Empty states for lists with no data | Verify fallback UI when arrays are empty |
-| RLS policies match query patterns | Cross-reference `.from()` calls with table RLS |
-| Navigation after success | Verify redirect or success screen after each flow completes |
+### Batch 1 -- High Severity (5 fixes)
+1. **PayByBankApproval.tsx**: Replace 3x `getSession()` with `getUser()`, add null guard on reject
+2. **MerchantPayByBank.tsx**: Replace `getSession()` with `getUser()`
+3. **MerchantWooSync.tsx**: Replace `getSession()` with `getUser()`
+4. **InstitutionApiClients.tsx**: Replace `getSession()` with `getUser()`, remove manual Authorization header
+5. **MermaidDiagram.tsx**: Add DOMPurify import and sanitize SVG output
 
----
+### Batch 2 -- Medium Severity (6 fixes)
+6. **CustomerTransfer.tsx**: Add idempotency key generation, add minimum amount validation (100 XAF)
+7. **CustomerCashOut.tsx**: Remove direct `app_notifications` insert (edge function already handles this)
+8. **CustomerOnboarding.tsx**: Wrap linked account creation in try/catch with better validation
+9. **CustomerRegister.tsx**: Add document type whitelist validation before insert
+10. **CustomerLinkedAccounts.tsx**: Add client-side max account check (e.g., 10 accounts)
+11. **CustomerTransfer.tsx**: Strip leading zeros from amount display
 
-## Deliverables Per Batch
+### Batch 3 -- Low Severity (2 fixes)
+12. **CustomerSettings.tsx**: Add current password field for password change
+13. **CustomerHelp.tsx**: Improve support submission feedback
 
-1. List of issues found (categorized: form/API/auth/data)
-2. Code fixes applied
-3. Verification that fix resolves the issue
+### Files Modified
+- `src/pages/customer-app/PayByBankApproval.tsx`
+- `src/pages/merchant/MerchantPayByBank.tsx`
+- `src/pages/merchant/MerchantWooSync.tsx`
+- `src/pages/institution/InstitutionApiClients.tsx`
+- `src/components/developer/MermaidDiagram.tsx`
+- `src/pages/customer-app/CustomerTransfer.tsx`
+- `src/pages/customer-app/CustomerCashOut.tsx`
+- `src/pages/customer-app/CustomerOnboarding.tsx`
+- `src/pages/customer-app/CustomerRegister.tsx`
+- `src/pages/customer-app/CustomerLinkedAccounts.tsx`
+- `src/pages/customer-app/CustomerSettings.tsx`
+- `src/pages/customer-app/CustomerHelp.tsx`
 
-## Estimated Scope
-
-- ~6,500 lines of customer page code
-- ~15 edge functions directly invoked
-- ~20 database tables queried
-- ~12 multi-step forms
-
+### What Was Verified Clean
+- All 5 financial flows (Transfer, FundWallet, CashOut, Bills, SendMoney) correctly gate mutations behind `PinConfirmDialog`
+- All financial mutations route through edge functions (not direct DB inserts)
+- `CustomerAppAuthGuard` correctly uses `getUser()` and checks profile existence
+- `SessionGuard` correctly implements inactivity timeout and single-session enforcement
+- DOMPurify is used for admin email template rendering
+- Amount inputs strip non-digits on change handlers
+- RIB/IBAN format validation is enforced before submission
