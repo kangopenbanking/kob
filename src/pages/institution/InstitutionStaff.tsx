@@ -95,16 +95,20 @@ export default function InstitutionStaff() {
       if (!instId) { navigate('/register'); return; }
       setInstitutionId(instId);
 
-      const [staffRes, branchRes, authRes, policyRes, profilesRes] = await Promise.all([
+      const [staffRes, branchRes, authRes, policyRes] = await Promise.all([
         supabase.from("staff_assignments").select("*").eq("institution_id", instId).order("assigned_at", { ascending: false }),
         supabase.from("branches").select("id, branch_name").eq("institution_id", instId),
         supabase.functions.invoke("banking-ops", { body: { action: "list-staff-authorizations", institution_id: instId } }),
         supabase.functions.invoke("banking-ops", { body: { action: "list-withdrawal-policies", institution_id: instId } }),
-        supabase.from("profiles").select("id, full_name, email"),
       ]);
 
+      // Fetch only profiles for staff members (scoped, not all profiles)
+      const staffUserIds = (staffRes.data || []).map((s: any) => s.user_id);
       const profileMap: Record<string, any> = {};
-      (profilesRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
+      if (staffUserIds.length > 0) {
+        const { data: profilesData } = await supabase.from("profiles").select("id, full_name, email").in("id", staffUserIds);
+        (profilesData || []).forEach((p: any) => { profileMap[p.id] = p; });
+      }
 
       const staffData: StaffMember[] = (staffRes.data || []).map((s: any) => ({
         ...s,

@@ -86,18 +86,25 @@ export default function InstitutionLedger() {
     return () => { supabase.removeChannel(channel); };
   }, [institutionId]);
 
+  const resolveInstitutionId = async (userId: string): Promise<string | null> => {
+    const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
+    if (inst) return inst.id;
+    const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: userId });
+    return staffInst || null;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
-      const { data: institution } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      if (!institution) { navigate('/register'); return; }
-      setInstitutionId(institution.id);
+      const instId = await resolveInstitutionId(user.id);
+      if (!instId) { navigate('/register'); return; }
+      setInstitutionId(instId);
 
       const [accountsRes, entriesRes, linesRes] = await Promise.all([
-        supabase.from("ledger_accounts").select("*").eq("institution_id", institution.id).order("account_code"),
-        supabase.from("journal_entries").select("*").eq("institution_id", institution.id).eq("is_reversed", false).order("entry_date", { ascending: false }).limit(500),
+        supabase.from("ledger_accounts").select("*").eq("institution_id", instId).order("account_code"),
+        supabase.from("journal_entries").select("*").eq("institution_id", instId).eq("is_reversed", false).order("entry_date", { ascending: false }).limit(500),
         supabase.from("journal_lines").select("*").order("created_at", { ascending: false }).limit(1000),
       ]);
 
