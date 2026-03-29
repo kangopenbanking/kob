@@ -216,6 +216,9 @@ const CustomerOnboarding: React.FC = () => {
           selected === 'bank_card' ? (CARD_NETWORKS.find(n => n.value === cardNetwork)?.label || 'Card') :
           selected === 'paypal' ? 'PayPal' : 'Unknown';
 
+        const validDocTypes = ['bank_account', 'bank_iban', 'momo_mtn', 'momo_orange', 'bank_card', 'paypal'];
+        if (!validDocTypes.includes(selected)) throw new Error('Invalid account type');
+
         await supabase.from('customer_linked_accounts' as any).insert({
           user_id: user.id,
           account_type: selected,

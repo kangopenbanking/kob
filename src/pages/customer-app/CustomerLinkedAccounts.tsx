@@ -652,6 +652,12 @@ const CustomerLinkedAccounts: React.FC = () => {
         toast.success('Account linking request submitted for admin approval');
         queryClient.invalidateQueries({ queryKey: ['linked-account-requests'] });
       } else {
+        // Enforce max linked accounts limit
+        if (linkedAccounts.length >= 10) {
+          toast.error('Maximum of 10 linked accounts allowed');
+          setSaving(false);
+          return;
+        }
         const { error } = await (supabase as any).from('customer_linked_accounts').insert({
           user_id: user.id,
           ...accountData,

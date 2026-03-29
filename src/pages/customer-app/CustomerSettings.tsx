@@ -113,14 +113,21 @@ const CustomerSettings: React.FC = () => {
   };
 
   const handleChangePassword = async () => {
+    if (!currentPassword) { toast.error('Please enter your current password'); return; }
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
     if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setSaving(true);
     try {
+      // Verify current password by re-authenticating
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('Unable to verify identity');
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword });
+      if (signInError) throw new Error('Current password is incorrect');
+      
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       toast.success('Password updated');
-      setNewPassword(''); setConfirmPassword('');
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
       setActiveSection(null);
     } catch (err: any) { toast.error(err.message); }
     finally { setSaving(false); }

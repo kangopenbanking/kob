@@ -157,12 +157,16 @@ const CustomerRegister: React.FC = () => {
         }
       }
 
-      // Insert KYC verification record (consumer app → no institution_id)
+      // Insert KYC verification record (consumer app - no institution_id)
+      const allowedDocTypes = ['national_id', 'passport', 'drivers_license'];
+      const docType = 'national_id';
+      if (!allowedDocTypes.includes(docType)) throw new Error('Invalid document type');
+
       await supabase.from('kyc_verifications').insert({
         user_id: user.id,
         verification_type: 'identity',
         status: 'pending',
-        document_type: 'national_id',
+        document_type: docType,
         document_front_url: documentFrontPath,
         selfie_url: selfiePath,
         source_app: 'customer_app',
