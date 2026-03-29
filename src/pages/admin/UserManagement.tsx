@@ -174,7 +174,6 @@ export default function UserManagement() {
     if (!actionTargetUser) return;
     setActionLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const isSuspended = actionTargetUser.status === 'suspended';
       
       const { data, error } = await supabase.functions.invoke('admin-manage-user', {

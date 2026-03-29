@@ -168,11 +168,13 @@ export default function WooCommerceManagement() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Not authenticated");
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session expired — please log in again");
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/woocommerce-transaction-sync?format=csv`,
         {
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            Authorization: `Bearer ${session.access_token}`
           }
         }
       );

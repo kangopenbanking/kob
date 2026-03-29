@@ -81,7 +81,11 @@ export default function ExchangeRateManagement() {
               </div>
               <div><Label>Rate</Label><Input type="number" step="0.0001" value={newRate.rate} onChange={(e) => setNewRate({ ...newRate, rate: e.target.value })} placeholder="e.g. 610.50" /></div>
               <div><Label>Margin (%)</Label><Input type="number" step="0.01" value={newRate.margin} onChange={(e) => setNewRate({ ...newRate, margin: e.target.value })} placeholder="e.g. 1.5" /></div>
-              <Button onClick={() => { addRate.mutate(); setDialogOpen(false); }} disabled={!newRate.rate || addRate.isPending} className="w-full">
+              <Button onClick={() => {
+                if (newRate.base === newRate.target) { toast.error("Base and target currencies must be different"); return; }
+                if (!newRate.rate || parseFloat(newRate.rate) <= 0) { toast.error("Rate must be greater than zero"); return; }
+                addRate.mutate(undefined, { onSuccess: () => setDialogOpen(false) });
+              }} disabled={!newRate.rate || addRate.isPending} className="w-full">
                 {addRate.isPending ? "Saving..." : "Save Rate"}
               </Button>
             </div>

@@ -56,50 +56,15 @@ const MerchantWalletOversight: React.FC = () => {
     },
   });
 
-  // Approve payout mutation
+  // Approve payout mutation - uses edge function for atomic wallet update
   const approvePayout = useMutation({
     mutationFn: async (payoutId: string) => {
-      const payout = payoutRequests?.find(p => p.id === payoutId);
-      if (!payout) throw new Error('Payout not found');
-
-      // Move funds from pending to available for withdrawal
-      const { data: wallet } = await supabase
-        .from('gateway_merchant_wallets')
-        .select('*')
-        .eq('merchant_id', payout.merchant_id)
-        .eq('currency', payout.currency)
-        .single();
-
-      if (!wallet) throw new Error('Wallet not found');
-
-      // Update wallet: deduct from pending, no change to available (funds will be sent out)
-      const { error: walletError } = await supabase
-        .from('gateway_merchant_wallets')
-        .update({
-          pending_balance: wallet.pending_balance - payout.amount,
-          ledger_balance: wallet.ledger_balance - payout.amount,
-        })
-        .eq('id', wallet.id);
-
-      if (walletError) throw walletError;
-
-      // Update payout status to processing (ready for provider execution)
-      const updatedMetadata = typeof payout.metadata === 'object' && payout.metadata !== null
-        ? { ...(payout.metadata as Record<string, any>) }
-        : {};
-        
-      updatedMetadata.approved_at = new Date().toISOString();
-      updatedMetadata.approved_by = (await supabase.auth.getUser()).data.user?.id;
-
-      const { error: payoutError } = await supabase
-        .from('gateway_payouts')
-        .update({
-          status: 'processing',
-          metadata: updatedMetadata,
-        })
-        .eq('id', payoutId);
-
-      if (payoutError) throw payoutError;
+      const { data, error } = await supabase.functions.invoke('gateway-retry-payout', {
+        body: { payout_id: payoutId, action: 'approve' },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.detail || data.message || data.error);
+      return data;
     },
     onSuccess: () => {
       toast.success('Payout approved successfully');
@@ -111,49 +76,15 @@ const MerchantWalletOversight: React.FC = () => {
     },
   });
 
-  // Reject payout mutation
+  // Reject payout mutation - uses edge function for atomic wallet update
   const rejectPayout = useMutation({
     mutationFn: async (payoutId: string) => {
-      const payout = payoutRequests?.find(p => p.id === payoutId);
-      if (!payout) throw new Error('Payout not found');
-
-      // Return funds from pending to available
-      const { data: wallet } = await supabase
-        .from('gateway_merchant_wallets')
-        .select('*')
-        .eq('merchant_id', payout.merchant_id)
-        .eq('currency', payout.currency)
-        .single();
-
-      if (!wallet) throw new Error('Wallet not found');
-
-      const { error: walletError } = await supabase
-        .from('gateway_merchant_wallets')
-        .update({
-          available_balance: wallet.available_balance + payout.amount,
-          pending_balance: wallet.pending_balance - payout.amount,
-        })
-        .eq('id', wallet.id);
-
-      if (walletError) throw walletError;
-
-      // Update payout status
-      const updatedMetadata = typeof payout.metadata === 'object' && payout.metadata !== null
-        ? { ...(payout.metadata as Record<string, any>) }
-        : {};
-        
-      updatedMetadata.rejected_at = new Date().toISOString();
-      updatedMetadata.rejected_by = (await supabase.auth.getUser()).data.user?.id;
-
-      const { error: payoutError } = await supabase
-        .from('gateway_payouts')
-        .update({
-          status: 'rejected',
-          metadata: updatedMetadata,
-        })
-        .eq('id', payoutId);
-
-      if (payoutError) throw payoutError;
+      const { data, error } = await supabase.functions.invoke('gateway-cancel-payout', {
+        body: { payout_id: payoutId },
+      });
+      if (error) throw error;
+      if (data?.error || data?.type) throw new Error(data.detail || data.message || data.error || 'Rejection failed');
+      return data;
     },
     onSuccess: () => {
       toast.success('Payout rejected');
