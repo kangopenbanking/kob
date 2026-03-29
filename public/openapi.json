@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.3.0",
+    "version": "4.4.0",
     "summary": "Unified Open Banking API for Cameroon",
-    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names.",
+    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
     "contact": {
       "name": "Kang Open Banking Support",
@@ -432,7 +432,15 @@
             "example": "CM",
             "description": "ISO 3166-1 alpha-2 country code"
           }
-        }
+        },
+        "required": [
+          "account_id",
+          "account_type",
+          "account_subtype",
+          "currency",
+          "identification_scheme",
+          "identification_value"
+        ]
       },
       "Balance": {
         "type": "object",
@@ -540,7 +548,63 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          },
+          "AccountId": {
+            "type": "string",
+            "description": "OBIE alias for the account identifier. Maps to account_id in parent resource context."
+          },
+          "TransactionId": {
+            "type": "string",
+            "description": "OBIE alias for transaction_id."
+          },
+          "Amount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,15}$",
+            "description": "OBIE alias for amount."
+          },
+          "Currency": {
+            "type": "string",
+            "enum": [
+              "XAF",
+              "XOF",
+              "USD",
+              "EUR",
+              "GBP",
+              "CNY",
+              "NGN",
+              "GHS",
+              "KES",
+              "ZAR"
+            ],
+            "description": "OBIE alias for currency."
+          },
+          "CreditDebitIndicator": {
+            "type": "string",
+            "enum": [
+              "Credit",
+              "Debit"
+            ],
+            "description": "OBIE alias for type. Maps credit/debit to transaction direction."
+          },
+          "BookingDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "OBIE alias for booking_date."
+          },
+          "ValueDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "OBIE alias for value_date."
           }
+        },
+        "x-obie-mapping": {
+          "AccountId": "account_id",
+          "TransactionId": "transaction_id",
+          "Amount": "amount",
+          "Currency": "currency",
+          "CreditDebitIndicator": "type",
+          "BookingDateTime": "booking_date",
+          "ValueDateTime": "value_date"
         }
       },
       "Payment": {
@@ -1401,6 +1465,44 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of last status change"
+          },
+          "description": {
+            "type": "string",
+            "description": "Merchant-provided description of the charge"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Arbitrary key-value metadata attached to this charge by the merchant"
+          },
+          "customer_id": {
+            "type": "string",
+            "description": "Identifier of the customer associated with this charge"
+          },
+          "dispute_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the dispute if this charge has been disputed"
+          },
+          "refunded_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the charge was fully refunded, if applicable"
+          },
+          "failure_reason": {
+            "type": "string",
+            "description": "Machine-readable failure reason code (e.g. insufficient_funds, expired_card)"
+          },
+          "failure_message": {
+            "type": "string",
+            "description": "Human-readable failure message for display to the merchant"
           }
         }
       },
@@ -2624,6 +2726,65 @@
             "example": "4.3.0"
           }
         }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "description": "RFC 7807 Problem Details for HTTP APIs. Used for structured error responses.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI reference identifying the problem type",
+            "example": "https://api.kangopenbanking.com/errors/validation-error"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short human-readable summary",
+            "example": "Validation Error"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code",
+            "example": 400
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable explanation specific to this occurrence",
+            "example": "The amount field must be a positive integer string"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI identifying the specific occurrence",
+            "example": "/v1/gateway/charges/abc-123"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Detailed field-level validation errors",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "amount"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "must match pattern ^[0-9]{1,15}$"
+                },
+                "code": {
+                  "type": "string",
+                  "example": "PATTERN_MISMATCH"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "parameters": {
@@ -3074,6 +3235,53 @@
                 "S256"
               ]
             }
+          },
+          {
+            "name": "nonce",
+            "in": "query",
+            "required": false,
+            "description": "FAPI 1.0 Advanced: Opaque value binding the ID Token to the client session. REQUIRED for code id_token response type.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "request_uri",
+            "in": "query",
+            "required": false,
+            "description": "FAPI 1.0 Advanced: URI referencing a Pushed Authorization Request (PAR). Mutually exclusive with request.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "request",
+            "in": "query",
+            "required": false,
+            "description": "FAPI 1.0 Advanced: Signed JWT containing the authorization request parameters (Request Object). Mutually exclusive with request_uri.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "acr_values",
+            "in": "query",
+            "required": false,
+            "description": "Space-separated string of requested Authentication Context Class Reference values. e.g. \"urn:openbanking:psd2:sca\"",
+            "schema": {
+              "type": "string",
+              "example": "urn:openbanking:psd2:sca"
+            }
+          },
+          {
+            "name": "claims",
+            "in": "query",
+            "required": false,
+            "description": "JSON object requesting specific claims in the ID Token or UserInfo response (OIDC Core Section 5.5).",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3177,7 +3385,11 @@
         ],
         "summary": "Exchange authorization code for token",
         "operationId": "oauthToken",
-        "security": [],
+        "security": [
+          {
+            "mtls": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3360,7 +3572,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
       }
     },
     "/v1/oauth/introspect": {
@@ -3859,6 +4072,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -6396,18 +6614,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Account"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Account"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -7797,7 +8019,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Payment"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Payment"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -7822,6 +8056,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -9553,7 +9792,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanApplication"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LoanApplication"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -10988,18 +11239,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/SavingsAccount"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SavingsAccount"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -12463,7 +12718,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MobileMoneyCharge"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/MobileMoneyCharge"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -12488,6 +12755,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -18905,25 +19177,6 @@
         ],
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
-          {
             "name": "sort_by",
             "in": "query",
             "schema": {
@@ -19082,25 +19335,6 @@
           }
         ],
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
           {
             "name": "sort_by",
             "in": "query",
@@ -19267,25 +19501,6 @@
           }
         ],
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
           {
             "name": "sort_by",
             "in": "query",
@@ -19469,25 +19684,6 @@
           }
         ],
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
           {
             "name": "sort_by",
             "in": "query",
@@ -19678,25 +19874,6 @@
           }
         ],
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
           {
             "name": "sort_by",
             "in": "query",
@@ -24081,7 +24258,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GatewayCharge"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/GatewayCharge"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -24106,6 +24295,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -24231,25 +24425,6 @@
             }
           },
           {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
-          {
             "name": "sort_by",
             "in": "query",
             "schema": {
@@ -24287,18 +24462,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/GatewayCharge"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GatewayCharge"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -25024,7 +25203,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GatewayRefund"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/GatewayRefund"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -25136,25 +25327,6 @@
         ],
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
-          {
             "name": "sort_by",
             "in": "query",
             "schema": {
@@ -25192,18 +25364,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/GatewayRefund"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GatewayRefund"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -25538,7 +25714,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GatewayPayout"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/GatewayPayout"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -25664,25 +25852,6 @@
             }
           },
           {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 25,
-              "maximum": 100
-            },
-            "description": "Items per page"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            },
-            "description": "Items to skip"
-          },
-          {
             "name": "sort_by",
             "in": "query",
             "schema": {
@@ -25720,18 +25889,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/GatewayPayout"
-                      }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
                     },
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GatewayPayout"
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -33720,6 +33893,240 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateSubscription",
+        "summary": "Update a subscription",
+        "description": "Update an existing subscription (e.g. change plan, billing cycle, or metadata). Only non-terminated subscriptions can be updated.",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Subscription unique identifier"
+          },
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plan_id": {
+                    "type": "string",
+                    "description": "New plan identifier to switch to"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "billing_cycle_anchor": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "New billing cycle anchor date"
+                  },
+                  "proration_behavior": {
+                    "type": "string",
+                    "enum": [
+                      "create_prorations",
+                      "none",
+                      "always_invoice"
+                    ],
+                    "default": "create_prorations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription updated successfully",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewaySubscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSubscription",
+        "summary": "Cancel a subscription",
+        "description": "Cancel (soft-delete) a subscription. The subscription will complete its current billing period unless cancel_immediately is true.",
+        "tags": [
+          "Payment Gateway"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Subscription unique identifier"
+          },
+          {
+            "name": "cancel_immediately",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "If true, cancel immediately without finishing the current period"
+          },
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription cancelled successfully",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewaySubscription"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -46461,42 +46868,54 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/StandardResponse"
                     },
-                    "amount": {
-                      "type": "string",
-                      "pattern": "^[0-9]{1,15}$",
-                      "description": "Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field."
-                    },
-                    "currency": {
-                      "type": "string",
-                      "enum": [
-                        "XAF",
-                        "XOF",
-                        "USD",
-                        "EUR",
-                        "GBP",
-                        "CNY",
-                        "NGN",
-                        "GHS",
-                        "KES",
-                        "ZAR"
-                      ],
-                      "default": "XAF",
-                      "description": "ISO 4217 currency code. Default is XAF (Central African CFA Franc)."
-                    },
-                    "status": {
-                      "type": "string",
-                      "example": "active"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time"
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "amount": {
+                              "type": "string",
+                              "pattern": "^[0-9]{1,15}$",
+                              "description": "Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field."
+                            },
+                            "currency": {
+                              "type": "string",
+                              "enum": [
+                                "XAF",
+                                "XOF",
+                                "USD",
+                                "EUR",
+                                "GBP",
+                                "CNY",
+                                "NGN",
+                                "GHS",
+                                "KES",
+                                "ZAR"
+                              ],
+                              "default": "XAF",
+                              "description": "ISO 4217 currency code. Default is XAF (Central African CFA Franc)."
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "active"
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             },
@@ -46521,6 +46940,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -54508,7 +54932,9 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "pacs.002.001.12",
+        "description": " Status responses conform to ISO 20022 pacs.002 (FIToFIPaymentStatusReport)."
       },
       "post": {
         "tags": [
@@ -54630,6 +55056,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
               }
             }
           },
@@ -54701,7 +55132,9 @@
               }
             }
           }
-        }
+        },
+        "x-iso20022-message": "pacs.008.001.10",
+        "description": " Conforms to ISO 20022 pacs.008.001.10 (FIToFICustomerCreditTransfer). The request body maps to the CdtTrfTxInf block of a pacs.008 message."
       }
     },
     "/v1/interbank/payments/{paymentId}": {
@@ -57072,7 +57505,7 @@
           "Provider Webhooks (Inbound)"
         ],
         "summary": "PayPal inbound webhook",
-        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.",
+        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post",
         "operationId": "receivePaypalWebhook",
         "security": [],
         "requestBody": {
@@ -57217,6 +57650,52 @@
               "example": "2026-03-22T10:00:00Z"
             },
             "description": "ISO 8601 timestamp of webhook transmission"
+          },
+          {
+            "name": "PAYPAL-TRANSMISSION-ID",
+            "in": "header",
+            "required": true,
+            "description": "PayPal-generated unique transmission ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "PAYPAL-TRANSMISSION-TIME",
+            "in": "header",
+            "required": true,
+            "description": "PayPal transmission timestamp (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "PAYPAL-TRANSMISSION-SIG",
+            "in": "header",
+            "required": true,
+            "description": "PayPal HMAC signature for webhook verification",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "PAYPAL-CERT-URL",
+            "in": "header",
+            "required": true,
+            "description": "URL to the PayPal signing certificate",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "PAYPAL-AUTH-ALGO",
+            "in": "header",
+            "required": true,
+            "description": "Algorithm used for the signature (e.g. SHA256withRSA)",
+            "schema": {
+              "type": "string"
+            }
           }
         ]
       }
@@ -57307,6 +57786,756 @@
           },
           "429": {
             "description": "Too Many Requests — rate limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/pacs004/generate": {
+      "post": {
+        "operationId": "generatePacs004",
+        "summary": "Generate pacs.004 (PaymentReturn)",
+        "description": "Generate an ISO 20022 pacs.004.001.11 PaymentReturn message for returning a previously settled interbank payment.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "pacs.004.001.11",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for pacs.004.001.11 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated pacs.004.001.11 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "pacs.004.001.11"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/pacs009/generate": {
+      "post": {
+        "operationId": "generatePacs009",
+        "summary": "Generate pacs.009 (FinancialInstitutionCreditTransfer)",
+        "description": "Generate an ISO 20022 pacs.009.001.10 FinancialInstitutionCreditTransfer message for interbank cover payments.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "pacs.009.001.10",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for pacs.009.001.10 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated pacs.009.001.10 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "pacs.009.001.10"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/camt052/generate": {
+      "post": {
+        "operationId": "generateCamt052",
+        "summary": "Generate camt.052 (BankToCustomerAccountReport)",
+        "description": "Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "camt.052.001.10",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for camt.052.001.10 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated camt.052.001.10 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "camt.052.001.10"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/camt054/generate": {
+      "post": {
+        "operationId": "generateCamt054",
+        "summary": "Generate camt.054 (BankToCustomerDebitCreditNotification)",
+        "description": "Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "camt.054.001.10",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for camt.054.001.10 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated camt.054.001.10 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "camt.054.001.10"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/standards/iso20022/camt056/generate": {
+      "post": {
+        "operationId": "generateCamt056",
+        "summary": "Generate camt.056 (FIToFIPaymentCancellationRequest)",
+        "description": "Generate an ISO 20022 camt.056.001.10 payment cancellation request for recalling an interbank payment before settlement.",
+        "tags": [
+          "Standards - ISO 20022"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iso20022-message": "camt.056.001.10",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XFapiInteractionId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated UUID for idempotent request deduplication.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Input fields for camt.056.001.10 message generation",
+                "properties": {
+                  "source_data": {
+                    "type": "object",
+                    "description": "Business data to be mapped into the ISO 20022 message structure"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "xml",
+                      "json"
+                    ],
+                    "default": "xml",
+                    "description": "Output format for the generated message"
+                  }
+                },
+                "required": [
+                  "source_data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated camt.056.001.10 message",
+            "headers": {
+              "x-fapi-interaction-id": {
+                "$ref": "#/components/headers/XFapiInteractionIdResponse"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_type": {
+                      "type": "string",
+                      "example": "camt.056.001.10"
+                    },
+                    "xml_content": {
+                      "type": "string",
+                      "description": "The generated ISO 20022 XML message"
+                    },
+                    "validation_result": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
