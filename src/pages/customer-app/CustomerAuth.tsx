@@ -295,7 +295,7 @@ const CustomerAuth: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (mode === 'otp') { resetOTP(); setMode('input'); }
+    if (mode === 'otp') { resetOTP(); setPendingPinReset(false); setMode('input'); }
     else if (mode === 'pin') { setMode('input'); setPin(''); setPinError(null); }
     else if (mode === 'input') { setMode('welcome'); }
     else if (mode === 'forgot-password') { setMode('input'); setForgotSent(false); setForgotEmail(''); }
