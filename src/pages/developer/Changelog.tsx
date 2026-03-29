@@ -6,6 +6,65 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.6.0",
+      date: "2026-03-29",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "FAPI 1.0 Advanced certification ready — code_challenge and code_challenge_method now required=true on /v1/oauth/authorize" },
+        { type: "feature", description: "Schema validation hardened — required[] arrays added to all 49 API schemas (37 previously missing)" },
+        { type: "feature", description: "Idempotency-Key header added to 15 payment-related POST endpoints for network-safe retries (OBIE R/W v3.1 Section 3.3)" },
+        { type: "feature", description: "StandardResponse envelope applied to all 19 single-resource GET endpoints for consistent response structure" },
+        { type: "feature", description: "PaginatedResponse envelope applied to all 67 list GET endpoints for universal pagination" },
+        { type: "feature", description: "RFC 7807 application/problem+json support expanded to all 330+ error responses across the API" },
+        { type: "feature", description: "WebhookEventPayload base schema added — structured envelope with 52 event types, deduplication ID, livemode flag, and per-event data mapping" },
+        { type: "improvement", description: "OIDC discovery document extended with pushed_authorization_request_endpoint and backchannel_authentication_endpoint" },
+      ]
+    },
+    {
+      version: "API Spec 4.5.0",
+      date: "2026-03-29",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Standards-ISO 20022 tag declared — 42/42 tag alignment across all 339 operations" },
+        { type: "feature", description: "nonce parameter set to required=true on /v1/oauth/authorize per FAPI 1.0 Advanced Section 5.2.2-14" },
+        { type: "feature", description: "Token endpoint restored for public PKCE clients — security now [{},{\"mtls\":[]}] supporting both public and confidential clients" },
+        { type: "feature", description: "camt.052 and camt.054 renamed from /generate to /parse with correct operationIds and x-iso20022-message versions" },
+        { type: "feature", description: "ProblemDetails schema extended with error_id and timestamp fields for support trace correlation" },
+        { type: "feature", description: "GatewaySubscription extended with trial_start, trial_end, cancel_at_period_end, cancelled_at, billing_cycle_anchor, and metadata fields" },
+        { type: "improvement", description: "GatewayCharge and Transaction schemas hardened with required[] arrays" },
+        { type: "improvement", description: "PayPal webhook signature verification headers and manual verification algorithm fully documented" },
+        { type: "improvement", description: "x-iso20022-message extension added to all 9 ISO 20022 endpoints for consistent metadata" },
+      ]
+    },
+    {
+      version: "API Spec 4.4.0",
+      date: "2026-03-29",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "StandardResponse and PaginatedResponse allOf envelopes wired to 12 operations for consistent response structure" },
+        { type: "feature", description: "5 FAPI parameters (nonce, request_uri, request, acr_values, claims) added to /v1/oauth/authorize" },
+        { type: "feature", description: "ProblemDetails schema (RFC 7807) added with application/problem+json support on 6 endpoints" },
+        { type: "feature", description: "5 new ISO 20022 message endpoints: pacs.004, pacs.009, camt.052, camt.054, camt.056" },
+        { type: "feature", description: "mTLS (RFC 8705) security option added to /v1/oauth/token for certificate-bound access tokens" },
+        { type: "feature", description: "PATCH and DELETE operations added to /v1/gateway/subscriptions/{subscriptionId}" },
+        { type: "improvement", description: "8 missing fields added to GatewayCharge schema (updated_at, description, metadata, customer_id, dispute_id, refunded_at, failure_reason, failure_message)" },
+        { type: "improvement", description: "7 OBIE PascalCase alias properties with x-obie-mapping added to Transaction schema" },
+        { type: "improvement", description: "6 OBIE-mandated required fields added to Account schema" },
+        { type: "improvement", description: "Duplicate inline pagination parameters removed from 8 endpoints in favour of component $ref" },
+      ]
+    },
+    {
+      version: "API Spec 4.3.0",
+      date: "2026-03-29",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "OpenAPI specification upgraded with 25 standards fixes across security, schema design, payment standards, ISO 20022 compliance, and OpenAPI structure" },
+        { type: "feature", description: "2 new savings endpoints added — total operations increased to 332 (later 339 with v4.4.0 additions)" },
+        { type: "improvement", description: "Provider webhook paths consolidated under /v1/ namespace" },
+        { type: "improvement", description: "FAPI 1.0 Advanced, PSD2, and OBIE R/W v3.1 compliance gaps addressed across all endpoint categories" },
+      ]
+    },
+    {
       version: "10.1.0",
       date: "2026-03-21",
       type: "minor",
