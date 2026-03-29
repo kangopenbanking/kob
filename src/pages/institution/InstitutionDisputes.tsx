@@ -56,8 +56,16 @@ export default function InstitutionDisputes() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
+      // Owner path
       const { data } = await supabase.from("institutions").select("id, institution_name").eq("user_id", user.id).maybeSingle();
-      return data;
+      if (data) return data;
+      // Staff path
+      const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
+      if (staffInstId) {
+        const { data: staffInst } = await supabase.from("institutions").select("id, institution_name").eq("id", staffInstId).maybeSingle();
+        return staffInst;
+      }
+      return null;
     },
   });
 

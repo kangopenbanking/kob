@@ -75,13 +75,11 @@ export default function InstitutionWebhooks() {
     if (!newUrl || newEvents.length === 0 || !institutionId) return;
     setCreating(true);
     try {
-      const { data: clients } = await supabase.from("api_clients").select("client_id").eq("institution_id", institutionId).limit(1);
-      if (!clients?.length) { toast({ title: "No API Client", description: "Create an API client first.", variant: "destructive" }); return; }
-      const secret = `whsec_${crypto.randomUUID().replace(/-/g, '')}`;
-      const { error } = await supabase.from("webhooks").insert({
-        client_id: clients[0].client_id, institution_id: institutionId, webhook_url: newUrl, url: newUrl, events: newEvents, secret, is_active: true,
+      const { data, error } = await supabase.functions.invoke("gateway-webhook-endpoints", {
+        body: { action: "create", institution_id: institutionId, url: newUrl, events: newEvents },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast({ title: "Webhook Created" });
       setCreateOpen(false); setNewUrl(""); setNewEvents([]); loadData();
     } catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
