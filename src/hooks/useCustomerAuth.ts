@@ -16,8 +16,8 @@ export function useCustomerAuth() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         setUser(null);
         setIsAuthenticated(false);
         setLoading(false);
@@ -27,7 +27,7 @@ export function useCustomerAuth() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, full_name, phone_number, linked_account_type')
-        .eq('id', session.user.id)
+        .eq('id', authUser.id)
         .maybeSingle();
       if (profile) {
         const p = profile as any;
@@ -38,14 +38,14 @@ export function useCustomerAuth() {
           const { data: linked } = await (supabase as any)
             .from('customer_linked_accounts')
             .select('id')
-            .eq('user_id', session.user.id)
+            .eq('user_id', authUser.id)
             .eq('is_active', true)
             .limit(1);
           hasLinkedAccounts = (linked?.length || 0) > 0;
           
           // Auto-update profile if they have linked accounts but profile says none
           if (hasLinkedAccounts && (!p.linked_account_type || p.linked_account_type === 'none')) {
-            await supabase.from('profiles').update({ linked_account_type: 'linked' } as any).eq('id', session.user.id);
+            await supabase.from('profiles').update({ linked_account_type: 'linked' } as any).eq('id', authUser.id);
           }
         }
         

@@ -198,11 +198,20 @@ const CustomerAuth: React.FC = () => {
     }
   };
 
+  // Track whether user initiated PIN reset flow (needs OTP first)
+  const [pendingPinReset, setPendingPinReset] = useState(false);
+
   const handleVerifyOTP = async (code: string) => {
     if (code.length !== 6) return;
     const success = await verifyOTP(code);
     if (success) {
       toast.success('Verified!');
+      // If user was resetting their PIN, go to reset-pin screen now that OTP is verified
+      if (pendingPinReset) {
+        setPendingPinReset(false);
+        setMode('reset-pin');
+        return;
+      }
       // Both signup and signin flow through navigateAfterAuth
       // which handles PIN check and linked_account_type routing
       await navigateAfterAuth();

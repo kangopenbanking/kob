@@ -194,7 +194,9 @@ export const SessionGuard: React.FC<Props> = ({
       supabase.from('user_active_sessions')
         .update({ last_active_at: new Date().toISOString() })
         .eq('session_id', sessionIdRef.current)
-        .then();
+        .then(({ error }) => {
+          if (error) console.error('Failed to refresh session activity:', error.message);
+        });
     }
   };
 
