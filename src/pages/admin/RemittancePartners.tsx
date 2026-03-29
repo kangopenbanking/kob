@@ -110,7 +110,6 @@ export default function RemittancePartners() {
 
   const corridorMutation = useMutation({
     mutationFn: async (form: any) => {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("remittance-engine", {
         body: {
           action: "admin_manage_corridor",
@@ -134,7 +133,6 @@ export default function RemittancePartners() {
             requires_kyc_level: form.requires_kyc_level || "basic",
           },
         },
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
       if (res.error) throw res.error;
       return res.data;
