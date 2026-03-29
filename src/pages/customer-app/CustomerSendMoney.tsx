@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { PinConfirmDialog } from "@/components/pwa/PinConfirmDialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeeEstimate } from "@/hooks/useFeeEstimate";
@@ -457,6 +458,7 @@ export default function CustomerSendMoney() {
   const [result, setResult] = useState<any>(null);
   const [liveStatus, setLiveStatus] = useState<string>("pending");
   const [trackDialog, setTrackDialog] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((s: Step, d = 1) => { setDir(d); setStep(s); }, []);
@@ -795,7 +797,8 @@ export default function CustomerSendMoney() {
   });
 
   /* ── Actions ── */
-  const confirmAndSend = () => { goTo("sending"); sendMut.mutate(); };
+  const confirmAndSend = () => { setShowPin(true); };
+  const executeSend = () => { goTo("sending"); sendMut.mutate(); };
 
   const reset = () => {
     if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
@@ -1480,6 +1483,8 @@ export default function CustomerSendMoney() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeSend} />
     </div>
   );
 }

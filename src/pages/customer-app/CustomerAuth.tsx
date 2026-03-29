@@ -198,11 +198,20 @@ const CustomerAuth: React.FC = () => {
     }
   };
 
+  // Track whether user initiated PIN reset flow (needs OTP first)
+  const [pendingPinReset, setPendingPinReset] = useState(false);
+
   const handleVerifyOTP = async (code: string) => {
     if (code.length !== 6) return;
     const success = await verifyOTP(code);
     if (success) {
       toast.success('Verified!');
+      // If user was resetting their PIN, go to reset-pin screen now that OTP is verified
+      if (pendingPinReset) {
+        setPendingPinReset(false);
+        setMode('reset-pin');
+        return;
+      }
       // Both signup and signin flow through navigateAfterAuth
       // which handles PIN check and linked_account_type routing
       await navigateAfterAuth();
@@ -286,7 +295,7 @@ const CustomerAuth: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (mode === 'otp') { resetOTP(); setMode('input'); }
+    if (mode === 'otp') { resetOTP(); setPendingPinReset(false); setMode('input'); }
     else if (mode === 'pin') { setMode('input'); setPin(''); setPinError(null); }
     else if (mode === 'input') { setMode('welcome'); }
     else if (mode === 'forgot-password') { setMode('input'); setForgotSent(false); setForgotEmail(''); }
@@ -567,8 +576,9 @@ const CustomerAuth: React.FC = () => {
                     variant="ghost"
                     onClick={async () => {
                       setPin(''); setPinError(null);
+                      setPendingPinReset(true);
                       await sendOTP(fullPhone);
-                      setMode('reset-pin');
+                      setMode('otp');
                     }}
                     className="w-full gap-2 text-sm text-destructive"
                   >

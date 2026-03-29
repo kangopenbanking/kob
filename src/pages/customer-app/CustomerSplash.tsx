@@ -19,13 +19,13 @@ const CustomerSplashInner: React.FC = () => {
     const checkState = async () => {
       const seen = localStorage.getItem(WALKTHROUGH_KEY) === 'true';
       if (seen) {
-        // Skip walkthrough — route based on session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        // Skip walkthrough — route based on validated user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('linked_account_type')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle();
         const lat = (profile as any)?.linked_account_type;
           if (lat && lat !== 'none') {
@@ -50,12 +50,12 @@ const CustomerSplashInner: React.FC = () => {
   };
 
   const handleInstallComplete = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('linked_account_type')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .maybeSingle();
       const lat = (profile as any)?.linked_account_type;
       if (lat && lat !== 'none') {
