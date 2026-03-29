@@ -19,13 +19,13 @@ export default function MerchantPayByBank() {
   }, []);
 
   const loadMerchantAndIntents = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
     const { data: merchant } = await supabase
       .from("gateway_merchants")
       .select("id")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (merchant) {

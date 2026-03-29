@@ -159,6 +159,7 @@ const CustomerTransfer: React.FC = () => {
 
   const handleContinue = () => {
     if (!amount || amountNum <= 0) { toast.error('Please enter an amount to send'); return; }
+    if (amountNum < 100) { toast.error('Minimum transfer amount is 100 XAF'); return; }
     if (!recipient.trim()) { toast.error('Please enter the recipient\'s phone number, name, or account details'); return; }
     if (!validation.valid && (recipientType === 'rib' || recipientType === 'iban')) { toast.error(`Please enter a valid ${recipientType === 'rib' ? 'RIB (23 digits)' : 'IBAN'} number`); return; }
     if (isOverBalance) { toast.error(`Insufficient balance. You have ${availableBalance.toLocaleString()} ${currency} available`); return; }
@@ -172,6 +173,7 @@ const CustomerTransfer: React.FC = () => {
       const cleanRecipient = recipientType === 'name'
         ? recipient.trim()
         : recipient.replace(/[\s\-]/g, '');
+      const idempotencyKey = `transfer_${selectedAccount?.id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('api-transfers', {
         body: {
           source_account_id: selectedAccount?.id,
@@ -180,6 +182,7 @@ const CustomerTransfer: React.FC = () => {
           currency,
           description: `Transfer to ${selectedRecipientName || recipient}${note ? ` - ${note}` : ''}`,
           identifier_type: getIdentifierType(),
+          idempotency_key: idempotencyKey,
         },
       });
 
@@ -358,7 +361,7 @@ const CustomerTransfer: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').replace(/^0+/, ''))}
                   placeholder="0"
                   className="bg-transparent text-4xl font-bold text-[hsl(0,0%,100%)] outline-none w-full text-center placeholder:text-[hsl(0,0%,100%)]/30"
                 />

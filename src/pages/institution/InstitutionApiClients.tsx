@@ -72,10 +72,9 @@ export default function InstitutionApiClients() {
     if (!newClientName || !institutionId) return;
     setCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate('/auth'); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate('/auth'); return; }
       const { data, error } = await supabase.functions.invoke('institution-create-client', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { client_name: newClientName, institution_id: institutionId, redirect_uris: newRedirectUri ? [newRedirectUri] : [], scopes: ['accounts', 'transactions', 'payments'], grant_types: ['authorization_code', 'client_credentials'] },
       });
       if (error) throw error;

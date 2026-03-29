@@ -223,30 +223,10 @@ const CustomerCashOut: React.FC = () => {
         }
       );
 
-      // Send in-app notification
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        await supabase.from('app_notifications').insert({
-          user_id: currentUser.id,
-          type: 'info',
-          title: isInstant ? 'Withdrawal Complete' : 'Withdrawal Processing',
-          message: isInstant
-            ? `XAF ${netAmount.toLocaleString()} has been sent to ${selectedAccount?.account_name || destinationType}.`
-            : `XAF ${netAmount.toLocaleString()} withdrawal to ${selectedAccount?.account_name || destinationType} is being processed. Expected: ${processingTime}.`,
-          icon: 'cash_out',
-          metadata: {
-            tx_ref: result.tx_ref,
-            amount: numAmount,
-            net_amount: netAmount,
-            fee: fee,
-            destination: selectedAccount?.account_name || destinationType,
-            processing_time: processingTime,
-            status: result.status,
-          },
-        });
-      }
+      // Notification is handled server-side by the edge function/DB trigger
 
       // Send confirmation email (non-blocking)
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       supabase.functions.invoke('send-communication', {
         body: {
           type: 'email',

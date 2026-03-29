@@ -35,8 +35,8 @@ export default function PayByBankApproval() {
   }, [intentId]);
 
   const loadIntent = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate("/app/auth"); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { navigate("/app/auth"); return; }
 
     const { data, error } = await supabase.functions.invoke("pay-by-bank", {
       body: { action: "get_intent", intent_id: intentId },
@@ -52,11 +52,11 @@ export default function PayByBankApproval() {
 
   const handleApprove = async () => {
     setStep("processing");
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { toast.error("Please sign in"); navigate("/app/auth"); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in"); navigate("/app/auth"); return; }
 
     const { data, error } = await supabase.functions.invoke("pay-by-bank", {
-      body: { action: "authorize", intent_id: intentId, user_id: session.user.id },
+      body: { action: "authorize", intent_id: intentId, user_id: user.id },
     });
 
     if (error || data?.error) {
@@ -71,9 +71,10 @@ export default function PayByBankApproval() {
 
   const handleReject = async () => {
     setStep("processing");
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in"); navigate("/app/auth"); return; }
     const { data } = await supabase.functions.invoke("pay-by-bank", {
-      body: { action: "reject", intent_id: intentId, user_id: session?.user?.id },
+      body: { action: "reject", intent_id: intentId, user_id: user.id },
     });
     setRedirectUrl(data?.redirect_url);
     setStep("rejected");

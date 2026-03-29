@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
+import DOMPurify from "dompurify";
 
 mermaid.initialize({
   startOnLoad: false,
@@ -45,7 +46,7 @@ export function MermaidDiagram({ chart }: { chart: string }) {
     const render = async () => {
       try {
         const { svg: rendered } = await mermaid.render(id, chart.trim());
-        setSvg(rendered);
+        setSvg(DOMPurify.sanitize(rendered, { USE_PROFILES: { svg: true, svgFilters: true } }));
         setError(null);
       } catch (e) {
         setError("Failed to render diagram");

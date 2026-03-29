@@ -66,8 +66,8 @@ export default function MerchantWooSync() {
   const triggerSync = async (integrationId: string) => {
     setSyncing(integrationId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
       const response = await supabase.functions.invoke("pos-inventory-sync", {
         body: { merchant_id: merchantId, integration_id: integrationId },
