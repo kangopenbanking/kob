@@ -1,12 +1,13 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight } from "lucide-react";
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
+import { DOC_NAV_ORDER } from "./docNavigationOrder";
 import {
   Sidebar,
   SidebarContent,
@@ -64,8 +65,11 @@ const navSections = [
     title: "Sandbox",
     icon: Zap,
     items: [
-      { title: "Overview & Credentials", path: "/developer/sandbox/overview" },
-      { title: "Sandbox Tools", path: "/developer/sandbox", protected: true },
+      { title: "Overview", path: "/developer/sandbox/overview" },
+      { title: "Credentials", path: "/developer/sandbox/credentials" },
+      { title: "Test Cards", path: "/developer/sandbox/test-cards" },
+      { title: "Test Mobile Money", path: "/developer/sandbox/mobile-money" },
+      { title: "Simulate Webhooks", path: "/developer/sandbox/simulate-webhooks" },
     ],
   },
   {
@@ -76,6 +80,8 @@ const navSections = [
       { title: "Error Codes", path: "/developer/api/error-codes" },
       { title: "Rate Limits", path: "/developer/api/rate-limits" },
       { title: "Idempotency", path: "/developer/api/idempotency" },
+      { title: "Pagination", path: "/developer/api-reference/pagination" },
+      { title: "Versioning", path: "/developer/api-reference/versioning" },
       { title: "Currencies", path: "/developer/api/currencies" },
       { title: "Countries", path: "/developer/api/countries" },
       { title: "API Explorer", path: "/developer/api-explorer" },
@@ -98,6 +104,21 @@ const navSections = [
       { title: "Tokenisation", path: "/developer/gateway/tokenization" },
       { title: "Disputes", path: "/developer/gateway/disputes" },
       { title: "Settlements", path: "/developer/gateway/settlements" },
+      { title: "Split Payments", path: "/developer/gateway/split-payments" },
+    ],
+  },
+  {
+    title: "Advanced Gateway",
+    icon: Wallet,
+    items: [
+      { title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" },
+      { title: "Wallets", path: "/developer/gateway/wallets" },
+      { title: "Escrow", path: "/developer/gateway/escrow" },
+      { title: "Treasury", path: "/developer/gateway/treasury" },
+      { title: "Instant Payouts", path: "/developer/gateway/instant-payouts" },
+      { title: "Compliance Screening", path: "/developer/gateway/compliance" },
+      { title: "Webhooks V2", path: "/developer/gateway/webhooks-v2" },
+      { title: "SLA Monitor", path: "/developer/gateway/sla" },
     ],
   },
   {
@@ -138,32 +159,15 @@ const navSections = [
     ],
   },
   {
-    title: "Examples",
-    icon: Code,
+    title: "Examples & Guides",
+    icon: Globe,
     items: [
       { title: "Code Examples", path: "/developer/examples" },
       { title: "Real-World Integrations", path: "/developer/examples/real-world" },
-    ],
-  },
-  {
-    title: "Guides",
-    icon: Globe,
-    items: [
       { title: "Go-Live Checklist", path: "/developer/guides/go-live" },
       { title: "Migration Guide", path: "/developer/migrate" },
       { title: "Web Integration", path: "/developer/guides/web" },
       { title: "Mobile Integration", path: "/developer/guides/mobile" },
-    ],
-  },
-  {
-    title: "Tools & Testing",
-    icon: Terminal,
-    items: [
-      { title: "API Keys", path: "/developer/api-keys", protected: true },
-      { title: "API Console", path: "/developer/console", protected: true },
-      { title: "API Playground", path: "/developer/api-playground", protected: true },
-      { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing", protected: true },
-      { title: "Data Generator", path: "/developer/sandbox/data-generator", protected: true },
     ],
   },
   {
@@ -179,14 +183,201 @@ const navSections = [
     ],
   },
   {
-    title: "E-Commerce & POS",
-    icon: ShoppingCart,
+    title: "Tools",
+    icon: Terminal,
     items: [
-      { title: "Merchants POS", path: "/developer/merchants-pos" },
-      { title: "WooCommerce Plugin", path: "/woo-for-kang" },
+      { title: "API Keys", path: "/developer/api-keys", protected: true },
+      { title: "API Console", path: "/developer/console", protected: true },
+      { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing", protected: true },
+      { title: "Data Generator", path: "/developer/sandbox/data-generator", protected: true },
     ],
   },
 ];
+
+/** Right-rail "On this page" TOC component */
+function TableOfContents() {
+  const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
+  const [activeId, setActiveId] = useState<string>("");
+  const location = useLocation();
+
+  useEffect(() => {
+    // Small delay to let the page render
+    const timer = setTimeout(() => {
+      const main = document.querySelector("main");
+      if (!main) return;
+      const elements = main.querySelectorAll("h2[id], h3[id]");
+      const items = Array.from(elements).map((el) => ({
+        id: el.id,
+        text: el.textContent || "",
+        level: el.tagName === "H2" ? 2 : 3,
+      }));
+      setHeadings(items);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (headings.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+            break;
+          }
+        }
+      },
+      { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
+    );
+    headings.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [headings]);
+
+  if (headings.length < 2) return null;
+
+  return (
+    <nav className="hidden xl:block w-56 shrink-0">
+      <div className="sticky top-20 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">On this page</p>
+        {headings.map(({ id, text, level }) => (
+          <a
+            key={id}
+            href={`#${id}`}
+            className={`block text-xs leading-relaxed transition-colors ${
+              level === 3 ? "pl-3" : ""
+            } ${
+              activeId === id
+                ? "text-primary font-medium"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {text}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+/** Docs search component */
+function DocsSearch() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const results = query.length >= 2
+    ? DOC_NAV_ORDER.filter((entry) =>
+        entry.title.toLowerCase().includes(query.toLowerCase()) ||
+        entry.path.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 8)
+    : [];
+
+  const handleSelect = useCallback((path: string) => {
+    navigate(path);
+    setIsOpen(false);
+    setQuery("");
+  }, [navigate]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus();
+  }, [isOpen]);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:border-primary/50 transition-colors"
+      >
+        <Search className="h-3.5 w-3.5" />
+        <span>Search docs...</span>
+        <kbd className="hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border px-1.5 text-[10px] font-medium text-muted-foreground">
+          <span className="text-xs">Ctrl</span>K
+        </kbd>
+      </button>
+
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <div className="relative w-full max-w-lg bg-background border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="flex items-center px-4 border-b border-border">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search documentation..."
+                className="flex-1 px-3 py-3 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+              />
+              <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {results.length > 0 && (
+              <div className="max-h-64 overflow-y-auto p-2">
+                {results.map((entry) => (
+                  <button
+                    key={entry.path}
+                    onClick={() => handleSelect(entry.path)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-left"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">{entry.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{entry.path}</p>
+                    </div>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+            {query.length >= 2 && results.length === 0 && (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                No results found for "{query}"
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Docs footer */
+function DocsFooter() {
+  return (
+    <footer className="border-t border-border mt-16 pt-8 pb-6 text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Code className="h-4 w-4" />
+          <span>Kang Open Banking Developer Docs</span>
+          <span className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">v4.6.0</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link to="/developer/support" className="hover:text-foreground transition-colors">Support</Link>
+          <Link to="/developer/status" className="hover:text-foreground transition-colors">Status</Link>
+          <Link to="/developer/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
+          <a href="/openapi.json" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">OpenAPI</a>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 interface PublicDeveloperLayoutProps {
   children?: ReactNode;
@@ -271,12 +462,13 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
               <span className="font-semibold">Developer Portal</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 ml-6">
-              <Link to="/developer/getting-started" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</Link>
-              <Link to="/developer/api-explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Reference</Link>
+              <Link to="/developer/getting-started" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
+              <Link to="/developer/api-explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Explorer</Link>
+              <Link to="/developer/guides/sdks" className="text-sm text-muted-foreground hover:text-foreground transition-colors">SDKs</Link>
               <Link to="/developer/changelog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Changelog</Link>
-              <Link to="/developer/status" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
             </nav>
             <div className="flex-1" />
+            <DocsSearch />
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
@@ -299,12 +491,16 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
             </div>
           </header>
 
-          <main className="flex-1 p-6">
-            <PortalErrorBoundary portalName="Developer Portal" fallbackPath="/developer">
-              <DeveloperBreadcrumb />
-              {children || <Outlet />}
-            </PortalErrorBoundary>
-          </main>
+          <div className="flex-1 flex">
+            <main className="flex-1 p-6 min-w-0">
+              <PortalErrorBoundary portalName="Developer Portal" fallbackPath="/developer">
+                <DeveloperBreadcrumb />
+                {children || <Outlet />}
+                <DocsFooter />
+              </PortalErrorBoundary>
+            </main>
+            <TableOfContents />
+          </div>
         </div>
       </div>
     </SidebarProvider>
