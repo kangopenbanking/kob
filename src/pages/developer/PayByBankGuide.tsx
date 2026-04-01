@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Shield, ArrowRight, Code2, Webhook, TestTube, CheckCircle } from "lucide-react";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function PayByBankGuide() {
   return (
@@ -199,7 +200,9 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/pay-by-bank \\
             <p className="text-muted-foreground mt-2">                                                    ↘ failed</p>
             <p className="text-muted-foreground">awaiting_auth → rejected</p>
             <p className="text-muted-foreground">awaiting_auth → expired (after 15 min)</p>
-          </div>
+          
+      <AutoDocNavigation />
+</div>
           <p className="text-xs text-muted-foreground mt-3">
             <strong>Important:</strong> Always verify the final status server-to-server via <code>get_intent</code> or webhooks. 
             Never trust the redirect URL status parameter alone.

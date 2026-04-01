@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Building2, CreditCard, Wallet, RotateCcw, Send, Bell, BarChart3, Shield, Landmark, Banknote, BookOpen, Clock, Terminal } from "lucide-react";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const examples = [
   { slug: "01-merchant-onboarding-kyb-api-keys", title: "Merchant Onboarding, KYB & API Keys", desc: "Register a merchant, submit KYB verification, and generate API keys for production access.", icon: Building2, tags: ["Gateway", "Merchant"], time: "8 min", category: "gateway" },
@@ -101,7 +102,9 @@ function GuideCard({ ex, index }: { ex: typeof examples[0]; index: number }) {
               <Clock className="h-3 w-3" /> {ex.time}
             </span>
           </div>
-        </div>
+        
+      <AutoDocNavigation />
+</div>
         <ArrowRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1" />
       </div>
     </Link>

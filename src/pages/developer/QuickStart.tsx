@@ -6,6 +6,7 @@ import { CheckCircle, Copy, Terminal, Zap, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function QuickStart() {
   const { toast } = useToast();
@@ -260,7 +261,9 @@ accounts = response.json()`
                 </div>
               </div>
             </Link>
-          </div>
+          
+      <AutoDocNavigation />
+</div>
         </CardContent>
       </Card>
     </div>
