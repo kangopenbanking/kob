@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight, Moon, Sun } from "lucide-react";
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -262,6 +262,39 @@ function TableOfContents() {
   );
 }
 
+/** Dark mode toggle */
+function DarkModeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  const toggle = () => {
+    const html = document.documentElement;
+    const newDark = !html.classList.contains('dark');
+    html.classList.toggle('dark', newDark);
+    setIsDark(newDark);
+    localStorage.setItem('theme', newDark ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    }
+  }, []);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? <Sun className="h-4 w-4" strokeWidth={1.5} /> : <Moon className="h-4 w-4" strokeWidth={1.5} />}
+    </Button>
+  );
+}
+
 /** Docs search component */
 function DocsSearch() {
   const [isOpen, setIsOpen] = useState(false);
@@ -469,6 +502,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
             </nav>
             <div className="flex-1" />
             <DocsSearch />
+            <DarkModeToggle />
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
