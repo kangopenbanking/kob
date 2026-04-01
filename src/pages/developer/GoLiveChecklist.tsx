@@ -77,6 +77,92 @@ export default function GoLiveChecklist() {
           </section>
         ))}
 
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="verify-code">Production Verification Code</h2>
+          <p className="text-muted-foreground mb-4 text-sm">Run this quick verification after switching to production keys:</p>
+          <CodeBlock
+            title="Verify Production Connection"
+            examples={[
+              {
+                language: "bash",
+                label: "cURL",
+                code: `curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer sk_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: go-live-verify-001" \\
+  -d '{"merchant_id":"YOUR_MERCHANT_ID","amount":100,"currency":"XAF","channel":"mobile_money","customer_phone":"+237677000001","tx_ref":"go_live_test_001"}'`
+              },
+              {
+                language: "javascript",
+                label: "Node.js",
+                code: `const kob = new KangOpenBanking({ apiKey: 'sk_live_YOUR_KEY' });
+const charge = await kob.charges.create({
+  merchant_id: 'YOUR_MERCHANT_ID',
+  amount: 100, currency: 'XAF', channel: 'mobile_money',
+  customer_phone: '+237677000001', tx_ref: 'go_live_test_001',
+});
+console.log('Production charge:', charge.data.status);`
+              },
+              {
+                language: "python",
+                label: "Python",
+                code: `kob = KangOpenBanking(api_key="sk_live_YOUR_KEY")
+charge = kob.charges.create(
+    merchant_id="YOUR_MERCHANT_ID",
+    amount=100, currency="XAF", channel="mobile_money",
+    customer_phone="+237677000001", tx_ref="go_live_test_001",
+)
+print("Production charge:", charge["data"]["status"])`
+              },
+              {
+                language: "php",
+                label: "PHP",
+                code: `$kob = new KangClient('sk_live_YOUR_KEY');
+$charge = $kob->charges->create([
+    'merchant_id' => 'YOUR_MERCHANT_ID',
+    'amount' => 100, 'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '+237677000001',
+    'tx_ref' => 'go_live_test_001',
+]);
+echo $charge['data']['status'];`
+              },
+              {
+                language: "go",
+                label: "Go",
+                code: `body, _ := json.Marshal(map[string]interface{}{
+    "merchant_id": "YOUR_MERCHANT_ID", "amount": 100,
+    "currency": "XAF", "channel": "mobile_money",
+    "customer_phone": "+237677000001", "tx_ref": "go_live_test_001",
+})
+req, _ := http.NewRequest("POST",
+    "https://api.kangopenbanking.com/v1/gateway/charges",
+    bytes.NewBuffer(body))
+req.Header.Set("Authorization", "Bearer sk_live_YOUR_KEY")
+req.Header.Set("Content-Type", "application/json")
+resp, _ := http.DefaultClient.Do(req)
+fmt.Println("Status:", resp.Status)`
+              },
+              {
+                language: "java",
+                label: "Java",
+                code: `String body = """
+    {"merchant_id":"YOUR_MERCHANT_ID","amount":100,
+     "currency":"XAF","channel":"mobile_money",
+     "customer_phone":"+237677000001","tx_ref":"go_live_test_001"}""";
+HttpRequest req = HttpRequest.newBuilder()
+    .uri(URI.create("https://api.kangopenbanking.com/v1/gateway/charges"))
+    .header("Authorization", "Bearer sk_live_YOUR_KEY")
+    .header("Content-Type", "application/json")
+    .POST(HttpRequest.BodyPublishers.ofString(body)).build();
+var resp = HttpClient.newHttpClient()
+    .send(req, HttpResponse.BodyHandlers.ofString());
+System.out.println(resp.body());`
+              }
+            ]}
+          />
+        </section>
+
         <AutoDocNavigation />
       </div>
     </>
