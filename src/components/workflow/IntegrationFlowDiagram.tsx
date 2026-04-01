@@ -26,7 +26,7 @@ Phase 10: Production Deployment (Week 10)
     ↓
 Phase 11: Ongoing Operations (Ongoing)
     ↓
-Live in Production ✓`}
+Live in Production`}
       </pre>
     </div>
   );

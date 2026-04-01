@@ -361,7 +361,7 @@ export default function SDKsPage() {
             ].map((item) => (
               <div key={item.domain} className="border rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm">{item.status}</span>
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   <span className="font-medium text-sm">{item.domain}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{item.endpoints}</p>

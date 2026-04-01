@@ -67,10 +67,10 @@ const SupportedCurrenciesPage = () => (
           {currencies.map(c => (
             <tr key={c.code} className="border-b">
               <td className="py-2 font-mono">{c.code}</td>
-              <td className="py-2 text-center">{c.channels.includes("card") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("mobile_money") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("bank_transfer") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("push_to_card") ? "✅" : "—"}</td>
+              <td className="py-2 text-center">{c.channels.includes("card") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("mobile_money") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("bank_transfer") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("push_to_card") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
             </tr>
           ))}
         </tbody>

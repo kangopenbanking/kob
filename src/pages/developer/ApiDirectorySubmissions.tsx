@@ -82,7 +82,7 @@ const ApiDirectorySubmissions = () => {
       description: "Directory of OpenAPI-based tools and APIs",
       submitUrl: "https://github.com/openapi-contrib/openapi-directory",
       requirements: [
-        "OpenAPI specification (✓ Available)",
+        "OpenAPI specification (Available)",
         "Submit via GitHub",
         "Pass validation"
       ]
