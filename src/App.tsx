@@ -951,7 +951,7 @@ function App() {
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
               <Route path="iso20022" element={<Iso20022Overview />} />
-              <Route path="iso20022/messages" element={<Iso20022Overview />} />
+              <Route path="iso20022/messages" element={<Iso20022Messages />} />
               <Route path="guides/go-live" element={<GoLiveChecklist />} />
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
