@@ -217,6 +217,27 @@ const ApiDirectorySubmissions = lazy(() => import("./pages/developer/ApiDirector
 const PaymentFacilitationDev = lazy(() => import("./pages/developer/PaymentFacilitation"));
 const Developer = lazy(() => import("./pages/Developer"));
 
+// New Developer Portal pages
+const AuthenticationOverview = lazy(() => import("./pages/developer/AuthenticationOverview"));
+const AuthApiKeys = lazy(() => import("./pages/developer/AuthApiKeys"));
+const AuthOAuth2 = lazy(() => import("./pages/developer/AuthOAuth2"));
+const AuthFapi = lazy(() => import("./pages/developer/AuthFapi"));
+const AuthMtls = lazy(() => import("./pages/developer/AuthMtls"));
+const SandboxOverview = lazy(() => import("./pages/developer/SandboxOverview"));
+const ApiReferenceOverview = lazy(() => import("./pages/developer/ApiReferenceOverview"));
+const OpenBankingOverview = lazy(() => import("./pages/developer/OpenBankingOverview"));
+const MobileMoneyOverview = lazy(() => import("./pages/developer/MobileMoneyOverview"));
+const MtnMomoGuide = lazy(() => import("./pages/developer/MtnMomoGuide"));
+const OrangeMoneyGuide = lazy(() => import("./pages/developer/OrangeMoneyGuide"));
+const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
+const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
+const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
+const Iso20022Overview = lazy(() => import("./pages/developer/Iso20022Overview"));
+const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
+const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
+const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
+const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
+
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
@@ -893,6 +914,43 @@ function App() {
               <Route path="compare" element={<CompetitiveComparison />} />
               <Route path="migrate" element={<MigrationGuide />} />
               <Route path="pay-by-bank" element={<PayByBankGuide />} />
+              {/* New documentation pages */}
+              <Route path="authentication" element={<AuthenticationOverview />} />
+              <Route path="authentication/api-keys" element={<AuthApiKeys />} />
+              <Route path="authentication/oauth2" element={<AuthOAuth2 />} />
+              <Route path="authentication/fapi" element={<AuthFapi />} />
+              <Route path="authentication/mtls" element={<AuthMtls />} />
+              <Route path="sandbox/overview" element={<SandboxOverview />} />
+              <Route path="sandbox/credentials" element={<SandboxOverview />} />
+              <Route path="sandbox/test-cards" element={<SandboxOverview />} />
+              <Route path="sandbox/mobile-money" element={<SandboxOverview />} />
+              <Route path="sandbox/simulate-webhooks" element={<SandboxOverview />} />
+              <Route path="api-reference" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/errors" element={<ErrorCodesReference />} />
+              <Route path="api-reference/pagination" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/rate-limits" element={<RateLimitsGuide />} />
+              <Route path="api-reference/versioning" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
+              <Route path="open-banking" element={<OpenBankingOverview />} />
+              <Route path="open-banking/aisp" element={<AispReference />} />
+              <Route path="open-banking/pisp" element={<PispReference />} />
+              <Route path="open-banking/consents" element={<OpenBankingOverview />} />
+              <Route path="open-banking/pay-by-bank" element={<PayByBankGuide />} />
+              <Route path="mobile-money" element={<MobileMoneyOverview />} />
+              <Route path="mobile-money/mtn" element={<MtnMomoGuide />} />
+              <Route path="mobile-money/orange" element={<OrangeMoneyGuide />} />
+              <Route path="compliance/kyc" element={<ComplianceKyc />} />
+              <Route path="compliance/aml" element={<ComplianceAml />} />
+              <Route path="compliance/fapi" element={<ComplianceFapi />} />
+              <Route path="iso20022" element={<Iso20022Overview />} />
+              <Route path="iso20022/messages" element={<Iso20022Overview />} />
+              <Route path="guides/go-live" element={<GoLiveChecklist />} />
+              <Route path="guides/postman" element={<PostmanGuide />} />
+              <Route path="guides/migrate" element={<MigrationGuide />} />
+              <Route path="access-policy" element={<AccessPolicy />} />
+              <Route path="support" element={<DeveloperSupport />} />
+              <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
+              <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
               {/* Remittance API Docs */}
               <Route path="remittance" element={<DevRemittanceOverview />} />
               <Route path="remittance/corridors-quotes" element={<DevRemittanceCorridorsQuotes />} />
