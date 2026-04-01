@@ -1,57 +1,76 @@
 
+Roles active: Guardian, Architect, Surgeon, Auditor, Scorekeeper.
 
-# Fix: Developer Portal Rendering -- All Pages Showing Same Stub (12/100 to 85+/100)
+Reality check
+- I parsed the uploaded audit report, inspected the current codebase, and re-fetched live published pages.
+- The report’s headline diagnosis is now stale: /developer, /developer/getting-started, /developer/authentication, /developer/changelog, and /developer/status currently render unique content on the live site.
+- The real remaining gaps are structural and UX-related: public/private route mixing, several prompt URLs still alias to shared overview pages, missing shared docs features, stale version copy in some places, and incomplete alignment with the Mega Super Master Prompt.
 
-## Root Cause
+What I will fix
+1. Public docs routing and URL contract
+- Make /developer/sandbox the permanent public sandbox docs landing page.
+- Move authenticated sandbox/tools pages out of the public docs path or into a clearly separate protected tools namespace.
+- Add any missing prompt-defined public routes and remove same-component aliases where a unique page is required.
+- Publish /developer/sitemap.xml and /developer/redirects.json, while keeping old URLs redirect-safe.
 
-The file `public/developer/index.html` is the single cause of the entire audit failure. Vite serves static files from `public/` with higher priority than SPA routing. When any browser requests `/developer` or `/developer/anything`, Vite (and the production hosting) serves this static HTML file instead of letting React Router handle the route.
+2. Remove public/private mixing
+- Clean the public sidebar so docs never point anonymous users into gated tools as if they were docs.
+- Update hero/top-nav CTAs so public users always go to readable docs first; gated actions become explicit secondary actions.
+- Keep ORDER P1 and P2 intact: public-first docs, zero-404 docs.
 
-The React SPA already has 60+ fully-built developer documentation pages with real content (code examples, tables, test credentials, Swagger UI, SDK docs, etc). None of them are reachable because the static HTML file intercepts every request.
+3. Replace duplicate-content routes with real pages
+- Create dedicated pages for routes currently reusing overview components, including:
+  - /developer/sandbox/credentials
+  - /developer/sandbox/test-cards
+  - /developer/sandbox/mobile-money
+  - /developer/sandbox/webhooks or simulate-webhooks
+  - /developer/sandbox/seed-data
+  - /developer/api-reference/errors
+  - /developer/api-reference/pagination
+  - /developer/api-reference/rate-limits
+  - /developer/api-reference/versioning
+  - /developer/api-reference/idempotency
+  - /developer/open-banking/consents
+  - /developer/iso20022/messages
+  - any remaining prompt URLs still absent or aliasing
+- Each page will contain explanation + code example + table/diagram, not just links.
 
-## Evidence
+4. Rebuild the docs flow to be Stripe-like and sequential
+- Reorder the canonical reading path to:
+  Home → Getting Started → Authentication → Sandbox → API Reference → API Explorer → SDKs → Gateway Quickstart → Webhooks → Open Banking → Mobile Money → ISO 20022 → Go-Live → Support/Access Policy.
+- Update AutoDocNavigation and each page’s “next steps” cards so they move logically to the next step, not sideways into unrelated sections.
+- Align the home page structure with the prompt: hero, start-here cards, use cases, changelog strip, status strip.
 
-- `src/pages/developer/GettingStarted.tsx` -- 338 lines, step-by-step guide with multi-language code examples
-- `src/pages/developer/SandboxOverview.tsx` -- 182 lines, test credentials visible without login, test card/phone tables
-- `src/pages/developer/AuthenticationOverview.tsx` -- 259 lines, OAuth 2.0 + PKCE flow with code
-- `src/pages/developer/ApiExplorer.tsx` -- 308 lines, embedded Swagger UI loading from `/openapi.json`
-- `src/pages/developer/SDKsPage.tsx` -- 409 lines, install commands + examples for 6 languages
-- `src/pages/developer/GatewayWebhooksGuide.tsx` -- 430 lines, webhook events + signature verification
-- `src/pages/developer/GatewayQuickstart.tsx` -- 254 lines, 10-minute tutorial
-- `src/App.tsx` lines 837-963 -- 60+ routes correctly mapped under `<PublicDeveloperLayout>`
-- `src/components/developer/PublicDeveloperLayout.tsx` -- full sidebar nav with 14 sections
+5. Rewrite high-impact pages to exact spec
+- Getting Started: convert from TPP/DCR-heavy onboarding to public “first API call” onboarding with keys, 6-language examples, annotated response, and next steps.
+- Authentication: tighten API Keys / OAuth2 / FAPI / mTLS into a clearer progression with proper scopes table and flow diagrams.
+- Sandbox: expose permanent public credentials at /developer/sandbox and split out the sub-pages.
+- API Explorer: prefill sandbox guidance, update stale fallback copy/version counts, and align messaging to v4.6.0 / 339 endpoints / 52 events.
+- SDKs: extend to Node, Python, PHP, Java, Go, and Flutter/Dart with install commands, imports, instantiation, full example, and package links.
+- Gateway Quickstart and Webhooks: match the prompt’s copy-paste tutorial quality and full event/reference requirements.
 
-All content exists. Zero content is rendered because of one file.
+6. Add the missing documentation-platform features
+- Implement a shared right-rail “On this page” component in PublicDeveloperLayout by reading H2/H3 anchors from the page content.
+- Add a consistent developer docs footer on every docs page.
+- Add full-text search across the docs set.
+- Standardize code blocks, copy buttons, anchors, and section IDs across all doc pages.
 
-## Fix
+7. Normalize metadata, SEO, and versioning
+- Give every docs page page-specific title, description, canonical, and TechArticle JSON-LD.
+- Remove stale version references (for example, ApiExplorer noscript still mentions v4.2.0 / 326+ operations).
+- Surface changelog.json on the homepage and keep changelog timing aligned with the standing orders.
 
-### Step 1: Delete `public/developer/index.html`
+8. Finish the public access contract
+- Tighten robots.txt around public docs vs private app/admin areas.
+- Ensure /openapi.json, /openapi.yaml, /openapi-sandbox.json, and /changelog.json stay public.
+- Ensure every published docs URL resolves uniquely or redirects intentionally.
 
-This single deletion unblocks all 60+ developer documentation pages. The static HTML was originally a SEO fallback for non-JS crawlers, but it now blocks all users. Modern search engines render JavaScript; the SPA's `<Helmet>` tags provide SEO metadata.
+Verification report I will deliver after implementation
+- Route-by-route matrix showing every required /developer URL, its component, and whether it is public, unique, and indexed.
+- List of duplicate/gated/stale pages fixed.
+- UX checklist: sequential nav, right-rail TOC, footer, search, copyable code, mobile responsiveness.
+- Content checklist: sandbox creds, SDK coverage, API Explorer, changelog, status, go-live, access policy.
+- Final confidence assessment against the Mega Super Master Prompt and the attached audit.
 
-### Step 2: Verify no other static HTML files shadow SPA routes
-
-Check `public/` for any other `index.html` files in subdirectories that could shadow React Router routes.
-
-### Step 3: Update the `navigateFallbackDenylist` in Vite PWA config
-
-Remove the now-unnecessary `/developer/index.html` entry from the service worker denylist in `vite.config.ts` line 20, since the file no longer exists.
-
-## Impact
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Unique content pages | 0 (all show stub) | 60+ (all React pages render) |
-| Getting Started | Stub | 338-line step-by-step guide |
-| Sandbox credentials | Hidden | Visible without login |
-| API Explorer | Stub | Live Swagger UI |
-| SDK docs | Stub | 6-language install + examples |
-| Webhook guide | Stub | 52 events + signature code |
-| Audit score | 12/100 | 85+/100 |
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `public/developer/index.html` | **DELETE** |
-| `vite.config.ts` | Remove `/developer/index.html` from denylist |
-
+Technical note
+- I will not replace the current portal with a new framework. The existing React/Vite docs foundation already has the routes, layout, Swagger UI, and most core content; the fastest safe path is to finish and normalize this system rather than restart it.
