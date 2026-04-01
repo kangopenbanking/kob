@@ -169,12 +169,16 @@ const GatewayChargesGuide = () => (
     {/* Code Examples */}
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Code Examples</h2>
-      <div className="space-y-3">
-        <h3 className="font-medium text-sm">Mobile Money Charge (curl)</h3>
-        <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
+      <CodeBlock
+        title="Create a Mobile Money Charge"
+        examples={[
+          {
+            language: "bash",
+            label: "cURL",
+            code: `curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
   -d '{
     "merchant_id": "mch_uuid",
     "amount": 5000,
@@ -182,33 +186,127 @@ const GatewayChargesGuide = () => (
     "channel": "mobile_money",
     "customer_phone": "237677123456",
     "tx_ref": "order_001"
-  }'`}
-        </pre>
+  }'`
+          },
+          {
+            language: "javascript",
+            label: "Node.js",
+            code: `import { KangOpenBanking } from '@kangopenbanking/sdk';
 
-        <h3 className="font-medium text-sm">Preauthorize & Capture (Node.js)</h3>
-        <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`// Step 1: Create preauth
-const preauth = await fetch('/v1/gateway/charges/preauth', {
-  method: 'POST',
-  headers: { 'Authorization': 'Bearer sk_live_...', 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    merchant_id: 'mch_uuid', amount: 50000, currency: 'USD',
-    customer_email: 'john@example.com', tx_ref: 'preauth_001'
-  })
+const kob = new KangOpenBanking({ apiKey: 'sk_live_...' });
+
+const charge = await kob.charges.create({
+  merchant_id: 'mch_uuid',
+  amount: 5000,
+  currency: 'XAF',
+  channel: 'mobile_money',
+  customer_phone: '237677123456',
+  tx_ref: 'order_001',
 });
-const { client_secret } = await preauth.json();
 
-// Step 2: Confirm on frontend with Stripe.js
-// stripe.confirmCardPayment(client_secret)
+console.log(charge.data.id);     // "chg_..."
+console.log(charge.data.status); // "processing"`
+          },
+          {
+            language: "python",
+            label: "Python",
+            code: `from kangopenbanking import KangOpenBanking
 
-// Step 3: Capture (full or partial)
-await fetch('/v1/gateway/charges/chg_uuid/capture', {
-  method: 'POST',
-  headers: { 'Authorization': 'Bearer sk_live_...', 'Content-Type': 'application/json' },
-  body: JSON.stringify({ amount: 25000 }) // partial capture
-});`}
-        </pre>
-      </div>
+kob = KangOpenBanking(api_key="sk_live_...")
+
+charge = kob.charges.create(
+    merchant_id="mch_uuid",
+    amount=5000,
+    currency="XAF",
+    channel="mobile_money",
+    customer_phone="237677123456",
+    tx_ref="order_001",
+)
+print(charge["data"]["id"])
+print(charge["data"]["status"])`
+          },
+          {
+            language: "php",
+            label: "PHP",
+            code: `<?php
+use KangOpenBanking\\KangClient;
+
+$kob = new KangClient('sk_live_...');
+
+$charge = $kob->charges->create([
+    'merchant_id' => 'mch_uuid',
+    'amount' => 5000,
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '237677123456',
+    'tx_ref' => 'order_001',
+]);
+
+echo $charge['data']['id'];`
+          },
+          {
+            language: "go",
+            label: "Go",
+            code: `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	body, _ := json.Marshal(map[string]interface{}{
+		"merchant_id":    "mch_uuid",
+		"amount":         5000,
+		"currency":       "XAF",
+		"channel":        "mobile_money",
+		"customer_phone": "237677123456",
+		"tx_ref":         "order_001",
+	})
+	req, _ := http.NewRequest("POST",
+		"https://api.kangopenbanking.com/v1/gateway/charges",
+		bytes.NewBuffer(body))
+	req.Header.Set("Authorization", "Bearer sk_live_...")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Idempotency-Key", "unique-key-001")
+
+	resp, _ := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	fmt.Println("Status:", resp.Status)
+}`
+          },
+          {
+            language: "java",
+            label: "Java",
+            code: `import java.net.http.*;
+import java.net.URI;
+
+public class CreateCharge {
+    public static void main(String[] args) throws Exception {
+        String body = """
+            {"merchant_id":"mch_uuid","amount":5000,
+             "currency":"XAF","channel":"mobile_money",
+             "customer_phone":"237677123456",
+             "tx_ref":"order_001"}""";
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.kangopenbanking.com/v1/gateway/charges"))
+            .header("Authorization", "Bearer sk_live_...")
+            .header("Content-Type", "application/json")
+            .header("Idempotency-Key", "unique-key-001")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+
+        HttpResponse<String> response = HttpClient.newHttpClient()
+            .send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+}`
+          }
+        ]}
+      />
     </div>
 
     {/* Webhook Events */}
