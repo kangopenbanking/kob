@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { CodeBlock } from "@/components/developer/CodeBlock";
 
 export default function GoLiveChecklist() {
   return (
