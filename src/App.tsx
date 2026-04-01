@@ -217,6 +217,27 @@ const ApiDirectorySubmissions = lazy(() => import("./pages/developer/ApiDirector
 const PaymentFacilitationDev = lazy(() => import("./pages/developer/PaymentFacilitation"));
 const Developer = lazy(() => import("./pages/Developer"));
 
+// New Developer Portal pages
+const AuthenticationOverview = lazy(() => import("./pages/developer/AuthenticationOverview"));
+const AuthApiKeys = lazy(() => import("./pages/developer/AuthApiKeys"));
+const AuthOAuth2 = lazy(() => import("./pages/developer/AuthOAuth2"));
+const AuthFapi = lazy(() => import("./pages/developer/AuthFapi"));
+const AuthMtls = lazy(() => import("./pages/developer/AuthMtls"));
+const SandboxOverview = lazy(() => import("./pages/developer/SandboxOverview"));
+const ApiReferenceOverview = lazy(() => import("./pages/developer/ApiReferenceOverview"));
+const OpenBankingOverview = lazy(() => import("./pages/developer/OpenBankingOverview"));
+const MobileMoneyOverview = lazy(() => import("./pages/developer/MobileMoneyOverview"));
+const MtnMomoGuide = lazy(() => import("./pages/developer/MtnMomoGuide"));
+const OrangeMoneyGuide = lazy(() => import("./pages/developer/OrangeMoneyGuide"));
+const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
+const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
+const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
+const Iso20022Overview = lazy(() => import("./pages/developer/Iso20022Overview"));
+const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
+const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
+const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
+const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
+
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
