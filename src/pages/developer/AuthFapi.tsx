@@ -56,7 +56,7 @@ export default function AuthFapi() {
           <p className="text-muted-foreground mb-4">
             The OpenID Connect discovery endpoint provides all configuration details:
           </p>
-          <CodeBlock code={`curl https://api.kangopenbanking.com/.well-known/openid-configuration
+          <CodeBlock examples={[{ code: `curl https://api.kangopenbanking.com/.well-known/openid-configuration
 
 # Key fields:
 {
@@ -69,7 +69,7 @@ export default function AuthFapi() {
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],
   "id_token_signing_alg_values_supported": ["PS256"]
-}`} language="bash" title="OIDC Discovery" />
+}`, language: "bash" }]} title="OIDC Discovery" />
         </section>
 
         <section>

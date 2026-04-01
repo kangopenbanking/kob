@@ -189,13 +189,13 @@ GET /v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=20`, language: "bash" }]} 
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="idempotency">Idempotency</h2>
-          <CodeBlock code={`# Safe to retry — server deduplicates by Idempotency-Key
+          <CodeBlock examples={[{ code: `# Safe to retry — server deduplicates by Idempotency-Key
 curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
   -H "Idempotency-Key: order_12345_attempt_1" \\
   ...same body...
 
 # Returns the SAME response as the original request
-# Keys expire after 24 hours`} language="bash" title="Idempotency" />
+# Keys expire after 24 hours`, language: "bash" }]} title="Idempotency" />
         </section>
 
         <DocNavigation
