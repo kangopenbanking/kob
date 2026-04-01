@@ -169,9 +169,9 @@ const ApiStatusPage = () => {
           <h3 className="font-semibold mb-2">FAPI Compliance</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             <span>Profile: <strong>{fapiCompliance.profile}</strong></span>
-            <span>mTLS: <Badge variant="outline" className="text-xs">{fapiCompliance.mtls_supported ? "✓" : "✗"}</Badge></span>
-            <span>PAR: <Badge variant="outline" className="text-xs">{fapiCompliance.par_supported ? "✓" : "✗"}</Badge></span>
-            <span>JAR: <Badge variant="outline" className="text-xs">{fapiCompliance.jar_supported ? "✓" : "✗"}</Badge></span>
+            <span>mTLS: <Badge variant="outline" className="text-xs">{fapiCompliance.mtls_supported ? "Supported" : "Not supported"}</Badge></span>
+            <span>PAR: <Badge variant="outline" className="text-xs">{fapiCompliance.par_supported ? "Supported" : "Not supported"}</Badge></span>
+            <span>JAR: <Badge variant="outline" className="text-xs">{fapiCompliance.jar_supported ? "Supported" : "Not supported"}</Badge></span>
             <span>PKCE: <Badge variant="outline" className="text-xs">{fapiCompliance.pkce_required ? "Required" : "Optional"}</Badge></span>
           </div>
         </div>

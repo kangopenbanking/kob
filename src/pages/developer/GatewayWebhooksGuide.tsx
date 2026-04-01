@@ -273,8 +273,8 @@ Authorization: Bearer <PayPal OAuth token>
 }
 
 // Step 3: Check response
-{ "verification_status": "SUCCESS" }  // ✅ Accept
-{ "verification_status": "FAILURE" }  // ❌ Reject with 401`}
+{ "verification_status": "SUCCESS" }  // Accept
+{ "verification_status": "FAILURE" }  // Reject with 401`}
           </pre>
         </div>
         <p className="text-sm text-muted-foreground">Events handled: <code className="bg-muted px-1 rounded">PAYMENT.CAPTURE.COMPLETED</code>, <code className="bg-muted px-1 rounded">CHECKOUT.ORDER.APPROVED</code>, <code className="bg-muted px-1 rounded">PAYOUTS-ITEM.*</code></p>

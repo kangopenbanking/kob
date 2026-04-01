@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { Check, Minus } from "lucide-react";
 
 const currencies = [
   { code: "XAF", name: "Central African CFA Franc", symbol: "FCFA", decimals: 0, countries: "Cameroon, Gabon, Congo, Chad, CAR, Eq. Guinea", channels: ["card", "mobile_money", "bank_transfer"] },
@@ -66,10 +67,10 @@ const SupportedCurrenciesPage = () => (
           {currencies.map(c => (
             <tr key={c.code} className="border-b">
               <td className="py-2 font-mono">{c.code}</td>
-              <td className="py-2 text-center">{c.channels.includes("card") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("mobile_money") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("bank_transfer") ? "✅" : "—"}</td>
-              <td className="py-2 text-center">{c.channels.includes("push_to_card") ? "✅" : "—"}</td>
+              <td className="py-2 text-center">{c.channels.includes("card") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("mobile_money") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("bank_transfer") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
+              <td className="py-2 text-center">{c.channels.includes("push_to_card") ? <Check className="h-4 w-4 text-primary inline-block" /> : <Minus className="h-4 w-4 text-muted-foreground inline-block" />}</td>
             </tr>
           ))}
         </tbody>

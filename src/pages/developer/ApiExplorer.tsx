@@ -180,7 +180,7 @@ grant_type=client_credentials
                     Authorize in Swagger UI
                   </h4>
                   <p className="text-sm text-muted-foreground ml-8">
-                    Click the <strong>Authorize 🔓</strong> button at the top of Swagger UI and enter your credentials:
+                    Click the <strong>Authorize</strong> button at the top of Swagger UI and enter your credentials:
                   </p>
                   <ul className="list-disc list-inside ml-8 text-sm text-muted-foreground space-y-1">
                     <li><strong>bearerAuth:</strong> Paste the <code className="bg-muted px-1 rounded">access_token</code> value from the response above</li>

@@ -88,13 +88,13 @@ const TestingGuide = () => (
     <div className="bg-muted/50 rounded-lg p-4 border">
       <h3 className="font-semibold mb-2">Going Live Checklist</h3>
       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-        <li>✅ Test all payment channels (card, MoMo, bank transfer) in sandbox</li>
-        <li>✅ Verify webhook signature validation works correctly</li>
-        <li>✅ Test error handling for declined and timed-out transactions</li>
-        <li>✅ Implement idempotency keys for all payment operations</li>
-        <li>✅ Switch to production API keys (prefix: <code className="bg-muted px-1 rounded">sk_live_</code>)</li>
-        <li>✅ Update base URL if using environment-specific URLs</li>
-        <li>✅ Complete KYB verification for your merchant account</li>
+        <li>Test all payment channels (card, MoMo, bank transfer) in sandbox</li>
+        <li>Verify webhook signature validation works correctly</li>
+        <li>Test error handling for declined and timed-out transactions</li>
+        <li>Implement idempotency keys for all payment operations</li>
+        <li>Switch to production API keys (prefix: <code className="bg-muted px-1 rounded">sk_live_</code>)</li>
+        <li>Update base URL if using environment-specific URLs</li>
+        <li>Complete KYB verification for your merchant account</li>
       </ul>
     </div>
 

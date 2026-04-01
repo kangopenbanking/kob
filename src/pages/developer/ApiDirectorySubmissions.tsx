@@ -55,7 +55,7 @@ const ApiDirectorySubmissions = () => {
       description: "Network of public APIs and collections",
       submitUrl: "https://www.postman.com/",
       requirements: [
-        "Postman collection (✓ Available)",
+        "Postman collection (Available)",
         "API documentation",
         "Workspace setup",
         "Collection publishing"
@@ -82,7 +82,7 @@ const ApiDirectorySubmissions = () => {
       description: "Directory of OpenAPI-based tools and APIs",
       submitUrl: "https://github.com/openapi-contrib/openapi-directory",
       requirements: [
-        "OpenAPI specification (✓ Available)",
+        "OpenAPI specification (Available)",
         "Submit via GitHub",
         "Pass validation"
       ]
