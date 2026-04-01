@@ -237,6 +237,14 @@ const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
+const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentials"));
+const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards"));
+const SandboxMobileMoney = lazy(() => import("./pages/developer/SandboxMobileMoney"));
+const SandboxSimulateWebhooks = lazy(() => import("./pages/developer/SandboxSimulateWebhooks"));
+const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReferencePagination"));
+const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
+const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
+const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
@@ -921,20 +929,20 @@ function App() {
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
-              <Route path="sandbox/credentials" element={<SandboxOverview />} />
-              <Route path="sandbox/test-cards" element={<SandboxOverview />} />
-              <Route path="sandbox/mobile-money" element={<SandboxOverview />} />
-              <Route path="sandbox/simulate-webhooks" element={<SandboxOverview />} />
+              <Route path="sandbox/credentials" element={<SandboxCredentials />} />
+              <Route path="sandbox/test-cards" element={<SandboxTestCards />} />
+              <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
+              <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
-              <Route path="api-reference/pagination" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/pagination" element={<ApiReferencePagination />} />
               <Route path="api-reference/rate-limits" element={<RateLimitsGuide />} />
-              <Route path="api-reference/versioning" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/versioning" element={<ApiReferenceVersioning />} />
               <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
               <Route path="open-banking/pisp" element={<PispReference />} />
-              <Route path="open-banking/consents" element={<OpenBankingOverview />} />
+              <Route path="open-banking/consents" element={<OpenBankingConsents />} />
               <Route path="open-banking/pay-by-bank" element={<PayByBankGuide />} />
               <Route path="mobile-money" element={<MobileMoneyOverview />} />
               <Route path="mobile-money/mtn" element={<MtnMomoGuide />} />
@@ -943,7 +951,7 @@ function App() {
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
               <Route path="iso20022" element={<Iso20022Overview />} />
-              <Route path="iso20022/messages" element={<Iso20022Overview />} />
+              <Route path="iso20022/messages" element={<Iso20022Messages />} />
               <Route path="guides/go-live" element={<GoLiveChecklist />} />
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
