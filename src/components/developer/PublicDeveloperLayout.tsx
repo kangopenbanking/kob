@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight, Moon, Sun } from "lucide-react";
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
