@@ -693,11 +693,11 @@ export default function Changelog() {
                 We maintain backwards compatibility and provide at least 6 months notice before deprecating any features.
               </CardDescription>
             </div>
-          
-      <AutoDocNavigation />
-</div>
+          </div>
         </CardHeader>
       </Card>
+
+      <AutoDocNavigation />
     </div>
   );
 }
