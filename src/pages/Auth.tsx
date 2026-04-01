@@ -579,12 +579,13 @@ export default function Auth() {
   };
 
   const loginGoBack = () => {
+    const previousStep = authMethod === 'firebase' ? 'firebase-otp' : 'phone';
     if (loginStep === 'otp') { setLoginStep('phone'); setLoginOtpCode(''); }
-    else if (loginStep === 'pin') { setLoginStep(authMethod === 'firebase' ? 'firebase-otp' : 'phone'); setLoginPinCode(''); setUsesPINLogin(false); }
+    else if (loginStep === 'pin') { setLoginStep(previousStep); setLoginPinCode(''); setUsesPINLogin(false); }
     else if (loginStep === 'phone') { setLoginStep('captcha'); generateCaptcha(); }
     else if (loginStep === 'firebase-otp') { firebasePhone.reset(); setFirebaseOtpCode(''); setLoginStep('captcha'); generateCaptcha(); }
-    else if (loginStep === 'forgot-password') { setLoginStep('phone'); setForgotSent(false); }
-    else if (loginStep === 'reset-pin') { setLoginStep('phone'); setNewPin(''); setConfirmNewPin(''); }
+    else if (loginStep === 'forgot-password') { setLoginStep(previousStep); setForgotSent(false); }
+    else if (loginStep === 'reset-pin') { setLoginStep(previousStep); setNewPin(''); setConfirmNewPin(''); }
   };
 
   // ── Computed ──
