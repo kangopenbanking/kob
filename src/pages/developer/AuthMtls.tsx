@@ -84,14 +84,14 @@ export default function AuthMtls() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="register">Step 1: Register Certificate</h2>
-          <CodeBlock code={registerCert} language="bash" title="Register Client Certificate" />
+          <CodeBlock examples={[{ code: registerCert, language: "bash" }]} title="Register Client Certificate" />
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="usage">Step 2: Make Requests</h2>
-          <CodeBlock code={useMtls} language="bash" title="cURL with mTLS" />
+          <CodeBlock examples={[{ code: useMtls, language: "bash" }]} title="cURL with mTLS" />
           <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Node.js</h3>
-          <CodeBlock code={nodeMtls} language="javascript" title="Node.js with mTLS" />
+          <CodeBlock examples={[{ code: nodeMtls, language: "javascript" }]} title="Node.js with mTLS" />
         </section>
 
         <section>

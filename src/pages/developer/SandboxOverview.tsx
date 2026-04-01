@@ -147,12 +147,12 @@ export default function SandboxOverview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="seed-data">Seed Test Data</h2>
-          <CodeBlock code={seedData} language="bash" title="Generate Seed Data" />
+          <CodeBlock examples={[{ code: seedData, language: "bash" }]} title="Generate Seed Data" />
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="webhooks">Simulate Webhooks</h2>
-          <CodeBlock code={simulateWebhook} language="bash" title="Trigger Test Webhook" />
+          <CodeBlock examples={[{ code: simulateWebhook, language: "bash" }]} title="Trigger Test Webhook" />
         </section>
 
         <section>

@@ -73,7 +73,7 @@ export default function AuthOAuth2() {
           <p className="text-muted-foreground mb-4">
             All authorization requests must use PAR (RFC 9126). This pushes the authorization parameters to the server first, then uses the returned <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code> in the redirect.
           </p>
-          <CodeBlock code={parRequest} language="bash" title="PAR Request" />
+          <CodeBlock examples={[{ code: parRequest, language: "bash" }]} title="PAR Request" />
         </section>
 
         <section>
@@ -81,13 +81,13 @@ export default function AuthOAuth2() {
           <p className="text-muted-foreground mb-4">
             Redirect the user to the authorization endpoint with the <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code>:
           </p>
-          <CodeBlock code={`https://api.kangopenbanking.com/v1/oauth/authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`} language="text" title="Authorization Redirect URL" />
+          <CodeBlock examples={[{ code: `https://api.kangopenbanking.com/v1/oauth/authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`, language: "text" }]} title="Authorization Redirect URL" />
           <p className="text-sm text-muted-foreground mt-2">The user authenticates with their bank and approves the consent. They are redirected back to your <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">redirect_uri</code> with a <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">code</code> parameter.</p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="step-3">Step 3: Token Exchange</h2>
-          <CodeBlock code={tokenExchange} language="bash" title="Exchange Code for Tokens" />
+          <CodeBlock examples={[{ code: tokenExchange, language: "bash" }]} title="Exchange Code for Tokens" />
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm border border-border rounded-lg">
               <thead className="bg-muted/50">
@@ -118,7 +118,7 @@ export default function AuthOAuth2() {
           <p className="text-muted-foreground mb-4">
             Access tokens expire after 1 hour. Use the refresh token to obtain new ones without user interaction. Requires <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">offline_access</code> scope.
           </p>
-          <CodeBlock code={refreshToken} language="bash" title="Refresh Token" />
+          <CodeBlock examples={[{ code: refreshToken, language: "bash" }]} title="Refresh Token" />
           <div className="p-4 border border-primary/30 bg-primary/5 rounded-lg mt-4">
             <p className="text-sm text-foreground font-medium">Refresh Token Reuse Detection</p>
             <p className="text-sm text-muted-foreground">Each refresh token can only be used once. If reuse is detected, all tokens for that session are immediately revoked (per FAPI 1.0 security requirements).</p>

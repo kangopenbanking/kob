@@ -80,7 +80,7 @@ export default function AuthApiKeys() {
           <p className="text-muted-foreground mb-4">
             Rotate keys periodically or immediately if compromised. The old key remains valid for 24 hours to allow zero-downtime migration.
           </p>
-          <CodeBlock code={rotateExample} language="bash" title="Rotate API Key" />
+          <CodeBlock examples={[{ code: rotateExample, language: "bash" }]} title="Rotate API Key" />
         </section>
 
         <section>
@@ -88,7 +88,7 @@ export default function AuthApiKeys() {
           <p className="text-muted-foreground mb-4">
             For microservice architectures, create restricted keys with specific scopes and IP allowlists.
           </p>
-          <CodeBlock code={restrictedExample} language="bash" title="Create Restricted Key" />
+          <CodeBlock examples={[{ code: restrictedExample, language: "bash" }]} title="Create Restricted Key" />
 
           <h3 className="text-lg font-semibold text-foreground mt-6 mb-3" id="available-scopes">Available Scopes</h3>
           <div className="overflow-x-auto">

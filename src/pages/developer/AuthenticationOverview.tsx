@@ -144,7 +144,7 @@ export default function AuthenticationOverview() {
             <p className="text-sm text-foreground font-medium">Security Warning</p>
             <p className="text-sm text-muted-foreground">Never expose your secret key in client-side code, public repositories, or browser JavaScript. Use environment variables on your server.</p>
           </div>
-          <CodeBlock code={curlExample} language="bash" title="Bearer Token Authentication" />
+          <CodeBlock examples={[{ code: curlExample, language: "bash" }]} title="Bearer Token Authentication" />
           <p className="text-sm text-muted-foreground mt-3">
             <Link to="/developer/authentication/api-keys" className="text-primary hover:underline">Full API Keys guide</Link> — rotation, restricted keys, and microservice scoping.
           </p>
@@ -182,10 +182,10 @@ export default function AuthenticationOverview() {
           </div>
 
           <h3 className="text-lg font-semibold text-foreground mb-3">Node.js Example</h3>
-          <CodeBlock code={pkceFlow} language="javascript" title="OAuth 2.0 + PKCE Flow (Node.js)" />
+          <CodeBlock examples={[{ code: pkceFlow, language: "javascript" }]} title="OAuth 2.0 + PKCE Flow (Node.js)" />
 
           <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Python Example</h3>
-          <CodeBlock code={pythonPkce} language="python" title="OAuth 2.0 + PKCE Flow (Python)" />
+          <CodeBlock examples={[{ code: pythonPkce, language: "python" }]} title="OAuth 2.0 + PKCE Flow (Python)" />
         </section>
 
         {/* Scopes */}

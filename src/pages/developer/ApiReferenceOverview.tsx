@@ -94,15 +94,15 @@ export default function ApiReferenceOverview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="request-format">Request Format</h2>
-          <CodeBlock code={requestFormat} language="bash" title="Standard Request" />
+          <CodeBlock examples={[{ code: requestFormat, language: "bash" }]} title="Standard Request" />
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="responses">Response Envelopes</h2>
           <h3 className="text-lg font-semibold text-foreground mb-3">Single Resource (StandardResponse)</h3>
-          <CodeBlock code={standardResponse} language="json" title="StandardResponse Envelope" />
+          <CodeBlock examples={[{ code: standardResponse, language: "json" }]} title="StandardResponse Envelope" />
           <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">List (PaginatedResponse)</h3>
-          <CodeBlock code={paginatedResponse} language="json" title="PaginatedResponse Envelope" />
+          <CodeBlock examples={[{ code: paginatedResponse, language: "json" }]} title="PaginatedResponse Envelope" />
         </section>
 
         <section>
@@ -143,7 +143,7 @@ export default function ApiReferenceOverview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="errors">Error Format (RFC 7807)</h2>
-          <CodeBlock code={errorResponse} language="json" title="application/problem+json" />
+          <CodeBlock examples={[{ code: errorResponse, language: "json" }]} title="application/problem+json" />
         </section>
 
         <section>
