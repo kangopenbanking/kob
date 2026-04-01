@@ -47,6 +47,80 @@ for _ in range(10):
         print(f"Final status: {result['data']['status']}")
         break`;
 
+const nodeMtn = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+
+const kob = new KangOpenBanking({
+  apiKey: 'sk_test_sandbox_KangOB2026Demo',
+  environment: 'sandbox',
+});
+
+const charge = await kob.charges.create({
+  merchant_id: 'merch_test_001',
+  amount: 5000,
+  currency: 'XAF',
+  channel: 'mobile_money',
+  provider: 'mtn_momo',
+  customer_phone: '+237650000000',
+  description: 'Order #12345',
+  tx_ref: 'order_12345',
+});
+
+console.log('Charge ID:', charge.data.id);
+console.log('Status:', charge.data.status);`;
+
+const goMtn = `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	body, _ := json.Marshal(map[string]interface{}{
+		"merchant_id":    "merch_test_001",
+		"amount":         5000,
+		"currency":       "XAF",
+		"channel":        "mobile_money",
+		"provider":       "mtn_momo",
+		"customer_phone": "+237650000000",
+		"tx_ref":         "order_12345",
+	})
+	req, _ := http.NewRequest("POST",
+		"https://sandbox.kangopenbanking.com/v1/gateway/charges",
+		bytes.NewBuffer(body))
+	req.Header.Set("Authorization", "Bearer sk_test_sandbox_KangOB2026Demo")
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	fmt.Println("Status:", resp.Status)
+}`;
+
+const javaMtn = `import java.net.http.*;
+import java.net.URI;
+
+public class MtnCharge {
+    public static void main(String[] args) throws Exception {
+        String body = """
+            {"merchant_id":"merch_test_001","amount":5000,
+             "currency":"XAF","channel":"mobile_money",
+             "provider":"mtn_momo","customer_phone":"+237650000000",
+             "tx_ref":"order_12345"}""";
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://sandbox.kangopenbanking.com/v1/gateway/charges"))
+            .header("Authorization", "Bearer sk_test_sandbox_KangOB2026Demo")
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+
+        HttpResponse<String> response = HttpClient.newHttpClient()
+            .send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+}`;
+
 export default function MtnMomoGuide() {
   return (
     <>
