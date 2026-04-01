@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Info } from "lucide-react";
 
 const GatewayChargesGuide = () => (
