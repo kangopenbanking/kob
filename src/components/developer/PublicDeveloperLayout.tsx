@@ -469,6 +469,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
             </nav>
             <div className="flex-1" />
             <DocsSearch />
+            <DarkModeToggle />
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
