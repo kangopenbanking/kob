@@ -942,7 +942,7 @@ function App() {
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
               <Route path="open-banking/pisp" element={<PispReference />} />
-              <Route path="open-banking/consents" element={<OpenBankingOverview />} />
+              <Route path="open-banking/consents" element={<OpenBankingConsents />} />
               <Route path="open-banking/pay-by-bank" element={<PayByBankGuide />} />
               <Route path="mobile-money" element={<MobileMoneyOverview />} />
               <Route path="mobile-money/mtn" element={<MtnMomoGuide />} />
