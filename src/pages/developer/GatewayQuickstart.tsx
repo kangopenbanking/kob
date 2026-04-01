@@ -76,7 +76,13 @@ const GatewayQuickstart = () => (
     <Card>
       <CardHeader><CardTitle>Step 3 — Create Your First Charge (Mobile Money)</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
+        <CodeBlock
+          title="Create a Mobile Money Charge"
+          examples={[
+            {
+              language: "bash",
+              label: "cURL",
+              code: `curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: charge-order-001" \\
@@ -88,19 +94,88 @@ const GatewayQuickstart = () => (
     "customer_phone": "+237677123456",
     "tx_ref": "order_001",
     "description": "Test payment - Quickstart"
-  }'
+  }'`
+            },
+            {
+              language: "javascript",
+              label: "Node.js",
+              code: `import { KangOpenBanking } from '@kangopenbanking/sdk';
 
-# Response
-{
-  "id": "chg_test_xyz789",
-  "status": "processing",
-  "amount": 5000,
-  "currency": "XAF",
-  "channel": "mobile_money",
-  "provider": "flutterwave",
-  "provider_ref": "FLW-MOCK-123456",
-  "tx_ref": "order_001"
-}`}</code></pre>
+const kob = new KangOpenBanking({
+  apiKey: 'YOUR_TOKEN',
+  environment: 'sandbox',
+});
+
+const charge = await kob.charges.create({
+  merchant_id: 'mch_test_abc123',
+  amount: 5000,
+  currency: 'XAF',
+  channel: 'mobile_money',
+  customer_phone: '+237677123456',
+  tx_ref: 'order_001',
+});
+console.log(charge.data.id);     // "chg_test_xyz789"
+console.log(charge.data.status); // "processing"`
+            },
+            {
+              language: "python",
+              label: "Python",
+              code: `from kangopenbanking import KangOpenBanking
+
+kob = KangOpenBanking(api_key="YOUR_TOKEN", environment="sandbox")
+
+charge = kob.charges.create(
+    merchant_id="mch_test_abc123",
+    amount=5000,
+    currency="XAF",
+    channel="mobile_money",
+    customer_phone="+237677123456",
+    tx_ref="order_001",
+)
+print(charge["data"]["id"])     # "chg_test_xyz789"
+print(charge["data"]["status"]) # "processing"`
+            },
+            {
+              language: "go",
+              label: "Go",
+              code: `body, _ := json.Marshal(map[string]interface{}{
+    "merchant_id":    "mch_test_abc123",
+    "amount":         5000,
+    "currency":       "XAF",
+    "channel":        "mobile_money",
+    "customer_phone": "+237677123456",
+    "tx_ref":         "order_001",
+})
+req, _ := http.NewRequest("POST",
+    "https://api.kangopenbanking.com/v1/gateway/charges",
+    bytes.NewBuffer(body))
+req.Header.Set("Authorization", "Bearer YOUR_TOKEN")
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("Idempotency-Key", "charge-order-001")
+resp, _ := http.DefaultClient.Do(req)`
+            },
+            {
+              language: "java",
+              label: "Java",
+              code: `String body = """
+    {"merchant_id":"mch_test_abc123","amount":5000,
+     "currency":"XAF","channel":"mobile_money",
+     "customer_phone":"+237677123456",
+     "tx_ref":"order_001"}""";
+
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("https://api.kangopenbanking.com/v1/gateway/charges"))
+    .header("Authorization", "Bearer YOUR_TOKEN")
+    .header("Content-Type", "application/json")
+    .header("Idempotency-Key", "charge-order-001")
+    .POST(HttpRequest.BodyPublishers.ofString(body))
+    .build();
+
+HttpResponse<String> response = HttpClient.newHttpClient()
+    .send(request, HttpResponse.BodyHandlers.ofString());`
+            }
+          ]}
+        />
         <p className="text-xs text-muted-foreground">In sandbox mode, Mobile Money charges auto-complete within seconds. In production, the customer receives a USSD/STK push on their phone.</p>
       </CardContent>
     </Card>
