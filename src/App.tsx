@@ -929,15 +929,15 @@ function App() {
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
-              <Route path="sandbox/credentials" element={<SandboxOverview />} />
-              <Route path="sandbox/test-cards" element={<SandboxOverview />} />
-              <Route path="sandbox/mobile-money" element={<SandboxOverview />} />
-              <Route path="sandbox/simulate-webhooks" element={<SandboxOverview />} />
+              <Route path="sandbox/credentials" element={<SandboxCredentials />} />
+              <Route path="sandbox/test-cards" element={<SandboxTestCards />} />
+              <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
+              <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
-              <Route path="api-reference/pagination" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/pagination" element={<ApiReferencePagination />} />
               <Route path="api-reference/rate-limits" element={<RateLimitsGuide />} />
-              <Route path="api-reference/versioning" element={<ApiReferenceOverview />} />
+              <Route path="api-reference/versioning" element={<ApiReferenceVersioning />} />
               <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
