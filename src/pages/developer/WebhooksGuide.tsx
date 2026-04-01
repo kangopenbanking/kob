@@ -324,57 +324,91 @@ def handle_payment_failed(payment):
     # Handle failure, refund, notify user, etc.`
                 },
                 {
-                  language: "php",
-                  label: "PHP",
-                  code: `<?php
-// webhook.php
+                  language: "go",
+                  label: "Go",
+                  code: `package main
 
-$webhookSecret = getenv('KOB_WEBHOOK_SECRET');
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+)
 
-// Get signature from header
-$signature = $_SERVER['HTTP_X_KOB_SIGNATURE'] ?? '';
+var webhookSecret = []byte("your_webhook_secret")
 
-// Get raw POST body
-$payload = file_get_contents('php://input');
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	signature := r.Header.Get("X-KOB-Signature")
+	payload, _ := io.ReadAll(r.Body)
 
-// Generate expected signature
-$expectedSignature = hash_hmac('sha256', $payload, $webhookSecret);
+	mac := hmac.New(sha256.New, webhookSecret)
+	mac.Write(payload)
+	expected := hex.EncodeToString(mac.Sum(nil))
 
-// Verify signature
-if (!hash_equals($signature, $expectedSignature)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Invalid signature']);
-    exit;
+	if !hmac.Equal([]byte(signature), []byte(expected)) {
+		http.Error(w, "Invalid signature", http.StatusUnauthorized)
+		return
+	}
+
+	var event map[string]interface{}
+	json.Unmarshal(payload, &event)
+	log.Printf("Event: %s", event["event"])
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{"received": true})
 }
 
-// Parse event
-$event = json_decode($payload, true);
+func main() {
+	http.HandleFunc("/webhooks/kob", webhookHandler)
+	log.Fatal(http.ListenAndServe(":3000", nil))
+}`
+                },
+                {
+                  language: "java",
+                  label: "Java",
+                  code: `import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
-// Handle event
-switch ($event['event']) {
-    case 'payment.completed':
-        handlePaymentCompleted($event['data']);
-        break;
-    case 'payment.failed':
-        handlePaymentFailed($event['data']);
-        break;
-    // ... handle other events
-}
+public class WebhookServlet extends HttpServlet {
+    private static final String WEBHOOK_SECRET = System.getenv("KOB_WEBHOOK_SECRET");
 
-// Acknowledge receipt
-http_response_code(200);
-echo json_encode(['received' => true]);
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String signature = req.getHeader("X-KOB-Signature");
+        String payload = new String(req.getInputStream().readAllBytes(),
+                StandardCharsets.UTF_8);
 
-function handlePaymentCompleted($payment) {
-    error_log('Payment completed: ' . $payment['payment_id']);
-    // Update database, notify user, etc.
-}
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(
+                    WEBHOOK_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
 
-function handlePaymentFailed($payment) {
-    error_log('Payment failed: ' . $payment['payment_id']);
-    // Handle failure, refund, notify user, etc.
-}
-?>`
+            if (!signature.equals(hex.toString())) {
+                resp.setStatus(401);
+                resp.getWriter().write("{\"error\":\"Invalid signature\"}");
+                return;
+            }
+        } catch (Exception e) {
+            resp.setStatus(500);
+            return;
+        }
+
+        // Process event
+        System.out.println("Webhook received: " + payload);
+        resp.setStatus(200);
+        resp.getWriter().write("{\"received\":true}");
+    }
+}`
                 }
               ]}
             />
