@@ -155,7 +155,10 @@ export default function MtnMomoGuide() {
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="create-charge">Create Charge</h2>
           <CodeBlock examples={[
             { code: mtnCharge, language: "bash", label: "cURL" },
+            { code: nodeMtn, language: "javascript", label: "Node.js" },
             { code: pythonMtn, language: "python", label: "Python" },
+            { code: goMtn, language: "go", label: "Go" },
+            { code: javaMtn, language: "java", label: "Java" },
           ]} title="MTN MoMo Charge" />
         </section>
 
