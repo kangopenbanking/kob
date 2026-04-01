@@ -237,6 +237,14 @@ const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
+const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentials"));
+const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards"));
+const SandboxMobileMoney = lazy(() => import("./pages/developer/SandboxMobileMoney"));
+const SandboxSimulateWebhooks = lazy(() => import("./pages/developer/SandboxSimulateWebhooks"));
+const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReferencePagination"));
+const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
+const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
+const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
