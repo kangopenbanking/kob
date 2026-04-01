@@ -180,11 +180,11 @@ export default function ApiReferenceOverview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="pagination">Pagination</h2>
-          <CodeBlock code={`# Page-based
+          <CodeBlock examples={[{ code: `# Page-based
 GET /v1/gateway/charges?page=2&limit=20
 
 # Cursor-based (recommended for large datasets)
-GET /v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=20`} language="bash" title="Pagination" />
+GET /v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=20`, language: "bash" }]} title="Pagination" />
         </section>
 
         <section>
