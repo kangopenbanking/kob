@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { Check, Minus } from "lucide-react";
 
 const currencies = [
   { code: "XAF", name: "Central African CFA Franc", symbol: "FCFA", decimals: 0, countries: "Cameroon, Gabon, Congo, Chad, CAR, Eq. Guinea", channels: ["card", "mobile_money", "bank_transfer"] },
