@@ -118,10 +118,7 @@ console.log(charge.data.status); // 'pending'`, language: "javascript", label: "
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "MTN MoMo", path: "/developer/mobile-money/mtn" }}
-          nextPage={{ title: "KYC Guide", path: "/developer/compliance/kyc" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

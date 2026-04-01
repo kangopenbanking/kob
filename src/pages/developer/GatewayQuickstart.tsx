@@ -244,10 +244,7 @@ X-KOB-Timestamp: 1711100000
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{ title: "Developer Home", path: "/developer" }}
-      nextPage={{ title: "Webhooks Guide", path: "/developer/gateway/webhooks" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

@@ -172,10 +172,7 @@ export default function SandboxOverview() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "mTLS", path: "/developer/authentication/mtls" }}
-          nextPage={{ title: "API Reference", path: "/developer/api-reference" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

@@ -502,16 +502,7 @@ ngrok http 3000
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Banking Operations API",
-          path: "/developer/api/banking"
-        }}
-        nextPage={{
-          title: "Web Integration",
-          path: "/developer/guides/web"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

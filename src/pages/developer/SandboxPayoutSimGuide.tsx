@@ -128,10 +128,7 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/payout-sim \\
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Data Generator", path: "/developer/sandbox/data-generator" }}
-      nextPage={{ title: "API Status", path: "/developer/status" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

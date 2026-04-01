@@ -262,16 +262,7 @@ export default function RiskAuditReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Transaction Exports",
-          path: "/developer/api/exports"
-        }}
-        nextPage={{
-          title: "Webhooks",
-          path: "/developer/api/webhooks"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

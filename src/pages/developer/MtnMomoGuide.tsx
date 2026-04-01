@@ -147,10 +147,7 @@ export default function MtnMomoGuide() {
   }'`, language: "bash" }]} title="MoMo Disbursement" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Mobile Money Overview", path: "/developer/mobile-money" }}
-          nextPage={{ title: "Orange Money", path: "/developer/mobile-money/orange" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

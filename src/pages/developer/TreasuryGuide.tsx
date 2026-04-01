@@ -147,10 +147,7 @@ const TreasuryGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-      nextPage={{ title: "Webhooks v2", path: "/developer/gateway/webhooks-v2" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

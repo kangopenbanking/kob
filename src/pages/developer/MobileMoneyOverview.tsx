@@ -154,10 +154,7 @@ export default function MobileMoneyOverview() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Open Banking", path: "/developer/open-banking" }}
-          nextPage={{ title: "MTN MoMo", path: "/developer/mobile-money/mtn" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

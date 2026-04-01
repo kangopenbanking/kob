@@ -76,10 +76,7 @@ Retry-After: 12   # Only present on 429 responses`}
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Error Codes", path: "/developer/api/error-codes" }}
-      nextPage={{ title: "Idempotency", path: "/developer/api/idempotency" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

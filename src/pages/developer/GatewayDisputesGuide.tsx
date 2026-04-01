@@ -139,10 +139,7 @@ const GatewayDisputesGuide = () => (
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Settlements", path: "/developer/gateway/settlements" }}
-      nextPage={{ title: "Payment Links", path: "/developer/gateway/payment-links" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

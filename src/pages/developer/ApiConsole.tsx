@@ -410,16 +410,7 @@ print(response.json())`}</code>
         </Card>
       )}
 
-      <DocNavigation
-        previousPage={{
-          title: "Mobile Integration",
-          path: "/developer/guides/mobile"
-        }}
-        nextPage={{
-          title: "Code Examples",
-          path: "/developer/examples"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

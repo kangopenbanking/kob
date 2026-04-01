@@ -185,16 +185,7 @@ export default function RefundsReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "PISP API Reference",
-          path: "/developer/api/pisp"
-        }}
-        nextPage={{
-          title: "Beneficiaries & Bank Lists",
-          path: "/developer/api/beneficiaries"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

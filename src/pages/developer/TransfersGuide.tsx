@@ -277,10 +277,7 @@ export default function TransfersGuide() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{ title: "Banking Operations", path: "/developer/api/banking" }}
-        nextPage={{ title: "Webhooks", path: "/developer/api/webhooks" }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

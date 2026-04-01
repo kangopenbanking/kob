@@ -610,16 +610,7 @@ export function webhookVerification(req: Request, res: Response, next: NextFunct
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "API Console",
-          path: "/developer/console"
-        }}
-        nextPage={{
-          title: "SDKs & Libraries",
-          path: "/developer/guides/sdks"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

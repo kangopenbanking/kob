@@ -177,16 +177,7 @@ export default function DisputesReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Settlements & Fees",
-          path: "/developer/api/settlements"
-        }}
-        nextPage={{
-          title: "Transaction Exports",
-          path: "/developer/api/exports"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

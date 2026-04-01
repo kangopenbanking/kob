@@ -115,10 +115,7 @@ const charge = await fetch('/v1/gateway/charges', {
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Subscriptions", path: "/developer/gateway/subscriptions" }}
-      nextPage={{ title: "Tokenization", path: "/developer/gateway/tokenization" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

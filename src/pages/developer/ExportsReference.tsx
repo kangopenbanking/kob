@@ -129,16 +129,7 @@ export default function ExportsReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Disputes & Chargebacks",
-          path: "/developer/api/disputes"
-        }}
-        nextPage={{
-          title: "Risk & Audit APIs",
-          path: "/developer/api/risk-audit"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

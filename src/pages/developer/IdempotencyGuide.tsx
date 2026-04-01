@@ -64,10 +64,7 @@ const IdempotencyGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Rate Limits", path: "/developer/api/rate-limits" }}
-      nextPage={{ title: "Supported Currencies", path: "/developer/api/currencies" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

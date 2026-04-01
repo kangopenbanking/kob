@@ -131,10 +131,7 @@ const GatewayPayoutsGuide = () => (
 
     <p className="text-sm text-muted-foreground">For full PayPal integration details including withdrawals and webhooks, see the <a href="/developer/gateway/paypal" className="text-primary underline">PayPal Integration Guide</a>.</p>
 
-    <DocNavigation
-      previousPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-      nextPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

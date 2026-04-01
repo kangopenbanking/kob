@@ -173,10 +173,7 @@ Authorised ──> Revoked`}
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Gateway Webhooks", path: "/developer/gateway/webhooks" }}
-          nextPage={{ title: "AISP Guide", path: "/developer/open-banking/aisp" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

@@ -133,10 +133,7 @@ export default function AuthApiKeys() {
           </ul>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Authentication Overview", path: "/developer/authentication" }}
-          nextPage={{ title: "OAuth 2.0", path: "/developer/authentication/oauth2" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

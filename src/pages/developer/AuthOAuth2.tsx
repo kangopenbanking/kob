@@ -125,10 +125,7 @@ export default function AuthOAuth2() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "API Keys", path: "/developer/authentication/api-keys" }}
-          nextPage={{ title: "FAPI 1.0 Advanced", path: "/developer/authentication/fapi" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

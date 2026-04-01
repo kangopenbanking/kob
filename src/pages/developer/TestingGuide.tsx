@@ -98,10 +98,7 @@ const TestingGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Supported Countries", path: "/developer/api/countries" }}
-      nextPage={{ title: "Sandbox & Testing", path: "/developer/sandbox" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

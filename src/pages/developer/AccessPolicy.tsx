@@ -80,9 +80,7 @@ export default function AccessPolicy() {
 
         <p className="text-sm text-muted-foreground italic">Last updated: March 2026</p>
 
-        <DocNavigation
-          previousPage={{ title: "Developer Home", path: "/developer" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

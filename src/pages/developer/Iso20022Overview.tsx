@@ -110,10 +110,7 @@ export default function Iso20022Overview() {
 }`, language: "bash" }]} title="Parse camt.054 Notification" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "FAPI Security", path: "/developer/compliance/fapi" }}
-          nextPage={{ title: "Go-Live Checklist", path: "/developer/guides/go-live" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

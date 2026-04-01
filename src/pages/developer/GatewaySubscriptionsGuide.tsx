@@ -153,10 +153,7 @@ const GatewaySubscriptionsGuide = () => (
       </div>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Payment Links", path: "/developer/gateway/payment-links" }}
-      nextPage={{ title: "Split Payments", path: "/developer/gateway/split-payments" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

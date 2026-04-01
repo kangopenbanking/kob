@@ -334,10 +334,7 @@ const PaymentFacilitation = () => {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{ title: "Transfers & Fund Movement", path: "/developer/api/transfers" }}
-        nextPage={{ title: "Certificates (mTLS)", path: "/developer/certificates" }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 };

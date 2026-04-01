@@ -435,16 +435,7 @@ export default function BankingReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Mobile Money API",
-          path: "/developer/api/mobile-money"
-        }}
-        nextPage={{
-          title: "Transfers Guide",
-          path: "/developer/api/transfers"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

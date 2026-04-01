@@ -360,16 +360,7 @@ export default function PispReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "AISP API Reference",
-          path: "/developer/api/aisp"
-        }}
-        nextPage={{
-          title: "Mobile Money API",
-          path: "/developer/api/mobile-money"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

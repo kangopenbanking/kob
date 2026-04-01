@@ -120,16 +120,7 @@ const GatewayFundingGuide = () => (
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{
-        title: "Payouts API",
-        path: "/developer/gateway/payouts"
-      }}
-      nextPage={{
-        title: "Banking Operations",
-        path: "/developer/api/banking"
-      }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

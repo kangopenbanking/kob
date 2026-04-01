@@ -318,16 +318,7 @@ export default function MobileMoneyReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "PISP API Reference",
-          path: "/developer/api/pisp"
-        }}
-        nextPage={{
-          title: "Banking Operations API",
-          path: "/developer/api/banking"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

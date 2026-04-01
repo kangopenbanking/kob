@@ -209,10 +209,7 @@ await fetch(\`/v1/escrow/\${id}/freeze\`, {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Wallets", path: "/developer/gateway/wallets" }}
-      nextPage={{ title: "Compliance Screening", path: "/developer/gateway/compliance" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

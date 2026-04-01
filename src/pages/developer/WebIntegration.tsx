@@ -675,16 +675,7 @@ Route::post('/payments', function (Request $request) {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Webhooks",
-          path: "/developer/api/webhooks"
-        }}
-        nextPage={{
-          title: "Mobile Integration",
-          path: "/developer/guides/mobile"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

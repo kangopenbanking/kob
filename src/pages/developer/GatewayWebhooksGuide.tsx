@@ -420,10 +420,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/{webh
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Tokenization", path: "/developer/gateway/tokenization" }}
-      nextPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

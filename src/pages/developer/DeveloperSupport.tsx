@@ -102,9 +102,7 @@ export default function DeveloperSupport() {
           </form>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Developer Home", path: "/developer" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

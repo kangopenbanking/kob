@@ -192,10 +192,7 @@ app.post('/webhooks', (req, res) => {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Treasury", path: "/developer/gateway/treasury" }}
-      nextPage={{ title: "SLA Monitoring", path: "/developer/gateway/sla" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

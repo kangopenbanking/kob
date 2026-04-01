@@ -205,16 +205,7 @@ export default function SettlementsReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Beneficiaries & Bank Lists",
-          path: "/developer/api/beneficiaries"
-        }}
-        nextPage={{
-          title: "Disputes & Chargebacks",
-          path: "/developer/api/disputes"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

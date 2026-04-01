@@ -123,10 +123,7 @@ export default function AuthMtls() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "FAPI 1.0 Advanced", path: "/developer/authentication/fapi" }}
-          nextPage={{ title: "Sandbox", path: "/developer/sandbox" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

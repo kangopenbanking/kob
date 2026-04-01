@@ -239,10 +239,7 @@ console.log(data.balance_after); // { available: 200000, pending: 25000, ledger:
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-      nextPage={{ title: "Escrow", path: "/developer/gateway/escrow" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

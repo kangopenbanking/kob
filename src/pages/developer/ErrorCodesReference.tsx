@@ -97,10 +97,7 @@ const ErrorCodesReference = () => (
       </div>
     ))}
 
-    <DocNavigation
-      previousPage={{ title: "Risk & Audit Logs", path: "/developer/api/risk-audit" }}
-      nextPage={{ title: "Rate Limits", path: "/developer/api/rate-limits" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

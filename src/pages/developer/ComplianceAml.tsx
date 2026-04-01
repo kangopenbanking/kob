@@ -88,10 +88,7 @@ export default function ComplianceAml() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "KYC Guide", path: "/developer/compliance/kyc" }}
-          nextPage={{ title: "FAPI Security", path: "/developer/compliance/fapi" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

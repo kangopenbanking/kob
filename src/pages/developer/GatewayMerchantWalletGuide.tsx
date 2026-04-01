@@ -84,10 +84,7 @@ if (xafBalance.available_balance >= payoutAmount) {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Webhooks", path: "/developer/gateway/webhooks" }}
-      nextPage={{ title: "Wallets", path: "/developer/gateway/wallets" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

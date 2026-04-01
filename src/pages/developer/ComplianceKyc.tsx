@@ -111,10 +111,7 @@ export default function ComplianceKyc() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Orange Money", path: "/developer/mobile-money/orange" }}
-          nextPage={{ title: "AML & SAR", path: "/developer/compliance/aml" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

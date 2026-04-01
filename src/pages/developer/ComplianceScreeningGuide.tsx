@@ -219,10 +219,7 @@ if (data.decision === 'pass') {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Escrow", path: "/developer/gateway/escrow" }}
-      nextPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

@@ -144,16 +144,7 @@ export default function BeneficiariesReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Refunds & Reversals",
-          path: "/developer/api/refunds"
-        }}
-        nextPage={{
-          title: "Settlements & Fees",
-          path: "/developer/api/settlements"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

@@ -99,10 +99,7 @@ export default function ComplianceFapi() {
           For detailed authentication implementation, see the <Link to="/developer/authentication/fapi" className="text-primary hover:underline">FAPI 1.0 Advanced guide</Link>.
         </p>
 
-        <DocNavigation
-          previousPage={{ title: "AML & SAR", path: "/developer/compliance/aml" }}
-          nextPage={{ title: "ISO 20022", path: "/developer/iso20022" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

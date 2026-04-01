@@ -249,10 +249,7 @@ export default function AuthenticationOverview() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Getting Started", path: "/developer/getting-started" }}
-          nextPage={{ title: "API Keys", path: "/developer/authentication/api-keys" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

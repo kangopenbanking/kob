@@ -327,12 +327,7 @@ print(accounts)`
         </CardContent>
       </Card>
 
-      <DocNavigation
-        nextPage={{
-          title: "AISP API Reference",
-          path: "/developer/api/aisp"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

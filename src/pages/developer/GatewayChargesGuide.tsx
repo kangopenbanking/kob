@@ -245,10 +245,7 @@ await fetch('/v1/gateway/charges/chg_uuid/capture', {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Gateway Quickstart", path: "/developer/gateway/quickstart" }}
-      nextPage={{ title: "Refunds", path: "/developer/gateway/refunds" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

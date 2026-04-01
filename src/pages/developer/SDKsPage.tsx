@@ -400,10 +400,7 @@ export default function SDKsPage() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{ title: "Mobile Integration", path: "/developer/guides/mobile" }}
-        nextPage={{ title: "API Explorer", path: "/developer/api-explorer" }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

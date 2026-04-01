@@ -180,10 +180,7 @@ if (incidents.data.length > 0) {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Webhooks v2", path: "/developer/gateway/webhooks-v2" }}
-      nextPage={{ title: "API Status", path: "/developer/status" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

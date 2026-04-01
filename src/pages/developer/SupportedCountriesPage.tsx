@@ -73,10 +73,7 @@ const SupportedCountriesPage = () => (
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Supported Currencies", path: "/developer/api/currencies" }}
-      nextPage={{ title: "Testing Guide", path: "/developer/api/testing" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

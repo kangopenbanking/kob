@@ -142,10 +142,7 @@ const { id, status } = await response.json();
       </Table>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Split Payments", path: "/developer/gateway/split-payments" }}
-      nextPage={{ title: "Webhooks", path: "/developer/gateway/webhooks" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

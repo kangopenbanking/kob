@@ -340,16 +340,7 @@ export default function AispReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Getting Started",
-          path: "/developer/getting-started"
-        }}
-        nextPage={{
-          title: "PISP API Reference",
-          path: "/developer/api/pisp"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

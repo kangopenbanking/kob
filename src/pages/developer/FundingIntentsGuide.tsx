@@ -311,10 +311,7 @@ const FundingIntentsGuide = () => (
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{ title: "Account Funding (Legacy)", path: "/developer/gateway/funding" }}
-      nextPage={{ title: "Payouts API", path: "/developer/gateway/payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

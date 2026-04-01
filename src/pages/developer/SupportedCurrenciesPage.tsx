@@ -84,10 +84,7 @@ const SupportedCurrenciesPage = () => (
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Idempotency", path: "/developer/api/idempotency" }}
-      nextPage={{ title: "Supported Countries", path: "/developer/api/countries" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

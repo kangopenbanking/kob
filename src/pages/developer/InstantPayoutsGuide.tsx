@@ -318,10 +318,7 @@ const InstantPayoutsGuide = () => (
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Compliance Screening", path: "/developer/gateway/compliance" }}
-      nextPage={{ title: "Treasury", path: "/developer/gateway/treasury" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

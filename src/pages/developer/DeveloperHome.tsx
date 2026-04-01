@@ -139,12 +139,7 @@ export default function DeveloperHome() {
         <ArchitectureSection />
         <SDKSection />
         <AdvancedFeaturesGate />
-        <DocNavigation
-          nextPage={{
-            title: "Getting Started",
-            path: "/developer/getting-started"
-          }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

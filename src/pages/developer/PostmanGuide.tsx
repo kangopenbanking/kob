@@ -75,10 +75,7 @@ https://kangopenbanking.com/openapi.json
 npx openapi-to-postmanv2 -s https://kangopenbanking.com/openapi.json -o kang-collection.json`, language: "bash" }]} title="Import from OpenAPI" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "SDKs & Libraries", path: "/developer/guides/sdks" }}
-          nextPage={{ title: "Go-Live Checklist", path: "/developer/guides/go-live" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

@@ -121,10 +121,7 @@ const GatewaySettlementsGuide = () => (
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Refunds", path: "/developer/gateway/refunds" }}
-      nextPage={{ title: "Disputes", path: "/developer/gateway/disputes" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

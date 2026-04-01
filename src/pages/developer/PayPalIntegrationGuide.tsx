@@ -207,10 +207,7 @@ grant_type=client_credentials
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{ title: "Payouts", path: "/developer/gateway/payouts" }}
-      nextPage={{ title: "Webhooks", path: "/developer/gateway/webhooks" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

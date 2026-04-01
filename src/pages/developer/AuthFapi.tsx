@@ -110,10 +110,7 @@ export default function AuthFapi() {
           </ul>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "OAuth 2.0", path: "/developer/authentication/oauth2" }}
-          nextPage={{ title: "mTLS", path: "/developer/authentication/mtls" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

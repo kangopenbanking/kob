@@ -817,16 +817,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Web Applications",
-          path: "/developer/guides/web"
-        }}
-        nextPage={{
-          title: "API Console",
-          path: "/developer/console"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }
