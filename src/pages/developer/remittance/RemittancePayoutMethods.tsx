@@ -1,6 +1,7 @@
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 
 export default function RemittancePayoutMethods() {
   return (
