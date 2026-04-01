@@ -262,6 +262,39 @@ function TableOfContents() {
   );
 }
 
+/** Dark mode toggle */
+function DarkModeToggle() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  const toggle = () => {
+    const html = document.documentElement;
+    const newDark = !html.classList.contains('dark');
+    html.classList.toggle('dark', newDark);
+    setIsDark(newDark);
+    localStorage.setItem('theme', newDark ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    }
+  }, []);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? <Sun className="h-4 w-4" strokeWidth={1.5} /> : <Moon className="h-4 w-4" strokeWidth={1.5} />}
+    </Button>
+  );
+}
+
 /** Docs search component */
 function DocsSearch() {
   const [isOpen, setIsOpen] = useState(false);
