@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Link } from "react-router-dom";
 
 export default function ComplianceFapi() {

@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const requestFormat = `curl -X POST https://api.kangopenbanking.com/v1/{endpoint} \\
   -H "Authorization: Bearer {your_secret_key}" \\

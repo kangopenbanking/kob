@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const countries = [
   { code: "CM", name: "Cameroon", region: "CEMAC", card: true, momo: true, bank: true, providers: "Flutterwave, MTN MoMo, Orange Money" },

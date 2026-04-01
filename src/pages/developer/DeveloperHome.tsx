@@ -8,7 +8,7 @@ import { SDKSection } from "@/components/developer/landing/SDKSection";
 import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSection";
 import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const jsonLdWebAPI = {
   "@context": "https://schema.org",

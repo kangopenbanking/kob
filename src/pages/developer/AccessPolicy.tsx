@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function AccessPolicy() {
   return (

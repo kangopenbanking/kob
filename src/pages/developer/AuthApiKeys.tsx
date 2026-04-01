@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const rotateExample = `# Rotate your API key (old key remains valid for 24 hours)
 curl -X POST https://api.kangopenbanking.com/v1/api-keys/rotate \\
