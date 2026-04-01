@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, Upload, List, XCircle, AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function CertificateReference() {
   return (
@@ -230,7 +231,9 @@ export default function CertificateReference() {
                 Certificate Guide
               </Link>
             </Button>
-          </div>
+          
+      <AutoDocNavigation />
+</div>
         </CardContent>
       </Card>
     </div>

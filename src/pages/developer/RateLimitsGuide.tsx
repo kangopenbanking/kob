@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const RateLimitsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -76,10 +76,7 @@ Retry-After: 12   # Only present on 429 responses`}
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Error Codes", path: "/developer/api/error-codes" }}
-      nextPage={{ title: "Idempotency", path: "/developer/api/idempotency" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

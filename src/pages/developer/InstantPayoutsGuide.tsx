@@ -1,7 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Zap, Info } from "lucide-react";
@@ -318,10 +318,7 @@ const InstantPayoutsGuide = () => (
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Compliance Screening", path: "/developer/gateway/compliance" }}
-      nextPage={{ title: "Treasury", path: "/developer/gateway/treasury" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

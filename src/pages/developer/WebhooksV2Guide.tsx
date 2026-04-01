@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const WebhooksV2Guide = () => (
@@ -192,10 +192,7 @@ app.post('/webhooks', (req, res) => {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Treasury", path: "/developer/gateway/treasury" }}
-      nextPage={{ title: "SLA Monitoring", path: "/developer/gateway/sla" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

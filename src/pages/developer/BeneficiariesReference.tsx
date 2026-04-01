@@ -2,7 +2,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function BeneficiariesReference() {
   return (
@@ -144,16 +144,7 @@ export default function BeneficiariesReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Refunds & Reversals",
-          path: "/developer/api/refunds"
-        }}
-        nextPage={{
-          title: "Settlements & Fees",
-          path: "/developer/api/settlements"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

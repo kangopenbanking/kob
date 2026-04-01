@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const SandboxPayoutSimGuide = () => (
@@ -128,10 +128,7 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/payout-sim \\
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Data Generator", path: "/developer/sandbox/data-generator" }}
-      nextPage={{ title: "API Status", path: "/developer/status" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Play, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const API_ENDPOINTS = {
   AISP: [
@@ -410,16 +410,7 @@ print(response.json())`}</code>
         </Card>
       )}
 
-      <DocNavigation
-        previousPage={{
-          title: "Mobile Integration",
-          path: "/developer/guides/mobile"
-        }}
-        nextPage={{
-          title: "Code Examples",
-          path: "/developer/examples"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

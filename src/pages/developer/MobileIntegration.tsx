@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2, Smartphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function MobileIntegration() {
   return (
@@ -817,16 +817,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Web Applications",
-          path: "/developer/guides/web"
-        }}
-        nextPage={{
-          title: "API Console",
-          path: "/developer/console"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

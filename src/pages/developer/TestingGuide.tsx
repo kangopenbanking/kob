@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const TestingGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -98,10 +98,7 @@ const TestingGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Supported Countries", path: "/developer/api/countries" }}
-      nextPage={{ title: "Sandbox & Testing", path: "/developer/sandbox" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

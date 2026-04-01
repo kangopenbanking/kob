@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayVirtualAccountsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -9,7 +10,9 @@ const GatewayVirtualAccountsGuide = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Virtual Accounts API</h1>
       <p className="text-muted-foreground mt-2">Provision dedicated virtual account numbers so customers can pay via bank transfer. Credits are automatically reconciled as charges via webhooks.</p>
-    </div>
+    
+      <AutoDocNavigation />
+</div>
 
     <ApiEndpoint method="POST" endpoint="/v1/gateway/virtual-accounts" description="Create a virtual account number for a merchant."
       requestBody={JSON.stringify({ merchant_id: "mch_uuid", email: "merchant@example.com", currency: "NGN", is_permanent: false, narration: "KOB-MyStore" }, null, 2)}

@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const rotateExample = `# Rotate your API key (old key remains valid for 24 hours)
 curl -X POST https://api.kangopenbanking.com/v1/api-keys/rotate \\
@@ -133,10 +133,7 @@ export default function AuthApiKeys() {
           </ul>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Authentication Overview", path: "/developer/authentication" }}
-          nextPage={{ title: "OAuth 2.0", path: "/developer/authentication/oauth2" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

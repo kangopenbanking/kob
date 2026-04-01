@@ -2,7 +2,7 @@ import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Separator } from "@/components/ui/separator";
 
 const GatewayWebhooksGuide = () => (
@@ -420,10 +420,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/{webh
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Tokenization", path: "/developer/gateway/tokenization" }}
-      nextPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

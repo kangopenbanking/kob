@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Shield } from "lucide-react";
 
 const ComplianceScreeningGuide = () => (
@@ -219,10 +219,7 @@ if (data.decision === 'pass') {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Escrow", path: "/developer/gateway/escrow" }}
-      nextPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

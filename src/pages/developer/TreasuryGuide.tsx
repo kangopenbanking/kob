@@ -1,7 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -147,10 +147,7 @@ const TreasuryGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-      nextPage={{ title: "Webhooks v2", path: "/developer/gateway/webhooks-v2" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

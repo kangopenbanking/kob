@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const requestFormat = `curl -X POST https://api.kangopenbanking.com/v1/{endpoint} \\
   -H "Authorization: Bearer {your_secret_key}" \\
@@ -198,10 +198,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
 # Keys expire after 24 hours`, language: "bash" }]} title="Idempotency" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Sandbox", path: "/developer/sandbox" }}
-          nextPage={{ title: "API Explorer", path: "/developer/api-explorer" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

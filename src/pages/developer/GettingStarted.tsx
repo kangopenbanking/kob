@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Code, Shield, Zap } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function GettingStarted() {
   return (
@@ -285,7 +285,7 @@ print(accounts)`
       </Card>
 
       {/* Next Steps */}
-      <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+      <Card className="bg-primary/5 border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
@@ -293,46 +293,41 @@ print(accounts)`
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="font-semibold">Now that you've completed the basics, explore these resources:</p>
+          <p className="font-semibold">Continue your integration journey:</p>
           <div className="grid gap-3">
-            <Link to="/developer/api/aisp" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
+            <Link to="/developer/authentication" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
               <CheckCircle2 className="h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">AISP API Reference</p>
-                <p className="text-sm text-muted-foreground">Explore all account information endpoints</p>
+                <p className="font-medium">Authentication</p>
+                <p className="text-sm text-muted-foreground">Set up OAuth 2.0, API keys, and mTLS</p>
               </div>
             </Link>
-            <Link to="/developer/api/pisp" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
+            <Link to="/developer/sandbox/overview" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
               <CheckCircle2 className="h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">PISP API Reference</p>
-                <p className="text-sm text-muted-foreground">Learn about payment initiation</p>
+                <p className="font-medium">Sandbox Environment</p>
+                <p className="text-sm text-muted-foreground">Get test credentials and start testing</p>
               </div>
             </Link>
-            <Link to="/developer/console" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
+            <Link to="/developer/gateway/quickstart" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
               <CheckCircle2 className="h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">Try API Console</p>
+                <p className="font-medium">Payment Gateway Quickstart</p>
+                <p className="text-sm text-muted-foreground">Accept your first payment in 10 minutes</p>
+              </div>
+            </Link>
+            <Link to="/developer/api-explorer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium">API Explorer</p>
                 <p className="text-sm text-muted-foreground">Test APIs interactively in your browser</p>
-              </div>
-            </Link>
-            <Link to="/developer/guides/web" className="flex items-center gap-3 p-3 rounded-lg hover:bg-background transition-colors">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-medium">Integration Guides</p>
-                <p className="text-sm text-muted-foreground">Step-by-step guides for web and mobile apps</p>
               </div>
             </Link>
           </div>
         </CardContent>
       </Card>
 
-      <DocNavigation
-        nextPage={{
-          title: "AISP API Reference",
-          path: "/developer/api/aisp"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

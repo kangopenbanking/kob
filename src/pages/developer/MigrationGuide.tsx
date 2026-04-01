@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Check, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const migrations = {
   stripe: {
@@ -411,7 +412,9 @@ export default function MigrationGuide() {
             <Button variant="outline" asChild><Link to="/developer/getting-started">Get Started Free</Link></Button>
           </div>
         </ScrollReveal>
-      </div>
+      
+      <AutoDocNavigation />
+</div>
     </>
   );
 }

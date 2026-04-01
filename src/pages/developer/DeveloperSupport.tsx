@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function DeveloperSupport() {
   const [sending, setSending] = useState(false);
@@ -102,9 +102,7 @@ export default function DeveloperSupport() {
           </form>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Developer Home", path: "/developer" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

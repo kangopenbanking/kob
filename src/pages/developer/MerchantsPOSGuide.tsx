@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Package, CreditCard, RotateCcw, RefreshCw, Store, Plug, BarChart3 } from "lucide-react";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function MerchantsPOSGuide() {
   return (
@@ -394,7 +395,9 @@ export default function MerchantsPOSGuide() {
             <div>• order.created</div>
             <div>• order.updated</div>
             <div>• refund.created</div>
-          </div>
+          
+      <AutoDocNavigation />
+</div>
         </Card>
       </section>
 

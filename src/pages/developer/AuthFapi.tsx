@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function AuthFapi() {
   return (
@@ -110,10 +110,7 @@ export default function AuthFapi() {
           </ul>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "OAuth 2.0", path: "/developer/authentication/oauth2" }}
-          nextPage={{ title: "mTLS", path: "/developer/authentication/mtls" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

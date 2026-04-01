@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function ComplianceAml() {
   return (
@@ -88,10 +88,7 @@ export default function ComplianceAml() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "KYC Guide", path: "/developer/compliance/kyc" }}
-          nextPage={{ title: "FAPI Security", path: "/developer/compliance/fapi" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

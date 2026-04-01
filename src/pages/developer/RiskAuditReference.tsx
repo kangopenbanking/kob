@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function RiskAuditReference() {
   return (
@@ -262,16 +262,7 @@ export default function RiskAuditReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Transaction Exports",
-          path: "/developer/api/exports"
-        }}
-        nextPage={{
-          title: "Webhooks",
-          path: "/developer/api/webhooks"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

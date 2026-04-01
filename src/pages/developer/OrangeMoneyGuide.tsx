@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function OrangeMoneyGuide() {
   return (
@@ -118,10 +118,7 @@ console.log(charge.data.status); // 'pending'`, language: "javascript", label: "
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "MTN MoMo", path: "/developer/mobile-money/mtn" }}
-          nextPage={{ title: "KYC Guide", path: "/developer/compliance/kyc" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

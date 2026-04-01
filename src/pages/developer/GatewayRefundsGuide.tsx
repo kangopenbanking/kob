@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const GatewayRefundsGuide = () => (
@@ -135,10 +135,7 @@ const GatewayRefundsGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Charges", path: "/developer/gateway/charges" }}
-      nextPage={{ title: "Settlements", path: "/developer/gateway/settlements" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

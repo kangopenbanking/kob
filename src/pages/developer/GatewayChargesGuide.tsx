@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const GatewayChargesGuide = () => (
@@ -245,10 +245,7 @@ await fetch('/v1/gateway/charges/chg_uuid/capture', {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Gateway Quickstart", path: "/developer/gateway/quickstart" }}
-      nextPage={{ title: "Refunds", path: "/developer/gateway/refunds" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

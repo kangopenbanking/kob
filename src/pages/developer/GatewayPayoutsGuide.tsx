@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayPayoutsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -131,10 +131,7 @@ const GatewayPayoutsGuide = () => (
 
     <p className="text-sm text-muted-foreground">For full PayPal integration details including withdrawals and webhooks, see the <a href="/developer/gateway/paypal" className="text-primary underline">PayPal Integration Guide</a>.</p>
 
-    <DocNavigation
-      previousPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-      nextPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

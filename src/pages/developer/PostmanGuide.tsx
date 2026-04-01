@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function PostmanGuide() {
   return (
@@ -75,10 +75,7 @@ https://kangopenbanking.com/openapi.json
 npx openapi-to-postmanv2 -s https://kangopenbanking.com/openapi.json -o kang-collection.json`, language: "bash" }]} title="Import from OpenAPI" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "SDKs & Libraries", path: "/developer/guides/sdks" }}
-          nextPage={{ title: "Go-Live Checklist", path: "/developer/guides/go-live" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

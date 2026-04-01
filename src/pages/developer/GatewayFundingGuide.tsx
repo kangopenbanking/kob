@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayFundingGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -120,16 +120,7 @@ const GatewayFundingGuide = () => (
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{
-        title: "Payouts API",
-        path: "/developer/gateway/payouts"
-      }}
-      nextPage={{
-        title: "Banking Operations",
-        path: "/developer/api/banking"
-      }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, AlertTriangle, XCircle, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 interface ServiceStatus {
   name: string;
@@ -186,7 +187,9 @@ const ApiStatusPage = () => {
         <p className="text-sm text-muted-foreground">
           Register a webhook endpoint to receive real-time status notifications. Use the <code className="bg-muted px-1 rounded">platform.incident.*</code> event type via the <a href="/developer/gateway/webhooks-v2" className="text-primary underline">Webhooks v2 API</a>.
         </p>
-      </div>
+      
+      <AutoDocNavigation />
+</div>
     </div>
   );
 };

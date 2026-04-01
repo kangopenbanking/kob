@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function GoLiveChecklist() {
   return (
@@ -76,10 +76,7 @@ export default function GoLiveChecklist() {
           </section>
         ))}
 
-        <DocNavigation
-          previousPage={{ title: "ISO 20022", path: "/developer/iso20022" }}
-          nextPage={{ title: "Migration Guide", path: "/developer/guides/migrate" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

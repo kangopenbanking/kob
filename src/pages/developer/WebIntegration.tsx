@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function WebIntegration() {
   return (
@@ -675,16 +675,7 @@ Route::post('/payments', function (Request $request) {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Webhooks",
-          path: "/developer/api/webhooks"
-        }}
-        nextPage={{
-          title: "Mobile Integration",
-          path: "/developer/guides/mobile"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

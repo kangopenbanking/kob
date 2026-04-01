@@ -1,7 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -239,10 +239,7 @@ console.log(data.balance_after); // { available: 200000, pending: 25000, ledger:
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
-      nextPage={{ title: "Escrow", path: "/developer/gateway/escrow" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

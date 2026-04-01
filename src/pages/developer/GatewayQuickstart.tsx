@@ -2,7 +2,7 @@ import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayQuickstart = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -244,10 +244,7 @@ X-KOB-Timestamp: 1711100000
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{ title: "Developer Home", path: "/developer" }}
-      nextPage={{ title: "Webhooks Guide", path: "/developer/gateway/webhooks" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

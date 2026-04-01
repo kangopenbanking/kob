@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const EscrowGuide = () => (
@@ -209,10 +209,7 @@ await fetch(\`/v1/escrow/\${id}/freeze\`, {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Wallets", path: "/developer/gateway/wallets" }}
-      nextPage={{ title: "Compliance Screening", path: "/developer/gateway/compliance" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

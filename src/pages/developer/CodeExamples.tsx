@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Code, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function CodeExamples() {
   return (
@@ -610,16 +610,7 @@ export function webhookVerification(req: Request, res: Response, next: NextFunct
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "API Console",
-          path: "/developer/console"
-        }}
-        nextPage={{
-          title: "SDKs & Libraries",
-          path: "/developer/guides/sdks"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

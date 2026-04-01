@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayVerificationGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -9,7 +10,9 @@ const GatewayVerificationGuide = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Bank & BVN Verification API</h1>
       <p className="text-muted-foreground mt-2">Verify bank account ownership and resolve BVN identity details for KYC compliance under the gateway namespace.</p>
-    </div>
+    
+      <AutoDocNavigation />
+</div>
 
     <ApiEndpoint method="POST" endpoint="/v1/gateway/verify-bank-account" description="Resolve a bank account number to retrieve the account holder's name."
       requestBody={JSON.stringify({ account_number: "1234567890", account_bank: "044" }, null, 2)}

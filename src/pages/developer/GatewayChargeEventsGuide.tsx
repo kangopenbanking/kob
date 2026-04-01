@@ -2,6 +2,7 @@ import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const GatewayChargeEventsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -33,7 +34,9 @@ const GatewayChargeEventsGuide = () => (
               <span className="text-sm text-muted-foreground">{e.desc}</span>
             </div>
           ))}
-        </div>
+        
+      <AutoDocNavigation />
+</div>
       </CardContent>
     </Card>
 

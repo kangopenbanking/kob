@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function ExportsReference() {
   return (
@@ -129,16 +129,7 @@ export default function ExportsReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Disputes & Chargebacks",
-          path: "/developer/api/disputes"
-        }}
-        nextPage={{
-          title: "Risk & Audit APIs",
-          path: "/developer/api/risk-audit"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

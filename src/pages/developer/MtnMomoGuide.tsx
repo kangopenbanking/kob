@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const mtnCharge = `curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
@@ -147,10 +147,7 @@ export default function MtnMomoGuide() {
   }'`, language: "bash" }]} title="MoMo Disbursement" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Mobile Money Overview", path: "/developer/mobile-money" }}
-          nextPage={{ title: "Orange Money", path: "/developer/mobile-money/orange" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

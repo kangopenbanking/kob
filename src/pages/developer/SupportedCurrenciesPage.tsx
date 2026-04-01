@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const currencies = [
   { code: "XAF", name: "Central African CFA Franc", symbol: "FCFA", decimals: 0, countries: "Cameroon, Gabon, Congo, Chad, CAR, Eq. Guinea", channels: ["card", "mobile_money", "bank_transfer"] },
@@ -84,10 +84,7 @@ const SupportedCurrenciesPage = () => (
       </p>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Idempotency", path: "/developer/api/idempotency" }}
-      nextPage={{ title: "Supported Countries", path: "/developer/api/countries" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

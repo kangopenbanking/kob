@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function DisputesReference() {
   return (
@@ -177,16 +177,7 @@ export default function DisputesReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "Settlements & Fees",
-          path: "/developer/api/settlements"
-        }}
-        nextPage={{
-          title: "Transaction Exports",
-          path: "/developer/api/exports"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function BankingReference() {
   return (
@@ -435,16 +435,7 @@ export default function BankingReference() {
         />
       </div>
 
-      <DocNavigation
-        previousPage={{
-          title: "Mobile Money API",
-          path: "/developer/api/mobile-money"
-        }}
-        nextPage={{
-          title: "Transfers Guide",
-          path: "/developer/api/transfers"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function Changelog() {
   const releases = [
@@ -692,7 +693,9 @@ export default function Changelog() {
                 We maintain backwards compatibility and provide at least 6 months notice before deprecating any features.
               </CardDescription>
             </div>
-          </div>
+          
+      <AutoDocNavigation />
+</div>
         </CardHeader>
       </Card>
     </div>

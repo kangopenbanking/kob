@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const IdempotencyGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -64,10 +64,7 @@ const IdempotencyGuide = () => (
       </ul>
     </div>
 
-    <DocNavigation
-      previousPage={{ title: "Rate Limits", path: "/developer/api/rate-limits" }}
-      nextPage={{ title: "Supported Currencies", path: "/developer/api/currencies" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

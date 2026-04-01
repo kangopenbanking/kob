@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, Wallet, CreditCard, Smartphone, Building2, ArrowRight, Store, Globe } from "lucide-react";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const FundingIntentsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -311,10 +311,7 @@ const FundingIntentsGuide = () => (
       </CardContent>
     </Card>
 
-    <DocNavigation
-      previousPage={{ title: "Account Funding (Legacy)", path: "/developer/gateway/funding" }}
-      nextPage={{ title: "Payouts API", path: "/developer/gateway/payouts" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

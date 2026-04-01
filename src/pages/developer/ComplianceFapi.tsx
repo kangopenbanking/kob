@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Link } from "react-router-dom";
 
 export default function ComplianceFapi() {
@@ -99,10 +99,7 @@ export default function ComplianceFapi() {
           For detailed authentication implementation, see the <Link to="/developer/authentication/fapi" className="text-primary hover:underline">FAPI 1.0 Advanced guide</Link>.
         </p>
 
-        <DocNavigation
-          previousPage={{ title: "AML & SAR", path: "/developer/compliance/aml" }}
-          nextPage={{ title: "ISO 20022", path: "/developer/iso20022" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

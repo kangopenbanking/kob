@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function Iso20022Overview() {
   return (
@@ -110,10 +110,7 @@ export default function Iso20022Overview() {
 }`, language: "bash" }]} title="Parse camt.054 Notification" />
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "FAPI Security", path: "/developer/compliance/fapi" }}
-          nextPage={{ title: "Go-Live Checklist", path: "/developer/guides/go-live" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

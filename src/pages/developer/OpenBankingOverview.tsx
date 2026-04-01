@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const aispExample = `// 1. Create AISP consent
 const consent = await fetch('https://api.kangopenbanking.com/v1/aisp/consents', {
@@ -173,10 +173,7 @@ Authorised ──> Revoked`}
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Gateway Webhooks", path: "/developer/gateway/webhooks" }}
-          nextPage={{ title: "AISP Guide", path: "/developer/open-banking/aisp" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function ComplianceKyc() {
   return (
@@ -111,10 +111,7 @@ export default function ComplianceKyc() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "Orange Money", path: "/developer/mobile-money/orange" }}
-          nextPage={{ title: "AML & SAR", path: "/developer/compliance/aml" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

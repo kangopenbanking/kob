@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const parRequest = `curl -X POST https://api.kangopenbanking.com/v1/oauth/par \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
@@ -125,10 +125,7 @@ export default function AuthOAuth2() {
           </div>
         </section>
 
-        <DocNavigation
-          previousPage={{ title: "API Keys", path: "/developer/authentication/api-keys" }}
-          nextPage={{ title: "FAPI 1.0 Advanced", path: "/developer/authentication/fapi" }}
-        />
+        <AutoDocNavigation />
       </div>
     </>
   );

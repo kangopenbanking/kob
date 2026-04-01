@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const errorDomains = [
   {
@@ -97,10 +97,7 @@ const ErrorCodesReference = () => (
       </div>
     ))}
 
-    <DocNavigation
-      previousPage={{ title: "Risk & Audit Logs", path: "/developer/api/risk-audit" }}
-      nextPage={{ title: "Rate Limits", path: "/developer/api/rate-limits" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

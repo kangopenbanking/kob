@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function RefundsReference() {
   return (
@@ -185,16 +185,7 @@ export default function RefundsReference() {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{
-          title: "PISP API Reference",
-          path: "/developer/api/pisp"
-        }}
-        nextPage={{
-          title: "Beneficiaries & Bank Lists",
-          path: "/developer/api/beneficiaries"
-        }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 }

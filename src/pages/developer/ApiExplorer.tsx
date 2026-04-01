@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { API_CONFIG } from '@/config/api';
 import yaml from 'js-yaml';
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -300,7 +301,9 @@ grant_type=client_credentials
           </p>
         </div>
       </noscript>
-    </div>
+    
+      <AutoDocNavigation />
+</div>
     </>
   );
 };

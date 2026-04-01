@@ -3,7 +3,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const SLAMonitorGuide = () => (
@@ -180,10 +180,7 @@ if (incidents.data.length > 0) {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Webhooks v2", path: "/developer/gateway/webhooks-v2" }}
-      nextPage={{ title: "API Status", path: "/developer/status" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

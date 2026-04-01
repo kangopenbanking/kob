@@ -2,7 +2,7 @@ import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Info } from "lucide-react";
 
 const GatewayMerchantWalletGuide = () => (
@@ -84,10 +84,7 @@ if (xafBalance.available_balance >= payoutAmount) {
       </AlertDescription>
     </Alert>
 
-    <DocNavigation
-      previousPage={{ title: "Webhooks", path: "/developer/gateway/webhooks" }}
-      nextPage={{ title: "Wallets", path: "/developer/gateway/wallets" }}
-    />
+    <AutoDocNavigation />
   </div>
 );
 

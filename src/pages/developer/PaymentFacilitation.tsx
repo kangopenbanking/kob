@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
-import { DocNavigation } from "@/components/developer/DocNavigation";
+import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { CheckCircle2, Wallet, Shield, Zap, Info, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -334,10 +334,7 @@ const PaymentFacilitation = () => {
         </CardContent>
       </Card>
 
-      <DocNavigation
-        previousPage={{ title: "Transfers & Fund Movement", path: "/developer/api/transfers" }}
-        nextPage={{ title: "Certificates (mTLS)", path: "/developer/certificates" }}
-      />
+      <AutoDocNavigation />
     </div>
   );
 };
