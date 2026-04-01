@@ -349,15 +349,15 @@ export default function SDKsPage() {
         <CardContent>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { domain: "Authentication", endpoints: "OAuth2 token, PKCE, refresh", status: "✅" },
-              { domain: "AISP", endpoints: "Accounts, balances, transactions, beneficiaries", status: "✅" },
-              { domain: "Gateway — Charges", endpoints: "Create, verify, list, cancel", status: "✅" },
-              { domain: "Gateway — Refunds", endpoints: "Create, get, list", status: "✅" },
-              { domain: "Gateway — Payouts", endpoints: "Create, get, list, batch", status: "✅" },
-              { domain: "Sandbox", endpoints: "Test accounts, data generation, webhooks", status: "✅" },
-              { domain: "Webhooks", endpoints: "HMAC-SHA256 signature verification", status: "✅" },
-              { domain: "Fee Estimates", endpoints: "Pre-charge fee calculation", status: "✅" },
-              { domain: "Error Handling", endpoints: "Typed errors with error_id + error_code", status: "✅" },
+              { domain: "Authentication", endpoints: "OAuth2 token, PKCE, refresh" },
+              { domain: "AISP", endpoints: "Accounts, balances, transactions, beneficiaries" },
+              { domain: "Gateway — Charges", endpoints: "Create, verify, list, cancel" },
+              { domain: "Gateway — Refunds", endpoints: "Create, get, list" },
+              { domain: "Gateway — Payouts", endpoints: "Create, get, list, batch" },
+              { domain: "Sandbox", endpoints: "Test accounts, data generation, webhooks" },
+              { domain: "Webhooks", endpoints: "HMAC-SHA256 signature verification" },
+              { domain: "Fee Estimates", endpoints: "Pre-charge fee calculation" },
+              { domain: "Error Handling", endpoints: "Typed errors with error_id + error_code" },
             ].map((item) => (
               <div key={item.domain} className="border rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
