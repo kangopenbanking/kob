@@ -959,6 +959,7 @@ function App() {
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
               <Route path="access-policy" element={<AccessPolicy />} />
+              <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />

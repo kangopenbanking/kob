@@ -138,9 +138,9 @@ const DeveloperRegistration = () => {
 
       {step === "credentials" && credentials && (
         <div className="space-y-6">
-          <Card className="border-green-500/30 bg-green-500/5">
+          <Card className="border-primary/30 bg-primary/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
+              <CardTitle className="flex items-center gap-2 text-primary">
                 <CheckCircle className="h-5 w-5" /> Sandbox Credentials Ready
               </CardTitle>
               <CardDescription>
