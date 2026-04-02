@@ -7,8 +7,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kangopenbanking/KangOpenBanking-KOB"
+    "url": "https://github.com/kangopenbanking/sdk-node"
   },
+  "bugs": {
+    "url": "https://github.com/kangopenbanking/sdk-node/issues"
+  },
+  "homepage": "https://kangopenbanking.com/developer",
   "keywords": ["open-banking", "cameroon", "xaf", "aisp", "pisp", "payment-gateway", "fintech"],
   "engines": { "node": ">=16" },
   "scripts": {
