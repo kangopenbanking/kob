@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { PostmanExportButton } from "@/components/developer/PostmanExportButton";
 
 export default function PostmanGuide() {
   return (
@@ -21,6 +22,9 @@ export default function PostmanGuide() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="download">Download</h2>
+          <div className="mb-4">
+            <PostmanExportButton variant="default" size="default" className="w-full sm:w-auto" />
+          </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <a href="/functions/v1/postman-collection" target="_blank" rel="noopener noreferrer" className="block border border-border rounded-lg p-4 hover:border-primary/50 transition-colors text-center">
               <h3 className="font-semibold text-foreground mb-1">Download Collection JSON</h3>

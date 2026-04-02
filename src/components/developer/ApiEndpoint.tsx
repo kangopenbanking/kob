@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Copy, ChevronDown, ChevronRight, Code2 } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SdkExamples } from "@/components/developer/SdkExamples";
 
 interface Parameter {
   name: string;
@@ -350,6 +351,8 @@ export function ApiEndpoint({
           <CodeBlock examples={codeExamples} title={`${method} ${endpoint}`} />
         </CollapsibleContent>
       </Collapsible>
+
+      <SdkExamples method={method} endpoint={endpoint} requestBody={requestBody} />
     </Card>
   );
 }
