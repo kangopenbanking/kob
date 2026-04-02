@@ -245,6 +245,7 @@ const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReference
 const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
 const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
 const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
+const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegistration"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
@@ -929,6 +930,7 @@ function App() {
               <Route path="authentication/oauth2" element={<AuthOAuth2 />} />
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
+              <Route path="sandbox" element={<Navigate to="/developer/sandbox/overview" replace />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
               <Route path="sandbox/credentials" element={<SandboxCredentials />} />
               <Route path="sandbox/test-cards" element={<SandboxTestCards />} />
@@ -957,6 +959,7 @@ function App() {
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
               <Route path="access-policy" element={<AccessPolicy />} />
+              <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />

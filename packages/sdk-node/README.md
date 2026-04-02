@@ -168,9 +168,16 @@ try {
 
 HTTP 429 responses include a `Retry-After` header.
 
-## Support
+## Links
 
-- [API Documentation](https://kangopenbanking.com/documentation)
-- [Developer Portal](https://kangopenbanking.com/for-developers)
+- [API Documentation](https://kangopenbanking.com/developer)
+- [Getting Started](https://kangopenbanking.com/developer/getting-started)
+- [OpenAPI Spec](https://kangopenbanking.com/openapi.json)
+- [Sandbox Spec](https://kangopenbanking.com/openapi-sandbox.json)
+- [Postman Collection](https://kangopenbanking.com/developer/guides/postman)
 - [API Status](https://kangopenbanking.com/developer/status)
 - Email: developers@kangopenbanking.com
+
+## License
+
+MIT
