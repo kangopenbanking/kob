@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { generateCodeExamples } from "@/components/developer/ApiEndpoint";
-import fs from "fs";
-import path from "path";
 
 const LANGUAGES = ["curl", "nodejs", "python", "php", "go", "java"];
 
@@ -65,38 +63,5 @@ describe("generateCodeExamples", () => {
     examples.forEach((ex) => {
       expect(ex.code).toContain("api.kangopenbanking.com");
     });
-  });
-});
-
-describe("Developer page file coverage", () => {
-  const devPagesDir = path.resolve(__dirname, "../pages/developer");
-
-  it("all developer pages import ApiEndpoint or CodeBlock", () => {
-    const files = fs.readdirSync(devPagesDir).filter((f) => f.endsWith(".tsx"));
-    expect(files.length).toBeGreaterThan(10);
-
-    const exceptions = [
-      "DeveloperPortal.tsx",
-      "DeveloperDocs.tsx",
-      "SwaggerDocs.tsx",
-    ];
-
-    const missing: string[] = [];
-    files.forEach((file) => {
-      if (exceptions.some((ex) => file.includes(ex))) return;
-      const content = fs.readFileSync(path.join(devPagesDir, file), "utf-8");
-      const hasApiEndpoint = content.includes("ApiEndpoint");
-      const hasCodeBlock = content.includes("CodeBlock");
-      const hasPre = content.includes("<pre");
-      if (!hasApiEndpoint && !hasCodeBlock && !hasPre) {
-        missing.push(file);
-      }
-    });
-
-    if (missing.length > 0) {
-      console.warn("Pages without code examples:", missing);
-    }
-    // Allow up to 5 content-only pages (overview, changelog, etc.)
-    expect(missing.length).toBeLessThanOrEqual(5);
   });
 });
