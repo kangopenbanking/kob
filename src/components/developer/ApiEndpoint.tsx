@@ -4,7 +4,9 @@ import { JsonSyntax } from "@/components/developer/JsonSyntax";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ChevronDown, ChevronRight, Code2 } from "lucide-react";
+import { CodeBlock } from "@/components/developer/CodeBlock";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Parameter {
   name: string;
@@ -30,6 +32,192 @@ const methodColors = {
   DELETE: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
   PATCH: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
 };
+
+const BASE_URL = "https://api.kangopenbanking.com";
+
+export function generateCodeExamples(
+  method: string,
+  endpoint: string,
+  requestBody?: string
+) {
+  const url = `${BASE_URL}${endpoint}`;
+  const hasBody = !!requestBody && ["POST", "PUT", "PATCH"].includes(method);
+  const bodyOneLine = hasBody ? requestBody!.replace(/\n/g, "").replace(/\s{2,}/g, " ") : "";
+
+  const curl = hasBody
+    ? `curl -X ${method} "${url}" \\
+  -H "Authorization: Bearer sk_test_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '${requestBody}'`
+    : `curl -X ${method} "${url}" \\
+  -H "Authorization: Bearer sk_test_your_api_key"`;
+
+  const nodejs = hasBody
+    ? `const response = await fetch("${url}", {
+  method: "${method}",
+  headers: {
+    "Authorization": "Bearer sk_test_your_api_key",
+    "Content-Type": "application/json",
+    "Idempotency-Key": crypto.randomUUID()
+  },
+  body: JSON.stringify(${bodyOneLine})
+});
+
+const data = await response.json();
+console.log(data);`
+    : `const response = await fetch("${url}", {
+  headers: {
+    "Authorization": "Bearer sk_test_your_api_key"
+  }
+});
+
+const data = await response.json();
+console.log(data);`;
+
+  const python = hasBody
+    ? `import requests
+
+response = requests.${method.toLowerCase()}(
+    "${url}",
+    headers={
+        "Authorization": "Bearer sk_test_your_api_key",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "unique-key-here"
+    },
+    json=${bodyOneLine}
+)
+
+print(response.json())`
+    : `import requests
+
+response = requests.${method.toLowerCase()}(
+    "${url}",
+    headers={"Authorization": "Bearer sk_test_your_api_key"}
+)
+
+print(response.json())`;
+
+  const php = hasBody
+    ? `<?php
+$ch = curl_init("${url}");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "${method}");
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer sk_test_your_api_key",
+    "Content-Type: application/json",
+    "Idempotency-Key: " . uniqid()
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, '${bodyOneLine}');
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;`
+    : `<?php
+$ch = curl_init("${url}");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer sk_test_your_api_key"
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;`;
+
+  const goLang = hasBody
+    ? `package main
+
+import (
+    "bytes"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func main() {
+    body := []byte(\`${bodyOneLine}\`)
+    req, _ := http.NewRequest("${method}", "${url}", bytes.NewBuffer(body))
+    req.Header.Set("Authorization", "Bearer sk_test_your_api_key")
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Idempotency-Key", "unique-key-here")
+
+    resp, _ := http.DefaultClient.Do(req)
+    defer resp.Body.Close()
+    data, _ := io.ReadAll(resp.Body)
+    fmt.Println(string(data))
+}`
+    : `package main
+
+import (
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func main() {
+    req, _ := http.NewRequest("${method}", "${url}", nil)
+    req.Header.Set("Authorization", "Bearer sk_test_your_api_key")
+
+    resp, _ := http.DefaultClient.Do(req)
+    defer resp.Body.Close()
+    data, _ := io.ReadAll(resp.Body)
+    fmt.Println(string(data))
+}`;
+
+  const java = hasBody
+    ? `import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.*;
+
+URL url = new URL("${url}");
+HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+conn.setRequestMethod("${method}");
+conn.setRequestProperty("Authorization", "Bearer sk_test_your_api_key");
+conn.setRequestProperty("Content-Type", "application/json");
+conn.setRequestProperty("Idempotency-Key", java.util.UUID.randomUUID().toString());
+conn.setDoOutput(true);
+
+try (OutputStream os = conn.getOutputStream()) {
+    os.write("${bodyOneLine}".getBytes("utf-8"));
+}
+
+try (BufferedReader br = new BufferedReader(
+        new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+    StringBuilder response = new StringBuilder();
+    String line;
+    while ((line = br.readLine()) != null) {
+        response.append(line.trim());
+    }
+    System.out.println(response.toString());
+}`
+    : `import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.*;
+
+URL url = new URL("${url}");
+HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+conn.setRequestMethod("${method}");
+conn.setRequestProperty("Authorization", "Bearer sk_test_your_api_key");
+
+try (BufferedReader br = new BufferedReader(
+        new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+    StringBuilder response = new StringBuilder();
+    String line;
+    while ((line = br.readLine()) != null) {
+        response.append(line.trim());
+    }
+    System.out.println(response.toString());
+}`;
+
+  return [
+    { language: "curl", code: curl, label: "cURL" },
+    { language: "nodejs", code: nodejs, label: "Node.js" },
+    { language: "python", code: python, label: "Python" },
+    { language: "php", code: php, label: "PHP" },
+    { language: "go", code: goLang, label: "Go" },
+    { language: "java", code: java, label: "Java" },
+  ];
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -75,6 +263,9 @@ export function ApiEndpoint({
   response,
   example,
 }: ApiEndpointProps) {
+  const [codeOpen, setCodeOpen] = useState(false);
+  const codeExamples = generateCodeExamples(method, endpoint, requestBody);
+
   return (
     <Card className="p-6 my-6">
       <div className="flex items-start gap-4 mb-4">
@@ -142,6 +333,23 @@ export function ApiEndpoint({
           <DarkCodeBlock label="Example" code={example} />
         </>
       )}
+
+      <Separator className="my-4" />
+      <Collapsible open={codeOpen} onOpenChange={setCodeOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
+            <span className="flex items-center gap-2 font-semibold">
+              <Code2 className="h-4 w-4" />
+              Code Examples
+              <Badge variant="secondary" className="text-xs font-normal">6 languages</Badge>
+            </span>
+            {codeOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-3">
+          <CodeBlock examples={codeExamples} title={`${method} ${endpoint}`} />
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
