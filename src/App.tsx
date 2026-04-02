@@ -245,6 +245,7 @@ const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReference
 const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
 const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
 const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
+const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegistration"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
