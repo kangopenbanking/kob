@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { PostmanExportButton } from "@/components/developer/PostmanExportButton";
 
 export default function PostmanGuide() {
   return (
