@@ -929,6 +929,7 @@ function App() {
               <Route path="authentication/oauth2" element={<AuthOAuth2 />} />
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
+              <Route path="sandbox" element={<Navigate to="/developer/sandbox/overview" replace />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
               <Route path="sandbox/credentials" element={<SandboxCredentials />} />
               <Route path="sandbox/test-cards" element={<SandboxTestCards />} />
