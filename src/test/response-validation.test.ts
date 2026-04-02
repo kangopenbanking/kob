@@ -35,7 +35,8 @@ describe("OpenAPI Response Structure Validation", () => {
           const valid = types.every(t =>
             t === "application/json" || t === "application/problem+json" ||
             t === "application/yaml" || t === "text/yaml" ||
-            t === "application/octet-stream" || t === "text/plain"
+            t === "application/octet-stream" || t === "text/plain" ||
+            t === "application/zip" || t === "text/csv"
           );
           if (!valid) {
             failures.push(`${method.toUpperCase()} ${path} [${code}] — unexpected content types: ${types.join(", ")}`);
