@@ -1,76 +1,60 @@
 
-Roles active: Guardian, Architect, Surgeon, Auditor, Scorekeeper.
 
-Reality check
-- I parsed the uploaded audit report, inspected the current codebase, and re-fetched live published pages.
-- The report’s headline diagnosis is now stale: /developer, /developer/getting-started, /developer/authentication, /developer/changelog, and /developer/status currently render unique content on the live site.
-- The real remaining gaps are structural and UX-related: public/private route mixing, several prompt URLs still alias to shared overview pages, missing shared docs features, stale version copy in some places, and incomplete alignment with the Mega Super Master Prompt.
+# Plan: Complete Multi-Language Examples + Automated Smoke Tests
 
-What I will fix
-1. Public docs routing and URL contract
-- Make /developer/sandbox the permanent public sandbox docs landing page.
-- Move authenticated sandbox/tools pages out of the public docs path or into a clearly separate protected tools namespace.
-- Add any missing prompt-defined public routes and remove same-component aliases where a unique page is required.
-- Publish /developer/sitemap.xml and /developer/redirects.json, while keeping old URLs redirect-safe.
+## Problem Summary
+Two remaining gaps from the audit:
+1. **Go/Java examples missing on 60+ API reference pages** -- all use the `ApiEndpoint` component which only shows JSON request/response blocks, not multi-language code examples
+2. **Automated code example smoke tests (ORDER P5)** -- no tests verify that code examples render or that all developer pages contain expected content
 
-2. Remove public/private mixing
-- Clean the public sidebar so docs never point anonymous users into gated tools as if they were docs.
-- Update hero/top-nav CTAs so public users always go to readable docs first; gated actions become explicit secondary actions.
-- Keep ORDER P1 and P2 intact: public-first docs, zero-404 docs.
+## Approach
 
-3. Replace duplicate-content routes with real pages
-- Create dedicated pages for routes currently reusing overview components, including:
-  - /developer/sandbox/credentials
-  - /developer/sandbox/test-cards
-  - /developer/sandbox/mobile-money
-  - /developer/sandbox/webhooks or simulate-webhooks
-  - /developer/sandbox/seed-data
-  - /developer/api-reference/errors
-  - /developer/api-reference/pagination
-  - /developer/api-reference/rate-limits
-  - /developer/api-reference/versioning
-  - /developer/api-reference/idempotency
-  - /developer/open-banking/consents
-  - /developer/iso20022/messages
-  - any remaining prompt URLs still absent or aliasing
-- Each page will contain explanation + code example + table/diagram, not just links.
+### Part 1: Auto-Generate Multi-Language Examples in ApiEndpoint (High Leverage)
 
-4. Rebuild the docs flow to be Stripe-like and sequential
-- Reorder the canonical reading path to:
-  Home → Getting Started → Authentication → Sandbox → API Reference → API Explorer → SDKs → Gateway Quickstart → Webhooks → Open Banking → Mobile Money → ISO 20022 → Go-Live → Support/Access Policy.
-- Update AutoDocNavigation and each page’s “next steps” cards so they move logically to the next step, not sideways into unrelated sections.
-- Align the home page structure with the prompt: hero, start-here cards, use cases, changelog strip, status strip.
+Instead of editing 37 individual page files, enhance the `ApiEndpoint` component itself to automatically generate tabbed code examples (cURL, Node.js, Python, PHP, Go, Java) from its existing props (`method`, `endpoint`, `requestBody`).
 
-5. Rewrite high-impact pages to exact spec
-- Getting Started: convert from TPP/DCR-heavy onboarding to public “first API call” onboarding with keys, 6-language examples, annotated response, and next steps.
-- Authentication: tighten API Keys / OAuth2 / FAPI / mTLS into a clearer progression with proper scopes table and flow diagrams.
-- Sandbox: expose permanent public credentials at /developer/sandbox and split out the sub-pages.
-- API Explorer: prefill sandbox guidance, update stale fallback copy/version counts, and align messaging to v4.6.0 / 339 endpoints / 52 events.
-- SDKs: extend to Node, Python, PHP, Java, Go, and Flutter/Dart with install commands, imports, instantiation, full example, and package links.
-- Gateway Quickstart and Webhooks: match the prompt’s copy-paste tutorial quality and full event/reference requirements.
+**Changes to `src/components/developer/ApiEndpoint.tsx`:**
+- Add a helper function `generateCodeExamples(method, endpoint, requestBody?)` that produces 6 language snippets:
+  - **cURL**: Standard curl command with headers
+  - **Node.js**: `fetch()` with proper headers
+  - **Python**: `requests` library call
+  - **PHP**: `curl_init()` pattern
+  - **Go**: `http.NewRequest` pattern
+  - **Java**: `HttpURLConnection` pattern
+- Import and use the existing `CodeBlock` component (tabbed view) to render the generated examples
+- Add a new "Code Examples" section after the Response section, using an expandable/collapsible accordion so it does not bloat the page
+- Base URL uses `https://api.kangopenbanking.com` from the API config
+- All examples include `Authorization: Bearer sk_test_...` and `Content-Type: application/json` headers
 
-6. Add the missing documentation-platform features
-- Implement a shared right-rail “On this page” component in PublicDeveloperLayout by reading H2/H3 anchors from the page content.
-- Add a consistent developer docs footer on every docs page.
-- Add full-text search across the docs set.
-- Standardize code blocks, copy buttons, anchors, and section IDs across all doc pages.
+**Result**: All 60+ reference pages using `ApiEndpoint` automatically gain 6-language code examples with zero individual file edits. Fully compliant with ORDER P9.
 
-7. Normalize metadata, SEO, and versioning
-- Give every docs page page-specific title, description, canonical, and TechArticle JSON-LD.
-- Remove stale version references (for example, ApiExplorer noscript still mentions v4.2.0 / 326+ operations).
-- Surface changelog.json on the homepage and keep changelog timing aligned with the standing orders.
+### Part 2: Automated Smoke Tests (ORDER P5)
 
-8. Finish the public access contract
-- Tighten robots.txt around public docs vs private app/admin areas.
-- Ensure /openapi.json, /openapi.yaml, /openapi-sandbox.json, and /changelog.json stay public.
-- Ensure every published docs URL resolves uniquely or redirects intentionally.
+**New file: `src/test/code-examples-smoke.test.ts`**
 
-Verification report I will deliver after implementation
-- Route-by-route matrix showing every required /developer URL, its component, and whether it is public, unique, and indexed.
-- List of duplicate/gated/stale pages fixed.
-- UX checklist: sequential nav, right-rail TOC, footer, search, copyable code, mobile responsiveness.
-- Content checklist: sandbox creds, SDK coverage, API Explorer, changelog, status, go-live, access policy.
-- Final confidence assessment against the Mega Super Master Prompt and the attached audit.
+Extend the existing test infrastructure with:
+1. **Developer page file coverage test** -- scan `src/pages/developer/*.tsx` and verify each file imports either `ApiEndpoint` or `CodeBlock` (ensures every page has code)
+2. **ApiEndpoint auto-example generation test** -- unit test the `generateCodeExamples` helper to verify it produces valid snippets for all 6 languages for GET and POST methods
+3. **Multi-language completeness test** -- verify the generated examples contain expected language keywords (e.g., `curl`, `fetch`, `requests.`, `curl_init`, `http.NewRequest`, `HttpURLConnection`)
+4. **Route coverage test** -- cross-reference `docNavigationOrder.ts` paths against registered routes in `App.tsx` to catch 404s
 
-Technical note
-- I will not replace the current portal with a new framework. The existing React/Vite docs foundation already has the routes, layout, Swagger UI, and most core content; the fastest safe path is to finish and normalize this system rather than restart it.
+### Part 3: Full Report
+
+Generate `KOB_Final_E2E_Report_April2026.md` to `/mnt/documents/` documenting:
+- All gaps closed
+- Test results
+- Updated compliance scores
+- ORDER P5/P9 status
+
+## Files Modified
+| File | Change |
+|------|--------|
+| `src/components/developer/ApiEndpoint.tsx` | Add auto-generated 6-language code examples section |
+| `src/test/code-examples-smoke.test.ts` | New: automated smoke tests for code coverage |
+| `/mnt/documents/KOB_Final_E2E_Report_April2026.md` | New: final audit report |
+
+## Compliance Impact
+- **ORDER P5** (Working Code Rule): Automated smoke tests verify code examples exist on all pages
+- **ORDER P9** (Multi-Language Rule): All 60+ API reference pages gain Go/Java/PHP/cURL/Node/Python automatically
+- Expected score: **87 -> 92/100**
+
