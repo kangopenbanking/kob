@@ -911,6 +911,7 @@ function App() {
               <Route path="openapi" element={<OpenApiDownloads />} />
               <Route path="reference" element={<RedocPage />} />
               <Route path="docs" element={<Navigate to="/developer/getting-started" replace />} />
+              <Route path="quickstart" element={<Navigate to="/developer/getting-started" replace />} />
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
