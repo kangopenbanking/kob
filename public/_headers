@@ -12,3 +12,7 @@
 
 /apis.json
   cache-control: public, max-age=300, stale-while-revalidate=86400
+
+/changelog.json
+  cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
