@@ -351,6 +351,8 @@ export function ApiEndpoint({
           <CodeBlock examples={codeExamples} title={`${method} ${endpoint}`} />
         </CollapsibleContent>
       </Collapsible>
+
+      <SdkExamples method={method} endpoint={endpoint} requestBody={requestBody} />
     </Card>
   );
 }
