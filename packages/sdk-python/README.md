@@ -110,8 +110,15 @@ with KangOpenBanking(client_id="id", api_key="sbx_key") as kob:
     accounts = kob.accounts.list()
 ```
 
-## Support
+## Links
 
-- [API Documentation](https://kangopenbanking.com/documentation)
-- [Developer Portal](https://kangopenbanking.com/for-developers)
+- [API Documentation](https://kangopenbanking.com/developer)
+- [Getting Started](https://kangopenbanking.com/developer/getting-started)
+- [OpenAPI Spec](https://kangopenbanking.com/openapi.json)
+- [Sandbox Spec](https://kangopenbanking.com/openapi-sandbox.json)
+- [API Status](https://kangopenbanking.com/developer/status)
 - Email: developers@kangopenbanking.com
+
+## License
+
+MIT

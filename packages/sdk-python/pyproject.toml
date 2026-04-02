@@ -14,5 +14,7 @@ keywords = ["open-banking", "cameroon", "xaf", "fintech", "aisp", "pisp"]
 
 [project.urls]
 Homepage = "https://kangopenbanking.com"
-Documentation = "https://kangopenbanking.com/documentation"
-Repository = "https://github.com/kangopenbanking/KangOpenBanking-KOB"
+Documentation = "https://kangopenbanking.com/developer"
+Repository = "https://github.com/kangopenbanking/sdk-python"
+Issues = "https://github.com/kangopenbanking/sdk-python/issues"
+Changelog = "https://kangopenbanking.com/changelog.json"

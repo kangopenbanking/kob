@@ -3,9 +3,100 @@
   "info": {
     "title": "Kang Open Banking API",
     "version": "4.6.0",
-    "summary": "Unified Open Banking API for Cameroon",
-    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.",
+    "summary": "Unified Open Banking API for Cameroon — SANDBOX ENVIRONMENT",
+    "description": "SANDBOX VARIANT — This specification includes test data, predictable error triggers, and scenario catalogues for integration testing. All test credentials are free and permanent (ORDER P3). Use the sandbox server URL for all testing.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
+    "x-sandbox": {
+      "note": "This is the sandbox-specific OpenAPI specification. It includes test data and error simulation patterns not present in the production spec.",
+      "test-credentials": {
+        "client_id": "kob_client_sandbox_demo",
+        "api_key": "kob_test_pk_sandbox_demo_xxxxxxxxxxxx",
+        "merchant_id": "mch_test_sandbox_demo"
+      },
+      "mobile-money-test-numbers": {
+        "mtn_momo": [
+          { "phone": "237650000000", "provider": "MTN MoMo", "behavior": "Always succeeds", "response_code": "00" },
+          { "phone": "237650000001", "provider": "MTN MoMo", "behavior": "Insufficient funds", "response_code": "51" },
+          { "phone": "237650000002", "provider": "MTN MoMo", "behavior": "Timeout after 30s", "response_code": "timeout" },
+          { "phone": "237650000003", "provider": "MTN MoMo", "behavior": "Pending then succeeds (10s delay)", "response_code": "00" },
+          { "phone": "237650000004", "provider": "MTN MoMo", "behavior": "Invalid phone number", "response_code": "14" }
+        ],
+        "orange_money": [
+          { "phone": "237690000000", "provider": "Orange Money", "behavior": "Always succeeds", "response_code": "00" },
+          { "phone": "237690000001", "provider": "Orange Money", "behavior": "Always fails", "response_code": "05" },
+          { "phone": "237690000002", "provider": "Orange Money", "behavior": "Pending indefinitely (test timeout handling)", "response_code": "pending" }
+        ]
+      },
+      "card-test-numbers": [
+        { "number": "4242424242424242", "brand": "Visa", "behavior": "Always succeeds" },
+        { "number": "5555555555554444", "brand": "Mastercard", "behavior": "Always succeeds" },
+        { "number": "4000000000000002", "brand": "Visa", "behavior": "Always declined" },
+        { "number": "4000000000009995", "brand": "Visa", "behavior": "Insufficient funds" },
+        { "number": "4000002500003155", "brand": "Visa", "behavior": "3D Secure required" },
+        { "number": "4000000000000069", "brand": "Visa", "behavior": "Expired card" },
+        { "number": "4000000000000127", "brand": "Visa", "behavior": "Incorrect CVC" }
+      ],
+      "bank-transfer-test-accounts": [
+        { "bank_code": "SGCM", "account_number": "1234567890", "behavior": "Always succeeds" },
+        { "bank_code": "SGCM", "account_number": "0000000001", "behavior": "Always fails" },
+        { "bank_code": "AFBCM", "account_number": "9999999999", "behavior": "Timeout (test retry logic)" }
+      ],
+      "paypal-test-accounts": [
+        { "email": "sb-buyer@personal.example.com", "behavior": "Always succeeds" },
+        { "email": "sb-fail@personal.example.com", "behavior": "Always fails" }
+      ],
+      "mock-account-ids": [
+        "acc_test_001_current_xaf",
+        "acc_test_002_savings_xaf",
+        "acc_test_003_business_usd",
+        "acc_test_004_zero_balance",
+        "acc_test_005_negative_balance"
+      ],
+      "error-trigger-patterns": {
+        "description": "Use these special values in sandbox requests to trigger specific error responses",
+        "triggers": [
+          { "field": "amount", "value": 99999999, "error": "amount_too_large", "http_status": 400 },
+          { "field": "amount", "value": 0, "error": "invalid_amount", "http_status": 400 },
+          { "field": "currency", "value": "INVALID", "error": "unsupported_currency", "http_status": 400 },
+          { "field": "tx_ref", "value": "DUPLICATE_REF", "error": "duplicate_transaction", "http_status": 409 },
+          { "field": "tx_ref", "value": "TIMEOUT_REF", "error": "gateway_timeout", "http_status": 504 },
+          { "field": "tx_ref", "value": "RATE_LIMIT_REF", "error": "rate_limit_exceeded", "http_status": 429 },
+          { "field": "merchant_id", "value": "mch_invalid", "error": "merchant_not_found", "http_status": 404 },
+          { "field": "customer_phone", "value": "000000000", "error": "invalid_phone", "http_status": 400 },
+          { "field": "Idempotency-Key", "value": "CONFLICT_KEY", "error": "idempotency_conflict", "http_status": 422 }
+        ]
+      },
+      "scenario-catalogues": {
+        "charge-lifecycle": [
+          "Create charge → poll status → charge.successful webhook",
+          "Create charge → insufficient funds → charge.failed webhook",
+          "Create charge → 3DS required → customer authenticates → charge.successful",
+          "Create charge → timeout → poll status → resolve manually",
+          "Create charge → succeed → create refund → refund.successful webhook"
+        ],
+        "payout-lifecycle": [
+          "Create payout → payout.processing → payout.completed",
+          "Create payout → payout.processing → payout.failed (invalid account)",
+          "Create payout → payout.processing → payout.reversed"
+        ],
+        "webhook-delivery": [
+          "Register endpoint → trigger test event → verify signature → process",
+          "Webhook delivery fails → automatic retry (3 attempts, exponential backoff)",
+          "Webhook secret rotation → old + new secrets both valid for 24h"
+        ],
+        "oauth-consent": [
+          "Create consent → redirect user → authorize → exchange code → access accounts",
+          "Create consent → user denies → handle rejection",
+          "Access token expires → refresh token → new access token",
+          "Refresh token reuse detected → full revocation"
+        ]
+      },
+      "rate-limits": {
+        "sandbox_requests_per_day": 10000,
+        "sandbox_requests_per_minute": 100,
+        "note": "Sandbox rate limits are 10x more generous than production"
+      }
+    },
     "contact": {
       "name": "Kang Open Banking Support",
       "email": "support@kangopenbanking.com",
