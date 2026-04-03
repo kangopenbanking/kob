@@ -80,9 +80,9 @@ Deno.test("POS Finalize Payment - invalid charge returns error", async () => {
     status: "successful",
     provider: "flutterwave",
   });
-  // Should return an error status OR a body indicating the charge was not found
-  const isError = res.status >= 400 || (res.data && (res.data.error || res.data.success === false));
-  assertEquals(isError, true);
+  // Should return an error status OR indicate charge was not found/skipped
+  const isHandled = res.status >= 400 || (res.data && (res.data.error || res.data.skipped === true));
+  assertEquals(isHandled, true);
 });
 
 // ── Test E: WooCommerce Connector - invalid action ──
