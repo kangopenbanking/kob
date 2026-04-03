@@ -948,6 +948,9 @@ function App() {
               <Route path="api-reference/rate-limits" element={<RateLimitsGuide />} />
               <Route path="api-reference/versioning" element={<ApiReferenceVersioning />} />
               <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
+              <Route path="api-reference/token-lifecycle" element={<TokenLifecycleGuide />} />
+              <Route path="api-reference/webhook-retry" element={<WebhookRetryGuide />} />
+              <Route path="api-reference/http-caching" element={<HttpCachingGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
               <Route path="open-banking/pisp" element={<PispReference />} />
