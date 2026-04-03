@@ -140,7 +140,7 @@ const SecurityCompliancePage = () => (
               <TableCell className="text-sm"><code className="bg-muted px-1.5 py-0.5 rounded">{s.target}</code></TableCell>
               <TableCell className="text-sm"><code className="bg-muted px-1.5 py-0.5 rounded">{s.actual}</code></TableCell>
               <TableCell>
-                <Badge variant="default" className="bg-green-600 text-white gap-1">
+                <Badge variant="default" className="gap-1">
                   <CheckCircle2 className="h-3 w-3" /> Met
                 </Badge>
               </TableCell>
