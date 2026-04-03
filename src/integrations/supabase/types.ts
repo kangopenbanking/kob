@@ -4020,6 +4020,59 @@ export type Database = {
           },
         ]
       }
+      business_verification_checks: {
+        Row: {
+          business_kyc_id: string
+          check_type: string
+          completed_at: string | null
+          confidence_score: number | null
+          created_at: string
+          cross_check_result: Json | null
+          extracted_data: Json | null
+          id: string
+          review_notes: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_kyc_id: string
+          check_type: string
+          completed_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          cross_check_result?: Json | null
+          extracted_data?: Json | null
+          id?: string
+          review_notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_kyc_id?: string
+          check_type?: string
+          completed_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          cross_check_result?: Json | null
+          extracted_data?: Json | null
+          id?: string
+          review_notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_verification_checks_business_kyc_id_fkey"
+            columns: ["business_kyc_id"]
+            isOneToOne: false
+            referencedRelation: "business_kyc"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       captcha_challenges: {
         Row: {
           attempts: number | null
@@ -12347,6 +12400,59 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_trust_scores: {
+        Row: {
+          created_at: string
+          dispute_score: number
+          failure_rate_score: number
+          id: string
+          last_calculated_at: string
+          merchant_id: string
+          overall_score: number
+          risk_level: string
+          score_breakdown: Json | null
+          transaction_score: number
+          updated_at: string
+          verification_score: number
+        }
+        Insert: {
+          created_at?: string
+          dispute_score?: number
+          failure_rate_score?: number
+          id?: string
+          last_calculated_at?: string
+          merchant_id: string
+          overall_score?: number
+          risk_level?: string
+          score_breakdown?: Json | null
+          transaction_score?: number
+          updated_at?: string
+          verification_score?: number
+        }
+        Update: {
+          created_at?: string
+          dispute_score?: number
+          failure_rate_score?: number
+          id?: string
+          last_calculated_at?: string
+          merchant_id?: string
+          overall_score?: number
+          risk_level?: string
+          score_breakdown?: Json | null
+          transaction_score?: number
+          updated_at?: string
+          verification_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_trust_scores_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
