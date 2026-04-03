@@ -236,6 +236,7 @@ const Iso20022Overview = lazy(() => import("./pages/developer/Iso20022Overview")
 const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
+const SecurityCompliancePage = lazy(() => import("./pages/developer/SecurityCompliancePage"));
 const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
 const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentials"));
 const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards"));
@@ -961,6 +962,8 @@ function App() {
               <Route path="access-policy" element={<AccessPolicy />} />
               <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
+              <Route path="security" element={<SecurityCompliancePage />} />
+              <Route path="compliance" element={<SecurityCompliancePage />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
               {/* Remittance API Docs */}
