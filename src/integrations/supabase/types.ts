@@ -7445,6 +7445,86 @@ export type Database = {
           },
         ]
       }
+      forum_replies: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          is_accepted_answer: boolean
+          thread_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author_name?: string
+          body: string
+          created_at?: string
+          id?: string
+          is_accepted_answer?: boolean
+          thread_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_accepted_answer?: boolean
+          thread_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_threads: {
+        Row: {
+          author_name: string
+          body: string
+          category: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          replies_count: number
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author_name?: string
+          body: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          replies_count?: number
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          replies_count?: number
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fraud_rules: {
         Row: {
           action: string
