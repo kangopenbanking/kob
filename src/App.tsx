@@ -856,6 +856,7 @@ function App() {
               <Route path="getting-started/first-call" element={<GettingStarted />} />
               <Route path="quick-start" element={<QuickStart />} />
               <Route path="changelog" element={<Changelog />} />
+              <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />
               <Route path="api/pisp" element={<PispReference />} />
               <Route path="api/mobile-money" element={<MobileMoneyReference />} />
