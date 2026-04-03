@@ -276,11 +276,9 @@ function DarkModeToggle() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark');
-      setIsDark(true);
-    }
+    // Default to dark on developer portal
+    document.documentElement.classList.add('dark');
+    setIsDark(true);
   }, []);
 
   return (
@@ -421,6 +419,19 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Force dark mode on the developer portal
+  useEffect(() => {
+    const previousTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('dev-portal-theme', 'dark');
+    return () => {
+      // Restore previous theme when leaving developer portal
+      if (previousTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
