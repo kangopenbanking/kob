@@ -214,6 +214,7 @@ const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide")
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
 const Playground = lazy(() => import("./pages/developer/Playground"));
 const Changelog = lazy(() => import("./pages/developer/Changelog"));
+const DeveloperForum = lazy(() => import("./pages/developer/DeveloperForum"));
 const ApiKeys = lazy(() => import("./pages/developer/ApiKeys"));
 const AIIntegrationGuide = lazy(() => import("./pages/developer/AIIntegrationGuide"));
 const MerchantsPOSGuide = lazy(() => import("./pages/developer/MerchantsPOSGuide"));
