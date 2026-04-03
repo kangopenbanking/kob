@@ -81,8 +81,7 @@ Deno.test("POS Finalize Payment - invalid charge returns error", async () => {
     provider: "flutterwave",
   });
   // Should return an error status OR a body indicating the charge was not found
-  const body = await res.json().catch(() => null);
-  const isError = res.status >= 400 || (body && (body.error || body.success === false));
+  const isError = res.status >= 400 || (res.data && (res.data.error || res.data.success === false));
   assertEquals(isError, true);
 });
 
