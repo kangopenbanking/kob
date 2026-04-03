@@ -981,7 +981,7 @@ function App() {
             </Route>
 
             {/* Protected Developer Tools — auth + role required */}
-            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
+            <Route path="/developer-tools" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
               <Route path="sandbox" element={<Sandbox />} />
               <Route path="sandbox/usage" element={<SandboxUsage />} />
               <Route path="sandbox/webhooks" element={<SandboxWebhooks />} />
