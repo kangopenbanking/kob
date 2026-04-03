@@ -78,7 +78,7 @@ const SecurityCompliancePage = () => (
           {certifications.map(c => (
             <TableRow key={c.standard}>
               <TableCell className="font-medium text-sm">{c.standard}</TableCell>
-              <TableCell><Badge variant="default" className="bg-green-600 text-white gap-1"><CheckCircle2 className="h-3 w-3" />{c.status}</Badge></TableCell>
+              <TableCell><Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" />{c.status}</Badge></TableCell>
               <TableCell className="text-sm text-muted-foreground">{c.scope}</TableCell>
               <TableCell className="text-sm text-muted-foreground">{c.authority}</TableCell>
             </TableRow>
