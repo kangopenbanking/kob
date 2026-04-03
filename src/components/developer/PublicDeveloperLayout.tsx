@@ -276,11 +276,9 @@ function DarkModeToggle() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark');
-      setIsDark(true);
-    }
+    // Default to dark on developer portal
+    document.documentElement.classList.add('dark');
+    setIsDark(true);
   }, []);
 
   return (
