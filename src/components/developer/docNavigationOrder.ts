@@ -18,6 +18,7 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "Developer Home", path: "/developer" },
   { title: "Getting Started", path: "/developer/getting-started" },
   { title: "Changelog", path: "/developer/changelog" },
+  { title: "Forum", path: "/developer/forum" },
   { title: "Status", path: "/developer/status" },
   { title: "Support", path: "/developer/support" },
   { title: "Access Policy", path: "/developer/access-policy" },
