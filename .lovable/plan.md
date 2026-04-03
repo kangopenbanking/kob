@@ -1,76 +1,71 @@
 
 
-# Plan: Fix All Confirmed Gaps for Production Readiness
+# Plan: Fix Portal Routing Conflict and Deployment Blocker
 
-## Diagnosis
+## Root Cause Analysis
 
-After thorough codebase analysis, here is the real status of each reported issue:
+Two distinct issues are preventing the developer portal from being publicly accessible:
 
-### Issues That Are NOT Code Bugs (Infrastructure/Deployment)
+### Issue 1: Duplicate Route Conflict (THE REAL BUG)
 
-| Issue | Root Cause | Fix |
-|-------|-----------|-----|
-| 7 of 9 sub-pages redirect to homepage | **Stale publish** -- all routes are correctly defined in App.tsx under `PublicDeveloperLayout` with no auth guard | Click "Publish" to deploy current build |
-| DNS failure on api.kangopenbanking.com | Custom domain DNS not configured for API subdomain | External DNS setup required (not a code change) |
-| DNS failure on sandbox.kangopenbanking.com | Same as above | External DNS setup required |
-| Terms/Privacy redirect to homepage | Routes exist at `/terms`, `/privacy` wrapped in public `Layout` -- stale publish | Click "Publish" |
-| Swagger UI not publicly accessible | Route exists at `/developer/api-explorer` -- stale publish | Click "Publish" |
-| Rate-limit documentation missing | Exists at `/developer/api/rate-limits` with full tables | Click "Publish" |
+`src/App.tsx` defines **two** `<Route path="/developer">` blocks:
 
-### Actual Code Gaps to Fix
+```text
+Line 848:  /developer  -->  PublicDeveloperLayout  (no auth)
+Line 984:  /developer  -->  ProtectedRoute + RoleGuard  (requires auth)
+```
 
-| Gap | Current State | Action |
-|-----|--------------|--------|
-| No COBAC registration number published | SecurityCompliancePage mentions COBAC but no registration number | Add registration number to compliance page |
-| No public pentest/security audit report | SecurityCompliancePage lists certifications but no downloadable audit | Add audit disclosure section |
-| FAPI certification not independently verified | Listed as "Compliant" but no verification link | Add OpenID Foundation reference link |
-| POS/Catalog endpoints -- spec only, not live | Edge functions exist but no public status indicator | Add "Beta" badges and availability table to POS guide |
-| API base URL references hardcoded to api.kangopenbanking.com | 845 references across 70 files -- will 404 until DNS resolves | Update `API_CONFIG` to use Lovable Cloud edge function URL as primary, with custom domain as display URL |
+Both blocks contain child routes with the **same path** -- notably `/developer/sandbox`. React Router v6 scores both equally and may match the **protected** block, which redirects unauthenticated users to `/auth` (line 86 of `ProtectedRoute.tsx`). This is why every independent audit sees sub-pages redirecting to the homepage or login page. It is NOT a stale publish -- it is an active routing conflict in the code.
+
+### Issue 2: Edge Function Rate Limiting (DEPLOYMENT BLOCKER)
+
+The project has **346 edge functions**. Deploying all of them at once exceeds the backend rate limit (`ThrottlerException: Too Many Requests`), which blocks every publish attempt. No frontend changes can go live until this is resolved.
 
 ## Implementation Steps
 
-### Step 1: Fix API Base URL Strategy
-Update `src/config/api.ts` to use the working Supabase functions URL as the runtime endpoint while displaying `api.kangopenbanking.com` in documentation. Add a helper that code examples reference.
+### Step 1: Eliminate the Route Conflict
 
-### Step 2: Enhance SecurityCompliancePage
-Add to `src/pages/developer/SecurityCompliancePage.tsx`:
-- COBAC registration reference number (placeholder for real number)
-- Downloadable security audit summary section
-- FAPI certification verification link
-- Incident response policy table (already partially exists)
+Move the 12 protected developer tool routes from `/developer/*` to `/developer-tools/*`. This gives the public `PublicDeveloperLayout` block sole ownership of the `/developer` prefix, eliminating all ambiguity.
 
-### Step 3: Add POS Module Availability Status
-Update `src/pages/developer/MerchantsPOSGuide.tsx`:
-- Add "Beta" badge and availability matrix
-- Clarify which POS endpoints are live vs planned
-- Add deployment timeline
+**Changes in `src/App.tsx`:**
+- Rename the protected block's parent path from `/developer` to `/developer-tools`
+- Update the redirect reference from `/developer-old` accordingly
+- Update any internal links that point to protected developer routes (e.g., sidebar links in `DeveloperLayout`)
 
-### Step 4: Create Dedicated SLA Page in Developer Portal
-Add a route at `/developer/sla` that consolidates SLA targets, uptime guarantees, and incident response from the existing SecurityCompliancePage into a standalone document accessible from the developer portal sidebar.
+**Changes in `src/components/developer/DeveloperLayout.tsx`:**
+- Update sidebar navigation links from `/developer/sandbox` to `/developer-tools/sandbox`, etc.
 
-### Step 5: Ensure All API Code Examples Use Fallback URL
-Create a shared constant `API_EXAMPLE_BASE_URL` that code example components (`ApiEndpoint.tsx`, `SdkExamples.tsx`) reference, so examples work even before custom domain DNS is configured.
+### Step 2: Remove or Consolidate Unnecessary Edge Functions
+
+Audit the `supabase/functions/` directory for duplicate, test-only, or unused functions. Removing even 50 functions would bring the count below typical rate-limit thresholds. Candidates:
+- Functions with identical logic (e.g., aliased endpoints)
+- Test/debug functions not needed in production
+- Functions that can be merged into existing routers (e.g., consolidate related POS functions)
+
+### Step 3: Generate Final Compliance Report
+
+After deploying, produce a verification report confirming:
+- Each `/developer/*` sub-page renders distinct content without auth
+- The publish succeeded without rate-limit errors
+- Legal pages (`/terms`, `/privacy`) are publicly accessible
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/config/api.ts` | Add runtime URL helper + example base URL constant |
-| `src/pages/developer/SecurityCompliancePage.tsx` | Add COBAC reg number, audit section, FAPI link |
-| `src/pages/developer/MerchantsPOSGuide.tsx` | Add availability matrix with Beta badges |
-| `src/pages/developer/SLAPage.tsx` | New: dedicated developer-portal SLA page |
-| `src/components/developer/PublicDeveloperLayout.tsx` | Add SLA to sidebar nav |
-| `src/App.tsx` | Add `/developer/sla` route |
-| `src/components/developer/ApiEndpoint.tsx` | Use configurable base URL for examples |
+| `src/App.tsx` | Move protected dev routes from `/developer` to `/developer-tools` |
+| `src/components/developer/DeveloperLayout.tsx` | Update sidebar links to `/developer-tools/*` |
+| `supabase/functions/` | Remove or consolidate unused edge functions to reduce count below rate-limit threshold |
+| `/mnt/documents/KOB_Routing_Fix_Report.md` | Final verification report |
 
-## Critical User Action Required
+## Why Previous Fixes Failed
 
-**You must click "Publish" after these changes.** The majority of reported issues (sub-page redirects, legal pages, Swagger UI, rate limits) are already correctly implemented in code but not deployed to the live site. No code change can fix a stale deployment.
+Every prior attempt diagnosed this as a "stale publish" and instructed you to click Publish. But:
+1. The route conflict exists in the **source code** -- publishing the same conflict changes nothing
+2. Even if the conflict were somehow not triggering, the publish itself fails due to edge function rate limiting
+3. The combination of these two issues creates a loop where fixes never reach production
 
-## Out of Scope (External Actions)
+## Critical Path
 
-- **DNS configuration** for `api.kangopenbanking.com` and `sandbox.kangopenbanking.com` -- requires DNS provider action
-- **GitHub organization creation** -- external platform action
-- **Third-party pentest report** -- requires engaging an audit firm
-- **COBAC actual registration number** -- requires the real regulatory reference
+The route rename (Step 1) is the minimum fix required. Step 2 (reducing edge functions) unblocks deployment. Both must happen together for the portal to actually go live.
 
