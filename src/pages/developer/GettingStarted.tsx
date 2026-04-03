@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Zap } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
+import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
+import { TryItNowPlayground } from "@/components/developer/TryItNowPlayground";
 
 const curlFirstCall = `# 1. Create a charge using sandbox credentials (no signup required)
 curl -X POST https://sandbox.kangopenbanking.com/v1/gateway/charges \\
