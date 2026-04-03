@@ -5,6 +5,27 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Package, CreditCard, RotateCcw, RefreshCw, Store, Plug, BarChart3 } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const posEndpointStatus = [
+  { endpoint: "pos-catalog-products", status: "Live", description: "Product CRUD and variant management" },
+  { endpoint: "pos-inventory", status: "Live", description: "Inventory adjustments and movements" },
+  { endpoint: "pos-inventory-sync", status: "Live", description: "WooCommerce inventory sync" },
+  { endpoint: "pos-orders", status: "Live", description: "Order creation and management" },
+  { endpoint: "pos-submit-order", status: "Live", description: "Order submission for payment" },
+  { endpoint: "pos-pay-order", status: "Live", description: "Payment initiation (MoMo/Card/PayPal)" },
+  { endpoint: "pos-finalize-payment", status: "Live", description: "Payment finalization via webhook" },
+  { endpoint: "pos-refunds", status: "Live", description: "Full/partial refunds with restocking" },
+  { endpoint: "pos-woo-connector", status: "Live", description: "WooCommerce store connection" },
+  { endpoint: "pos-woo-webhook-ingestion", status: "Live", description: "WooCommerce webhook receiver" },
+  { endpoint: "pos-qr-payment", status: "Beta", description: "QR code payment generation and processing" },
+  { endpoint: "pos-consumer-checkout", status: "Beta", description: "Consumer marketplace wallet checkout" },
+  { endpoint: "pos-store-browse", status: "Beta", description: "Store discovery and browsing" },
+  { endpoint: "pos-store-subscription", status: "Beta", description: "Merchant subscription management" },
+  { endpoint: "pos-device-registry", status: "Planned", description: "Physical terminal and device management" },
+  { endpoint: "pos-staff-auth", status: "Planned", description: "Staff PIN login for POS terminals" },
+];
+
 export default function MerchantsPOSGuide() {
   return (
     <div className="max-w-4xl mx-auto space-y-10">
@@ -12,7 +33,8 @@ export default function MerchantsPOSGuide() {
       <div>
         <div className="flex items-center gap-3 mb-2">
           <ShoppingCart className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Merchants → POS</h1>
+          <h1 className="text-3xl font-bold">Merchants -- POS</h1>
+          <Badge variant="outline" className="gap-1 ml-2">Commerce Module</Badge>
         </div>
         <p className="text-lg text-muted-foreground">
           Build omnichannel commerce with KOB's POS API — WooCommerce sync, catalog management,
@@ -27,6 +49,44 @@ export default function MerchantsPOSGuide() {
           <Badge variant="secondary">Idempotent</Badge>
         </div>
       </div>
+
+      <Separator />
+
+      {/* Endpoint Availability Matrix */}
+      <section>
+        <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">
+          <BarChart3 className="h-6 w-6" /> Endpoint Availability
+        </h2>
+        <Card className="p-6">
+          <p className="text-muted-foreground mb-4">
+            The POS Commerce Layer is actively deployed. Some endpoints are in Beta or Planned status.
+            Beta endpoints are functional but may have breaking changes. Planned endpoints are documented
+            in the OpenAPI spec but not yet deployed.
+          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Endpoint</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {posEndpointStatus.map(e => (
+                <TableRow key={e.endpoint}>
+                  <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{e.endpoint}</code></TableCell>
+                  <TableCell>
+                    <Badge variant={e.status === "Live" ? "default" : e.status === "Beta" ? "secondary" : "outline"} className="text-xs">
+                      {e.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{e.description}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </section>
 
       <Separator />
 
