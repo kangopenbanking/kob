@@ -889,6 +889,7 @@ function App() {
               <Route path="gateway/treasury" element={<TreasuryGuide />} />
               <Route path="gateway/webhooks-v2" element={<WebhooksV2Guide />} />
               <Route path="gateway/sla" element={<SLAMonitorGuide />} />
+              <Route path="sla" element={<SLAPage />} />
               <Route path="api/error-codes" element={<ErrorCodesReference />} />
               <Route path="api/rate-limits" element={<RateLimitsGuide />} />
               <Route path="api/idempotency" element={<IdempotencyGuide />} />

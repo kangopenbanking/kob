@@ -46,6 +46,7 @@ const navSections = [
       { title: "Getting Started", path: "/developer/getting-started" },
       { title: "Changelog", path: "/developer/changelog" },
       { title: "Status", path: "/developer/status" },
+      { title: "SLA", path: "/developer/sla" },
       { title: "Support", path: "/developer/support" },
       { title: "Access Policy", path: "/developer/access-policy" },
     ],
