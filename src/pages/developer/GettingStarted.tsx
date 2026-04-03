@@ -163,9 +163,15 @@ export default function GettingStarted() {
         <div>
           <h1 className="text-4xl font-bold tracking-tight mb-4">Getting Started</h1>
           <p className="text-xl text-muted-foreground">
-            Make your first API call in under 5 minutes. No signup required — use the sandbox credentials below to start immediately.
+            Make your first API call in under 5 minutes. No signup required -- use the sandbox credentials below to start immediately.
           </p>
         </div>
+
+        {/* Instant key generator */}
+        <InstantKeyGenerator />
+
+        {/* Interactive onboarding wizard */}
+        <OnboardingWizard />
 
         {/* Step 1: Sandbox Credentials */}
         <Card>
