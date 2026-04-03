@@ -9,6 +9,9 @@ import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSe
 import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
+import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
+import { TryItNowPlayground } from "@/components/developer/TryItNowPlayground";
 
 const jsonLdWebAPI = {
   "@context": "https://schema.org",
@@ -131,6 +134,22 @@ export default function DeveloperHome() {
 
       <div className="space-y-16 pb-8">
         <HeroSection />
+
+        {/* Instant sandbox credentials -- public, no auth */}
+        <section id="instant-keys" aria-label="Instant API Key Generation">
+          <InstantKeyGenerator />
+        </section>
+
+        {/* Step-by-step onboarding wizard */}
+        <section id="onboarding" aria-label="Step-by-step Integration Guide">
+          <OnboardingWizard />
+        </section>
+
+        {/* Try It Now playground -- public, no auth */}
+        <section id="try-it-now" aria-label="Interactive API Playground">
+          <TryItNowPlayground />
+        </section>
+
         <IntegrationOverview />
         <UseCasesSection />
         <CodeSnippetSection />
