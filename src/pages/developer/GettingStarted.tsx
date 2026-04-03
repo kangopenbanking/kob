@@ -336,6 +336,9 @@ export default function GettingStarted() {
           </CardContent>
         </Card>
 
+        {/* Try It Now playground */}
+        <TryItNowPlayground />
+
         <AutoDocNavigation />
       </div>
     </>
