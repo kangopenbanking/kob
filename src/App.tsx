@@ -208,6 +208,9 @@ const SupportedCurrenciesPage = lazy(() => import("./pages/developer/SupportedCu
 const SupportedCountriesPage = lazy(() => import("./pages/developer/SupportedCountriesPage"));
 const ApiStatusPage = lazy(() => import("./pages/developer/ApiStatusPage"));
 const TestingGuide = lazy(() => import("./pages/developer/TestingGuide"));
+const TokenLifecycleGuide = lazy(() => import("./pages/developer/TokenLifecycleGuide"));
+const WebhookRetryGuide = lazy(() => import("./pages/developer/WebhookRetryGuide"));
+const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide"));
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
 const Playground = lazy(() => import("./pages/developer/Playground"));
 const Changelog = lazy(() => import("./pages/developer/Changelog"));
