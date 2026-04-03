@@ -9,6 +9,9 @@ import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSe
 import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
+import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
+import { TryItNowPlayground } from "@/components/developer/TryItNowPlayground";
 
 const jsonLdWebAPI = {
   "@context": "https://schema.org",
