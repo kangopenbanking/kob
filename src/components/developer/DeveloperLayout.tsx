@@ -30,6 +30,7 @@ const navSections = [
       { title: "Integration Workflow", path: "/developer/integration-workflow" },
       { title: "SDKs & Libraries", path: "/developer/guides/sdks" },
       { title: "Changelog", path: "/developer/changelog" },
+      { title: "Forum", path: "/developer/forum" },
     ],
   },
   {

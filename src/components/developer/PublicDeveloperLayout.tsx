@@ -45,6 +45,7 @@ const navSections = [
       { title: "Developer Home", path: "/developer" },
       { title: "Getting Started", path: "/developer/getting-started" },
       { title: "Changelog", path: "/developer/changelog" },
+      { title: "Forum", path: "/developer/forum" },
       { title: "Status", path: "/developer/status" },
       { title: "SLA", path: "/developer/sla" },
       { title: "Support", path: "/developer/support" },
