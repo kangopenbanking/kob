@@ -200,6 +200,7 @@ const TreasuryGuide = lazy(() => import("./pages/developer/TreasuryGuide"));
 const WebhooksV2Guide = lazy(() => import("./pages/developer/WebhooksV2Guide"));
 const SandboxPayoutSimGuide = lazy(() => import("./pages/developer/SandboxPayoutSimGuide"));
 const SLAMonitorGuide = lazy(() => import("./pages/developer/SLAMonitorGuide"));
+const SLAPage = lazy(() => import("./pages/developer/SLAPage"));
 const ErrorCodesReference = lazy(() => import("./pages/developer/ErrorCodesReference"));
 const RateLimitsGuide = lazy(() => import("./pages/developer/RateLimitsGuide"));
 const IdempotencyGuide = lazy(() => import("./pages/developer/IdempotencyGuide"));
@@ -888,6 +889,7 @@ function App() {
               <Route path="gateway/treasury" element={<TreasuryGuide />} />
               <Route path="gateway/webhooks-v2" element={<WebhooksV2Guide />} />
               <Route path="gateway/sla" element={<SLAMonitorGuide />} />
+              <Route path="sla" element={<SLAPage />} />
               <Route path="api/error-codes" element={<ErrorCodesReference />} />
               <Route path="api/rate-limits" element={<RateLimitsGuide />} />
               <Route path="api/idempotency" element={<IdempotencyGuide />} />
