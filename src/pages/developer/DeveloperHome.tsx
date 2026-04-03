@@ -134,6 +134,22 @@ export default function DeveloperHome() {
 
       <div className="space-y-16 pb-8">
         <HeroSection />
+
+        {/* Instant sandbox credentials -- public, no auth */}
+        <section id="instant-keys" aria-label="Instant API Key Generation">
+          <InstantKeyGenerator />
+        </section>
+
+        {/* Step-by-step onboarding wizard */}
+        <section id="onboarding" aria-label="Step-by-step Integration Guide">
+          <OnboardingWizard />
+        </section>
+
+        {/* Try It Now playground -- public, no auth */}
+        <section id="try-it-now" aria-label="Interactive API Playground">
+          <TryItNowPlayground />
+        </section>
+
         <IntegrationOverview />
         <UseCasesSection />
         <CodeSnippetSection />
