@@ -962,6 +962,8 @@ function App() {
               <Route path="access-policy" element={<AccessPolicy />} />
               <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
+              <Route path="security" element={<SecurityCompliancePage />} />
+              <Route path="compliance" element={<SecurityCompliancePage />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
               {/* Remittance API Docs */}
