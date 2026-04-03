@@ -1,9 +1,28 @@
 {
-  "apiVersion": "4.6.0",
+  "apiVersion": "4.7.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-02",
+  "lastUpdated": "2026-04-03",
   "entries": [
+    {
+      "version": "4.7.0",
+      "date": "2026-04-03",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "HTTP Caching, Token Lifecycle, Webhook Retry Policy, and Spec Hardening",
+      "highlights": [
+        "Cache-Control, ETag, and Last-Modified headers added to all 122 GET endpoints (RFC 7234)",
+        "304 Not Modified response component added for conditional request support",
+        "Token lifetime documented: 15m access, 30d rotating refresh, 60s auth code",
+        "Webhook delivery policy documented: 7 attempts, exponential backoff, 30-day dead-letter",
+        "IdempotencyKey header now documents 24-hour key retention TTL",
+        "balance_after on Transaction schema corrected from number to string (precision fix)",
+        "OAuth authorizationUrl/tokenUrl corrected from /functions/v1/ to /v1/ path",
+        "Rate limit headers added to 7 previously missing endpoint responses",
+        "Dual naming convention (snake_case/PascalCase) documented on Transaction schema",
+        "New documentation pages: Token Lifecycle, Webhook Retry Policy, HTTP Caching"
+      ]
+    },
     {
       "version": "4.6.0",
       "date": "2026-03-29",
