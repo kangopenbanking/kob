@@ -34,7 +34,9 @@ const methodColors = {
   PATCH: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
 };
 
-const BASE_URL = "https://api.kangopenbanking.com";
+import { API_EXAMPLE_BASE_URL } from "@/config/api";
+
+const BASE_URL = API_EXAMPLE_BASE_URL;
 
 export function generateCodeExamples(
   method: string,

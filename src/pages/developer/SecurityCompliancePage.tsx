@@ -71,8 +71,9 @@ const SecurityCompliancePage = () => (
             <TableHead>Standard</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Scope</TableHead>
-            <TableHead>Authority</TableHead>
-          </TableRow>
+              <TableHead>Authority</TableHead>
+              <TableHead>Reference</TableHead>
+           </TableRow>
         </TableHeader>
         <TableBody>
           {certifications.map(c => (
@@ -81,6 +82,15 @@ const SecurityCompliancePage = () => (
               <TableCell><Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" />{c.status}</Badge></TableCell>
               <TableCell className="text-sm text-muted-foreground">{c.scope}</TableCell>
               <TableCell className="text-sm text-muted-foreground">{c.authority}</TableCell>
+              <TableCell className="text-sm">
+                {c.link ? (
+                  <a href={c.link} target="_blank" rel="noopener noreferrer" className="text-primary underline">{c.ref || "Verify"}</a>
+                ) : c.ref ? (
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{c.ref}</code>
+                ) : (
+                  <span className="text-muted-foreground">--</span>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
