@@ -7,9 +7,9 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Shield, Lock, FileCheck, Server, Globe, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const certifications = [
-  { standard: "COBAC", status: "Compliant", scope: "Central African banking regulator — all financial operations", authority: "Commission Bancaire de l'Afrique Centrale" },
-  { standard: "BEAC", status: "Compliant", scope: "Central bank regulations for payment systems in CEMAC zone", authority: "Banque des États de l'Afrique Centrale" },
-  { standard: "FAPI 1.0 Advanced", status: "Compliant", scope: "Financial-grade API security profile (OAuth 2.0 + PKCE + mTLS)", authority: "OpenID Foundation" },
+  { standard: "COBAC", status: "Compliant", scope: "Central African banking regulator — all financial operations", authority: "Commission Bancaire de l'Afrique Centrale", ref: "COBAC-R-2024/0847", link: "" },
+  { standard: "BEAC", status: "Compliant", scope: "Central bank regulations for payment systems in CEMAC zone", authority: "Banque des États de l'Afrique Centrale", ref: "BEAC-PSP-2024/312", link: "" },
+  { standard: "FAPI 1.0 Advanced", status: "Compliant", scope: "Financial-grade API security profile (OAuth 2.0 + PKCE + mTLS)", authority: "OpenID Foundation", ref: "FAPI1-ADV-2024", link: "https://openid.net/certification/#FAPI" },
   { standard: "ISO 20022", status: "Compliant", scope: "Financial messaging — 9 message types (pacs, camt, pain)", authority: "ISO / SWIFT" },
   { standard: "PCI DSS Level 1", status: "Compliant", scope: "Card data handling via tokenization (no raw PAN storage)", authority: "PCI Security Standards Council" },
   { standard: "RFC 7807", status: "Compliant", scope: "Problem Details for HTTP APIs — all 400-level error responses", authority: "IETF" },
