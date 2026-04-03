@@ -1,60 +1,76 @@
 
 
-# Plan: Complete Multi-Language Examples + Automated Smoke Tests
+# Plan: Fix All Confirmed Gaps for Production Readiness
 
-## Problem Summary
-Two remaining gaps from the audit:
-1. **Go/Java examples missing on 60+ API reference pages** -- all use the `ApiEndpoint` component which only shows JSON request/response blocks, not multi-language code examples
-2. **Automated code example smoke tests (ORDER P5)** -- no tests verify that code examples render or that all developer pages contain expected content
+## Diagnosis
 
-## Approach
+After thorough codebase analysis, here is the real status of each reported issue:
 
-### Part 1: Auto-Generate Multi-Language Examples in ApiEndpoint (High Leverage)
+### Issues That Are NOT Code Bugs (Infrastructure/Deployment)
 
-Instead of editing 37 individual page files, enhance the `ApiEndpoint` component itself to automatically generate tabbed code examples (cURL, Node.js, Python, PHP, Go, Java) from its existing props (`method`, `endpoint`, `requestBody`).
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| 7 of 9 sub-pages redirect to homepage | **Stale publish** -- all routes are correctly defined in App.tsx under `PublicDeveloperLayout` with no auth guard | Click "Publish" to deploy current build |
+| DNS failure on api.kangopenbanking.com | Custom domain DNS not configured for API subdomain | External DNS setup required (not a code change) |
+| DNS failure on sandbox.kangopenbanking.com | Same as above | External DNS setup required |
+| Terms/Privacy redirect to homepage | Routes exist at `/terms`, `/privacy` wrapped in public `Layout` -- stale publish | Click "Publish" |
+| Swagger UI not publicly accessible | Route exists at `/developer/api-explorer` -- stale publish | Click "Publish" |
+| Rate-limit documentation missing | Exists at `/developer/api/rate-limits` with full tables | Click "Publish" |
 
-**Changes to `src/components/developer/ApiEndpoint.tsx`:**
-- Add a helper function `generateCodeExamples(method, endpoint, requestBody?)` that produces 6 language snippets:
-  - **cURL**: Standard curl command with headers
-  - **Node.js**: `fetch()` with proper headers
-  - **Python**: `requests` library call
-  - **PHP**: `curl_init()` pattern
-  - **Go**: `http.NewRequest` pattern
-  - **Java**: `HttpURLConnection` pattern
-- Import and use the existing `CodeBlock` component (tabbed view) to render the generated examples
-- Add a new "Code Examples" section after the Response section, using an expandable/collapsible accordion so it does not bloat the page
-- Base URL uses `https://api.kangopenbanking.com` from the API config
-- All examples include `Authorization: Bearer sk_test_...` and `Content-Type: application/json` headers
+### Actual Code Gaps to Fix
 
-**Result**: All 60+ reference pages using `ApiEndpoint` automatically gain 6-language code examples with zero individual file edits. Fully compliant with ORDER P9.
+| Gap | Current State | Action |
+|-----|--------------|--------|
+| No COBAC registration number published | SecurityCompliancePage mentions COBAC but no registration number | Add registration number to compliance page |
+| No public pentest/security audit report | SecurityCompliancePage lists certifications but no downloadable audit | Add audit disclosure section |
+| FAPI certification not independently verified | Listed as "Compliant" but no verification link | Add OpenID Foundation reference link |
+| POS/Catalog endpoints -- spec only, not live | Edge functions exist but no public status indicator | Add "Beta" badges and availability table to POS guide |
+| API base URL references hardcoded to api.kangopenbanking.com | 845 references across 70 files -- will 404 until DNS resolves | Update `API_CONFIG` to use Lovable Cloud edge function URL as primary, with custom domain as display URL |
 
-### Part 2: Automated Smoke Tests (ORDER P5)
+## Implementation Steps
 
-**New file: `src/test/code-examples-smoke.test.ts`**
+### Step 1: Fix API Base URL Strategy
+Update `src/config/api.ts` to use the working Supabase functions URL as the runtime endpoint while displaying `api.kangopenbanking.com` in documentation. Add a helper that code examples reference.
 
-Extend the existing test infrastructure with:
-1. **Developer page file coverage test** -- scan `src/pages/developer/*.tsx` and verify each file imports either `ApiEndpoint` or `CodeBlock` (ensures every page has code)
-2. **ApiEndpoint auto-example generation test** -- unit test the `generateCodeExamples` helper to verify it produces valid snippets for all 6 languages for GET and POST methods
-3. **Multi-language completeness test** -- verify the generated examples contain expected language keywords (e.g., `curl`, `fetch`, `requests.`, `curl_init`, `http.NewRequest`, `HttpURLConnection`)
-4. **Route coverage test** -- cross-reference `docNavigationOrder.ts` paths against registered routes in `App.tsx` to catch 404s
+### Step 2: Enhance SecurityCompliancePage
+Add to `src/pages/developer/SecurityCompliancePage.tsx`:
+- COBAC registration reference number (placeholder for real number)
+- Downloadable security audit summary section
+- FAPI certification verification link
+- Incident response policy table (already partially exists)
 
-### Part 3: Full Report
+### Step 3: Add POS Module Availability Status
+Update `src/pages/developer/MerchantsPOSGuide.tsx`:
+- Add "Beta" badge and availability matrix
+- Clarify which POS endpoints are live vs planned
+- Add deployment timeline
 
-Generate `KOB_Final_E2E_Report_April2026.md` to `/mnt/documents/` documenting:
-- All gaps closed
-- Test results
-- Updated compliance scores
-- ORDER P5/P9 status
+### Step 4: Create Dedicated SLA Page in Developer Portal
+Add a route at `/developer/sla` that consolidates SLA targets, uptime guarantees, and incident response from the existing SecurityCompliancePage into a standalone document accessible from the developer portal sidebar.
 
-## Files Modified
+### Step 5: Ensure All API Code Examples Use Fallback URL
+Create a shared constant `API_EXAMPLE_BASE_URL` that code example components (`ApiEndpoint.tsx`, `SdkExamples.tsx`) reference, so examples work even before custom domain DNS is configured.
+
+## Files to Modify
+
 | File | Change |
 |------|--------|
-| `src/components/developer/ApiEndpoint.tsx` | Add auto-generated 6-language code examples section |
-| `src/test/code-examples-smoke.test.ts` | New: automated smoke tests for code coverage |
-| `/mnt/documents/KOB_Final_E2E_Report_April2026.md` | New: final audit report |
+| `src/config/api.ts` | Add runtime URL helper + example base URL constant |
+| `src/pages/developer/SecurityCompliancePage.tsx` | Add COBAC reg number, audit section, FAPI link |
+| `src/pages/developer/MerchantsPOSGuide.tsx` | Add availability matrix with Beta badges |
+| `src/pages/developer/SLAPage.tsx` | New: dedicated developer-portal SLA page |
+| `src/components/developer/PublicDeveloperLayout.tsx` | Add SLA to sidebar nav |
+| `src/App.tsx` | Add `/developer/sla` route |
+| `src/components/developer/ApiEndpoint.tsx` | Use configurable base URL for examples |
 
-## Compliance Impact
-- **ORDER P5** (Working Code Rule): Automated smoke tests verify code examples exist on all pages
-- **ORDER P9** (Multi-Language Rule): All 60+ API reference pages gain Go/Java/PHP/cURL/Node/Python automatically
-- Expected score: **87 -> 92/100**
+## Critical User Action Required
+
+**You must click "Publish" after these changes.** The majority of reported issues (sub-page redirects, legal pages, Swagger UI, rate limits) are already correctly implemented in code but not deployed to the live site. No code change can fix a stale deployment.
+
+## Out of Scope (External Actions)
+
+- **DNS configuration** for `api.kangopenbanking.com` and `sandbox.kangopenbanking.com` -- requires DNS provider action
+- **GitHub organization creation** -- external platform action
+- **Third-party pentest report** -- requires engaging an audit firm
+- **COBAC actual registration number** -- requires the real regulatory reference
 
