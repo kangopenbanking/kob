@@ -7,6 +7,23 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.7.0",
+      date: "2026-04-03",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Cache-Control, ETag, and Last-Modified headers added to all 122 GET endpoints (RFC 7234)" },
+        { type: "feature", description: "304 Not Modified response component added for conditional request support" },
+        { type: "feature", description: "Token lifetime documented: 15m access, 30d rotating refresh, 60s auth code" },
+        { type: "feature", description: "Webhook delivery policy documented: 7 attempts, exponential backoff, 30-day dead-letter" },
+        { type: "feature", description: "IdempotencyKey header now documents 24-hour key retention TTL" },
+        { type: "fix", description: "balance_after on Transaction schema corrected from number to string (precision fix)" },
+        { type: "fix", description: "OAuth authorizationUrl/tokenUrl corrected from /functions/v1/ to /v1/ path" },
+        { type: "feature", description: "Rate limit headers added to 7 previously missing endpoint responses" },
+        { type: "improvement", description: "Dual naming convention (snake_case/PascalCase) documented on Transaction schema" },
+        { type: "feature", description: "New documentation pages: Token Lifecycle, Webhook Retry Policy, HTTP Caching" },
+      ]
+    },
+    {
       version: "API Spec 4.6.0",
       date: "2026-03-29",
       type: "minor",
