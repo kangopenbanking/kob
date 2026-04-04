@@ -7,6 +7,27 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.8.0",
+      date: "2026-04-04",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Public Business Identity API -- unauthenticated lookup, search, and verification badge endpoints for any merchant" },
+        { type: "feature", description: "Public business directory search with filtering by industry, country, and trust tier (paginated)" },
+        { type: "feature", description: "Trust Score tiers introduced: Unverified, Bronze, Silver, Gold, Platinum -- mapped from 0-100 composite score" },
+        { type: "feature", description: "Public trust badge endpoint returns verification status, tier, and score without authentication" },
+        { type: "feature", description: "Trust score history tracking -- up to 24 historical score snapshots per merchant" },
+        { type: "feature", description: "Public-safe factors summary (verification strength, transaction volume, reliability, dispute record) exposed on public scores" },
+        { type: "feature", description: "Document expiry tracking on verification checks with expiring_docs admin endpoint" },
+        { type: "feature", description: "Batch verification initiation for pending KYC submissions (admin)" },
+        { type: "feature", description: "Auto-complete KYB workflow -- when all checks pass/fail, business_kyc status auto-updates to approved/rejected" },
+        { type: "feature", description: "Sanctions screening check added to cross-check pipeline (OFAC SDN, EU, UN Consolidated, CEMAC Regional)" },
+        { type: "feature", description: "Business age assessment added to verification cross-checks with enhanced monitoring flag for businesses under 1 year" },
+        { type: "improvement", description: "Verification sources now tracked per check (RCCM Registry, DGI Tax Authority, PostIQ, National ID Registry)" },
+        { type: "improvement", description: "Trust score calculation now syncs trust_tier to public_business_profiles automatically" },
+        { type: "improvement", description: "RCCM format validation expanded to support RCCM/ prefix patterns used in OHADA jurisdictions" },
+      ]
+    },
+    {
       version: "API Spec 4.7.0",
       date: "2026-04-03",
       type: "minor",
