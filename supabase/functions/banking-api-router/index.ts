@@ -41,9 +41,9 @@ Deno.serve(async (req) => {
       case "list_banks": {
         const { data, error } = await supabase
           .from("banks")
-          .select("id, name, swift_bic, country_code, bank_code, logo_url, is_active, integration_modes, created_at")
-          .eq("is_active", true)
-          .order("name");
+          .select("id, legal_name, display_name, swift_bic, country, bank_code, status, integration_mode, created_at")
+          .eq("status", "active")
+          .order("display_name");
         if (error) throw error;
         result = { data, meta: { total: data?.length || 0 } };
         break;
