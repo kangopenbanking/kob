@@ -12,7 +12,7 @@ export default function BankApprovalQueue() {
       const { data } = await supabase
         .from("approval_requests")
         .select("*")
-        .in("status", ["pending", "under_review"])
+        .in("status", ["submitted", "pending_assistant_manager", "pending_branch_manager"])
         .order("created_at", { ascending: false })
         .limit(50);
       return data || [];
