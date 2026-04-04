@@ -7,6 +7,25 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.0",
+      date: "2026-04-04",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Unified Banking API Router -- 14 actions for customer, account, transfer, KYC, and COBAC report operations via /v1/banking/*" },
+        { type: "feature", description: "Bank Dashboard -- white-label portal for connected banks with connector setup wizard, approval queue, customer management, transfer manager, reports, and API logs" },
+        { type: "feature", description: "Embeddable Widget System -- Payment, Bank Connect, and Verification widgets with iframe and JS SDK integration, postMessage event communication" },
+        { type: "feature", description: "Open Banking Standards page -- FAPI 1.0, COBAC, PSD2, ISO 20022 compliance matrix with CEMAC zone coverage" },
+        { type: "feature", description: "Bank Onboarding Guide -- step-by-step connector setup documentation for API, Database, File, and Manual Console connector types" },
+        { type: "feature", description: "E2E Test Report page -- automated test results for connector health, API endpoints, auth, widgets, and webhook delivery" },
+        { type: "feature", description: "banking_customers table -- bank-managed customer profiles with institution-scoped RLS and external ID mapping" },
+        { type: "feature", description: "banking_api_logs table -- request/response audit trail with institution and developer scoping" },
+        { type: "feature", description: "widget_sessions table -- ephemeral widget token sessions with service-role-only access" },
+        { type: "feature", description: "Internal transfer with idempotency -- atomic fund movement via execute_atomic_transfer RPC with Idempotency-Key duplicate prevention" },
+        { type: "feature", description: "COBAC-compliant transaction report generation with credit/debit summaries and net position calculation" },
+        { type: "improvement", description: "Developer portal navigation extended with Widgets SDK, Test Report, Open Banking Standards, and Bank Onboarding entries" },
+      ]
+    },
+    {
       version: "API Spec 4.8.0",
       date: "2026-04-04",
       type: "minor",

@@ -2937,6 +2937,119 @@ export type Database = {
           },
         ]
       }
+      banking_api_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          institution_id: string | null
+          ip_address: string | null
+          method: string
+          request_body: Json | null
+          request_headers: Json | null
+          response_body: Json | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          institution_id?: string | null
+          ip_address?: string | null
+          method: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          institution_id?: string | null
+          ip_address?: string | null
+          method?: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banking_api_logs_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banking_customers: {
+        Row: {
+          bank_id: string | null
+          created_at: string
+          email: string | null
+          external_customer_id: string
+          full_name: string
+          id: string
+          institution_id: string
+          kyc_status: string
+          metadata: Json | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_customer_id: string
+          full_name: string
+          id?: string
+          institution_id: string
+          kyc_status?: string
+          metadata?: Json | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_id?: string | null
+          created_at?: string
+          email?: string | null
+          external_customer_id?: string
+          full_name?: string
+          id?: string
+          institution_id?: string
+          kyc_status?: string
+          metadata?: Json | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banking_customers_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banking_customers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banks: {
         Row: {
           bank_code: string | null
@@ -21227,6 +21340,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "webhooks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      widget_sessions: {
+        Row: {
+          bank_id: string | null
+          config: Json
+          created_at: string
+          expires_at: string
+          id: string
+          institution_id: string | null
+          session_token: string
+          status: string
+          user_id: string | null
+          widget_type: string
+        }
+        Insert: {
+          bank_id?: string | null
+          config?: Json
+          created_at?: string
+          expires_at: string
+          id?: string
+          institution_id?: string | null
+          session_token: string
+          status?: string
+          user_id?: string | null
+          widget_type: string
+        }
+        Update: {
+          bank_id?: string | null
+          config?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          institution_id?: string | null
+          session_token?: string
+          status?: string
+          user_id?: string | null
+          widget_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "widget_sessions_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "widget_sessions_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"

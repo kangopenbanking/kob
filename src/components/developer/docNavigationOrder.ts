@@ -19,6 +19,8 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "Getting Started", path: "/developer/getting-started" },
   { title: "Changelog", path: "/developer/changelog" },
   { title: "Forum", path: "/developer/forum" },
+  { title: "Widgets SDK", path: "/developer/widgets" },
+  { title: "Test Report", path: "/developer/test-report" },
   { title: "Status", path: "/developer/status" },
   { title: "Support", path: "/developer/support" },
   { title: "Access Policy", path: "/developer/access-policy" },
@@ -79,6 +81,8 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
 
   // ── 6. Open Banking ──
   { title: "Open Banking Overview", path: "/developer/open-banking" },
+  { title: "Open Banking Standards", path: "/developer/open-banking/standards" },
+  { title: "Bank Onboarding", path: "/developer/bank-onboarding" },
   { title: "AISP Guide", path: "/developer/open-banking/aisp" },
   { title: "PISP Guide", path: "/developer/open-banking/pisp" },
   { title: "Consents", path: "/developer/open-banking/consents" },

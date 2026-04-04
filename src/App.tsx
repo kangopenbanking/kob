@@ -345,7 +345,26 @@ const RolesPermissions = lazy(() => import("./pages/developer/RolesPermissions")
 const CompetitiveComparison = lazy(() => import("./pages/developer/CompetitiveComparison"));
 const MigrationGuide = lazy(() => import("./pages/developer/MigrationGuide"));
 
-// Institution (FI Portal)
+// Bank Dashboard
+const BankDashboardHome = lazy(() => import("./pages/bank-dashboard/BankDashboardHome"));
+const BankConnectorSetup = lazy(() => import("./pages/bank-dashboard/BankConnectorSetup"));
+const BankApprovalQueue = lazy(() => import("./pages/bank-dashboard/BankApprovalQueue"));
+const BankCustomerView = lazy(() => import("./pages/bank-dashboard/BankCustomerView"));
+const BankTransferManager = lazy(() => import("./pages/bank-dashboard/BankTransferManager"));
+const BankReports = lazy(() => import("./pages/bank-dashboard/BankReports"));
+const BankApiLogs = lazy(() => import("./pages/bank-dashboard/BankApiLogs"));
+
+// Widgets
+const EmbeddablePaymentWidget = lazy(() => import("./pages/widgets/EmbeddablePaymentWidget"));
+const EmbeddableBankConnectWidget = lazy(() => import("./pages/widgets/EmbeddableBankConnectWidget"));
+const EmbeddableVerificationWidget = lazy(() => import("./pages/widgets/EmbeddableVerificationWidget"));
+
+// New Developer Pages
+const WidgetSDKPage = lazy(() => import("./pages/developer/WidgetSDKPage"));
+const OpenBankingStandards = lazy(() => import("./pages/developer/OpenBankingStandards"));
+const BankOnboardingGuide = lazy(() => import("./pages/developer/BankOnboardingGuide"));
+const TestReport = lazy(() => import("./pages/developer/TestReport"));
+
 const FIPortal = lazy(() => import("./pages/FIPortal"));
 const InstitutionTransactions = lazy(() => import("./pages/institution/InstitutionTransactions"));
 const InstitutionAnalytics = lazy(() => import("./pages/institution/InstitutionAnalytics"));
@@ -976,6 +995,10 @@ function App() {
               <Route path="compliance" element={<SecurityCompliancePage />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
+              <Route path="widgets" element={<WidgetSDKPage />} />
+              <Route path="open-banking/standards" element={<OpenBankingStandards />} />
+              <Route path="bank-onboarding" element={<BankOnboardingGuide />} />
+              <Route path="test-report" element={<TestReport />} />
               {/* Remittance API Docs */}
               <Route path="remittance" element={<DevRemittanceOverview />} />
               <Route path="remittance/corridors-quotes" element={<DevRemittanceCorridorsQuotes />} />
@@ -1024,6 +1047,22 @@ function App() {
             <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />
             <Route path="/solutions/credit-scoring" element={<Layout><CreditScoring /></Layout>} />
             
+            {/* Widget standalone routes - public */}
+            <Route path="/widgets/payment" element={<EmbeddablePaymentWidget />} />
+            <Route path="/widgets/bank-connect" element={<EmbeddableBankConnectWidget />} />
+            <Route path="/widgets/verify" element={<EmbeddableVerificationWidget />} />
+
+            {/* Bank Dashboard - institution role */}
+            <Route path="/bank-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
+              <Route index element={<BankDashboardHome />} />
+              <Route path="connector-setup" element={<BankConnectorSetup />} />
+              <Route path="approvals" element={<BankApprovalQueue />} />
+              <Route path="customers" element={<BankCustomerView />} />
+              <Route path="transfers" element={<BankTransferManager />} />
+              <Route path="reports" element={<BankReports />} />
+              <Route path="api-logs" element={<BankApiLogs />} />
+            </Route>
+
             <Route path="/developer-old" element={<Navigate to="/developer" replace />} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
