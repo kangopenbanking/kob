@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         }
         const { data: bank, error } = await supabase
           .from("banks")
-          .select("id, name, is_active, integration_modes, created_at")
+          .select("id, display_name, status, integration_mode, created_at")
           .eq("id", bankId)
           .maybeSingle();
         if (error) throw error;
