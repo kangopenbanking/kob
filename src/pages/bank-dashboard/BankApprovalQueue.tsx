@@ -29,8 +29,8 @@ export default function BankApprovalQueue() {
       <div className="grid gap-3 md:grid-cols-3">
         <Card className="border border-border/50">
           <CardContent className="pt-6 text-center">
-            <Clock className="mx-auto h-8 w-8 text-yellow-500" />
-            <p className="mt-2 text-2xl font-bold">{requests?.filter(r => r.status === "pending").length || 0}</p>
+            <Clock className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-2xl font-bold">{requests?.filter(r => r.status === "submitted").length || 0}</p>
             <p className="text-sm text-muted-foreground">Pending</p>
           </CardContent>
         </Card>
