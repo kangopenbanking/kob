@@ -995,6 +995,10 @@ function App() {
               <Route path="compliance" element={<SecurityCompliancePage />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
+              <Route path="widgets" element={<WidgetSDKPage />} />
+              <Route path="open-banking/standards" element={<OpenBankingStandards />} />
+              <Route path="bank-onboarding" element={<BankOnboardingGuide />} />
+              <Route path="test-report" element={<TestReport />} />
               {/* Remittance API Docs */}
               <Route path="remittance" element={<DevRemittanceOverview />} />
               <Route path="remittance/corridors-quotes" element={<DevRemittanceCorridorsQuotes />} />
