@@ -4028,12 +4028,14 @@ export type Database = {
           confidence_score: number | null
           created_at: string
           cross_check_result: Json | null
+          document_expires_at: string | null
           extracted_data: Json | null
           id: string
           review_notes: string | null
           reviewed_by: string | null
           status: string
           updated_at: string
+          verification_source: string | null
         }
         Insert: {
           business_kyc_id: string
@@ -4042,12 +4044,14 @@ export type Database = {
           confidence_score?: number | null
           created_at?: string
           cross_check_result?: Json | null
+          document_expires_at?: string | null
           extracted_data?: Json | null
           id?: string
           review_notes?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
+          verification_source?: string | null
         }
         Update: {
           business_kyc_id?: string
@@ -4056,12 +4060,14 @@ export type Database = {
           confidence_score?: number | null
           created_at?: string
           cross_check_result?: Json | null
+          document_expires_at?: string | null
           extracted_data?: Json | null
           id?: string
           review_notes?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
+          verification_source?: string | null
         }
         Relationships: [
           {
@@ -12486,44 +12492,59 @@ export type Database = {
       }
       merchant_trust_scores: {
         Row: {
+          badge_issued_at: string | null
           created_at: string
           dispute_score: number
+          factors_summary: Json | null
           failure_rate_score: number
           id: string
+          is_public: boolean
           last_calculated_at: string
           merchant_id: string
           overall_score: number
           risk_level: string
           score_breakdown: Json | null
+          score_history: Json[] | null
           transaction_score: number
+          trust_tier: string
           updated_at: string
           verification_score: number
         }
         Insert: {
+          badge_issued_at?: string | null
           created_at?: string
           dispute_score?: number
+          factors_summary?: Json | null
           failure_rate_score?: number
           id?: string
+          is_public?: boolean
           last_calculated_at?: string
           merchant_id: string
           overall_score?: number
           risk_level?: string
           score_breakdown?: Json | null
+          score_history?: Json[] | null
           transaction_score?: number
+          trust_tier?: string
           updated_at?: string
           verification_score?: number
         }
         Update: {
+          badge_issued_at?: string | null
           created_at?: string
           dispute_score?: number
+          factors_summary?: Json | null
           failure_rate_score?: number
           id?: string
+          is_public?: boolean
           last_calculated_at?: string
           merchant_id?: string
           overall_score?: number
           risk_level?: string
           score_breakdown?: Json | null
+          score_history?: Json[] | null
           transaction_score?: number
+          trust_tier?: string
           updated_at?: string
           verification_score?: number
         }
@@ -15601,6 +15622,71 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_business_profiles: {
+        Row: {
+          business_name: string
+          business_type: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          is_active: boolean
+          merchant_id: string
+          public_description: string | null
+          registration_country: string | null
+          trust_tier: string
+          updated_at: string
+          verification_badge: string | null
+          verified_since: string | null
+          website_url: string | null
+        }
+        Insert: {
+          business_name: string
+          business_type?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          is_active?: boolean
+          merchant_id: string
+          public_description?: string | null
+          registration_country?: string | null
+          trust_tier?: string
+          updated_at?: string
+          verification_badge?: string | null
+          verified_since?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          business_name?: string
+          business_type?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          is_active?: boolean
+          merchant_id?: string
+          public_description?: string | null
+          registration_country?: string | null
+          trust_tier?: string
+          updated_at?: string
+          verification_badge?: string | null
+          verified_since?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_business_profiles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
