@@ -345,7 +345,26 @@ const RolesPermissions = lazy(() => import("./pages/developer/RolesPermissions")
 const CompetitiveComparison = lazy(() => import("./pages/developer/CompetitiveComparison"));
 const MigrationGuide = lazy(() => import("./pages/developer/MigrationGuide"));
 
-// Institution (FI Portal)
+// Bank Dashboard
+const BankDashboardHome = lazy(() => import("./pages/bank-dashboard/BankDashboardHome"));
+const BankConnectorSetup = lazy(() => import("./pages/bank-dashboard/BankConnectorSetup"));
+const BankApprovalQueue = lazy(() => import("./pages/bank-dashboard/BankApprovalQueue"));
+const BankCustomerView = lazy(() => import("./pages/bank-dashboard/BankCustomerView"));
+const BankTransferManager = lazy(() => import("./pages/bank-dashboard/BankTransferManager"));
+const BankReports = lazy(() => import("./pages/bank-dashboard/BankReports"));
+const BankApiLogs = lazy(() => import("./pages/bank-dashboard/BankApiLogs"));
+
+// Widgets
+const EmbeddablePaymentWidget = lazy(() => import("./pages/widgets/EmbeddablePaymentWidget"));
+const EmbeddableBankConnectWidget = lazy(() => import("./pages/widgets/EmbeddableBankConnectWidget"));
+const EmbeddableVerificationWidget = lazy(() => import("./pages/widgets/EmbeddableVerificationWidget"));
+
+// New Developer Pages
+const WidgetSDKPage = lazy(() => import("./pages/developer/WidgetSDKPage"));
+const OpenBankingStandards = lazy(() => import("./pages/developer/OpenBankingStandards"));
+const BankOnboardingGuide = lazy(() => import("./pages/developer/BankOnboardingGuide"));
+const TestReport = lazy(() => import("./pages/developer/TestReport"));
+
 const FIPortal = lazy(() => import("./pages/FIPortal"));
 const InstitutionTransactions = lazy(() => import("./pages/institution/InstitutionTransactions"));
 const InstitutionAnalytics = lazy(() => import("./pages/institution/InstitutionAnalytics"));
