@@ -973,6 +973,7 @@ function App() {
               <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
               <Route path="sandbox/console" element={<SandboxConsole />} />
               <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
+              <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
               <Route path="api-reference/pagination" element={<ApiReferencePagination />} />
