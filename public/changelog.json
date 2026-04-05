@@ -1,9 +1,24 @@
 {
-  "apiVersion": "4.9.1",
+  "apiVersion": "4.9.2",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-05",
   "entries": [
+    {
+      "version": "4.9.2",
+      "date": "2026-04-05",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "DCR schema completion -- full request/response schemas for POST /v1/dcr/register",
+      "highlights": [
+        "DcrRegistrationRequest component schema added with 12 properties including software_statement (SSA JWT), jwks_uri, jwks, and FAPI signing algorithm fields",
+        "DcrRegistrationResponse component schema added with 13 properties covering all fields returned by the DCR edge function",
+        "POST /v1/dcr/register endpoint now uses $ref component schemas instead of inline definitions",
+        "Request and response examples added to the DCR endpoint for developer onboarding",
+        "Integration contracts documentation updated with full DCR field reference table"
+      ],
+      "standard_citations": ["RFC 7591 Section 2", "RFC 7591 Section 2.3", "FAPI-1.0-ADV Section 5.2.2", "OIDC Core Section 2"]
+    },
     {
       "version": "4.9.1",
       "date": "2026-04-05",
