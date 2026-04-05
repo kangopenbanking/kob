@@ -60,6 +60,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
             src={wConfig.logo_url || logoUrl!}
             alt={name}
             className="h-20 w-20 rounded-2xl object-contain bg-primary-foreground p-2"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== window.location.origin + '/kfs-logo.png') {
+                target.src = '/kfs-logo.png';
+              }
+            }}
           />
         ) : (
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-foreground">
