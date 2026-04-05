@@ -122,13 +122,14 @@ export default function TranslationManager() {
   } | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  const fetchAllRows = async (table: string, query: any) => {
+  const fetchAllRows = async (tableName: string, buildQuery: () => any) => {
     const PAGE_SIZE = 1000;
     let allData: any[] = [];
     let from = 0;
     let hasMore = true;
     while (hasMore) {
-      const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+      // Build a fresh query each iteration to avoid mutating the same builder
+      const { data, error } = await buildQuery().range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
       if (data) allData = allData.concat(data);
       hasMore = data && data.length === PAGE_SIZE;
@@ -141,10 +142,10 @@ export default function TranslationManager() {
     setLoading(true);
     try {
       const [stringsData, valuesData] = await Promise.all([
-        fetchAllRows("translation_strings",
+        fetchAllRows("translation_strings", () =>
           supabase.from("translation_strings").select("*").order("category").order("string_key")
         ),
-        fetchAllRows("translation_values",
+        fetchAllRows("translation_values", () =>
           supabase.from("translation_values").select("*")
         ),
       ]);
