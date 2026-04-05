@@ -27,6 +27,10 @@ import {
   Clock,
   ChevronRight,
   LayoutDashboard,
+  Building2,
+  Plug,
+  FileCheck,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
