@@ -998,6 +998,8 @@ function App() {
               <Route path="guides/go-live" element={<GoLiveChecklist />} />
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
+              <Route path="guides/webhooks" element={<Navigate to="/developer/api-reference/webhook-retry" replace />} />
+              <Route path="playground" element={<Navigate to="/developer/api-playground" replace />} />
               <Route path="access-policy" element={<AccessPolicy />} />
               <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
