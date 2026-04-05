@@ -98,6 +98,18 @@ export const institutionNavigation = [
     ]
   },
   {
+    title: "Banking Dashboard",
+    items: [
+      { title: "Bank Overview", path: "/fi-portal/banking", icon: Landmark, sectionKey: "banking" },
+      { title: "Connector Setup", path: "/fi-portal/banking/connector-setup", icon: Settings, sectionKey: "banking" },
+      { title: "Manual Approvals", path: "/fi-portal/banking/approvals", icon: ClipboardList, sectionKey: "banking" },
+      { title: "Bank Customers", path: "/fi-portal/banking/customers", icon: Users, sectionKey: "banking" },
+      { title: "Transfer Manager", path: "/fi-portal/banking/transfers", icon: ArrowUpDown, sectionKey: "banking" },
+      { title: "Bank Reports", path: "/fi-portal/banking/reports", icon: FileText, sectionKey: "banking" },
+      { title: "API Logs", path: "/fi-portal/banking/api-logs", icon: Activity, sectionKey: "banking" },
+    ]
+  },
+  {
     title: "Bank Connector Kit",
     items: [
       { title: "Connector Overview", path: "/fi-portal/connector", icon: Activity, sectionKey: "connector" },
@@ -172,5 +184,6 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'gateway-subaccounts', label: 'Subaccounts' },
   { key: 'gateway-customers', label: 'Gateway Customers' },
   { key: 'connector', label: 'Bank Connector Kit' },
+  { key: 'banking', label: 'Banking Dashboard' },
   { key: 'disputes', label: 'Disputes' },
 ];
