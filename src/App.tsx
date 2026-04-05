@@ -723,6 +723,14 @@ function App() {
               <Route path="connector/templates" element={<ConnectorTemplates />} />
               <Route path="connector/guide" element={<ConnectorGuide />} />
               <Route path="connector/onboard" element={<ConnectorOnboard />} />
+              {/* Banking Dashboard */}
+              <Route path="banking" element={<BankDashboardHome />} />
+              <Route path="banking/connector-setup" element={<BankConnectorSetup />} />
+              <Route path="banking/approvals" element={<BankApprovalQueue />} />
+              <Route path="banking/customers" element={<BankCustomerView />} />
+              <Route path="banking/transfers" element={<BankTransferManager />} />
+              <Route path="banking/reports" element={<BankReports />} />
+              <Route path="banking/api-logs" element={<BankApiLogs />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
