@@ -243,6 +243,7 @@ const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const SecurityCompliancePage = lazy(() => import("./pages/developer/SecurityCompliancePage"));
 const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
+const SandboxConsole = lazy(() => import("./pages/developer/SandboxConsole"));
 const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentials"));
 const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards"));
 const SandboxMobileMoney = lazy(() => import("./pages/developer/SandboxMobileMoney"));
