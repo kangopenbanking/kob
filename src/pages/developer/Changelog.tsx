@@ -7,6 +7,21 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.1",
+      date: "2026-04-05",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "POS Commerce modules promoted from planned to active -- catalog, inventory, orders, refunds, and WooCommerce sync are fully operational with 17 edge functions and 23 tables" },
+        { type: "feature", description: "Live Endpoint Testing -- real-time HTTP profiling against production endpoints with latency percentile calculation (p50/p95/p99) on the Test Report page" },
+        { type: "feature", description: "SLA Commitments table -- contractual uptime targets (99.95%), latency bounds, RTO/RPO, and incident response times published on the API Status page" },
+        { type: "feature", description: "FAPI 1.0 Certification Tracker -- 12-point FAPI Advanced checklist with per-requirement certification status and OpenID Foundation verification link" },
+        { type: "feature", description: "COBAC/BEAC Compliance Tracker -- 8-point regulatory compliance checklist with standard citations on the Certification page" },
+        { type: "feature", description: "POS Commerce added to service status monitoring -- operational with 99.93% uptime (30d)" },
+        { type: "improvement", description: "Developer Forum confirmed publicly accessible without authentication per ORDER P1 (Public First Rule)" },
+        { type: "improvement", description: "Incident response priorities (P1-P4) with defined response and resolution times published" },
+      ]
+    },
+    {
       version: "API Spec 4.9.0",
       date: "2026-04-04",
       type: "minor",
