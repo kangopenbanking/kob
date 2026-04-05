@@ -661,7 +661,7 @@ curl -X POST https://sandbox.kangopenbanking.com/v1/sandbox/data/generate \\
             <CardDescription>Complete sandbox workflow using cURL (RFC 7591 Section 2.3, ORDER P5, ORDER P9)</CardDescription>
           </CardHeader>
           <CardContent>
-            <CodeBlock code={sandboxCurlExample} language="bash" />
+            <CodeBlock examples={[{ language: "bash", label: "cURL", code: sandboxCurlExample }]} />
           </CardContent>
         </Card>
 
