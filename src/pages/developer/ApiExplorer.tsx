@@ -293,8 +293,14 @@ grant_type=client_credentials
             tryItOutEnabled={true}
           />
         ) : (
-          <div className="p-8 text-center text-muted-foreground">
-            Failed to load API specification. Please refresh the page.
+          <div className="p-8 text-center space-y-4">
+            <p className="text-muted-foreground">Failed to load API specification.</p>
+            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)}>
+              <Terminal className="mr-2 h-4 w-4" /> Retry Loading Spec
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Or view the <a href="/developer/api-explorer-static" className="text-primary underline">static API reference</a> instead.
+            </p>
           </div>
         )}
       </Card>
