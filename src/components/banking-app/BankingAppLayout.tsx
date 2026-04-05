@@ -11,6 +11,8 @@ import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
+import { HealthBanner } from '@/components/HealthBanner';
+import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -29,6 +31,7 @@ const BankingAppInner: React.FC = () => {
       className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text"
       style={{ '--pwa-font-multiplier': tenant.fontSizeMultiplier } as React.CSSProperties}
     >
+      <HealthBanner />
       <OfflineIndicator />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-16">
@@ -50,6 +53,7 @@ export const BankingAppLayout: React.FC = () => {
   }, []);
 
   useRealtimeBalanceSync(userId, institutionId);
+  useBankingWebhookEvents(institutionId);
 
   return (
     <BankingAppAuthGuard>
