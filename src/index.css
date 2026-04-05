@@ -303,6 +303,46 @@ All colors MUST be HSL.
   @apply bg-muted/50 p-4 rounded-lg;
 }
 
+/* Improve Swagger UI text visibility */
+.swagger-container .swagger-ui,
+.swagger-container .swagger-ui .opblock-tag,
+.swagger-container .swagger-ui .opblock-summary-description,
+.swagger-container .swagger-ui .opblock-description-wrapper p,
+.swagger-container .swagger-ui .opblock-external-docs-wrapper p,
+.swagger-container .swagger-ui .markdown p,
+.swagger-container .swagger-ui .markdown li,
+.swagger-container .swagger-ui table thead tr th,
+.swagger-container .swagger-ui table tbody tr td,
+.swagger-container .swagger-ui .parameter__name,
+.swagger-container .swagger-ui .parameter__type,
+.swagger-container .swagger-ui .parameter__in,
+.swagger-container .swagger-ui .response-col_status,
+.swagger-container .swagger-ui .response-col_description,
+.swagger-container .swagger-ui .model-title,
+.swagger-container .swagger-ui .model .property,
+.swagger-container .swagger-ui label,
+.swagger-container .swagger-ui .btn,
+.swagger-container .swagger-ui select,
+.swagger-container .swagger-ui input,
+.swagger-container .swagger-ui .info .title,
+.swagger-container .swagger-ui .info p,
+.swagger-container .swagger-ui .info li,
+.swagger-container .swagger-ui .filter-container input {
+  color: hsl(var(--foreground));
+}
+
+.swagger-container .swagger-ui .opblock-summary-path,
+.swagger-container .swagger-ui .opblock-summary-path span {
+  color: hsl(var(--foreground)) !important;
+}
+
+.swagger-container .swagger-ui .opblock-tag small,
+.swagger-container .swagger-ui .info .base-url,
+.swagger-container .swagger-ui .parameter__deprecated,
+.swagger-container .swagger-ui .response-col_links {
+  color: hsl(var(--muted-foreground));
+}
+
 /* Arrow Trail Animation */
 @keyframes arrow-pulse {
   0%, 100% {
