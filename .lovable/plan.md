@@ -1,183 +1,95 @@
 
 
-# Plan: Full Banking API Platform Extension for CEMAC Banks
+# Plan: Complete DCR Schema in OpenAPI Specification
 
-## Audit Summary
+## Problem
 
-### What Already Exists (DO NOT TOUCH)
-- **Bank Connectors**: 4 connector edge functions operational (`bank-api-connector`, `bank-db-connector`, `bank-file-connector`, `bank-mq-connector`)
-- **Banking Ops Router**: Withdrawal policies, staff authorizations, approvals (`banking-ops`)
-- **AISP/PISP**: Full endpoint suite (accounts, balances, transactions, beneficiaries, consents, payments)
-- **Payment Gateway**: 8 consolidated routers (~42 endpoints)
-- **KYB System**: `business-verification-workflow`, `merchant-trust-score`, `public-business-identity`
-- **OAuth2/PKCE/mTLS**: Complete authentication layer
-- **Developer Portal**: 100+ documentation pages, API Explorer, SDK guides, changelog, forum
-- **Admin Dashboard**: 70+ pages covering transactions, KYC, disputes, settlements, branches, webhooks
-- **Compliance Dashboard**: `ComplianceDashboard.tsx` with KYC/AML monitoring
-- **Bank Directory**: `bank-directory`, `directory-banks-cm`
-- **Interbank Engine**: ISO 20022 switch with outbox dispatch
-- **Mobile Money**: charge, transfer, verify, to-bank endpoints
-- **OpenAPI Spec**: v4.8.0 with 339+ endpoints
+The DCR request and response schemas in `/public/openapi.json` are incomplete relative to what the `dcr-register` edge function actually accepts and returns:
 
-### What is MISSING (To Build)
+**Request gaps** (fields the edge function uses but the spec omits):
+- `software_statement` (SSA JWT) -- **required** by the function, absent from spec
+- `jwks` (inline JWKS) -- accepted by function, absent from spec
+- `jwks_uri` -- accepted via SSA but should also be a direct field
 
-| Gap | Priority |
+**Response gaps** (fields returned but not documented):
+- Only `client_id`, `client_secret`, `client_id_issued_at` are in the spec
+- Missing: `client_name`, `software_id`, `software_roles`, `redirect_uris`, `grant_types`, `response_types`, `token_endpoint_auth_method`, `jwks_uri`, `scope`, `environment`
+
+**Structural gap**: No reusable component schemas -- request/response are inline
+
+## Changes
+
+### 1. Add two component schemas to `openapi.json`
+
+**`DcrRegistrationRequest`** -- 12 properties, `required: [software_statement, redirect_uris]`
+
+| Property | Type | Description | Source |
+|---|---|---|---|
+| `software_statement` | string (JWT) | Signed SSA from KOB Directory | RFC 7591 Section 2.3 |
+| `redirect_uris` | array of URI strings | OAuth redirect endpoints | RFC 7591 Section 2 |
+| `client_name` | string | Human-readable client name | RFC 7591 Section 2 |
+| `token_endpoint_auth_method` | string enum | Auth method (default: `tls_client_auth`) | FAPI 1.0 ADV Section 5.2.2 |
+| `grant_types` | array of string enum | Supported grant types | RFC 7591 Section 2 |
+| `response_types` | array of string enum | Supported response types | RFC 7591 Section 2 |
+| `scope` | string | Space-delimited scopes | RFC 7591 Section 2 |
+| `jwks_uri` | string (URI) | JWKS endpoint for client keys | RFC 7591 Section 2 |
+| `jwks` | object | Inline JWKS (mutually exclusive with jwks_uri) | RFC 7591 Section 2 |
+| `application_type` | string enum | web or native | OIDC Section 2 |
+| `id_token_signed_response_alg` | string enum | PS256/ES256/RS256 | FAPI 1.0 ADV |
+| `request_object_signing_alg` | string enum | PS256/ES256 | FAPI 1.0 ADV |
+
+**`DcrRegistrationResponse`** -- 12 properties, all documented
+
+| Property | Type |
 |---|---|
-| Unified Banking API router (`/v1/banking/*` for customer/account/transfer ops) | Critical |
-| Bank Dashboard (white-label for connected banks) | Critical |
-| Embeddable Widget System (Payment, Bank Connect, Verification) | Critical |
-| Developer Dashboard (API keys, logs, request history in portal) | High |
-| Bank Onboarding Wizard (connector setup flow) | High |
-| COBAC Compliance pages + FAPI/PSD2 standards page | High |
-| E2E test report endpoint | Medium |
-| Changelog RSS feed | Medium |
-| OpenAPI v5.0.0 with new banking endpoints | Critical |
+| `client_id` | string |
+| `client_secret` | string (returned once) |
+| `client_name` | string |
+| `software_id` | string |
+| `software_roles` | array of strings |
+| `redirect_uris` | array of strings |
+| `grant_types` | array of strings |
+| `response_types` | array of strings |
+| `token_endpoint_auth_method` | string |
+| `jwks_uri` | string |
+| `scope` | string |
+| `environment` | string enum (sandbox/production) |
+| `client_id_issued_at` | integer (unix timestamp) |
 
----
+### 2. Update `/v1/dcr/register` endpoint
 
-## Implementation Plan (11 Steps)
+- Replace inline request schema with `$ref: '#/components/schemas/DcrRegistrationRequest'`
+- Replace inline 201 response schema with `$ref: '#/components/schemas/DcrRegistrationResponse'`
+- Add example values for both request and response
+- Keep existing parameters (Idempotency-Key), security (mtls), and error responses untouched
 
-### Step 1: Unified Banking API Router (Edge Function)
-Create `banking-api-router/index.ts` -- a single router handling all new `/v1/banking/*` endpoints.
+### 3. Version bump to 4.9.2 (patch -- additive schema completion)
 
-**Actions dispatched:**
-- `list_banks` / `get_bank_status` -- read from `banks` table
-- `create_customer` / `get_customer` -- CRUD on a new `banking_customers` table
-- `list_accounts` / `get_account_balance` / `get_account_transactions` -- proxy to bank connectors
-- `internal_transfer` / `external_transfer` / `get_transfer_status` -- orchestrate via connectors + interbank engine
-- `submit_kyc` / `get_kyc_status` -- extend existing KYC flow
-- `generate_report` -- COBAC-compliant transaction report
+- Standing Order 4 (Surgeon Rule): All changes are additive
+- Standing Order 6 (Version Gate): Patch increment for non-breaking additions
+- Standing Order 3 (Audit Trail): RFC 7591, FAPI 1.0 ADV Section 5.2.2
 
-**New table**: `banking_customers` (bank_id, customer_id, external_customer_id, full_name, phone, email, kyc_status, created_at) with RLS.
+### 4. Update changelog
 
-No existing endpoints modified. This router calls existing connectors internally.
+Add v4.9.2 entry to `public/changelog.json` and `src/pages/developer/Changelog.tsx` documenting the DCR schema completion.
 
-### Step 2: Bank Dashboard Pages
-Create `/bank-dashboard/*` route group (authenticated, institution role):
+### 5. Update integration contracts doc
 
-- `BankDashboardHome.tsx` -- API usage metrics, connector health, transaction volumes
-- `BankConnectorSetup.tsx` -- Onboarding wizard (choose connector type, configure, test)
-- `BankApprovalQueue.tsx` -- Manual transaction approval for Manual Console connector banks
-- `BankCustomerView.tsx` -- Customer accounts, balances, transaction history
-- `BankTransferManager.tsx` -- Initiate/approve internal and external transfers
-- `BankReports.tsx` -- Statement downloads (PDF, CSV, CAMT.053)
-- `BankApiLogs.tsx` -- Real-time API call logs
+Add a DCR section to `docs/master/integration-contracts.md` with the full field reference table.
 
-All pages use existing Supabase queries and edge function calls. No new backend required beyond Step 1.
+## Files Modified
 
-### Step 3: Embeddable Widget System
-Create `src/components/widgets/` with three embeddable React components:
-
-- `EmbeddablePaymentWidget.tsx` -- Drop-in checkout using gateway charges API
-- `EmbeddableBankConnectWidget.tsx` -- Account linking flow via AISP consent
-- `EmbeddableVerificationWidget.tsx` -- KYC/KYB document upload and status
-
-Each widget:
-- Renders standalone at `/widgets/payment`, `/widgets/bank-connect`, `/widgets/verify`
-- Supports iframe embedding with `postMessage` communication
-- Accepts config via URL params (bank_id, theme, amount, currency)
-- Uses secure token exchange (existing OAuth2)
-
-Create `WidgetSDKPage.tsx` in developer portal with embed code snippets and JS SDK usage.
-
-### Step 4: Developer Dashboard Enhancement
-Create `/developer/dashboard/*` pages (authenticated developers):
-
-- `DeveloperDashboardHome.tsx` -- API key management, usage stats
-- `DeveloperRequestHistory.tsx` -- Recent API calls with request/response logs
-- `DeveloperWebhookMonitor.tsx` -- Webhook delivery status, retry history
-
-These pages query existing tables (`api_keys`, `webhook_deliveries`, `api_usage_logs`).
-
-### Step 5: Open Banking Compliance Pages
-Create public pages:
-
-- `/open-banking/standards` -- FAPI 1.0, COBAC, PSD2 alignment matrix
-- `/open-banking/security` -- mTLS, encryption, audit trail whitepaper
-- `/bank-onboarding` -- Step-by-step connector setup guide for banks
-
-### Step 6: OpenAPI Spec v5.0.0
-Update `public/openapi.json` with:
-- All new `/v1/banking/*` endpoints (customers, accounts, transfers, reports)
-- `x-bank-connector` extension on bank-specific operations
-- New schemas: `BankingCustomer`, `BankConnectorStatus`, `COBACReport`
-- Version bump to 5.0.0 (new endpoint group = minor, but banking API is a major milestone)
-
-Per Standing Order 6, this is a minor version (new endpoints, no removals). Will use v4.9.0 instead.
-
-### Step 7: Changelog v4.9.0
-Add v4.9.0 entry to `Changelog.tsx` documenting:
-- All new banking endpoints
-- Widget system
-- Bank dashboard
-- Developer dashboard enhancements
-- COBAC compliance pages
-
-Add RSS feed at `/developer/changelog.xml` (static XML generation).
-
-### Step 8: Demo Bank Seed Data
-Create `seed-demo-banks` edge function that populates:
-- BANK001 (Afriland, API Connector)
-- BANK002 (UBA Cameroon, File Connector)
-- BANK003 (Local CU, Manual Console)
-
-Each with sample customers, accounts, transactions.
-
-### Step 9: E2E Test Report
-Create `/developer/test-report` page showing automated test results:
-- Connector health checks
-- Endpoint response validation
-- Webhook delivery verification
-- Idempotency verification
-- Auth scope enforcement
-
-### Step 10: Updated Postman Collection + SDK Extensions
-Update `postman-collection` edge function to include new banking endpoints.
-Add banking examples to SDK pages (Node.js, Python, PHP, cURL, Go, Java).
-
-### Step 11: Architecture Diagram
-Generate Mermaid diagram showing:
-- Bank Connector Layer (4 types)
-- Unified Banking API Router
-- Existing KOB Core
-- Widget System
-- Dashboard Layer
-
----
-
-## Database Changes
-
-| Table | Purpose | RLS |
-|---|---|---|
-| `banking_customers` | Bank-managed customer profiles | Bank-scoped via institution_id |
-| `banking_api_logs` | API request/response audit trail | Developer-scoped |
-| `widget_sessions` | Ephemeral widget token sessions | Service role only |
-
-No existing tables modified.
-
-## Files Created/Modified Summary
-
-| Category | Count |
+| File | Change |
 |---|---|
-| New edge functions | 2 (banking-api-router, seed-demo-banks) |
-| New React pages | ~15 (bank dashboard, widgets, compliance, developer dashboard) |
-| New React components | ~10 (widgets, dashboard components) |
-| Modified files | ~5 (App.tsx routes, Changelog, OpenAPI spec, Postman) |
-| New documentation | 3 pages (standards, security, bank-onboarding) |
-| Database migrations | 1 (3 new tables) |
+| `public/openapi.json` | Add 2 component schemas, update DCR endpoint refs |
+| `public/changelog.json` | Add v4.9.2 entry |
+| `src/pages/developer/Changelog.tsx` | Add v4.9.2 entry |
+| `docs/master/integration-contracts.md` | Add DCR field reference |
 
-## Execution Order
+## What Is NOT Changed
 
-1. Database migration (banking_customers, banking_api_logs, widget_sessions)
-2. Banking API Router edge function
-3. Bank Dashboard pages (7 pages)
-4. Embeddable Widget System (3 widgets + SDK page)
-5. Developer Dashboard pages (3 pages)
-6. Compliance pages (3 pages)
-7. OpenAPI spec update to v4.9.0
-8. Changelog + RSS feed
-9. Demo bank seed data
-10. Test report page
-11. Postman + SDK updates
-12. Architecture diagram
+- No edge function modifications
+- No database changes
+- No route changes
+- No breaking changes to existing schemas
 
