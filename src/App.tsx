@@ -971,6 +971,7 @@ function App() {
               <Route path="sandbox/credentials" element={<SandboxCredentials />} />
               <Route path="sandbox/test-cards" element={<SandboxTestCards />} />
               <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
+              <Route path="sandbox/console" element={<SandboxConsole />} />
               <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
