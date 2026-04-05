@@ -19,19 +19,38 @@ const ApiExplorer = () => {
   const [authGuideOpen, setAuthGuideOpen] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const [retryCount, setRetryCount] = useState(0);
+
   useEffect(() => {
+    let cancelled = false;
+    const fetchWithTimeout = async (url: string, timeoutMs: number): Promise<Response> => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        return res;
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
     const fetchSpec = async () => {
-      // Try static file first, then edge function fallback
-      const sources = [
-        '/openapi.json',
-        `${API_CONFIG.BASE_URL_FALLBACK}/public-api-spec`,
-        `${API_CONFIG.BASE_URL}/public-api-spec`,
+      setIsChecking(true);
+      setFetchError(null);
+      // Try static file first (longer timeout for large file), then edge function fallbacks
+      const sources: { url: string; timeout: number }[] = [
+        { url: `${window.location.origin}/openapi.json`, timeout: 30000 },
+        { url: `${API_CONFIG.BASE_URL_FALLBACK}/public-api-spec`, timeout: 20000 },
+        { url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 15000 },
       ];
-      for (const url of sources) {
+      for (const { url, timeout } of sources) {
+        if (cancelled) return;
         try {
-          const res = await fetch(url);
+          const res = await fetchWithTimeout(url, timeout);
           if (!res.ok) continue;
-          const data = await res.json();
+          const text = await res.text();
+          if (cancelled) return;
+          const data = JSON.parse(text);
           if (data?.openapi || data?.info) {
             setSpec(data);
             setFetchError(null);
@@ -41,10 +60,13 @@ const ApiExplorer = () => {
           // try next source
         }
       }
-      setFetchError('Failed to load API specification. Please try again later.');
+      if (!cancelled) {
+        setFetchError('Failed to load API specification from all sources.');
+      }
     };
-    fetchSpec().finally(() => setIsChecking(false));
-  }, []);
+    fetchSpec().finally(() => { if (!cancelled) setIsChecking(false); });
+    return () => { cancelled = true; };
+  }, [retryCount]);
 
   const handleDownload = async (format: 'json' | 'yaml') => {
     if (!spec) return;
@@ -271,8 +293,14 @@ grant_type=client_credentials
             tryItOutEnabled={true}
           />
         ) : (
-          <div className="p-8 text-center text-muted-foreground">
-            Failed to load API specification. Please refresh the page.
+          <div className="p-8 text-center space-y-4">
+            <p className="text-muted-foreground">Failed to load API specification.</p>
+            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)}>
+              <Terminal className="mr-2 h-4 w-4" /> Retry Loading Spec
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Or view the <a href="/developer/api-explorer-static" className="text-primary underline">static API reference</a> instead.
+            </p>
           </div>
         )}
       </Card>
