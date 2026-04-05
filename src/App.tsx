@@ -973,6 +973,7 @@ function App() {
               <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
               <Route path="sandbox/console" element={<SandboxConsole />} />
               <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
+              <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
               <Route path="api-reference/pagination" element={<ApiReferencePagination />} />
@@ -998,6 +999,8 @@ function App() {
               <Route path="guides/go-live" element={<GoLiveChecklist />} />
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
+              <Route path="guides/webhooks" element={<Navigate to="/developer/api-reference/webhook-retry" replace />} />
+              <Route path="playground" element={<Navigate to="/developer/api-playground" replace />} />
               <Route path="access-policy" element={<AccessPolicy />} />
               <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
