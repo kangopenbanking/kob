@@ -43,6 +43,7 @@ const CustomerAppInner: React.FC = () => {
         '--pwa-body-color-dark': '#cccccc',
       } as React.CSSProperties}
     >
+      <HealthBanner />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-20">
           <Outlet />
