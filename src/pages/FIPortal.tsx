@@ -68,7 +68,21 @@ export default function FIPortal() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
 
+      // Check if user is admin — admins can access all dashboards
+      const { data: isAdmin } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin' as any,
+      });
+
       const inst = await resolveInstitution(user.id);
+
+      if (!inst && isAdmin) {
+        // Admin with no institution — show portal in admin overview mode
+        setInstitution({ id: 'admin-overview', name: 'Admin Overview', status: 'approved', institution_type: 'admin' });
+        setLoading(false);
+        return;
+      }
+
       if (!inst) { navigate('/register'); return; }
       if (inst.status === 'pending' || inst.status === 'rejected') { navigate('/pending-approval'); return; }
       setInstitution(inst);
