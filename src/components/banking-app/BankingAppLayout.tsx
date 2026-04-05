@@ -53,6 +53,7 @@ export const BankingAppLayout: React.FC = () => {
   }, []);
 
   useRealtimeBalanceSync(userId, institutionId);
+  useBankingWebhookEvents(institutionId);
 
   return (
     <BankingAppAuthGuard>
