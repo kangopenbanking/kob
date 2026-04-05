@@ -11,6 +11,8 @@ import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
+import { HealthBanner } from '@/components/HealthBanner';
+import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
