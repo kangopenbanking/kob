@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.3",
+      date: "2026-04-05",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "Sandbox Console (/developer/sandbox/console) -- unified self-service sandbox registration, API key generation, test data seeding, webhook testing, and bank connector validation (ORDER P3, ORDER P5)" },
+        { type: "feature", description: "Self-service API key issuance -- developers get sbx_ prefixed keys instantly without manual provisioning, up to 5 active keys per account with tiered rate limits" },
+        { type: "feature", description: "Bank Connector Validation suite -- tests all 4 connector modes (API Pull, DB Polling, File CSV/MT940, Message Queue) plus Banking API Router with per-test latency profiling" },
+        { type: "feature", description: "Webhook testing panel -- sends real HTTP requests with HMAC-SHA256 signatures to any URL and reports status code, response time, and delivery success" },
+        { type: "improvement", description: "6 sandbox edge functions deployed and verified: sandbox-create-account, sandbox-create-api-key, sandbox-generate-data, sandbox-test-webhook, sandbox-trigger-webhook, sandbox-register-webhook" },
+      ]
+    },
+    {
       version: "API Spec 4.9.2",
       date: "2026-04-05",
       type: "patch",
