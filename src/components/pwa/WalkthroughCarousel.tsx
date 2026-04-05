@@ -172,10 +172,10 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
           )}
 
           {/* Logo overlaid on media */}
-          {(wConfig.logo_url || logoUrl) && (
+          {(wConfig.logo_url || tenant.logoUrl) && (
             <div className="absolute left-4 top-4 z-10">
               <img
-                src={wConfig.logo_url || logoUrl || '/kfs-logo.png'}
+                src={wConfig.logo_url || tenant.logoUrl || '/kfs-logo.png'}
                 alt="Logo"
                 className="h-8 w-auto rounded-lg object-contain bg-background/60 p-1 backdrop-blur-sm"
                 onError={(e) => {
