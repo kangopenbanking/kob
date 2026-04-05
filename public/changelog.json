@@ -1,9 +1,25 @@
 {
-  "apiVersion": "4.9.2",
+  "apiVersion": "4.9.3",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-05",
   "entries": [
+    {
+      "version": "4.9.3",
+      "date": "2026-04-05",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Self-service Sandbox Console with API key issuance, test data seeding, webhook testing, and bank connector validation",
+      "highlights": [
+        "Sandbox Console page (/developer/sandbox/console) -- unified self-service sandbox registration, API key generation, test data seeding, webhook testing, and bank connector validation",
+        "Self-service API key issuance eliminates manual key provisioning -- developers get sbx_ keys instantly",
+        "Bank connector validation suite tests all 4 modes (API, DB, File, MQ) plus Banking API Router with latency profiling",
+        "Webhook testing sends real HTTP requests with HMAC-SHA256 signatures and reports status code and response time",
+        "Test data generator creates realistic XAF accounts, transactions, and balances in configurable quantities",
+        "6 sandbox edge functions deployed and verified: sandbox-create-account, sandbox-create-api-key, sandbox-generate-data, sandbox-test-webhook, sandbox-trigger-webhook, sandbox-register-webhook"
+      ],
+      "standard_citations": ["RFC 7591 Section 2.3", "ORDER P3", "ORDER P5", "ORDER P9"]
+    },
     {
       "version": "4.9.2",
       "date": "2026-04-05",

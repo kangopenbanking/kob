@@ -71,6 +71,7 @@ const navSections = [
     icon: Zap,
     items: [
       { title: "Overview", path: "/developer/sandbox/overview" },
+      { title: "Console", path: "/developer/sandbox/console" },
       { title: "Credentials", path: "/developer/sandbox/credentials" },
       { title: "Test Cards", path: "/developer/sandbox/test-cards" },
       { title: "Test Mobile Money", path: "/developer/sandbox/mobile-money" },
