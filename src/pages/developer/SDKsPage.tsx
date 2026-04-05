@@ -379,10 +379,10 @@ export default function SDKsPage() {
         <CardContent>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
-              { label: "OpenAPI 3.1 Spec", href: "https://api.kangopenbanking.com/functions/v1/public-api-spec", icon: Code },
-              { label: "Postman Collection", href: "https://api.kangopenbanking.com/functions/v1/postman-collection", icon: Download },
-              { label: "API Playground", href: "/developer/playground", icon: Terminal },
-              { label: "Webhook Guide", href: "/developer/guides/webhooks", icon: Package },
+              { label: "OpenAPI 3.1 Spec", href: "/openapi.json", icon: Code },
+              { label: "Postman Collection", href: "/developer/openapi", icon: Download },
+              { label: "API Playground", href: "/developer/api-playground", icon: Terminal },
+              { label: "Webhook Guide", href: "/developer/api-reference/webhook-retry", icon: Package },
             ].map((r) => (
               <a
                 key={r.label}
