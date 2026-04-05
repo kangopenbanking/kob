@@ -1060,16 +1060,9 @@ function App() {
             <Route path="/widgets/bank-connect" element={<EmbeddableBankConnectWidget />} />
             <Route path="/widgets/verify" element={<EmbeddableVerificationWidget />} />
 
-            {/* Bank Dashboard - institution role */}
-            <Route path="/bank-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
-              <Route index element={<BankDashboardHome />} />
-              <Route path="connector-setup" element={<BankConnectorSetup />} />
-              <Route path="approvals" element={<BankApprovalQueue />} />
-              <Route path="customers" element={<BankCustomerView />} />
-              <Route path="transfers" element={<BankTransferManager />} />
-              <Route path="reports" element={<BankReports />} />
-              <Route path="api-logs" element={<BankApiLogs />} />
-            </Route>
+            {/* Bank Dashboard - redirects to fi-portal */}
+            <Route path="/bank-dashboard" element={<Navigate to="/fi-portal/banking" replace />} />
+            <Route path="/bank-dashboard/*" element={<Navigate to="/fi-portal/banking" replace />} />
 
             <Route path="/developer-old" element={<Navigate to="/developer" replace />} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
