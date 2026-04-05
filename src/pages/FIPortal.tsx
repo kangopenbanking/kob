@@ -266,6 +266,53 @@ export default function FIPortal() {
         </div>
       </div>
 
+      {/* Banking Dashboard Quick Access */}
+      <Card className="border-border/60 overflow-hidden">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fi-indigo/10 border border-fi-indigo/20">
+                <Building2 className="h-4 w-4 text-fi-indigo" />
+              </div>
+              <div>
+                <CardTitle className="text-sm font-semibold">Banking Dashboard</CardTitle>
+                <CardDescription className="text-xs">Connector management, approvals, transfers and reporting</CardDescription>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/fi-portal/banking">
+                Open Dashboard
+                <ChevronRight className="ml-1 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Connectors", icon: Plug, path: "/fi-portal/banking/connector-setup", desc: "Setup & configure" },
+              { label: "Approvals", icon: FileCheck, path: "/fi-portal/banking/approvals", desc: "Review queue" },
+              { label: "Transfers", icon: ArrowRightLeft, path: "/fi-portal/banking/transfers", desc: "Send & track" },
+              { label: "Reports", icon: Receipt, path: "/fi-portal/banking/reports", desc: "COBAC statements" },
+            ].map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="group flex items-center gap-3 rounded-lg border border-border/40 bg-muted/30 p-3 hover:border-primary/30 hover:bg-muted/50 transition-all duration-200"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background">
+                  <item.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium truncate">{item.label}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{item.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-5">
         <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
