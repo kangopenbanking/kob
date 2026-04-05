@@ -64,6 +64,55 @@ HTTP status codes: 400, 401, 403, 404, 409, 422, 429, 500.
 
 ---
 
+### Dynamic Client Registration (DCR)
+
+Endpoint: `POST /v1/dcr/register` (RFC 7591, FAPI 1.0 ADV Section 5.2.2)
+
+#### Request Body (`DcrRegistrationRequest`)
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `software_statement` | string (JWT) | Yes | -- | Signed SSA from KOB Directory. Must contain `software_id`, `software_client_name`, `software_roles` claims |
+| `redirect_uris` | array of URI | Yes | -- | OAuth 2.0 redirect endpoints. HTTPS required in production |
+| `client_name` | string | No | From SSA | Human-readable client name |
+| `token_endpoint_auth_method` | string enum | No | `tls_client_auth` | One of: `tls_client_auth`, `private_key_jwt`, `client_secret_basic`, `client_secret_post`, `none` |
+| `grant_types` | array of string | No | `["authorization_code", "refresh_token"]` | Supported grant types |
+| `response_types` | array of string | No | `["code"]` | Supported response types |
+| `scope` | string | No | `accounts payments` | Space-delimited scopes |
+| `jwks_uri` | string (URI) | No | -- | JWKS endpoint for client keys (mutually exclusive with `jwks`) |
+| `jwks` | object | No | -- | Inline JWKS (mutually exclusive with `jwks_uri`) |
+| `application_type` | string enum | No | `web` | `web` or `native` |
+| `id_token_signed_response_alg` | string enum | No | `PS256` | `PS256`, `ES256`, or `RS256` |
+| `request_object_signing_alg` | string enum | No | `PS256` | `PS256` or `ES256` |
+
+#### Response Body (`DcrRegistrationResponse`)
+
+| Field | Type | Description |
+|---|---|---|
+| `client_id` | string | Unique client identifier (format: `tpp_{uuid}`) |
+| `client_secret` | string | Plaintext secret -- returned ONLY at registration time |
+| `client_name` | string | Registered client name |
+| `software_id` | string | Software identifier from SSA |
+| `software_roles` | array | Granted roles (e.g., `["AISP", "PISP"]`) |
+| `redirect_uris` | array | Registered redirect URIs |
+| `grant_types` | array | Granted grant types |
+| `response_types` | array | Granted response types |
+| `token_endpoint_auth_method` | string | Registered auth method |
+| `jwks_uri` | string | Registered JWKS endpoint (if provided) |
+| `scope` | string | Granted scopes |
+| `environment` | string | `sandbox` or `production` |
+| `client_id_issued_at` | integer | Unix timestamp of issuance |
+
+#### SSA Required Claims
+
+The `software_statement` JWT must contain these claims:
+- `software_id` -- unique identifier for the software
+- `software_client_name` -- display name
+- `software_roles` -- array of authorized roles (`AISP`, `PISP`, `CBPII`)
+- `software_redirect_uris` -- fallback redirect URIs (used if `redirect_uris` not provided in request body)
+
+---
+
 ## 2. Merchant Integration Contract
 
 ### Prerequisites

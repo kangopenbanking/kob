@@ -5131,96 +5131,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "client_name",
-                  "redirect_uris"
-                ],
-                "properties": {
-                  "client_name": {
-                    "type": "string",
-                    "example": "FinTech App Cameroun"
-                  },
-                  "redirect_uris": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "token_endpoint_auth_method": {
-                    "type": "string",
-                    "description": "Authentication method for the token endpoint. private_key_jwt is required for FAPI 1.0 Advanced clients.",
-                    "enum": [
-                      "private_key_jwt",
-                      "tls_client_auth",
-                      "client_secret_basic",
-                      "client_secret_post",
-                      "none"
-                    ],
-                    "default": "private_key_jwt"
-                  },
-                  "grant_types": {
-                    "type": "array",
-                    "description": "OAuth 2.0 grant types the client will use (RFC 7591). Must be a subset of the server-supported types.",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "authorization_code",
-                        "refresh_token",
-                        "client_credentials"
-                      ]
-                    },
-                    "example": [
-                      "authorization_code",
-                      "refresh_token"
-                    ]
-                  },
-                  "scope": {
-                    "type": "string"
-                  },
-                  "response_types": {
-                    "type": "array",
-                    "description": "OAuth 2.0 response types the client will use.",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "code",
-                        "code id_token"
-                      ]
-                    },
-                    "default": [
-                      "code"
-                    ]
-                  },
-                  "application_type": {
-                    "type": "string",
-                    "enum": [
-                      "web",
-                      "native"
-                    ],
-                    "default": "web",
-                    "description": "Kind of application (OIDC Section 2)"
-                  },
-                  "id_token_signed_response_alg": {
-                    "type": "string",
-                    "enum": [
-                      "PS256",
-                      "ES256",
-                      "RS256"
-                    ],
-                    "default": "PS256",
-                    "description": "Algorithm for signing ID Tokens issued to this client. PS256 required for FAPI 1.0 Advanced."
-                  },
-                  "request_object_signing_alg": {
-                    "type": "string",
-                    "enum": [
-                      "PS256",
-                      "ES256"
-                    ],
-                    "default": "PS256",
-                    "description": "Algorithm used to sign Request Objects sent to this server."
-                  }
-                }
+                "$ref": "#/components/schemas/DcrRegistrationRequest"
+              },
+              "example": {
+                "software_statement": "eyJhbGciOiJQUzI1NiJ9.eyJzb2Z0d2FyZV9pZCI6InRwcF8wMDEiLCJzb2Z0d2FyZV9jbGllbnRfbmFtZSI6IkZpblRlY2ggQXBwIENhbWVyb3VuIiwic29mdHdhcmVfcm9sZXMiOlsiQUlTUCIsIlBJU1AiXX0.sig",
+                "redirect_uris": ["https://app.example.com/callback"],
+                "token_endpoint_auth_method": "tls_client_auth",
+                "grant_types": ["authorization_code", "refresh_token"],
+                "scope": "accounts payments"
               }
             }
           }
@@ -5231,18 +5149,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "client_id": {
-                      "type": "string"
-                    },
-                    "client_secret": {
-                      "type": "string"
-                    },
-                    "client_id_issued_at": {
-                      "type": "integer"
-                    }
-                  }
+                  "$ref": "#/components/schemas/DcrRegistrationResponse"
+                },
+                "example": {
+                  "client_id": "tpp_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "client_secret": "kob_sec_7f3a9b2c4d5e6f1a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f",
+                  "client_name": "FinTech App Cameroun",
+                  "software_id": "tpp_001",
+                  "software_roles": ["AISP", "PISP"],
+                  "redirect_uris": ["https://app.example.com/callback"],
+                  "grant_types": ["authorization_code", "refresh_token"],
+                  "response_types": ["code"],
+                  "token_endpoint_auth_method": "tls_client_auth",
+                  "scope": "accounts payments",
+                  "environment": "sandbox",
+                  "client_id_issued_at": 1710504000
                 }
               }
             },

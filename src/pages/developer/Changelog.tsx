@@ -7,6 +7,17 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.2",
+      date: "2026-04-05",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "DcrRegistrationRequest component schema -- 12 properties including software_statement (SSA JWT), jwks_uri, jwks, and FAPI signing algorithm fields (RFC 7591 Section 2, FAPI 1.0 ADV Section 5.2.2)" },
+        { type: "feature", description: "DcrRegistrationResponse component schema -- 13 properties covering all fields returned by the DCR edge function including software_roles, environment, and client_id_issued_at" },
+        { type: "improvement", description: "POST /v1/dcr/register now uses $ref component schemas instead of inline definitions with full request/response examples" },
+        { type: "improvement", description: "Integration contracts documentation updated with complete DCR field reference table and SSA claim requirements" },
+      ]
+    },
+    {
       version: "API Spec 4.9.1",
       date: "2026-04-05",
       type: "patch",
