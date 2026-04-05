@@ -1,9 +1,25 @@
 {
-  "apiVersion": "4.7.0",
+  "apiVersion": "4.9.1",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-03",
+  "lastUpdated": "2026-04-05",
   "entries": [
+    {
+      "version": "4.9.1",
+      "date": "2026-04-05",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "POS modules GA, live endpoint testing, SLA transparency, FAPI certification tracker",
+      "highlights": [
+        "POS Commerce modules (catalog, inventory, orders, refunds, WooCommerce sync) promoted to active status",
+        "Live endpoint testing with real-time latency profiling (p50/p95/p99) on Test Report page",
+        "SLA commitment table with 99.95% uptime target, RTO/RPO guarantees, and P1-P4 incident response times",
+        "FAPI 1.0 Advanced certification tracker with 12-point checklist and OpenID Foundation verification link",
+        "COBAC/BEAC regulatory compliance tracker with 8-point checklist and standard citations",
+        "Developer Forum confirmed publicly accessible per ORDER P1"
+      ],
+      "standard_citations": ["FAPI-1.0-ADV Section 5.2.2", "RFC 9126", "RFC 9101", "COBAC Regulation 01/CEMAC", "ORDER P1"]
+    },
     {
       "version": "4.7.0",
       "date": "2026-04-03",
