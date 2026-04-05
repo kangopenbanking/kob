@@ -10,6 +10,8 @@ import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { CustomerAppAuthGuard } from '@/components/auth/CustomerAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
+import { HealthBanner } from '@/components/HealthBanner';
+import { useConsumerWebhookEvents } from '@/hooks/useConsumerWebhookEvents';
 
 const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
@@ -20,6 +22,7 @@ const CustomerAppInner: React.FC = () => {
 
   useOneSignal(undefined);
   useRealtimeBalanceSync(user?.id);
+  useConsumerWebhookEvents(user?.id);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
