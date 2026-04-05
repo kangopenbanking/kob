@@ -21,21 +21,29 @@ const ApiExplorer = () => {
 
   useEffect(() => {
     const fetchSpec = async () => {
-      try {
-        // Use stable static spec endpoint for reliability + caching
-        const res = await fetch('/openapi.json');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setSpec(data);
-        setFetchError(null);
-      } catch (error) {
-        console.error('Failed to fetch OpenAPI spec:', error);
-        setFetchError('Failed to load API specification. Please try again later.');
-      } finally {
-        setIsChecking(false);
+      // Try static file first, then edge function fallback
+      const sources = [
+        '/openapi.json',
+        `${API_CONFIG.BASE_URL_FALLBACK}/public-api-spec`,
+        `${API_CONFIG.BASE_URL}/public-api-spec`,
+      ];
+      for (const url of sources) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data?.openapi || data?.info) {
+            setSpec(data);
+            setFetchError(null);
+            return;
+          }
+        } catch {
+          // try next source
+        }
       }
+      setFetchError('Failed to load API specification. Please try again later.');
     };
-    fetchSpec();
+    fetchSpec().finally(() => setIsChecking(false));
   }, []);
 
   const handleDownload = async (format: 'json' | 'yaml') => {
