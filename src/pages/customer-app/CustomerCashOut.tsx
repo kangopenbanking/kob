@@ -229,7 +229,7 @@ const CustomerCashOut: React.FC = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       supabase.functions.invoke('send-communication', {
         body: {
-          template_key: 'payout_completed',
+          template_key: 'payment_completed',
           recipient_email: currentUser?.email,
           variables: {
             amount: `XAF ${numAmount.toLocaleString()}`,

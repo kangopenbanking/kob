@@ -44,6 +44,21 @@ Deno.serve(async (req) => {
       const body = await req.json();
       const { action, merchant_id, variant_id, quantity, cart_id } = body;
 
+      // Validate UUID format for any provided IDs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (merchant_id && !uuidRegex.test(merchant_id)) {
+        return new Response(JSON.stringify({ error: 'invalid_merchant_id', message: 'merchant_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (variant_id && !uuidRegex.test(variant_id)) {
+        return new Response(JSON.stringify({ error: 'invalid_variant_id', message: 'variant_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (cart_id && !uuidRegex.test(cart_id)) {
+        return new Response(JSON.stringify({ error: 'invalid_cart_id', message: 'cart_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (body.item_id && !uuidRegex.test(body.item_id)) {
+        return new Response(JSON.stringify({ error: 'invalid_item_id', message: 'item_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       if (action === 'add') {
         if (!merchant_id || !variant_id) {
           return new Response(JSON.stringify({ error: 'merchant_id and variant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
