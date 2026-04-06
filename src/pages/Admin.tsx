@@ -7,7 +7,7 @@ import {
   Building2, Users, Activity, DollarSign, CheckCircle2, Clock,
   Shield, FileText, XCircle, AlertCircle, TrendingUp, Key, TestTube,
   Bell, MessageCircle, CreditCard, BarChart3, ArrowRight,
-  AlertTriangle, Wallet, Globe, Zap, RefreshCw, Eye
+  AlertTriangle, Wallet, Globe, Zap, RefreshCw, Eye, Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
