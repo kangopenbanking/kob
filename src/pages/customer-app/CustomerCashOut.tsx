@@ -229,60 +229,18 @@ const CustomerCashOut: React.FC = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       supabase.functions.invoke('send-communication', {
         body: {
-          type: 'email',
-          recipient: currentUser?.email,
-          subject: isInstant ? '✅ Withdrawal Complete' : '⏳ Withdrawal Processing – Kang',
-          body: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-              <div style="text-align: center; margin-bottom: 24px;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: ${isInstant ? '#dcfce7' : '#fef3c7'}; margin-bottom: 12px;">
-                  <span style="font-size: 24px;">${isInstant ? '✅' : '⏳'}</span>
-                </div>
-                <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
-                  ${isInstant ? 'Withdrawal Complete' : 'Withdrawal Processing'}
-                </h1>
-              </div>
-              
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Amount</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">XAF ${numAmount.toLocaleString()}</td>
-                  </tr>
-                  ${fee > 0 ? `<tr>
-                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Fee</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #ef4444; font-size: 14px;">- XAF ${fee.toLocaleString()}</td>
-                  </tr>` : ''}
-                  <tr style="border-top: 1px solid #e5e7eb;">
-                    <td style="padding: 12px 0 8px; color: #1a1a1a; font-weight: 700; font-size: 15px;">You Receive</td>
-                    <td style="padding: 12px 0 8px; text-align: right; font-weight: 800; font-size: 15px; color: #1a1a1a;">XAF ${netAmount.toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Destination</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">${selectedAccount?.account_name || destinationType}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Reference</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 13px; font-family: monospace;">${result.tx_ref}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Processing Time</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">${processingTime}</td>
-                  </tr>
-                </table>
-              </div>
-              
-              <p style="color: #6b7280; font-size: 13px; text-align: center; margin-top: 20px;">
-                ${isInstant
-                  ? 'Your funds have been delivered. No further action needed.'
-                  : `Your withdrawal is being processed and should arrive within ${processingTime}. We'll notify you when it's complete.`
-                }
-              </p>
-              <p style="color: #9ca3af; font-size: 11px; text-align: center; margin-top: 16px;">
-                If you did not initiate this withdrawal, please contact support immediately.
-              </p>
-            </div>
-          `,
+          template_key: 'payout_completed',
+          recipient_email: currentUser?.email,
+          variables: {
+            amount: `XAF ${numAmount.toLocaleString()}`,
+            fee: fee > 0 ? `XAF ${fee.toLocaleString()}` : '0',
+            net_amount: `XAF ${netAmount.toLocaleString()}`,
+            destination: selectedAccount?.account_name || destinationType,
+            reference: result.tx_ref || '',
+            processing_time: processingTime,
+            status: isInstant ? 'Completed' : 'Processing',
+            customer_name: currentUser?.user_metadata?.full_name || 'Customer',
+          },
         },
       }).catch(err => console.error('Withdrawal email failed:', err));
 
