@@ -101,6 +101,7 @@ serve(async (req) => {
       const computedHashHex = Array.from(new Uint8Array(digest))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
+      
       pinValid = computedHashHex === storedHashHex;
     } else {
       console.warn('Unsupported PIN hash format for user:', profile.id);
