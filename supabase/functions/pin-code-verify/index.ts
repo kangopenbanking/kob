@@ -153,7 +153,7 @@ serve(async (req) => {
           remaining_attempts: Math.max(0, remainingAttempts),
           locked: newAttempts >= 3,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
