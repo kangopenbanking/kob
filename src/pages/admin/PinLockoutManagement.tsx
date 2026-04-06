@@ -141,6 +141,7 @@ export default function PinLockoutManagement() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
+        icon={Lock}
         title="PIN Lockout Management"
         description="View and manage user PIN lockouts, clear failed attempts, and reset PINs"
       />
