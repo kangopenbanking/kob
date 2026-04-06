@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
         .eq('id', otpRecord.id);
 
       return new Response(
-        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.', verified: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
