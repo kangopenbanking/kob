@@ -142,6 +142,13 @@ export const Footer = () => {
           ))}
         </div>
 
+        {/* Large brand text like "Flow" in reference */}
+        <div className="mt-12 overflow-hidden select-none" aria-hidden="true">
+          <p className="text-[8rem] md:text-[12rem] lg:text-[16rem] font-black leading-none tracking-tighter text-primary">
+            KANG OB
+          </p>
+        </div>
+
         <div className="border-t mt-8 pt-8 space-y-4 text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p>© 2026 Kang <span style={{ color: '#9fe870' }}>Open</span> Banking. All rights reserved.</p>
