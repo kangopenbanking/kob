@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     if ((challenge.attempts || 0) >= (challenge.max_attempts || 3)) {
       await supabase.from('captcha_challenges').update({ status: 'failed' }).eq('id', challenge.id);
       return new Response(JSON.stringify({ error: 'max_attempts_exceeded', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
