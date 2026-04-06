@@ -224,6 +224,7 @@ const Admin = () => {
     { title: "Fee Management", icon: CreditCard, path: '/admin/fee-management', color: "bg-rose-500" },
     { title: "Revenue", icon: BarChart3, path: '/admin/revenue', color: "bg-indigo-500" },
     { title: "Security", icon: Shield, path: '/admin/security-dashboard', color: "bg-orange-500" },
+    { title: "PIN Lockouts", icon: Lock, path: '/admin/pin-lockout', color: "bg-red-500" },
     { title: "Audit Logs", icon: FileText, path: '/admin/audit-logs', color: "bg-cyan-500" },
     { title: "System Config", icon: Globe, path: '/admin/system-config', color: "bg-pink-500" },
   ];

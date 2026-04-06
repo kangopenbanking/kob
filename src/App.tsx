@@ -819,6 +819,7 @@ function App() {
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="institution-management" element={<InstitutionManagement />} />
               <Route path="security-dashboard" element={<SecurityDashboard />} />
+              <Route path="pin-lockout" element={<PinLockoutManagement />} />
               {/* Phase 1: Fixed orphaned routes - now inside admin layout */}
               <Route path="fee-management" element={<FeeManagement />} />
               <Route path="system-monitoring" element={<SystemMonitoring />} />
