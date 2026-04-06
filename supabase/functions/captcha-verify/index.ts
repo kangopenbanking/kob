@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     if (new Date(challenge.expires_at) < new Date()) {
       await supabase.from('captcha_challenges').update({ status: 'expired' }).eq('id', challenge.id);
       return new Response(JSON.stringify({ error: 'captcha_expired', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
