@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
 
     if (otpError || !otpRecord) {
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired OTP code' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'Invalid or expired OTP code', verified: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -61,8 +61,8 @@ Deno.serve(async (req) => {
         .eq('id', otpRecord.id);
 
       return new Response(
-        JSON.stringify({ error: 'OTP code has expired' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'OTP code has expired', verified: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
         .eq('id', otpRecord.id);
 
       return new Response(
-        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.', verified: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
     if (!codeMatch) {
       const remaining = (otpRecord.max_attempts || 5) - newAttempts;
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired OTP code', remaining_attempts: remaining }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'Invalid or expired OTP code', verified: false, remaining_attempts: remaining }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 

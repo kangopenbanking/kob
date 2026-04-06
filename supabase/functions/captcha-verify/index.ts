@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     if (fetchErr || !challenge) {
       return new Response(JSON.stringify({ error: 'invalid_session', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     if (new Date(challenge.expires_at) < new Date()) {
       await supabase.from('captcha_challenges').update({ status: 'expired' }).eq('id', challenge.id);
       return new Response(JSON.stringify({ error: 'captcha_expired', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     if ((challenge.attempts || 0) >= (challenge.max_attempts || 3)) {
       await supabase.from('captcha_challenges').update({ status: 'failed' }).eq('id', challenge.id);
       return new Response(JSON.stringify({ error: 'max_attempts_exceeded', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ verified: false, error: 'incorrect_answer' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     const errorId = crypto.randomUUID().slice(0, 8);

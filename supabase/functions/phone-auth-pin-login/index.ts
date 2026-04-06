@@ -74,12 +74,13 @@ serve(async (req) => {
       );
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: `Account locked. Try again in ${minutesRemaining} minutes.`,
           locked_until: profile.pin_locked_until,
           remaining_attempts: 0,
           locked: true,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -214,7 +215,7 @@ serve(async (req) => {
           remaining_attempts: Math.max(0, remainingAttempts),
           locked: newAttempts >= 3,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
