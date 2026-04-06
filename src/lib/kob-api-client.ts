@@ -304,21 +304,44 @@ interface HealthResponse {
 }
 
 export async function checkHealth(): Promise<HealthStatus> {
+  // Primary: use our own edge function which is always reachable
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (supabaseUrl) {
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/api-health`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'operational') return 'healthy';
+        if (data.status === 'degraded') return 'degraded';
+      }
+      // Non-ok but reachable = degraded, not unhealthy
+      return 'degraded';
+    } catch {
+      // Edge function unreachable — fall through to external check
+    }
+  }
+
+  // Fallback: external API health endpoint
   try {
     const res = await fetch(`${BASE_URL}/health`, {
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(5000),
     });
 
-    if (res.status === 503) return 'unhealthy';
-    if (!res.ok) return 'unhealthy';
+    if (res.status === 503) return 'degraded';
+    if (!res.ok) return 'degraded';
 
     const data: HealthResponse = await res.json();
-    if (data.status === 'unhealthy') return 'unhealthy';
+    if (data.status === 'unhealthy') return 'degraded';
     if (data.status === 'degraded') return 'degraded';
     return 'healthy';
   } catch {
-    return 'unhealthy';
+    // Both checks failed — still show degraded, NOT unhealthy
+    // The full-screen block should only appear for explicit 503 maintenance mode
+    return 'degraded';
   }
 }
 
