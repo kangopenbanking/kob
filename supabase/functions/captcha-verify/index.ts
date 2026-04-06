@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     if (fetchErr || !challenge) {
       return new Response(JSON.stringify({ error: 'invalid_session', verified: false }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
