@@ -304,6 +304,7 @@ const InstitutionVerification = lazy(() => import("./pages/admin/InstitutionVeri
 const AccessRoleManagement = lazy(() => import("./pages/admin/AccessRoleManagement"));
 const SupportedCountriesManagement = lazy(() => import("./pages/admin/SupportedCountriesManagement"));
 const SecurityDashboard = lazy(() => import("./pages/admin/SecurityDashboard"));
+const PinLockoutManagement = lazy(() => import("./pages/admin/PinLockoutManagement"));
 const AdminTravelManagement = lazy(() => import("./pages/admin/AdminTravelManagement"));
 const AdminTravelGuide = lazy(() => import("./pages/admin/AdminTravelGuide"));
 const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
@@ -818,6 +819,7 @@ function App() {
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="institution-management" element={<InstitutionManagement />} />
               <Route path="security-dashboard" element={<SecurityDashboard />} />
+              <Route path="pin-lockout" element={<PinLockoutManagement />} />
               {/* Phase 1: Fixed orphaned routes - now inside admin layout */}
               <Route path="fee-management" element={<FeeManagement />} />
               <Route path="system-monitoring" element={<SystemMonitoring />} />
