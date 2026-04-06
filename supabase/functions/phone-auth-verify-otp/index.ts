@@ -61,8 +61,8 @@ Deno.serve(async (req) => {
         .eq('id', otpRecord.id);
 
       return new Response(
-        JSON.stringify({ error: 'OTP code has expired' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'OTP code has expired', verified: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
