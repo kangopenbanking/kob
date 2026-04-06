@@ -1,0 +1,1 @@
+UPDATE profiles SET pin_attempts = 0, pin_locked_until = NULL WHERE id = 'b1153abf-a6df-4146-82b3-33cc761034cc';
