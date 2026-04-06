@@ -50,7 +50,54 @@ export const PinConfirmDialog: React.FC<PinConfirmDialogProps> = ({
         body: { phone_number: profile.phone_number, pin_code: pin },
       });
 
-      if (error) throw error;
+      const parsedError = (() => {
+        if (!error) return null;
+
+        const contextBody = error.context?.body;
+        if (contextBody && typeof contextBody === 'object') return contextBody as Record<string, any>;
+
+        if (typeof contextBody === 'string') {
+          try {
+            return JSON.parse(contextBody) as Record<string, any>;
+          } catch {
+            // Ignore parse failure and try other shapes
+          }
+        }
+
+        if (typeof error.message === 'string') {
+          try {
+            return JSON.parse(error.message) as Record<string, any>;
+          } catch {
+            // Ignore parse failure and fall back to generic handling
+          }
+        }
+
+        return null;
+      })();
+
+      const isLockedError = Boolean(
+        parsedError?.locked ||
+        parsedError?.locked_until ||
+        (typeof parsedError?.error === 'string' && parsedError.error.toLowerCase().includes('locked'))
+      );
+
+      if (error) {
+        if (isLockedError || parsedError?.remaining_attempts !== undefined) {
+          sounds.error();
+          setRemainingAttempts(parsedError?.remaining_attempts ?? null);
+          setLocked(isLockedError);
+          setPin('');
+
+          if (isLockedError) {
+            toast.error(parsedError?.error || 'Account locked due to too many failed attempts. Try again in 30 minutes.');
+          } else {
+            toast.error(`Invalid PIN. ${parsedError?.remaining_attempts ?? 0} attempts remaining.`);
+          }
+          return;
+        }
+
+        throw error;
+      }
 
       if (data?.verified) {
         sounds.success();
@@ -65,7 +112,7 @@ export const PinConfirmDialog: React.FC<PinConfirmDialogProps> = ({
         setLocked(data?.locked ?? false);
         setPin('');
         if (data?.locked) {
-          toast.error('Account locked due to too many failed attempts. Try again in 30 minutes.');
+          toast.error(data?.error || 'Account locked due to too many failed attempts. Try again in 30 minutes.');
         } else {
           toast.error(`Invalid PIN. ${data?.remaining_attempts ?? 0} attempts remaining.`);
         }

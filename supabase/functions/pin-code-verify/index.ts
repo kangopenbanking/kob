@@ -59,10 +59,13 @@ serve(async (req) => {
       );
       return new Response(
         JSON.stringify({ 
+          verified: false,
           error: `Account is locked. Try again in ${minutesRemaining} minutes.`,
+          locked: true,
+          remaining_attempts: 0,
           locked_until: profile.pin_locked_until 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
