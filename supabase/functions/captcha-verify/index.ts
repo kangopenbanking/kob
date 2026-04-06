@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ verified: false, error: 'incorrect_answer' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     const errorId = crypto.randomUUID().slice(0, 8);

@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
     if (!codeMatch) {
       const remaining = (otpRecord.max_attempts || 5) - newAttempts;
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired OTP code', remaining_attempts: remaining }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ error: 'Invalid or expired OTP code', verified: false, remaining_attempts: remaining }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
