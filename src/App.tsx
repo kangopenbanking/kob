@@ -304,6 +304,7 @@ const InstitutionVerification = lazy(() => import("./pages/admin/InstitutionVeri
 const AccessRoleManagement = lazy(() => import("./pages/admin/AccessRoleManagement"));
 const SupportedCountriesManagement = lazy(() => import("./pages/admin/SupportedCountriesManagement"));
 const SecurityDashboard = lazy(() => import("./pages/admin/SecurityDashboard"));
+const PinLockoutManagement = lazy(() => import("./pages/admin/PinLockoutManagement"));
 const AdminTravelManagement = lazy(() => import("./pages/admin/AdminTravelManagement"));
 const AdminTravelGuide = lazy(() => import("./pages/admin/AdminTravelGuide"));
 const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
