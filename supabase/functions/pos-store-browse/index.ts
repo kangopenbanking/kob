@@ -29,10 +29,24 @@ Deno.serve(async (req) => {
       const limit = parseInt(url.searchParams.get('limit') || '20');
       const offset = parseInt(url.searchParams.get('offset') || '0');
 
+      // Get merchant_ids with active subscriptions first (no FK exists between these tables)
+      const { data: activeSubs } = await supabase
+        .from('pos_store_subscriptions')
+        .select('merchant_id')
+        .eq('status', 'active');
+
+      const activeMerchantIds = (activeSubs || []).map((s: any) => s.merchant_id);
+
+      if (activeMerchantIds.length === 0) {
+        return new Response(JSON.stringify({ stores: [], total: 0, limit, offset }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       let query = supabase.from('pos_store_profiles')
-        .select('*, pos_store_subscriptions!inner(status)', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('is_published', true)
-        .eq('pos_store_subscriptions.status', 'active')
+        .in('merchant_id', activeMerchantIds)
         .order('rating', { ascending: false });
 
       if (city) query = query.ilike('city', `%${city}%`);
@@ -43,10 +57,7 @@ Deno.serve(async (req) => {
       const { data, error, count } = await query;
       if (error) throw error;
 
-      // Strip subscription join data from response
-      const stores = (data || []).map(({ pos_store_subscriptions, ...store }: any) => store);
-
-      return new Response(JSON.stringify({ stores, total: count, limit, offset }), {
+      return new Response(JSON.stringify({ stores: data || [], total: count, limit, offset }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
