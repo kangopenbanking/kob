@@ -206,7 +206,7 @@ export default function PinLockoutManagement() {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <SearchFilter
-            searchQuery={searchQuery}
+            searchTerm={searchQuery}
             onSearchChange={setSearchQuery}
             placeholder="Search by name, email, or phone..."
           />
