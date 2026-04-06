@@ -24,12 +24,13 @@ export function CustomerMarketplace() {
     queryKey: ['marketplace-stores', searchTerm, selectedCity, selectedCategory, sortBy],
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.set('action', 'stores');
       if (searchTerm) params.set('search', searchTerm);
       if (selectedCity !== 'all') params.set('city', selectedCity);
       if (selectedCategory !== 'all') params.set('category', selectedCategory);
       params.set('limit', '20');
 
-      const { data, error } = await supabase.functions.invoke('pos-store-browse', {
+      const { data, error } = await supabase.functions.invoke(`pos-store-browse?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
