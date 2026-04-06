@@ -81,8 +81,16 @@ async function handlePay(req: Request, body: any) {
   const { payment_id } = body;
   if (!payment_id) throw new Error('payment_id required');
 
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(payment_id)) {
+    return new Response(JSON.stringify({ error: 'invalid_payment_id', message: 'payment_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   const { data: payment, error: payErr } = await supabase.from('piggybank_payments').select('*, piggybank_plans(*)').eq('id', payment_id).eq('user_id', user.id).single();
-  if (payErr || !payment) throw new Error('Payment not found');
+  if (payErr || !payment) {
+    return new Response(JSON.stringify({ error: 'payment_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
   if (payment.status === 'paid') throw new Error('Already paid');
 
   const now = new Date(), dueDate = new Date(payment.due_date);
