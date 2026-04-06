@@ -143,8 +143,8 @@ export const Footer = () => {
         </div>
 
         {/* Large brand text like "Flow" in reference */}
-        <div className="mt-12 overflow-hidden select-none" aria-hidden="true">
-          <p className="text-[8rem] md:text-[12rem] lg:text-[16rem] font-black leading-none tracking-tighter text-primary">
+        <div className="mt-12 overflow-hidden select-none text-center" aria-hidden="true">
+          <p className="text-[8rem] md:text-[12rem] lg:text-[16rem] font-black leading-none tracking-tighter text-primary" style={{ fontFamily: "'Poppins', sans-serif" }}>
             KANG OB
           </p>
         </div>
