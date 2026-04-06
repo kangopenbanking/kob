@@ -64,6 +64,12 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ error: 'merchant_id and variant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // Verify merchant exists before creating cart
+        const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).maybeSingle();
+        if (!merchant) {
+          return new Response(JSON.stringify({ error: 'merchant_not_found', message: 'Merchant does not exist' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         // Get or create active cart for this merchant
         let { data: cart } = await supabase.from('pos_consumer_carts')
           .select('id')

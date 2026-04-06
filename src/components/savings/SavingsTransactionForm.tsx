@@ -23,9 +23,9 @@ export const SavingsTransactionForm = ({ savingsAccount, type, onSuccess, onCanc
     setLoading(true);
 
     try {
-      const functionName = type === 'deposit' ? 'savings-deposit' : 'savings-withdraw';
-      const { data, error } = await supabase.functions.invoke(functionName, {
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
         body: {
+          action: type === 'deposit' ? 'deposit' : 'withdraw',
           savings_account_id: savingsAccount.id,
           amount: parseFloat(amount),
           [type === 'deposit' ? 'source_account_id' : 'destination_account_id']: null,
