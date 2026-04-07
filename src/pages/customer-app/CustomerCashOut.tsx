@@ -187,6 +187,7 @@ const CustomerCashOut: React.FC = () => {
       const destinationType = selectedAccount?.account_type;
 
       // Call the unified withdrawal edge function
+      const idempotencyKey = `withdrawal_${primaryAccount?.id}_${Date.now()}`;
       const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
         body: {
           amount: numAmount,
@@ -195,6 +196,7 @@ const CustomerCashOut: React.FC = () => {
           linked_account_id: selectedAccount?.id,
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
+          idempotency_key: idempotencyKey,
         },
       });
 

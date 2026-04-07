@@ -186,6 +186,7 @@ const CustomerFundWallet: React.FC = () => {
 
     setProcessing(true);
     try {
+      const idempotencyKey = `funding_${primaryAccount.id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('gateway-create-funding-intent', {
         body: {
           amount: numAmount,
