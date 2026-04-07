@@ -133,23 +133,43 @@ const CustomerNjangi: React.FC = () => {
     });
   };
 
-  const handleContribute = (groupId: string) => {
-    contributeMutation.mutate({ group_id: groupId }, {
-      onSuccess: (data) => {
-        const status = data?.contribution_status === 'late' ? '(late — interest applied)' : '';
-        toast.success(`Contribution recorded ${status}`);
-        refetch();
-      },
-    });
+  const requestContribute = (groupId: string) => {
+    setPinAction({ type: 'contribute', groupId });
+    setShowPin(true);
   };
 
-  const handlePayout = (groupId: string) => {
-    payoutMutation.mutate({ group_id: groupId }, {
-      onSuccess: (data) => {
-        toast.success(`Payout of ${data?.total_amount?.toLocaleString()} XAF sent! Cycle ${data?.next_cycle} begins.`);
-        refetch();
-      },
-    });
+  const requestPayout = (groupId: string) => {
+    setPinAction({ type: 'payout', groupId });
+    setShowPin(true);
+  };
+
+  const handlePinConfirmed = async () => {
+    if (!pinAction) return;
+    if (pinAction.type === 'contribute') {
+      contributeMutation.mutate({ group_id: pinAction.groupId }, {
+        onSuccess: async (data) => {
+          const status = data?.contribution_status === 'late' ? '(late — interest applied)' : '';
+          toast.success(`Contribution recorded ${status}`);
+          refetch();
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+            queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+          ]);
+        },
+      });
+    } else {
+      payoutMutation.mutate({ group_id: pinAction.groupId }, {
+        onSuccess: async (data) => {
+          toast.success(`Payout of ${data?.total_amount?.toLocaleString()} XAF sent! Cycle ${data?.next_cycle} begins.`);
+          refetch();
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+            queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+          ]);
+        },
+      });
+    }
+    setPinAction(null);
   };
 
   const openDetail = (circle: any) => {
