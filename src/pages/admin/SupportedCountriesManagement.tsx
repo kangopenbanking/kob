@@ -98,7 +98,7 @@ export default function SupportedCountriesManagement() {
   });
 
   const openAdd = () => { setEditing(null); setForm({ ...emptyForm, sort_order: countries.length + 1 }); setDialogOpen(true); };
-  const openEdit = (c: CountryRow) => { setEditing(c); setForm({ code: c.code, country: c.country, flag: c.flag, dial_code: c.dial_code, enabled_consumer_app: c.enabled_consumer_app, enabled_banking_app: c.enabled_banking_app, sort_order: c.sort_order }); setDialogOpen(true); };
+  const openEdit = (c: CountryRow) => { setEditing(c); setForm({ code: c.code, country: c.country, flag: c.flag, dial_code: c.dial_code, enabled_consumer_app: c.enabled_consumer_app, enabled_banking_app: c.enabled_banking_app, enabled_desktop_app: c.enabled_desktop_app, sort_order: c.sort_order }); setDialogOpen(true); };
   const closeDialog = () => { setDialogOpen(false); setEditing(null); setForm(emptyForm); };
 
   const handleSave = () => saveMutation.mutate(editing ? { ...form, id: editing.id } : form);
