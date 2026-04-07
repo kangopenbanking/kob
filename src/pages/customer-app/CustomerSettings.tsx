@@ -40,7 +40,7 @@ const CustomerSettings: React.FC = () => {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [showPinDialog, setShowPinDialog] = useState(false);
-  const [biometric, setBiometric] = useState(true);
+  const [biometric, setBiometric] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
 
   // Notifications
