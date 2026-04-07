@@ -40,7 +40,7 @@ const CustomerSettings: React.FC = () => {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [showPinDialog, setShowPinDialog] = useState(false);
-  const [biometric, setBiometric] = useState(true);
+  const [biometric, setBiometric] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
 
   // Notifications
@@ -91,6 +91,8 @@ const CustomerSettings: React.FC = () => {
         setEmailNotifs(prefs.email_notifications ?? true);
         setSmsNotifs(prefs.sms_notifications ?? false);
         setTxAlerts(prefs.transaction_alerts ?? true);
+        setBiometric(prefs.biometric_enabled ?? false);
+        setTwoFA(prefs.two_factor_enabled ?? false);
       }
 
       setDarkMode(document.documentElement.classList.contains('dark'));
@@ -311,10 +313,15 @@ const CustomerSettings: React.FC = () => {
               />
             </SettingCard>
 
-            {/* Help & Logout */}
+            {/* Help & Logout & Delete */}
             <SettingCard>
               <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help')} />
               <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
+              <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label="Delete Account" description="Permanently delete your account and data" onClick={() => {
+                if (window.confirm('Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.')) {
+                  toast.info('Please contact support@kangconsultancy.com to process your account deletion request.');
+                }
+              }} destructive />
             </SettingCard>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
@@ -359,13 +366,23 @@ const CustomerSettings: React.FC = () => {
                 icon={<Fingerprint className="h-5 w-5" strokeWidth={1.5} />}
                 label="Biometric Login"
                 description="Use fingerprint or Face ID"
-                right={<Switch checked={biometric} onCheckedChange={v => { setBiometric(v); toast.success(v ? 'Biometric enabled' : 'Biometric disabled'); }} />}
+                right={<Switch checked={biometric} onCheckedChange={async (v) => {
+                  setBiometric(v);
+                  const { data: { user: u } } = await supabase.auth.getUser();
+                  if (u) await (supabase.from('user_preferences') as any).upsert({ user_id: u.id, biometric_enabled: v, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                  toast.success(v ? 'Biometric enabled' : 'Biometric disabled');
+                }} />}
               />
               <SettingRow
                 icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
                 label="Two-Factor Auth"
                 description="Extra layer of security"
-                right={<Switch checked={twoFA} onCheckedChange={v => { setTwoFA(v); toast.success(v ? '2FA enabled' : '2FA disabled'); }} />}
+                right={<Switch checked={twoFA} onCheckedChange={async (v) => {
+                  setTwoFA(v);
+                  const { data: { user: u } } = await supabase.auth.getUser();
+                  if (u) await (supabase.from('user_preferences') as any).upsert({ user_id: u.id, two_factor_enabled: v, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                  toast.success(v ? '2FA enabled' : '2FA disabled');
+                }} />}
               />
             </SettingCard>
 

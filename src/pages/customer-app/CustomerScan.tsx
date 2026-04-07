@@ -12,6 +12,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
 import { useQRScanner } from '@/hooks/useQRScanner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Tab = 'scan' | 'receive';
 
@@ -29,6 +31,8 @@ const CustomerScan: React.FC = () => {
   const [payAmount, setPayAmount] = useState('');
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
+  const queryClient = useQueryClient();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -95,7 +99,13 @@ const CustomerScan: React.FC = () => {
     }, 1200);
   };
 
-  const handlePayNow = async () => {
+  const handlePayNow = () => {
+    if (!scanResult) return;
+    if (!payAmount || Number(payAmount) <= 0) { toast.error('Enter a valid amount'); return; }
+    setShowPin(true);
+  };
+
+  const executePayment = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
 
@@ -120,6 +130,10 @@ const CustomerScan: React.FC = () => {
           timestamp: new Date().toISOString(),
         });
         setScanResult(null);
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+          queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+        ]);
       } catch (err: any) {
         toast.error(extractEdgeFunctionError(err, 'Payment failed'));
       } finally {
@@ -440,6 +454,7 @@ const CustomerScan: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executePayment} />
     </div>
   );
 };
