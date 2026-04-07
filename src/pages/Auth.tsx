@@ -152,7 +152,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: authConfig } = useAuthPageConfig();
-  const { data: supportedCountries = [], isLoading: countriesLoading } = useSupportedCountries();
+  const { data: supportedCountries = [], isLoading: countriesLoading } = useSupportedCountries('desktop');
 
   // Only show countries enabled by admin — deduplicate by country+code
   const countryList = (() => {
