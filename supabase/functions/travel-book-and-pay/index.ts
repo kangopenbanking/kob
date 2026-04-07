@@ -262,6 +262,7 @@ Deno.serve(async (req) => {
         payment_status: "paid",
         booking_status: "confirmed",
         payment_method: "wallet",
+        idempotency_key: idempotency_key || null,
       })
       .select("id")
       .single();
