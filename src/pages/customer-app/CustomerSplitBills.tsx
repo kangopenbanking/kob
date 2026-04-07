@@ -273,8 +273,9 @@ const CustomerSplitBills: React.FC = () => {
     setPinPaymentId(null);
     setActionLoading(`pay-${participantId}`);
     try {
+      const idempotencyKey = `split_pay_${participantId}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('split-bills-ops', {
-        body: { action: 'pay_share', participant_id: participantId },
+        body: { action: 'pay_share', participant_id: participantId, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
