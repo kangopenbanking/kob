@@ -262,9 +262,9 @@ export default function ProfileSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={cc.code} value={cc.code}>
-                          {cc.flag} {cc.code}
+                      {supportedCountries.map((sc) => (
+                        <SelectItem key={`${sc.dial_code}-${sc.country}`} value={sc.dial_code}>
+                          {sc.flag} {sc.dial_code}
                         </SelectItem>
                       ))}
                     </SelectContent>
