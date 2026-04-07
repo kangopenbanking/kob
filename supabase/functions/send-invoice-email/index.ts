@@ -53,7 +53,7 @@ serve(async (req) => {
     const invoiceHtml = generateInvoiceHtml(invoice, fees || []);
 
     // Send email
-    const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.api.kangopenbanking.com>';
+    const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.kangopenbanking.com>';
     const { error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: [invoice.institutions.email],
