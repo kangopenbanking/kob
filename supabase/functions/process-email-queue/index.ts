@@ -234,24 +234,9 @@ Deno.serve(async (req) => {
       }
 
       try {
-        // Use sender_domain from payload (verified domain) for the actual Resend from address.
-        // The payload.from may contain the display domain (e.g. kangopenbanking.com) which is
-        // NOT verified on Resend. We must use the verified sender_domain for Resend delivery.
-        let fromAddress = payload.from || resendFrom || `Kang OB <noreply@notify.api.kangopenbanking.com>`
-        
-        // If a verified sender_domain is provided, rewrite the from address to use it
-        if (payload.sender_domain) {
-          const match = fromAddress.match(/^(.*<)([^@]+)@[^>]+(>.*)$/)
-          if (match) {
-            fromAddress = `${match[1]}${match[2]}@${payload.sender_domain}${match[3]}`
-          } else {
-            // Simple email without display name
-            const atIndex = fromAddress.indexOf('@')
-            if (atIndex > 0) {
-              fromAddress = `${fromAddress.substring(0, atIndex)}@${payload.sender_domain}`
-            }
-          }
-        }
+        // Use the from address from the payload directly.
+        // The from domain must be verified on the Resend account (e.g. kangopenbanking.com).
+        const fromAddress = payload.from || resendFrom || `Kang OB <noreply@kangopenbanking.com>`
 
         await sendViaResend(resendApiKey, {
           from: fromAddress,
