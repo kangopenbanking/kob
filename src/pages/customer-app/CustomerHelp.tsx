@@ -50,50 +50,52 @@ const faqs = [
   { q: 'How do I contact support?', a: 'You can use Live Chat, email us, or call our hotline from this Help page.', cat: 'General' },
 ];
 
-const contactOptions = [
-  {
-    icon: <MessageCircle className="h-5 w-5" strokeWidth={1.8} />,
-    label: 'Live Chat',
-    desc: 'Chat with an agent',
-    gradient: 'from-[hsl(160,60%,45%)] to-[hsl(160,60%,55%)]',
-    iconBg: 'bg-[hsl(160,60%,40%)]',
-    action: () => toast.info('Live chat coming soon'),
-  },
-  {
-    icon: <Mail className="h-5 w-5" strokeWidth={1.8} />,
-    label: 'Email Us',
-    desc: 'support@kob.com',
-    gradient: 'from-[hsl(217,91%,50%)] to-[hsl(217,91%,60%)]',
-    iconBg: 'bg-[hsl(217,91%,45%)]',
-    action: () => { window.location.href = 'mailto:support@kangopenbanking.com'; },
-  },
-  {
-    icon: <Phone className="h-5 w-5" strokeWidth={1.8} />,
-    label: 'Call Us',
-    desc: '+237 233 432 100',
-    gradient: 'from-[hsl(25,80%,50%)] to-[hsl(25,80%,60%)]',
-    iconBg: 'bg-[hsl(25,80%,45%)]',
-    action: () => { window.location.href = 'tel:+237233432100'; },
-  },
-];
-
-const quickLinks = [
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
-  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
-];
-
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
-};
-
 const CustomerHelp: React.FC = () => {
   const navigate = useNavigate();
+
+  const contactOptions = [
+    {
+      icon: <MessageCircle className="h-5 w-5" strokeWidth={1.8} />,
+      label: 'Live Chat',
+      desc: 'Chat with an agent',
+      gradient: 'from-[hsl(160,60%,45%)] to-[hsl(160,60%,55%)]',
+      iconBg: 'bg-[hsl(160,60%,40%)]',
+      action: () => navigate('/app/support'),
+    },
+    {
+      icon: <Mail className="h-5 w-5" strokeWidth={1.8} />,
+      label: 'Email Us',
+      desc: 'support@kangopenbanking.com',
+      gradient: 'from-[hsl(217,91%,50%)] to-[hsl(217,91%,60%)]',
+      iconBg: 'bg-[hsl(217,91%,45%)]',
+      action: () => { window.location.href = 'mailto:support@kangopenbanking.com'; },
+    },
+    {
+      icon: <Phone className="h-5 w-5" strokeWidth={1.8} />,
+      label: 'Call Us',
+      desc: '+237 233 432 100',
+      gradient: 'from-[hsl(25,80%,50%)] to-[hsl(25,80%,60%)]',
+      iconBg: 'bg-[hsl(25,80%,45%)]',
+      action: () => { window.location.href = 'tel:+237233432100'; },
+    },
+  ];
+
+  const quickLinks = [
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
+    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
+  ];
+
+  const stagger = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+  };
+
+
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
