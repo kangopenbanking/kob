@@ -85,13 +85,37 @@ const CustomerStores: React.FC = () => {
     }
   };
 
-  const toggleFavourite = (id: string, e: React.MouseEvent) => {
+  const toggleFavourite = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) {
+      toast.error('Please sign in to save favorites');
+      return;
+    }
+    const isFav = favourites.has(id);
+    // Optimistic update
     setFavourites(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      isFav ? next.delete(id) : next.add(id);
       return next;
     });
+    try {
+      if (isFav) {
+        await (supabase as any).from('customer_favorite_merchants')
+          .delete().eq('user_id', user.id).eq('merchant_id', id);
+      } else {
+        const { error } = await (supabase as any).from('customer_favorite_merchants')
+          .insert({ user_id: user.id, merchant_id: id });
+        if (error && error.code !== '23505') throw error;
+      }
+    } catch {
+      // Revert on failure
+      setFavourites(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(id) : next.delete(id);
+        return next;
+      });
+      toast.error('Could not update favorite');
+    }
   };
 
   return (
