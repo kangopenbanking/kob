@@ -21,10 +21,11 @@ interface CountryRow {
   dial_code: string;
   enabled_consumer_app: boolean;
   enabled_banking_app: boolean;
+  enabled_desktop_app: boolean;
   sort_order: number;
 }
 
-const emptyForm = { code: "", country: "", flag: "", dial_code: "", enabled_consumer_app: true, enabled_banking_app: true, sort_order: 0 };
+const emptyForm = { code: "", country: "", flag: "", dial_code: "", enabled_consumer_app: true, enabled_banking_app: true, enabled_desktop_app: true, sort_order: 0 };
 
 export default function SupportedCountriesManagement() {
   const qc = useQueryClient();
