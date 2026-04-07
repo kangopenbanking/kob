@@ -217,7 +217,156 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, notified: false, message: 'Participant is not a registered user' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action. Use: create, search_users, settle, or remind' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // PAY SHARE — participant pays their share from wallet
+    if (action === 'pay_share') {
+      const { participant_id } = body;
+      if (!participant_id) {
+        return new Response(JSON.stringify({ error: 'participant_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Get participant record
+      const { data: part, error: partErr } = await supabase.from('split_bill_participants')
+        .select('id, split_bill_id, name, user_id, share_amount, paid, is_owner')
+        .eq('id', participant_id)
+        .single();
+      if (partErr || !part) {
+        return new Response(JSON.stringify({ error: 'Participant not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Verify the caller IS this participant
+      if (part.user_id !== user.id) {
+        return new Response(JSON.stringify({ error: 'You can only pay your own share' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (part.paid) {
+        return new Response(JSON.stringify({ error: 'This share has already been paid' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const amount = Number(part.share_amount);
+      if (amount <= 0) {
+        return new Response(JSON.stringify({ error: 'Invalid share amount' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Get payer's account & balance
+      const { data: payerAccount } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      if (!payerAccount) {
+        return new Response(JSON.stringify({ error: 'No active wallet found. Please fund your account first.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const { data: payerBalance } = await supabase
+        .from('account_balances')
+        .select('id, amount')
+        .eq('account_id', payerAccount.id)
+        .eq('balance_type', 'ClosingAvailable')
+        .maybeSingle();
+      if (!payerBalance || payerBalance.amount < amount) {
+        return new Response(JSON.stringify({ error: `Insufficient funds. You need ${amount.toLocaleString()} XAF but have ${(payerBalance?.amount || 0).toLocaleString()} XAF.` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Get bill owner's account
+      const { data: bill } = await supabase.from('split_bills')
+        .select('id, user_id, title')
+        .eq('id', part.split_bill_id)
+        .single();
+      if (!bill) {
+        return new Response(JSON.stringify({ error: 'Bill not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const { data: ownerAccount } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', bill.user_id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      if (!ownerAccount) {
+        return new Response(JSON.stringify({ error: 'Bill creator\'s wallet not found' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Debit payer
+      await supabase.from('account_balances')
+        .update({ amount: payerBalance.amount - amount, balance_datetime: new Date().toISOString() })
+        .eq('id', payerBalance.id);
+
+      // Credit bill owner
+      const { data: ownerBalance } = await supabase
+        .from('account_balances')
+        .select('id, amount')
+        .eq('account_id', ownerAccount.id)
+        .eq('balance_type', 'ClosingAvailable')
+        .maybeSingle();
+      if (ownerBalance) {
+        await supabase.from('account_balances')
+          .update({ amount: ownerBalance.amount + amount, balance_datetime: new Date().toISOString() })
+          .eq('id', ownerBalance.id);
+      }
+
+      // Record transactions
+      const now = new Date().toISOString();
+      const idempotencyKey = `splitbill_${part.id}_${Date.now()}`;
+      await supabase.from('transactions').insert([
+        {
+          account_id: payerAccount.id,
+          amount,
+          currency: 'XAF',
+          transaction_type: 'debit',
+          credit_debit_indicator: 'Debit',
+          status: 'Booked',
+          description: `Split bill payment: ${bill.title}`,
+          reference: idempotencyKey,
+          booking_date: now,
+          value_date: now,
+          merchant_name: 'Split Bill',
+          category: 'transfer',
+        },
+        {
+          account_id: ownerAccount.id,
+          amount,
+          currency: 'XAF',
+          transaction_type: 'credit',
+          credit_debit_indicator: 'Credit',
+          status: 'Booked',
+          description: `Split bill received from ${part.name}: ${bill.title}`,
+          reference: idempotencyKey,
+          booking_date: now,
+          value_date: now,
+          merchant_name: 'Split Bill',
+          category: 'transfer',
+        },
+      ]);
+
+      // Mark participant as paid
+      await supabase.from('split_bill_participants')
+        .update({ paid: true, paid_at: now })
+        .eq('id', participant_id);
+
+      // Check if all paid → settle bill
+      const { data: allParts } = await supabase.from('split_bill_participants')
+        .select('paid')
+        .eq('split_bill_id', bill.id);
+      if (allParts && allParts.every((p: any) => p.paid)) {
+        await supabase.from('split_bills').update({ status: 'settled' }).eq('id', bill.id);
+      }
+
+      // Notify bill owner
+      await supabase.from('app_notifications').insert({
+        user_id: bill.user_id,
+        type: 'info',
+        title: 'Split Bill Payment Received',
+        message: `${part.name} paid ${amount.toLocaleString()} XAF for "${bill.title}"`,
+        icon: 'payment',
+        metadata: { split_bill_id: bill.id, amount, paid_by: user.id },
+      });
+
+      return new Response(JSON.stringify({ success: true, amount }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid action. Use: create, search_users, settle, remind, or pay_share' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error('split-bills-ops error:', error);
