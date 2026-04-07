@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
+
+const SITE_NAME = "Kang OB";
+const SENDER_DOMAIN = "notify.api.kangopenbanking.com";
+const FROM_DOMAIN = "kangopenbanking.com";
 
 interface CommunicationRequest {
   template_key: string;
@@ -12,7 +15,6 @@ interface CommunicationRequest {
   test_mode?: boolean;
 }
 
-// Simple template variable replacement
 function replaceVariables(template: string, variables: Record<string, any>): string {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
@@ -23,7 +25,6 @@ function replaceVariables(template: string, variables: Record<string, any>): str
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -61,72 +62,44 @@ serve(async (req) => {
     let success = false;
     let errorMessage = '';
     let sentAt = null;
-    let reroutedTo = null;
 
-    // Send email
+    // Send email via Lovable email queue
     if (template.template_type === 'email' && recipient_email) {
-      const resendApiKey = Deno.env.get('RESEND_API_KEY');
-      
-      if (!resendApiKey) {
-        errorMessage = 'RESEND_API_KEY not configured';
-        console.error('RESEND_API_KEY environment variable is not set');
-      } else {
-        try {
-          const resend = new Resend(resendApiKey);
-          const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.api.kangopenbanking.com>';
-          
-          const { error: emailError } = await resend.emails.send({
-            from: fromAddress,
-            to: [recipient_email],
+      try {
+        const messageId = crypto.randomUUID();
+
+        const { error: enqueueError } = await supabaseClient.rpc('enqueue_email', {
+          queue_name: 'transactional_emails',
+          payload: {
+            message_id: messageId,
+            to: recipient_email,
+            from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+            sender_domain: SENDER_DOMAIN,
             subject: subject,
             html: body,
-          });
+            text: subject,
+            purpose: 'transactional',
+            label: `communication-${template_key}`,
+            idempotency_key: `comm-${template_key}-${messageId}`,
+            queued_at: new Date().toISOString(),
+          },
+        });
 
-          if (emailError) {
-            // Check if this is a sandbox validation error
-            if (test_mode && emailError.message && emailError.message.includes('You can only send testing emails')) {
-              console.log('Sandbox mode detected, attempting to reroute to allowed address');
-              
-              // Extract allowed email from error message (between parentheses)
-              const match = emailError.message.match(/\(([^)]+)\)/);
-              const allowedEmail = match ? match[1] : 'kangopenbanking@gmail.com';
-              
-              console.log(`Rerouting test email from ${recipient_email} to ${allowedEmail}`);
-              
-              // Retry with allowed email
-              const { error: retryError } = await resend.emails.send({
-                from: fromAddress,
-                to: [allowedEmail],
-                subject: `[TEST for ${recipient_email}] ${subject}`,
-                html: `<p><strong>Note: This test email was rerouted from ${recipient_email} due to Resend sandbox restrictions.</strong></p><hr>${body}`,
-              });
-
-              if (retryError) {
-                errorMessage = `Reroute failed: ${retryError.message}`;
-                console.error('Reroute error:', retryError);
-              } else {
-                success = true;
-                sentAt = new Date().toISOString();
-                reroutedTo = allowedEmail;
-                console.log(`Email rerouted successfully to: ${allowedEmail}`);
-              }
-            } else {
-              errorMessage = emailError.message;
-              console.error('Email error:', emailError);
-            }
-          } else {
-            success = true;
-            sentAt = new Date().toISOString();
-            console.log('Email sent successfully to:', recipient_email);
-          }
-        } catch (error: any) {
-          errorMessage = error.message;
-          console.error('Email sending failed:', error);
+        if (enqueueError) {
+          errorMessage = enqueueError.message || 'Failed to enqueue email';
+          console.error('Email enqueue error:', enqueueError);
+        } else {
+          success = true;
+          sentAt = new Date().toISOString();
+          console.log('Email enqueued successfully for:', recipient_email);
         }
+      } catch (error: any) {
+        errorMessage = error.message;
+        console.error('Email enqueue failed:', error);
       }
     }
 
-    // Send SMS
+    // Send SMS (unchanged — still uses Vonage)
     if (template.template_type === 'sms' && recipient_phone) {
       try {
         const vonageApiKey = Deno.env.get('VONAGE_API_KEY');
@@ -134,9 +107,7 @@ serve(async (req) => {
 
         const smsResponse = await fetch('https://rest.nexmo.com/sms/json', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from: 'OpenBanking',
             to: recipient_phone,
@@ -147,7 +118,7 @@ serve(async (req) => {
         });
 
         const smsResult = await smsResponse.json();
-        
+
         if (smsResult.messages && smsResult.messages[0].status === '0') {
           success = true;
           sentAt = new Date().toISOString();
@@ -185,15 +156,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success, 
+      JSON.stringify({
+        success,
         message: success ? 'Communication sent successfully' : 'Communication failed',
         error: errorMessage || undefined,
-        rerouted_to: reroutedTo || undefined
       }),
-      { 
+      {
         status: success ? 200 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   } catch (error: any) {

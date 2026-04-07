@@ -1,6 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
+
+const SITE_NAME = "Kang OB";
+const SENDER_DOMAIN = "notify.api.kangopenbanking.com";
+const FROM_DOMAIN = "kangopenbanking.com";
 
 function replaceVariables(template: string, variables: Record<string, any>): string {
   let result = template;
@@ -127,11 +130,10 @@ Deno.serve(async (req) => {
       primaryColor: '#007A3D',
       secondaryColor: '#1e3a8a',
       footerText: 'Powered by Kang Open Banking',
-      fromName: 'Kang Open Banking',
+      fromName: 'Kang OB',
     };
 
     if (institution_id) {
-      // Customer-facing emails use institution branding
       const { data: instSettings } = await supabase
         .from('institution_email_settings')
         .select('*')
@@ -146,7 +148,6 @@ Deno.serve(async (req) => {
         if (instSettings.from_name) branding.fromName = instSettings.from_name;
       }
 
-      // Get institution name for variables
       const { data: inst } = await supabase
         .from('institutions')
         .select('institution_name')
@@ -165,43 +166,58 @@ Deno.serve(async (req) => {
     // 6. Wrap in professional layout
     const fullHtml = wrapInLayout(finalBody, branding);
 
-    // 7. Send via Resend
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) throw new Error('RESEND_API_KEY not configured');
+    // 7. Send via Lovable email queue (enqueue_email RPC)
+    const messageId = crypto.randomUUID();
 
-    const resend = new Resend(resendApiKey);
-    const fromAddress = Deno.env.get('RESEND_FROM') || `${branding.fromName} <noreply@kangopenbanking.com>`;
-
-    const { error: sendErr } = await resend.emails.send({
-      from: fromAddress,
-      to: [finalEmail],
-      subject: finalSubject,
-      html: fullHtml,
-    });
-
-    const status = sendErr ? 'failed' : 'sent';
-
-    // 8. Log
+    // Log pending
     await supabase.from('managed_email_logs').insert({
       email_type_id: emailType.id,
       institution_id: institution_id || null,
       recipient_user_id: recipient_user_id || null,
       recipient_email: finalEmail,
       subject: finalSubject,
-      status,
-      error_message: sendErr?.message || null,
+      status: 'pending',
+      error_message: null,
       metadata: variables,
-      sent_at: status === 'sent' ? new Date().toISOString() : null,
+      sent_at: null,
     });
 
-    if (sendErr) {
-      console.error('Email send error:', sendErr);
-      return new Response(JSON.stringify({ success: false, error: sendErr.message }), {
+    const { error: enqueueError } = await supabase.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id: messageId,
+        to: finalEmail,
+        from: `${branding.fromName} <support@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject: finalSubject,
+        html: fullHtml,
+        text: finalSubject, // plain text fallback
+        purpose: 'transactional',
+        label: `managed-${email_key}`,
+        idempotency_key: `managed-${email_key}-${messageId}`,
+        queued_at: new Date().toISOString(),
+      },
+    });
+
+    if (enqueueError) {
+      console.error('Failed to enqueue managed email:', enqueueError);
+      await supabase.from('managed_email_logs').insert({
+        email_type_id: emailType.id,
+        institution_id: institution_id || null,
+        recipient_user_id: recipient_user_id || null,
+        recipient_email: finalEmail,
+        subject: finalSubject,
+        status: 'failed',
+        error_message: enqueueError.message || 'Failed to enqueue email',
+        metadata: variables,
+      });
+
+      return new Response(JSON.stringify({ success: false, error: 'Failed to enqueue email' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`managed-send-email: ${email_key} sent to ${finalEmail}`);
+    console.log(`managed-send-email: ${email_key} enqueued for ${finalEmail}`);
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
