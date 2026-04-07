@@ -515,6 +515,8 @@ const CustomerNjangi: React.FC = () => {
           <UserPlus className="h-4 w-4" strokeWidth={1.5} /> Join Circle
         </Button>
       </div>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
 };
