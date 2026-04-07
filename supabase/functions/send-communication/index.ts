@@ -4,7 +4,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const SITE_NAME = "Kang OB";
 const SENDER_DOMAIN = "notify.kangopenbanking.com";
-const FROM_DOMAIN = "kangopenbanking.com";
+const FROM_DOMAIN = "support.kangopenbanking.com";
 
 interface CommunicationRequest {
   template_key: string;

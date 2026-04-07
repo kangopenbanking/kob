@@ -6,7 +6,7 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 // Configuration baked in at scaffold time
 const SITE_NAME = "Kang OB"
 const SENDER_DOMAIN = "notify.kangopenbanking.com"
-const FROM_DOMAIN = "kangopenbanking.com"
+const FROM_DOMAIN = "support.kangopenbanking.com"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

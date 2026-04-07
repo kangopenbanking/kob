@@ -236,7 +236,7 @@ Deno.serve(async (req) => {
       try {
         // Use the from address from the payload directly.
         // The from domain must be verified on the Resend account (e.g. kangopenbanking.com).
-        const fromAddress = payload.from || resendFrom || `Kang OB <noreply@kangopenbanking.com>`
+        const fromAddress = payload.from || resendFrom || `Kang OB <support@support.kangopenbanking.com>`
 
         await sendViaResend(resendApiKey, {
           from: fromAddress,
