@@ -313,10 +313,15 @@ const CustomerSettings: React.FC = () => {
               />
             </SettingCard>
 
-            {/* Help & Logout */}
+            {/* Help & Logout & Delete */}
             <SettingCard>
               <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help')} />
               <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
+              <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label="Delete Account" description="Permanently delete your account and data" onClick={() => {
+                if (window.confirm('Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.')) {
+                  toast.info('Please contact support@kangconsultancy.com to process your account deletion request.');
+                }
+              }} destructive />
             </SettingCard>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
