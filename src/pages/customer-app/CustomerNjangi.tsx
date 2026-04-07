@@ -235,7 +235,7 @@ const CustomerNjangi: React.FC = () => {
         {/* Actions */}
         <div className="flex gap-2">
           {!iHavePaid && selectedGroup.status === 'active' && (
-            <Button onClick={() => handleContribute(selectedGroup.id)} disabled={contributeMutation.isPending}
+            <Button onClick={() => requestContribute(selectedGroup.id)} disabled={contributeMutation.isPending}
               className="flex-1 rounded-2xl h-11 gap-2">
               {contributeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
               Contribute
