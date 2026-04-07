@@ -15,6 +15,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import kangCardBg from '@/assets/kangcard_visa.png';
 import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
