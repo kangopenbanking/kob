@@ -111,10 +111,11 @@ export default function SupportedCountriesManagement() {
         <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Country</Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{countries.length}</p><p className="text-xs text-muted-foreground">Total Countries</p></CardContent></Card>
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-green-600">{countries.filter(c => c.enabled_consumer_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Smartphone className="h-3 w-3" /> Consumer App</p></CardContent></Card>
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-blue-600">{countries.filter(c => c.enabled_banking_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Building2 className="h-3 w-3" /> Banking App</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-purple-600">{countries.filter(c => c.enabled_desktop_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Monitor className="h-3 w-3" /> Desktop App</p></CardContent></Card>
       </div>
 
       <Card>
