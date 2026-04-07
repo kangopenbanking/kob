@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, TrendingUp, CheckCircle2, Loader2, Plus, Calendar, Banknote, Info, Shield, BadgeCheck, Flame, Clock, CreditCard, ChevronRight, XCircle, AlertTriangle } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
