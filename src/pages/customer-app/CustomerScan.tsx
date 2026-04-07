@@ -31,6 +31,8 @@ const CustomerScan: React.FC = () => {
   const [payAmount, setPayAmount] = useState('');
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
+  const queryClient = useQueryClient();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
