@@ -21750,6 +21750,10 @@ export type Database = {
         Args: { _balance_id: string; _debit_amount: number }
         Returns: Json
       }
+      atomic_debit_balance: {
+        Args: { _account_id: string; _amount: number; _currency?: string }
+        Returns: Json
+      }
       atomic_dispute_wallet_adjust: {
         Args: {
           _amount: number
