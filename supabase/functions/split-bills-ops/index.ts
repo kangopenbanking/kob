@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
         split_bill_id: bill.id,
         name: p.name,
         phone: p.phone || null,
-        user_id: p.user_id || null,
+        user_id: i === 0 ? user.id : (p.user_id || null),
         share_amount: p.share_amount,
         share_percent: p.share_percent || 0,
         is_owner: i === 0,
