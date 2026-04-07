@@ -65,7 +65,11 @@ const CustomerStoreDetail: React.FC = () => {
   };
 
   const addToCart = async (variantId: string) => {
-    if (!user || !merchantId) return;
+    if (!user) {
+      toast.error('Please sign in to add items to your cart');
+      return;
+    }
+    if (!merchantId) return;
     setAddingToCart(variantId);
     try {
       const { error } = await supabase.functions.invoke('pos-consumer-cart', {
@@ -75,7 +79,7 @@ const CustomerStoreDetail: React.FC = () => {
       toast.success('Item added to your cart 🛒');
       setCartCount(prev => prev + 1);
     } catch (err: any) {
-      toast.error('Could not add item to cart. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Could not add item to cart. Please try again.'));
     } finally {
       setAddingToCart(null);
     }
