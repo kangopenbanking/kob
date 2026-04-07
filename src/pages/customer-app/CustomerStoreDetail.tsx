@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CustomerStoreDetail: React.FC = () => {
   const { merchantId } = useParams<{ merchantId: string }>();
