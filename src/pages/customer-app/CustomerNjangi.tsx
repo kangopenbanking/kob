@@ -5,6 +5,7 @@ import {
   Loader2, Banknote, AlertCircle, CheckCircle2, Clock, UserPlus, Trophy, Repeat, ShieldCheck, Gift
 } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
