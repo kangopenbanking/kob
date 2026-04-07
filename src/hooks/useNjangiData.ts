@@ -94,8 +94,9 @@ export function useNjangiContribute() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { group_id: string }) => {
+      const idempotencyKey = `njangi_contrib_${body.group_id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('njangi-ops', {
-        body: { action: 'contribute', ...body },
+        body: { action: 'contribute', ...body, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
