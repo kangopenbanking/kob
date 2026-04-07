@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { formatErrorForToast, parseEdgeFunctionError } from '@/lib/error-handler';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 export default function ProfileSettings() {
   const { toast } = useToast();
