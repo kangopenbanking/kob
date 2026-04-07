@@ -51,7 +51,7 @@ export default function SupportedCountriesManagement() {
         const { error } = await supabase.from("supported_countries").update({
           code: values.code, country: values.country, flag: values.flag, dial_code: values.dial_code,
           enabled_consumer_app: values.enabled_consumer_app, enabled_banking_app: values.enabled_banking_app,
-          sort_order: values.sort_order, updated_at: new Date().toISOString(),
+          enabled_desktop_app: values.enabled_desktop_app, sort_order: values.sort_order, updated_at: new Date().toISOString(),
         }).eq("id", values.id);
         if (error) throw error;
       } else {
