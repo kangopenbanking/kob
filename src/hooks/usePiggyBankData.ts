@@ -50,6 +50,29 @@ export function usePiggyBankPayments(planId: string) {
   });
 }
 
+// ─── User Accounts (for auto-fund source selection) ───
+export function useUserAccounts() {
+  return useQuery({
+    queryKey: ['customer-accounts'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, nickname, currency, account_balances(amount, balance_type, credit_debit_indicator)')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+      if (error) throw error;
+      return (data || []).map((a: any) => {
+        const closingBal = (a.account_balances || []).find(
+          (b: any) => b.balance_type === 'ClosingAvailable' && b.credit_debit_indicator === 'Credit'
+        );
+        return { ...a, available_balance: closingBal?.amount || 0 };
+      });
+    },
+  });
+}
+
 // ─── Create Plan ───
 export function useCreatePiggyBankPlan() {
   const qc = useQueryClient();
@@ -65,7 +88,7 @@ export function useCreatePiggyBankPlan() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
-      toast.success('Your PiggyBank savings plan is now active! 🐷 Keep saving consistently.');
+      toast.success('Your PiggyBank savings plan is now active! Keep saving consistently.');
     },
     onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not create your savings plan. Please try again.')),
   });
@@ -76,7 +99,7 @@ export function usePiggyBankPay() {
   const qc = useQueryClient();
   const institutionId = useInstitutionId();
   return useMutation({
-    mutationFn: async (body: { payment_id: string }) => {
+    mutationFn: async (body: { payment_id: string; fund_from_wallet?: boolean; account_id?: string }) => {
       const idempotencyKey = `piggy_pay_${body.payment_id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('piggybank', {
         body: { action: 'pay', ...body, idempotency_key: idempotencyKey },
@@ -85,10 +108,13 @@ export function usePiggyBankPay() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
-      toast.success('Installment paid! You\'re one step closer to your savings goal. 🎉');
+      qc.invalidateQueries({ queryKey: ['customer-accounts'] });
+      qc.invalidateQueries({ queryKey: ['account-balances'] });
+      const walletMsg = data?.wallet_debited ? ' Funds debited from your wallet.' : '';
+      toast.success(`Installment paid! You're one step closer to your savings goal.${walletMsg}`);
     },
     onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Payment could not be processed. Please ensure you have sufficient funds.')),
   });

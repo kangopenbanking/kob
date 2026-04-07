@@ -13927,6 +13927,8 @@ export type Database = {
       }
       piggybank_plans: {
         Row: {
+          auto_fund_account_id: string | null
+          auto_fund_enabled: boolean
           created_at: string
           end_date: string | null
           id: string
@@ -13945,6 +13947,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_fund_account_id?: string | null
+          auto_fund_enabled?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -13963,6 +13967,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_fund_account_id?: string | null
+          auto_fund_enabled?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -13981,6 +13987,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "piggybank_plans_auto_fund_account_id_fkey"
+            columns: ["auto_fund_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "piggybank_plans_institution_id_fkey"
             columns: ["institution_id"]
