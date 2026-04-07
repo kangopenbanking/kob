@@ -111,6 +111,7 @@ export function usePiggyBankPay() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      qc.invalidateQueries({ queryKey: ['customer-credit-score'] });
       qc.invalidateQueries({ queryKey: ['customer-accounts'] });
       qc.invalidateQueries({ queryKey: ['account-balances'] });
       const walletMsg = data?.wallet_debited ? ' Funds debited from your wallet.' : '';
