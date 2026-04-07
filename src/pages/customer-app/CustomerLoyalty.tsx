@@ -69,9 +69,9 @@ export function CustomerLoyalty() {
   const progressToNextTier = Math.min((totalPoints / nextTier) * 100, 100);
 
   const tiers = [
-    { name: 'Bronze', min: 0, color: 'text-amber-700', icon: Award },
-    { name: 'Silver', min: 1000, color: 'text-gray-400', icon: Star },
-    { name: 'Gold', min: 5000, color: 'text-yellow-500', icon: Sparkles },
+    { name: 'Bronze', min: 0, color: 'text-[hsl(25,60%,45%)]', icon: Award },
+    { name: 'Silver', min: 1000, color: 'text-muted-foreground', icon: Star },
+    { name: 'Gold', min: 5000, color: 'text-[hsl(45,80%,45%)]', icon: Sparkles },
   ];
 
   const currentTier = tiers.reduce((acc, tier) => (totalPoints >= tier.min ? tier : acc), tiers[0]);
