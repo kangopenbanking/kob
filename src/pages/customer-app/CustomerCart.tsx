@@ -299,7 +299,7 @@ const CustomerCart: React.FC = () => {
           className="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-50"
         >
           <Button
-            onClick={handleCheckout}
+            onClick={() => setShowPin(true)}
             disabled={checkingOut || walletBalance < total}
             className="w-full h-12 rounded-2xl font-semibold shadow-lg"
           >
@@ -311,6 +311,8 @@ const CustomerCart: React.FC = () => {
           </Button>
         </motion.div>
       )}
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleCheckout} />
     </div>
   );
 };
