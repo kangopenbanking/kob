@@ -95,8 +95,7 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
 
-const CustomerHelp: React.FC = () => {
-  const navigate = useNavigate();
+
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);

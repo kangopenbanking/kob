@@ -153,7 +153,7 @@ export default function CustomerDisputes() {
       setForm({ reason: '', description: '', dispute_type: 'unauthorized', amount: '', transaction_ref: '', institution_id: '' });
       refetch();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Could not file dispute", variant: "destructive" });
+      toast({ title: "Error", description: extractEdgeFunctionError(err, "Could not file dispute"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
