@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 const CustomerCart: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: accounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
@@ -23,6 +24,7 @@ const CustomerCart: React.FC = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [orderComplete, setOrderComplete] = useState<any>(null);
   const [orderFailed, setOrderFailed] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const walletBalance = balances.find((b: any) => b.balance_type === 'ClosingAvailable')?.amount || 0;
 
