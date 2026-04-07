@@ -209,8 +209,8 @@ const CustomerSplitBills: React.FC = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
+      await queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
+      await queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
       setShowCreate(false);
       resetForm();
       toast.success(`Split request sent to ${participants.length - 1} people`);
