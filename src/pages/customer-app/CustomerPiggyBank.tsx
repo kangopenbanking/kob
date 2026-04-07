@@ -52,9 +52,11 @@ const CustomerPiggyBank: React.FC = () => {
   const { data: userAccounts = [] } = useUserAccounts();
   const createPlan = useCreatePiggyBankPlan();
   const payMutation = usePiggyBankPay();
+  const cancelPlan = useCancelPiggyBankPlan();
   const [showPin, setShowPin] = useState(false);
   const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
   const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ planId: string; planName: string } | null>(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
