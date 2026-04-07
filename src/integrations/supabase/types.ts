@@ -5354,6 +5354,7 @@ export type Database = {
       credit_events: {
         Row: {
           created_at: string
+          description: string | null
           event_time: string
           event_type: Database["public"]["Enums"]["credit_event_type"]
           id: string
@@ -5365,6 +5366,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           event_time?: string
           event_type: Database["public"]["Enums"]["credit_event_type"]
           id?: string
@@ -5376,6 +5378,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           event_time?: string
           event_type?: Database["public"]["Enums"]["credit_event_type"]
           id?: string
