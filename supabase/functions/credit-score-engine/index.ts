@@ -162,6 +162,10 @@ Deno.serve(async (req) => {
         case 'POSTIQ_VERIFIED':
           points = rule.max; // +50
           break;
+        // Hard inquiries
+        case 'HARD_INQUIRY':
+          points = rule.min; // -5
+          break;
       }
 
       score += points;
