@@ -108,11 +108,18 @@ const CustomerRentReporting: React.FC = () => {
     }
   };
 
-  const handleRecordPayment = async (paymentId: string) => {
-    setPayingId(paymentId);
+  const handlePayRequest = (paymentId: string) => {
+    setPendingPaymentId(paymentId);
+    setShowPin(true);
+  };
+
+  const handleRecordPaymentConfirmed = async () => {
+    if (!pendingPaymentId) return;
+    setPayingId(pendingPaymentId);
     try {
+      const idempotencyKey = `rent_pay_${pendingPaymentId}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('piggybank', {
-        body: { action: 'pay', payment_id: paymentId },
+        body: { action: 'pay', payment_id: pendingPaymentId, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       toast.success(
@@ -121,11 +128,16 @@ const CustomerRentReporting: React.FC = () => {
           : `Payment recorded (late). Score impact: ${data?.score_delta || 0}`
       );
       refetchPlans();
-      queryClient.invalidateQueries({ queryKey: ['customer-credit-score'] });
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-credit-score'] }),
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Failed to record payment'));
     } finally {
       setPayingId(null);
+      setPendingPaymentId(null);
     }
   };
 
