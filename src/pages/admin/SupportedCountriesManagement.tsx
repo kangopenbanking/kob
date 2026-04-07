@@ -131,6 +131,7 @@ export default function SupportedCountriesManagement() {
                 <TableHead>Dial Code</TableHead>
                 <TableHead className="text-center">Consumer App</TableHead>
                 <TableHead className="text-center">Banking App</TableHead>
+                <TableHead className="text-center">Desktop App</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
