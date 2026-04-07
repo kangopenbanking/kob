@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const SITE_NAME = "Kang OB";
-const SENDER_DOMAIN = "notify.api.kangopenbanking.com";
+const SENDER_DOMAIN = "notify.kangopenbanking.com";
 const FROM_DOMAIN = "kangopenbanking.com";
 
 interface CommunicationRequest {
