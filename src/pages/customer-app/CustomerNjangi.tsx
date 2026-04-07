@@ -5,6 +5,7 @@ import {
   Loader2, Banknote, AlertCircle, CheckCircle2, Clock, UserPlus, Trophy, Repeat, ShieldCheck, Gift
 } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerNjangi } from '@/hooks/useCustomerData';
 import { useCreateNjangiGroup, useJoinNjangiGroup, useNjangiContribute, useNjangiPayout } from '@/hooks/useNjangiData';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const circleColors = [
   { bg: 'bg-[hsl(270,60%,92%)]', accent: 'text-[hsl(270,50%,45%)]', bar: 'bg-[hsl(270,50%,45%)]' },
@@ -29,6 +30,7 @@ type ViewMode = 'list' | 'create' | 'join' | 'detail';
 const CustomerNjangi: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: circles = [], isLoading, refetch } = useCustomerNjangi(user?.id);
 
   const createMutation = useCreateNjangiGroup();
@@ -38,6 +40,8 @@ const CustomerNjangi: React.FC = () => {
 
   const [view, setView] = useState<ViewMode>('list');
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
+  const [pinAction, setPinAction] = useState<{ type: 'contribute' | 'payout'; groupId: string } | null>(null);
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -129,23 +133,43 @@ const CustomerNjangi: React.FC = () => {
     });
   };
 
-  const handleContribute = (groupId: string) => {
-    contributeMutation.mutate({ group_id: groupId }, {
-      onSuccess: (data) => {
-        const status = data?.contribution_status === 'late' ? '(late — interest applied)' : '';
-        toast.success(`Contribution recorded ${status}`);
-        refetch();
-      },
-    });
+  const requestContribute = (groupId: string) => {
+    setPinAction({ type: 'contribute', groupId });
+    setShowPin(true);
   };
 
-  const handlePayout = (groupId: string) => {
-    payoutMutation.mutate({ group_id: groupId }, {
-      onSuccess: (data) => {
-        toast.success(`Payout of ${data?.total_amount?.toLocaleString()} XAF sent! Cycle ${data?.next_cycle} begins.`);
-        refetch();
-      },
-    });
+  const requestPayout = (groupId: string) => {
+    setPinAction({ type: 'payout', groupId });
+    setShowPin(true);
+  };
+
+  const handlePinConfirmed = async () => {
+    if (!pinAction) return;
+    if (pinAction.type === 'contribute') {
+      contributeMutation.mutate({ group_id: pinAction.groupId }, {
+        onSuccess: async (data) => {
+          const status = data?.contribution_status === 'late' ? '(late — interest applied)' : '';
+          toast.success(`Contribution recorded ${status}`);
+          refetch();
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+            queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+          ]);
+        },
+      });
+    } else {
+      payoutMutation.mutate({ group_id: pinAction.groupId }, {
+        onSuccess: async (data) => {
+          toast.success(`Payout of ${data?.total_amount?.toLocaleString()} XAF sent! Cycle ${data?.next_cycle} begins.`);
+          refetch();
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+            queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+          ]);
+        },
+      });
+    }
+    setPinAction(null);
   };
 
   const openDetail = (circle: any) => {
@@ -211,7 +235,7 @@ const CustomerNjangi: React.FC = () => {
         {/* Actions */}
         <div className="flex gap-2">
           {!iHavePaid && selectedGroup.status === 'active' && (
-            <Button onClick={() => handleContribute(selectedGroup.id)} disabled={contributeMutation.isPending}
+            <Button onClick={() => requestContribute(selectedGroup.id)} disabled={contributeMutation.isPending}
               className="flex-1 rounded-2xl h-11 gap-2">
               {contributeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
               Contribute
@@ -223,7 +247,7 @@ const CustomerNjangi: React.FC = () => {
             </div>
           )}
           {isCreator && allPaid && detailMembers.length > 0 && (
-            <Button variant="outline" onClick={() => handlePayout(selectedGroup.id)} disabled={payoutMutation.isPending}
+            <Button variant="outline" onClick={() => requestPayout(selectedGroup.id)} disabled={payoutMutation.isPending}
               className="flex-1 rounded-2xl h-11 gap-2 border-[hsl(45,60%,35%)] text-[hsl(45,60%,35%)]">
               {payoutMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
               Trigger Payout
@@ -491,6 +515,8 @@ const CustomerNjangi: React.FC = () => {
           <UserPlus className="h-4 w-4" strokeWidth={1.5} /> Join Circle
         </Button>
       </div>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
 };

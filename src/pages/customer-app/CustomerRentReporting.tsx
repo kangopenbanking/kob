@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, TrendingUp, CheckCircle2, Loader2, Plus, Calendar, Banknote, Info, Shield, BadgeCheck, Flame, Clock, CreditCard, ChevronRight, XCircle, AlertTriangle } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +22,8 @@ const CustomerRentReporting: React.FC = () => {
   const { user } = useCustomerAuth();
   const [showSetup, setShowSetup] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [showPin, setShowPin] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const [rentAmount, setRentAmount] = useState('');
   const [landlordName, setLandlordName] = useState('');
@@ -105,11 +108,18 @@ const CustomerRentReporting: React.FC = () => {
     }
   };
 
-  const handleRecordPayment = async (paymentId: string) => {
-    setPayingId(paymentId);
+  const handlePayRequest = (paymentId: string) => {
+    setPendingPaymentId(paymentId);
+    setShowPin(true);
+  };
+
+  const handleRecordPaymentConfirmed = async () => {
+    if (!pendingPaymentId) return;
+    setPayingId(pendingPaymentId);
     try {
+      const idempotencyKey = `rent_pay_${pendingPaymentId}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('piggybank', {
-        body: { action: 'pay', payment_id: paymentId },
+        body: { action: 'pay', payment_id: pendingPaymentId, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       toast.success(
@@ -118,11 +128,16 @@ const CustomerRentReporting: React.FC = () => {
           : `Payment recorded (late). Score impact: ${data?.score_delta || 0}`
       );
       refetchPlans();
-      queryClient.invalidateQueries({ queryKey: ['customer-credit-score'] });
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-credit-score'] }),
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Failed to record payment'));
     } finally {
       setPayingId(null);
+      setPendingPaymentId(null);
     }
   };
 
@@ -304,7 +319,7 @@ const CustomerRentReporting: React.FC = () => {
                                 </div>
                                 <Button
                                   size="sm"
-                                  onClick={() => handleRecordPayment(payment.id)}
+                                  onClick={() => handlePayRequest(payment.id)}
                                   disabled={isPaying}
                                   className="rounded-xl h-8 text-[11px] px-3"
                                   variant={isOverdue ? 'destructive' : 'default'}
@@ -460,6 +475,8 @@ const CustomerRentReporting: React.FC = () => {
           )}
         </>
       )}
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleRecordPaymentConfirmed} />
     </div>
   );
 };

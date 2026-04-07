@@ -9,11 +9,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay } from '@/hooks/usePiggyBankData';
 import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
 import PersonalSavingImg from '@/assets/Personal_Savings.png';
 
@@ -42,10 +43,13 @@ function useSavingsProducts() {
 
 const CustomerPiggyBank: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
   const { data: plans = [], isLoading } = usePiggyBankPlans();
   const createPlan = useCreatePiggyBankPlan();
   const payMutation = usePiggyBankPay();
+  const [showPin, setShowPin] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
@@ -103,11 +107,23 @@ const CustomerPiggyBank: React.FC = () => {
     } catch { /* error handled by hook */ }
   };
 
-  const handlePay = async (paymentId: string) => {
+  const handlePayRequest = (paymentId: string) => {
+    setPendingPaymentId(paymentId);
+    setShowPin(true);
+  };
+
+  const handlePayConfirmed = async () => {
+    if (!pendingPaymentId) return;
     try {
-      await payMutation.mutateAsync({ payment_id: paymentId });
+      await payMutation.mutateAsync({ payment_id: pendingPaymentId });
       toast.success('Payment recorded!');
-    } catch { /* error handled by hook */ }
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
+    } catch { /* error handled by hook */ } finally {
+      setPendingPaymentId(null);
+    }
   };
 
   const getHeaderTitle = () => {
@@ -229,7 +245,7 @@ const CustomerPiggyBank: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {displayPlans.map((plan: any, i: number) => (
-                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePay} isBank={selectedCategory === 'bank'} />
+                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} />
                 ))}
               </div>
             )}
@@ -289,6 +305,8 @@ const CustomerPiggyBank: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePayConfirmed} />
     </div>
   );
 };

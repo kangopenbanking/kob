@@ -77,8 +77,9 @@ export function usePiggyBankPay() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { payment_id: string }) => {
+      const idempotencyKey = `piggy_pay_${body.payment_id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('piggybank', {
-        body: { action: 'pay', ...body },
+        body: { action: 'pay', ...body, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

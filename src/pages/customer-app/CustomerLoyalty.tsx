@@ -69,9 +69,9 @@ export function CustomerLoyalty() {
   const progressToNextTier = Math.min((totalPoints / nextTier) * 100, 100);
 
   const tiers = [
-    { name: 'Bronze', min: 0, color: 'text-amber-700', icon: Award },
-    { name: 'Silver', min: 1000, color: 'text-gray-400', icon: Star },
-    { name: 'Gold', min: 5000, color: 'text-yellow-500', icon: Sparkles },
+    { name: 'Bronze', min: 0, color: 'text-[hsl(25,60%,45%)]', icon: Award },
+    { name: 'Silver', min: 1000, color: 'text-muted-foreground', icon: Star },
+    { name: 'Gold', min: 5000, color: 'text-[hsl(45,80%,45%)]', icon: Sparkles },
   ];
 
   const currentTier = tiers.reduce((acc, tier) => (totalPoints >= tier.min ? tier : acc), tiers[0]);
@@ -116,8 +116,8 @@ export function CustomerLoyalty() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="h-12 w-12 rounded-lg bg-[hsl(150,40%,90%)] flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-[hsl(150,40%,35%)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalPoints.toLocaleString()}</p>
@@ -128,8 +128,8 @@ export function CustomerLoyalty() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <Gift className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-lg bg-[hsl(270,60%,92%)] flex items-center justify-center">
+                <Gift className="h-6 w-6 text-[hsl(270,50%,45%)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{redeemedPoints.toLocaleString()}</p>
@@ -194,7 +194,7 @@ export function CustomerLoyalty() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold ${txn.points_change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`font-bold ${txn.points_change > 0 ? 'text-[hsl(150,60%,35%)]' : 'text-destructive'}`}>
                         {txn.points_change > 0 ? '+' : ''}{txn.points_change}
                       </p>
                       <p className="text-xs text-muted-foreground">points</p>
