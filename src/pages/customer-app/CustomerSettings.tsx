@@ -91,6 +91,8 @@ const CustomerSettings: React.FC = () => {
         setEmailNotifs(prefs.email_notifications ?? true);
         setSmsNotifs(prefs.sms_notifications ?? false);
         setTxAlerts(prefs.transaction_alerts ?? true);
+        setBiometric(prefs.biometric_enabled ?? false);
+        setTwoFA(prefs.two_factor_enabled ?? false);
       }
 
       setDarkMode(document.documentElement.classList.contains('dark'));
