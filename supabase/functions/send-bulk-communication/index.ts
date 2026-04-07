@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-
 import { corsHeaders } from "../_shared/cors.ts";
+
+const SITE_NAME = "Kang OB";
+const SENDER_DOMAIN = "notify.api.kangopenbanking.com";
+const FROM_DOMAIN = "kangopenbanking.com";
 
 interface BulkCommunicationRequest {
   template_key: string;
@@ -13,7 +15,6 @@ interface BulkCommunicationRequest {
   variables: Record<string, any>;
 }
 
-// Simple template variable replacement
 function replaceVariables(template: string, variables: Record<string, any>): string {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
@@ -24,7 +25,6 @@ function replaceVariables(template: string, variables: Record<string, any>): str
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -100,7 +100,7 @@ serve(async (req) => {
           profiles!inner(email, full_name)
         `)
         .eq('status', 'approved');
-      
+
       recipients = institutions || [];
     } else if (recipient_filter.type === 'specific_institution' && recipient_filter.institution_id) {
       const { data: institution } = await supabaseClient
@@ -113,13 +113,13 @@ serve(async (req) => {
         `)
         .eq('id', recipient_filter.institution_id)
         .single();
-      
+
       if (institution) recipients = [institution];
     } else if (recipient_filter.type === 'all_users') {
       const { data: users } = await supabaseClient
         .from('profiles')
         .select('*');
-      
+
       recipients = users || [];
     }
 
@@ -147,82 +147,90 @@ serve(async (req) => {
       );
     }
 
-    // Send emails in background (Note: Deno Deploy doesn't support waitUntil, processing synchronously)
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    // Send emails via Lovable email queue
     let sentCount = 0;
     let failedCount = 0;
 
     for (const recipient of recipients) {
-        try {
-          const email = recipient.profiles?.email || recipient.email;
-          const name = recipient.profiles?.full_name || recipient.full_name || recipient.institution_name;
+      try {
+        const email = recipient.profiles?.email || recipient.email;
+        const name = recipient.profiles?.full_name || recipient.full_name || recipient.institution_name;
 
-          if (!email) {
-            failedCount++;
-            continue;
-          }
+        if (!email) {
+          failedCount++;
+          continue;
+        }
 
-          // Personalize variables
-          const personalizedVars = {
-            ...variables,
-            contact_name: name,
-            institution_name: recipient.institution_name || variables.institution_name,
-          };
+        const personalizedVars = {
+          ...variables,
+          contact_name: name,
+          institution_name: recipient.institution_name || variables.institution_name,
+        };
 
-          const subject = replaceVariables(template.subject || '', personalizedVars);
-          const body = replaceVariables(template.body, personalizedVars);
+        const subject = replaceVariables(template.subject || '', personalizedVars);
+        const body = replaceVariables(template.body, personalizedVars);
 
-          const fromAddress = Deno.env.get('RESEND_FROM') || 'Kang Open Banking <noreply@notify.api.kangopenbanking.com>';
-          const { error: emailError } = await resend.emails.send({
-            from: fromAddress,
-            to: [email],
+        const messageId = crypto.randomUUID();
+
+        const { error: enqueueError } = await supabaseClient.rpc('enqueue_email', {
+          queue_name: 'transactional_emails',
+          payload: {
+            message_id: messageId,
+            to: email,
+            from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+            sender_domain: SENDER_DOMAIN,
             subject: subject,
             html: body,
-          });
+            text: subject,
+            purpose: 'transactional',
+            label: `bulk-${template_key}`,
+            idempotency_key: `bulk-${bulkComm.id}-${messageId}`,
+            queued_at: new Date().toISOString(),
+          },
+        });
 
-          if (emailError) {
-            failedCount++;
-            console.error('Failed to send to:', email, emailError);
-          } else {
-            sentCount++;
-            
-            // Log individual communication
-            await supabaseClient
-              .from('communication_logs')
-              .insert({
-                template_id: template.id,
-                recipient_type: 'institution',
-                recipient_id: recipient.user_id || recipient.id,
-                recipient_email: email,
-                communication_type: 'email',
-                subject: subject,
-                body: body,
-                status: 'sent',
-                sent_at: new Date().toISOString(),
-                metadata: { bulk_communication_id: bulkComm.id, variables: personalizedVars },
-              });
-          }
-        } catch (error: any) {
+        if (enqueueError) {
           failedCount++;
-          console.error('Error sending to recipient:', error);
+          console.error('Failed to enqueue to:', email, enqueueError);
+        } else {
+          sentCount++;
+
+          await supabaseClient
+            .from('communication_logs')
+            .insert({
+              template_id: template.id,
+              recipient_type: 'institution',
+              recipient_id: recipient.user_id || recipient.id,
+              recipient_email: email,
+              communication_type: 'email',
+              subject: subject,
+              body: body,
+              status: 'sent',
+              sent_at: new Date().toISOString(),
+              metadata: { bulk_communication_id: bulkComm.id, variables: personalizedVars },
+            });
+        }
+      } catch (error: any) {
+        failedCount++;
+        console.error('Error enqueuing for recipient:', error);
       }
     }
 
     // Update bulk communication record
     await supabaseClient
-        .from('bulk_communications')
-        .update({
-          sent_count: sentCount,
-          failed_count: failedCount,
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-        })
+      .from('bulk_communications')
+      .update({
+        sent_count: sentCount,
+        failed_count: failedCount,
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+      })
       .eq('id', bulkComm.id);
 
-    console.log(`Bulk communication completed: ${sentCount} sent, ${failedCount} failed`);
+    console.log(`Bulk communication completed: ${sentCount} enqueued, ${failedCount} failed`);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: 'Bulk communication started',
         bulk_id: bulkComm.id,

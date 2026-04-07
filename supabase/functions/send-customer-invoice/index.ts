@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+const SITE_NAME = "Kang OB";
+const SENDER_DOMAIN = "notify.api.kangopenbanking.com";
+const FROM_DOMAIN = "kangopenbanking.com";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -14,8 +18,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    const resendFrom = Deno.env.get('RESEND_FROM') || 'noreply@notify.kangopenbanking.com';
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get('Authorization');
@@ -93,32 +95,33 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    // Send email via Resend
+    // Send email via Lovable email queue
     let emailSent = false;
-    if (resendApiKey) {
-      const resendRes = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: resendFrom,
-          to: [invoice.client_email],
-          subject: `Invoice ${invoice.invoice_number} from ${senderName} — ${Number(invoice.amount).toLocaleString()} ${invoice.currency}`,
-          html: emailHtml,
-        }),
-      });
+    const messageId = crypto.randomUUID();
+    const emailSubject = `Invoice ${invoice.invoice_number} from ${senderName} — ${Number(invoice.amount).toLocaleString()} ${invoice.currency}`;
 
-      if (resendRes.ok) {
-        emailSent = true;
-        console.log(`Email sent to ${invoice.client_email} for invoice ${invoice.invoice_number}`);
-      } else {
-        const resendErr = await resendRes.text();
-        console.error(`Resend API error: ${resendRes.status} - ${resendErr}`);
-      }
+    const { error: enqueueError } = await supabase.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id: messageId,
+        to: invoice.client_email,
+        from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject: emailSubject,
+        html: emailHtml,
+        text: emailSubject,
+        purpose: 'transactional',
+        label: 'customer-invoice',
+        idempotency_key: `invoice-${invoice_id}-${messageId}`,
+        queued_at: new Date().toISOString(),
+      },
+    });
+
+    if (enqueueError) {
+      console.error('Failed to enqueue invoice email:', enqueueError);
     } else {
-      console.warn('RESEND_API_KEY not configured, skipping email delivery');
+      emailSent = true;
+      console.log(`Invoice email enqueued for ${invoice.client_email}`);
     }
 
     // Create app notification for the sender
