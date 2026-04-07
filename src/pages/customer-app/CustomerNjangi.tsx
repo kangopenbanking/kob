@@ -30,6 +30,7 @@ type ViewMode = 'list' | 'create' | 'join' | 'detail';
 const CustomerNjangi: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: circles = [], isLoading, refetch } = useCustomerNjangi(user?.id);
 
   const createMutation = useCreateNjangiGroup();
@@ -39,6 +40,8 @@ const CustomerNjangi: React.FC = () => {
 
   const [view, setView] = useState<ViewMode>('list');
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
+  const [pinAction, setPinAction] = useState<{ type: 'contribute' | 'payout'; groupId: string } | null>(null);
 
   // Create form state
   const [newName, setNewName] = useState('');
