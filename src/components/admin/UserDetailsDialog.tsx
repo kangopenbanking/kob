@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
-import { 
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { 
   User, Mail, Phone, Calendar, Shield, Edit, Save, X,
   CheckCircle, XCircle, Clock, Building2, MapPin, KeyRound
 } from 'lucide-react';
