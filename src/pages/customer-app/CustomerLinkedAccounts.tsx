@@ -15,6 +15,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import kangCardBg from '@/assets/kangcard_visa.png';
 import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -685,19 +686,29 @@ const CustomerLinkedAccounts: React.FC = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const [showDeletePin, setShowDeletePin] = useState(false);
+
+  const initiateDelete = (id: string) => {
+    setDeleteId(id);
+    setShowDeletePin(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
     if (!deleteId) return;
     try {
-      await (supabase as any).from('customer_linked_accounts')
+      const { error } = await (supabase as any).from('customer_linked_accounts')
         .update({ is_active: false, status: 'removed', removed_at: new Date().toISOString() })
         .eq('id', deleteId);
-      
+      if (error) throw error;
+
       await (supabase as any).rpc('increment_removal_count' as any, { row_id: deleteId }).catch(() => {});
 
       toast.success('Account removed. Future account additions will require admin approval.');
       queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['customer-has-removals'] });
-    } catch { toast.error('Failed to remove'); }
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Failed to remove linked account'));
+    }
     setDeleteId(null);
   };
 
@@ -967,7 +978,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {linkedAccounts.map((acc: any) => (
-            <LinkedAccountCard key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
+            <LinkedAccountCard key={acc.id} acc={acc} onDelete={() => initiateDelete(acc.id)} />
           ))}
         </div>
       )}
@@ -1054,7 +1065,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
+      <AlertDialog open={!!deleteId && !showDeletePin} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Account?</AlertDialogTitle>
@@ -1064,10 +1075,12 @@ const CustomerLinkedAccounts: React.FC = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
+            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PinConfirmDialog open={showDeletePin} onOpenChange={(v) => { if (!v) { setShowDeletePin(false); setDeleteId(null); } }} onConfirmed={handleDeleteConfirmed} />
     </div>
   );
 };

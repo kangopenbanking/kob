@@ -5,18 +5,59 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCards, useCardTransactions } from '@/hooks/useCustomerData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(25,60%,35%)]'];
 
 const CustomerCards: React.FC = () => {
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const { data: cards = [], isLoading } = useCustomerCards(user?.id);
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
 
   const card = cards[activeCard] as any;
+
+  const handleFreezeUnfreeze = () => {
+    if (!card) return;
+    setPendingAction(card.status === 'frozen' ? 'unfreeze' : 'freeze');
+    setShowPin(true);
+  };
+
+  const handlePinConfirmed = async () => {
+    if (!card || !pendingAction) return;
+    setIsUpdatingStatus(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const newStatus = pendingAction === 'freeze' ? 'inactive' : 'active';
+      const idempotencyKey = `card_status_${card.id}_${newStatus}_${Date.now()}`;
+
+      const response = await supabase.functions.invoke('virtual-cards', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { card_id: card.id, status: newStatus, idempotency_key: idempotencyKey },
+      });
+
+      if (response.error) throw response.error;
+
+      toast.success(pendingAction === 'freeze' ? 'Card frozen successfully' : 'Card activated successfully');
+      await queryClient.refetchQueries({ queryKey: ['customer-cards'] });
+    } catch (error: any) {
+      toast.error(extractEdgeFunctionError(error, 'Failed to update card status'));
+    } finally {
+      setIsUpdatingStatus(false);
+      setPendingAction(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -91,13 +132,15 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Show'}</span>
             </button>
-            <button onClick={() => {
-              if (!card) return;
-              const action = card.status === 'frozen' ? 'unfreeze' : 'freeze';
-              toast.info(`Card ${action} is managed from your card issuer's portal.`);
-            }} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
+            <button
+              onClick={handleFreezeUnfreeze}
+              disabled={isUpdatingStatus || card?.status === 'cancelled'}
+              className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4 disabled:opacity-50"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(200,60%,82%)]">
-                <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
+                {isUpdatingStatus
+                  ? <Loader2 className="h-5 w-5 animate-spin text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
+                  : <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />}
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
@@ -136,6 +179,8 @@ const CustomerCards: React.FC = () => {
           </Button>
         </>
       )}
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
 };
