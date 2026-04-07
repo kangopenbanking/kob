@@ -21971,6 +21971,14 @@ export type Database = {
         Args: { _merchant_id: string; _user_id: string }
         Returns: boolean
       }
+      is_split_bill_owner: {
+        Args: { _bill_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_split_bill_participant: {
+        Args: { _bill_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_travel_service_owner: {
         Args: { _service_id: string; _user_id: string }
         Returns: boolean
