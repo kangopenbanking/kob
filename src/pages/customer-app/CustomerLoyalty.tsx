@@ -194,7 +194,7 @@ export function CustomerLoyalty() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold ${txn.points_change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`font-bold ${txn.points_change > 0 ? 'text-[hsl(150,60%,35%)]' : 'text-destructive'}`}>
                         {txn.points_change > 0 ? '+' : ''}{txn.points_change}
                       </p>
                       <p className="text-xs text-muted-foreground">points</p>
