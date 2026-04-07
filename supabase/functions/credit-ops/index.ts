@@ -253,11 +253,11 @@ async function handleApplyPreapproved(req: Request, body: any) {
   try {
     await serviceClient.from('credit_events').insert({
       user_id: user.id,
-      event_type: 'hard_inquiry',
+      event_type: 'HARD_INQUIRY',
       event_time: new Date().toISOString(),
       source: 'preapproved_loan',
       description: `Hard credit check for ${offer.product_name} loan application`,
-      score_impact: -5,
+      value_numeric: -5,
       metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
     });
   } catch (_) { /* non-critical */ }
