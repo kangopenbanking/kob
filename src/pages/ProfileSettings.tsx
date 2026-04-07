@@ -18,6 +18,7 @@ import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 export default function ProfileSettings() {
   const { toast } = useToast();
+  const { data: supportedCountries = [] } = useSupportedCountries();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   
