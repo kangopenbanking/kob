@@ -305,6 +305,8 @@ const CustomerPiggyBank: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePayConfirmed} />
     </div>
   );
 };
