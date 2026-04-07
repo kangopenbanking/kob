@@ -19172,6 +19172,7 @@ export type Database = {
           dial_code: string
           enabled_banking_app: boolean
           enabled_consumer_app: boolean
+          enabled_desktop_app: boolean
           flag: string
           id: string
           sort_order: number
@@ -19184,6 +19185,7 @@ export type Database = {
           dial_code: string
           enabled_banking_app?: boolean
           enabled_consumer_app?: boolean
+          enabled_desktop_app?: boolean
           flag: string
           id?: string
           sort_order?: number
@@ -19196,6 +19198,7 @@ export type Database = {
           dial_code?: string
           enabled_banking_app?: boolean
           enabled_consumer_app?: boolean
+          enabled_desktop_app?: boolean
           flag?: string
           id?: string
           sort_order?: number

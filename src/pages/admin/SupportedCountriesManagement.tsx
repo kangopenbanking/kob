@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Globe, Smartphone, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Globe, Smartphone, Building2, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
@@ -21,10 +21,11 @@ interface CountryRow {
   dial_code: string;
   enabled_consumer_app: boolean;
   enabled_banking_app: boolean;
+  enabled_desktop_app: boolean;
   sort_order: number;
 }
 
-const emptyForm = { code: "", country: "", flag: "", dial_code: "", enabled_consumer_app: true, enabled_banking_app: true, sort_order: 0 };
+const emptyForm = { code: "", country: "", flag: "", dial_code: "", enabled_consumer_app: true, enabled_banking_app: true, enabled_desktop_app: true, sort_order: 0 };
 
 export default function SupportedCountriesManagement() {
   const qc = useQueryClient();
@@ -50,14 +51,14 @@ export default function SupportedCountriesManagement() {
         const { error } = await supabase.from("supported_countries").update({
           code: values.code, country: values.country, flag: values.flag, dial_code: values.dial_code,
           enabled_consumer_app: values.enabled_consumer_app, enabled_banking_app: values.enabled_banking_app,
-          sort_order: values.sort_order, updated_at: new Date().toISOString(),
+          enabled_desktop_app: values.enabled_desktop_app, sort_order: values.sort_order, updated_at: new Date().toISOString(),
         }).eq("id", values.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("supported_countries").insert({
           code: values.code, country: values.country, flag: values.flag, dial_code: values.dial_code,
           enabled_consumer_app: values.enabled_consumer_app, enabled_banking_app: values.enabled_banking_app,
-          sort_order: values.sort_order,
+          enabled_desktop_app: values.enabled_desktop_app, sort_order: values.sort_order,
         });
         if (error) throw error;
       }
@@ -97,7 +98,7 @@ export default function SupportedCountriesManagement() {
   });
 
   const openAdd = () => { setEditing(null); setForm({ ...emptyForm, sort_order: countries.length + 1 }); setDialogOpen(true); };
-  const openEdit = (c: CountryRow) => { setEditing(c); setForm({ code: c.code, country: c.country, flag: c.flag, dial_code: c.dial_code, enabled_consumer_app: c.enabled_consumer_app, enabled_banking_app: c.enabled_banking_app, sort_order: c.sort_order }); setDialogOpen(true); };
+  const openEdit = (c: CountryRow) => { setEditing(c); setForm({ code: c.code, country: c.country, flag: c.flag, dial_code: c.dial_code, enabled_consumer_app: c.enabled_consumer_app, enabled_banking_app: c.enabled_banking_app, enabled_desktop_app: c.enabled_desktop_app, sort_order: c.sort_order }); setDialogOpen(true); };
   const closeDialog = () => { setDialogOpen(false); setEditing(null); setForm(emptyForm); };
 
   const handleSave = () => saveMutation.mutate(editing ? { ...form, id: editing.id } : form);
@@ -110,10 +111,11 @@ export default function SupportedCountriesManagement() {
         <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Country</Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{countries.length}</p><p className="text-xs text-muted-foreground">Total Countries</p></CardContent></Card>
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-green-600">{countries.filter(c => c.enabled_consumer_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Smartphone className="h-3 w-3" /> Consumer App</p></CardContent></Card>
         <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-blue-600">{countries.filter(c => c.enabled_banking_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Building2 className="h-3 w-3" /> Banking App</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold text-purple-600">{countries.filter(c => c.enabled_desktop_app).length}</p><p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Monitor className="h-3 w-3" /> Desktop App</p></CardContent></Card>
       </div>
 
       <Card>
@@ -129,12 +131,13 @@ export default function SupportedCountriesManagement() {
                 <TableHead>Dial Code</TableHead>
                 <TableHead className="text-center">Consumer App</TableHead>
                 <TableHead className="text-center">Banking App</TableHead>
+                <TableHead className="text-center">Desktop App</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : countries.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono text-xs">{c.sort_order}</TableCell>
@@ -147,6 +150,9 @@ export default function SupportedCountriesManagement() {
                   </TableCell>
                   <TableCell className="text-center">
                     <Switch checked={c.enabled_banking_app} onCheckedChange={(v) => toggleMutation.mutate({ id: c.id, field: "enabled_banking_app", value: v })} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Switch checked={c.enabled_desktop_app} onCheckedChange={(v) => toggleMutation.mutate({ id: c.id, field: "enabled_desktop_app", value: v })} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -183,6 +189,10 @@ export default function SupportedCountriesManagement() {
             <div className="flex items-center justify-between">
               <Label>Enabled in Banking App</Label>
               <Switch checked={form.enabled_banking_app} onCheckedChange={v => setForm(f => ({ ...f, enabled_banking_app: v }))} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Enabled in Desktop App</Label>
+              <Switch checked={form.enabled_desktop_app} onCheckedChange={v => setForm(f => ({ ...f, enabled_desktop_app: v }))} />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={closeDialog}>Cancel</Button>

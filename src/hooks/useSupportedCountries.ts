@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppType = "consumer" | "banking";
+export type AppType = "consumer" | "banking" | "desktop";
 
 export interface SupportedCountry {
   id: string;
@@ -11,6 +11,7 @@ export interface SupportedCountry {
   dial_code: string;
   enabled_consumer_app: boolean;
   enabled_banking_app: boolean;
+  enabled_desktop_app: boolean;
   sort_order: number;
 }
 
@@ -34,6 +35,8 @@ export function useSupportedCountries(appType?: AppType) {
         countries = countries.filter((c) => c.enabled_consumer_app);
       } else if (appType === "banking") {
         countries = countries.filter((c) => c.enabled_banking_app);
+      } else if (appType === "desktop") {
+        countries = countries.filter((c) => c.enabled_desktop_app);
       }
 
       return countries;
