@@ -429,8 +429,9 @@ function PreApprovedOffersSection({ score }: { score: number }) {
 
   const applyMutation = useMutation({
     mutationFn: async ({ offerId, amount }: { offerId: string; amount: number }) => {
+      const idempotencyKey = `loan_apply_${offerId}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('credit-ops', {
-        body: { action: 'apply-preapproved', offer_id: offerId, requested_amount: amount }
+        body: { action: 'apply-preapproved', offer_id: offerId, requested_amount: amount, idempotency_key: idempotencyKey }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

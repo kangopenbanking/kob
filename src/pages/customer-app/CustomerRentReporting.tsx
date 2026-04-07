@@ -319,7 +319,7 @@ const CustomerRentReporting: React.FC = () => {
                                 </div>
                                 <Button
                                   size="sm"
-                                  onClick={() => handleRecordPayment(payment.id)}
+                                  onClick={() => handlePayRequest(payment.id)}
                                   disabled={isPaying}
                                   className="rounded-xl h-8 text-[11px] px-3"
                                   variant={isOverdue ? 'destructive' : 'default'}
