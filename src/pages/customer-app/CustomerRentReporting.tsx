@@ -475,6 +475,8 @@ const CustomerRentReporting: React.FC = () => {
           )}
         </>
       )}
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleRecordPaymentConfirmed} />
     </div>
   );
 };
