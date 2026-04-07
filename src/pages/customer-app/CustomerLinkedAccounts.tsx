@@ -1064,7 +1064,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
+      <AlertDialog open={!!deleteId && !showDeletePin} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Account?</AlertDialogTitle>
@@ -1074,10 +1074,12 @@ const CustomerLinkedAccounts: React.FC = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
+            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PinConfirmDialog open={showDeletePin} onOpenChange={(v) => { if (!v) { setShowDeletePin(false); setDeleteId(null); } }} onConfirmed={handleDeleteConfirmed} />
     </div>
   );
 };
