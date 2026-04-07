@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle, Receipt, UserPlus, Bell, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle, Receipt, UserPlus, Bell, Search, Loader2, Wallet, CreditCard } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
+type TabView = 'my_bills' | 'bills_owed';
 
 interface Participant {
   name: string;
@@ -28,7 +30,6 @@ interface SearchResult {
   id: string;
   name: string;
   phone_masked: string | null;
-  avatar_url: string | null;
 }
 
 const colors = [
@@ -49,8 +50,12 @@ const CustomerSplitBills: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabView>('my_bills');
+  const [pinPaymentId, setPinPaymentId] = useState<string | null>(null);
+  const [pinPaymentAmount, setPinPaymentAmount] = useState(0);
+  const [pinPaymentTitle, setPinPaymentTitle] = useState('');
 
-  // Fetch split bills from DB
+  // Fetch split bills I created
   const { data: bills = [], isLoading } = useQuery({
     queryKey: ['customer-split-bills', user?.id],
     enabled: !!user?.id,
@@ -62,6 +67,36 @@ const CustomerSplitBills: React.FC = () => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
+    },
+  });
+
+  // Fetch split bills I owe (where I'm a participant but not the owner)
+  const { data: owedBills = [], isLoading: owedLoading } = useQuery({
+    queryKey: ['customer-split-bills-owed', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      // Get participant records for this user
+      const { data: myParticipations, error: partErr } = await supabase
+        .from('split_bill_participants')
+        .select('id, split_bill_id, share_amount, paid, paid_at, is_owner, name')
+        .eq('user_id', user!.id)
+        .eq('is_owner', false);
+      if (partErr) throw partErr;
+      if (!myParticipations?.length) return [];
+
+      const billIds = [...new Set(myParticipations.map(p => p.split_bill_id))];
+      const { data: billsData, error: billErr } = await supabase
+        .from('split_bills')
+        .select('*, split_bill_participants(*)')
+        .in('id', billIds)
+        .order('created_at', { ascending: false });
+      if (billErr) throw billErr;
+
+      // Attach the user's own participation info
+      return (billsData || []).map(bill => ({
+        ...bill,
+        myParticipation: myParticipations.find(p => p.split_bill_id === bill.id),
+      }));
     },
   });
 
@@ -102,17 +137,13 @@ const CustomerSplitBills: React.FC = () => {
 
   // Search registered users
   const handleSearch = useCallback(async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
+    if (query.length < 2) { setSearchResults([]); return; }
     setSearching(true);
     try {
       const { data, error } = await supabase.functions.invoke('split-bills-ops', {
         body: { action: 'search_users', query },
       });
       if (error) throw error;
-      // Filter out already-added participants
       const addedIds = new Set(participants.map(p => p.userId).filter(Boolean));
       setSearchResults((data?.users || []).filter((u: SearchResult) => !addedIds.has(u.id)));
     } catch {
@@ -128,15 +159,15 @@ const CustomerSplitBills: React.FC = () => {
     searchDebounceRef.current = setTimeout(() => handleSearch(value), 300);
   };
 
-  const addRegisteredUser = (user: SearchResult) => {
+  const addRegisteredUser = (u: SearchResult) => {
     setParticipants([
       ...participants,
-      makeParticipant(user.name, user.phone_masked || '', colors[participants.length % colors.length], false, user.id),
+      makeParticipant(u.name, u.phone_masked || '', colors[participants.length % colors.length], false, u.id),
     ]);
     setSearchQuery('');
     setSearchResults([]);
     setShowAddPerson(false);
-    toast.success(`${user.name} added`);
+    toast.success(`${u.name} added`);
   };
 
   const removePerson = (i: number) => {
@@ -173,19 +204,13 @@ const CustomerSplitBills: React.FC = () => {
       }));
 
       const { data, error } = await supabase.functions.invoke('split-bills-ops', {
-        body: {
-          action: 'create',
-          title: title.trim(),
-          total_amount: totalNum,
-          split_mode: splitMode,
-          notes: notes || null,
-          participants: participantData,
-        },
+        body: { action: 'create', title: title.trim(), total_amount: totalNum, split_mode: splitMode, notes: notes || null, participants: participantData },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
       setShowCreate(false);
       resetForm();
       toast.success(`Split request sent to ${participants.length - 1} people`);
@@ -205,6 +230,7 @@ const CustomerSplitBills: React.FC = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
       toast.success('Marked as paid');
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Failed to mark as paid'));
@@ -233,11 +259,43 @@ const CustomerSplitBills: React.FC = () => {
     }
   };
 
+  // Initiate payment with PIN confirmation
+  const initiatePayment = (participantId: string, amount: number, billTitle: string) => {
+    setPinPaymentId(participantId);
+    setPinPaymentAmount(amount);
+    setPinPaymentTitle(billTitle);
+  };
+
+  // Execute payment after PIN confirmed
+  const executePayment = async () => {
+    if (!pinPaymentId) return;
+    const participantId = pinPaymentId;
+    setPinPaymentId(null);
+    setActionLoading(`pay-${participantId}`);
+    try {
+      const { data, error } = await supabase.functions.invoke('split-bills-ops', {
+        body: { action: 'pay_share', participant_id: participantId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-data'] });
+      toast.success(`Payment of ${pinPaymentAmount.toLocaleString()} XAF successful!`);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Payment failed. Please try again.'));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const resetForm = () => {
     setTitle(''); setTotal(''); setSplitMode('equal'); setNotes('');
     setParticipants([makeParticipant('You', '', colors[0], true, user?.id || null)]);
     setSearchQuery(''); setSearchResults([]);
   };
+
+  const unpaidOwedCount = owedBills.filter((b: any) => !b.myParticipation?.paid).length;
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -257,9 +315,30 @@ const CustomerSplitBills: React.FC = () => {
           { icon: Receipt, title: 'Add a Bill', description: 'Enter the bill title, total amount, and choose how to split — equal, custom amounts, or percentages.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
           { icon: UserPlus, title: 'Add Participants', description: 'Search and add registered users. Their share is calculated automatically.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
           { icon: Send, title: 'Send Split Request', description: 'Everyone gets notified of their share. Track who has paid in real-time.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
-          { icon: Bell, title: 'Remind & Settle', description: 'Send reminders to unpaid participants. Mark payments as received to settle the bill.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
+          { icon: Wallet, title: 'Pay & Settle', description: 'Recipients pay their share directly from their wallet. Bills auto-settle when everyone has paid.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
         ] as FlowStep[]}
       />
+
+      {/* Tab Switcher */}
+      <div className="flex gap-2 rounded-2xl bg-muted p-1">
+        <button
+          onClick={() => setActiveTab('my_bills')}
+          className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all ${activeTab === 'my_bills' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
+        >
+          My Bills
+        </button>
+        <button
+          onClick={() => setActiveTab('bills_owed')}
+          className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all relative ${activeTab === 'bills_owed' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
+        >
+          Bills I Owe
+          {unpaidOwedCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+              {unpaidOwedCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Create Form */}
       <AnimatePresence>
@@ -373,7 +452,6 @@ const CustomerSplitBills: React.FC = () => {
                       {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                     </div>
 
-                    {/* Search Results */}
                     {searchResults.length > 0 && (
                       <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl bg-background border border-border p-1">
                         {searchResults.map(u => (
@@ -427,93 +505,198 @@ const CustomerSplitBills: React.FC = () => {
 
       {/* Bills History */}
       <div className="space-y-2">
-        {isLoading ? (
-          <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
-        ) : bills.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
-        ) : bills.map((bill: any, i: number) => {
-          const parts = bill.split_bill_participants || [];
-          const paidCount = parts.filter((p: any) => p.paid).length;
-          const isExpanded = expandedId === bill.id;
-          const isSettled = bill.status === 'settled';
-          return (
-            <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
-              <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isSettled ? 'bg-[hsl(150,40%,90%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
-                  {isSettled
-                    ? <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
-                    : <Users className="h-5 w-5 text-[hsl(340,50%,45%)]" strokeWidth={1.5} />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
-                  <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-foreground">{Number(bill.total_amount).toLocaleString()}</p>
-                  <span className={`text-[10px] font-bold ${paidCount === parts.length ? 'text-[hsl(150,60%,40%)]' : 'text-[hsl(45,60%,35%)]'}`}>
-                    {paidCount}/{parts.length} paid
-                  </span>
-                </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
-              </button>
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                    <div className="border-t border-border px-4 pb-4 pt-3 space-y-2">
-                      {bill.notes && <p className="text-[11px] text-muted-foreground italic">{bill.notes}</p>}
-                      {parts.map((p: any) => (
-                        <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2.5">
-                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${p.is_owner ? 'bg-[hsl(210,80%,93%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
-                            <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-foreground truncate">{p.name}{p.is_owner ? ' (You)' : ''}</p>
-                            {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
-                          </div>
-                          <span className="text-xs font-bold text-foreground">{Number(p.share_amount).toLocaleString()} XAF</span>
-
-                          {p.paid ? (
-                            <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
-                          ) : (
-                            <div className="flex items-center gap-1 shrink-0">
-                              {!p.is_owner && (
-                                <>
-                                  <button
-                                    onClick={() => handleRemind(p.id, bill.id)}
-                                    disabled={actionLoading === `remind-${p.id}`}
-                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(45,70%,90%)] hover:bg-[hsl(45,70%,85%)] transition-colors"
-                                    title="Send reminder"
-                                  >
-                                    {actionLoading === `remind-${p.id}`
-                                      ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(45,60%,35%)]" />
-                                      : <Bell className="h-3 w-3 text-[hsl(45,60%,35%)]" strokeWidth={2} />}
-                                  </button>
-                                  <button
-                                    onClick={() => handleSettle(p.id)}
-                                    disabled={actionLoading === p.id}
-                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(150,40%,90%)] hover:bg-[hsl(150,40%,85%)] transition-colors"
-                                    title="Mark as paid"
-                                  >
-                                    {actionLoading === p.id
-                                      ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(150,60%,40%)]" />
-                                      : <CheckCircle2 className="h-3 w-3 text-[hsl(150,60%,40%)]" strokeWidth={2} />}
-                                  </button>
-                                </>
+        {activeTab === 'my_bills' && (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+            ) : bills.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
+            ) : bills.map((bill: any, i: number) => {
+              const parts = bill.split_bill_participants || [];
+              const paidCount = parts.filter((p: any) => p.paid).length;
+              const isExpanded = expandedId === bill.id;
+              const isSettled = bill.status === 'settled';
+              return (
+                <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
+                  <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isSettled ? 'bg-[hsl(150,40%,90%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
+                      {isSettled
+                        ? <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                        : <Users className="h-5 w-5 text-[hsl(340,50%,45%)]" strokeWidth={1.5} />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">{Number(bill.total_amount).toLocaleString()}</p>
+                      <span className={`text-[10px] font-bold ${paidCount === parts.length ? 'text-[hsl(150,60%,40%)]' : 'text-[hsl(45,60%,35%)]'}`}>
+                        {paidCount}/{parts.length} paid
+                      </span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
+                  </button>
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                        <div className="border-t border-border px-4 pb-4 pt-3 space-y-2">
+                          {bill.notes && <p className="text-[11px] text-muted-foreground italic">{bill.notes}</p>}
+                          {parts.map((p: any) => (
+                            <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2.5">
+                              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${p.is_owner ? 'bg-[hsl(210,80%,93%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
+                                <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-foreground truncate">{p.name}{p.is_owner ? ' (You)' : ''}</p>
+                                {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
+                              </div>
+                              <span className="text-xs font-bold text-foreground">{Number(p.share_amount).toLocaleString()} XAF</span>
+                              {p.paid ? (
+                                <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
+                              ) : (
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {!p.is_owner && (
+                                    <>
+                                      <button onClick={() => handleRemind(p.id, bill.id)} disabled={actionLoading === `remind-${p.id}`}
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(45,70%,90%)] hover:bg-[hsl(45,70%,85%)] transition-colors" title="Send reminder">
+                                        {actionLoading === `remind-${p.id}` ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(45,60%,35%)]" /> : <Bell className="h-3 w-3 text-[hsl(45,60%,35%)]" strokeWidth={2} />}
+                                      </button>
+                                      <button onClick={() => handleSettle(p.id)} disabled={actionLoading === p.id}
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(150,40%,90%)] hover:bg-[hsl(150,40%,85%)] transition-colors" title="Mark as paid">
+                                        {actionLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(150,60%,40%)]" /> : <CheckCircle2 className="h-3 w-3 text-[hsl(150,60%,40%)]" strokeWidth={2} />}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               )}
                             </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </>
+        )}
+
+        {activeTab === 'bills_owed' && (
+          <>
+            {owedLoading ? (
+              <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+            ) : owedBills.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-12">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(150,40%,90%)]">
+                  <CheckCircle2 className="h-7 w-7 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-bold text-foreground">You're all clear!</p>
+                <p className="text-xs text-muted-foreground text-center">No pending split bills to pay</p>
+              </div>
+            ) : owedBills.map((bill: any, i: number) => {
+              const myPart = bill.myParticipation;
+              const isPaid = myPart?.paid;
+              const shareAmount = Number(myPart?.share_amount || 0);
+              const ownerParticipant = (bill.split_bill_participants || []).find((p: any) => p.is_owner);
+              const isExpanded = expandedId === bill.id;
+
+              return (
+                <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className={`rounded-3xl bg-card border-2 overflow-hidden ${isPaid ? 'border-[hsl(150,40%,80%)]' : 'border-[hsl(340,60%,85%)]'}`}
+                >
+                  <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isPaid ? 'bg-[hsl(150,40%,90%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
+                      {isPaid
+                        ? <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                        : <CreditCard className="h-5 w-5 text-[hsl(340,50%,45%)]" strokeWidth={1.5} />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        From {ownerParticipant?.name || 'Unknown'} · {new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">{shareAmount.toLocaleString()} XAF</p>
+                      <span className={`text-[10px] font-bold ${isPaid ? 'text-[hsl(150,60%,40%)]' : 'text-[hsl(340,50%,45%)]'}`}>
+                        {isPaid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                        <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
+                          {bill.notes && <p className="text-[11px] text-muted-foreground italic">{bill.notes}</p>}
+
+                          {/* Bill breakdown */}
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bill Breakdown</p>
+                            <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
+                              <span className="text-xs text-muted-foreground">Total bill</span>
+                              <span className="text-xs font-bold text-foreground">{Number(bill.total_amount).toLocaleString()} XAF</span>
+                            </div>
+                            <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
+                              <span className="text-xs text-muted-foreground">Your share ({bill.split_mode})</span>
+                              <span className="text-xs font-bold text-foreground">{shareAmount.toLocaleString()} XAF</span>
+                            </div>
+                            <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
+                              <span className="text-xs text-muted-foreground">Participants</span>
+                              <span className="text-xs font-bold text-foreground">{(bill.split_bill_participants || []).length} people</span>
+                            </div>
+                          </div>
+
+                          {isPaid ? (
+                            <div className="flex items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)] p-3">
+                              <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                              <div>
+                                <p className="text-xs font-bold text-[hsl(150,40%,25%)]">Payment Complete</p>
+                                <p className="text-[10px] text-[hsl(150,30%,40%)]">
+                                  Paid on {myPart.paid_at ? new Date(myPart.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => initiatePayment(myPart.id, shareAmount, bill.title)}
+                              disabled={actionLoading === `pay-${myPart.id}`}
+                              className="w-full rounded-2xl h-12 text-sm font-bold bg-primary hover:bg-primary/90"
+                            >
+                              {actionLoading === `pay-${myPart.id}` ? (
+                                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing Payment...</span>
+                              ) : (
+                                <span className="flex items-center gap-2">
+                                  <Wallet className="h-4 w-4" strokeWidth={1.5} />
+                                  Pay {shareAmount.toLocaleString()} XAF from Wallet
+                                </span>
+                              )}
+                            </Button>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </>
+        )}
       </div>
+
+      {/* PIN Confirmation Dialog */}
+      <PinConfirmDialog
+        open={!!pinPaymentId}
+        onOpenChange={(open) => { if (!open) setPinPaymentId(null); }}
+        onConfirmed={executePayment}
+        title="Confirm Split Bill Payment"
+        description={`Pay ${pinPaymentAmount.toLocaleString()} XAF for "${pinPaymentTitle}" from your wallet`}
+      />
     </div>
   );
 };
