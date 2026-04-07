@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { POS_PRODUCT_ATTRIBUTES } from '@/lib/storefront-data';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface Variant {
   id?: string;
@@ -173,7 +174,7 @@ export default function BusinessProductForm() {
 
       navigate('/biz/products');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save product');
+      toast.error(extractEdgeFunctionError(error, 'Failed to save product'));
     } finally {
       setLoading(false);
     }

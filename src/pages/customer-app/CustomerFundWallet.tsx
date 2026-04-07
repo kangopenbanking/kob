@@ -14,6 +14,7 @@ import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { cn } from '@/lib/utils';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -215,7 +216,7 @@ const CustomerFundWallet: React.FC = () => {
       setStep('result');
       toast.success('Payment initiated successfully');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to initiate payment');
+      toast.error(extractEdgeFunctionError(err, 'Failed to initiate payment'));
     } finally {
       setProcessing(false);
     }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 function useInstitutionId() {
   const { institutionId } = useParams();
@@ -62,7 +63,7 @@ export function useCreateNjangiGroup() {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       toast.success('Njangi group created! Share the group ID to invite members.');
     },
-    onError: (err: any) => toast.error(err.message || 'Could not create group. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not create group. Please try again.')),
   });
 }
 
@@ -83,7 +84,7 @@ export function useJoinNjangiGroup() {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       toast.success('You have joined the Njangi group successfully! 🤝');
     },
-    onError: (err: any) => toast.error(err.message || 'Could not join group. It may be full or no longer active.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not join group. It may be full or no longer active.')),
   });
 }
 
@@ -105,7 +106,7 @@ export function useNjangiContribute() {
       qc.invalidateQueries({ queryKey: ['credit-score'] });
       toast.success('Contribution recorded! Your credit score may be positively impacted. 📈');
     },
-    onError: (err: any) => toast.error(err.message || 'Contribution failed. Please ensure you have sufficient funds.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Contribution failed. Please ensure you have sufficient funds.')),
   });
 }
 
@@ -127,6 +128,6 @@ export function useNjangiPayout() {
       qc.invalidateQueries({ queryKey: ['credit-score'] });
       toast.success('Payout processed! Funds have been transferred to the recipient.');
     },
-    onError: (err: any) => toast.error(err.message || 'Payout failed. Please ensure the group has sufficient collected funds.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Payout failed. Please ensure the group has sufficient collected funds.')),
   });
 }

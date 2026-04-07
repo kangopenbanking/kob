@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function SandboxWebhooks() {
   const navigate = useNavigate();
@@ -111,7 +112,7 @@ export default function SandboxWebhooks() {
       fetchData();
     } catch (error: any) {
       console.error('Error registering webhook:', error);
-      toast.error(error.message || 'Failed to register webhook');
+      toast.error(extractEdgeFunctionError(error, 'Failed to register webhook'));
     } finally {
       setSubmitting(false);
     }

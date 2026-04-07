@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, RefreshCw, CheckCircle2, XCircle, Clock, Plug, AlertTriangle, Package } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   connected: { label: "Connected", icon: CheckCircle2, variant: "default" },
@@ -77,7 +78,7 @@ export default function MerchantWooSync() {
       toast.success("Sync triggered successfully");
       setTimeout(loadData, 1500);
     } catch (err: any) {
-      toast.error(err.message || "Failed to trigger sync");
+      toast.error(extractEdgeFunctionError(err, "Failed to trigger sync"));
     } finally {
       setSyncing(null);
     }
@@ -102,7 +103,7 @@ export default function MerchantWooSync() {
       toast.success(`Import complete: ${result?.imported || 0} products synced`);
       loadData();
     } catch (err: any) {
-      toast.error(err.message || "Failed to import products");
+      toast.error(extractEdgeFunctionError(err, "Failed to import products"));
     } finally {
       setSyncing(null);
     }

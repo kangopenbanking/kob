@@ -16,6 +16,7 @@ import { Loader2, Download, Search, Banknote, Clock, CheckCircle2, ArrowUpRight,
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function MerchantPayouts() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -150,7 +151,7 @@ export default function MerchantPayouts() {
       setWithdrawOpen(false);
       loadData();
     } catch (err: any) {
-      toast.error(err.message || "Withdrawal failed");
+      toast.error(extractEdgeFunctionError(err, "Withdrawal failed"));
     } finally {
       setWithdrawLoading(false);
     }

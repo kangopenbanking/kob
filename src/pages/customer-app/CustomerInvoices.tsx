@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface InvoiceItem {
   description: string;
@@ -135,7 +136,7 @@ const CustomerInvoices: React.FC = () => {
       resetForm();
       loadInvoices();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create invoice');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create invoice'));
     } finally {
       setCreating(false);
     }

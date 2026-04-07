@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { getTheme } from '@/lib/travel-theme';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
 type Gender = 'male' | 'female';
@@ -211,7 +212,7 @@ const CustomerTravelBooking: React.FC = () => {
       navigate(`/app/travel/ticket/${data.booking_id}`);
     } catch (err: any) {
       console.error('Booking error:', err);
-      toast.error(err.message || 'Booking failed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Booking failed. Please try again.'));
     } finally {
       setBooking(false);
     }

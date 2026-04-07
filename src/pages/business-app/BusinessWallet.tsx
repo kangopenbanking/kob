@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const BusinessWallet: React.FC = () => {
   const navigate = useNavigate();
@@ -120,7 +121,7 @@ const BusinessWallet: React.FC = () => {
       setShowWithdraw(false);
       refetchWallets();
     } catch (err: any) {
-      toast.error(err.message || 'Withdrawal could not be processed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Withdrawal could not be processed. Please try again.'));
     } finally {
       setWithdrawLoading(false);
     }

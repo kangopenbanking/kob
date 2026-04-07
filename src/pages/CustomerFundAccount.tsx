@@ -16,6 +16,7 @@ import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
 import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -74,7 +75,7 @@ const CustomerFundAccount = () => {
       setResult(data);
       toast.success("Funding intent created");
     } catch (err: any) {
-      toast.error(err.message || "Failed to create funding intent");
+      toast.error(extractEdgeFunctionError(err, "Failed to create funding intent"));
     }
     setLoading(false);
   };

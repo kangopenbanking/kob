@@ -19,6 +19,7 @@ import { API_CONFIG } from '@/config/api';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthTab = 'phone' | 'email';
@@ -241,7 +242,7 @@ const CustomerAuth: React.FC = () => {
         await navigateAfterAuth();
       }
     } catch (err: any) {
-      toast.error(err.message || 'Authentication failed');
+      toast.error(extractEdgeFunctionError(err, 'Authentication failed'));
     } finally {
       setLoading(false);
     }
@@ -258,7 +259,7 @@ const CustomerAuth: React.FC = () => {
       setForgotSent(true);
       toast.success('Password reset email sent!');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send reset email');
+      toast.error(extractEdgeFunctionError(err, 'Failed to send reset email'));
     } finally {
       setForgotLoading(false);
     }
@@ -288,7 +289,7 @@ const CustomerAuth: React.FC = () => {
         throw new Error(data?.error || 'Failed to reset PIN');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to reset PIN');
+      toast.error(extractEdgeFunctionError(err, 'Failed to reset PIN'));
     } finally {
       setResetPinLoading(false);
     }
@@ -654,7 +655,7 @@ const CustomerAuth: React.FC = () => {
                       if (error) throw error;
                       toast.success('Verification email resent! Check your inbox.');
                     } catch (err: any) {
-                      toast.error(err.message || 'Failed to resend verification email');
+                      toast.error(extractEdgeFunctionError(err, 'Failed to resend verification email'));
                     } finally {
                       setLoading(false);
                     }

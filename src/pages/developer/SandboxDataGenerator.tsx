@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, Database, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 
 export default function SandboxDataGenerator() {
@@ -38,7 +39,7 @@ export default function SandboxDataGenerator() {
       toast.success('Test data generated successfully!');
     } catch (error: any) {
       console.error('Error generating data:', error);
-      toast.error(error.message || 'Failed to generate test data');
+      toast.error(extractEdgeFunctionError(error, 'Failed to generate test data'));
     } finally {
       setGenerating(false);
     }

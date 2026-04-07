@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { SearchFilter } from '@/components/SearchFilter';
 import { format, formatDistanceToNow } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface LockoutUser {
   id: string;
@@ -44,7 +45,7 @@ export default function PinLockoutManagement() {
       setLockedUsers(data.locked_users || []);
       setAllPinUsers(data.all_pin_users || []);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to load lockout data');
+      toast.error(extractEdgeFunctionError(err, 'Failed to load lockout data'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ export default function PinLockoutManagement() {
       toast.success(data.message || 'Action completed');
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || 'Action failed');
+      toast.error(extractEdgeFunctionError(err, 'Action failed'));
     } finally {
       setActionLoading(null);
       setConfirmDialog({ open: false, action: '', userId: '', userName: '' });

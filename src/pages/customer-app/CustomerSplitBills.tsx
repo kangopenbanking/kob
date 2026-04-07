@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
 
@@ -144,7 +145,7 @@ const CustomerSplitBills: React.FC = () => {
       resetForm();
       toast.success(`Split request sent to ${participants.length - 1} people`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create split bill');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create split bill'));
     } finally {
       setSending(false);
     }

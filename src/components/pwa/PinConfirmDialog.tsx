@@ -6,6 +6,7 @@ import { Shield, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sounds } from '@/lib/sounds';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface PinConfirmDialogProps {
   open: boolean;
@@ -119,7 +120,7 @@ export const PinConfirmDialog: React.FC<PinConfirmDialogProps> = ({
       }
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'PIN verification failed');
+      toast.error(extractEdgeFunctionError(err, 'PIN verification failed'));
     } finally {
       setLoading(false);
     }

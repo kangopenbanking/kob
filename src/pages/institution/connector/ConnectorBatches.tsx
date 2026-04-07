@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface BatchItem {
   beneficiary_name: string;
@@ -81,7 +82,7 @@ export default function ConnectorBatches() {
       setItems([{ beneficiary_name: "", beneficiary_account_number: "", beneficiary_bank_code: "", amount: "", narration: "" }]);
       queryClient.invalidateQueries({ queryKey: ["connector-batches"] });
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const handleGenerateFile = async (batchId: string, fmt: string) => {

@@ -10,6 +10,7 @@ import { Shield, Upload, Trash2, CheckCircle, XCircle, Clock, AlertTriangle, Cop
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AuthRequiredAlert } from '@/components/developer/AuthRequiredAlert';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface Certificate {
   id: string;
@@ -134,7 +135,7 @@ export default function CertificateManagement() {
       loadCertificates();
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload certificate');
+      toast.error(extractEdgeFunctionError(error, 'Failed to upload certificate'));
     } finally {
       setUploading(false);
     }
@@ -157,7 +158,7 @@ export default function CertificateManagement() {
       loadCertificates();
     } catch (error: any) {
       console.error('Revoke error:', error);
-      toast.error(error.message || 'Failed to revoke certificate');
+      toast.error(extractEdgeFunctionError(error, 'Failed to revoke certificate'));
     }
   };
 

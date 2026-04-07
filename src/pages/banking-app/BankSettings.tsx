@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'appearance' | 'legal' | 'legal-view';
 
@@ -118,7 +119,7 @@ const BankSettings: React.FC = () => {
       toast.success('Personal information updated');
       setActiveSection(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update');
+      toast.error(extractEdgeFunctionError(err, 'Failed to update'));
     } finally {
       setSaving(false);
     }
@@ -143,7 +144,7 @@ const BankSettings: React.FC = () => {
       setConfirmPassword('');
       setActiveSection(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to change password');
+      toast.error(extractEdgeFunctionError(err, 'Failed to change password'));
     } finally {
       setSaving(false);
     }
@@ -169,7 +170,7 @@ const BankSettings: React.FC = () => {
       setConfirmPin('');
       setShowPinDialog(false);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to set PIN');
+      toast.error(extractEdgeFunctionError(err, 'Failed to set PIN'));
     } finally {
       setSaving(false);
     }
@@ -194,7 +195,7 @@ const BankSettings: React.FC = () => {
       toast.success('Notification preferences saved');
       setActiveSection(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save');
+      toast.error(extractEdgeFunctionError(err, 'Failed to save'));
     } finally {
       setSaving(false);
     }
@@ -217,7 +218,7 @@ const BankSettings: React.FC = () => {
       toast.success('Language & region saved');
       setActiveSection(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save');
+      toast.error(extractEdgeFunctionError(err, 'Failed to save'));
     } finally {
       setSaving(false);
     }

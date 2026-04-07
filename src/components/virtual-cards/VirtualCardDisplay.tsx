@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface VirtualCardDisplayProps {
   card: any;
@@ -57,7 +58,7 @@ export const VirtualCardDisplay = ({
       );
       onRefresh();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update card status');
+      toast.error(extractEdgeFunctionError(error, 'Failed to update card status'));
     } finally {
       setIsUpdatingStatus(false);
     }

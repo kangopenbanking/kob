@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Mail, Edit, Eye, Send, Search, BarChart3, Settings, FileText, Building2, MailCheck} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CATEGORIES = [
   { key: 'transactional', label: 'Transactional', color: 'bg-blue-100 text-blue-800' },
@@ -211,7 +212,7 @@ const ManagedEmailAdmin: React.FC = () => {
       return data;
     },
     onSuccess: () => toast.success('Test email sent to your email'),
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
   });
 
   const filtered = emailTypes.filter(t => {

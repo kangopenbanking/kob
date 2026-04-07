@@ -9,6 +9,7 @@ import { API_CONFIG } from '@/config/api';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CustomerPayLinks: React.FC = () => {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const CustomerPayLinks: React.FC = () => {
       resetForm();
       toast.success('Pay link created!');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create link');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create link'));
     } finally {
       setCreating(false);
     }
@@ -99,7 +100,7 @@ const CustomerPayLinks: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
       toast.success(data?.is_active ? 'Link activated' : 'Link deactivated');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update');
+      toast.error(extractEdgeFunctionError(err, 'Failed to update'));
     }
   };
 

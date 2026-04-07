@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
   ArrowLeftRight, Activity, RefreshCw, Search, ChevronDown, FileText, Clock,
   AlertTriangle, CheckCircle2, XCircle, Loader2, Network, Database, Send,
   TrendingUp, Globe, Shield, Users, CreditCard, Zap, MailWarning, Inbox
@@ -121,7 +122,7 @@ function PaymentsTab() {
       return data;
     },
     onSuccess: () => { toast.success("Payment submitted successfully"); queryClient.invalidateQueries({ queryKey: ["interbank-payments"] }); },
-    onError: (err: any) => toast.error(err.message || "Submit failed"),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, "Submit failed")),
   });
 
   const reverseMutation = useMutation({
@@ -131,7 +132,7 @@ function PaymentsTab() {
       return data;
     },
     onSuccess: () => { toast.success("Payment reversed"); queryClient.invalidateQueries({ queryKey: ["interbank-payments"] }); },
-    onError: (err: any) => toast.error(err.message || "Reversal failed"),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, "Reversal failed")),
   });
 
   const payments = (data?.payments || []).filter((p: any) =>
@@ -360,7 +361,7 @@ function ParticipantsTab() {
       setShowCreate(false);
       setNewParticipant({ participant_code: "", legal_name: "", display_name: "", type: "bank", settlement_mode: "prefunded" });
     },
-    onError: (err: any) => toast.error(err.message || "Create failed"),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, "Create failed")),
   });
 
   const seedMutation = useMutation({

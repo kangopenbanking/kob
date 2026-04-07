@@ -20,6 +20,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const TOTAL_STEPS = 8;
 
@@ -185,7 +186,7 @@ const CustomerRegister: React.FC = () => {
       toast.success('Registration complete!');
       navigate('/app/onboarding', { replace: true });
     } catch (err: any) {
-      toast.error(err.message || 'Registration failed');
+      toast.error(extractEdgeFunctionError(err, 'Registration failed'));
     } finally {
       setLoading(false);
     }

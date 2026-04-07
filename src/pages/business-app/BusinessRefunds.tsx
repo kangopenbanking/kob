@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function BusinessRefunds() {
   const queryClient = useQueryClient();
@@ -64,7 +65,7 @@ export default function BusinessRefunds() {
       setRefundAmount(""); setRefundReason(""); setPinCode("");
       toast.success(`Refund of ${Number(refundAmount || selectedCharge?.amount).toLocaleString()} XAF initiated. Customer will be credited within 1–3 business days.`);
     },
-    onError: (error: any) => toast.error(error.message || "Refund could not be processed. Please verify the charge and try again."),
+    onError: (error: any) => toast.error(extractEdgeFunctionError(error, "Refund could not be processed. Please verify the charge and try again.")),
   });
 
   const openRefundDialog = (charge: any) => {

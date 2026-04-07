@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeSlide = {
   initial: { opacity: 0, y: 12 },
@@ -69,7 +70,7 @@ const StaffLogin: React.FC = () => {
       toast.success('Welcome back!');
       navigate('/merchant/travel-services', { replace: true });
     } catch (error: any) {
-      toast.error(error.message || 'Login failed');
+      toast.error(extractEdgeFunctionError(error, 'Login failed'));
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ const StaffLogin: React.FC = () => {
         throw new Error('No session returned');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Login failed');
+      toast.error(extractEdgeFunctionError(error, 'Login failed'));
     } finally {
       setLoading(false);
     }

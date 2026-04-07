@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const billCategories = [
   {
@@ -63,7 +64,7 @@ const BankBills: React.FC = () => {
       setStep('success');
       toast.success('Bill payment successful!');
     } catch (err: any) {
-      toast.error(err.message || 'Bill payment failed');
+      toast.error(extractEdgeFunctionError(err, 'Bill payment failed'));
     } finally {
       setPaying(false);
     }

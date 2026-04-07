@@ -19,6 +19,7 @@ import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { SearchFilter } from '@/components/SearchFilter';
 import { MerchantIntegrityAlert } from '@/components/admin/MerchantIntegrityAlert';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface UserProfile {
   id: string;
@@ -194,7 +195,7 @@ export default function UserManagement() {
       loadUsers();
     } catch (error: any) {
       logger.error('Error suspending user:', error);
-      toast.error(error.message || 'Failed to update user status');
+      toast.error(extractEdgeFunctionError(error, 'Failed to update user status'));
     } finally {
       setActionLoading(false);
     }
@@ -222,7 +223,7 @@ export default function UserManagement() {
       loadUsers();
     } catch (error: any) {
       logger.error('Error deleting user:', error);
-      toast.error(error.message || 'Failed to delete user');
+      toast.error(extractEdgeFunctionError(error, 'Failed to delete user'));
     } finally {
       setActionLoading(false);
     }

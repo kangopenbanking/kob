@@ -21,6 +21,7 @@ import { PayoutDetailDrawer } from "@/components/admin/PayoutDetailDrawer";
 import { AdminAutoWithdrawalRules } from "@/components/admin/AdminAutoWithdrawalRules";
 import { AdminBatchPayouts } from "@/components/admin/AdminBatchPayouts";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type PayoutTab = "all" | "consumer" | "merchant";
 type TopTab = "payouts" | "auto-rules" | "batches";
@@ -67,7 +68,7 @@ export default function PayoutManagement() {
       return data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] }); toast.success("Payout retry initiated"); setDrawerOpen(false); },
-    onError: (e: any) => toast.error(e.message || "Retry failed"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Retry failed")),
   });
 
   const reversePayout = useMutation({
@@ -92,7 +93,7 @@ export default function PayoutManagement() {
       toast.success(`Payout reversed — balance restored${restored}`);
       setDrawerOpen(false);
     },
-    onError: (e: any) => toast.error(e.message || "Reversal failed"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Reversal failed")),
   });
 
   const cancelPayout = useMutation({
@@ -103,7 +104,7 @@ export default function PayoutManagement() {
       return data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] }); toast.success("Payout cancelled"); setDrawerOpen(false); },
-    onError: (e: any) => toast.error(e.message || "Cancel failed"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Cancel failed")),
   });
 
   const filteredPayouts = (payouts || []).filter((p: any) => {

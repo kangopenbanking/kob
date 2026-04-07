@@ -6,6 +6,7 @@ import { useCreditScore } from '@/hooks/useBankingData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 function getScoreLabel(score: number): string {
   if (score >= 800) return 'Excellent';
@@ -84,7 +85,7 @@ const BankCreditScore: React.FC = () => {
       if (data?.error) throw new Error(data.error);
       setOverdraftResult(data);
     } catch (e: any) {
-      toast.error(e.message || 'Failed to check overdraft eligibility');
+      toast.error(extractEdgeFunctionError(e, 'Failed to check overdraft eligibility'));
     } finally {
       setOverdraftLoading(false);
     }
@@ -409,7 +410,7 @@ function BankPreApprovedOffers({ score }: { score: number }) {
       queryClient.invalidateQueries({ queryKey: ['preapproved-offers-bank'] });
       setApplyingId(null);
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to apply'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Failed to apply')),
   });
 
   if (isLoading || !offers.length) return null;

@@ -16,6 +16,7 @@ import { Search, CheckCircle, Clock, XCircle, AlertTriangle, Eye, Shield, Scale,
 import { format, formatDistanceToNow } from "date-fns";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const KANBAN_COLUMNS = [
   { key: 'open', label: 'Open', color: 'bg-amber-500' },
@@ -96,7 +97,7 @@ export default function DisputeManagement() {
       queryClient.invalidateQueries({ queryKey: ["dispute-activities"] });
       toast.success("Dispute updated");
     },
-    onError: (e: any) => toast.error(e.message || "Failed to update dispute"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Failed to update dispute")),
   });
 
   const allDisputes = [...gatewayDisputes, ...legacyDisputes].filter(d => {

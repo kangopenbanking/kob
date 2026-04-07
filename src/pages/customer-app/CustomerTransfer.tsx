@@ -10,6 +10,7 @@ import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
@@ -202,7 +203,7 @@ const CustomerTransfer: React.FC = () => {
       setStep('success');
       toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
     } catch (err: any) {
-      toast.error(err.message || 'Transfer could not be completed. Please verify recipient details and try again.');
+      toast.error(extractEdgeFunctionError(err, 'Transfer could not be completed. Please verify recipient details and try again.'));
     } finally {
       setSending(false);
     }
