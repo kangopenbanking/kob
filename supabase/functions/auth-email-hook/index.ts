@@ -36,10 +36,10 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "kob"
+const SITE_NAME = "Kang OB"
 const SENDER_DOMAIN = "notify.api.kangopenbanking.com"
-const ROOT_DOMAIN = "api.kangopenbanking.com"
-const FROM_DOMAIN = "api.kangopenbanking.com" // Domain shown in From address (may be root or sender subdomain)
+const ROOT_DOMAIN = "kangopenbanking.com"
+const FROM_DOMAIN = "kangopenbanking.com" // Domain shown in From address (root domain for branding)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
