@@ -279,9 +279,13 @@ const CustomerSplitBills: React.FC = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-split-bills-owed'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-data'] });
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-split-bills'] }),
+        queryClient.refetchQueries({ queryKey: ['customer-split-bills-owed'] }),
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+        queryClient.invalidateQueries({ queryKey: ['customer-data'] }),
+      ]);
       toast.success(`Payment of ${pinPaymentAmount.toLocaleString()} XAF successful!`);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Payment failed. Please try again.'));
