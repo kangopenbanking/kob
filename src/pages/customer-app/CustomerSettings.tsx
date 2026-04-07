@@ -361,13 +361,23 @@ const CustomerSettings: React.FC = () => {
                 icon={<Fingerprint className="h-5 w-5" strokeWidth={1.5} />}
                 label="Biometric Login"
                 description="Use fingerprint or Face ID"
-                right={<Switch checked={biometric} onCheckedChange={v => { setBiometric(v); toast.success(v ? 'Biometric enabled' : 'Biometric disabled'); }} />}
+                right={<Switch checked={biometric} onCheckedChange={async (v) => {
+                  setBiometric(v);
+                  const { data: { user: u } } = await supabase.auth.getUser();
+                  if (u) await (supabase.from('user_preferences') as any).upsert({ user_id: u.id, biometric_enabled: v, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                  toast.success(v ? 'Biometric enabled' : 'Biometric disabled');
+                }} />}
               />
               <SettingRow
                 icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
                 label="Two-Factor Auth"
                 description="Extra layer of security"
-                right={<Switch checked={twoFA} onCheckedChange={v => { setTwoFA(v); toast.success(v ? '2FA enabled' : '2FA disabled'); }} />}
+                right={<Switch checked={twoFA} onCheckedChange={async (v) => {
+                  setTwoFA(v);
+                  const { data: { user: u } } = await supabase.auth.getUser();
+                  if (u) await (supabase.from('user_preferences') as any).upsert({ user_id: u.id, two_factor_enabled: v, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                  toast.success(v ? '2FA enabled' : '2FA disabled');
+                }} />}
               />
             </SettingCard>
 
