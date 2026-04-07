@@ -80,20 +80,20 @@ const CustomerHelp: React.FC = () => {
     },
   ];
 
-const quickLinks = [
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
-  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
-];
+  const quickLinks = [
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
+    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
+  ];
 
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
-};
+  const stagger = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+  };
 
 
   const [subject, setSubject] = useState('');
