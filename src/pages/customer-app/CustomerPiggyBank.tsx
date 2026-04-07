@@ -107,11 +107,23 @@ const CustomerPiggyBank: React.FC = () => {
     } catch { /* error handled by hook */ }
   };
 
-  const handlePay = async (paymentId: string) => {
+  const handlePayRequest = (paymentId: string) => {
+    setPendingPaymentId(paymentId);
+    setShowPin(true);
+  };
+
+  const handlePayConfirmed = async () => {
+    if (!pendingPaymentId) return;
     try {
-      await payMutation.mutateAsync({ payment_id: paymentId });
+      await payMutation.mutateAsync({ payment_id: pendingPaymentId });
       toast.success('Payment recorded!');
-    } catch { /* error handled by hook */ }
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
+    } catch { /* error handled by hook */ } finally {
+      setPendingPaymentId(null);
+    }
   };
 
   const getHeaderTitle = () => {
