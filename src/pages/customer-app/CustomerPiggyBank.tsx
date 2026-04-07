@@ -43,10 +43,13 @@ function useSavingsProducts() {
 
 const CustomerPiggyBank: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
   const { data: plans = [], isLoading } = usePiggyBankPlans();
   const createPlan = useCreatePiggyBankPlan();
   const payMutation = usePiggyBankPay();
+  const [showPin, setShowPin] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
