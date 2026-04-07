@@ -399,11 +399,11 @@ async function handleReviewApplication(req: Request, body: any) {
   try {
     await serviceClient.from('credit_events').insert({
       user_id: app.user_id,
-      event_type: isApproved ? 'loan_approved' : 'loan_declined',
+      event_type: isApproved ? 'LOAN_CLOSED' : 'HARD_INQUIRY',
       event_time: new Date().toISOString(),
       source: 'preapproved_loan',
       description: `${productName} application ${decision} by ${institutionName}`,
-      score_impact: 0,
+      value_numeric: 0,
       metadata: { application_id, decision, reviewer_id: user.id, institution_id: app.institution_id },
     });
   } catch (_) { /* non-critical */ }
