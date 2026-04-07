@@ -68,8 +68,8 @@ const CustomerCart: React.FC = () => {
         });
       }
       fetchCart();
-    } catch {
-      toast.error('Could not update cart. Please try again.');
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not update cart. Please try again.'));
     }
   };
 
