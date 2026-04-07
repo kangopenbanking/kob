@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, Wallet, Percent, Search, SlidersHorizontal, ArrowUpDown, BarChart3, Zap, Clock, AlertCircle, CreditCard, ArrowDownCircle, CircleDollarSign } from 'lucide-react';
+import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, Wallet, Percent, Search, SlidersHorizontal, ArrowUpDown, BarChart3, Zap, Clock, AlertCircle, CreditCard, ArrowDownCircle, CircleDollarSign, Trash2, AlertTriangle, StopCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
