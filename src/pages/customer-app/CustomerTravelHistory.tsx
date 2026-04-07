@@ -70,12 +70,12 @@ const CustomerTravelHistory: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-[#0f1729] px-5 pb-8 pt-4">
+      <div className="bg-foreground px-5 pb-8 pt-4">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 active:scale-95 transition-transform">
-            <ChevronLeft className="h-5 w-5 text-white" />
+          <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/10 active:scale-95 transition-transform">
+            <ChevronLeft className="h-5 w-5 text-background" />
           </button>
           <div>
             <h1 className="text-lg font-bold text-white">Booking History</h1>

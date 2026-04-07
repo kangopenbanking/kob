@@ -13,6 +13,8 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { getTheme } from '@/lib/travel-theme';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
 type Gender = 'male' | 'female';
@@ -20,10 +22,12 @@ type Gender = 'male' | 'female';
 const CustomerTravelBooking: React.FC = () => {
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user: customerUser } = useCustomerAuth();
   const { account: walletAccount, loading: walletLoading } = useEnsureWalletAccount(customerUser?.id);
   const theme = getTheme(category);
   const CatIcon = theme.icon;
+  const [showPinDialog, setShowPinDialog] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState<any>(null);
@@ -161,14 +165,19 @@ const CustomerTravelBooking: React.FC = () => {
     toast.success(`Promo "${d.discount_name}" applied!`);
   };
 
-  const handleBook = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { toast.error('Please log in first'); return; }
+  const initiateBooking = () => {
     for (const seat of selectedSeats) {
       if (!passengers[seat]?.name?.trim()) { toast.error(`Enter name for seat ${seat}`); return; }
     }
+    setShowPinDialog(true);
+  };
+
+  const handleBook = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Please log in first'); return; }
 
     setBooking(true);
+    const idempotencyKey = `travel_book_${tripId}_${user.id}_${selectedSeats.sort().join('-')}_${Date.now()}`;
 
     try {
       const { data, error } = await supabase.functions.invoke('travel-book-and-pay', {
@@ -179,6 +188,7 @@ const CustomerTravelBooking: React.FC = () => {
           category,
           discount_id: bestDiscount?.id || null,
           promo_code: promoCode.trim().toUpperCase() || null,
+          idempotency_key: idempotencyKey,
         },
       });
 
@@ -199,7 +209,6 @@ const CustomerTravelBooking: React.FC = () => {
             },
             duration: 8000,
           });
-          // Update displayed balance
           setWalletBalance(data.available ?? walletBalance);
           setBooking(false);
           return;
@@ -209,6 +218,13 @@ const CustomerTravelBooking: React.FC = () => {
 
       toast.success('Booking confirmed! Payment successful.');
       setWalletBalance(data.new_balance ?? walletBalance);
+
+      // Sync balance cache
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
+
       navigate(`/app/travel/ticket/${data.booking_id}`);
     } catch (err: any) {
       console.error('Booking error:', err);
@@ -606,7 +622,7 @@ const CustomerTravelBooking: React.FC = () => {
                   Add {shortfall.toLocaleString()} {trip.currency}
                 </Button>
               ) : (
-                <Button onClick={handleBook} disabled={booking || balanceLoading} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
+                <Button onClick={initiateBooking} disabled={booking || balanceLoading} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
                   style={{ backgroundColor: theme.color, color: theme.fg }}>
                   {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wallet className="mr-2 h-4 w-4" />}
                   {booking ? 'Processing...' : 'Pay & Confirm'}
@@ -616,6 +632,12 @@ const CustomerTravelBooking: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      <PinConfirmDialog
+        open={showPinDialog}
+        onOpenChange={setShowPinDialog}
+        onConfirmed={handleBook}
+      />
     </div>
   );
 };

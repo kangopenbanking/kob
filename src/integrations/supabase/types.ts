@@ -20216,6 +20216,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          idempotency_key: string | null
           payment_method: string | null
           payment_status: string
           total_amount: number
@@ -20228,6 +20229,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           payment_method?: string | null
           payment_status?: string
           total_amount?: number
@@ -20240,6 +20242,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           payment_method?: string | null
           payment_status?: string
           total_amount?: number

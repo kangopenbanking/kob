@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
       category,
       discount_id,
       promo_code,
+      idempotency_key,
     } = body;
 
     if (!trip_id || !selected_seats?.length || !passengers) {
@@ -55,6 +56,29 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Idempotency check: if a confirmed booking already exists for this key, return it
+    if (idempotency_key) {
+      const { data: existingBooking } = await supabaseAdmin
+        .from("travel_bookings")
+        .select("id, booking_ref, total_amount, currency")
+        .eq("idempotency_key", idempotency_key)
+        .maybeSingle();
+
+      if (existingBooking) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            booking_id: existingBooking.id,
+            booking_ref: existingBooking.booking_ref,
+            amount_charged: existingBooking.total_amount,
+            currency: existingBooking.currency,
+            duplicate: true,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // 1. Fetch trip details
@@ -238,6 +262,7 @@ Deno.serve(async (req) => {
         payment_status: "paid",
         booking_status: "confirmed",
         payment_method: "wallet",
+        idempotency_key: idempotency_key || null,
       })
       .select("id")
       .single();
