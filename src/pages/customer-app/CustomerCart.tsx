@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useAccountBalances, useCustomerAccounts } from '@/hooks/useCustomerData';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 const CustomerCart: React.FC = () => {
   const navigate = useNavigate();
