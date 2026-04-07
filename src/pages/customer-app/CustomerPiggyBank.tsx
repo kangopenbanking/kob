@@ -373,6 +373,17 @@ const CustomerPiggyBank: React.FC = () => {
               </p>
             </div>
 
+            {/* Cancellation Warning */}
+            <div className="rounded-2xl bg-destructive/5 border border-destructive/15 p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-destructive">Cancellation Warning</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Stopping or deleting this plan after creation will result in a <span className="font-bold text-destructive">-5 point</span> impact to your CrediQ credit score. Only create a plan you intend to complete.
+                </p>
+              </div>
+            </div>
+
             <Button onClick={handleCreate} disabled={createPlan.isPending} className="w-full rounded-2xl h-12">
               {createPlan.isPending ? 'Creating...' : 'Create Plan'}
             </Button>
