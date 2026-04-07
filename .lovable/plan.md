@@ -1,50 +1,119 @@
 
 
-## Email Services Audit & Fix Plan
+# Consumer PWA Super Audit -- Comprehensive E2E Plan
 
-### Current Findings
+## Scope
 
-The project has **three separate email sending systems**, each with different configurations:
+The Consumer App has **44 routes** and **20+ edge function integrations**. This audit will systematically verify every feature, fix gaps, and test before moving to the next. Features are grouped into phases by domain.
 
-| System | Sender Name | From Address | Status |
-|--------|-------------|--------------|--------|
-| **Lovable Transactional** (`send-transactional-email`) | `kob` | `noreply@api.kangopenbanking.com` | Uses Lovable queue (verified domain: `notify.api.kangopenbanking.com`) |
-| **Lovable Auth** (`auth-email-hook`) | `kob` | `noreply@api.kangopenbanking.com` | Uses Lovable queue (same verified domain) |
-| **Managed Email** (`managed-send-email`) | `Kang Open Banking` | Via Resend `RESEND_FROM` secret | **FAILING** — Resend rejects `kangopenbanking.com` as unverified |
-| **Send Communication** (`send-communication`) | `Kang Open Banking` | Via Resend `RESEND_FROM` secret | **FAILING** — same Resend domain issue |
-| **Send Bulk Communication** (`send-bulk-communication`) | `Kang Open Banking` | Via Resend `RESEND_FROM` secret | **FAILING** — same Resend domain issue |
-| **Send Customer Invoice** (`send-customer-invoice`) | N/A | Via Resend `RESEND_FROM` secret | **FAILING** — same Resend domain issue |
+---
 
-### Issues to Fix
+## Audit Methodology
 
-1. **Sender name "kob" is wrong** — The Lovable transactional and auth email systems use `SITE_NAME = "kob"` instead of `"Kang OB"`. The `from` field renders as `kob <noreply@...>`.
+For each feature, the following checklist applies:
 
-2. **Resend-based functions are all broken** — `managed-send-email`, `send-communication`, `send-bulk-communication`, and `send-customer-invoice` use Resend directly, but the domain `kangopenbanking.com` is not verified on Resend. The verified Lovable domain is `notify.api.kangopenbanking.com`.
+1. **Route loads** -- no crash, no blank screen, proper loading states
+2. **Data persistence** -- CRUD operations write to and read from DB correctly
+3. **Error handling** -- professional toast messages (no raw edge function errors)
+4. **Edge function integration** -- correct payloads, proper response parsing
+5. **PIN gating** -- all financial operations gated by PinConfirmDialog
+6. **Idempotency** -- money-moving operations include idempotency keys
+7. **Empty states** -- actionable UI when no data exists
+8. **RLS compliance** -- users can only see/modify their own data
+9. **Balance sync** -- financial ops trigger refetchQueries (not invalidateQueries)
+10. **Mobile UX** -- proper back navigation, scrolling, no clipped elements
 
-3. **From address mismatch** — User wants `support@kangopenbanking.com` but the verified sender domain is `notify.api.kangopenbanking.com` (subdomain). The `FROM_DOMAIN` can show as root domain in the From header, but the actual sending must go through the verified subdomain.
+---
 
-### Plan
+## Phase 1 -- Authentication and Onboarding
+- CustomerAuth (phone login, OTP, PIN, captcha)
+- CustomerRegister (signup flow)
+- CustomerOnboarding (KYC wizard)
+- CustomerSplash (landing/redirect)
 
-**Step 1: Fix Lovable email sender name**
-- Update `SITE_NAME` from `"kob"` to `"Kang OB"` in:
-  - `supabase/functions/send-transactional-email/index.ts` (line 7)
-  - `supabase/functions/auth-email-hook/index.ts` (line 39)
-- Update `FROM_DOMAIN` to use `kangopenbanking.com` (root) so the From header shows `Kang OB <noreply@kangopenbanking.com>`
+## Phase 2 -- Core Financial Operations
+- CustomerHome (balance display, navigation)
+- CustomerTransfer (P2P transfers -- phone/account/name/RIB/IBAN)
+- CustomerFundWallet (add money -- MoMo/card/bank/PayPal)
+- CustomerCashOut (withdraw to linked accounts)
+- CustomerSendMoney (remittance wizard)
+- CustomerRemittances (remittance history)
 
-**Step 2: Migrate Resend-based functions to use Lovable email queue**
-- Refactor `managed-send-email` to enqueue emails via the Lovable `enqueue_email` RPC instead of Resend directly. This uses the verified `notify.api.kangopenbanking.com` domain and gets retry safety.
-- Update the `from` field to `Kang OB <support@kangopenbanking.com>` as the display From address.
-- Update `send-communication` similarly for its email path.
-- Update `send-bulk-communication` similarly.
-- Update `send-customer-invoice` similarly.
+## Phase 3 -- Bills and Payments
+- CustomerBillsV2 (utility bill payments, provider directory)
+- CustomerInvoices (create/send/pay invoices)
+- CustomerSplitBills (split, search users, pay share)
+- CustomerRecurring (auto-pay subscriptions)
+- CustomerPayLinks (payment links)
 
-**Step 3: Deploy all updated functions**
-- Deploy: `send-transactional-email`, `auth-email-hook`, `managed-send-email`, `send-communication`, `send-bulk-communication`, `send-customer-invoice`
+## Phase 4 -- Savings and Financial Health
+- CustomerPiggyBank (bank savings, personal goals)
+- CustomerNjangi (group savings circles)
+- CustomerCreditScore (score, insights, pre-approved offers)
+- CustomerRentReporting (rent history for credit)
+- CustomerRewards (cashback, coupons, referrals)
+- CustomerLoyalty (points, redemption)
 
-**Step 4: Test email delivery**
-- Send a test email via `managed-send-email` to verify delivery works with the correct sender name and address.
+## Phase 5 -- Cards and Accounts
+- CustomerCards (virtual cards, freeze/unfreeze)
+- CustomerLinkedAccounts (link bank accounts)
+- CustomerBank (add money sources)
 
-### Technical Detail
+## Phase 6 -- Commerce and Marketplace
+- CustomerStores (browse merchants)
+- CustomerStoreDetail (product listing, add to cart)
+- CustomerCart (checkout flow)
+- CustomerOrderTracking (order status)
+- CustomerMarketplace (search, filter, favorites)
+- CustomerWishlist (saved stores/products)
+- CustomerReviews (rate orders)
 
-The verified Lovable email domain is `notify.api.kangopenbanking.com`. Emails must be sent through this domain's infrastructure. The `FROM_DOMAIN` (display domain in the From header) can be set to the root `kangopenbanking.com` since `display_from_root` is supported. The sender name will be `Kang OB` and the display address `support@kangopenbanking.com`.
+## Phase 7 -- Travel
+- CustomerTravelCategories (browse travel types)
+- CustomerTravelAgencies (service providers)
+- CustomerTravelTrips (available trips)
+- CustomerTravelBooking (book and pay)
+- CustomerTravelTicket (view ticket)
+- CustomerTravelHistory (past bookings)
+
+## Phase 8 -- Communication and Support
+- CustomerSupport (live chat, departments)
+- CustomerHelp (FAQ, quick links)
+- CustomerAlerts (notifications)
+- CustomerDisputes (file/track disputes)
+
+## Phase 9 -- Settings and Scan
+- CustomerSettings (profile, security, PIN, language, legal)
+- CustomerScan (QR code scanning -- kob_pay, kob_pos_pay, kob_store)
+- CustomerRequest (QR code generation for receiving)
+- CustomerActivity (transaction history)
+- PayByBankApproval (PISP authorization)
+
+---
+
+## Deliverables
+
+Each phase produces:
+- Gaps identified (numbered list)
+- Fixes applied (code changes)
+- Verification test (edge function curl or UI confirmation)
+- Score per feature (Pass / Partial / Fail)
+
+Final output: **Feature scorecard** with pass rate across all 44 routes.
+
+---
+
+## Technical Approach
+
+- Read each page file fully and trace all edge function calls
+- Query DB for schema/data alignment
+- Test edge functions via `curl_edge_functions`
+- Fix error handling, missing PIN gates, broken queries, dead features
+- One feature at a time, verified before moving on
+
+---
+
+## Execution Order
+
+Will start with **Phase 1 (Auth)** and proceed sequentially. Each phase is a discrete unit of work with its own test cycle. Estimated: 9 phases, working through them systematically.
 
