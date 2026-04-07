@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface Discount {
   id: string;
@@ -107,10 +108,10 @@ const MerchantTravelDiscounts: React.FC = () => {
 
     if (editing) {
       const { error } = await supabase.from('travel_discounts').update(payload as any).eq('id', editing.id);
-      if (error) toast.error(error.message); else { toast.success('Discount updated'); setDialogOpen(false); fetchData(); }
+      if (error) toast.error(extractEdgeFunctionError(error)); else { toast.success('Discount updated'); setDialogOpen(false); fetchData(); }
     } else {
       const { error } = await supabase.from('travel_discounts').insert(payload as any);
-      if (error) toast.error(error.message); else { toast.success('Discount created'); setDialogOpen(false); fetchData(); }
+      if (error) toast.error(extractEdgeFunctionError(error)); else { toast.success('Discount created'); setDialogOpen(false); fetchData(); }
     }
     setSaving(false);
   };

@@ -11,6 +11,7 @@ import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function BusinessStorefront() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export default function BusinessStorefront() {
       if (error) throw error;
       toast.success('Storefront updated');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save');
+      toast.error(extractEdgeFunctionError(error, 'Failed to save'));
     } finally {
       setLoading(false);
     }

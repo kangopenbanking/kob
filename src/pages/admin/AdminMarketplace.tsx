@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function AdminMarketplace() {
   const [plans, setPlans] = useState<any[]>([]);
@@ -85,7 +86,7 @@ export default function AdminMarketplace() {
       setPlanDialog(false);
       loadAll();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save plan');
+      toast.error(extractEdgeFunctionError(err, 'Failed to save plan'));
     } finally {
       setSavingPlan(false);
     }

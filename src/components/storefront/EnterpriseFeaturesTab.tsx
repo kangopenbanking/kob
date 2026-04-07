@@ -14,6 +14,7 @@ import { EnterpriseGate } from './EnterpriseGate';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface EnterpriseFeaturesTabProps {
   isEnterprise: boolean;
@@ -109,7 +110,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
       } else {
         toast.error(json.detail || 'Failed to generate key');
       }
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setGeneratingKey(false); }
   };
 
@@ -128,7 +129,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
       });
       toast.success('Key revoked');
       loadApiKeys();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
   };
 
   const loadLocations = async () => {
@@ -161,7 +162,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
       });
       toast.success('Location removed');
       loadLocations();
-    } catch (err: any) { toast.error(err.message || 'Failed to delete location'); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, 'Failed to delete location')); }
   };
 
   const addLocation = async () => {
@@ -187,7 +188,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
       } else {
         toast.error(json.error || 'Failed');
       }
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setAddingLocation(false); }
   };
 
@@ -206,7 +207,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
       }).eq('id', profile.id);
       toast.success('Branding saved');
       onProfileUpdate();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSavingBrand(false); }
   };
 

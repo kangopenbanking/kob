@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CM_BANKS, CM_MOMO_PROVIDERS } from "@/constants/cameroon-banks";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CAMEROON_BANKS = CM_BANKS.map(b => ({ code: b.code, name: b.name }));
 
@@ -239,7 +240,7 @@ export default function MerchantSettlementAccounts() {
       setForm({ ...INITIAL_FORM });
       loadData();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setSaving(false);
     }
@@ -257,7 +258,7 @@ export default function MerchantSettlementAccounts() {
 
   const deactivateAccount = async (id: string) => {
     const { error } = await supabase.from("gateway_merchant_settlement_accounts").update({ is_active: false }).eq("id", id);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success("Account deactivated"); loadData(); }
   };
 

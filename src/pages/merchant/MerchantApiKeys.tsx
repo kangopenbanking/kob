@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -91,7 +92,7 @@ export default function MerchantApiKeys() {
       await loadKeys(merchantId);
       toast.success("API key generated successfully");
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setSaving(false);
     }
@@ -115,7 +116,7 @@ export default function MerchantApiKeys() {
       toast.success("API key revoked");
       await loadKeys(merchantId);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setRevoking(false);
       setRevokeTarget(null);
@@ -137,7 +138,7 @@ export default function MerchantApiKeys() {
       await loadKeys(merchantId);
       toast.success("API key rotated successfully");
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setRotating(false);
       setRotateTarget(null);

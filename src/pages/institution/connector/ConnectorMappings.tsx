@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const FILE_TYPES = ["accounts", "balances", "transactions", "beneficiaries"];
 
@@ -63,7 +64,7 @@ export default function ConnectorMappings() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Mapping created"); setShowEditor(false); queryClient.invalidateQueries({ queryKey: ["connector-mappings"] }); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const toggleActive = useMutation({
@@ -76,7 +77,7 @@ export default function ConnectorMappings() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Mapping updated"); queryClient.invalidateQueries({ queryKey: ["connector-mappings"] }); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   if (bankLoading) {

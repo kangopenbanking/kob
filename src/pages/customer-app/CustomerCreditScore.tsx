@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CustomerCreditScore: React.FC = () => {
   const navigate = useNavigate();
@@ -440,7 +441,7 @@ function PreApprovedOffersSection({ score }: { score: number }) {
       queryClient.invalidateQueries({ queryKey: ['preapproved-offers-customer'] });
       setApplyingId(null);
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to apply'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Failed to apply')),
   });
 
   if (isLoading || !offers.length) return null;

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type Intent = {
   id: string;
@@ -73,7 +74,7 @@ export default function PayByBankAuthorize() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoginLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(extractEdgeFunctionError(error));
       return;
     }
     setUserId(data.user.id);

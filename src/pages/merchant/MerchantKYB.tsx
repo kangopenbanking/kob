@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DocumentUploader } from "@/components/kyc/DocumentUploader";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const statusConfig: Record<string, { icon: any; color: string; label: string; description: string }> = {
   not_submitted: { icon: Clock, color: "text-muted-foreground", label: "Not Submitted", description: "Submit your business documents to begin verification" },
@@ -133,7 +134,7 @@ export default function MerchantKYB() {
       if (error) throw error;
       toast.success("Draft saved successfully");
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSubmitting(false); }
   };
 
@@ -164,7 +165,7 @@ export default function MerchantKYB() {
       }
       toast.success("KYB application submitted for review");
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSubmitting(false); }
   };
 

@@ -13,6 +13,7 @@ import { useCustomerTransactions, useCustomerCreditScore } from '@/hooks/useCust
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CustomerRentReporting: React.FC = () => {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ const CustomerRentReporting: React.FC = () => {
       setLandlordName('');
       refetchPlans();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create rent plan');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create rent plan'));
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +120,7 @@ const CustomerRentReporting: React.FC = () => {
       refetchPlans();
       queryClient.invalidateQueries({ queryKey: ['customer-credit-score'] });
     } catch (err: any) {
-      toast.error(err.message || 'Failed to record payment');
+      toast.error(extractEdgeFunctionError(err, 'Failed to record payment'));
     } finally {
       setPayingId(null);
     }

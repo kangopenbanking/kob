@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Upload, CheckCircle, XCircle, AlertCircle, FileText } from "lucide-react";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface SWIFTMessage {
   id: string;
@@ -86,7 +87,7 @@ export default function SWIFTDashboard() {
       fetchMessages();
     } catch (error: any) {
       console.error("Error parsing MT103:", error);
-      toast.error(error.message || "Failed to parse MT103");
+      toast.error(extractEdgeFunctionError(error, "Failed to parse MT103"));
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export default function SWIFTDashboard() {
       fetchMessages();
     } catch (error: any) {
       console.error("Error parsing MT940:", error);
-      toast.error(error.message || "Failed to parse MT940");
+      toast.error(extractEdgeFunctionError(error, "Failed to parse MT940"));
     } finally {
       setLoading(false);
     }
@@ -167,7 +168,7 @@ export default function SWIFTDashboard() {
       fetchMessages();
     } catch (error: any) {
       console.error("Error generating MT103:", error);
-      toast.error(error.message || "Failed to generate MT103");
+      toast.error(extractEdgeFunctionError(error, "Failed to generate MT103"));
     } finally {
       setLoading(false);
     }
@@ -195,7 +196,7 @@ export default function SWIFTDashboard() {
       }
     } catch (error: any) {
       console.error("Error validating IBAN:", error);
-      toast.error(error.message || "Failed to validate IBAN");
+      toast.error(extractEdgeFunctionError(error, "Failed to validate IBAN"));
     } finally {
       setLoading(false);
     }
@@ -223,7 +224,7 @@ export default function SWIFTDashboard() {
       }
     } catch (error: any) {
       console.error("Error validating BIC:", error);
-      toast.error(error.message || "Failed to validate BIC");
+      toast.error(extractEdgeFunctionError(error, "Failed to validate BIC"));
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2, Webhook, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function MerchantWebhooks() {
   const [webhooks, setWebhooks] = useState<any[]>([]);
@@ -56,19 +57,19 @@ export default function MerchantWebhooks() {
       setDialogOpen(false);
       setForm({ url: "", events: "charge.success" });
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
   const toggleActive = async (id: string, current: boolean) => {
     const { error } = await supabase.from("gateway_merchant_webhooks").update({ is_active: !current }).eq("id", id);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success(`Webhook ${current ? "disabled" : "enabled"}`); loadData(); }
   };
 
   const deleteWebhook = async (id: string) => {
     const { error } = await supabase.from("gateway_merchant_webhooks").delete().eq("id", id);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success("Webhook deleted"); loadData(); }
   };
 

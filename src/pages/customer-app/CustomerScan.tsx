@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
 import { useQRScanner } from '@/hooks/useQRScanner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type Tab = 'scan' | 'receive';
 
@@ -120,7 +121,7 @@ const CustomerScan: React.FC = () => {
         });
         setScanResult(null);
       } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
+        toast.error(extractEdgeFunctionError(err, 'Payment failed'));
       } finally {
         setProcessing(false);
       }

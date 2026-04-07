@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const MerchantWalletOversight: React.FC = () => {
   const queryClient = useQueryClient();
@@ -72,7 +73,7 @@ const MerchantWalletOversight: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-merchant-wallets'] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to approve payout');
+      toast.error(extractEdgeFunctionError(error, 'Failed to approve payout'));
     },
   });
 
@@ -92,7 +93,7 @@ const MerchantWalletOversight: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-merchant-wallets'] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to reject payout');
+      toast.error(extractEdgeFunctionError(error, 'Failed to reject payout'));
     },
   });
 

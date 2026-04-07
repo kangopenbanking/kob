@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 function useInstitutionId() {
   const { institutionId } = useParams();
@@ -66,7 +67,7 @@ export function useCreatePiggyBankPlan() {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       toast.success('Your PiggyBank savings plan is now active! 🐷 Keep saving consistently.');
     },
-    onError: (err: any) => toast.error(err.message || 'Could not create your savings plan. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not create your savings plan. Please try again.')),
   });
 }
 
@@ -88,6 +89,6 @@ export function usePiggyBankPay() {
       qc.invalidateQueries({ queryKey: ['credit-score'] });
       toast.success('Installment paid! You\'re one step closer to your savings goal. 🎉');
     },
-    onError: (err: any) => toast.error(err.message || 'Payment could not be processed. Please ensure you have sufficient funds.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Payment could not be processed. Please ensure you have sufficient funds.')),
   });
 }

@@ -27,6 +27,7 @@ import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner"
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // ─── Types ───
 interface RewardsConfig {
@@ -1073,7 +1074,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
       toast.success(`${uploadedIsVideo ? 'Video' : 'Image'} uploaded & saved`);
     } catch (err: any) {
       console.error('Hero media upload error:', err);
-      toast.error(err.message || 'Upload failed');
+      toast.error(extractEdgeFunctionError(err, 'Upload failed'));
     } finally {
       setUploading(false);
     }

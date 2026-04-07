@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Shield, FileText, CreditCard, AlertCircle, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -92,7 +93,7 @@ const ConsentManagement = () => {
       setSelectedConsent(null);
     } catch (error: any) {
       console.error('Error revoking consent:', error);
-      toast.error(error.message || "Failed to revoke consent");
+      toast.error(extractEdgeFunctionError(error, "Failed to revoke consent"));
     }
   };
 

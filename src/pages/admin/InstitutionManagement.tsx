@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Building2, CheckCircle, AlertCircle, Clock, Ban, Trash2, RotateCcw, Landmark} from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function InstitutionManagement() {
   const [search, setSearch] = useState("");
@@ -50,7 +51,7 @@ export default function InstitutionManagement() {
       setDeleteDialogOpen(false);
       setActionReason("");
     },
-    onError: (err: any) => toast.error(err.message || "Action failed"),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, "Action failed")),
   });
 
   const filtered = (institutions || []).filter((i: any) => {

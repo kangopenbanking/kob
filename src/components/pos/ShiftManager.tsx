@@ -14,6 +14,7 @@ import {
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface ShiftManagerProps {
   merchantId: string;
@@ -117,7 +118,7 @@ export const ShiftManager: React.FC<ShiftManagerProps> = ({ merchantId }) => {
       setCashAmount('');
       toast.success('Shift started!');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   // Add cash movement
@@ -144,7 +145,7 @@ export const ShiftManager: React.FC<ShiftManagerProps> = ({ merchantId }) => {
       setMovementReason('');
       toast.success('Cash movement recorded');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   // Close shift
@@ -177,7 +178,7 @@ export const ShiftManager: React.FC<ShiftManagerProps> = ({ merchantId }) => {
       setCloseNotes('');
       toast.success('Shift closed successfully');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   if (isLoading) {

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQRScanner } from '@/hooks/useQRScanner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type Tab = 'scan' | 'receive';
 
@@ -117,7 +118,7 @@ const BankQRPay: React.FC = () => {
         toast.success(`Payment of ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name || 'merchant'} completed! ✅`);
         resetScan();
       } catch (err: any) {
-        toast.error(err.message || 'Payment could not be completed. Please check your balance and try again.');
+        toast.error(extractEdgeFunctionError(err, 'Payment could not be completed. Please check your balance and try again.'));
       } finally {
         setProcessing(false);
       }

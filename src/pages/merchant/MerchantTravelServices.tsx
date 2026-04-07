@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface ServiceCategory {
   key: string;
@@ -124,7 +125,7 @@ const MerchantTravelServices: React.FC = () => {
     } as any);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(extractEdgeFunctionError(error));
     } else {
       toast.success(`${cat?.label} service created!`);
       setSetupOpen(false);
@@ -140,7 +141,7 @@ const MerchantTravelServices: React.FC = () => {
       .eq('id', service.id);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(extractEdgeFunctionError(error));
     } else {
       setServices(prev => prev.map(s => s.id === service.id ? { ...s, is_active: !s.is_active } : s));
     }
@@ -159,7 +160,7 @@ const MerchantTravelServices: React.FC = () => {
       toast.success(`Demo data seeded! Services: ${data.services}, Routes: ${data.routes}, Plans: ${data.seating_plans}, Trips: ${data.trips}, Timetables: ${data.timetables}`);
       fetchMerchantAndServices();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to seed data');
+      toast.error(extractEdgeFunctionError(err, 'Failed to seed data'));
     }
     setSeeding(false);
   };

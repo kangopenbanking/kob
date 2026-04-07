@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: any; color: string }> = {
   open: { variant: "outline", icon: AlertTriangle, color: "text-amber-600" },
@@ -104,7 +105,7 @@ export default function MerchantDisputes() {
       queryClient.invalidateQueries({ queryKey: ["merchant-disputes"] });
       queryClient.invalidateQueries({ queryKey: ["dispute-activities", selectedDispute.id] });
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setSubmittingEvidence(false);
     }
@@ -127,7 +128,7 @@ export default function MerchantDisputes() {
       setNoteText("");
       queryClient.invalidateQueries({ queryKey: ["dispute-activities", selectedDispute.id] });
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setAddingNote(false);
     }

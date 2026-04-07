@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // Try build-time env var first, otherwise fetch from backend
 let stripePromiseCache: Promise<Stripe | null> | null = null;
@@ -93,7 +94,7 @@ const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amou
       });
 
       if (error) {
-        toast.error(error.message || "Card payment failed");
+        toast.error(extractEdgeFunctionError(error, "Card payment failed"));
       } else if (paymentIntent?.status === "succeeded") {
         if (fundingIntentId) {
           const result = await confirmWithBackend(fundingIntentId);
@@ -117,7 +118,7 @@ const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amou
         toast.info(`Payment status: ${paymentIntent?.status}`);
       }
     } catch (err: any) {
-      toast.error(err.message || "Payment confirmation failed");
+      toast.error(extractEdgeFunctionError(err, "Payment confirmation failed"));
     }
     setLoading(false);
   };

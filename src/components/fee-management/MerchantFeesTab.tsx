@@ -11,6 +11,7 @@ import { Loader2, Plus, Save, Store, Trash2, Zap, CreditCard, Building2, Globe, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const GATEWAY_CHANNELS = [
   { value: "mobile_money_charge", label: "Mobile Money", icon: Phone, color: "bg-[hsl(38,92%,50%)]" },
@@ -86,7 +87,7 @@ export function MerchantFeesTab() {
       setNewOverride({ transaction_type: "", percentage_rate: 0, fixed_amount: 0 });
       queryClient.invalidateQueries({ queryKey: ["merchant-fee-overrides", selectedMerchantId] });
     } catch (err: any) {
-      toast.error(err.message || "Failed to create override");
+      toast.error(extractEdgeFunctionError(err, "Failed to create override"));
     }
     setSaving(false);
   };

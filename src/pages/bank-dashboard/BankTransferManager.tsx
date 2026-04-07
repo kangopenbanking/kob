@@ -7,6 +7,7 @@ import { ArrowUpDown, Send } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function BankTransferManager() {
   const [sourceAccount, setSourceAccount] = useState("");
@@ -41,7 +42,7 @@ export default function BankTransferManager() {
       setAmount("");
       setNarration("");
     } catch (err: any) {
-      toast.error(err.message || "Transfer failed");
+      toast.error(extractEdgeFunctionError(err, "Transfer failed"));
     } finally {
       setLoading(false);
     }

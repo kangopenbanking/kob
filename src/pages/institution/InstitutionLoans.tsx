@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, Banknote, FileText, Calendar, CreditCard, Search, Plus, Download, Eye, TrendingUp, CheckCircle, XCircle, Clock, ToggleLeft, Star, Users, AlertTriangle, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -151,7 +152,7 @@ export default function InstitutionLoans() {
       setShowCreate(false);
       setNewProduct({ product_name: "", product_code: "", loan_type: "personal_loan", interest_rate: "12", interest_calculation_method: "reducing_balance", min_amount: "50000", max_amount: "5000000", min_tenure_months: "3", max_tenure_months: "60", processing_fee_percentage: "1", description: "", requires_collateral: false, requires_guarantor: false });
       loadData();
-    } catch (err: any) { toast.error(err.message || "Failed to create product"); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, "Failed to create product")); }
     finally { setCreating(false); }
   };
 
@@ -192,7 +193,7 @@ export default function InstitutionLoans() {
       setShowCreateOffer(false);
       setNewOffer({ product_name: "", description: "", min_credit_score: 650, max_credit_score: 850, min_amount: "100000", max_amount: "5000000", interest_rate_annual: "15", max_tenure_months: "36", requires_existing_account: false });
       loadData();
-    } catch (err: any) { toast.error(err.message || "Failed to create offer"); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, "Failed to create offer")); }
     finally { setCreatingOffer(false); }
   };
 

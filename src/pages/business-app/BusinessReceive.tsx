@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { sounds } from '@/lib/sounds';
 import { getCanonicalUrl } from '@/config/api';
 import { cn } from '@/lib/utils';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type Tab = 'qr' | 'links';
 
@@ -58,7 +59,7 @@ const BusinessReceive: React.FC = () => {
       if (data?.error) { toast.error(data.error); return; }
       setGeneratedQR(data);
       toast.success('QR code generated');
-    } catch (err: any) { toast.error(err.message || 'Failed to generate QR'); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, 'Failed to generate QR')); }
     finally { setGeneratingQR(false); }
   };
 
@@ -90,7 +91,7 @@ const BusinessReceive: React.FC = () => {
       setCreatedLink(data);
       setRecentLinks(prev => [data, ...prev]);
       toast.success('Payment link created');
-    } catch (err: any) { toast.error(err.message || 'Failed to create link'); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, 'Failed to create link')); }
     finally { setCreatingLink(false); }
   };
 

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface DemoStoreTabProps {
   merchantId: string | null;
@@ -43,7 +44,7 @@ export function DemoStoreTab({ merchantId, onDataChanged }: DemoStoreTabProps) {
       toast.success('Demo store created with sample products!');
       onDataChanged?.();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create demo store');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create demo store'));
     } finally {
       setCreating(false);
     }
@@ -72,7 +73,7 @@ export function DemoStoreTab({ merchantId, onDataChanged }: DemoStoreTabProps) {
       toast.success('All POS demo data has been reset');
       onDataChanged?.();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to reset demo data');
+      toast.error(extractEdgeFunctionError(err, 'Failed to reset demo data'));
     } finally {
       setResetting(false);
     }

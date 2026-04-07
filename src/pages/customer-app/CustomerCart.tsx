@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useAccountBalances, useCustomerAccounts } from '@/hooks/useCustomerData';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CustomerCart: React.FC = () => {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ const CustomerCart: React.FC = () => {
       }
       setOrderComplete(data);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout could not be completed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Checkout could not be completed. Please try again.'));
       setOrderFailed(true);
     } finally {
       setCheckingOut(false);

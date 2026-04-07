@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { API_CONFIG } from '@/config/api';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -116,7 +117,7 @@ const BankFundAccount: React.FC = () => {
       setResult(data);
       toast.success(`${Number(amount).toLocaleString()} XAF funding request initiated. Follow the payment instructions to complete.`);
     } catch (err: any) {
-      toast.error(err.message || 'Could not initiate funding. Please try again later.');
+      toast.error(extractEdgeFunctionError(err, 'Could not initiate funding. Please try again later.'));
     }
     setLoading(false);
   };

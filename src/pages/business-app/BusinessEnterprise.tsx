@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const enterpriseFeatures = [
   { icon: Palette, label: 'Custom Branding', subtitle: 'White-label your app with custom colors, logos & domain', path: '/biz/storefront', gated: true },
@@ -135,7 +136,7 @@ export default function BusinessEnterprise() {
       window.location.reload();
     } catch (err: any) {
       console.error('Subscription error:', err);
-      toast.error(err.message || 'Subscription failed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Subscription failed. Please try again.'));
     } finally {
       setSubscribing(false);
     }

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { 
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
   User, Mail, Phone, Calendar, Shield, Edit, Save, X,
   CheckCircle, XCircle, Clock, Building2, MapPin, KeyRound
 } from 'lucide-react';
@@ -200,7 +201,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
       loadUserDetails();
     } catch (error: any) {
       logger.error('Error setting PIN:', error);
-      toast.error(error.message || 'Failed to set PIN code');
+      toast.error(extractEdgeFunctionError(error, 'Failed to set PIN code'));
     } finally {
       setSettingPin(false);
     }

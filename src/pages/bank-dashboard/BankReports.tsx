@@ -5,6 +5,7 @@ import { FileText, Download, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function BankReports() {
   const [generating, setGenerating] = useState(false);
@@ -24,7 +25,7 @@ export default function BankReports() {
       setReport(data?.data);
       toast.success("Report generated successfully");
     } catch (err: any) {
-      toast.error(err.message || "Failed to generate report");
+      toast.error(extractEdgeFunctionError(err, "Failed to generate report"));
     } finally {
       setGenerating(false);
     }

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, RefreshCw } from "lucide-react";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface TopUpFormProps {
   card: any;
@@ -147,7 +148,7 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
       onSuccess();
     } catch (error: any) {
       console.error('Error topping up card:', error);
-      toast.error(error.message || 'Failed to top up card');
+      toast.error(extractEdgeFunctionError(error, 'Failed to top up card'));
     } finally {
       setIsProcessing(false);
     }

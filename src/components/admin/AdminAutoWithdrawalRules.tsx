@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Pause, Clock, Calendar, TrendingUp, AlertTriangle, Layers, Activity } from "lucide-react";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export function AdminAutoWithdrawalRules() {
   const queryClient = useQueryClient();
@@ -36,7 +37,7 @@ export function AdminAutoWithdrawalRules() {
       queryClient.invalidateQueries({ queryKey: ["admin-payout-schedules"] });
       toast.success("Rule disabled");
     },
-    onError: (e: any) => toast.error(e.message || "Failed to disable rule"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Failed to disable rule")),
   });
 
   const scheduleIcons: Record<string, any> = {

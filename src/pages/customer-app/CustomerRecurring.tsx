@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const categories = [
   { label: 'Utilities', icon: Zap, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
@@ -100,7 +101,7 @@ const CustomerRecurring: React.FC = () => {
       resetForm();
       toast.success(`"${newName.trim()}" set up! First payment of ${Number(newAmount).toLocaleString()} XAF scheduled for ${newStartDate}.`);
     } catch (err: any) {
-      toast.error(err.message || 'Could not create recurring payment. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Could not create recurring payment. Please try again.'));
     } finally {
       setCreating(false);
     }

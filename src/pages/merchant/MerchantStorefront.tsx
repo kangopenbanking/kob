@@ -38,6 +38,7 @@ import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgrad
 import { ProductsTab } from '@/components/storefront/ProductsTab';
 import { WooConnectTab } from '@/components/storefront/WooConnectTab';
 import { getCanonicalUrl } from '@/config/api';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -171,7 +172,7 @@ export default function MerchantStorefront() {
         setProfile(data);
       }
       toast.success('Storefront saved successfully');
-    } catch (err: any) { toast.error(err.message || 'Failed to save'); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, 'Failed to save')); }
     finally { setSaving(false); }
   };
 
@@ -184,7 +185,7 @@ export default function MerchantStorefront() {
       if (data?.error) throw new Error(data.message || data.error);
       toast.success('Subscription activated!');
       loadData();
-    } catch (err: any) { toast.error(err.message || 'Subscription failed'); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, 'Subscription failed')); }
     finally { setSubscribing(false); }
   };
 

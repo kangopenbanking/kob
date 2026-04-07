@@ -17,6 +17,7 @@ import { FundingHistory } from "@/components/funding/FundingHistory";
 import { BankSelector } from "@/components/funding/BankSelector";
 import { StatCard } from "@/components/ui/stat-card";
 import { API_CONFIG } from "@/config/api";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -125,7 +126,7 @@ const InstitutionFundAccount = () => {
       setResult(data);
       toast.success("Funding intent created");
     } catch (err: any) {
-      toast.error(err.message || "Failed to create funding intent");
+      toast.error(extractEdgeFunctionError(err, "Failed to create funding intent"));
     }
     setLoading(false);
   };

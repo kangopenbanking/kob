@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export interface WalletQRData {
   qr_payload: string;
@@ -247,7 +248,7 @@ export function usePOSTill(merchantId: string | undefined) {
 
       toast.success(`Payment of ${total.toLocaleString()} XAF received via ${paymentMethod === 'cash' ? 'cash' : 'Mobile Money'} ✅`);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout could not be completed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Checkout could not be completed. Please try again.'));
     } finally {
       setIsCheckingOut(false);
     }

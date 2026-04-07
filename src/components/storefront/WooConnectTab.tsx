@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface WooConnectTabProps {
   merchantId: string | null;
@@ -66,7 +67,7 @@ export function WooConnectTab({ merchantId }: WooConnectTabProps) {
       setConsumerSecret('');
       loadIntegrations();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to connect store');
+      toast.error(extractEdgeFunctionError(err, 'Failed to connect store'));
     } finally {
       setConnecting(false);
     }
@@ -85,7 +86,7 @@ export function WooConnectTab({ merchantId }: WooConnectTabProps) {
       toast.success('Store disconnected');
       loadIntegrations();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to disconnect');
+      toast.error(extractEdgeFunctionError(err, 'Failed to disconnect'));
     }
   };
 

@@ -7,6 +7,7 @@ import { Lock, Unlock, FileText, CheckCircle2, Loader2, ShieldCheck, BarChart3, 
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function FullReportPaywall() {
   const navigate = useNavigate();
@@ -146,7 +147,7 @@ export default function FullReportPaywall() {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       toast.success('Full Credit Report unlocked! Funds deducted from your wallet.');
     } catch (err: any) {
-      toast.error(err.message || 'Purchase failed');
+      toast.error(extractEdgeFunctionError(err, 'Purchase failed'));
     } finally {
       setIsPurchasing(false);
     }

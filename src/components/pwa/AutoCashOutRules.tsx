@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { Clock, Calendar, TrendingUp, Plus, Trash2, ChevronDown, Zap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface AutoCashOutRulesProps {
   userId: string;
@@ -87,7 +88,7 @@ export function AutoCashOutRules({ userId, linkedAccounts, ownerType = "consumer
       setShowCreate(false);
       resetForm();
     },
-    onError: (e: any) => toast.error(e.message || "Failed to create rule"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Failed to create rule")),
   });
 
   const deleteRule = useMutation({
@@ -103,7 +104,7 @@ export function AutoCashOutRules({ userId, linkedAccounts, ownerType = "consumer
       queryClient.invalidateQueries({ queryKey: ["auto-withdraw-rules", effectiveOwnerId] });
       toast.success("Rule disabled");
     },
-    onError: (e: any) => toast.error(e.message || "Failed to disable rule"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Failed to disable rule")),
   });
 
   const toggleRule = useMutation({
@@ -118,7 +119,7 @@ export function AutoCashOutRules({ userId, linkedAccounts, ownerType = "consumer
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auto-withdraw-rules", effectiveOwnerId] });
     },
-    onError: (e: any) => toast.error(e.message || "Failed to update rule"),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, "Failed to update rule")),
   });
 
   const resetForm = () => {

@@ -16,6 +16,7 @@ import {
 } from '@/hooks/useBillsV2';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // ─── Icon mapping ───
 const iconMap: Record<string, React.ElementType> = {
@@ -142,7 +143,7 @@ const CustomerBillsV2: React.FC = () => {
       setIntent(result);
       setStep('confirm');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create payment intent');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create payment intent'));
     }
   };
 
@@ -153,7 +154,7 @@ const CustomerBillsV2: React.FC = () => {
       setStep('receipt');
       toast.success('Bill payment successful!');
     } catch (err: any) {
-      toast.error(err.message || 'Payment failed');
+      toast.error(extractEdgeFunctionError(err, 'Payment failed'));
     }
   };
 

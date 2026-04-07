@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface ImageUploadProps {
   label: string;
@@ -48,7 +49,7 @@ export function ImageUpload({
       onChange(publicUrl);
       toast.success('Image uploaded');
     } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+      toast.error(extractEdgeFunctionError(err, 'Upload failed'));
     } finally {
       setUploading(false);
     }

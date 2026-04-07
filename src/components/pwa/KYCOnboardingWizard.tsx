@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from './TenantProvider';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface KYCOnboardingWizardProps {
   onComplete: () => void;
@@ -106,7 +107,7 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       toast.success('KYC submitted for verification!');
       onComplete();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to submit KYC');
+      toast.error(extractEdgeFunctionError(err, 'Failed to submit KYC'));
     } finally {
       setLoading(false);
     }

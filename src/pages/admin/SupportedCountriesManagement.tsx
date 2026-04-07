@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2, Globe, Smartphone, Building2, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface CountryRow {
   id: string;
@@ -69,7 +70,7 @@ export default function SupportedCountriesManagement() {
       toast.success(editing ? "Country updated" : "Country added");
       closeDialog();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(extractEdgeFunctionError(e)),
   });
 
   const deleteMutation = useMutation({
@@ -82,7 +83,7 @@ export default function SupportedCountriesManagement() {
       qc.invalidateQueries({ queryKey: ["supported-countries"] });
       toast.success("Country removed");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(extractEdgeFunctionError(e)),
   });
 
   const toggleMutation = useMutation({
@@ -94,7 +95,7 @@ export default function SupportedCountriesManagement() {
       qc.invalidateQueries({ queryKey: ["admin-supported-countries"] });
       qc.invalidateQueries({ queryKey: ["supported-countries"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(extractEdgeFunctionError(e)),
   });
 
   const openAdd = () => { setEditing(null); setForm({ ...emptyForm, sort_order: countries.length + 1 }); setDialogOpen(true); };

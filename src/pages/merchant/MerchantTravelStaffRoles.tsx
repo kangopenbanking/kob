@@ -13,6 +13,7 @@ import { UserPlus, Loader2, Shield, Pencil, Trash2, Eye, EyeOff, Copy, Link2 } f
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getCanonicalUrl } from '@/config/api';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const permissionKeys = [
   { key: 'services', label: 'Services', desc: 'Manage travel services' },
@@ -145,7 +146,7 @@ const MerchantTravelStaffRoles: React.FC = () => {
       setDialogOpen(false);
       fetchData();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save');
+      toast.error(extractEdgeFunctionError(error, 'Failed to save'));
     } finally {
       setSaving(false);
     }

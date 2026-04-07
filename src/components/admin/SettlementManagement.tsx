@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, TrendingUp, DollarSign, CheckCircle2, Clock, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // ─── Skeletons ───
 const StatSkeleton = () => (
@@ -95,7 +96,7 @@ export function SettlementManagement() {
       toast.success("Settlement processed successfully");
       refetchSettlements();
     } catch (error: any) {
-      toast.error(error.message || "Failed to process settlement");
+      toast.error(extractEdgeFunctionError(error, "Failed to process settlement"));
     } finally {
       setProcessing(null);
     }

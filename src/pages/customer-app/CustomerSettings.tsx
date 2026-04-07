@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
 
@@ -109,7 +110,7 @@ const CustomerSettings: React.FC = () => {
       toast.success('Profile updated');
       setActiveSection(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update');
+      toast.error(extractEdgeFunctionError(err, 'Failed to update'));
     } finally { setSaving(false); }
   };
 
@@ -130,7 +131,7 @@ const CustomerSettings: React.FC = () => {
       toast.success('Password updated');
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
       setActiveSection(null);
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
@@ -144,7 +145,7 @@ const CustomerSettings: React.FC = () => {
       toast.success('PIN set successfully');
       setNewPin(''); setConfirmPin('');
       setShowPinDialog(false);
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
@@ -160,7 +161,7 @@ const CustomerSettings: React.FC = () => {
       if (error) throw error;
       toast.success('Notification preferences saved');
       setActiveSection(null);
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
@@ -175,7 +176,7 @@ const CustomerSettings: React.FC = () => {
       if (error) throw error;
       toast.success('Language & region saved');
       setActiveSection(null);
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 

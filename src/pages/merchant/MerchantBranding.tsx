@@ -17,6 +17,7 @@ import {
   Shield, ExternalLink, Code, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const defaultBranding = {
   primary_color: "#6366f1",
@@ -102,7 +103,7 @@ export default function MerchantBranding() {
       updateField(field, data.publicUrl);
       toast.success(`${field === "logo_url" ? "Logo" : "Favicon"} uploaded`);
     } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+      toast.error(extractEdgeFunctionError(err, "Upload failed"));
     } finally {
       setter(false);
     }

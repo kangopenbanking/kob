@@ -15,6 +15,7 @@ import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
 import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -92,7 +93,7 @@ const MerchantFundWallet = () => {
       toast.success("Funding request submitted — follow the instructions to complete payment");
       refetchWallets();
     } catch (err: any) {
-      toast.error(err.message || "Failed to create funding intent. Please try again.");
+      toast.error(extractEdgeFunctionError(err, "Failed to create funding intent. Please try again."));
     }
     setLoading(false);
   };

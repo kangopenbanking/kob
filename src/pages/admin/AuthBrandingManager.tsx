@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Loader2, Upload, Image, Type, Save, Palette} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface ConfigRow {
   id: string;
@@ -66,7 +67,7 @@ const AuthBrandingManager = () => {
       setEditedValues(prev => ({ ...prev, [configKey]: urlData.publicUrl }));
       toast.success('Image uploaded successfully');
     } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+      toast.error(extractEdgeFunctionError(err, 'Upload failed'));
     } finally {
       setUploading(null);
     }
@@ -96,7 +97,7 @@ const AuthBrandingManager = () => {
       toast.success('Auth branding updated successfully');
       fetchConfigs();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save');
+      toast.error(extractEdgeFunctionError(err, 'Failed to save'));
     } finally {
       setSaving(false);
     }

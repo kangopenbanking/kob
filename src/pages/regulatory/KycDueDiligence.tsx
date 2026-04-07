@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DocumentUploader } from "@/components/kyc/DocumentUploader";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // ─── Types ──────────────────────────────────────────────
 interface FormState {
@@ -201,7 +202,7 @@ export default function KycDueDiligence() {
       }
       setForm(initial); setDocs(initialDocs); setFlowType(null); setStep(0);
     } catch (err: any) {
-      toast.error(err.message || "Submission failed.");
+      toast.error(extractEdgeFunctionError(err, "Submission failed."));
     } finally {
       setSubmitting(false);
     }

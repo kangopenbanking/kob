@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock, Ban, Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function MerchantManagement() {
   const [search, setSearch] = useState("");
@@ -96,7 +97,7 @@ export default function MerchantManagement() {
       setKybDecision(null);
       setRejectionReason("");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const statusMutation = useMutation({
@@ -111,7 +112,7 @@ export default function MerchantManagement() {
       toast.success("Merchant status updated");
       queryClient.invalidateQueries({ queryKey: ["admin-gateway-merchants"] });
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const adminManageMutation = useMutation({
@@ -130,7 +131,7 @@ export default function MerchantManagement() {
       setDeleteDialogOpen(false);
       setActionReason("");
     },
-    onError: (err: any) => toast.error(err.message || "Action failed"),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, "Action failed")),
   });
 
   const filtered = (merchants || []).filter((m: any) => {

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Copy, CheckCircle2, AlertCircle, Shield, Key } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const TPPRegistration = () => {
   const [softwareStatement, setSoftwareStatement] = useState("");
@@ -60,7 +61,7 @@ const TPPRegistration = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || "Failed to register TPP");
+      toast.error(extractEdgeFunctionError(error, "Failed to register TPP"));
     } finally {
       setIsLoading(false);
     }

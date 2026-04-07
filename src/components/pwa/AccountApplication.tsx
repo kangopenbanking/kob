@@ -18,6 +18,7 @@ interface AccountApplicationProps {
 }
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const STEPS = ['Personal', 'Contact', 'Account', 'Security', 'Review'];
 
@@ -119,7 +120,7 @@ export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComple
       onComplete();
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'Failed to create account');
+      toast.error(extractEdgeFunctionError(err, 'Failed to create account'));
     } finally {
       setLoading(false);
     }

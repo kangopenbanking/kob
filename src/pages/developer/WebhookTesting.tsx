@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 
 const eventTemplates = {
@@ -134,7 +135,7 @@ export default function WebhookTesting() {
       }
     } catch (error: any) {
       console.error('Error testing webhook:', error);
-      toast.error(error.message || 'Failed to test webhook');
+      toast.error(extractEdgeFunctionError(error, 'Failed to test webhook'));
       setTestResult({
         success: false,
         error: error.message,

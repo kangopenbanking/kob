@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface CartItem {
   product_id: string;
@@ -71,7 +72,7 @@ const BusinessQuickOrder: React.FC = () => {
       return order;
     },
     onSuccess: () => { toast.success('Order created!'); navigate('/biz/orders'); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
   });
 
   return (

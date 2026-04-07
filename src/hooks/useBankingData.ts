@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 // Re-export toast for components that import from here
 
@@ -142,7 +143,7 @@ export function useSavingsDeposit() {
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       toast.success(`${variables.amount.toLocaleString()} XAF deposited to your savings account`);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not complete your deposit. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not complete your deposit. Please try again.')),
   });
 }
 
@@ -162,7 +163,7 @@ export function useSavingsWithdraw() {
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       toast.success(`${variables.amount.toLocaleString()} XAF withdrawn from savings. Funds available in your account.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not process withdrawal. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not process withdrawal. Please try again.')),
   });
 }
 
@@ -187,7 +188,7 @@ export function useCreateSavingsGoal() {
       queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
       toast.success(`Your savings goal "${variables.account_name}" is now active. Keep saving! 🎯`);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not create your savings goal. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not create your savings goal. Please try again.')),
   });
 }
 
@@ -260,7 +261,7 @@ export function useApplyForLoan() {
       queryClient.invalidateQueries({ queryKey: ['loan-applications', institutionId] });
       toast.success(`Loan application for ${variables.requested_amount.toLocaleString()} XAF submitted. You'll be notified once reviewed.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not submit loan application. Please check your details and try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not submit loan application. Please check your details and try again.')),
   });
 }
 
@@ -313,7 +314,7 @@ export function useCreateVirtualCard() {
       queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
       toast.success('Your new virtual card is ready to use for online payments 💳');
     },
-    onError: (err: any) => toast.error(err.message || 'Could not create virtual card. Please try again later.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not create virtual card. Please try again later.')),
   });
 }
 
@@ -332,7 +333,7 @@ export function useTopUpCard() {
       queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
       toast.success(`${variables.amount.toLocaleString()} XAF added to your virtual card`);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not top up your card. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not top up your card. Please try again.')),
   });
 }
 
@@ -354,7 +355,7 @@ export function useUpdateCardStatus() {
         : `Card status changed to ${variables.status}`;
       toast.success(statusMsg);
     },
-    onError: (err: any) => toast.error(err.message || 'Could not update card status. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not update card status. Please try again.')),
   });
 }
 
@@ -382,7 +383,7 @@ export function useSendTransfer() {
       queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
       toast.success(`${variables.amount.toLocaleString()} ${variables.currency || 'XAF'} sent successfully. Your balance has been updated.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Transfer could not be completed. Please verify recipient details and try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Transfer could not be completed. Please verify recipient details and try again.')),
   });
 }
 
@@ -408,7 +409,7 @@ export function useMobileMoneyCharge() {
       queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
       toast.success(`${variables.amount.toLocaleString()} XAF sent to ${variables.phone_number} via ${variables.provider === 'mtn' ? 'MTN MoMo' : variables.provider === 'orange' ? 'Orange Money' : 'Mobile Money'}`);
     },
-    onError: (err: any) => toast.error(err.message || 'Mobile Money transfer failed. Please check the number and try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Mobile Money transfer failed. Please check the number and try again.')),
   });
 }
 
@@ -449,7 +450,7 @@ export function useExportStatement() {
       return data;
     },
     onSuccess: () => toast.success('Your bank statement is ready for download 📄'),
-    onError: (err: any) => toast.error(err.message || 'Could not generate your statement. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not generate your statement. Please try again.')),
   });
 }
 
@@ -475,7 +476,7 @@ export function useLoanRepayment() {
       queryClient.invalidateQueries({ queryKey: ['credit-score', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
     },
-    onError: (err: any) => toast.error(err.message || 'Loan repayment could not be processed. Please try again.'),
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Loan repayment could not be processed. Please try again.')),
   });
 }
 

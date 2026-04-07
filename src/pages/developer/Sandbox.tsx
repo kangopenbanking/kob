@@ -14,6 +14,7 @@ import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 
 import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function Sandbox() {
   const navigate = useNavigate();
@@ -99,7 +100,7 @@ export default function Sandbox() {
       setAccount(data.account);
     } catch (error: any) {
       console.error('Error creating sandbox account:', error);
-      toast.error(error.message || 'Failed to create sandbox account');
+      toast.error(extractEdgeFunctionError(error, 'Failed to create sandbox account'));
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +130,7 @@ export default function Sandbox() {
       fetchSandboxData();
     } catch (error: any) {
       console.error('Error creating API key:', error);
-      toast.error(error.message || 'Failed to create API key');
+      toast.error(extractEdgeFunctionError(error, 'Failed to create API key'));
     } finally {
       setSubmitting(false);
     }

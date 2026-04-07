@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const BusinessCoupons: React.FC = () => {
   const { merchantId } = useMerchantContext();
@@ -52,7 +53,7 @@ const BusinessCoupons: React.FC = () => {
       toast.success(`Coupon "${code.toUpperCase().trim()}" created and ready for customers to use`);
       setShowCreate(false); setCode(''); setValue(''); setMinOrder(''); setMaxUses('');
     },
-    onError: (e: any) => toast.error(e.message || 'Could not create coupon. The code may already exist.'),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e, 'Could not create coupon. The code may already exist.')),
   });
 
   const toggleMutation = useMutation({

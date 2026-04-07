@@ -11,6 +11,7 @@ import { Bell, Send, Loader2, Users, Megaphone, Clock, AlertTriangle, Info } fro
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const notificationTypes = [
   { value: 'general', label: 'General Notice', icon: Info, color: 'text-blue-500' },
@@ -108,7 +109,7 @@ const MerchantTravelNotifications: React.FC = () => {
     } as any);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(extractEdgeFunctionError(error));
     } else {
       // Send in-app notifications to passengers
       if (targetTrip !== 'all') {
