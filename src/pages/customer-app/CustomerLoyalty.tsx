@@ -116,8 +116,8 @@ export function CustomerLoyalty() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="h-12 w-12 rounded-lg bg-[hsl(150,40%,90%)] flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-[hsl(150,40%,35%)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalPoints.toLocaleString()}</p>
