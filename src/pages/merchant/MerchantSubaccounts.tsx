@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, GitBranch, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function MerchantSubaccounts() {
   const [subs, setSubs] = useState<any[]>([]);
@@ -50,20 +51,20 @@ export default function MerchantSubaccounts() {
       setDialogOpen(false);
       setForm({ business_name: "", split_type: "percentage", split_value: "", account_bank: "", account_number: "" });
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
   const toggleActive = async (id: string, current: boolean) => {
     const { error } = await supabase.from("gateway_subaccounts").update({ is_active: !current }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(extractEdgeFunctionError(error)); return; }
     toast.success(`Subaccount ${current ? "disabled" : "enabled"}`);
     loadData();
   };
 
   const deleteSubaccount = async (id: string) => {
     const { error } = await supabase.from("gateway_subaccounts").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(extractEdgeFunctionError(error)); return; }
     toast.success("Subaccount deleted");
     loadData();
   };

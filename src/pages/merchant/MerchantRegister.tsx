@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, Store, ArrowRight, ArrowLeft, CheckCircle2, Building2, Globe, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const STEPS = [
   { title: "Business Information", description: "Tell us about your business" },
@@ -111,7 +112,7 @@ export default function MerchantRegister() {
         setTimeout(() => navigate("/merchant"), 500);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to create merchant account");
+      toast.error(extractEdgeFunctionError(err, "Failed to create merchant account"));
     } finally {
       setSubmitting(false);
     }

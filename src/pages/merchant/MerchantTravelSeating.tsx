@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Loader2, Plus, Save, Trash2, RotateCcw, Armchair, Grid3X3, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type CellType = 'seat' | 'aisle' | 'blocked';
 
@@ -125,14 +126,14 @@ const MerchantTravelSeating: React.FC = () => {
     let error;
     if (editingPlan) { ({ error } = await supabase.from('travel_seating_plans').update(payload as any).eq('id', editingPlan.id)); }
     else { ({ error } = await supabase.from('travel_seating_plans').insert(payload as any)); }
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success(editingPlan ? 'Plan updated!' : 'Plan created!'); setEditorOpen(false); fetchData(); }
     setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from('travel_seating_plans').delete().eq('id', id);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success('Plan deleted'); fetchData(); }
   };
 

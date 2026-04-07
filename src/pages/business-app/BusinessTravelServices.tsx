@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 /* ── Category config ── */
 const categories = [
@@ -106,7 +107,7 @@ const BusinessTravelServices: React.FC = () => {
       display_name: setupName.trim(),
       theme_color: cat?.key === 'bus' ? '#F5C518' : cat?.key === 'tours' ? '#00BCD4' : null,
     } as any);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success(`${cat?.label} service created!`); setSetupOpen(false); refetchServices(); }
     setSaving(false);
   };

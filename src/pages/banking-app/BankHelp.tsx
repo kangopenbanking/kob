@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/components/pwa/TenantProvider';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const faqs = [
   { q: 'How do I fund my account?', a: 'Go to Home → Fund Account and choose from Mobile Money, Card, PayPal, or Bank Transfer. Follow the prompts to complete your deposit.' },
@@ -82,7 +83,7 @@ const BankHelp: React.FC = () => {
       setChatSubject('');
       setShowChat(false);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send message');
+      toast.error(extractEdgeFunctionError(err, 'Failed to send message'));
     }
   };
 

@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Plus, Trash2, Calendar, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -65,7 +66,7 @@ const MerchantTravelTimetable: React.FC = () => {
       arrival_time: formArrival,
       price: parseFloat(formPrice) || 0,
     } as any);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success('Timetable entry added!'); setDialogOpen(false); fetchData(); }
     setSaving(false);
   };

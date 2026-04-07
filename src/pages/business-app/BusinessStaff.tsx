@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const STAFF_ROLES = [
   { value: 'merchant_admin', label: 'Admin', description: 'Full access to all features', color: 'text-violet-600 bg-violet-500/10' },
@@ -70,7 +71,7 @@ export default function BusinessStaff() {
       setInvitePin('');
       queryClient.invalidateQueries({ queryKey: ['business-staff'] });
     },
-    onError: (error: any) => toast.error(error.message || 'Failed to invite staff'),
+    onError: (error: any) => toast.error(extractEdgeFunctionError(error, 'Failed to invite staff')),
   });
 
   const deleteMutation = useMutation({

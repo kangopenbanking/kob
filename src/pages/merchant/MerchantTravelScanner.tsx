@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface TicketData {
   id: string;
@@ -221,7 +222,7 @@ const MerchantTravelScanner: React.FC = () => {
       setQrCode('');
     } catch (err: any) {
       console.error('Ticket validation error:', err);
-      toast.error(err.message || 'Validation failed. Please try again.');
+      toast.error(extractEdgeFunctionError(err, 'Validation failed. Please try again.'));
       setResult({ message: err.message || 'An unexpected error occurred.' } as any);
       setResultType('error');
       updateStats('error');

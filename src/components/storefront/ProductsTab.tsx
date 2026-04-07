@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { POSAttribute } from '@/lib/storefront-data';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface ProductsTabProps {
   merchantId: string | null;
@@ -253,7 +254,7 @@ export function ProductsTab({ merchantId, currency, standardAttributes = [], cus
       resetForm();
       loadProducts();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save product');
+      toast.error(extractEdgeFunctionError(err, 'Failed to save product'));
     } finally {
       setSaving(false);
       setUploading(false);
@@ -269,7 +270,7 @@ export function ProductsTab({ merchantId, currency, standardAttributes = [], cus
       setDeleteTarget(null);
       loadProducts();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete');
+      toast.error(extractEdgeFunctionError(err, 'Failed to delete'));
     } finally {
       setDeleting(false);
     }

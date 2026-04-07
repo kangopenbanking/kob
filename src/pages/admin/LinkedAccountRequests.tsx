@@ -10,6 +10,7 @@ import { CheckCircle2, XCircle, Clock, Loader2, MessageSquare, Link2} from "luci
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const LinkedAccountRequests: React.FC = () => {
   const queryClient = useQueryClient();
@@ -83,7 +84,7 @@ const LinkedAccountRequests: React.FC = () => {
       setReviewId(null);
       setReviewNotes('');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to process request');
+      toast.error(extractEdgeFunctionError(err, 'Failed to process request'));
     } finally {
       setProcessing(false);
     }

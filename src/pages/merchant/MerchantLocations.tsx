@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Plus, MapPin, Users, Trash2, Save, X, Building2, Edit2 } from "lucide-react";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const STAFF_ROLES = [
   { value: "merchant_admin", label: "Admin" },
@@ -91,7 +92,7 @@ export default function MerchantLocations() {
       setLocDialog(false);
       loadAll();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setSavingLoc(false);
     }
@@ -100,7 +101,7 @@ export default function MerchantLocations() {
   const deleteLoc = async (loc: any) => {
     if (!confirm(`Delete location "${loc.name}"?`)) return;
     const { error } = await supabase.from("merchant_locations").delete().eq("id", loc.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(extractEdgeFunctionError(error));
     toast.success("Location deleted");
     loadAll();
   };
@@ -144,7 +145,7 @@ export default function MerchantLocations() {
       setStaffDialog(false);
       loadAll();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(extractEdgeFunctionError(err));
     } finally {
       setSavingStaff(false);
     }
@@ -153,7 +154,7 @@ export default function MerchantLocations() {
   const deleteStaff = async (s: any) => {
     if (!confirm(`Remove staff member "${s.full_name || s.email}"?`)) return;
     const { error } = await supabase.from("merchant_pos_staff").delete().eq("id", s.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(extractEdgeFunctionError(error));
     toast.success("Staff member removed");
     loadAll();
   };

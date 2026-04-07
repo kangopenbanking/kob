@@ -13,6 +13,7 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Search, Store, Clock, Ey
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type StoreStatus = "pending" | "approved" | "rejected" | "suspended";
 
@@ -93,7 +94,7 @@ export default function AdminMarketplaceModeration() {
       setSelectedStore(null);
       loadData();
     } catch (err: any) {
-      toast.error(err.message || "Failed to submit action");
+      toast.error(extractEdgeFunctionError(err, "Failed to submit action"));
     } finally {
       setSubmitting(false);
     }

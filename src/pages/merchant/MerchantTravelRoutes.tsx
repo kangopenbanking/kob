@@ -11,6 +11,7 @@ import { Loader2, Plus, MapPin, Clock, Calendar, Trash2, Edit } from 'lucide-rea
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface TravelService { id: string; display_name: string; service_type: string; }
 interface TravelRoute {
@@ -90,7 +91,7 @@ const MerchantTravelRoutes: React.FC = () => {
       distance_km: distanceKm ? Number(distanceKm) : null,
       estimated_duration_minutes: durationMin ? Number(durationMin) : null,
     } as any);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success('Route created!'); setRouteOpen(false); fetchData(); }
     setSavingRoute(false);
   };
@@ -109,14 +110,14 @@ const MerchantTravelRoutes: React.FC = () => {
       available_seats: plan?.total_seats || 0,
       vehicle_info: tripVehicle.trim() || null,
     } as any);
-    if (error) toast.error(error.message);
+    if (error) toast.error(extractEdgeFunctionError(error));
     else { toast.success('Trip scheduled!'); setTripOpen(false); fetchData(); }
     setSavingTrip(false);
   };
 
   const deleteRoute = async (id: string) => {
     const { error } = await supabase.from('travel_routes').delete().eq('id', id);
-    if (error) toast.error(error.message); else { toast.success('Route deleted'); fetchData(); }
+    if (error) toast.error(extractEdgeFunctionError(error)); else { toast.success('Route deleted'); fetchData(); }
   };
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;

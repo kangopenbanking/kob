@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { API_CONFIG } from "@/config/api";
 import { motion } from "framer-motion";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -66,7 +67,7 @@ export default function MerchantPaymentLinks() {
       setDialogOpen(false);
       setForm({ title: "", description: "", amount: "", currency: "XAF", redirect_url: "" });
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 
@@ -77,14 +78,14 @@ export default function MerchantPaymentLinks() {
 
   const toggleActive = async (id: string, current: boolean) => {
     const { error } = await supabase.from("gateway_payment_links").update({ status: current ? "inactive" : "active" }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(extractEdgeFunctionError(error)); return; }
     toast.success(`Link ${current ? "deactivated" : "activated"}`);
     loadData();
   };
 
   const deleteLink = async (id: string) => {
     const { error } = await supabase.from("gateway_payment_links").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(extractEdgeFunctionError(error)); return; }
     toast.success("Payment link deleted");
     loadData();
   };

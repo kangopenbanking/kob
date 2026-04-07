@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 /* ─── Account type definitions matching CustomerLinkedAccounts ─── */
 
@@ -239,7 +240,7 @@ const CustomerOnboarding: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Failed to complete setup');
       setStep(selected === 'none' ? 'select' : 'details');
-      toast.error(err.message || 'Setup failed');
+      toast.error(extractEdgeFunctionError(err, 'Setup failed'));
     } finally {
       setLoading(false);
     }

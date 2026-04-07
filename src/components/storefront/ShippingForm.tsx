@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CARRIERS = [
   'DHL Express',
@@ -235,7 +236,7 @@ export function ShippingForm({ storeName, currency, merchantId }: ShippingFormPr
         setOrderError(null);
       }, 3000);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to confirm shipping');
+      toast.error(extractEdgeFunctionError(err, 'Failed to confirm shipping'));
     } finally {
       setSending(false);
     }

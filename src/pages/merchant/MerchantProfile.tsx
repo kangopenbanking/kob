@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 export default function MerchantProfile() {
   const [merchant, setMerchant] = useState<any>(null);
@@ -70,7 +71,7 @@ export default function MerchantProfile() {
       if (error) throw error;
       toast.success("Profile updated successfully");
       loadData();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
 

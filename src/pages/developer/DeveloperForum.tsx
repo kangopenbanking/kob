@@ -9,6 +9,7 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { toast } from "sonner";
 import { MessageSquare, CheckCircle2, Clock, ChevronRight, ArrowLeft, Send, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const CATEGORIES = [
   { value: "general", label: "General" },
@@ -99,7 +100,7 @@ export default function DeveloperForum() {
       setShowNewThread(false);
       toast.success("Thread created successfully.");
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const createReply = useMutation({
@@ -122,7 +123,7 @@ export default function DeveloperForum() {
       setNewReply({ body: "", author_name: "" });
       toast.success("Reply posted.");
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(extractEdgeFunctionError(err)),
   });
 
   const activeThread = threads.find((t) => t.id === selectedThread);

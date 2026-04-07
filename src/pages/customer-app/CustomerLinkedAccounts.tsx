@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import kangCardBg from '@/assets/kangcard_visa.png';
 import { CM_BANKS } from '@/constants/cameroon-banks';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -678,7 +679,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       setFormData({});
       setValidationMsg(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to link account');
+      toast.error(extractEdgeFunctionError(err, 'Failed to link account'));
     } finally {
       setSaving(false);
     }

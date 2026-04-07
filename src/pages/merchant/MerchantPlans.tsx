@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Plus, Edit2, Trash2, RefreshCw, Users, CheckCircle2, Save, X } from "lucide-react";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface Plan {
   id: string;
@@ -133,7 +134,7 @@ export default function MerchantPlans() {
       setDialogOpen(false);
       loadData();
     } catch (err: any) {
-      toast.error(err.message || "Failed to save plan");
+      toast.error(extractEdgeFunctionError(err, "Failed to save plan"));
     } finally {
       setSaving(false);
     }
@@ -144,7 +145,7 @@ export default function MerchantPlans() {
       .from("gateway_payment_plans")
       .update({ is_active: !plan.is_active })
       .eq("id", plan.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(extractEdgeFunctionError(error));
     toast.success(`Plan ${plan.is_active ? "deactivated" : "activated"}`);
     loadData();
   };
@@ -156,7 +157,7 @@ export default function MerchantPlans() {
       return;
     }
     const { error } = await supabase.from("gateway_payment_plans").delete().eq("id", plan.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(extractEdgeFunctionError(error));
     toast.success("Plan deleted");
     loadData();
   };

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const faqCategories = [
   {
@@ -124,7 +125,7 @@ const CustomerHelp: React.FC = () => {
       setDescription('');
       toast.success('Report submitted. We\'ll get back to you soon.');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to submit report');
+      toast.error(extractEdgeFunctionError(err, 'Failed to submit report'));
     } finally {
       setSubmitting(false);
     }

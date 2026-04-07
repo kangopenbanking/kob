@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 type OrderStatus = 'all' | 'paid' | 'pending_payment' | 'draft' | 'cancelled' | 'refunded';
 
@@ -97,7 +98,7 @@ const BusinessOrders: React.FC = () => {
       toast.success(`Order updated to ${statusConfig[newStatus]?.label || newStatus}`);
       if (selectedOrder) setSelectedOrder({ ...selectedOrder, status: newStatus });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
   });
 
   const formatXAF = (amount: number) =>

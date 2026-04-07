@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, PiggyBank, Percent, ArrowUpDown, Search, Plus, Download, Eye, TrendingUp, Users, Wallet, ToggleLeft } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -113,7 +114,7 @@ export default function InstitutionSavings() {
       setShowCreate(false);
       setNewProduct({ product_name: "", product_code: "", savings_type: "regular", base_interest_rate: "3", interest_payment_frequency: "monthly", min_opening_balance: "1000", min_balance: "0", max_withdrawals_per_month: "", lock_in_period_months: "", early_closure_penalty: "", description: "" });
       loadData();
-    } catch (err: any) { toast.error(err.message || "Failed to create product"); }
+    } catch (err: any) { toast.error(extractEdgeFunctionError(err, "Failed to create product")); }
     finally { setCreating(false); }
   };
 

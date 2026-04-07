@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLoanApplications, useLoanProducts, useApplyForLoan, useLoanRepayment } from '@/hooks/useBankingData';
 import { toast } from 'sonner';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const loanColorMap: Record<string, { color: string; fg: string }> = {
   personal_loan: { color: 'bg-[hsl(var(--bank-coral))]', fg: 'text-white' },
@@ -76,7 +77,7 @@ const BankLoans: React.FC = () => {
         setRepayAmount('');
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Repayment could not be processed. Please ensure you have sufficient funds.');
+        toast.error(extractEdgeFunctionError(err, 'Repayment could not be processed. Please ensure you have sufficient funds.'));
       },
     });
   };
