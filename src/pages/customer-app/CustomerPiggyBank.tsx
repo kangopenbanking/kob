@@ -381,6 +381,59 @@ const CustomerPiggyBank: React.FC = () => {
       </AnimatePresence>
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePayConfirmed} />
+
+      {/* Cancel Plan Confirmation */}
+      <AlertDialog open={!!cancelConfirm} onOpenChange={(open) => !open && setCancelConfirm(null)}>
+        <AlertDialogContent className="rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-destructive" strokeWidth={1.5} />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-base">Cancel Savings Plan?</AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  You are about to cancel <span className="font-semibold text-foreground">"{cancelConfirm?.planName}"</span>.
+                </p>
+                <div className="rounded-2xl bg-destructive/5 border border-destructive/15 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-destructive shrink-0" strokeWidth={1.5} />
+                    <p className="text-xs font-semibold text-destructive">Credit Score Impact: -5 points</p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Cancelling a savings plan is reported to CrediQ and will reduce your credit score by 5 points. This action cannot be undone.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted/50 p-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    All pending payments will be cancelled. Payments already made will remain on your record.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl">Keep Plan</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelPlan.isPending}
+              onClick={() => {
+                if (cancelConfirm) {
+                  cancelPlan.mutate({ plan_id: cancelConfirm.planId }, {
+                    onSettled: () => setCancelConfirm(null),
+                  });
+                }
+              }}
+            >
+              {cancelPlan.isPending ? 'Cancelling...' : 'Cancel Plan (-5 pts)'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
