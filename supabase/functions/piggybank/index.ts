@@ -187,6 +187,48 @@ async function handlePay(req: Request, body: any) {
   return new Response(JSON.stringify({ success: true, payment_status: isLate ? 'late' : 'paid', credit_event_type: eventType, score_delta: scoreResult?.delta || 0, new_score: scoreResult?.score || null, wallet_debited: !!(fund_from_wallet || plan.auto_fund_enabled) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
+// ─── Cancel/Stop Plan ───
+async function handleCancel(req: Request, body: any) {
+  const { user, supabase } = await getAuthUser(req);
+  const { plan_id } = body;
+  if (!plan_id) throw new Error('plan_id required');
+
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(plan_id)) {
+    return new Response(JSON.stringify({ error: 'invalid_plan_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const { data: plan, error: planErr } = await supabase.from('piggybank_plans').select('*').eq('id', plan_id).eq('user_id', user.id).single();
+  if (planErr || !plan) {
+    return new Response(JSON.stringify({ error: 'plan_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  if (plan.status === 'cancelled') throw new Error('Plan already cancelled');
+
+  // Cancel the plan
+  await supabase.from('piggybank_plans').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', plan_id);
+
+  // Cancel all pending payments
+  await supabase.from('piggybank_payments').update({ status: 'cancelled' }).eq('plan_id', plan_id).eq('status', 'pending');
+
+  // Record credit event: cancellation penalty (-5 points)
+  const now = new Date().toISOString();
+  await supabase.from('credit_events').insert({
+    user_id: user.id,
+    event_type: 'PIGGYBANK_PLAN_CANCELLED',
+    value_numeric: -5,
+    description: `Savings plan cancelled - ${plan.plan_name}. Credit score impact: -5 points.`,
+    event_time: now,
+    metadata: { plan_id, plan_name: plan.plan_name, plan_type: plan.plan_type },
+    source: 'piggybank_service',
+  });
+
+  // Recompute credit score
+  let scoreResult = null;
+  try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
+
+  return new Response(JSON.stringify({ success: true, credit_impact: -5, new_score: scoreResult?.score || null }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
 // ─── Auto-Fund Cron: processes due payments for auto-funded plans ───
 async function handleAutoFund(req: Request) {
   const auth = verifyCronAuth(req);
