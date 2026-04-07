@@ -13,6 +13,8 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { getTheme } from '@/lib/travel-theme';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/customer-app/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
 type Gender = 'male' | 'female';
