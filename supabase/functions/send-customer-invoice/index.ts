@@ -105,7 +105,7 @@ serve(async (req) => {
       payload: {
         message_id: messageId,
         to: invoice.client_email,
-        from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: emailSubject,
         html: emailHtml,
