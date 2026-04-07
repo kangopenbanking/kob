@@ -514,7 +514,7 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
   );
 }
 
-function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[] }) {
+function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void }) {
   const payments = plan.piggybank_payments || [];
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const missedPayments = payments.filter((p: any) => p.status === 'missed' || p.status === 'late');
@@ -522,6 +522,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
   const totalPaid = paidPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
   const target = plan.target_amount || 0;
   const pct = target > 0 ? Math.min(100, Math.round((totalPaid / target) * 100)) : 0;
+  const isCancelled = plan.status === 'cancelled';
 
   const streakCount = (() => {
     let count = 0;
@@ -535,13 +536,15 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="rounded-3xl border border-border bg-card p-5"
+      className={`rounded-3xl border bg-card p-5 ${isCancelled ? 'border-destructive/20 opacity-60' : 'border-border'}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${isBank ? 'bg-primary/10' : 'bg-accent/20'}`}>
-            {plan.auto_fund_enabled ? (
+          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${isCancelled ? 'bg-destructive/10' : isBank ? 'bg-primary/10' : 'bg-accent/20'}`}>
+            {isCancelled ? (
+              <StopCircle className="h-5 w-5 text-destructive" strokeWidth={1.5} />
+            ) : plan.auto_fund_enabled ? (
               <Zap className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
             ) : (
               <Target className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
@@ -551,12 +554,24 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
             <p className="text-sm font-bold text-foreground">{plan.plan_name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 capitalize">{plan.schedule_frequency}</Badge>
-              {plan.auto_fund_enabled && (
+              {plan.auto_fund_enabled && !isCancelled && (
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Auto-Fund</Badge>
+              )}
+              {isCancelled && (
+                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Cancelled</Badge>
               )}
             </div>
           </div>
         </div>
+        {!isCancelled && plan.status === 'active' && (
+          <button
+            onClick={() => onCancel(plan.id, plan.plan_name)}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Cancel plan"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+        )}
       </div>
 
       {/* Progress */}
@@ -588,7 +603,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
       </div>
 
       {/* Next Payment */}
-      {nextPayment && (
+      {!isCancelled && nextPayment && (
         <div className="flex items-center justify-between rounded-2xl bg-primary/5 border border-primary/10 p-3">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -607,7 +622,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
         </div>
       )}
 
-      {!nextPayment && payments.length > 0 && (
+      {!isCancelled && !nextPayment && payments.length > 0 && (
         <div className="flex items-center gap-2 rounded-2xl bg-primary/5 border border-primary/10 p-3">
           <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <p className="text-xs font-semibold text-foreground">All payments completed</p>
