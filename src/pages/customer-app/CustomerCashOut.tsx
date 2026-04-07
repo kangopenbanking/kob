@@ -12,18 +12,8 @@ import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { KANG_PLATFORM_ID } from '@/constants/platform';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
-import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
-import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 
-import { KANG_PLATFORM_ID } from '@/constants/platform';
+
 
 const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
