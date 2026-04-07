@@ -193,6 +193,7 @@ export default function SupportedCountriesManagement() {
             <div className="flex items-center justify-between">
               <Label>Enabled in Desktop App</Label>
               <Switch checked={form.enabled_desktop_app} onCheckedChange={v => setForm(f => ({ ...f, enabled_desktop_app: v }))} />
+            </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={closeDialog}>Cancel</Button>
               <Button onClick={handleSave} disabled={saveMutation.isPending || !form.country || !form.code || !form.dial_code}>
