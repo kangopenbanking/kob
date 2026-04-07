@@ -8,6 +8,7 @@ import { ArrowLeft, ShieldAlert, Plus, Clock, CheckCircle, XCircle, AlertTriangl
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
