@@ -16,7 +16,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerNjangi } from '@/hooks/useCustomerData';
 import { useCreateNjangiGroup, useJoinNjangiGroup, useNjangiContribute, useNjangiPayout } from '@/hooks/useNjangiData';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const circleColors = [
   { bg: 'bg-[hsl(270,60%,92%)]', accent: 'text-[hsl(270,50%,45%)]', bar: 'bg-[hsl(270,50%,45%)]' },
