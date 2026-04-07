@@ -14,10 +14,11 @@ import { useQuery } from '@tanstack/react-query';
 import { formatErrorForToast, parseEdgeFunctionError } from '@/lib/error-handler';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 export default function ProfileSettings() {
   const { toast } = useToast();
+  const { data: supportedCountries = [] } = useSupportedCountries();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   
@@ -261,9 +262,9 @@ export default function ProfileSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={cc.code} value={cc.code}>
-                          {cc.flag} {cc.code}
+                      {supportedCountries.map((sc) => (
+                        <SelectItem key={`${sc.dial_code}-${sc.country}`} value={sc.dial_code}>
+                          {sc.flag} {sc.dial_code}
                         </SelectItem>
                       ))}
                     </SelectContent>
