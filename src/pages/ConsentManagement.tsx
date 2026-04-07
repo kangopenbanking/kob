@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, FileText, CreditCard, AlertCircle, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,

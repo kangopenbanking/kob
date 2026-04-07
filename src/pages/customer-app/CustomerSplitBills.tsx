@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle, Receipt, UserPlus, Coins, Bell } from 'lucide-react';
+import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle, Receipt, UserPlus, Bell, Search, Loader2 } from 'lucide-react';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ type SplitMode = 'equal' | 'custom' | 'percentage';
 interface Participant {
   name: string;
   phone: string;
+  userId: string | null;
   initials: string;
   color: string;
   customAmount: number;
@@ -23,14 +24,21 @@ interface Participant {
   paid: boolean;
 }
 
+interface SearchResult {
+  id: string;
+  name: string;
+  phone_masked: string | null;
+  avatar_url: string | null;
+}
+
 const colors = [
   'bg-[hsl(210,80%,93%)]', 'bg-[hsl(150,40%,90%)]', 'bg-[hsl(340,60%,92%)]',
   'bg-[hsl(45,70%,90%)]', 'bg-[hsl(270,60%,92%)]', 'bg-[hsl(25,80%,92%)]',
 ];
 
-const makeParticipant = (name: string, phone: string, color: string, paid: boolean): Participant => {
+const makeParticipant = (name: string, phone: string, color: string, paid: boolean, userId: string | null = null): Participant => {
   const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  return { name, phone, initials, color, customAmount: 0, customPercent: 0, paid };
+  return { name, phone, initials, color, customAmount: 0, customPercent: 0, paid, userId };
 };
 
 const CustomerSplitBills: React.FC = () => {
@@ -40,6 +48,7 @@ const CustomerSplitBills: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Fetch split bills from DB
   const { data: bills = [], isLoading } = useQuery({
@@ -62,11 +71,13 @@ const CustomerSplitBills: React.FC = () => {
   const [splitMode, setSplitMode] = useState<SplitMode>('equal');
   const [notes, setNotes] = useState('');
   const [participants, setParticipants] = useState<Participant[]>([
-    makeParticipant('You', '', colors[0], true),
+    makeParticipant('You', '', colors[0], true, user?.id || null),
   ]);
   const [showAddPerson, setShowAddPerson] = useState(false);
-  const [newPersonName, setNewPersonName] = useState('');
-  const [newPersonPhone, setNewPersonPhone] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalNum = Number(total || 0);
   const perPerson = participants.length > 0 ? Math.ceil(totalNum / participants.length) : 0;
@@ -89,10 +100,43 @@ const CustomerSplitBills: React.FC = () => {
   const percentTotal = splitMode === 'percentage' ? participants.slice(1).reduce((s, p) => s + (p.customPercent || 0), 0) : 0;
   const myAutoPercent = splitMode === 'percentage' ? Math.max(100 - percentTotal, 0) : 0;
 
-  const addPerson = () => {
-    if (!newPersonName.trim()) { toast.error('Enter a name'); return; }
-    setParticipants([...participants, makeParticipant(newPersonName.trim(), newPersonPhone.trim(), colors[participants.length % colors.length], false)]);
-    setNewPersonName(''); setNewPersonPhone(''); setShowAddPerson(false);
+  // Search registered users
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('split-bills-ops', {
+        body: { action: 'search_users', query },
+      });
+      if (error) throw error;
+      // Filter out already-added participants
+      const addedIds = new Set(participants.map(p => p.userId).filter(Boolean));
+      setSearchResults((data?.users || []).filter((u: SearchResult) => !addedIds.has(u.id)));
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [participants]);
+
+  const onSearchInput = (value: string) => {
+    setSearchQuery(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => handleSearch(value), 300);
+  };
+
+  const addRegisteredUser = (user: SearchResult) => {
+    setParticipants([
+      ...participants,
+      makeParticipant(user.name, user.phone_masked || '', colors[participants.length % colors.length], false, user.id),
+    ]);
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowAddPerson(false);
+    toast.success(`${user.name} added`);
   };
 
   const removePerson = (i: number) => {
@@ -123,6 +167,7 @@ const CustomerSplitBills: React.FC = () => {
       const participantData = participants.map((p, i) => ({
         name: p.name,
         phone: p.phone || null,
+        user_id: p.userId || null,
         share_amount: shares[i],
         share_percent: splitMode === 'percentage' ? (i === 0 ? myAutoPercent : p.customPercent) : 0,
       }));
@@ -151,9 +196,47 @@ const CustomerSplitBills: React.FC = () => {
     }
   };
 
+  const handleSettle = async (participantId: string) => {
+    setActionLoading(participantId);
+    try {
+      const { data, error } = await supabase.functions.invoke('split-bills-ops', {
+        body: { action: 'settle', participant_id: participantId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
+      toast.success('Marked as paid');
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Failed to mark as paid'));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemind = async (participantId: string, billId: string) => {
+    setActionLoading(`remind-${participantId}`);
+    try {
+      const { data, error } = await supabase.functions.invoke('split-bills-ops', {
+        body: { action: 'remind', participant_id: participantId, split_bill_id: billId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.notified) {
+        toast.success('Reminder sent');
+      } else {
+        toast('This participant is not a registered user — they cannot receive in-app reminders');
+      }
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Failed to send reminder'));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const resetForm = () => {
     setTitle(''); setTotal(''); setSplitMode('equal'); setNotes('');
-    setParticipants([makeParticipant('You', '', colors[0], true)]);
+    setParticipants([makeParticipant('You', '', colors[0], true, user?.id || null)]);
+    setSearchQuery(''); setSearchResults([]);
   };
 
   return (
@@ -172,9 +255,9 @@ const CustomerSplitBills: React.FC = () => {
         title="How Split Bills Works"
         steps={[
           { icon: Receipt, title: 'Add a Bill', description: 'Enter the bill title, total amount, and choose how to split — equal, custom amounts, or percentages.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
-          { icon: UserPlus, title: 'Add Participants', description: 'Add friends by name and phone. Your share is auto-calculated as the remainder.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
+          { icon: UserPlus, title: 'Add Participants', description: 'Search and add registered users. Their share is calculated automatically.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
           { icon: Send, title: 'Send Split Request', description: 'Everyone gets notified of their share. Track who has paid in real-time.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
-          { icon: Bell, title: 'Remind & Settle', description: 'Send reminders to unpaid participants. Once everyone pays, the bill is settled.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
+          { icon: Bell, title: 'Remind & Settle', description: 'Send reminders to unpaid participants. Mark payments as received to settle the bill.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
         ] as FlowStep[]}
       />
 
@@ -235,6 +318,9 @@ const CustomerSplitBills: React.FC = () => {
                       {i === 0 && splitMode !== 'equal' && (
                         <p className="text-[9px] text-primary font-semibold">Auto-calculated</p>
                       )}
+                      {p.userId && i > 0 && (
+                        <p className="text-[9px] text-[hsl(150,60%,40%)] font-semibold">Registered user</p>
+                      )}
                     </div>
                     {splitMode === 'custom' && i > 0 && (
                       <Input type="number" min={0} value={p.customAmount || ''} onChange={e => updateParticipant(i, 'customAmount', Number(e.target.value))}
@@ -272,19 +358,57 @@ const CustomerSplitBills: React.FC = () => {
                   </div>
                 )}
 
+                {/* Add Person — User Search */}
                 {showAddPerson ? (
                   <div className="flex flex-col gap-2 rounded-2xl border border-dashed border-border p-3">
-                    <Input value={newPersonName} onChange={e => setNewPersonName(e.target.value)} placeholder="Name" className="rounded-xl text-xs" />
-                    <Input value={newPersonPhone} onChange={e => setNewPersonPhone(e.target.value)} placeholder="Phone (optional)" className="rounded-xl text-xs" />
-                    <div className="flex gap-2">
-                      <Button size="sm" className="rounded-xl flex-1 text-xs" onClick={addPerson}>Add</Button>
-                      <Button size="sm" variant="outline" className="rounded-xl text-xs" onClick={() => setShowAddPerson(false)}>Cancel</Button>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                      <Input
+                        value={searchQuery}
+                        onChange={e => onSearchInput(e.target.value)}
+                        placeholder="Search by name or phone number"
+                        className="rounded-xl text-xs pl-9"
+                        autoFocus
+                      />
+                      {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                     </div>
+
+                    {/* Search Results */}
+                    {searchResults.length > 0 && (
+                      <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl bg-background border border-border p-1">
+                        {searchResults.map(u => (
+                          <button
+                            key={u.id}
+                            onClick={() => addRegisteredUser(u)}
+                            className="flex items-center gap-2.5 w-full rounded-lg p-2.5 hover:bg-muted/70 transition-colors text-left"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(210,80%,93%)]">
+                              <span className="text-[9px] font-bold text-foreground">
+                                {u.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-foreground truncate">{u.name}</p>
+                              {u.phone_masked && <p className="text-[10px] text-muted-foreground">{u.phone_masked}</p>}
+                            </div>
+                            <Plus className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground text-center py-2">No registered users found for "{searchQuery}"</p>
+                    )}
+
+                    <Button size="sm" variant="outline" className="rounded-xl text-xs" onClick={() => { setShowAddPerson(false); setSearchQuery(''); setSearchResults([]); }}>
+                      Cancel
+                    </Button>
                   </div>
                 ) : (
                   <button onClick={() => setShowAddPerson(true)} className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border p-3">
-                    <Plus className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    <span className="text-[11px] font-bold text-muted-foreground">Add Person</span>
+                    <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                    <span className="text-[11px] font-bold text-muted-foreground">Search & Add Person</span>
                   </button>
                 )}
               </div>
@@ -293,7 +417,7 @@ const CustomerSplitBills: React.FC = () => {
                 className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-14" />
 
               <Button onClick={handleCreate} disabled={sending} className="rounded-2xl h-11 text-xs font-bold">
-                {sending ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Sending...</span>
+                {sending ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sending...</span>
                   : <><Users className="mr-2 h-4 w-4" strokeWidth={1.5} /> Send Split Request</>}
               </Button>
             </div>
@@ -311,12 +435,16 @@ const CustomerSplitBills: React.FC = () => {
           const parts = bill.split_bill_participants || [];
           const paidCount = parts.filter((p: any) => p.paid).length;
           const isExpanded = expandedId === bill.id;
+          const isSettled = bill.status === 'settled';
           return (
             <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
               <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[hsl(340,60%,92%)]">
-                  <Users className="h-5 w-5 text-[hsl(340,50%,45%)]" strokeWidth={1.5} />
+                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isSettled ? 'bg-[hsl(150,40%,90%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
+                  {isSettled
+                    ? <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                    : <Users className="h-5 w-5 text-[hsl(340,50%,45%)]" strokeWidth={1.5} />
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
@@ -345,8 +473,37 @@ const CustomerSplitBills: React.FC = () => {
                             {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
                           </div>
                           <span className="text-xs font-bold text-foreground">{Number(p.share_amount).toLocaleString()} XAF</span>
-                          {p.paid ? <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
-                            : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
+
+                          {p.paid ? (
+                            <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
+                          ) : (
+                            <div className="flex items-center gap-1 shrink-0">
+                              {!p.is_owner && (
+                                <>
+                                  <button
+                                    onClick={() => handleRemind(p.id, bill.id)}
+                                    disabled={actionLoading === `remind-${p.id}`}
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(45,70%,90%)] hover:bg-[hsl(45,70%,85%)] transition-colors"
+                                    title="Send reminder"
+                                  >
+                                    {actionLoading === `remind-${p.id}`
+                                      ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(45,60%,35%)]" />
+                                      : <Bell className="h-3 w-3 text-[hsl(45,60%,35%)]" strokeWidth={2} />}
+                                  </button>
+                                  <button
+                                    onClick={() => handleSettle(p.id)}
+                                    disabled={actionLoading === p.id}
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(150,40%,90%)] hover:bg-[hsl(150,40%,85%)] transition-colors"
+                                    title="Mark as paid"
+                                  >
+                                    {actionLoading === p.id
+                                      ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(150,60%,40%)]" />
+                                      : <CheckCircle2 className="h-3 w-3 text-[hsl(150,60%,40%)]" strokeWidth={2} />}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
