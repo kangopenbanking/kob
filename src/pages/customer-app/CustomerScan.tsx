@@ -99,7 +99,13 @@ const CustomerScan: React.FC = () => {
     }, 1200);
   };
 
-  const handlePayNow = async () => {
+  const handlePayNow = () => {
+    if (!scanResult) return;
+    if (!payAmount || Number(payAmount) <= 0) { toast.error('Enter a valid amount'); return; }
+    setShowPin(true);
+  };
+
+  const executePayment = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
 
@@ -124,6 +130,10 @@ const CustomerScan: React.FC = () => {
           timestamp: new Date().toISOString(),
         });
         setScanResult(null);
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+          queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+        ]);
       } catch (err: any) {
         toast.error(extractEdgeFunctionError(err, 'Payment failed'));
       } finally {
