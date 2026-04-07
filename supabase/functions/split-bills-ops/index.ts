@@ -82,7 +82,6 @@ Deno.serve(async (req) => {
         phone_masked: u.phone_number
           ? u.phone_number.slice(0, -4).replace(/\d/g, '*') + u.phone_number.slice(-4)
           : null,
-        avatar_url: u.avatar_url,
       }));
 
       return new Response(JSON.stringify({ users }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
