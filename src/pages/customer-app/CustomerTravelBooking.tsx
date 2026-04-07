@@ -622,7 +622,7 @@ const CustomerTravelBooking: React.FC = () => {
                   Add {shortfall.toLocaleString()} {trip.currency}
                 </Button>
               ) : (
-                <Button onClick={handleBook} disabled={booking || balanceLoading} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
+                <Button onClick={initiateBooking} disabled={booking || balanceLoading} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
                   style={{ backgroundColor: theme.color, color: theme.fg }}>
                   {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wallet className="mr-2 h-4 w-4" />}
                   {booking ? 'Processing...' : 'Pay & Confirm'}
@@ -632,6 +632,12 @@ const CustomerTravelBooking: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      <PinConfirmDialog
+        open={showPinDialog}
+        onOpenChange={setShowPinDialog}
+        onConfirmed={handleBook}
+      />
     </div>
   );
 };
