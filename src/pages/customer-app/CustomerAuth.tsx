@@ -163,20 +163,28 @@ const CustomerAuth: React.FC = () => {
         body: { phone_number: fullPhone, pin_code: pin, captcha_session_id: captchaData.session_id },
       });
       if (error) {
-        // Parse structured error from edge function
+        // Parse structured error from edge function context body
+        let parsed: any = null;
         try {
-          const parsed = typeof error === 'object' && error.message ? JSON.parse(error.message) : null;
-          if (parsed?.locked) throw new Error(parsed.error || 'Account locked');
-          if (parsed?.remaining_attempts !== undefined) {
-            setPinError(`Invalid PIN. ${parsed.remaining_attempts} attempts remaining.`);
-            setPin('');
-            return;
+          const body = error.context?.body;
+          if (body) {
+            parsed = typeof body === 'string' ? JSON.parse(body) : body;
+          } else if (typeof error.message === 'string') {
+            parsed = JSON.parse(error.message);
           }
-          throw new Error(parsed?.error || error.message || 'PIN login failed');
-        } catch (parseErr) {
-          if (parseErr instanceof SyntaxError) throw error;
-          throw parseErr;
+        } catch { /* not JSON */ }
+
+        if (parsed?.locked) {
+          setPinError(parsed.error || 'Account temporarily locked. Please try again later.');
+          setPin('');
+          return;
         }
+        if (parsed?.remaining_attempts !== undefined) {
+          setPinError(`Invalid PIN. ${parsed.remaining_attempts} attempt${parsed.remaining_attempts !== 1 ? 's' : ''} remaining.`);
+          setPin('');
+          return;
+        }
+        throw new Error(parsed?.error || extractEdgeFunctionError(error, 'PIN login failed'));
       }
 
       if (data?.success && data?.session) {
