@@ -47,15 +47,23 @@ export function CustomerMarketplace() {
       return;
     }
 
-    const { error } = await (supabase as any).from('customer_favorite_merchants').insert({
-      user_id: user.id,
-      merchant_id: merchantId,
-    });
+    // Check if already favourited
+    const { data: existing } = await (supabase as any).from('customer_favorite_merchants')
+      .select('id').eq('user_id', user.id).eq('merchant_id', merchantId).maybeSingle();
 
-    if (error && error.code !== '23505') {
-      toast({ title: 'Error', description: 'Could not save favorite', variant: 'destructive' });
+    if (existing) {
+      const { error } = await (supabase as any).from('customer_favorite_merchants').delete().eq('id', existing.id);
+      if (!error) toast({ title: 'Removed', description: 'Store removed from favorites' });
     } else {
-      toast({ title: 'Saved', description: 'Store added to favorites' });
+      const { error } = await (supabase as any).from('customer_favorite_merchants').insert({
+        user_id: user.id,
+        merchant_id: merchantId,
+      });
+      if (error && error.code !== '23505') {
+        toast({ title: 'Error', description: 'Could not save favorite', variant: 'destructive' });
+      } else {
+        toast({ title: 'Saved', description: 'Store added to favorites' });
+      }
     }
   };
 

@@ -8,10 +8,13 @@ import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useAccountBalances, useCustomerAccounts } from '@/hooks/useCustomerData';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 const CustomerCart: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: accounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
@@ -21,6 +24,7 @@ const CustomerCart: React.FC = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [orderComplete, setOrderComplete] = useState<any>(null);
   const [orderFailed, setOrderFailed] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const walletBalance = balances.find((b: any) => b.balance_type === 'ClosingAvailable')?.amount || 0;
 
@@ -64,8 +68,8 @@ const CustomerCart: React.FC = () => {
         });
       }
       fetchCart();
-    } catch {
-      toast.error('Could not update cart. Please try again.');
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not update cart. Please try again.'));
     }
   };
 
@@ -74,9 +78,9 @@ const CustomerCart: React.FC = () => {
     setCheckingOut(true);
     setOrderFailed(false);
     try {
+      const idempotencyKey = `checkout_${cart.id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('pos-consumer-checkout', {
-        body: { cart_id: cart.id },
-        headers: { 'Idempotency-Key': `checkout_${cart.id}` },
+        body: { cart_id: cart.id, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) {
@@ -89,6 +93,11 @@ const CustomerCart: React.FC = () => {
         }
         return;
       }
+      // Sync balances after successful payment
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
       setOrderComplete(data);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Checkout could not be completed. Please try again.'));
@@ -290,7 +299,7 @@ const CustomerCart: React.FC = () => {
           className="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-50"
         >
           <Button
-            onClick={handleCheckout}
+            onClick={() => setShowPin(true)}
             disabled={checkingOut || walletBalance < total}
             className="w-full h-12 rounded-2xl font-semibold shadow-lg"
           >
@@ -302,6 +311,8 @@ const CustomerCart: React.FC = () => {
           </Button>
         </motion.div>
       )}
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleCheckout} />
     </div>
   );
 };

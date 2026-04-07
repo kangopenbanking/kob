@@ -9,11 +9,14 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 const categories = ['All Categories', 'Fashion', 'Electronics', 'Food', 'Beauty', 'Health & Wellness', 'Home', 'Services'];
 
 const CustomerStores: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -23,6 +26,18 @@ const CustomerStores: React.FC = () => {
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
+
+  // Load persisted favourites
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('customer_favorite_merchants')
+        .select('merchant_id')
+        .eq('user_id', user.id);
+      if (data) setFavourites(new Set(data.map((f: any) => f.merchant_id)));
+    })();
+  }, [user]);
 
   useEffect(() => {
     fetchStores();
@@ -70,13 +85,37 @@ const CustomerStores: React.FC = () => {
     }
   };
 
-  const toggleFavourite = (id: string, e: React.MouseEvent) => {
+  const toggleFavourite = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) {
+      toast.error('Please sign in to save favorites');
+      return;
+    }
+    const isFav = favourites.has(id);
+    // Optimistic update
     setFavourites(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      isFav ? next.delete(id) : next.add(id);
       return next;
     });
+    try {
+      if (isFav) {
+        await (supabase as any).from('customer_favorite_merchants')
+          .delete().eq('user_id', user.id).eq('merchant_id', id);
+      } else {
+        const { error } = await (supabase as any).from('customer_favorite_merchants')
+          .insert({ user_id: user.id, merchant_id: id });
+        if (error && error.code !== '23505') throw error;
+      }
+    } catch {
+      // Revert on failure
+      setFavourites(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(id) : next.delete(id);
+        return next;
+      });
+      toast.error('Could not update favorite');
+    }
   };
 
   return (
