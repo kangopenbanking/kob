@@ -16,6 +16,7 @@ const categories = ['All Categories', 'Fashion', 'Electronics', 'Food', 'Beauty'
 
 const CustomerStores: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -25,6 +26,18 @@ const CustomerStores: React.FC = () => {
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
+
+  // Load persisted favourites
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('customer_favorite_merchants')
+        .select('merchant_id')
+        .eq('user_id', user.id);
+      if (data) setFavourites(new Set(data.map((f: any) => f.merchant_id)));
+    })();
+  }, [user]);
 
   useEffect(() => {
     fetchStores();
