@@ -119,3 +119,25 @@ export function usePiggyBankPay() {
     onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Payment could not be processed. Please ensure you have sufficient funds.')),
   });
 }
+
+// ─── Cancel Plan ───
+export function useCancelPiggyBankPlan() {
+  const qc = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async (body: { plan_id: string }) => {
+      const { data, error } = await supabase.functions.invoke('piggybank', {
+        body: { action: 'cancel', ...body },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
+      qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success(`Plan cancelled. Your credit score was impacted by ${data?.credit_impact || -5} points.`);
+    },
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not cancel the plan.')),
+  });
+}
