@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, Wallet, Percent, Search, SlidersHorizontal, ArrowUpDown, BarChart3, Zap, Clock, AlertCircle, CreditCard, ArrowDownCircle, CircleDollarSign } from 'lucide-react';
+import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, Wallet, Percent, Search, SlidersHorizontal, ArrowUpDown, BarChart3, Zap, Clock, AlertCircle, CreditCard, ArrowDownCircle, CircleDollarSign, Trash2, AlertTriangle, StopCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +14,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts } from '@/hooks/usePiggyBankData';
+import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts, useCancelPiggyBankPlan } from '@/hooks/usePiggyBankData';
 import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
@@ -51,9 +52,11 @@ const CustomerPiggyBank: React.FC = () => {
   const { data: userAccounts = [] } = useUserAccounts();
   const createPlan = useCreatePiggyBankPlan();
   const payMutation = usePiggyBankPay();
+  const cancelPlan = useCancelPiggyBankPlan();
   const [showPin, setShowPin] = useState(false);
   const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
   const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ planId: string; planName: string } | null>(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
@@ -277,7 +280,7 @@ const CustomerPiggyBank: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {displayPlans.map((plan: any, i: number) => (
-                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} />
+                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} onCancel={(id, name) => setCancelConfirm({ planId: id, planName: name })} />
                 ))}
               </div>
             )}
@@ -378,6 +381,59 @@ const CustomerPiggyBank: React.FC = () => {
       </AnimatePresence>
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePayConfirmed} />
+
+      {/* Cancel Plan Confirmation */}
+      <AlertDialog open={!!cancelConfirm} onOpenChange={(open) => !open && setCancelConfirm(null)}>
+        <AlertDialogContent className="rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-destructive" strokeWidth={1.5} />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-base">Cancel Savings Plan?</AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  You are about to cancel <span className="font-semibold text-foreground">"{cancelConfirm?.planName}"</span>.
+                </p>
+                <div className="rounded-2xl bg-destructive/5 border border-destructive/15 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-destructive shrink-0" strokeWidth={1.5} />
+                    <p className="text-xs font-semibold text-destructive">Credit Score Impact: -5 points</p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Cancelling a savings plan is reported to CrediQ and will reduce your credit score by 5 points. This action cannot be undone.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted/50 p-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    All pending payments will be cancelled. Payments already made will remain on your record.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl">Keep Plan</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelPlan.isPending}
+              onClick={() => {
+                if (cancelConfirm) {
+                  cancelPlan.mutate({ plan_id: cancelConfirm.planId }, {
+                    onSettled: () => setCancelConfirm(null),
+                  });
+                }
+              }}
+            >
+              {cancelPlan.isPending ? 'Cancelling...' : 'Cancel Plan (-5 pts)'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -458,7 +514,7 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
   );
 }
 
-function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[] }) {
+function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void }) {
   const payments = plan.piggybank_payments || [];
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const missedPayments = payments.filter((p: any) => p.status === 'missed' || p.status === 'late');
@@ -466,6 +522,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
   const totalPaid = paidPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
   const target = plan.target_amount || 0;
   const pct = target > 0 ? Math.min(100, Math.round((totalPaid / target) * 100)) : 0;
+  const isCancelled = plan.status === 'cancelled';
 
   const streakCount = (() => {
     let count = 0;
@@ -479,13 +536,15 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="rounded-3xl border border-border bg-card p-5"
+      className={`rounded-3xl border bg-card p-5 ${isCancelled ? 'border-destructive/20 opacity-60' : 'border-border'}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${isBank ? 'bg-primary/10' : 'bg-accent/20'}`}>
-            {plan.auto_fund_enabled ? (
+          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${isCancelled ? 'bg-destructive/10' : isBank ? 'bg-primary/10' : 'bg-accent/20'}`}>
+            {isCancelled ? (
+              <StopCircle className="h-5 w-5 text-destructive" strokeWidth={1.5} />
+            ) : plan.auto_fund_enabled ? (
               <Zap className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
             ) : (
               <Target className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
@@ -495,12 +554,24 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
             <p className="text-sm font-bold text-foreground">{plan.plan_name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 capitalize">{plan.schedule_frequency}</Badge>
-              {plan.auto_fund_enabled && (
+              {plan.auto_fund_enabled && !isCancelled && (
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Auto-Fund</Badge>
+              )}
+              {isCancelled && (
+                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Cancelled</Badge>
               )}
             </div>
           </div>
         </div>
+        {!isCancelled && plan.status === 'active' && (
+          <button
+            onClick={() => onCancel(plan.id, plan.plan_name)}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Cancel plan"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+        )}
       </div>
 
       {/* Progress */}
@@ -532,7 +603,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
       </div>
 
       {/* Next Payment */}
-      {nextPayment && (
+      {!isCancelled && nextPayment && (
         <div className="flex items-center justify-between rounded-2xl bg-primary/5 border border-primary/10 p-3">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -551,7 +622,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts }: { plan: any; ind
         </div>
       )}
 
-      {!nextPayment && payments.length > 0 && (
+      {!isCancelled && !nextPayment && payments.length > 0 && (
         <div className="flex items-center gap-2 rounded-2xl bg-primary/5 border border-primary/10 p-3">
           <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <p className="text-xs font-semibold text-foreground">All payments completed</p>
