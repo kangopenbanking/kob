@@ -9,6 +9,8 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 const categories = ['All Categories', 'Fashion', 'Electronics', 'Food', 'Beauty', 'Health & Wellness', 'Home', 'Services'];
 
