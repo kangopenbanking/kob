@@ -12,6 +12,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
 import { useQRScanner } from '@/hooks/useQRScanner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from '@/components/customer-app/PinConfirmDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Tab = 'scan' | 'receive';
 
