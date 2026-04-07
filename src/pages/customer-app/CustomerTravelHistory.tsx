@@ -70,7 +70,7 @@ const CustomerTravelHistory: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-[#0f1729] px-5 pb-8 pt-4">
         <div className="flex items-center gap-3 mb-4">
