@@ -151,6 +151,9 @@ export default function SupportedCountriesManagement() {
                   <TableCell className="text-center">
                     <Switch checked={c.enabled_banking_app} onCheckedChange={(v) => toggleMutation.mutate({ id: c.id, field: "enabled_banking_app", value: v })} />
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Switch checked={c.enabled_desktop_app} onCheckedChange={(v) => toggleMutation.mutate({ id: c.id, field: "enabled_desktop_app", value: v })} />
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
