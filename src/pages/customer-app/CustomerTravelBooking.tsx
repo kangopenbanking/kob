@@ -22,10 +22,12 @@ type Gender = 'male' | 'female';
 const CustomerTravelBooking: React.FC = () => {
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user: customerUser } = useCustomerAuth();
   const { account: walletAccount, loading: walletLoading } = useEnsureWalletAccount(customerUser?.id);
   const theme = getTheme(category);
   const CatIcon = theme.icon;
+  const [showPinDialog, setShowPinDialog] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState<any>(null);
