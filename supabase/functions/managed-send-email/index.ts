@@ -3,7 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const SITE_NAME = "Kang OB";
 const SENDER_DOMAIN = "notify.kangopenbanking.com";
-const FROM_DOMAIN = "kangopenbanking.com";
+const FROM_DOMAIN = "support.kangopenbanking.com";
 
 function replaceVariables(template: string, variables: Record<string, any>): string {
   let result = template;

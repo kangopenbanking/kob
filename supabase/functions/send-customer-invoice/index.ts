@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const SITE_NAME = "Kang OB";
 const SENDER_DOMAIN = "notify.kangopenbanking.com";
-const FROM_DOMAIN = "kangopenbanking.com";
+const FROM_DOMAIN = "support.kangopenbanking.com";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
