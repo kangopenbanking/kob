@@ -1,4 +1,4 @@
-// Consolidated router for piggybank operations: create, pay, overdue-detect
+// Consolidated router for piggybank operations: create, pay, auto-fund, overdue-detect
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'create': return handleCreate(req, body);
       case 'pay': return handlePay(req, body);
+      case 'auto-fund': return handleAutoFund(req);
       case 'overdue-detect': return handleOverdueDetect(req);
       default: return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -49,10 +50,57 @@ function generateSchedule(startDate: string, endDate: string | null, frequency: 
   return payments;
 }
 
+// ─── Atomic wallet debit helper ───
+async function debitWallet(supabase: any, accountId: string, amount: number, userId: string, description: string): Promise<{ success: boolean; error?: string }> {
+  // Get current ClosingAvailable balance
+  const { data: balance, error: balErr } = await supabase
+    .from('account_balances')
+    .select('id, amount')
+    .eq('account_id', accountId)
+    .eq('balance_type', 'ClosingAvailable')
+    .eq('credit_debit_indicator', 'Credit')
+    .maybeSingle();
+
+  if (balErr || !balance) return { success: false, error: 'Could not retrieve wallet balance' };
+  if (balance.amount < amount) return { success: false, error: `Insufficient balance. Available: ${balance.amount} XAF, Required: ${amount} XAF` };
+
+  // Atomic debit
+  const { error: updateErr } = await supabase
+    .from('account_balances')
+    .update({ amount: balance.amount - amount, balance_datetime: new Date().toISOString() })
+    .eq('id', balance.id);
+
+  if (updateErr) return { success: false, error: 'Failed to debit wallet' };
+
+  // Record transaction
+  const now = new Date().toISOString();
+  await supabase.from('transactions').insert({
+    account_id: accountId,
+    amount,
+    currency: 'XAF',
+    credit_debit_indicator: 'Debit',
+    status: 'Booked',
+    booking_datetime: now,
+    value_datetime: now,
+    transaction_type: 'savings_deposit',
+    transaction_information: description,
+    user_id: userId,
+    metadata: { source: 'piggybank_auto_fund' },
+  });
+
+  return { success: true };
+}
+
 async function handleCreate(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
-  const { plan_name, plan_type, target_amount, schedule_frequency, installment_amount, payment_method, start_date, end_date, institution_id, landlord_user_id } = body;
+  const { plan_name, plan_type, target_amount, schedule_frequency, installment_amount, payment_method, start_date, end_date, institution_id, landlord_user_id, auto_fund_enabled, auto_fund_account_id } = body;
   if (!plan_name || !start_date || !installment_amount) throw new Error('Missing required fields');
+
+  // Validate auto_fund_account_id belongs to user if auto-funding enabled
+  if (auto_fund_enabled && auto_fund_account_id) {
+    const { data: acct } = await supabase.from('accounts').select('id').eq('id', auto_fund_account_id).eq('user_id', user.id).maybeSingle();
+    if (!acct) throw new Error('Invalid wallet account for auto-funding');
+  }
 
   let rent_reference: string | null = null;
   if (plan_type === 'rent') {
@@ -64,7 +112,22 @@ async function handleCreate(req: Request, body: any) {
     if (!rent_reference) throw new Error('Could not generate unique rent reference');
   }
 
-  const { data: plan, error: planErr } = await supabase.from('piggybank_plans').insert({ user_id: user.id, institution_id: institution_id || null, plan_name, plan_type: plan_type || 'savings', target_amount: target_amount || 0, schedule_frequency: schedule_frequency || 'monthly', installment_amount, payment_method: payment_method || null, start_date, end_date: end_date || null, rent_reference, landlord_user_id: landlord_user_id || null }).select().single();
+  const { data: plan, error: planErr } = await supabase.from('piggybank_plans').insert({
+    user_id: user.id,
+    institution_id: institution_id || null,
+    plan_name,
+    plan_type: plan_type || 'savings',
+    target_amount: target_amount || 0,
+    schedule_frequency: schedule_frequency || 'monthly',
+    installment_amount,
+    payment_method: payment_method || null,
+    start_date,
+    end_date: end_date || null,
+    rent_reference,
+    landlord_user_id: landlord_user_id || null,
+    auto_fund_enabled: auto_fund_enabled || false,
+    auto_fund_account_id: (auto_fund_enabled && auto_fund_account_id) ? auto_fund_account_id : null,
+  }).select().single();
   if (planErr) throw planErr;
 
   const schedule = generateSchedule(start_date, end_date, schedule_frequency || 'monthly', installment_amount);
@@ -78,10 +141,9 @@ async function handleCreate(req: Request, body: any) {
 
 async function handlePay(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
-  const { payment_id } = body;
+  const { payment_id, fund_from_wallet, account_id } = body;
   if (!payment_id) throw new Error('payment_id required');
 
-  // Validate UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(payment_id)) {
     return new Response(JSON.stringify({ error: 'invalid_payment_id', message: 'payment_id must be a valid UUID' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -93,23 +155,89 @@ async function handlePay(req: Request, body: any) {
   }
   if (payment.status === 'paid') throw new Error('Already paid');
 
+  const plan = payment.piggybank_plans;
+
+  // Determine funding source: explicit account_id > plan's auto_fund_account_id
+  const fundAccountId = account_id || (plan.auto_fund_enabled ? plan.auto_fund_account_id : null);
+
+  // If funding from wallet, debit first
+  if ((fund_from_wallet || plan.auto_fund_enabled) && fundAccountId) {
+    const debitResult = await debitWallet(supabase, fundAccountId, payment.amount, user.id, `PiggyBank savings deposit - ${plan.plan_name}`);
+    if (!debitResult.success) {
+      return new Response(JSON.stringify({ error: 'insufficient_funds', message: debitResult.error }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+  }
+
   const now = new Date(), dueDate = new Date(payment.due_date);
   const isLate = now > dueDate;
-  const plan = payment.piggybank_plans;
   const isRent = plan.plan_type === 'rent';
   const eventType = isRent ? (isLate ? 'RENT_PAYMENT_LATE' : 'RENT_PAYMENT_ON_TIME') : (isLate ? 'PIGGYBANK_PAYMENT_LATE' : 'PIGGYBANK_PAYMENT_ON_TIME');
 
   await supabase.from('piggybank_payments').update({ status: isLate ? 'late' : 'paid', paid_at: now.toISOString() }).eq('id', payment_id);
 
   const daysLate = isLate ? Math.floor((now.getTime() - dueDate.getTime()) / 86400000) : 0;
-  const { data: creditEvent } = await supabase.from('credit_events').insert({ user_id: user.id, event_type: eventType, value_numeric: isLate ? daysLate : payment.amount, description: `${isRent ? 'Rent' : 'Piggy bank'} payment ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${plan.plan_name}`, event_time: now.toISOString(), metadata: { payment_id, plan_id: plan.id, plan_type: plan.plan_type, amount: payment.amount, days_late: daysLate }, source: isRent ? 'rent_service' : 'piggybank_service' }).select('id').single();
+  const { data: creditEvent } = await supabase.from('credit_events').insert({ user_id: user.id, event_type: eventType, value_numeric: isLate ? daysLate : payment.amount, description: `${isRent ? 'Rent' : 'Piggy bank'} payment ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${plan.plan_name}`, event_time: now.toISOString(), metadata: { payment_id, plan_id: plan.id, plan_type: plan.plan_type, amount: payment.amount, days_late: daysLate, funded_from_wallet: !!(fund_from_wallet || plan.auto_fund_enabled) }, source: isRent ? 'rent_service' : 'piggybank_service' }).select('id').single();
 
   if (creditEvent) await supabase.from('piggybank_payments').update({ credit_event_id: creditEvent.id }).eq('id', payment_id);
 
   let scoreResult = null;
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
 
-  return new Response(JSON.stringify({ success: true, payment_status: isLate ? 'late' : 'paid', credit_event_type: eventType, score_delta: scoreResult?.delta || 0, new_score: scoreResult?.score || null }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, payment_status: isLate ? 'late' : 'paid', credit_event_type: eventType, score_delta: scoreResult?.delta || 0, new_score: scoreResult?.score || null, wallet_debited: !!(fund_from_wallet || plan.auto_fund_enabled) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// ─── Auto-Fund Cron: processes due payments for auto-funded plans ───
+async function handleAutoFund(req: Request) {
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const today = new Date().toISOString().split('T')[0];
+
+  // Find pending payments due today or earlier for auto-funded plans
+  const { data: duePayments, error } = await supabase
+    .from('piggybank_payments')
+    .select('*, piggybank_plans!inner(auto_fund_enabled, auto_fund_account_id, plan_name, user_id, plan_type)')
+    .eq('status', 'pending')
+    .eq('piggybank_plans.auto_fund_enabled', true)
+    .lte('due_date', today);
+
+  if (error) throw error;
+
+  let processed = 0, failed = 0;
+  for (const payment of (duePayments || [])) {
+    const plan = payment.piggybank_plans;
+    if (!plan.auto_fund_account_id) continue;
+
+    const debitResult = await debitWallet(supabase, plan.auto_fund_account_id, payment.amount, plan.user_id, `Auto-save deposit - ${plan.plan_name}`);
+
+    if (debitResult.success) {
+      const now = new Date();
+      const dueDate = new Date(payment.due_date);
+      const isLate = now > dueDate;
+      const isRent = plan.plan_type === 'rent';
+      const eventType = isRent ? (isLate ? 'RENT_PAYMENT_LATE' : 'RENT_PAYMENT_ON_TIME') : (isLate ? 'PIGGYBANK_PAYMENT_LATE' : 'PIGGYBANK_PAYMENT_ON_TIME');
+
+      await supabase.from('piggybank_payments').update({ status: isLate ? 'late' : 'paid', paid_at: now.toISOString() }).eq('id', payment.id);
+      await supabase.from('credit_events').insert({ user_id: plan.user_id, event_type: eventType, value_numeric: payment.amount, description: `Auto-funded ${isRent ? 'rent' : 'savings'} payment - ${plan.plan_name}`, event_time: now.toISOString(), metadata: { payment_id: payment.id, auto_funded: true }, source: isRent ? 'rent_service' : 'piggybank_service' });
+
+      try { await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: plan.user_id } }); } catch (e) { console.error('Score recompute failed:', e); }
+      processed++;
+    } else {
+      console.error(`Auto-fund failed for payment ${payment.id}:`, debitResult.error);
+      // Send notification about failed auto-debit
+      await supabase.from('app_notifications').insert({
+        user_id: plan.user_id,
+        title: 'Auto-Save Failed',
+        message: `Could not auto-debit ${payment.amount} XAF for "${plan.plan_name}". ${debitResult.error}`,
+        type: 'piggybank',
+        icon: 'alert-circle',
+      });
+      failed++;
+    }
+  }
+
+  return new Response(JSON.stringify({ processed, failed, total: (duePayments || []).length }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleOverdueDetect(req: Request) {
