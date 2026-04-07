@@ -22,6 +22,8 @@ const CustomerRentReporting: React.FC = () => {
   const { user } = useCustomerAuth();
   const [showSetup, setShowSetup] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [showPin, setShowPin] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const [rentAmount, setRentAmount] = useState('');
   const [landlordName, setLandlordName] = useState('');
