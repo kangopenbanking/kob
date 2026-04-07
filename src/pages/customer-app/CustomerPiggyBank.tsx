@@ -245,7 +245,7 @@ const CustomerPiggyBank: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {displayPlans.map((plan: any, i: number) => (
-                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePay} isBank={selectedCategory === 'bank'} />
+                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} />
                 ))}
               </div>
             )}
