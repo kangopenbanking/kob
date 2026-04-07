@@ -20944,6 +20944,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          biometric_enabled: boolean | null
           created_at: string | null
           default_currency: string | null
           email_notifications: boolean | null
@@ -20952,10 +20953,12 @@ export type Database = {
           push_notifications: boolean | null
           sms_notifications: boolean | null
           transaction_alerts: boolean | null
+          two_factor_enabled: boolean | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          biometric_enabled?: boolean | null
           created_at?: string | null
           default_currency?: string | null
           email_notifications?: boolean | null
@@ -20964,10 +20967,12 @@ export type Database = {
           push_notifications?: boolean | null
           sms_notifications?: boolean | null
           transaction_alerts?: boolean | null
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          biometric_enabled?: boolean | null
           created_at?: string | null
           default_currency?: string | null
           email_notifications?: boolean | null
@@ -20976,6 +20981,7 @@ export type Database = {
           push_notifications?: boolean | null
           sms_notifications?: boolean | null
           transaction_alerts?: boolean | null
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
