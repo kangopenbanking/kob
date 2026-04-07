@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import PinConfirmDialog from '@/components/pwa/PinConfirmDialog';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
 type TabView = 'my_bills' | 'bills_owed';
