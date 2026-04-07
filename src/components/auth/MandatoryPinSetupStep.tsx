@@ -54,7 +54,7 @@ export const MandatoryPinSetupStep: React.FC<MandatoryPinSetupStepProps> = ({
       toast.success('PIN set successfully!');
       setTimeout(() => onComplete(), 1500);
     } catch (err: any) {
-      setError(err.message || 'Failed to set PIN. Please try again.');
+      setError(extractEdgeFunctionError(err, 'Failed to set PIN. Please try again.'));
     } finally {
       setLoading(false);
     }

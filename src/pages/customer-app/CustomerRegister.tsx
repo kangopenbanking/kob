@@ -133,6 +133,7 @@ const CustomerRegister: React.FC = () => {
       await supabase.from('profiles').update({
         full_name: fullName,
         phone_number: contactNumber,
+        email: email || null,
         date_of_birth: dob ? format(dob, 'yyyy-MM-dd') : null,
         gender: gender || null,
         address: address || null,
