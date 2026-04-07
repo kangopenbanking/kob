@@ -117,8 +117,9 @@ export function useNjangiPayout() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { group_id: string; recipient_member_id?: string }) => {
+      const idempotencyKey = `njangi_payout_${body.group_id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('njangi-ops', {
-        body: { action: 'payout', ...body },
+        body: { action: 'payout', ...body, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
