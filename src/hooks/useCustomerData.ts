@@ -194,16 +194,27 @@ export function useCustomerCreditScore(userId?: string) {
       if (error) throw error;
       if (!data?.score) return null;
 
+      // Handle both legacy (nested components) and event-sourced (flat factors array) responses
+      const components = data.score_factors?.components || {};
+      const factorsArr = Array.isArray(data.score_factors) ? data.score_factors : [];
+
+      // For event-sourced: derive factor-like scores from factor impacts
+      const getFactorFromArray = (keywords: string[]) => {
+        const match = factorsArr.find((f: any) => keywords.some(k => f.event_type?.includes(k)));
+        // Normalize to 0-100 scale: positive impact = higher score
+        return match ? Math.max(0, Math.min(100, 50 + match.total_impact)) : 0;
+      };
+
       return {
         score: data.score,
         score_band: data.score_range,
         updated_at: data.calculated_at,
         score_factors: data.score_factors,
-        payment_history_score: data.score_factors?.components?.payment_history?.score ?? data.score_factors?.components?.payment_history_score ?? 0,
-        amounts_owed_score: data.score_factors?.components?.amounts_owed?.score ?? data.score_factors?.components?.amounts_owed_score ?? 0,
-        credit_history_length_score: data.score_factors?.components?.credit_history?.score ?? data.score_factors?.components?.credit_history_length_score ?? 0,
-        new_credit_score: data.score_factors?.components?.new_credit?.score ?? data.score_factors?.components?.new_credit_score ?? 0,
-        credit_mix_score: data.score_factors?.components?.credit_mix?.score ?? data.score_factors?.components?.credit_mix_score ?? 0,
+        payment_history_score: components.payment_history_score ?? components.payment_history?.score ?? getFactorFromArray(['LOAN_REPAYMENT', 'LOAN_INSTALLMENT']),
+        amounts_owed_score: components.amounts_owed_score ?? components.amounts_owed?.score ?? getFactorFromArray(['LOAN_DEFAULTED']),
+        credit_history_length_score: components.credit_history_length_score ?? components.credit_history?.score ?? getFactorFromArray(['LOAN_CLOSED']),
+        new_credit_score: components.new_credit_score ?? components.new_credit?.score ?? getFactorFromArray(['HARD_INQUIRY']),
+        credit_mix_score: components.credit_mix_score ?? components.credit_mix?.score ?? getFactorFromArray(['SAVINGS', 'NJANGI', 'PIGGYBANK', 'RENT']),
         source: (data.source || 'edge_function') as string,
       };
     },
