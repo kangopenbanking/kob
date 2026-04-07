@@ -128,8 +128,8 @@ export function CustomerLoyalty() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <Gift className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-lg bg-[hsl(270,60%,92%)] flex items-center justify-center">
+                <Gift className="h-6 w-6 text-[hsl(270,50%,45%)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{redeemedPoints.toLocaleString()}</p>
