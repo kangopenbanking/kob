@@ -15,6 +15,7 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   PIGGYBANK_PAYMENT_ON_TIME: { min: 3, max: 5 },
   PIGGYBANK_PAYMENT_LATE: { min: -15, max: -5 },
   PIGGYBANK_PAYMENT_MISSED: { min: -20, max: -20 },
+  PIGGYBANK_PLAN_CANCELLED: { min: -5, max: -5 },
   // Njangi
   NJANGI_CONTRIBUTION_ON_TIME: { min: 3, max: 5 },
   NJANGI_CONTRIBUTION_LATE: { min: -15, max: -5 },
@@ -25,6 +26,8 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   RENT_PAYMENT_MISSED: { min: -30, max: -30 },
   // PostiQ address verification
   POSTIQ_VERIFIED: { min: 50, max: 50 },
+  // Loan application events
+  HARD_INQUIRY: { min: -5, max: -5 },
 };
 
 const BASELINE = 500;
@@ -128,6 +131,9 @@ Deno.serve(async (req) => {
         case 'PIGGYBANK_PAYMENT_MISSED':
           points = rule.min; // -20
           break;
+        case 'PIGGYBANK_PLAN_CANCELLED':
+          points = rule.min; // -5
+          break;
         // Njangi events
         case 'NJANGI_CONTRIBUTION_ON_TIME':
           points = rule.max; // +5
@@ -155,6 +161,10 @@ Deno.serve(async (req) => {
         // PostiQ
         case 'POSTIQ_VERIFIED':
           points = rule.max; // +50
+          break;
+        // Hard inquiries
+        case 'HARD_INQUIRY':
+          points = rule.min; // -5
           break;
       }
 

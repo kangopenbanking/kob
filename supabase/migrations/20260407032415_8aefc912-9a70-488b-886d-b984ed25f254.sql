@@ -1,0 +1,1 @@
+ALTER TABLE public.credit_events ADD COLUMN IF NOT EXISTS description text;

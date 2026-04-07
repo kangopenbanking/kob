@@ -162,11 +162,12 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   LOAN_CLOSED: { min: 15, max: 15 }, SAVINGS_DEPOSIT: { min: 1, max: 3 },
   SAVINGS_WITHDRAWAL: { min: 0, max: 0 }, SAVINGS_BALANCE_STABLE: { min: 2, max: 2 },
   PIGGYBANK_PAYMENT_ON_TIME: { min: 3, max: 5 }, PIGGYBANK_PAYMENT_LATE: { min: -15, max: -5 },
-  PIGGYBANK_PAYMENT_MISSED: { min: -20, max: -20 },
+  PIGGYBANK_PAYMENT_MISSED: { min: -20, max: -20 }, PIGGYBANK_PLAN_CANCELLED: { min: -5, max: -5 },
   NJANGI_CONTRIBUTION_ON_TIME: { min: 3, max: 5 }, NJANGI_CONTRIBUTION_LATE: { min: -15, max: -5 },
   NJANGI_CONTRIBUTION_MISSED: { min: -25, max: -25 },
   RENT_PAYMENT_ON_TIME: { min: 5, max: 10 }, RENT_PAYMENT_LATE: { min: -25, max: -10 },
   RENT_PAYMENT_MISSED: { min: -30, max: -30 }, POSTIQ_VERIFIED: { min: 50, max: 50 },
+  HARD_INQUIRY: { min: -5, max: -5 },
 };
 
 async function handleEngine(body: any, supabaseUrl: string, serviceKey: string) {
@@ -191,7 +192,7 @@ async function handleEngine(body: any, supabaseUrl: string, serviceKey: string) 
     switch (event.event_type) {
       case 'LOAN_REPAYMENT_ON_TIME': points = rule.max; break;
       case 'LOAN_REPAYMENT_LATE': { const d = Math.abs(event.value_numeric || 1); points = Math.max(rule.min, Math.min(rule.max, -10 - Math.floor(d / 3) * 3)); break; }
-      case 'LOAN_INSTALLMENT_MISSED': case 'LOAN_DEFAULTED': case 'PIGGYBANK_PAYMENT_MISSED': case 'NJANGI_CONTRIBUTION_MISSED': case 'RENT_PAYMENT_MISSED': points = rule.min; break;
+      case 'LOAN_INSTALLMENT_MISSED': case 'LOAN_DEFAULTED': case 'PIGGYBANK_PAYMENT_MISSED': case 'PIGGYBANK_PLAN_CANCELLED': case 'NJANGI_CONTRIBUTION_MISSED': case 'RENT_PAYMENT_MISSED': case 'HARD_INQUIRY': points = rule.min; break;
       case 'LOAN_CLOSED': case 'PIGGYBANK_PAYMENT_ON_TIME': case 'NJANGI_CONTRIBUTION_ON_TIME': case 'RENT_PAYMENT_ON_TIME': case 'POSTIQ_VERIFIED': points = rule.max; break;
       case 'SAVINGS_DEPOSIT': {
         const mk = event.event_time.substring(0, 7);
