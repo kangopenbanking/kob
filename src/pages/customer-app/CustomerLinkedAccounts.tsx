@@ -977,7 +977,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {linkedAccounts.map((acc: any) => (
-            <LinkedAccountCard key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
+            <LinkedAccountCard key={acc.id} acc={acc} onDelete={() => initiateDelete(acc.id)} />
           ))}
         </div>
       )}
