@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { COUNTRY_CODES } from "@/lib/country-codes";
 
 export type AppType = "consumer" | "banking";
 
@@ -25,18 +24,8 @@ export function useSupportedCountries(appType?: AppType) {
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Failed to fetch supported countries, falling back to static list:", error);
-        // Fallback to static list
-        return COUNTRY_CODES.map((cc, i) => ({
-          code: cc.code,
-          country: cc.country,
-          flag: cc.flag,
-          dial_code: cc.code,
-          enabled_consumer_app: true,
-          enabled_banking_app: true,
-          sort_order: i,
-          id: `static-${i}`,
-        })) as SupportedCountry[];
+        console.error("Failed to fetch supported countries:", error);
+        return [] as SupportedCountry[];
       }
 
       let countries = (data || []) as SupportedCountry[];
@@ -49,6 +38,6 @@ export function useSupportedCountries(appType?: AppType) {
 
       return countries;
     },
-    staleTime: 5 * 60 * 1000, // Cache 5 min
+    staleTime: 5 * 60 * 1000,
   });
 }

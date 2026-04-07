@@ -152,13 +152,11 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: authConfig } = useAuthPageConfig();
-  const { data: supportedCountries = [] } = useSupportedCountries();
+  const { data: supportedCountries = [], isLoading: countriesLoading } = useSupportedCountries();
 
-  // Use supportedCountries with fallback to static COUNTRY_CODES — deduplicate by country name
+  // Only show countries enabled by admin — deduplicate by country+code
   const countryList = (() => {
-    const raw = supportedCountries.length > 0
-      ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
-      : [...COUNTRY_CODES];
+    const raw = supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }));
     const seen = new Set<string>();
     return raw.filter(c => {
       const k = `${c.country}-${c.code}`;
