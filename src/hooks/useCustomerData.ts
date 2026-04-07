@@ -49,9 +49,8 @@ export function useAccountBalances(accountIds: string[]) {
         .in('balance_type', ['ClosingAvailable', 'InterimAvailable']);
       if (error) throw error;
 
-      // Pick the most recently updated balance per account (by balance_datetime).
-      // This ensures we always show the balance that was last touched by a
-      // transfer / deposit / withdrawal, regardless of balance_type.
+      // Pick ClosingAvailable per account (preferred), fallback to InterimAvailable.
+      // This ensures UI matches the balance the transfer edge function checks.
       const byAccount = new Map<string, any>();
       for (const row of (data || [])) {
         const existing = byAccount.get(row.account_id);
@@ -59,9 +58,15 @@ export function useAccountBalances(accountIds: string[]) {
           byAccount.set(row.account_id, row);
           continue;
         }
-        const rowTime = new Date(row.balance_datetime || 0).getTime();
-        const exTime = new Date(existing.balance_datetime || 0).getTime();
-        if (rowTime > exTime) byAccount.set(row.account_id, row);
+        // Prefer ClosingAvailable over InterimAvailable
+        if (row.balance_type === 'ClosingAvailable' && existing.balance_type !== 'ClosingAvailable') {
+          byAccount.set(row.account_id, row);
+        } else if (row.balance_type === existing.balance_type) {
+          // Same type: pick the most recently updated one
+          const rowTime = new Date(row.balance_datetime || 0).getTime();
+          const exTime = new Date(existing.balance_datetime || 0).getTime();
+          if (rowTime > exTime) byAccount.set(row.account_id, row);
+        }
       }
 
       return Array.from(byAccount.values());

@@ -78,28 +78,28 @@ serve(async (req) => {
       });
     }
 
-    // Check source account balance — try InterimAvailable first, then ClosingAvailable
+    // Check source account balance — prefer ClosingAvailable (matches UI display), fallback to InterimAvailable
     // SECURITY: Filter by credit_debit_indicator='Credit' to ensure accurate available funds
     let sourceBalance = null;
-    const { data: interimBal } = await supabase
+    const { data: closingBal } = await supabase
       .from('account_balances')
       .select('id, amount, balance_type')
       .eq('account_id', source_account_id)
-      .eq('balance_type', 'InterimAvailable')
+      .eq('balance_type', 'ClosingAvailable')
       .eq('credit_debit_indicator', 'Credit')
       .maybeSingle();
 
-    if (interimBal) {
-      sourceBalance = interimBal;
+    if (closingBal) {
+      sourceBalance = closingBal;
     } else {
-      const { data: closingBal } = await supabase
+      const { data: interimBal } = await supabase
         .from('account_balances')
         .select('id, amount, balance_type')
         .eq('account_id', source_account_id)
-        .eq('balance_type', 'ClosingAvailable')
+        .eq('balance_type', 'InterimAvailable')
         .eq('credit_debit_indicator', 'Credit')
         .maybeSingle();
-      sourceBalance = closingBal;
+      sourceBalance = interimBal;
     }
 
     if (!sourceBalance || parseFloat(sourceBalance.amount) < transferAmount) {
