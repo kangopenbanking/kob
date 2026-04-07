@@ -29,26 +29,37 @@ Deno.serve(async (req) => {
       }
 
       // Search by name
-      const { data: nameResults } = await supabase
+      const { data: nameResults, error: nameErr } = await supabase
         .from('profiles')
-        .select('id, full_name, phone_number, avatar_url')
+        .select('id, full_name, phone_number')
         .neq('id', user.id)
         .ilike('full_name', `%${query}%`)
         .limit(8);
+      
+      if (nameErr) console.error('Name search error:', nameErr);
 
       // Also search by phone if query looks like a phone number
       let phoneResults: any[] = [];
       const cleanQuery = query.replace(/[\s\-\(\)]/g, '');
-      if (/^\+?\d{4,}$/.test(cleanQuery)) {
+      if (/^\+?\d{3,}$/.test(cleanQuery)) {
         const phoneVariants = [cleanQuery];
         if (!cleanQuery.startsWith('+')) phoneVariants.push(`+${cleanQuery}`);
         if (/^6\d{8}$/.test(cleanQuery)) {
           phoneVariants.push(`+237${cleanQuery}`);
         }
+        // Also do a partial match on phone
+        const { data: partialPhone } = await supabase
+          .from('profiles')
+          .select('id, full_name, phone_number')
+          .neq('id', user.id)
+          .ilike('phone_number', `%${cleanQuery}%`)
+          .limit(5);
+        if (partialPhone?.length) phoneResults.push(...partialPhone);
+        
         for (const pv of phoneVariants) {
           const { data } = await supabase
             .from('profiles')
-            .select('id, full_name, phone_number, avatar_url')
+            .select('id, full_name, phone_number')
             .eq('phone_number', pv)
             .neq('id', user.id)
             .limit(3);
