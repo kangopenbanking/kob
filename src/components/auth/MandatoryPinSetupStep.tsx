@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 interface MandatoryPinSetupStepProps {
   onComplete: () => void;
@@ -53,7 +54,7 @@ export const MandatoryPinSetupStep: React.FC<MandatoryPinSetupStepProps> = ({
       toast.success('PIN set successfully!');
       setTimeout(() => onComplete(), 1500);
     } catch (err: any) {
-      setError(err.message || 'Failed to set PIN. Please try again.');
+      setError(extractEdgeFunctionError(err, 'Failed to set PIN. Please try again.'));
     } finally {
       setLoading(false);
     }

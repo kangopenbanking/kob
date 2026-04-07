@@ -10,8 +10,10 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
-
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { KANG_PLATFORM_ID } from '@/constants/platform';
+
+
 
 const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
@@ -185,6 +187,7 @@ const CustomerCashOut: React.FC = () => {
       const destinationType = selectedAccount?.account_type;
 
       // Call the unified withdrawal edge function
+      const idempotencyKey = `withdrawal_${primaryAccount?.id}_${Date.now()}`;
       const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
         body: {
           amount: numAmount,
@@ -193,6 +196,7 @@ const CustomerCashOut: React.FC = () => {
           linked_account_id: selectedAccount?.id,
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
+          idempotency_key: idempotencyKey,
         },
       });
 
@@ -246,7 +250,7 @@ const CustomerCashOut: React.FC = () => {
 
       setTimeout(() => navigate(-1), 4000);
     } catch (err: any) {
-      toast.error(err.message || 'Withdrawal failed. Please try again.', {
+      toast.error(extractEdgeFunctionError(err, 'Withdrawal failed. Please try again.'), {
         description: 'Your balance has been restored. No funds were deducted.',
         duration: 5000,
       });
