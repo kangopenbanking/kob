@@ -131,6 +131,9 @@ Deno.serve(async (req) => {
         case 'PIGGYBANK_PAYMENT_MISSED':
           points = rule.min; // -20
           break;
+        case 'PIGGYBANK_PLAN_CANCELLED':
+          points = rule.min; // -5
+          break;
         // Njangi events
         case 'NJANGI_CONTRIBUTION_ON_TIME':
           points = rule.max; // +5
