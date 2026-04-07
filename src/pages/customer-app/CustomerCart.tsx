@@ -78,9 +78,9 @@ const CustomerCart: React.FC = () => {
     setCheckingOut(true);
     setOrderFailed(false);
     try {
+      const idempotencyKey = `checkout_${cart.id}_${Date.now()}`;
       const { data, error } = await supabase.functions.invoke('pos-consumer-checkout', {
-        body: { cart_id: cart.id },
-        headers: { 'Idempotency-Key': `checkout_${cart.id}` },
+        body: { cart_id: cart.id, idempotency_key: idempotencyKey },
       });
       if (error) throw error;
       if (data?.error) {
@@ -93,6 +93,11 @@ const CustomerCart: React.FC = () => {
         }
         return;
       }
+      // Sync balances after successful payment
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
+        queryClient.refetchQueries({ queryKey: ['account-balances'] }),
+      ]);
       setOrderComplete(data);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Checkout could not be completed. Please try again.'));
