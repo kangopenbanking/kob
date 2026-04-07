@@ -111,6 +111,7 @@ export function usePiggyBankPay() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      qc.invalidateQueries({ queryKey: ['customer-credit-score'] });
       qc.invalidateQueries({ queryKey: ['customer-accounts'] });
       qc.invalidateQueries({ queryKey: ['account-balances'] });
       const walletMsg = data?.wallet_debited ? ' Funds debited from your wallet.' : '';
@@ -136,6 +137,7 @@ export function useCancelPiggyBankPlan() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      qc.invalidateQueries({ queryKey: ['customer-credit-score'] });
       toast.success(`Plan cancelled. Your credit score was impacted by ${data?.credit_impact || -5} points.`);
     },
     onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not cancel the plan.')),

@@ -51,27 +51,21 @@ function generateSchedule(startDate: string, endDate: string | null, frequency: 
   return payments;
 }
 
-// ─── Atomic wallet debit helper ───
+// ─── Atomic wallet debit helper (uses SELECT FOR UPDATE via DB function) ───
 async function debitWallet(supabase: any, accountId: string, amount: number, userId: string, description: string): Promise<{ success: boolean; error?: string }> {
-  // Get current ClosingAvailable balance
-  const { data: balance, error: balErr } = await supabase
-    .from('account_balances')
-    .select('id, amount')
-    .eq('account_id', accountId)
-    .eq('balance_type', 'ClosingAvailable')
-    .eq('credit_debit_indicator', 'Credit')
-    .maybeSingle();
+  // Atomic debit with row-level locking — prevents double-debit race conditions
+  const { data: result, error: rpcErr } = await supabase.rpc('atomic_debit_balance', {
+    _account_id: accountId,
+    _amount: amount,
+    _currency: 'XAF',
+  });
 
-  if (balErr || !balance) return { success: false, error: 'Could not retrieve wallet balance' };
-  if (balance.amount < amount) return { success: false, error: `Insufficient balance. Available: ${balance.amount} XAF, Required: ${amount} XAF` };
-
-  // Atomic debit
-  const { error: updateErr } = await supabase
-    .from('account_balances')
-    .update({ amount: balance.amount - amount, balance_datetime: new Date().toISOString() })
-    .eq('id', balance.id);
-
-  if (updateErr) return { success: false, error: 'Failed to debit wallet' };
+  if (rpcErr) {
+    const msg = rpcErr.message || 'Failed to debit wallet';
+    if (msg.includes('Insufficient funds')) return { success: false, error: msg };
+    if (msg.includes('Balance not found')) return { success: false, error: 'Could not retrieve wallet balance' };
+    return { success: false, error: msg };
+  }
 
   // Record transaction
   const now = new Date().toISOString();
