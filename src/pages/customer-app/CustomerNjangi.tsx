@@ -247,7 +247,7 @@ const CustomerNjangi: React.FC = () => {
             </div>
           )}
           {isCreator && allPaid && detailMembers.length > 0 && (
-            <Button variant="outline" onClick={() => handlePayout(selectedGroup.id)} disabled={payoutMutation.isPending}
+            <Button variant="outline" onClick={() => requestPayout(selectedGroup.id)} disabled={payoutMutation.isPending}
               className="flex-1 rounded-2xl h-11 gap-2 border-[hsl(45,60%,35%)] text-[hsl(45,60%,35%)]">
               {payoutMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
               Trigger Payout
