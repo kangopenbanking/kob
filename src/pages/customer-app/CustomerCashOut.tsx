@@ -248,7 +248,7 @@ const CustomerCashOut: React.FC = () => {
 
       setTimeout(() => navigate(-1), 4000);
     } catch (err: any) {
-      toast.error(err.message || 'Withdrawal failed. Please try again.', {
+      toast.error(extractEdgeFunctionError(err, 'Withdrawal failed. Please try again.'), {
         description: 'Your balance has been restored. No funds were deducted.',
         duration: 5000,
       });
