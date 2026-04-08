@@ -78,6 +78,8 @@ export default function RealWorldExamples() {
           </ul>
         </div>
       </noscript>
+
+      <AutoDocNavigation />
     </div>
   );
 }
