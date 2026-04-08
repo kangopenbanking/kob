@@ -1,9 +1,33 @@
 {
-  "apiVersion": "4.9.3",
+  "apiVersion": "4.9.4",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-05",
+  "lastUpdated": "2026-04-08",
   "entries": [
+    {
+      "version": "4.9.4",
+      "date": "2026-04-08",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Rate limit documentation hardening, 429 response schema, X-RateLimit headers, and changelog version sync",
+      "highlights": [
+        "Added 429 Too Many Requests response with RFC 7807 ProblemDetails to all rate-limited endpoints",
+        "Added X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, and Retry-After response headers to OpenAPI specification",
+        "Rate limit documentation page (/developer/api/rate-limits) verified with per-endpoint and per-tier limits",
+        "Changelog apiVersion synchronized with spec version (previously 4.9.3 while spec was 4.9.2)",
+        "All developer portal pages verified publicly accessible without authentication per Standing Order P1",
+        "Status page (/developer/status) verified with SLA commitments and incident priority matrix",
+        "Terms (/terms) and Privacy (/privacy) pages verified with full legal content"
+      ],
+      "standard_citations": [
+        "RFC 6585 Section 4",
+        "RFC 7807",
+        "ORDER P1",
+        "ORDER P6",
+        "ORDER P7",
+        "ORDER P10"
+      ]
+    },
     {
       "version": "4.9.3",
       "date": "2026-04-05",
@@ -18,7 +42,12 @@
         "Test data generator creates realistic XAF accounts, transactions, and balances in configurable quantities",
         "6 sandbox edge functions deployed and verified: sandbox-create-account, sandbox-create-api-key, sandbox-generate-data, sandbox-test-webhook, sandbox-trigger-webhook, sandbox-register-webhook"
       ],
-      "standard_citations": ["RFC 7591 Section 2.3", "ORDER P3", "ORDER P5", "ORDER P9"]
+      "standard_citations": [
+        "RFC 7591 Section 2.3",
+        "ORDER P3",
+        "ORDER P5",
+        "ORDER P9"
+      ]
     },
     {
       "version": "4.9.2",
@@ -33,7 +62,12 @@
         "Request and response examples added to the DCR endpoint for developer onboarding",
         "Integration contracts documentation updated with full DCR field reference table"
       ],
-      "standard_citations": ["RFC 7591 Section 2", "RFC 7591 Section 2.3", "FAPI-1.0-ADV Section 5.2.2", "OIDC Core Section 2"]
+      "standard_citations": [
+        "RFC 7591 Section 2",
+        "RFC 7591 Section 2.3",
+        "FAPI-1.0-ADV Section 5.2.2",
+        "OIDC Core Section 2"
+      ]
     },
     {
       "version": "4.9.1",
@@ -49,7 +83,13 @@
         "COBAC/BEAC regulatory compliance tracker with 8-point checklist and standard citations",
         "Developer Forum confirmed publicly accessible per ORDER P1"
       ],
-      "standard_citations": ["FAPI-1.0-ADV Section 5.2.2", "RFC 9126", "RFC 9101", "COBAC Regulation 01/CEMAC", "ORDER P1"]
+      "standard_citations": [
+        "FAPI-1.0-ADV Section 5.2.2",
+        "RFC 9126",
+        "RFC 9101",
+        "COBAC Regulation 01/CEMAC",
+        "ORDER P1"
+      ]
     },
     {
       "version": "4.7.0",
@@ -77,13 +117,13 @@
       "breaking_changes": false,
       "summary": "FAPI 1.0 Advanced Certification + Schema Hardening",
       "highlights": [
-        "FAPI 1.0 Advanced certification ready — code_challenge and code_challenge_method now required on /v1/oauth/authorize",
-        "Schema validation hardened — required[] arrays added to all 49 API schemas",
+        "FAPI 1.0 Advanced certification ready \u2014 code_challenge and code_challenge_method now required on /v1/oauth/authorize",
+        "Schema validation hardened \u2014 required[] arrays added to all 49 API schemas",
         "Idempotency-Key header added to 15 payment-related POST endpoints",
         "StandardResponse envelope applied to all 19 single-resource GET endpoints",
         "PaginatedResponse envelope applied to all 67 list GET endpoints",
         "RFC 7807 application/problem+json support expanded to all 330+ error responses",
-        "WebhookEventPayload base schema added — 52 event types with deduplication ID"
+        "WebhookEventPayload base schema added \u2014 52 event types with deduplication ID"
       ]
     },
     {
@@ -108,7 +148,7 @@
         "Auto-generated code examples in 9 languages on all 60+ API reference pages",
         "Official SDK examples for Node.js, Python, and PHP added to API reference",
         "Postman Collection v2.1 auto-export from OpenAPI spec",
-        "Response validation test suite — 8 automated tests for OpenAPI contract integrity"
+        "Response validation test suite \u2014 8 automated tests for OpenAPI contract integrity"
       ]
     },
     {
@@ -130,7 +170,7 @@
       "date": "2026-03-21",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "Pay by Bank — Redirect-Based SCA",
+      "summary": "Pay by Bank \u2014 Redirect-Based SCA",
       "highlights": [
         "Pay by Bank with Strong Customer Authentication",
         "New pay_by_bank_intents table",
@@ -158,13 +198,13 @@
       "date": "2026-03-14",
       "type": "major",
       "breaking_changes": false,
-      "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle",
+      "summary": "Identity Modernization \u2014 unified registration, login, MFA, onboarding lifecycle",
       "highlights": [
         "Unified /v1/identity/register endpoint supporting personal, merchant, institution, and developer account types",
-        "MFA system — TOTP, SMS OTP, email OTP with step-up challenges",
-        "Session management — device tracking, rotating tokens, session revocation",
-        "Onboarding lifecycle — unified onboarding_applications table",
-        "Developer organizations with sandbox_active→prod_approved lifecycle"
+        "MFA system \u2014 TOTP, SMS OTP, email OTP with step-up challenges",
+        "Session management \u2014 device tracking, rotating tokens, session revocation",
+        "Onboarding lifecycle \u2014 unified onboarding_applications table",
+        "Developer organizations with sandbox_active\u2192prod_approved lifecycle"
       ]
     },
     {
@@ -174,8 +214,8 @@
       "breaking_changes": false,
       "summary": "Admin Rewards & Referral Management, 5 new banking fee types",
       "highlights": [
-        "Admin Rewards Management — full referral tracking, reward history, manual credit",
-        "Dynamic reward settings — referral bonus, cashback rate configurable via system_config",
+        "Admin Rewards Management \u2014 full referral tracking, reward history, manual credit",
+        "Dynamic reward settings \u2014 referral bonus, cashback rate configurable via system_config",
         "5 new fee types: overdraft_fee, loan_processing_fee, atm_withdrawal, standing_order, dormancy_fee"
       ]
     },
@@ -186,9 +226,9 @@
       "breaking_changes": false,
       "summary": "Overdraft Eligibility Engine + Credit Report Purchase",
       "highlights": [
-        "Overdraft Eligibility Engine — 7-factor scoring with risk bands (A-F)",
+        "Overdraft Eligibility Engine \u2014 7-factor scoring with risk bands (A-F)",
         "Full overdraft lifecycle: recalculate, request, approve, suspend, revoke",
-        "Credit Report Purchase — wallet-based payment with 30-day access"
+        "Credit Report Purchase \u2014 wallet-based payment with 30-day access"
       ]
     },
     {
@@ -198,8 +238,8 @@
       "breaking_changes": false,
       "summary": "POS Consumer Marketplace + QR Payments",
       "highlights": [
-        "POS Consumer Marketplace — merchants publish storefronts",
-        "QR Code Payments — static/dynamic merchant QR generation",
+        "POS Consumer Marketplace \u2014 merchants publish storefronts",
+        "QR Code Payments \u2014 static/dynamic merchant QR generation",
         "Wallet payment method added to pos-pay-order"
       ]
     },
@@ -208,7 +248,7 @@
       "date": "2026-03-01",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT",
+      "summary": "Cameroon Banking Identifiers \u2014 RIB, IBAN, BIC/SWIFT",
       "highlights": [
         "Full RIB (23-digit) and IBAN (27-char) validation with MOD-97 checksum",
         "DOMESTIC_RIB added to account_scheme enum",
@@ -223,7 +263,7 @@
       "summary": "30+ institutional pages, regulatory compliance, fraud engine",
       "highlights": [
         "BEAC/COBAC regulatory framework",
-        "Fraud Engine — 5-layer defence model",
+        "Fraud Engine \u2014 5-layer defence model",
         "Double-Entry Ledger and Reconciliation Framework"
       ]
     },
@@ -247,7 +287,7 @@
       "date": "2024-11-01",
       "type": "major",
       "breaking_changes": false,
-      "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
+      "summary": "Initial public release \u2014 AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
       "highlights": [
         "Account Information Service (AISP)",
         "Payment Initiation Service (PISP)",
