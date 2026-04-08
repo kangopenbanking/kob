@@ -78,6 +78,8 @@ export default function RealWorldExamples() {
           </ul>
         </div>
       </noscript>
+
+      <AutoDocNavigation />
     </div>
   );
 }
@@ -102,9 +104,7 @@ function GuideCard({ ex, index }: { ex: typeof examples[0]; index: number }) {
               <Clock className="h-3 w-3" /> {ex.time}
             </span>
           </div>
-        
-      <AutoDocNavigation />
-</div>
+        </div>
         <ArrowRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1" />
       </div>
     </Link>
