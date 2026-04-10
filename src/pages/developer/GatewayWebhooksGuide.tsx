@@ -367,13 +367,13 @@ app.post('/webhooks/kob', (req, res) => {
           </TableHeader>
           <TableBody>
             {[
-              { attempt: 1, delay: "2 min", cumulative: "2 min" },
-              { attempt: 2, delay: "4 min", cumulative: "6 min" },
-              { attempt: 3, delay: "8 min", cumulative: "14 min" },
-              { attempt: 4, delay: "16 min", cumulative: "30 min" },
-              { attempt: 5, delay: "32 min", cumulative: "62 min" },
-              { attempt: 6, delay: "64 min", cumulative: "~2 hrs" },
-              { attempt: 7, delay: "128 min", cumulative: "~4 hrs" },
+              { attempt: 1, delay: "1 min", cumulative: "1 min" },
+              { attempt: 2, delay: "5 min", cumulative: "6 min" },
+              { attempt: 3, delay: "30 min", cumulative: "36 min" },
+              { attempt: 4, delay: "2 hrs", cumulative: "~2.5 hrs" },
+              { attempt: 5, delay: "8 hrs", cumulative: "~10.5 hrs" },
+              { attempt: 6, delay: "24 hrs", cumulative: "~34.5 hrs" },
+              { attempt: 7, delay: "48 hrs", cumulative: "~82.5 hrs" },
             ].map(r => (
               <TableRow key={r.attempt}>
                 <TableCell className="text-sm">{r.attempt}</TableCell>
@@ -383,7 +383,31 @@ app.post('/webhooks/kob', (req, res) => {
             ))}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground">After 7 failures, the event enters the <strong>dead-letter queue</strong>. Both merchants and admins can view failed deliveries and manually retry via the dashboard.</p>
+        <p className="text-xs text-muted-foreground">After 7 failures, the event enters the <strong>dead-letter queue</strong>. Failed events are retained for 30 days.</p>
+
+        <div className="mt-4">
+          <h4 className="font-semibold text-sm mb-2">Replay Failed Events via API</h4>
+          <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`# List dead-letter events
+GET /v1/gateway/merchants/webhooks/{webhookId}/dead-letters?merchant_id=mch_uuid
+
+# Replay a specific failed event
+POST /v1/gateway/merchants/webhooks/{webhookId}/dead-letters/{eventId}/replay
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+{
+  "merchant_id": "mch_uuid"
+}
+
+# Response
+{
+  "replayed": true,
+  "event_id": "evt_abc123",
+  "delivery_id": "del_new_uuid",
+  "status": "pending"
+}`}
+          </pre>
+        </div>
       </CardContent>
     </Card>
 
