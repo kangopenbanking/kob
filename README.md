@@ -6,7 +6,7 @@ Kang Open Banking provides developers with a single REST API to integrate **mobi
 
 ---
 
-## 🚀 Overview
+## Overview
 
 The Kang Open Banking API enables businesses and developers to:
 
@@ -19,7 +19,7 @@ All services are exposed through a **single unified API endpoint**, simplifying 
 
 ---
 
-## 🌍 Supported Payment Methods
+## Supported Payment Methods
 
 * **Mobile Money**
 
@@ -40,24 +40,24 @@ All services are exposed through a **single unified API endpoint**, simplifying 
 
 ---
 
-## 🧩 Core Features
+## Core Features
 
-* 🔗 Unified Payments API
-* 💸 Payment Initiation (PISP)
-* 🏦 Account Information Access (AISP)
-* 🔐 KYC / AML Compliance Tools
-* 📊 Credit Scoring APIs
-* 🔄 Recurring Billing & Subscriptions
-* 💼 Custodial Wallets & Escrow
-* 🔀 Split Payments
-* 🌐 ISO 20022 & SWIFT Messaging
-* 🔔 Webhooks with signature verification
+* Unified Payments API
+* Payment Initiation (PISP)
+* Account Information Access (AISP)
+* KYC / AML Compliance Tools
+* Credit Scoring APIs
+* Recurring Billing & Subscriptions
+* Custodial Wallets & Escrow
+* Split Payments
+* ISO 20022 & SWIFT Messaging
+* Webhooks with signature verification
 
 All features are accessible via RESTful endpoints with consistent request/response formats. ([Kang Open Banking][1])
 
 ---
 
-## 🔧 Base URL
+## Base URL
 
 ```bash
 https://api.kangopenbanking.com/v1
@@ -65,7 +65,7 @@ https://api.kangopenbanking.com/v1
 
 ---
 
-## ⚡ Getting Started
+## Getting Started
 
 ### 1. Access the Developer Portal
 
@@ -87,7 +87,7 @@ Use your API credentials to authenticate and securely interact with endpoints.
 
 ---
 
-## 📦 Example Request
+## Example Request
 
 ```bash
 curl -X POST https://api.kangopenbanking.com/v1/payments \
@@ -103,7 +103,7 @@ curl -X POST https://api.kangopenbanking.com/v1/payments \
 
 ---
 
-## 🔔 Webhooks
+## Webhooks
 
 Kang Open Banking supports webhook notifications for:
 
@@ -115,7 +115,7 @@ Webhook signatures can be verified for enhanced security (similar to Stripe, Pay
 
 ---
 
-## 🧪 Sandbox Environment
+## Sandbox Environment
 
 A full-featured sandbox is available to:
 
@@ -125,7 +125,7 @@ A full-featured sandbox is available to:
 
 ---
 
-## 📄 API Specifications
+## API Specifications
 
 Download OpenAPI specs:
 
@@ -137,7 +137,7 @@ These can be imported into tools like Postman for rapid testing.
 
 ---
 
-## 🔐 Security & Compliance
+## Security & Compliance
 
 * Secure REST API architecture
 * Encrypted data transmission
@@ -146,15 +146,15 @@ These can be imported into tools like Postman for rapid testing.
 
 ---
 
-## 📬 Support
+## Support
 
 For developer support or inquiries:
 
-📧 [developers@kangopenbanking.com](mailto:developers@kangopenbanking.com)
+[developers@kangopenbanking.com](mailto:developers@kangopenbanking.com)
 
 ---
 
-## 📌 Use Cases
+## Use Cases
 
 * Fintech applications
 * Payment gateways
@@ -165,7 +165,7 @@ For developer support or inquiries:
 
 ---
 
-## 🏁 Go Live
+## Go Live
 
 1. Complete sandbox testing
 2. Obtain production credentials
@@ -174,7 +174,7 @@ For developer support or inquiries:
 
 ---
 
-## 📖 Resources
+## Resources
 
 * API Explorer (Swagger UI)
 * Integration Guides
@@ -183,19 +183,19 @@ For developer support or inquiries:
 
 ---
 
-## 📄 License
+## License
 
 This project is proprietary. Please contact Kang Open Banking for usage and partnership details.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Currently not open for public contributions. For partnerships or integrations, please contact the team.
 
 ---
 
-## 🌐 Website
+## Website
 
 https://kangopenbanking.com
 
