@@ -12,6 +12,7 @@ const GatewayWebhooksGuide = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Webhook Guide</h1>
       <p className="text-muted-foreground mt-2">Receive real-time event notifications for charges, payouts, refunds, and disputes. All outbound webhooks are HMAC-SHA256 signed. Inbound provider webhooks use provider-native verification.</p>
+      <p className="text-sm text-muted-foreground mt-1">Last updated: 10 April 2026 | Contact: developers@kangopenbanking.com</p>
     </div>
 
     {/* Setup */}
@@ -66,17 +67,57 @@ const GatewayWebhooksGuide = () => (
           </TableHeader>
           <TableBody>
             {[
+              ["charge.created", "Charge", "Charge initiated"],
               ["charge.successful", "Charge", "Payment completed successfully"],
               ["charge.failed", "Charge", "Payment failed"],
+              ["charge.pending", "Charge", "Payment awaiting confirmation"],
               ["charge.refunded", "Charge", "Payment was refunded"],
+              ["charge.reversed", "Charge", "Payment reversed by provider"],
+              ["charge.expired", "Charge", "Payment expired before completion"],
+              ["charge.cancelled", "Charge", "Payment cancelled by customer"],
+              ["payout.created", "Payout", "Payout initiated"],
               ["payout.completed", "Payout", "Payout disbursed to recipient"],
               ["payout.failed", "Payout", "Payout failed"],
+              ["payout.reversed", "Payout", "Payout reversed"],
+              ["payout.pending", "Payout", "Payout awaiting processing"],
+              ["refund.created", "Refund", "Refund initiated"],
               ["refund.completed", "Refund", "Refund processed successfully"],
               ["refund.failed", "Refund", "Refund failed"],
               ["dispute.created", "Dispute", "Card dispute opened"],
-              ["dispute.won", "Dispute", "Dispute resolved in merchant's favor"],
+              ["dispute.updated", "Dispute", "Dispute evidence submitted"],
+              ["dispute.won", "Dispute", "Dispute resolved in merchant favor"],
               ["dispute.lost", "Dispute", "Dispute resolved against merchant"],
+              ["settlement.created", "Settlement", "Settlement batch created"],
               ["settlement.paid", "Settlement", "Settlement batch paid out"],
+              ["settlement.failed", "Settlement", "Settlement failed"],
+              ["subscription.created", "Subscription", "Subscription plan created"],
+              ["subscription.activated", "Subscription", "Subscription activated"],
+              ["subscription.renewed", "Subscription", "Subscription renewed"],
+              ["subscription.cancelled", "Subscription", "Subscription cancelled"],
+              ["subscription.expired", "Subscription", "Subscription expired"],
+              ["subscription.payment_failed", "Subscription", "Subscription payment failed"],
+              ["merchant.created", "Merchant", "Merchant account created"],
+              ["merchant.updated", "Merchant", "Merchant details updated"],
+              ["merchant.verified", "Merchant", "Merchant verification complete"],
+              ["merchant.suspended", "Merchant", "Merchant account suspended"],
+              ["wallet.credited", "Wallet", "Wallet credited"],
+              ["wallet.debited", "Wallet", "Wallet debited"],
+              ["wallet.frozen", "Wallet", "Wallet frozen"],
+              ["escrow.created", "Escrow", "Escrow created"],
+              ["escrow.funded", "Escrow", "Escrow funded"],
+              ["escrow.released", "Escrow", "Escrow released"],
+              ["escrow.disputed", "Escrow", "Escrow disputed"],
+              ["escrow.refunded", "Escrow", "Escrow refunded"],
+              ["consent.authorized", "AISP", "Account consent authorized"],
+              ["consent.revoked", "AISP", "Account consent revoked"],
+              ["consent.expired", "AISP", "Account consent expired"],
+              ["payment_link.created", "Payment Link", "Payment link created"],
+              ["payment_link.paid", "Payment Link", "Payment link completed"],
+              ["payment_link.expired", "Payment Link", "Payment link expired"],
+              ["pay_by_bank.authorized", "Pay by Bank", "Pay by bank authorized"],
+              ["pay_by_bank.submitted", "Pay by Bank", "Pay by bank submitted"],
+              ["pay_by_bank.completed", "Pay by Bank", "Pay by bank completed"],
+              ["pay_by_bank.failed", "Pay by Bank", "Pay by bank failed"],
             ].map(([event, domain, desc]) => (
               <TableRow key={event}>
                 <TableCell><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{event}</code></TableCell>
@@ -86,6 +127,7 @@ const GatewayWebhooksGuide = () => (
             ))}
           </TableBody>
         </Table>
+        <p className="text-xs text-muted-foreground mt-2">52 event types total. Subscribe to specific events or use <code className="bg-muted px-1 rounded">*</code> to receive all.</p>
       </CardContent>
     </Card>
 
@@ -326,13 +368,13 @@ app.post('/webhooks/kob', (req, res) => {
           </TableHeader>
           <TableBody>
             {[
-              { attempt: 1, delay: "2 min", cumulative: "2 min" },
-              { attempt: 2, delay: "4 min", cumulative: "6 min" },
-              { attempt: 3, delay: "8 min", cumulative: "14 min" },
-              { attempt: 4, delay: "16 min", cumulative: "30 min" },
-              { attempt: 5, delay: "32 min", cumulative: "62 min" },
-              { attempt: 6, delay: "64 min", cumulative: "~2 hrs" },
-              { attempt: 7, delay: "128 min", cumulative: "~4 hrs" },
+              { attempt: 1, delay: "1 min", cumulative: "1 min" },
+              { attempt: 2, delay: "5 min", cumulative: "6 min" },
+              { attempt: 3, delay: "30 min", cumulative: "36 min" },
+              { attempt: 4, delay: "2 hrs", cumulative: "~2.5 hrs" },
+              { attempt: 5, delay: "8 hrs", cumulative: "~10.5 hrs" },
+              { attempt: 6, delay: "24 hrs", cumulative: "~34.5 hrs" },
+              { attempt: 7, delay: "48 hrs", cumulative: "~82.5 hrs" },
             ].map(r => (
               <TableRow key={r.attempt}>
                 <TableCell className="text-sm">{r.attempt}</TableCell>
@@ -342,7 +384,31 @@ app.post('/webhooks/kob', (req, res) => {
             ))}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground">After 7 failures, the event enters the <strong>dead-letter queue</strong>. Both merchants and admins can view failed deliveries and manually retry via the dashboard.</p>
+        <p className="text-xs text-muted-foreground">After 7 failures, the event enters the <strong>dead-letter queue</strong>. Failed events are retained for 30 days.</p>
+
+        <div className="mt-4">
+          <h4 className="font-semibold text-sm mb-2">Replay Failed Events via API</h4>
+          <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`# List dead-letter events
+GET /v1/gateway/merchants/webhooks/{webhookId}/dead-letters?merchant_id=mch_uuid
+
+# Replay a specific failed event
+POST /v1/gateway/merchants/webhooks/{webhookId}/dead-letters/{eventId}/replay
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+{
+  "merchant_id": "mch_uuid"
+}
+
+# Response
+{
+  "replayed": true,
+  "event_id": "evt_abc123",
+  "delivery_id": "del_new_uuid",
+  "status": "pending"
+}`}
+          </pre>
+        </div>
       </CardContent>
     </Card>
 

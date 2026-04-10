@@ -7,6 +7,32 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.5",
+      date: "2026-04-10",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "Rate limit tables added to OpenAPI info description -- Production and Sandbox thresholds for all endpoint groups (300/120 req/min general, 60/30 payments, 30 OAuth, 10 webhook replay)" },
+        { type: "feature", description: "RateLimitError schema enhanced with retry_after and limit required fields per RFC 6585 Section 4" },
+        { type: "feature", description: "SLA table added to OpenAPI info description -- 99.9% Production uptime, 99.5% Sandbox, P1 30-minute response time, 72-hour maintenance notice" },
+        { type: "improvement", description: "x-status-page updated to status.kangopenbanking.com, x-sla-url updated to kangopenbanking.com/sla" },
+        { type: "improvement", description: "Rate limit response header documentation (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After) added to spec description" },
+      ]
+    },
+    {
+      version: "API Spec 4.9.4",
+      date: "2026-04-08",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "TooManyRequests (429) reusable response component added with X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, and Retry-After headers" },
+        { type: "feature", description: "RateLimitError schema added to components/schemas with RFC 7807 Problem Details format" },
+        { type: "feature", description: "429 response injected into all 196 POST endpoints for universal rate limit coverage" },
+        { type: "feature", description: "x-sla-url, x-status-page, and x-uptime-sla extensions added to OpenAPI info block" },
+        { type: "feature", description: "x-sdk-libraries extension added for Node.js, Python, and PHP SDK references" },
+        { type: "feature", description: "x-postman-collection extension added with Postman workspace link" },
+        { type: "improvement", description: "SDK section on developer portal enhanced with repository links and version badges" },
+      ]
+    },
+    {
       version: "API Spec 4.9.3",
       date: "2026-04-05",
       type: "patch",

@@ -1,3 +1,10 @@
+// ============================================================
+// PERMANENT PUBLIC ROUTES -- DO NOT REMOVE OR REDIRECT
+// This layout serves ALL /developer/* routes publicly.
+// No authentication, no login wall, no redirect.
+// Required for international API standards compliance (ORDER P1).
+// ============================================================
+
 import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
