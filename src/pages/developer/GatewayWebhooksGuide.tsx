@@ -66,17 +66,57 @@ const GatewayWebhooksGuide = () => (
           </TableHeader>
           <TableBody>
             {[
+              ["charge.created", "Charge", "Charge initiated"],
               ["charge.successful", "Charge", "Payment completed successfully"],
               ["charge.failed", "Charge", "Payment failed"],
+              ["charge.pending", "Charge", "Payment awaiting confirmation"],
               ["charge.refunded", "Charge", "Payment was refunded"],
+              ["charge.reversed", "Charge", "Payment reversed by provider"],
+              ["charge.expired", "Charge", "Payment expired before completion"],
+              ["charge.cancelled", "Charge", "Payment cancelled by customer"],
+              ["payout.created", "Payout", "Payout initiated"],
               ["payout.completed", "Payout", "Payout disbursed to recipient"],
               ["payout.failed", "Payout", "Payout failed"],
+              ["payout.reversed", "Payout", "Payout reversed"],
+              ["payout.pending", "Payout", "Payout awaiting processing"],
+              ["refund.created", "Refund", "Refund initiated"],
               ["refund.completed", "Refund", "Refund processed successfully"],
               ["refund.failed", "Refund", "Refund failed"],
               ["dispute.created", "Dispute", "Card dispute opened"],
-              ["dispute.won", "Dispute", "Dispute resolved in merchant's favor"],
+              ["dispute.updated", "Dispute", "Dispute evidence submitted"],
+              ["dispute.won", "Dispute", "Dispute resolved in merchant favor"],
               ["dispute.lost", "Dispute", "Dispute resolved against merchant"],
+              ["settlement.created", "Settlement", "Settlement batch created"],
               ["settlement.paid", "Settlement", "Settlement batch paid out"],
+              ["settlement.failed", "Settlement", "Settlement failed"],
+              ["subscription.created", "Subscription", "Subscription plan created"],
+              ["subscription.activated", "Subscription", "Subscription activated"],
+              ["subscription.renewed", "Subscription", "Subscription renewed"],
+              ["subscription.cancelled", "Subscription", "Subscription cancelled"],
+              ["subscription.expired", "Subscription", "Subscription expired"],
+              ["subscription.payment_failed", "Subscription", "Subscription payment failed"],
+              ["merchant.created", "Merchant", "Merchant account created"],
+              ["merchant.updated", "Merchant", "Merchant details updated"],
+              ["merchant.verified", "Merchant", "Merchant verification complete"],
+              ["merchant.suspended", "Merchant", "Merchant account suspended"],
+              ["wallet.credited", "Wallet", "Wallet credited"],
+              ["wallet.debited", "Wallet", "Wallet debited"],
+              ["wallet.frozen", "Wallet", "Wallet frozen"],
+              ["escrow.created", "Escrow", "Escrow created"],
+              ["escrow.funded", "Escrow", "Escrow funded"],
+              ["escrow.released", "Escrow", "Escrow released"],
+              ["escrow.disputed", "Escrow", "Escrow disputed"],
+              ["escrow.refunded", "Escrow", "Escrow refunded"],
+              ["consent.authorized", "AISP", "Account consent authorized"],
+              ["consent.revoked", "AISP", "Account consent revoked"],
+              ["consent.expired", "AISP", "Account consent expired"],
+              ["payment_link.created", "Payment Link", "Payment link created"],
+              ["payment_link.paid", "Payment Link", "Payment link completed"],
+              ["payment_link.expired", "Payment Link", "Payment link expired"],
+              ["pay_by_bank.authorized", "Pay by Bank", "Pay by bank authorized"],
+              ["pay_by_bank.submitted", "Pay by Bank", "Pay by bank submitted"],
+              ["pay_by_bank.completed", "Pay by Bank", "Pay by bank completed"],
+              ["pay_by_bank.failed", "Pay by Bank", "Pay by bank failed"],
             ].map(([event, domain, desc]) => (
               <TableRow key={event}>
                 <TableCell><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{event}</code></TableCell>
@@ -86,6 +126,7 @@ const GatewayWebhooksGuide = () => (
             ))}
           </TableBody>
         </Table>
+        <p className="text-xs text-muted-foreground mt-2">52 event types total. Subscribe to specific events or use <code className="bg-muted px-1 rounded">*</code> to receive all.</p>
       </CardContent>
     </Card>
 
