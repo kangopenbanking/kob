@@ -12,6 +12,7 @@ const GatewayWebhooksGuide = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Webhook Guide</h1>
       <p className="text-muted-foreground mt-2">Receive real-time event notifications for charges, payouts, refunds, and disputes. All outbound webhooks are HMAC-SHA256 signed. Inbound provider webhooks use provider-native verification.</p>
+      <p className="text-sm text-muted-foreground mt-1">Last updated: 10 April 2026 | Contact: developers@kangopenbanking.com</p>
     </div>
 
     {/* Setup */}

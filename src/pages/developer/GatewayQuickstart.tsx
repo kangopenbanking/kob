@@ -12,6 +12,7 @@ const GatewayQuickstart = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Gateway Quickstart</h1>
       <p className="text-muted-foreground mt-2">Go from zero to your first payment in under 10 minutes. This guide uses the sandbox environment with test credentials.</p>
+      <p className="text-sm text-muted-foreground mt-1">Last updated: 10 April 2026 | Contact: developers@kangopenbanking.com</p>
     </div>
 
     <Card className="border-primary/30 bg-primary/5">
