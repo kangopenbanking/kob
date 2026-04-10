@@ -1,87 +1,206 @@
-# Welcome to Kang Open Banking - KOB
+# Kang Open Banking API
 
-## Project info
+Unified Open Banking & Payment Gateway API for Cameroon and the CEMAC region.
 
-**URL**: https://kangopenbanking.com
+Kang Open Banking provides developers with a single REST API to integrate **mobile money, card payments, bank transfers, and financial services** into their applications.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Overview
 
-**Use Kang Unified Banking API for Cameroon**
+The Kang Open Banking API enables businesses and developers to:
 
-Simply visit the [Kang Open Banking](https://kangopenbanking.com) and start prompting.
+* Accept payments (Mobile Money, Cards)
+* Initiate payouts and transfers
+* Access banking data securely
+* Build fintech products with compliance-ready infrastructure
 
-Changes made via Kang Open Banking - KOB will be committed automatically to this repo.
+All services are exposed through a **single unified API endpoint**, simplifying integration and scaling. ([Kang Open Banking][1])
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in KOB.
+## 🌍 Supported Payment Methods
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* **Mobile Money**
 
-Follow these steps:
+  * MTN MoMo
+  * Orange Money
+  * Express Union
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+* **Card Payments**
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+  * Visa
+  * Mastercard
+  * 3D Secure authentication
 
-# Step 3: Install the necessary dependencies.
-npm i
+* **Bank Transfers**
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+  * Account-to-account transfers
+  * Instant payouts
+
+---
+
+## 🧩 Core Features
+
+* 🔗 Unified Payments API
+* 💸 Payment Initiation (PISP)
+* 🏦 Account Information Access (AISP)
+* 🔐 KYC / AML Compliance Tools
+* 📊 Credit Scoring APIs
+* 🔄 Recurring Billing & Subscriptions
+* 💼 Custodial Wallets & Escrow
+* 🔀 Split Payments
+* 🌐 ISO 20022 & SWIFT Messaging
+* 🔔 Webhooks with signature verification
+
+All features are accessible via RESTful endpoints with consistent request/response formats. ([Kang Open Banking][1])
+
+---
+
+## 🔧 Base URL
+
+```bash
+https://api.kangopenbanking.com/v1
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## ⚡ Getting Started
 
-**Use GitHub Codespaces**
+### 1. Access the Developer Portal
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Visit: https://kangopenbanking.com/developer
 
-## What technologies are used for this project?
+### 2. Explore the API
 
-This project is built with:
+* Swagger / API Explorer
+* OpenAPI Specifications (JSON / YAML)
+* Integration examples
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3. Use the Sandbox
 
-## How can I deploy this project?
+Test your integration in a safe sandbox environment before going live.
 
-Simply open [Kang Open Banking](https://kangopenbanking.com) and click on Register your financial institution ->
+### 4. Authenticate Requests
 
-## API Access
+Use your API credentials to authenticate and securely interact with endpoints.
 
-The Kang Open Banking API is publicly accessible at:
+---
 
-**Base URL:** `https://api.kangopenbanking.com/functions/v1`
+## 📦 Example Request
 
-**Documentation:**
-- Interactive API Explorer: https://kangopenbanking.com/developer/api-explorer
-- Full Documentation: https://kangopenbanking.com/documentation
-- OpenAPI Specification: https://api.kangopenbanking.com/functions/v1/public-api-spec
-- Postman Collection: https://api.kangopenbanking.com/functions/v1/postman-collection
+```bash
+curl -X POST https://api.kangopenbanking.com/v1/payments \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 1000,
+    "currency": "XAF",
+    "method": "mobile_money",
+    "provider": "MTN"
+  }'
+```
 
-See the [Developer Testing Guide](docs/developer-testing-guide.md) for sandbox credentials and testing instructions.
+---
 
-## Can I connect a custom domain to my KOB project?
+## 🔔 Webhooks
 
-Yes, you can!
+Kang Open Banking supports webhook notifications for:
 
-To connect a domain, navigate to Account > Console > Integrate KOB with your application.
+* Payment status updates
+* Transaction confirmations
+* Subscription events
 
-Read more here: [Developer Console](https://kangopenbanking.com/integration-workflow)
+Webhook signatures can be verified for enhanced security (similar to Stripe, PayPal, Flutterwave models). ([Kang Open Banking][1])
+
+---
+
+## 🧪 Sandbox Environment
+
+A full-featured sandbox is available to:
+
+* Simulate transactions
+* Test integrations
+* Validate webhook flows
+
+---
+
+## 📄 API Specifications
+
+Download OpenAPI specs:
+
+* JSON format
+* YAML format
+* Sandbox specification
+
+These can be imported into tools like Postman for rapid testing.
+
+---
+
+## 🔐 Security & Compliance
+
+* Secure REST API architecture
+* Encrypted data transmission
+* Compliance with financial regulations
+* Built-in KYC/AML verification tools
+
+---
+
+## 📬 Support
+
+For developer support or inquiries:
+
+📧 [developers@kangopenbanking.com](mailto:developers@kangopenbanking.com)
+
+---
+
+## 📌 Use Cases
+
+* Fintech applications
+* Payment gateways
+* E-commerce platforms
+* Banking integrations
+* Subscription platforms
+* Digital wallets
+
+---
+
+## 🏁 Go Live
+
+1. Complete sandbox testing
+2. Obtain production credentials
+3. Switch to live endpoints
+4. Monitor transactions via webhooks
+
+---
+
+## 📖 Resources
+
+* API Explorer (Swagger UI)
+* Integration Guides
+* Webhook Verification Guide
+* Quickstart Tutorials
+
+---
+
+## 📄 License
+
+This project is proprietary. Please contact Kang Open Banking for usage and partnership details.
+
+---
+
+## 🤝 Contributing
+
+Currently not open for public contributions. For partnerships or integrations, please contact the team.
+
+---
+
+## 🌐 Website
+
+https://kangopenbanking.com
+
+---
+
+**Kang Open Banking — Powering Financial Innovation Across Africa**
+
+[1]: https://kangopenbanking.com/?utm_source=chatgpt.com "Kang Open Banking - Unified Banking API for Cameroon"
