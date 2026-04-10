@@ -1,3 +1,26 @@
+// ============================================================
+// PERMANENT PUBLIC ROUTES -- DO NOT REMOVE OR REDIRECT
+// These routes must remain publicly accessible at all times.
+// No authentication, no login wall, no redirect.
+// Required for international API standards compliance.
+// Removing or changing these routes breaks SDK integrations
+// and third-party developer tools worldwide.
+// ============================================================
+// PERMANENT_PUBLIC_ROUTES:
+//   /developer
+//   /developer/getting-started
+//   /developer/api-explorer
+//   /developer/examples/real-world
+//   /developer/gateway/quickstart
+//   /developer/gateway/webhooks
+//   /developer/sandbox
+//   /developer/guides/sdks
+//   /developer/changelog
+//   /openapi.json
+//   /openapi.yaml
+//   /openapi-sandbox.json
+// ============================================================
+
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
