@@ -15,7 +15,41 @@
     "license": {
       "name": "Proprietary",
       "url": "https://kangopenbanking.com/terms"
-    }
+    },
+    "x-sla-url": "https://kangopenbanking.com/developer/sla",
+    "x-status-page": "https://kangopenbanking.com/developer/status",
+    "x-uptime-sla": {
+      "production": "99.95%",
+      "sandbox": "99.9%",
+      "incident_response": {
+        "P1_critical": "30 minutes",
+        "P2_high": "2 hours",
+        "P3_medium": "8 hours",
+        "P4_low": "48 hours"
+      },
+      "maintenance_notice": "72 hours advance notice"
+    },
+    "x-sdk-libraries": {
+      "node": {
+        "name": "@kang/openbanking-node",
+        "version": "1.1.0",
+        "repository": "https://github.com/kangfinance/openbanking-node",
+        "package_manager": "https://www.npmjs.com/package/@kang/openbanking-node"
+      },
+      "python": {
+        "name": "kang-openbanking",
+        "version": "1.1.0",
+        "repository": "https://github.com/kangfinance/openbanking-python",
+        "package_manager": "https://pypi.org/project/kang-openbanking/"
+      },
+      "php": {
+        "name": "kang/openbanking-php",
+        "version": "1.1.0",
+        "repository": "https://github.com/kangfinance/openbanking-php",
+        "package_manager": "https://packagist.org/packages/kang/openbanking-php"
+      }
+    },
+    "x-postman-collection": "https://www.postman.com/kangfinance/kang-open-banking-api"
   },
   "servers": [
     {
@@ -3475,6 +3509,52 @@
             "description": "Merchant-provided metadata attached to the originating resource"
           }
         }
+      },
+      "RateLimitError": {
+        "type": "object",
+        "description": "Error response returned when a client exceeds their rate limit allocation (HTTP 429). Implements RFC 7807 Problem Details.",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "error_code",
+          "error_id",
+          "timestamp"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://kangopenbanking.com/errors/rate-limited"
+          },
+          "title": {
+            "type": "string",
+            "example": "Rate Limit Exceeded"
+          },
+          "status": {
+            "type": "integer",
+            "example": 429
+          },
+          "detail": {
+            "type": "string",
+            "example": "You have exceeded your rate limit of 1000 requests per minute. Retry after 30 seconds."
+          },
+          "error_code": {
+            "type": "string",
+            "example": "AUTH_005"
+          },
+          "error_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "err_abc123def456"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-04-10T10:00:00Z"
+          }
+        }
       }
     },
     "parameters": {
@@ -3689,11 +3769,8 @@
         }
       },
       "TooManyRequests": {
-        "description": "Rate limit exceeded. Retry after the number of seconds specified in the Retry-After header.",
+        "description": "Too Many Requests \u2014 rate limit exceeded. See `Retry-After` header for backoff.",
         "headers": {
-          "Retry-After": {
-            "$ref": "#/components/headers/Retry-After"
-          },
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/X-RateLimit-Limit"
           },
@@ -3702,21 +3779,15 @@
           },
           "X-RateLimit-Reset": {
             "$ref": "#/components/headers/X-RateLimit-Reset"
+          },
+          "Retry-After": {
+            "$ref": "#/components/headers/Retry-After"
           }
         },
         "content": {
           "application/problem+json": {
             "schema": {
-              "$ref": "#/components/schemas/ProblemDetails"
-            },
-            "example": {
-              "type": "https://kangopenbanking.com/errors/rate-limited",
-              "title": "Rate Limit Exceeded",
-              "status": 429,
-              "detail": "You have exceeded your rate limit of 1000 requests per minute. Retry after 30 seconds.",
-              "error_code": "AUTH_005",
-              "error_id": "err_rl_abc123",
-              "timestamp": "2026-04-08T10:00:00Z"
+              "$ref": "#/components/schemas/RateLimitError"
             }
           }
         }
