@@ -3,66 +3,128 @@ info:
   title: Kang Open Banking API
   version: 4.9.5
   summary: Unified Open Banking API for Cameroon
-  description: |
-    COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{"mtls":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.
+  description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards,
+    Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central
+    African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API.
+    | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/,
+    added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated
+    webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type
+    enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final
+    compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account
+    schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing
+    fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata
+    to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal
+    webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint
+    restored for public PKCE clients [{},{"mtls":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails
+    extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation
+    and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented.
+    N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27):
+    100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete
+    schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource
+    GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses
+    — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint
+    added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.
+
 
     ## Token Lifetimes
 
+
     | Token Type | Lifetime | Rotation Policy |
+
     |---|---|---|
+
     | Access Token | 15 minutes | Non-rotating; request a new one via refresh |
+
     | Refresh Token | 30 days | Rotating — each use issues a new refresh token and invalidates the old one |
+
     | Authorization Code | 60 seconds | Single-use; expires if not exchanged |
+
 
     Refresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).
 
+
     ## Webhook Delivery Policy
 
+
     | Parameter | Value |
+
     |---|---|
+
     | Maximum attempts | 7 |
+
     | Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |
+
     | Timeout per attempt | 10 seconds |
+
     | Signature | HMAC-SHA256 via `X-KOB-Signature` header |
+
     | Dead letter | Failed events retained for 30 days; manual replay available via API |
+
 
     ## HTTP Caching
 
-    GET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.
+
+    GET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits.
+    Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.
+
 
 
     ## Rate Limits
 
+
     All production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.
 
+
     | Endpoint Group | Limit (Production) | Limit (Sandbox) |
+
     |---|---|---|
+
     | All authenticated endpoints | 300 req/min | 120 req/min |
+
     | Payment initiation (POST /payments*) | 60 req/min | 30 req/min |
+
     | OAuth /token endpoint | 30 req/min per IP | 30 req/min |
+
     | Webhook replay | 10 req/min | 10 req/min |
+
 
     ### Rate Limit Response Headers
 
+
     Every response includes the following headers:
 
+
     | Header | Description |
+
     |---|---|
+
     | `X-RateLimit-Limit` | Maximum requests allowed in the current window |
+
     | `X-RateLimit-Remaining` | Requests remaining in the current window |
+
     | `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |
+
     | `Retry-After` | Seconds to wait before retrying (present on 429 only) |
+
 
     When the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.
 
+
     ## Service Level Agreement (SLA)
 
+
     | Environment | Uptime SLA | Response Time (p95) | Support Response |
+
     |---|---|---|---|
+
     | Production | 99.9%/mo | < 500ms | P1: 30 min |
+
     | Sandbox | 99.5%/mo | < 1000ms | Best effort |
 
+
     Planned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com
+
+    '
   x-changelog-url: https://kangopenbanking.com/changelog.json
   contact:
     name: Kang Open Banking Support
@@ -97,6 +159,45 @@ info:
       version: 1.1.0
       repository: https://github.com/kangfinance/openbanking-php
   x-postman-collection: https://www.postman.com/kangfinance/kang-open-banking-api
+  x-sandbox: true
+  x-test-data:
+    mobile_money:
+      mtn_momo:
+      - phone: '237650000001'
+        scenario: Always succeeds
+      - phone: '237650000002'
+        scenario: Insufficient funds error
+      - phone: '237650000003'
+        scenario: User timeout (120s no approval)
+      - phone: '237650000004'
+        scenario: Delayed success (8s)
+      orange_money:
+      - phone: '237690000001'
+        scenario: Always succeeds
+      - phone: '237690000002'
+        scenario: Always fails
+    cards:
+    - number: '4242424242424242'
+      brand: Visa
+      scenario: Always succeeds
+    - number: '4000000000000002'
+      brand: Visa
+      scenario: Always declines
+    - number: '5200828282828210'
+      brand: Mastercard
+      scenario: 3DS prompt required
+    - number: '4000000000003220'
+      brand: Visa
+      scenario: 3DS2 challenge flow
+    error_triggers:
+    - tx_ref: err_429_rate_limit
+      scenario: Triggers 429 Too Many Requests
+    - tx_ref: err_504_timeout
+      scenario: Triggers 504 Gateway Timeout
+    - tx_ref: err_insufficient_funds
+      scenario: Triggers insufficient_funds error
+    - tx_ref: err_blocked_card
+      scenario: Triggers card_blocked error
 servers:
 - url: https://sandbox.kangopenbanking.com/v1
   description: Sandbox
@@ -162,9 +263,8 @@ tags:
 - name: Developer
   description: Developer app registration
 - name: Payment Gateway
-  description: Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization,
-    virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments,
-    tokenization, reconciliation
+  description: Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment
+    links, subscriptions, split payments, tokenization, reconciliation
 - name: Payment Facilitation
   description: White-label payment processing — facilitated charges, settlement calculation and processing
 - name: Merchant Onboarding
@@ -174,17 +274,14 @@ tags:
 - name: Bank Directory
   description: Bank/ASPSP registration, lifecycle management, PSU linking, and public directory
 - name: Bank Connectors
-  description: Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring,
-    and payment status callbacks
+  description: Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks
 - name: Interbank
-  description: Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle
-    (10-state machine)
+  description: Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)
 - name: Pay by Bank
-  description: Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization,
-    webhook events (authorized, submitted, completed, failed)
+  description: Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)
 - name: Provider Webhooks (Inbound)
-  description: Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific
-    signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention.
+  description: Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider}
+    convention.
 - name: Overdraft
   description: Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle
 - name: Approval Workflows
@@ -194,9 +291,8 @@ tags:
 - name: Operational Controls
   description: Internal operational controls — teller transactions, withdrawal policies, and staff authorisations
 - name: Standards - ISO 20022
-  description: ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054,
-    camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting,
-    debit/credit notification, payment cancellation, and corporate treasury workflows.
+  description: ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return,
+    FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.
 components:
   securitySchemes:
     bearerAuth:
@@ -230,14 +326,13 @@ components:
       required:
       - software_statement
       - redirect_uris
-      description: Dynamic Client Registration request per RFC 7591, with FAPI 1.0 Advanced extensions. The software_statement
-        is a signed JWT (SSA) issued by the KOB Directory containing the TPP's identity claims.
+      description: Dynamic Client Registration request per RFC 7591, with FAPI 1.0 Advanced extensions. The software_statement is a signed JWT (SSA) issued by the KOB Directory containing the TPP's identity
+        claims.
       properties:
         software_statement:
           type: string
           format: jwt
-          description: Signed Software Statement Assertion (SSA) JWT from the KOB Directory. Must contain software_id, software_client_name,
-            and software_roles claims (RFC 7591 Section 2.3).
+          description: Signed Software Statement Assertion (SSA) JWT from the KOB Directory. Must contain software_id, software_client_name, and software_roles claims (RFC 7591 Section 2.3).
           example: eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb2Z0d2FyZV9pZCI6InRwcF8wMDEiLCJzb2Z0d2FyZV9jbGllbnRfbmFtZSI6IkZpblRlY2ggQXBwIENhbWVyb3VuIiwic29mdHdhcmVfcm9sZXMiOlsiQUlTUCIsIlBJU1AiXSwic29mdHdhcmVfcmVkaXJlY3RfdXJpcyI6WyJodHRwczovL2FwcC5leGFtcGxlLmNvbS9jYWxsYmFjayJdfQ.signature
         redirect_uris:
           type: array
@@ -250,13 +345,11 @@ components:
           - https://app.example.com/silent-renew
         client_name:
           type: string
-          description: Human-readable name of the client application. If omitted, extracted from software_statement (RFC 7591
-            Section 2).
+          description: Human-readable name of the client application. If omitted, extracted from software_statement (RFC 7591 Section 2).
           example: FinTech App Cameroun
         token_endpoint_auth_method:
           type: string
-          description: Authentication method for the token endpoint. tls_client_auth is the default for FAPI 1.0 Advanced
-            clients (FAPI 1.0 ADV Section 5.2.2).
+          description: Authentication method for the token endpoint. tls_client_auth is the default for FAPI 1.0 Advanced clients (FAPI 1.0 ADV Section 5.2.2).
           enum:
           - tls_client_auth
           - private_key_jwt
@@ -301,8 +394,7 @@ components:
           example: https://app.example.com/.well-known/jwks.json
         jwks:
           type: object
-          description: Inline JSON Web Key Set. Mutually exclusive with jwks_uri. Use when the client cannot host a JWKS endpoint
-            (RFC 7591 Section 2).
+          description: Inline JSON Web Key Set. Mutually exclusive with jwks_uri. Use when the client cannot host a JWKS endpoint (RFC 7591 Section 2).
           properties:
             keys:
               type: array
@@ -322,8 +414,7 @@ components:
           - ES256
           - RS256
           default: PS256
-          description: Algorithm for signing ID Tokens issued to this client. PS256 required for FAPI 1.0 Advanced (FAPI 1.0
-            ADV Section 5.2.2).
+          description: Algorithm for signing ID Tokens issued to this client. PS256 required for FAPI 1.0 Advanced (FAPI 1.0 ADV Section 5.2.2).
         request_object_signing_alg:
           type: string
           enum:
@@ -345,8 +436,7 @@ components:
       - scope
       - environment
       - client_id_issued_at
-      description: Dynamic Client Registration response per RFC 7591. The client_secret is returned in plaintext exactly once
-        at registration time and must be stored securely by the caller.
+      description: Dynamic Client Registration response per RFC 7591. The client_secret is returned in plaintext exactly once at registration time and must be stored securely by the caller.
       properties:
         client_id:
           type: string
@@ -354,8 +444,7 @@ components:
           example: tpp_a1b2c3d4-e5f6-7890-abcd-ef1234567890
         client_secret:
           type: string
-          description: Client secret. Returned in plaintext ONLY at registration time. Store securely; it cannot be retrieved
-            again.
+          description: Client secret. Returned in plaintext ONLY at registration time. Store securely; it cannot be retrieved again.
           example: kob_sec_7f3a9b2c4d5e6f1a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f
         client_name:
           type: string
@@ -539,8 +628,7 @@ components:
           type: string
           example: '1500000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         account_holder_name:
           type: string
           example: Jean-Pierre Kamga
@@ -607,8 +695,7 @@ components:
           type: string
           example: '1500000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -649,8 +736,7 @@ components:
           type: string
           example: '25000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -730,8 +816,7 @@ components:
         TransactionInformation:
           type: string
           maxLength: 500
-          description: OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the
-            originator to the beneficiary about the payment transaction.
+          description: OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction.
           example: Payment for Invoice INV-2025-001 — Professional Services
         Status:
           type: string
@@ -739,8 +824,7 @@ components:
           - Booked
           - Pending
           - Rejected
-          description: OBIE OBTransaction6 transaction status. Booked = settled, Pending = authorised but not yet settled,
-            Rejected = declined or failed.
+          description: OBIE OBTransaction6 transaction status. Booked = settled, Pending = authorised but not yet settled, Rejected = declined or failed.
       x-obie-mapping:
         AccountId: account_id
         TransactionId: transaction_id
@@ -755,9 +839,8 @@ components:
       - currency
       - type
       - timestamp
-      x-naming-convention: 'This schema uses dual naming: snake_case (native) and PascalCase (OBIE-compatible). Both represent
-        the same field. SDK consumers should use snake_case. OBIE-conformant consumers may use PascalCase aliases. A future
-        version will support content negotiation via Accept: application/json;profile=obie.'
+      x-naming-convention: 'This schema uses dual naming: snake_case (native) and PascalCase (OBIE-compatible). Both represent the same field. SDK consumers should use snake_case. OBIE-conformant consumers
+        may use PascalCase aliases. A future version will support content negotiation via Accept: application/json;profile=obie.'
     Payment:
       type: object
       properties:
@@ -768,8 +851,7 @@ components:
           type: string
           example: '50000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           default: XAF
@@ -906,8 +988,7 @@ components:
           type: string
           example: '500000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           default: XAF
@@ -1024,8 +1105,7 @@ components:
           type: string
           example: '1000000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1206,8 +1286,7 @@ components:
           type: string
           example: '25000000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         is_active:
           type: boolean
       required:
@@ -1275,8 +1354,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           default: XAF
@@ -1341,8 +1419,7 @@ components:
       - status
     WebhookEventType:
       type: object
-      description: Webhook event type with its payload structure. All webhook deliveries follow the WebhookEventPayload envelope
-        with event-type-specific data.
+      description: Webhook event type with its payload structure. All webhook deliveries follow the WebhookEventPayload envelope with event-type-specific data.
       allOf:
       - $ref: '#/components/schemas/WebhookEventPayload'
       properties:
@@ -1404,10 +1481,9 @@ components:
           description: The specific event type. Use 'wildcard.*' to subscribe to all events.
         data:
           type: object
-          description: 'Event-specific payload. Key schemas by event: charge.* -> GatewayCharge, refund.* -> GatewayRefund,
-            payout.* -> GatewayPayout, payment.* -> Payment, dispute.* -> GatewayDispute, settlement.* -> GatewaySettlement,
-            consent.* -> Consent, loan.* -> LoanApplication, mobile_money.* -> MobileMoneyCharge, interbank.* -> InterbankPayment,
-            pay_by_bank.* -> PayByBankIntent, subscription.* -> GatewaySubscription'
+          description: 'Event-specific payload. Key schemas by event: charge.* -> GatewayCharge, refund.* -> GatewayRefund, payout.* -> GatewayPayout, payment.* -> Payment, dispute.* -> GatewayDispute,
+            settlement.* -> GatewaySettlement, consent.* -> Consent, loan.* -> LoanApplication, mobile_money.* -> MobileMoneyCharge, interbank.* -> InterbankPayment, pay_by_bank.* -> PayByBankIntent, subscription.*
+            -> GatewaySubscription'
           additionalProperties: true
     Webhook:
       type: object
@@ -1473,8 +1549,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1599,8 +1674,7 @@ components:
           type: string
           example: '10000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1660,8 +1734,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1711,8 +1784,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1766,8 +1838,7 @@ components:
           type: string
           example: '450000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1848,8 +1919,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -1965,8 +2035,7 @@ components:
           type: string
           example: '500000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         pending_balance:
           type: number
           example: 25000
@@ -2031,8 +2100,7 @@ components:
           type: string
           example: '5000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -2091,8 +2159,7 @@ components:
           type: string
           example: '10000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -2180,36 +2247,31 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: UTC datetime when the trial period ends or ended. After this datetime, regular billing resumes. Null
-            if no trial was applied.
+          description: UTC datetime when the trial period ends or ended. After this datetime, regular billing resumes. Null if no trial was applied.
           example: '2025-03-15T00:00:00Z'
         cancel_at_period_end:
           type: boolean
           default: false
-          description: When true, the subscription is scheduled to cancel at the end of the current billing period (current_period_end)
-            rather than immediately. The status remains 'active' until then.
+          description: When true, the subscription is scheduled to cancel at the end of the current billing period (current_period_end) rather than immediately. The status remains 'active' until then.
           example: false
         cancelled_at:
           type: string
           format: date-time
           nullable: true
-          description: UTC datetime when the subscription was cancelled (either immediately or when a scheduled end-of-period
-            cancellation took effect). Null if subscription is still active.
+          description: UTC datetime when the subscription was cancelled (either immediately or when a scheduled end-of-period cancellation took effect). Null if subscription is still active.
           example: '2025-04-01T00:00:00Z'
         billing_cycle_anchor:
           type: string
           format: date-time
           nullable: true
-          description: UTC datetime that defines the billing cycle. Future billing dates are calculated relative to this anchor.
-            Useful for aligning subscription billing to a fixed day of the month.
+          description: UTC datetime that defines the billing cycle. Future billing dates are calculated relative to this anchor. Useful for aligning subscription billing to a fixed day of the month.
           example: '2025-01-01T00:00:00Z'
         metadata:
           type: object
           additionalProperties:
             type: string
           maxProperties: 20
-          description: Arbitrary key-value metadata attached to this subscription. Keys and values must be strings. Maximum
-            20 pairs.
+          description: Arbitrary key-value metadata attached to this subscription. Keys and values must be strings. Maximum 20 pairs.
           example:
             customer_ref: CUST-001
             plan_tier: professional
@@ -2468,8 +2530,7 @@ components:
         amount:
           type: string
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           enum:
@@ -2527,8 +2588,7 @@ components:
           type: string
           example: '50000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           example: XAF
@@ -2604,8 +2664,7 @@ components:
           type: string
           example: '50000'
           pattern: ^[0-9]{1,15}$
-          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent
-            with the currency field.
+          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
         currency:
           type: string
           default: XAF
@@ -2732,8 +2791,7 @@ components:
                 example: PATTERN_MISMATCH
         error_id:
           type: string
-          description: Kang-specific trace correlation identifier. Reference this ID when contacting support. Matches the
-            error_id field in the standard Error schema for cross-format correlation.
+          description: Kang-specific trace correlation identifier. Reference this ID when contacting support. Matches the error_id field in the standard Error schema for cross-format correlation.
           example: err_a1b2c3d4e5f6
         timestamp:
           type: string
@@ -2742,8 +2800,7 @@ components:
           example: '2025-03-27T14:32:00Z'
     WebhookEventPayload:
       type: object
-      description: Base structure for all Kang webhook event payloads. The 'data' field contains the event-specific resource
-        object.
+      description: Base structure for all Kang webhook event payloads. The 'data' field contains the event-specific resource object.
       required:
       - id
       - event
@@ -2760,6 +2817,66 @@ components:
           type: string
           description: Event type name from the subscribed events catalogue
           example: charge.created
+          enum:
+          - charge.created
+          - charge.successful
+          - charge.failed
+          - charge.pending
+          - charge.refunded
+          - charge.reversed
+          - charge.expired
+          - charge.cancelled
+          - payout.created
+          - payout.completed
+          - payout.failed
+          - payout.reversed
+          - payout.pending
+          - refund.created
+          - refund.completed
+          - refund.failed
+          - dispute.created
+          - dispute.updated
+          - dispute.won
+          - dispute.lost
+          - settlement.created
+          - settlement.paid
+          - settlement.failed
+          - subscription.created
+          - subscription.activated
+          - subscription.renewed
+          - subscription.cancelled
+          - subscription.expired
+          - subscription.payment_failed
+          - merchant.created
+          - merchant.updated
+          - merchant.verified
+          - merchant.suspended
+          - wallet.credited
+          - wallet.debited
+          - wallet.frozen
+          - escrow.created
+          - escrow.funded
+          - escrow.released
+          - escrow.disputed
+          - escrow.refunded
+          - consent.authorized
+          - consent.revoked
+          - consent.expired
+          - payment_link.created
+          - payment_link.paid
+          - payment_link.expired
+          - pay_by_bank.authorized
+          - pay_by_bank.submitted
+          - pay_by_bank.completed
+          - pay_by_bank.failed
+          - onboarding_application.approved
+          - onboarding_application.rejected
+          - merchant_kyb.verified
+          - merchant_kyb.failed
+          - credit_score.updated
+          - loan_application.approved
+          - loan_application.rejected
+          - loan_application.pending_documents
         created_at:
           type: string
           format: date-time
@@ -2834,8 +2951,7 @@ components:
       schema:
         type: string
         format: uuid
-      description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-        Keys expire after 24 hours.
+      description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
     Limit:
       name: limit
       in: query
@@ -2855,8 +2971,7 @@ components:
       name: x-fapi-interaction-id
       in: header
       required: false
-      description: RFC4122 UUID used as a correlation ID. If provided, the server MUST echo it in the response x-fapi-interaction-id
-        header. If not provided, the server MUST generate a fresh UUID.
+      description: RFC4122 UUID used as a correlation ID. If provided, the server MUST echo it in the response x-fapi-interaction-id header. If not provided, the server MUST generate a fresh UUID.
       schema:
         type: string
         format: uuid
@@ -2909,8 +3024,7 @@ components:
         example: eyJpZCI6IjEyMyJ9
   headers:
     XFapiInteractionIdResponse:
-      description: RFC4122 UUID echoing the request x-fapi-interaction-id or a server-generated UUID if not provided in the
-        request.
+      description: RFC4122 UUID echoing the request x-fapi-interaction-id or a server-generated UUID if not provided in the request.
       required: true
       schema:
         type: string
@@ -2932,21 +3046,18 @@ components:
         type: integer
         example: 1743081600
     RetryAfter:
-      description: Number of seconds to wait before retrying after a 429 Too Many Requests response. Implement exponential
-        backoff with jitter starting from this value.
+      description: Number of seconds to wait before retrying after a 429 Too Many Requests response. Implement exponential backoff with jitter starting from this value.
       schema:
         type: integer
         example: 30
     CacheControl:
-      description: 'Directives for caching mechanisms. For mutable data (balances, transactions): `no-cache`. For semi-static
-        data (bank directory, exchange rates): `max-age=300, must-revalidate`.'
+      description: 'Directives for caching mechanisms. For mutable data (balances, transactions): `no-cache`. For semi-static data (bank directory, exchange rates): `max-age=300, must-revalidate`.'
       required: true
       schema:
         type: string
         example: max-age=300, must-revalidate
     ETag:
-      description: Entity tag for conditional requests. Use with `If-None-Match` on subsequent requests to receive 304 Not
-        Modified when data has not changed.
+      description: Entity tag for conditional requests. Use with `If-None-Match` on subsequent requests to receive 304 Not Modified when data has not changed.
       required: true
       schema:
         type: string
@@ -2959,9 +3070,8 @@ components:
         format: date-time
         example: Sat, 22 Mar 2026 10:00:00 GMT
     IdempotencyKey:
-      description: A unique UUID (v4) identifying this request for safe retries. Keys are retained for **24 hours** after
-        the first request. Reusing a key with identical parameters returns the cached response. Reusing a key with different
-        parameters returns 409 Conflict. Required on all money-moving POST endpoints.
+      description: A unique UUID (v4) identifying this request for safe retries. Keys are retained for **24 hours** after the first request. Reusing a key with identical parameters returns the cached response.
+        Reusing a key with different parameters returns 409 Conflict. Required on all money-moving POST endpoints.
       required: true
       schema:
         type: string
@@ -2989,8 +3099,7 @@ components:
         example: 30
   responses:
     NotModified:
-      description: Resource has not been modified since the last request. Returned when `If-None-Match` matches the current
-        `ETag` or `If-Modified-Since` is after `Last-Modified`.
+      description: Resource has not been modified since the last request. Returned when `If-None-Match` matches the current `ETag` or `If-Modified-Since` is after `Last-Modified`.
       headers:
         ETag:
           $ref: '#/components/headers/ETag'
@@ -3301,9 +3410,8 @@ paths:
         schema:
           type: string
         required: true
-        description: PKCE code challenge. The Base64URL-encoded SHA-256 hash of the code_verifier (S256 method). REQUIRED
-          by FAPI 1.0 Advanced Section 5.2.2 for all authorization requests. The corresponding code_verifier must be provided
-          at the token endpoint.
+        description: PKCE code challenge. The Base64URL-encoded SHA-256 hash of the code_verifier (S256 method). REQUIRED by FAPI 1.0 Advanced Section 5.2.2 for all authorization requests. The corresponding
+          code_verifier must be provided at the token endpoint.
       - name: code_challenge_method
         in: query
         schema:
@@ -3311,15 +3419,12 @@ paths:
           enum:
           - S256
         required: true
-        description: PKCE code challenge method. MUST be S256 (SHA-256). Plain method is NOT supported per FAPI 1.0 Advanced
-          security requirements.
+        description: PKCE code challenge method. MUST be S256 (SHA-256). Plain method is NOT supported per FAPI 1.0 Advanced security requirements.
       - name: nonce
         in: query
         required: true
-        description: Cryptographically random nonce value associating the client session with the ID Token and preventing
-          replay attacks. REQUIRED by FAPI 1.0 Advanced Section 5.2.2-14 for all authorization requests. Must be unique per
-          request with at least 128 bits of entropy (minimum 22 Base64url characters). The server MUST include the nonce claim
-          in the issued ID Token.
+        description: Cryptographically random nonce value associating the client session with the ID Token and preventing replay attacks. REQUIRED by FAPI 1.0 Advanced Section 5.2.2-14 for all authorization
+          requests. Must be unique per request with at least 128 bits of entropy (minimum 22 Base64url characters). The server MUST include the nonce claim in the issued ID Token.
         schema:
           type: string
       - name: request_uri
@@ -3332,8 +3437,7 @@ paths:
       - name: request
         in: query
         required: false
-        description: 'FAPI 1.0 Advanced: Signed JWT containing the authorization request parameters (Request Object). Mutually
-          exclusive with request_uri.'
+        description: 'FAPI 1.0 Advanced: Signed JWT containing the authorization request parameters (Request Object). Mutually exclusive with request_uri.'
         schema:
           type: string
       - name: acr_values
@@ -3642,11 +3746,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
-      description: 'OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code
-        + PKCE — no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC
-        8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required
-        by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access
-        tokens required by FAPI 1.0 Advanced.'
+      description: 'OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context.
+        (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual
+        TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced.'
   /v1/oauth/introspect:
     post:
       tags:
@@ -3806,8 +3908,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -3969,8 +4070,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -4197,8 +4297,7 @@ paths:
                     - private_key_jwt
                     - tls_client_auth
                     - client_secret_basic
-                    description: List of client authentication methods supported at the token endpoint. private_key_jwt required
-                      for FAPI 1.0 Advanced.
+                    description: List of client authentication methods supported at the token endpoint. private_key_jwt required for FAPI 1.0 Advanced.
                   request_object_signing_alg_values_supported:
                     type: array
                     items:
@@ -4241,14 +4340,12 @@ paths:
                   pushed_authorization_request_endpoint:
                     type: string
                     format: uri
-                    description: URL of the Pushed Authorisation Request (PAR) endpoint (RFC 9126). Clients SHOULD use PAR
-                      before calling the authorization endpoint.
+                    description: URL of the Pushed Authorisation Request (PAR) endpoint (RFC 9126). Clients SHOULD use PAR before calling the authorization endpoint.
                     example: https://api.kangopenbanking.com/v1/oauth/par
                   backchannel_authentication_endpoint:
                     type: string
                     format: uri
-                    description: URL of the CIBA (Client-Initiated Backchannel Authentication) endpoint for decoupled authentication
-                      flows. Optional advanced FAPI feature for mobile banking step-up authentication.
+                    description: URL of the CIBA (Client-Initiated Backchannel Authentication) endpoint for decoupled authentication flows. Optional advanced FAPI feature for mobile banking step-up authentication.
                     example: https://api.kangopenbanking.com/v1/auth/backchannel
           headers:
             x-fapi-interaction-id:
@@ -5777,8 +5874,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -6061,8 +6157,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -6218,8 +6313,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -7467,8 +7561,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -7487,8 +7580,7 @@ paths:
                   type: string
                   example: '50000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -7646,8 +7738,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -7671,8 +7762,7 @@ paths:
                   type: string
                   example: '50000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -7830,8 +7920,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -8117,8 +8206,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '200':
           description: Consent authorized
@@ -9352,8 +9440,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -9678,8 +9765,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -9826,8 +9912,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -10113,8 +10198,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '201':
           description: Schedule generated
@@ -10255,8 +10339,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -10552,8 +10635,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -10807,8 +10889,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -10968,8 +11049,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -11122,8 +11202,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -11431,8 +11510,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -11749,8 +11827,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -12064,8 +12141,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -12083,8 +12159,7 @@ paths:
                   type: string
                   example: '5000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -12230,8 +12305,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
-      description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses
-        will conform to the StandardResponse envelope in a future minor release.'
+      description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release.'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
   /v1/mobile-money/transfer:
@@ -12250,8 +12324,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -12268,8 +12341,7 @@ paths:
                   type: string
                   example: '10000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -12541,8 +12613,7 @@ paths:
       - name: Idempotency-Key
         in: header
         required: false
-        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server
-          returns the original response without re-processing.
+        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.
         schema:
           type: string
           format: uuid
@@ -12566,8 +12637,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -12728,8 +12798,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -12749,8 +12818,7 @@ paths:
                   type: string
                   example: '100000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -13193,8 +13261,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -13208,8 +13275,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: XAF
@@ -13365,8 +13431,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -13516,8 +13581,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -13826,8 +13890,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -14123,8 +14186,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -14616,8 +14678,7 @@ paths:
                         amount:
                           type: string
                           pattern: ^[0-9]{1,15}$
-                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits).
-                            Must be consistent with the currency field.
+                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                         currency:
                           type: string
                           enum:
@@ -14913,8 +14974,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -15058,8 +15118,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -15217,8 +15276,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -15350,9 +15408,8 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
-        This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate
-        (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
+        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
   /v1/standards/swift/mt940/parse:
@@ -15508,9 +15565,8 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
-        This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate
-        (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
+        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/camt053/parse
   /v1/standards/swift/mt103/generate:
@@ -15528,8 +15584,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -15656,9 +15711,8 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
-        This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate
-        (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
+        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
   /v1/standards/validate/iban:
@@ -15977,8 +16031,7 @@ paths:
                   default: CM
       responses:
         '200':
-          description: RIB validation result with structured fields (bank_code, branch_code, account_number, rib_key), derived
-            IBAN, and bank lookup
+          description: RIB validation result with structured fields (bank_code, branch_code, account_number, rib_key), derived IBAN, and bank lookup
           content:
             application/json:
               schema:
@@ -16363,8 +16416,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -16860,8 +16912,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -17371,8 +17422,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -17534,8 +17584,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -19318,8 +19367,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -19466,8 +19514,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -19626,8 +19673,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -19771,8 +19817,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -19795,8 +19840,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -19939,8 +19983,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -20092,8 +20135,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -20247,8 +20289,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -20904,8 +20945,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -21190,8 +21230,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -21508,8 +21547,7 @@ paths:
       tags:
       - WooCommerce
       summary: Download WooCommerce plugin ZIP
-      description: Downloads the complete Woo for Kang WordPress plugin as a ZIP file ready for installation. Authentication
-        required. A developer account or merchant account bearer token must be provided.
+      description: Downloads the complete Woo for Kang WordPress plugin as a ZIP file ready for installation. Authentication required. A developer account or merchant account bearer token must be provided.
       operationId: woocommerceDownloadPlugin
       security:
       - bearerAuth: []
@@ -21648,8 +21686,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -21666,8 +21703,7 @@ paths:
                   type: string
                   example: '25000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -22067,8 +22103,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -22224,8 +22259,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '201':
           description: Sandbox account created
@@ -22361,8 +22395,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '201':
           description: API key created
@@ -22627,8 +22660,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -22774,8 +22806,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -22938,8 +22969,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -22962,8 +22992,7 @@ paths:
                   type: string
                   example: '5000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -23444,8 +23473,7 @@ paths:
       - name: Idempotency-Key
         in: header
         required: false
-        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server
-          returns the original response without re-processing.
+        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.
         schema:
           type: string
           format: uuid
@@ -23581,8 +23609,7 @@ paths:
       - name: Idempotency-Key
         in: header
         required: false
-        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server
-          returns the original response without re-processing.
+        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.
         schema:
           type: string
           format: uuid
@@ -23872,8 +23899,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -24317,8 +24343,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -24339,8 +24364,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -24803,8 +24827,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -24856,8 +24879,7 @@ paths:
                   total_amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -25131,8 +25153,7 @@ paths:
       tags:
       - Payment Gateway
       summary: Create PayPal payout
-      description: Send money to a PayPal recipient via EMAIL, PHONE, or PAYPAL_ID. Currency must be PayPal-supported (USD,
-        EUR, GBP).
+      description: Send money to a PayPal recipient via EMAIL, PHONE, or PAYPAL_ID. Currency must be PayPal-supported (USD, EUR, GBP).
       operationId: gatewayCreatePayPalPayout
       security:
       - bearerAuth: []
@@ -25143,8 +25164,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -25166,8 +25186,7 @@ paths:
                   type: string
                   example: '5000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   example: USD
@@ -25316,8 +25335,7 @@ paths:
       tags:
       - Payment Gateway
       summary: Withdraw to PayPal
-      description: Withdraw KOB account balance to a PayPal email. Account is debited immediately with automatic reversal
-        on failure.
+      description: Withdraw KOB account balance to a PayPal email. Account is debited immediately with automatic reversal on failure.
       operationId: gatewayWithdrawToPayPal
       security:
       - bearerAuth: []
@@ -25328,8 +25346,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -25345,8 +25362,7 @@ paths:
                   type: string
                   example: '10000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 account_id:
                   type: string
                   format: uuid
@@ -25383,8 +25399,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   fee_amount:
                     type: number
                   total_debited:
@@ -25838,8 +25853,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -26293,8 +26307,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -27183,8 +27196,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -27203,8 +27215,7 @@ paths:
                   type: string
                   example: '50000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: USD
@@ -27360,8 +27371,7 @@ paths:
       - name: Idempotency-Key
         in: header
         required: false
-        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server
-          returns the original response without re-processing.
+        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.
         schema:
           type: string
           format: uuid
@@ -27375,8 +27385,7 @@ paths:
               properties:
                 amount:
                   type: string
-                  description: Partial capture amount. Omit for full capture. Represented as a string integer in the currency's
-                    minor unit (XAF has no subunits).
+                  description: Partial capture amount. Omit for full capture. Represented as a string integer in the currency's minor unit (XAF has no subunits).
                   pattern: ^[0-9]{1,15}$
       responses:
         '200':
@@ -27517,8 +27526,7 @@ paths:
       - name: Idempotency-Key
         in: header
         required: false
-        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server
-          returns the original response without re-processing.
+        description: Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.
         schema:
           type: string
           format: uuid
@@ -27824,8 +27832,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -28671,8 +28678,7 @@ paths:
       tags:
       - Payment Gateway
       summary: Fund a KOB account
-      description: Add funds to a user's KOB account via Mobile Money, Card, or Bank Transfer. On successful provider charge,
-        the account balance is automatically credited.
+      description: Add funds to a user's KOB account via Mobile Money, Card, or Bank Transfer. On successful provider charge, the account balance is automatically credited.
       operationId: gatewayFundAccount
       security:
       - bearerAuth: []
@@ -28683,8 +28689,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -28700,8 +28705,7 @@ paths:
                   type: string
                   example: '50000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -28750,8 +28754,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -28895,8 +28898,7 @@ paths:
       tags:
       - Payment Gateway
       summary: Withdraw to external bank
-      description: Withdraw funds from a user's KOB account to an external bank account via Flutterwave. Debits the account
-        immediately; reverses if payout fails.
+      description: Withdraw funds from a user's KOB account to an external bank account via Flutterwave. Debits the account immediately; reverses if payout fails.
       operationId: gatewayWithdrawToBank
       security:
       - bearerAuth: []
@@ -28907,8 +28909,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -28959,8 +28960,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   fee_amount:
                     type: number
                   total_debited:
@@ -29102,8 +29102,7 @@ paths:
       tags:
       - Banking Operations
       summary: Internal account-to-account transfer
-      description: Transfer funds between two accounts within KOB. Validates source ownership, checks balance, creates a Debit
-        transaction, and updates balances atomically.
+      description: Transfer funds between two accounts within KOB. Validates source ownership, checks balance, creates a Debit transaction, and updates balances atomically.
       operationId: bankingInternalTransfer
       security:
       - bearerAuth: []
@@ -29114,8 +29113,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -29139,8 +29137,7 @@ paths:
                   type: string
                   example: '25000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -29183,8 +29180,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -29312,8 +29308,8 @@ paths:
       tags:
       - Banking Operations
       summary: Institution-facilitated bank transfer
-      description: Initiate a bank payout facilitated by a financial institution through the Flutterwave rail. Includes KOB
-        fee calculation and settlement tracking. The institution_id determines fee structure and settlement bucket.
+      description: Initiate a bank payout facilitated by a financial institution through the Flutterwave rail. Includes KOB fee calculation and settlement tracking. The institution_id determines fee structure
+        and settlement bucket.
       operationId: bankingFacilitatedTransfer
       security:
       - bearerAuth: []
@@ -29324,8 +29320,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -29351,8 +29346,7 @@ paths:
                   type: string
                   example: '100000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -29394,8 +29388,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   kob_fee_amount:
                     type: number
                   currency:
@@ -29540,8 +29533,8 @@ paths:
       tags:
       - Payment Facilitation
       summary: Facilitated mobile money collection
-      description: Initiate a mobile money charge using KOB's pre-verified Flutterwave account. The institution must have
-        use_kob_flutterwave enabled. KOB fee is automatically calculated and the transaction is tagged for settlement.
+      description: Initiate a mobile money charge using KOB's pre-verified Flutterwave account. The institution must have use_kob_flutterwave enabled. KOB fee is automatically calculated and the transaction
+        is tagged for settlement.
       operationId: facilitatedMobileMoneyCharge
       security:
       - bearerAuth: []
@@ -29552,8 +29545,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -29572,8 +29564,7 @@ paths:
                   type: string
                   example: '5000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -29733,8 +29724,8 @@ paths:
       tags:
       - Payment Facilitation
       summary: Calculate settlement balance
-      description: Calculate the settlement balance for the authenticated institution over a given period. Returns total inflows,
-        outflows, KOB fees, and net settlement amount with a breakdown by payment method.
+      description: Calculate the settlement balance for the authenticated institution over a given period. Returns total inflows, outflows, KOB fees, and net settlement amount with a breakdown by payment
+        method.
       operationId: settlementCalculate
       security:
       - bearerAuth: []
@@ -29902,8 +29893,8 @@ paths:
       tags:
       - Payment Facilitation
       summary: Process settlement payout
-      description: Process a settlement payout for a facilitated institution. Admin-only. Debits the net settlement amount
-        and transfers to the institution's configured bank or mobile money account via Flutterwave.
+      description: Process a settlement payout for a facilitated institution. Admin-only. Debits the net settlement amount and transfers to the institution's configured bank or mobile money account via
+        Flutterwave.
       operationId: settlementProcess
       security:
       - bearerAuth: []
@@ -29914,8 +29905,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -30073,8 +30063,7 @@ paths:
       tags:
       - Payment Gateway
       summary: Score transaction risk
-      description: Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0–100
-        risk score, flags, and recommended action (allow | flag_for_review | block).
+      description: Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0–100 risk score, flags, and recommended action (allow | flag_for_review | block).
       operationId: gatewayRiskScore
       security:
       - bearerAuth: []
@@ -30096,8 +30085,7 @@ paths:
                   type: string
                   example: '500000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -30482,8 +30470,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -30503,8 +30490,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -31092,8 +31078,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -31114,8 +31099,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -31714,8 +31698,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -32161,8 +32144,7 @@ paths:
     patch:
       operationId: updateSubscription
       summary: Update a subscription
-      description: Update an existing subscription (e.g. change plan, billing cycle, or metadata). Only non-terminated subscriptions
-        can be updated.
+      description: Update an existing subscription (e.g. change plan, billing cycle, or metadata). Only non-terminated subscriptions can be updated.
       tags:
       - Payment Gateway
       security:
@@ -32277,8 +32259,7 @@ paths:
     delete:
       operationId: deleteSubscription
       summary: Cancel a subscription
-      description: Cancel (soft-delete) a subscription. The subscription will complete its current billing period unless cancel_immediately
-        is true.
+      description: Cancel (soft-delete) a subscription. The subscription will complete its current billing period unless cancel_immediately is true.
       tags:
       - Payment Gateway
       security:
@@ -32507,8 +32488,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -33232,8 +33212,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -34094,8 +34073,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -34113,8 +34091,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -34403,8 +34380,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -34879,8 +34855,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '200':
           description: Payout retried
@@ -35010,8 +34985,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -35474,8 +35448,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -35777,8 +35750,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -36199,8 +36171,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -36507,8 +36478,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -36954,8 +36924,7 @@ paths:
       tags:
       - OAuth
       summary: Get user info
-      description: OpenID Connect UserInfo endpoint. Returns claims about the authenticated user based on the access token
-        scope.
+      description: OpenID Connect UserInfo endpoint. Returns claims about the authenticated user based on the access token scope.
       operationId: oauthUserInfo
       security:
       - bearerAuth: []
@@ -37039,8 +37008,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -37247,8 +37215,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -37403,8 +37370,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -37756,8 +37722,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -37912,8 +37877,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -38066,8 +38030,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -38083,8 +38046,7 @@ paths:
                   type: string
                   example: '50000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -38122,8 +38084,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -38451,8 +38412,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -38875,8 +38835,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -38895,8 +38854,7 @@ paths:
                   type: string
                   example: '100000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -39201,8 +39159,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -39837,8 +39794,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -40290,8 +40246,7 @@ paths:
       tags:
       - Approval Workflows
       summary: Create withdrawal request
-      description: Create a withdrawal request. If the amount exceeds the staff member's policy limit, the request is automatically
-        routed into the approval workflow.
+      description: Create a withdrawal request. If the amount exceeds the staff member's policy limit, the request is automatically routed into the approval workflow.
       operationId: createWithdrawalRequest
       security:
       - bearerAuth: []
@@ -40302,8 +40257,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -40328,8 +40282,7 @@ paths:
                   type: string
                   example: '2000000'
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -40368,8 +40321,7 @@ paths:
                     type: string
                     example: '500000'
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     example: XAF
@@ -40725,8 +40677,7 @@ paths:
                   amount:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   currency:
                     type: string
                     enum:
@@ -41469,8 +41420,7 @@ paths:
       tags:
       - Approval Workflows
       summary: Approve request
-      description: Approve a pending request. The approver must have the required operational role. If the entity is a withdrawal,
-        it is automatically executed after approval.
+      description: Approve a pending request. The approver must have the required operational role. If the entity is a withdrawal, it is automatically executed after approval.
       operationId: approveRequest
       security:
       - bearerAuth: []
@@ -41486,8 +41436,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -42087,8 +42036,7 @@ paths:
       tags:
       - Overdraft
       summary: Recalculate overdraft eligibility
-      description: Re-evaluates account behavior (salary consistency, savings, balance, tenure, activity, repayment history,
-        credit score) and produces an explainable overdraft recommendation.
+      description: Re-evaluates account behavior (salary consistency, savings, balance, tenure, activity, repayment history, credit score) and produces an explainable overdraft recommendation.
       operationId: recalculateOverdraft
       security:
       - bearerAuth: []
@@ -42228,8 +42176,7 @@ paths:
       tags:
       - Overdraft
       summary: Request overdraft facility
-      description: Request an overdraft. Automatically scores the account and either auto-approves (high score) or routes
-        to manager approval.
+      description: Request an overdraft. Automatically scores the account and either auto-approves (high score) or routes to manager approval.
       operationId: requestOverdraft
       security:
       - bearerAuth: []
@@ -42245,8 +42192,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -42415,8 +42361,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -42863,8 +42808,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         content:
           application/json:
@@ -43010,8 +42954,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -43068,8 +43011,7 @@ paths:
                   available_balance:
                     type: string
                     pattern: ^[0-9]{1,15}$
-                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                      be consistent with the currency field.
+                    description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                   status:
                     type: string
                   created_at:
@@ -43500,8 +43442,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -43515,8 +43456,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -43674,8 +43614,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -43689,8 +43628,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -44170,8 +44108,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -44189,8 +44126,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -44269,8 +44205,7 @@ paths:
                         amount:
                           type: string
                           pattern: ^[0-9]{1,15}$
-                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits).
-                            Must be consistent with the currency field.
+                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                         currency:
                           type: string
                           enum:
@@ -44593,8 +44528,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -44750,8 +44684,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -44761,8 +44694,7 @@ paths:
               properties:
                 amount:
                   type: string
-                  description: Partial release amount (omit for full) Represented as a string integer in the currency's minor
-                    unit (XAF has no subunits).
+                  description: Partial release amount (omit for full) Represented as a string integer in the currency's minor unit (XAF has no subunits).
                   pattern: ^[0-9]{1,15}$
                 recipient_wallet_id:
                   type: string
@@ -44906,8 +44838,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -45214,8 +45145,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -45376,8 +45306,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -45399,8 +45328,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -45885,8 +45813,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       responses:
         '200':
           description: SAR submitted
@@ -46326,8 +46253,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -46346,8 +46272,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -46505,8 +46430,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -46525,8 +46449,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -46988,8 +46911,7 @@ paths:
                         balance:
                           type: string
                           pattern: ^[0-9]{1,15}$
-                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits).
-                            Must be consistent with the currency field.
+                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
           headers:
             x-fapi-interaction-id:
               $ref: '#/components/headers/XFapiInteractionIdResponse'
@@ -47116,8 +47038,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -47134,8 +47055,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -48041,9 +47961,8 @@ paths:
       tags:
       - Webhooks
       summary: Register webhook endpoint (v2)
-      description: Register a new webhook endpoint with event filtering and unique signing secret. All delivered webhook payloads
-        follow the WebhookEventPayload schema (see components/schemas/WebhookEventPayload). The data field contains the event-specific
-        resource object referenced in the event type mapping.
+      description: Register a new webhook endpoint with event filtering and unique signing secret. All delivered webhook payloads follow the WebhookEventPayload schema (see components/schemas/WebhookEventPayload).
+        The data field contains the event-specific resource object referenced in the event type mapping.
       operationId: webhookV2Create
       security:
       - bearerAuth: []
@@ -48054,8 +47973,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -48862,8 +48780,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -48888,8 +48805,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   enum:
@@ -49642,8 +49558,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -50664,8 +50579,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -51132,8 +51046,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -51316,8 +51229,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       requestBody:
         required: true
         content:
@@ -51339,8 +51251,7 @@ paths:
                       amount:
                         type: string
                         pattern: ^[0-9]{1,15}$
-                        description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must
-                          be consistent with the currency field.
+                        description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                       currency:
                         type: string
                         enum:
@@ -51684,8 +51595,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended).
-          Keys expire after 24 hours.
+        description: Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
@@ -51713,8 +51623,7 @@ paths:
                 amount:
                   type: string
                   pattern: ^[0-9]{1,15}$
-                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                    consistent with the currency field.
+                  description: Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field.
                 currency:
                   type: string
                   default: XAF
@@ -51847,8 +51756,7 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       x-iso20022-message: pacs.008.001.10
-      description: ' Conforms to ISO 20022 pacs.008.001.10 (FIToFICustomerCreditTransfer). The request body maps to the CdtTrfTxInf
-        block of a pacs.008 message.'
+      description: ' Conforms to ISO 20022 pacs.008.001.10 (FIToFICustomerCreditTransfer). The request body maps to the CdtTrfTxInf block of a pacs.008 message.'
   /v1/interbank/payments/{paymentId}:
     get:
       tags:
@@ -53768,8 +53676,7 @@ paths:
       tags:
       - Merchant Onboarding
       summary: Rotate webhook signing secret
-      description: Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately
-        invalidated. The new secret is returned once — store it securely.
+      description: Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once — store it securely.
       operationId: rotateMerchantWebhookSecret
       parameters:
       - name: webhookId
@@ -53877,10 +53784,8 @@ paths:
       tags:
       - Provider Webhooks (Inbound)
       summary: Stripe inbound webhook
-      description: Receives Stripe webhook events. Verifies `stripe-signature` header using HMAC-SHA256. Deduplicates by event
-        ID via `webhook_inbox` table. Maps Stripe events to internal charge/refund/dispute/payout status updates. Return HTTP
-        400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event
-        types.
+      description: Receives Stripe webhook events. Verifies `stripe-signature` header using HMAC-SHA256. Deduplicates by event ID via `webhook_inbox` table. Maps Stripe events to internal charge/refund/dispute/payout
+        status updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
       operationId: receiveStripeWebhook
       security: []
       parameters:
@@ -53976,9 +53881,8 @@ paths:
       tags:
       - Provider Webhooks (Inbound)
       summary: Flutterwave inbound webhook
-      description: Receives Flutterwave webhook events. Verifies `verif-hash` header against configured secret. Deduplicates
-        by event ID. Maps Flutterwave events to internal charge/payout/refund status updates. Return HTTP 400 for malformed
-        payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
+      description: Receives Flutterwave webhook events. Verifies `verif-hash` header against configured secret. Deduplicates by event ID. Maps Flutterwave events to internal charge/payout/refund status
+        updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
       operationId: receiveFlutterwaveWebhook
       security: []
       parameters:
@@ -54071,40 +53975,66 @@ paths:
       tags:
       - Provider Webhooks (Inbound)
       summary: PayPal inbound webhook
-      description: |-
-        Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.
+      description: 'Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.
+
 
         **Signature Verification (Certificate-Based)**
 
-        KOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:
+
+        KOB verifies PayPal webhooks using PayPal''s `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:
+
 
         1. Extract the 5 `paypal-*` headers from the incoming request
-        2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint
+
+        2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal''s verification endpoint
+
         3. If PayPal returns `verification_status: "SUCCESS"`, the event is accepted; otherwise rejected with `401`
+
 
         **Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: "already_processed"}`.
 
+
         **Handled Event Types**:
+
         - `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit
+
         - `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order
-        - `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post
+
+        - `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event
+        types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers:
+        PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing
+        any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post
+
 
         **PayPal Webhook Request Headers (present on every delivery):**
 
+
         | Header | Description |
+
         |--------|-------------|
+
         | `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |
+
         | `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |
+
         | `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |
+
         | `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |
+
         | `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |
 
+
         **Manual Verification Algorithm (alternative to API-based verification):**
+
         1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)
+
         2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`
-        3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`
+
+        3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate''s public key and the algorithm in `PayPal-Auth-Algo`
+
         4. Reject any request where verification fails — return HTTP 400 to halt retries
-        5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically
+
+        5. For SDK-based verification, use PayPal''s Node.js/Java/PHP SDKs which handle the above automatically'
       operationId: receivePaypalWebhook
       security: []
       requestBody:
@@ -54352,8 +54282,7 @@ paths:
     post:
       operationId: generatePacs004
       summary: Generate pacs.004 (PaymentReturn)
-      description: Generate an ISO 20022 pacs.004.001.11 PaymentReturn message for returning a previously settled interbank
-        payment.
+      description: Generate an ISO 20022 pacs.004.001.11 PaymentReturn message for returning a previously settled interbank payment.
       tags:
       - Standards - ISO 20022
       security:
@@ -54583,8 +54512,7 @@ paths:
     post:
       operationId: generateCamt056
       summary: Generate camt.056 (FIToFIPaymentCancellationRequest)
-      description: Generate an ISO 20022 camt.056.001.10 payment cancellation request for recalling an interbank payment before
-        settlement.
+      description: Generate an ISO 20022 camt.056.001.10 payment cancellation request for recalling an interbank payment before settlement.
       tags:
       - Standards - ISO 20022
       security:
@@ -54699,9 +54627,8 @@ paths:
     post:
       operationId: parseISO20022Camt052
       summary: Parse ISO 20022 camt.052 Bank-to-Customer Account Report
-      description: Parse and validate an inbound ISO 20022 camt.052.001.08 (Bank-to-Customer Account Report) XML message.
-        This intraday report is sent BY the bank TO the platform to report account balances and transactions during the business
-        day. Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.
+      description: Parse and validate an inbound ISO 20022 camt.052.001.08 (Bank-to-Customer Account Report) XML message. This intraday report is sent BY the bank TO the platform to report account balances
+        and transactions during the business day. Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.
       tags:
       - Standards - ISO 20022
       security:
@@ -54816,9 +54743,8 @@ paths:
     post:
       operationId: parseISO20022Camt054
       summary: Parse ISO 20022 camt.054 Bank-to-Customer Debit Credit Notification
-      description: Parse and validate an inbound ISO 20022 camt.054.001.08 (Bank-to-Customer Debit/Credit Notification) XML
-        message. This notification is sent BY the bank TO the platform to report a specific debit or credit to a customer
-        account in real time. Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.
+      description: Parse and validate an inbound ISO 20022 camt.054.001.08 (Bank-to-Customer Debit/Credit Notification) XML message. This notification is sent BY the bank TO the platform to report a specific
+        debit or credit to a customer account in real time. Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.
       tags:
       - Standards - ISO 20022
       security:
