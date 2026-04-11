@@ -1,119 +1,98 @@
 
 
-# Consumer PWA Super Audit -- Comprehensive E2E Plan
+## Plan: Make SDKs Publishable with CI/CD Auto-Publish Pipeline
 
-## Scope
+### Problem
+The SDK source code exists in `packages/sdk-node`, `packages/sdk-python`, and `packages/sdk-php` but:
+- Missing packaging files required for registry publishing (LICENSE files, Python build config, .npmrc/.npmignore)
+- No CI/CD pipeline to publish on version bumps
+- No automated testing before publish
 
-The Consumer App has **44 routes** and **20+ edge function integrations**. This audit will systematically verify every feature, fix gaps, and test before moving to the next. Features are grouped into phases by domain.
+### What Will Be Built
 
----
+**1. Packaging completeness for each SDK**
 
-## Audit Methodology
+Each SDK package will get the missing files needed for real installation:
 
-For each feature, the following checklist applies:
+- **Node.js** (`packages/sdk-node/`): Add `.npmignore`, `LICENSE` file, and `"files"` field in `package.json` to ensure `npm install @kangopenbanking/sdk` works
+- **Python** (`packages/sdk-python/`): Add `LICENSE` file and a `py.typed` marker for PEP 561 typed package support. The `pyproject.toml` already uses setuptools correctly
+- **PHP** (`packages/sdk-php/`): Add `LICENSE` file. The `composer.json` is already valid for Packagist
 
-1. **Route loads** -- no crash, no blank screen, proper loading states
-2. **Data persistence** -- CRUD operations write to and read from DB correctly
-3. **Error handling** -- professional toast messages (no raw edge function errors)
-4. **Edge function integration** -- correct payloads, proper response parsing
-5. **PIN gating** -- all financial operations gated by PinConfirmDialog
-6. **Idempotency** -- money-moving operations include idempotency keys
-7. **Empty states** -- actionable UI when no data exists
-8. **RLS compliance** -- users can only see/modify their own data
-9. **Balance sync** -- financial ops trigger refetchQueries (not invalidateQueries)
-10. **Mobile UX** -- proper back navigation, scrolling, no clipped elements
+**2. GitHub Actions workflow: `.github/workflows/publish-sdks.yml`**
 
----
+A single workflow file that triggers on version tag pushes (e.g., `sdk-v1.1.0`) and publishes all three packages:
 
-## Phase 1 -- Authentication and Onboarding
-- CustomerAuth (phone login, OTP, PIN, captcha)
-- CustomerRegister (signup flow)
-- CustomerOnboarding (KYC wizard)
-- CustomerSplash (landing/redirect)
+```text
+Trigger: push tag matching "sdk-v*"
 
-## Phase 2 -- Core Financial Operations
-- CustomerHome (balance display, navigation)
-- CustomerTransfer (P2P transfers -- phone/account/name/RIB/IBAN)
-- CustomerFundWallet (add money -- MoMo/card/bank/PayPal)
-- CustomerCashOut (withdraw to linked accounts)
-- CustomerSendMoney (remittance wizard)
-- CustomerRemittances (remittance history)
+Jobs (run in parallel):
+  
+  publish-npm:
+    - Checkout repo
+    - Setup Node.js 20
+    - cd packages/sdk-node
+    - npm install && npm run build
+    - npm publish --access public
+    - Uses NPM_TOKEN secret
+  
+  publish-pypi:
+    - Checkout repo
+    - Setup Python 3.11
+    - cd packages/sdk-python
+    - pip install build twine
+    - python -m build
+    - twine upload dist/*
+    - Uses PYPI_API_TOKEN secret
+  
+  publish-packagist:
+    - No build step needed — Packagist auto-syncs from GitHub
+    - Job creates a GitHub release to trigger Packagist webhook
+```
 
-## Phase 3 -- Bills and Payments
-- CustomerBillsV2 (utility bill payments, provider directory)
-- CustomerInvoices (create/send/pay invoices)
-- CustomerSplitBills (split, search users, pay share)
-- CustomerRecurring (auto-pay subscriptions)
-- CustomerPayLinks (payment links)
+**3. Version sync script: `scripts/bump-sdk-version.sh`**
 
-## Phase 4 -- Savings and Financial Health
-- CustomerPiggyBank (bank savings, personal goals)
-- CustomerNjangi (group savings circles)
-- CustomerCreditScore (score, insights, pre-approved offers)
-- CustomerRentReporting (rent history for credit)
-- CustomerRewards (cashback, coupons, referrals)
-- CustomerLoyalty (points, redemption)
+A helper script that bumps the version across all three SDK manifests simultaneously, commits, and creates the tag:
 
-## Phase 5 -- Cards and Accounts
-- CustomerCards (virtual cards, freeze/unfreeze)
-- CustomerLinkedAccounts (link bank accounts)
-- CustomerBank (add money sources)
+```text
+Usage: ./scripts/bump-sdk-version.sh 1.2.0
 
-## Phase 6 -- Commerce and Marketplace
-- CustomerStores (browse merchants)
-- CustomerStoreDetail (product listing, add to cart)
-- CustomerCart (checkout flow)
-- CustomerOrderTracking (order status)
-- CustomerMarketplace (search, filter, favorites)
-- CustomerWishlist (saved stores/products)
-- CustomerReviews (rate orders)
+Updates:
+  - packages/sdk-node/package.json → version: "1.2.0"
+  - packages/sdk-python/pyproject.toml → version = "1.2.0"  
+  - packages/sdk-python/kangopenbanking/__init__.py → __version__ = "1.2.0"
+  - packages/sdk-php/composer.json → version: "1.2.0"
+  
+Then: git tag sdk-v1.2.0
+```
 
-## Phase 7 -- Travel
-- CustomerTravelCategories (browse travel types)
-- CustomerTravelAgencies (service providers)
-- CustomerTravelTrips (available trips)
-- CustomerTravelBooking (book and pay)
-- CustomerTravelTicket (view ticket)
-- CustomerTravelHistory (past bookings)
+### Required Secrets
 
-## Phase 8 -- Communication and Support
-- CustomerSupport (live chat, departments)
-- CustomerHelp (FAQ, quick links)
-- CustomerAlerts (notifications)
-- CustomerDisputes (file/track disputes)
+The user will need to configure these as GitHub repository secrets (not Lovable secrets — these are for GitHub Actions):
 
-## Phase 9 -- Settings and Scan
-- CustomerSettings (profile, security, PIN, language, legal)
-- CustomerScan (QR code scanning -- kob_pay, kob_pos_pay, kob_store)
-- CustomerRequest (QR code generation for receiving)
-- CustomerActivity (transaction history)
-- PayByBankApproval (PISP authorization)
+| Secret | Registry | How to get it |
+|--------|----------|---------------|
+| `NPM_TOKEN` | npmjs.com | npm → Access Tokens → Automation token |
+| `PYPI_API_TOKEN` | pypi.org | PyPI → Account Settings → API tokens |
 
----
+Packagist does not need a secret — it uses a GitHub webhook that auto-updates on push.
 
-## Deliverables
+### Files to Create/Modify
 
-Each phase produces:
-- Gaps identified (numbered list)
-- Fixes applied (code changes)
-- Verification test (edge function curl or UI confirmation)
-- Score per feature (Pass / Partial / Fail)
+| Action | File |
+|--------|------|
+| Create | `.github/workflows/publish-sdks.yml` |
+| Create | `scripts/bump-sdk-version.sh` |
+| Create | `packages/sdk-node/LICENSE` |
+| Create | `packages/sdk-node/.npmignore` |
+| Modify | `packages/sdk-node/package.json` (add `files` field, `publishConfig`) |
+| Create | `packages/sdk-python/LICENSE` |
+| Create | `packages/sdk-python/kangopenbanking/py.typed` |
+| Create | `packages/sdk-php/LICENSE` |
 
-Final output: **Feature scorecard** with pass rate across all 44 routes.
+### Post-Implementation Setup (User Action Required)
 
----
-
-## Technical Approach
-
-- Read each page file fully and trace all edge function calls
-- Query DB for schema/data alignment
-- Test edge functions via `curl_edge_functions`
-- Fix error handling, missing PIN gates, broken queries, dead features
-- One feature at a time, verified before moving on
-
----
-
-## Execution Order
-
-Will start with **Phase 1 (Auth)** and proceed sequentially. Each phase is a discrete unit of work with its own test cycle. Estimated: 9 phases, working through them systematically.
+1. Register the package names on npm (`@kangopenbanking/sdk`), PyPI (`kangopenbanking`), and Packagist (`kangopenbanking/sdk`)
+2. Add `NPM_TOKEN` and `PYPI_API_TOKEN` as GitHub repository secrets
+3. Register the repo on Packagist.org and enable the GitHub webhook
+4. Run `./scripts/bump-sdk-version.sh 1.1.0` and push the tag to trigger the first publish
 
