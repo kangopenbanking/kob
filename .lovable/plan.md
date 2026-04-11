@@ -1,98 +1,85 @@
 
 
-## Plan: Make SDKs Publishable with CI/CD Auto-Publish Pipeline
+## Plan: Permanent Fix Package -- Developer Portal, Spec, and Monitoring
 
-### Problem
-The SDK source code exists in `packages/sdk-node`, `packages/sdk-python`, and `packages/sdk-php` but:
-- Missing packaging files required for registry publishing (LICENSE files, Python build config, .npmrc/.npmignore)
-- No CI/CD pipeline to publish on version bumps
-- No automated testing before publish
+### Problem Summary
+Based on codebase analysis, the audit report identifies issues that are partially outdated (many fixes already exist). Here is the actual current state and remaining gaps:
 
-### What Will Be Built
+**Already Fixed (no work needed):**
+- Portal routing: All /developer/* routes exist in App.tsx with real page components (GettingStarted, ApiExplorer, GatewayQuickstart, GatewayWebhooksGuide, RealWorldExamples, Sandbox, Changelog, SDKsPage, etc.)
+- Rate limit headers: Already defined in OpenAPI spec components (X-RateLimit-* headers, 429 TooManyRequests response, RateLimitError schema)
+- Status page: /developer/status exists with ApiStatusPage component
+- Developer registration: /developer/register exists with DeveloperRegistration component
+- Sitemap, robots.txt: Already exist in /public
+- CORS headers: Already configured in public/_headers
+- SDKs page: /developer/guides/sdks exists with multi-language tabs
 
-**1. Packaging completeness for each SDK**
+**Actual Remaining Gaps:**
 
-Each SDK package will get the missing files needed for real installation:
+### 1. Changelog version desync (spec 4.9.5, changelog 4.9.4)
+- Update `public/changelog.json` to apiVersion 4.9.5
+- Add v4.9.5 entry to changelog.json
+- Add v4.9.5 entry to the Changelog.tsx React component
 
-- **Node.js** (`packages/sdk-node/`): Add `.npmignore`, `LICENSE` file, and `"files"` field in `package.json` to ensure `npm install @kangopenbanking/sdk` works
-- **Python** (`packages/sdk-python/`): Add `LICENSE` file and a `py.typed` marker for PEP 561 typed package support. The `pyproject.toml` already uses setuptools correctly
-- **PHP** (`packages/sdk-php/`): Add `LICENSE` file. The `composer.json` is already valid for Packagist
+### 2. Sandbox spec missing x-sandbox metadata
+- Add `x-sandbox: true` to openapi-sandbox.json info block
+- Add `x-test-data` section with test phone numbers and card numbers
+- Add `x-scenario` annotations to key payment endpoints
 
-**2. GitHub Actions workflow: `.github/workflows/publish-sdks.yml`**
+### 3. /developer/sandbox routes partially in PROTECTED_PATHS
+- `/developer/sandbox` is listed in PROTECTED_PATHS (line 39 of PublicDeveloperLayout.tsx), but it redirects to `/developer/sandbox/overview` which is NOT protected
+- The redirect itself works, but `/developer/sandbox` should be removed from PROTECTED_PATHS since the sandbox overview must be public per ORDER P3
+- Also remove sandbox sub-paths that should be public (overview, test-cards, mobile-money, credentials)
 
-A single workflow file that triggers on version tag pushes (e.g., `sdk-v1.1.0`) and publishes all three packages:
+### 4. Missing webhook event types
+- Add 8 new event types to the WebhookEventPayload enum in openapi.json and openapi-sandbox.json:
+  `onboarding_application.approved`, `onboarding_application.rejected`, `merchant_kyb.verified`, `merchant_kyb.failed`, `credit_score.updated`, `loan_application.approved`, `loan_application.rejected`, `loan_application.pending_documents`
+- Update GatewayWebhooksGuide.tsx event table to include these
 
-```text
-Trigger: push tag matching "sdk-v*"
+### 5. Webhook event filtering documentation
+- Add `events` field documentation to the webhook registration section in GatewayWebhooksGuide.tsx
+- Show topic-based subscription model with code example
 
-Jobs (run in parallel):
-  
-  publish-npm:
-    - Checkout repo
-    - Setup Node.js 20
-    - cd packages/sdk-node
-    - npm install && npm run build
-    - npm publish --access public
-    - Uses NPM_TOKEN secret
-  
-  publish-pypi:
-    - Checkout repo
-    - Setup Python 3.11
-    - cd packages/sdk-python
-    - pip install build twine
-    - python -m build
-    - twine upload dist/*
-    - Uses PYPI_API_TOKEN secret
-  
-  publish-packagist:
-    - No build step needed — Packagist auto-syncs from GitHub
-    - Job creates a GitHub release to trigger Packagist webhook
-```
+### 6. Split payment documentation gap
+- Enhance GatewaySplitPaymentsGuide.tsx with worked marketplace example
+- Add percentage vs fixed_amount split types
+- Add settlement timing for split recipients
 
-**3. Version sync script: `scripts/bump-sdk-version.sh`**
+### 7. /developer/sdks alias route
+- The audit expects `/developer/sdks` but the route is at `/developer/guides/sdks`
+- Add a redirect: `/developer/sdks` -> `/developer/guides/sdks` (ORDER P2: zero-404)
 
-A helper script that bumps the version across all three SDK manifests simultaneously, commits, and creates the tag:
+### 8. /status top-level route
+- `/status` exists but renders a general Status page, not the API-specific status page
+- Add a prominent link from /status to /developer/status or make /status redirect to /developer/status
 
-```text
-Usage: ./scripts/bump-sdk-version.sh 1.2.0
+### 9. Navigation additions
+- Add "SDKs" link to the top nav bar in PublicDeveloperLayout
+- Already has: Docs, API Explorer, SDKs, Changelog -- verified present
 
-Updates:
-  - packages/sdk-node/package.json → version: "1.2.0"
-  - packages/sdk-python/pyproject.toml → version = "1.2.0"  
-  - packages/sdk-python/kangopenbanking/__init__.py → __version__ = "1.2.0"
-  - packages/sdk-php/composer.json → version: "1.2.0"
-  
-Then: git tag sdk-v1.2.0
-```
+---
 
-### Required Secrets
+### Files to Modify
 
-The user will need to configure these as GitHub repository secrets (not Lovable secrets — these are for GitHub Actions):
+| File | Change |
+|------|--------|
+| `public/changelog.json` | Add v4.9.5 entry, bump apiVersion |
+| `public/openapi-sandbox.json` | Add x-sandbox, x-test-data metadata |
+| `public/openapi-sandbox.yaml` | Same as above in YAML |
+| `public/openapi.json` | Add 8 new webhook event types to enum |
+| `public/openapi.yaml` | Same as above in YAML |
+| `src/components/developer/PublicDeveloperLayout.tsx` | Remove sandbox paths from PROTECTED_PATHS |
+| `src/pages/developer/Changelog.tsx` | Add v4.9.5 release entry |
+| `src/pages/developer/GatewayWebhooksGuide.tsx` | Add event filtering docs + 8 new event types |
+| `src/pages/developer/GatewaySplitPaymentsGuide.tsx` | Add marketplace worked example |
+| `src/App.tsx` | Add /developer/sdks redirect to /developer/guides/sdks |
 
-| Secret | Registry | How to get it |
-|--------|----------|---------------|
-| `NPM_TOKEN` | npmjs.com | npm → Access Tokens → Automation token |
-| `PYPI_API_TOKEN` | pypi.org | PyPI → Account Settings → API tokens |
+### Version Bump
+Spec version stays at 4.9.5 (already current). Changelog syncs to match.
 
-Packagist does not need a secret — it uses a GitHub webhook that auto-updates on push.
-
-### Files to Create/Modify
-
-| Action | File |
-|--------|------|
-| Create | `.github/workflows/publish-sdks.yml` |
-| Create | `scripts/bump-sdk-version.sh` |
-| Create | `packages/sdk-node/LICENSE` |
-| Create | `packages/sdk-node/.npmignore` |
-| Modify | `packages/sdk-node/package.json` (add `files` field, `publishConfig`) |
-| Create | `packages/sdk-python/LICENSE` |
-| Create | `packages/sdk-python/kangopenbanking/py.typed` |
-| Create | `packages/sdk-php/LICENSE` |
-
-### Post-Implementation Setup (User Action Required)
-
-1. Register the package names on npm (`@kangopenbanking/sdk`), PyPI (`kangopenbanking`), and Packagist (`kangopenbanking/sdk`)
-2. Add `NPM_TOKEN` and `PYPI_API_TOKEN` as GitHub repository secrets
-3. Register the repo on Packagist.org and enable the GitHub webhook
-4. Run `./scripts/bump-sdk-version.sh 1.1.0` and push the tag to trigger the first publish
+### Standing Order Compliance
+- All changes are additive (ORDER 4 -- Surgeon Rule)
+- No operationIds renamed or removed (ORDER 1 -- The Lock)
+- Enum values only added, never removed (ORDER 2 -- The Ratchet)
+- Justification: RFC 6585 (rate limits), FAPI 1.0 ADV (ORDER 3)
 
