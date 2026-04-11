@@ -118,6 +118,14 @@ const GatewayWebhooksGuide = () => (
               ["pay_by_bank.submitted", "Pay by Bank", "Pay by bank submitted"],
               ["pay_by_bank.completed", "Pay by Bank", "Pay by bank completed"],
               ["pay_by_bank.failed", "Pay by Bank", "Pay by bank failed"],
+              ["onboarding_application.approved", "Onboarding", "Application approved"],
+              ["onboarding_application.rejected", "Onboarding", "Application rejected"],
+              ["merchant_kyb.verified", "KYB", "Merchant KYB verification passed"],
+              ["merchant_kyb.failed", "KYB", "Merchant KYB verification failed"],
+              ["credit_score.updated", "Credit", "Credit score recalculated"],
+              ["loan_application.approved", "Lending", "Loan application approved"],
+              ["loan_application.rejected", "Lending", "Loan application rejected"],
+              ["loan_application.pending_documents", "Lending", "Loan awaiting documents"],
             ].map(([event, domain, desc]) => (
               <TableRow key={event}>
                 <TableCell><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{event}</code></TableCell>
@@ -127,7 +135,47 @@ const GatewayWebhooksGuide = () => (
             ))}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground mt-2">52 event types total. Subscribe to specific events or use <code className="bg-muted px-1 rounded">*</code> to receive all.</p>
+        <p className="text-xs text-muted-foreground mt-2">60 event types total. Subscribe to specific events or use <code className="bg-muted px-1 rounded">*</code> to receive all.</p>
+      </CardContent>
+    </Card>
+
+    {/* Event Filtering */}
+    <Card>
+      <CardHeader><CardTitle>3b. Event Filtering (Topic Subscriptions)</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          When registering a webhook, you can specify which event types to receive using the <code className="bg-muted px-1 rounded">events</code> array. If omitted or empty, the endpoint receives all events (backward compatible).
+        </p>
+        <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`// Register a webhook that only receives payment events
+POST /v1/gateway/merchants/webhooks
+{
+  "merchant_id": "mch_uuid",
+  "url": "https://yourapp.com/webhooks/payments",
+  "events": [
+    "charge.successful",
+    "charge.failed",
+    "payout.completed",
+    "refund.completed"
+  ],
+  "active": true
+}
+
+// Register a second endpoint for onboarding events only
+POST /v1/gateway/merchants/webhooks
+{
+  "merchant_id": "mch_uuid",
+  "url": "https://yourapp.com/webhooks/onboarding",
+  "events": [
+    "onboarding_application.approved",
+    "onboarding_application.rejected",
+    "merchant_kyb.verified",
+    "merchant_kyb.failed"
+  ],
+  "active": true
+}`}
+        </pre>
+        <p className="text-xs text-muted-foreground">You can update subscribed events at any time via PATCH. Events not in your filter are silently dropped -- they do not count toward delivery attempts or rate limits.</p>
       </CardContent>
     </Card>
 

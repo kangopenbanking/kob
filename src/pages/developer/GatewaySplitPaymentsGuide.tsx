@@ -108,10 +108,93 @@ const charge = await fetch('/v1/gateway/charges', {
     <div className="bg-muted/50 rounded-lg p-4 border">
       <h3 className="font-semibold mb-2">Use Cases</h3>
       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-        <li><strong>E-commerce marketplace</strong> — Platform takes commission, sellers receive their share automatically</li>
-        <li><strong>Food delivery</strong> — Restaurant receives order value minus platform and delivery fees</li>
-        <li><strong>Ride-hailing</strong> — Driver receives fare minus platform commission</li>
-        <li><strong>Multi-vendor SaaS</strong> — Software vendor and reseller share subscription revenue</li>
+        <li><strong>E-commerce marketplace</strong> -- Platform takes commission, sellers receive their share automatically</li>
+        <li><strong>Food delivery</strong> -- Restaurant receives order value minus platform and delivery fees</li>
+        <li><strong>Ride-hailing</strong> -- Driver receives fare minus platform commission</li>
+        <li><strong>Multi-vendor SaaS</strong> -- Software vendor and reseller share subscription revenue</li>
+      </ul>
+    </div>
+
+    {/* Marketplace Worked Example */}
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Marketplace Worked Example</h2>
+      <p className="text-sm text-muted-foreground">
+        A food delivery marketplace charges a customer 50,000 XAF. The platform takes a 15% commission, the restaurant receives 70% of net, and the delivery driver receives a flat 2,000 XAF fee.
+      </p>
+      <div className="border rounded-lg p-4 space-y-3">
+        <h4 className="font-medium text-sm">Step-by-step breakdown</h4>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Step</TableHead>
+              <TableHead>Amount (XAF)</TableHead>
+              <TableHead>Recipient</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow><TableCell>Customer pays</TableCell><TableCell>50,000</TableCell><TableCell>--</TableCell></TableRow>
+            <TableRow><TableCell>Gateway fee (3%)</TableCell><TableCell>-1,500</TableCell><TableCell>Gateway</TableCell></TableRow>
+            <TableRow><TableCell>Net amount</TableCell><TableCell>48,500</TableCell><TableCell>--</TableCell></TableRow>
+            <TableRow><TableCell>Driver (flat 2,000)</TableCell><TableCell>-2,000</TableCell><TableCell>Driver subaccount</TableCell></TableRow>
+            <TableRow><TableCell>Restaurant (70% of net)</TableCell><TableCell>-33,950</TableCell><TableCell>Restaurant subaccount</TableCell></TableRow>
+            <TableRow><TableCell className="font-medium">Platform retains</TableCell><TableCell className="font-medium">12,550</TableCell><TableCell className="font-medium">Platform</TableCell></TableRow>
+          </TableBody>
+        </Table>
+      </div>
+      <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`// Create the marketplace charge
+const charge = await fetch('/v1/gateway/charges', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer sk_live_...',
+    'Content-Type': 'application/json',
+    'Idempotency-Key': 'order_12345_attempt_1'
+  },
+  body: JSON.stringify({
+    merchant_id: 'mch_platform_uuid',
+    amount: 50000,
+    currency: 'XAF',
+    channel: 'mobile_money',
+    customer_phone: '237677123456',
+    tx_ref: 'food_order_12345',
+    subaccounts: [
+      { subaccount_id: 'sub_restaurant_uuid' },  // 70% percentage split
+      { subaccount_id: 'sub_driver_uuid' }         // flat 2,000 XAF split
+    ]
+  })
+});`}
+      </pre>
+    </div>
+
+    {/* Settlement Timing */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Settlement Timing</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Recipient</TableHead>
+            <TableHead>Settlement Window</TableHead>
+            <TableHead>Notes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow><TableCell>Platform</TableCell><TableCell>T+1 business day</TableCell><TableCell>Net of all subaccount splits</TableCell></TableRow>
+          <TableRow><TableCell>Subaccount (percentage)</TableCell><TableCell>T+2 business days</TableCell><TableCell>Calculated from net amount after fees</TableCell></TableRow>
+          <TableRow><TableCell>Subaccount (flat)</TableCell><TableCell>T+2 business days</TableCell><TableCell>Fixed amount deducted before percentage splits</TableCell></TableRow>
+        </TableBody>
+      </Table>
+      <p className="text-xs text-muted-foreground">Settlement timing may vary by payment channel. Mobile Money settlements are typically T+1. Card settlements are T+2. Custom settlement schedules are available for high-volume merchants.</p>
+    </div>
+
+    {/* Split Limits */}
+    <div className="bg-muted/50 rounded-lg p-4 border">
+      <h3 className="font-semibold mb-2">Split Limits and Rules</h3>
+      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+        <li><strong>Maximum splits per transaction:</strong> 10 subaccounts</li>
+        <li><strong>Percentage splits:</strong> Total of all percentage splits must not exceed 100%</li>
+        <li><strong>Flat splits:</strong> Total of all flat splits must not exceed the net amount</li>
+        <li><strong>Minimum split amount:</strong> 100 XAF per subaccount</li>
+        <li><strong>Processing order:</strong> Flat splits are deducted first, then percentage splits are applied to the remainder</li>
       </ul>
     </div>
 
