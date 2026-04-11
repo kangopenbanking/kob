@@ -8,6 +8,19 @@ export default function Changelog() {
   const releases = [
     {
       version: "API Spec 4.9.5",
+      date: "2026-04-11",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "8 new webhook event types: onboarding_application.approved/rejected, merchant_kyb.verified/failed, credit_score.updated, loan_application.approved/rejected/pending_documents (STANDING ORDER 2, STANDING ORDER 4)" },
+        { type: "feature", description: "Webhook event filtering -- topic-based subscription model with events[] array on POST /v1/webhooks for selective event delivery" },
+        { type: "feature", description: "Sandbox spec enhanced with x-sandbox: true, x-test-data test phone numbers and card numbers, x-scenario annotations (ORDER P3, ORDER P5)" },
+        { type: "feature", description: "Split payment documentation expanded with marketplace worked examples, settlement timing table, and split limits (ORDER P6)" },
+        { type: "improvement", description: "/developer/sandbox paths made fully public per ORDER P3 (Free Sandbox Rule)" },
+        { type: "improvement", description: "/developer/sdks redirect added for backward compatibility per ORDER P2 (Zero-404 Rule)" },
+      ]
+    },
+    {
+      version: "API Spec 4.9.5",
       date: "2026-04-10",
       type: "patch",
       changes: [
