@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/sidebar";
 
 // Protected paths that require authentication
+// Protected paths that require authentication
+// NOTE: /developer/sandbox/* public paths removed per ORDER P3 (Free Sandbox Rule)
 const PROTECTED_PATHS = new Set([
   "/developer/api-keys",
   "/developer/console",
@@ -36,12 +38,6 @@ const PROTECTED_PATHS = new Set([
   "/developer/api-testing",
   "/developer/playground",
   "/developer/certificates",
-  "/developer/sandbox",
-  "/developer/sandbox/usage",
-  "/developer/sandbox/webhooks",
-  "/developer/sandbox/webhook-testing",
-  "/developer/sandbox/data-generator",
-  "/developer/sandbox/payout-simulation",
 ]);
 
 const navSections = [

@@ -1,9 +1,33 @@
 {
-  "apiVersion": "4.9.4",
+  "apiVersion": "4.9.5",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-08",
+  "lastUpdated": "2026-04-11",
   "entries": [
+    {
+      "version": "4.9.5",
+      "date": "2026-04-11",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Webhook event expansion, sandbox x-test-data metadata, event filtering documentation, split payment examples",
+      "highlights": [
+        "8 new webhook event types added: onboarding_application.approved/rejected, merchant_kyb.verified/failed, credit_score.updated, loan_application.approved/rejected/pending_documents",
+        "Sandbox spec (openapi-sandbox.json) enhanced with x-sandbox: true, x-test-data test phone numbers and card numbers, x-scenario annotations",
+        "Webhook event filtering documentation -- topic-based subscription model with events[] array on POST /v1/webhooks",
+        "Split payment documentation expanded with marketplace worked examples, settlement timing, and percentage vs fixed_amount comparisons",
+        "/developer/sandbox paths made fully public per ORDER P3 (Free Sandbox Rule)",
+        "/developer/sdks redirect added for backward compatibility per ORDER P2 (Zero-404 Rule)"
+      ],
+      "standard_citations": [
+        "ORDER P2",
+        "ORDER P3",
+        "ORDER P6",
+        "ORDER P7",
+        "ORDER P10",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4"
+      ]
+    },
     {
       "version": "4.9.4",
       "date": "2026-04-08",
