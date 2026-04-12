@@ -555,7 +555,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
                 to="/developer/api-explorer"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Explorer
+                APIs Explorer
               </Link>
               <Link
                 to="/developer/guides/sdks"
