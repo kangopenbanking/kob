@@ -370,7 +370,7 @@ function DocsSearch() {
         className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:border-primary/50 transition-colors"
       >
         <Search className="h-3.5 w-3.5" />
-        <span>Search docs...</span>
+        <span>Search...</span>
         <kbd className="hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border px-1.5 text-[10px] font-medium text-muted-foreground">
           <span className="text-xs">Ctrl</span>K
         </kbd>
