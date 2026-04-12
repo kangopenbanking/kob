@@ -14,6 +14,8 @@ const examples = [
   { slug: "08-disputes-chargebacks-evidence", title: "Disputes & Chargebacks", desc: "Handle dispute notifications and submit chargeback evidence within deadlines.", icon: Shield, tags: ["Gateway", "Disputes"], time: "7 min", category: "gateway" },
   { slug: "09-open-banking-aisp-consent-accounts-transactions", title: "Open Banking AISP — Accounts & Transactions", desc: "Create consent, authorize via redirect, and retrieve account data via AISP flow.", icon: Landmark, tags: ["Open Banking", "AISP"], time: "12 min", category: "openbanking" },
   { slug: "10-open-banking-pisp-consent-domestic-payment", title: "Open Banking PISP — Domestic Payment", desc: "Initiate a domestic payment via PISP consent and authorization flow.", icon: Banknote, tags: ["Open Banking", "PISP"], time: "10 min", category: "openbanking" },
+  { slug: "11-build-marketplace-checkout", title: "Build a Marketplace Checkout", desc: "End-to-end guide: charge buyers, calculate commission, disburse to sellers, and reconcile.", icon: CreditCard, tags: ["Use Case", "Gateway"], time: "15 min", category: "usecase" },
+  { slug: "12-build-bank-data-aggregator", title: "Build a Bank Data Aggregator", desc: "End-to-end guide: AISP consent, account sync, transaction history, and token management.", icon: Landmark, tags: ["Use Case", "AISP"], time: "15 min", category: "usecase" },
 ];
 
 export default function RealWorldExamples() {
@@ -27,11 +29,11 @@ export default function RealWorldExamples() {
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground mb-3">Real-World Integration Examples</h1>
         <p className="text-lg text-muted-foreground max-w-3xl">
-          10 complete, copy-paste-ready guides covering every major integration scenario — from merchant onboarding to Open Banking payments. Each guide includes curl commands, sequence diagrams, webhook payloads, and error handling.
+          12 complete, copy-paste-ready guides covering every major integration scenario — from merchant onboarding to Open Banking payments. Includes two end-to-end "Build X" use-case guides with failure handling, retry logic, and production considerations.
         </p>
         <div className="flex items-center gap-6 mt-5 text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5"><Terminal className="h-4 w-4" /> curl + JSON examples</span>
-          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> 5–12 min each</span>
+          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> 5-15 min each</span>
           <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> Sequence diagrams included</span>
         </div>
       </div>
@@ -61,6 +63,16 @@ export default function RealWorldExamples() {
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Open Banking</h2>
         <div className="grid gap-3 md:grid-cols-2">
           {examples.filter(e => e.category === "openbanking").map((ex) => (
+            <GuideCard key={ex.slug} ex={ex} index={examples.indexOf(ex)} />
+          ))}
+        </div>
+      </section>
+
+      {/* Build X Use Cases */}
+      <section>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">End-to-End Use Cases</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          {examples.filter(e => e.category === "usecase").map((ex) => (
             <GuideCard key={ex.slug} ex={ex} index={examples.indexOf(ex)} />
           ))}
         </div>

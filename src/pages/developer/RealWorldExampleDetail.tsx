@@ -17,6 +17,8 @@ const exampleFiles: Record<string, () => Promise<string>> = {
   "08-disputes-chargebacks-evidence": () => import("../../../docs/examples/08-disputes-chargebacks-evidence.md?raw").then(m => m.default),
   "09-open-banking-aisp-consent-accounts-transactions": () => import("../../../docs/examples/09-open-banking-aisp-consent-accounts-transactions.md?raw").then(m => m.default),
   "10-open-banking-pisp-consent-domestic-payment": () => import("../../../docs/examples/10-open-banking-pisp-consent-domestic-payment.md?raw").then(m => m.default),
+  "11-build-marketplace-checkout": () => import("../../../docs/examples/11-build-marketplace-checkout.md?raw").then(m => m.default),
+  "12-build-bank-data-aggregator": () => import("../../../docs/examples/12-build-bank-data-aggregator.md?raw").then(m => m.default),
 };
 
 const guideMeta: Record<string, { title: string; time: string }> = {
@@ -30,6 +32,8 @@ const guideMeta: Record<string, { title: string; time: string }> = {
   "08-disputes-chargebacks-evidence": { title: "Disputes & Chargebacks", time: "7 min" },
   "09-open-banking-aisp-consent-accounts-transactions": { title: "Open Banking AISP — Accounts & Transactions", time: "12 min" },
   "10-open-banking-pisp-consent-domestic-payment": { title: "Open Banking PISP — Domestic Payment", time: "10 min" },
+  "11-build-marketplace-checkout": { title: "Build a Marketplace Checkout", time: "15 min" },
+  "12-build-bank-data-aggregator": { title: "Build a Bank Data Aggregator", time: "15 min" },
 };
 
 function CopyButton({ code }: { code: string }) {

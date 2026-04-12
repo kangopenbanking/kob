@@ -54,6 +54,15 @@ export default function GoLiveChecklist() {
             "Log all API responses with request_id for support debugging",
             "Dashboard access configured for operations team",
           ]},
+          { title: "Observability Setup", id: "observability", items: [
+            "Structured logging: log every API response with request_id, status, and latency",
+            "Webhook monitoring: track delivery success rate and average processing time",
+            "Error rate alerting: alert when 4xx or 5xx rate exceeds 5% over a 5-minute window",
+            "Latency tracking: monitor p50, p95, and p99 API response times",
+            "Dead-letter queue monitoring: alert when failed webhook deliveries accumulate",
+            "Settlement reconciliation: automated daily check that charges minus payouts equals expected balance",
+            "Health endpoint polling: check /v1/health every 60 seconds with alerting on consecutive failures",
+          ]},
           { title: "Go-Live Action", id: "go-live", items: [
             "Switch base URL from sandbox.kangopenbanking.com to api.kangopenbanking.com",
             "Switch API key from sk_test_... to sk_live_...",
