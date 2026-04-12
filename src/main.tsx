@@ -4,6 +4,12 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
+// Remove server-rendered fallback content once React hydrates
+const ssrFallback = document.getElementById('ssr-fallback');
+if (ssrFallback) {
+  ssrFallback.remove();
+}
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HelmetProvider>
