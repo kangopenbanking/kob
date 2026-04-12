@@ -101,10 +101,11 @@ export default function TestReport() {
       const start = performance.now();
       try {
         const functionName = ep.path.replace("/", "");
-        const invokeOptions: { method: string; body?: unknown } = {
-          method: ep.method,
+        const method = ep.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+        const invokeOptions: { method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown } = {
+          method,
         };
-        if (ep.method === "POST") {
+        if (method === "POST") {
           invokeOptions.body = ep.body || {};
         }
         const res = await supabase.functions.invoke(functionName, invokeOptions);
