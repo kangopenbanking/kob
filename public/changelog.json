@@ -1,9 +1,37 @@
 {
-  "apiVersion": "4.9.5",
+  "apiVersion": "4.9.6",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-11",
+  "lastUpdated": "2026-04-12",
   "entries": [
+    {
+      "version": "4.9.6",
+      "date": "2026-04-12",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Documentation depth upgrade -- 63-error catalogue, failure/retry/reversal guides, end-to-end use-case tutorials, auth decision table, observability checklist",
+      "highlights": [
+        "Error Codes Reference expanded from 18 to 63 codes across 14 domains (AUTH, AISP, PISP, PAY, MM, FLW, KYC, CERT, LOAN, SAV, ADM, WH, LED, BANK) with per-error recovery actions",
+        "Retry/backoff code examples (Node.js + Python) added to Error Codes page for 429 and 5xx handling",
+        "Common Mistakes section added to Error Codes Reference with 5 frequent integration pitfalls",
+        "Failure handling, edge cases, and reversal flows added to Accept Payments, Refunds, and Payouts guides",
+        "New guide: Build a Marketplace Checkout -- end-to-end charge, commission split, payout, and settlement reconciliation",
+        "New guide: Build a Bank Data Aggregator -- OAuth consent, AISP account fetch, transaction sync, token refresh lifecycle",
+        "Authentication Overview enhanced with 'Which method do I need?' decision table (API Key vs OAuth vs mTLS)",
+        "Cross-links added from Authentication to Token Lifecycle and Roles and Permissions pages",
+        "Go-Live Checklist enhanced with Observability Setup section -- structured logging, webhook monitoring, latency tracking, error rate alerting",
+        "Prerendered static HTML for 9 developer portal routes to resolve SPA ghost-page routing on published site"
+      ],
+      "standard_citations": [
+        "ORDER P5",
+        "ORDER P6",
+        "ORDER P7",
+        "ORDER P9",
+        "ORDER P10",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4"
+      ]
+    },
     {
       "version": "4.9.5",
       "date": "2026-04-11",
