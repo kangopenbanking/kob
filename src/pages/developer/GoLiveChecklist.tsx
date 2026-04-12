@@ -54,6 +54,15 @@ export default function GoLiveChecklist() {
             "Log all API responses with request_id for support debugging",
             "Dashboard access configured for operations team",
           ]},
+          { title: "Observability Setup", id: "observability", items: [
+            "Structured logging: log every API response with request_id, status, and latency",
+            "Webhook monitoring: track delivery success rate and average processing time",
+            "Error rate alerting: alert when 4xx or 5xx rate exceeds 5% over a 5-minute window",
+            "Latency tracking: monitor p50, p95, and p99 API response times",
+            "Dead-letter queue monitoring: alert when failed webhook deliveries accumulate",
+            "Settlement reconciliation: automated daily check that charges minus payouts equals expected balance",
+            "Health endpoint polling: check /v1/health every 60 seconds with alerting on consecutive failures",
+          ]},
           { title: "Go-Live Action", id: "go-live", items: [
             "Switch base URL from sandbox.kangopenbanking.com to api.kangopenbanking.com",
             "Switch API key from sk_test_... to sk_live_...",
@@ -76,6 +85,80 @@ export default function GoLiveChecklist() {
             </div>
           </section>
         ))}
+
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="logging-example">Structured API Logging</h2>
+          <p className="text-muted-foreground mb-4 text-sm">Log every API interaction with structured metadata for debugging and monitoring:</p>
+          <CodeBlock
+            title="Structured API Response Logging"
+            examples={[
+              {
+                language: "javascript",
+                label: "Node.js",
+                code: `async function loggedApiCall(method, url, body, idempotencyKey) {
+  const start = Date.now();
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': \`Bearer \${process.env.KOB_SECRET_KEY}\`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const latencyMs = Date.now() - start;
+  const data = await response.json();
+
+  // Structured log entry
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    method,
+    url,
+    status: response.status,
+    latency_ms: latencyMs,
+    request_id: data.error_id || data.id,
+    idempotency_key: idempotencyKey,
+    replayed: response.headers.get('X-Idempotent-Replayed') === 'true',
+    rate_limit_remaining: response.headers.get('X-RateLimit-Remaining'),
+    success: response.status < 400,
+  }));
+
+  return { response, data };
+}`
+              },
+              {
+                language: "python",
+                label: "Python",
+                code: `import logging, time, json, requests
+
+logger = logging.getLogger("kob_api")
+
+def logged_api_call(method, url, body=None, idempotency_key=None):
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+    }
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
+
+    start = time.monotonic()
+    resp = requests.request(method, url, json=body, headers=headers)
+    latency_ms = (time.monotonic() - start) * 1000
+
+    logger.info(json.dumps({
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "method": method, "url": url,
+        "status": resp.status_code,
+        "latency_ms": round(latency_ms, 1),
+        "request_id": resp.json().get("error_id") or resp.json().get("id"),
+        "success": resp.status_code < 400,
+    }))
+    return resp`
+              },
+            ]}
+          />
+        </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="verify-code">Production Verification Code</h2>

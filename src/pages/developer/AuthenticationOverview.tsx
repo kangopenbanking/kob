@@ -232,6 +232,44 @@ export default function AuthenticationOverview() {
         </section>
 
         {/* Next Steps */}
+        {/* Which method do I need? */}
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="which-method">Which Authentication Method Do I Need?</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border border-border rounded-lg">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-3 font-medium text-foreground">You Are</th>
+                  <th className="text-left p-3 font-medium text-foreground">Method</th>
+                  <th className="text-left p-3 font-medium text-foreground">Scopes</th>
+                  <th className="text-left p-3 font-medium text-foreground">Guide</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-border">
+                  <td className="p-3 text-foreground">Merchant (payments, payouts)</td>
+                  <td className="p-3 text-muted-foreground">API Key (Bearer token)</td>
+                  <td className="p-3 font-mono text-xs text-muted-foreground">N/A -- full gateway access</td>
+                  <td className="p-3"><Link to="/developer/authentication/api-keys" className="text-primary hover:underline">API Keys Guide</Link></td>
+                </tr>
+                <tr className="border-t border-border">
+                  <td className="p-3 text-foreground">TPP / Fintech (account data, payments)</td>
+                  <td className="p-3 text-muted-foreground">OAuth 2.0 + PKCE (FAPI 1.0)</td>
+                  <td className="p-3 font-mono text-xs text-muted-foreground">accounts, balances, payments</td>
+                  <td className="p-3"><Link to="/developer/authentication/oauth2" className="text-primary hover:underline">OAuth 2.0 Guide</Link></td>
+                </tr>
+                <tr className="border-t border-border">
+                  <td className="p-3 text-foreground">Bank / Financial Institution</td>
+                  <td className="p-3 text-muted-foreground">mTLS (certificate-bound tokens)</td>
+                  <td className="p-3 font-mono text-xs text-muted-foreground">All scopes + institutional</td>
+                  <td className="p-3"><Link to="/developer/authentication/mtls" className="text-primary hover:underline">mTLS Guide</Link></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Deep Dive */}
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="next-steps">Deep Dive</h2>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -240,6 +278,8 @@ export default function AuthenticationOverview() {
               { title: "OAuth 2.0 Guide", desc: "Full Authorization Code + PKCE walkthrough", path: "/developer/authentication/oauth2" },
               { title: "FAPI 1.0 Advanced", desc: "Security profile, PAR, and certification details", path: "/developer/authentication/fapi" },
               { title: "mTLS Guide", desc: "Certificate-bound tokens for institutional clients", path: "/developer/authentication/mtls" },
+              { title: "Token Lifecycle", desc: "Token lifetimes, refresh rotation, and reuse detection", path: "/developer/guides/token-lifecycle" },
+              { title: "Roles & Permissions", desc: "RBAC model, role hierarchy, and scope mapping", path: "/developer/guides/roles-permissions" },
             ].map((card) => (
               <Link key={card.path} to={card.path} className="block border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
                 <h3 className="font-semibold text-foreground mb-1">{card.title}</h3>
