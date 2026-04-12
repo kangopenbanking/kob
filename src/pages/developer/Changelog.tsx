@@ -7,6 +7,22 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.6",
+      date: "2026-04-12",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "Error Codes Reference expanded from 18 to 63 codes across 14 domains (AUTH, AISP, PISP, PAY, MM, FLW, KYC, CERT, LOAN, SAV, ADM, WH, LED, BANK) with per-error recovery actions and retry guidance" },
+        { type: "feature", description: "Common Mistakes section added to Error Codes Reference with 5 frequent integration pitfalls and solutions" },
+        { type: "feature", description: "New guide: Build a Marketplace Checkout -- end-to-end charge, commission split, payout, and settlement reconciliation with failure handling" },
+        { type: "feature", description: "New guide: Build a Bank Data Aggregator -- OAuth consent, AISP account fetch, transaction sync, and token refresh lifecycle" },
+        { type: "improvement", description: "Failure handling, edge cases, and reversal flows added to Accept Payments, Refunds, and Payouts guides (ORDER P6)" },
+        { type: "improvement", description: "Authentication Overview enhanced with 'Which method do I need?' decision table linking API Key, OAuth, and mTLS to user roles" },
+        { type: "improvement", description: "Go-Live Checklist enhanced with Observability Setup section -- structured logging, webhook monitoring, latency tracking, error rate alerting (ORDER P6)" },
+        { type: "improvement", description: "Live Test Report patched -- public endpoints tested without auth; authenticated endpoints skipped gracefully for anonymous users; invalid test parameters corrected" },
+        { type: "improvement", description: "Prerendered static HTML for 9 developer portal routes to resolve SPA ghost-page routing on published site (ORDER P2)" },
+      ]
+    },
+    {
       version: "API Spec 4.9.5",
       date: "2026-04-11",
       type: "patch",
