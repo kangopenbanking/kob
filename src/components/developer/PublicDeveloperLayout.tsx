@@ -9,7 +9,31 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale, Lock, Search, X, ChevronRight, Moon, Sun } from "lucide-react";
+import {
+  ArrowLeft,
+  Code,
+  Home,
+  Zap,
+  Shield,
+  Puzzle,
+  CreditCard,
+  Wallet,
+  FileText,
+  BookOpen,
+  ShoppingCart,
+  Database,
+  Smartphone,
+  Globe,
+  Terminal,
+  Activity,
+  Scale,
+  Lock,
+  Search,
+  X,
+  ChevronRight,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -236,7 +260,7 @@ function TableOfContents() {
           }
         }
       },
-      { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
+      { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 },
     );
     headings.forEach(({ id }) => {
       const el = document.getElementById(id);
@@ -255,12 +279,8 @@ function TableOfContents() {
           <a
             key={id}
             href={`#${id}`}
-            className={`block text-xs leading-relaxed transition-colors ${
-              level === 3 ? "pl-3" : ""
-            } ${
-              activeId === id
-                ? "text-primary font-medium"
-                : "text-muted-foreground hover:text-foreground"
+            className={`block text-xs leading-relaxed transition-colors ${level === 3 ? "pl-3" : ""} ${
+              activeId === id ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {text}
@@ -273,19 +293,19 @@ function TableOfContents() {
 
 /** Dark mode toggle */
 function DarkModeToggle() {
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   const toggle = () => {
     const html = document.documentElement;
-    const newDark = !html.classList.contains('dark');
-    html.classList.toggle('dark', newDark);
+    const newDark = !html.classList.contains("dark");
+    html.classList.toggle("dark", newDark);
     setIsDark(newDark);
-    localStorage.setItem('theme', newDark ? 'dark' : 'light');
+    localStorage.setItem("theme", newDark ? "dark" : "light");
   };
 
   useEffect(() => {
     // Default to dark on developer portal
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
     setIsDark(true);
   }, []);
 
@@ -309,18 +329,23 @@ function DocsSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const results = query.length >= 2
-    ? DOC_NAV_ORDER.filter((entry) =>
-        entry.title.toLowerCase().includes(query.toLowerCase()) ||
-        entry.path.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
-    : [];
+  const results =
+    query.length >= 2
+      ? DOC_NAV_ORDER.filter(
+          (entry) =>
+            entry.title.toLowerCase().includes(query.toLowerCase()) ||
+            entry.path.toLowerCase().includes(query.toLowerCase()),
+        ).slice(0, 8)
+      : [];
 
-  const handleSelect = useCallback((path: string) => {
-    navigate(path);
-    setIsOpen(false);
-    setQuery("");
-  }, [navigate]);
+  const handleSelect = useCallback(
+    (path: string) => {
+      navigate(path);
+      setIsOpen(false);
+      setQuery("");
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -387,9 +412,7 @@ function DocsSearch() {
               </div>
             )}
             {query.length >= 2 && results.length === 0 && (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No results found for "{query}"
-              </div>
+              <div className="p-6 text-center text-sm text-muted-foreground">No results found for "{query}"</div>
             )}
           </div>
         </div>
@@ -409,10 +432,23 @@ function DocsFooter() {
           <span className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">v4.6.0</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/developer/support" className="hover:text-foreground transition-colors">Support</Link>
-          <Link to="/developer/status" className="hover:text-foreground transition-colors">Status</Link>
-          <Link to="/developer/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
-          <a href="/openapi.json" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">OpenAPI</a>
+          <Link to="/developer/support" className="hover:text-foreground transition-colors">
+            Support
+          </Link>
+          <Link to="/developer/status" className="hover:text-foreground transition-colors">
+            Status
+          </Link>
+          <Link to="/developer/changelog" className="hover:text-foreground transition-colors">
+            Changelog
+          </Link>
+          <a
+            href="/openapi.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            OpenAPI
+          </a>
         </div>
       </div>
     </footer>
@@ -430,25 +466,29 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
 
   // Force dark mode on the developer portal
   useEffect(() => {
-    const previousTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('dev-portal-theme', 'dark');
+    const previousTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("dev-portal-theme", "dark");
     return () => {
       // Restore previous theme when leaving developer portal
-      if (previousTheme === 'light') {
-        document.documentElement.classList.remove('dark');
+      if (previousTheme === "light") {
+        document.documentElement.classList.remove("dark");
       }
     };
   }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
     };
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
     });
     return () => subscription.unsubscribe();
@@ -462,12 +502,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r">
           <div className="p-4 border-b">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="w-full justify-start"
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="w-full justify-start">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -487,14 +522,9 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
                       return (
                         <SidebarMenuItem key={item.path}>
                           <SidebarMenuButton asChild isActive={isActivePath(item.path)}>
-                            <Link
-                              to={isLocked ? "/auth" : item.path}
-                              className="flex items-center justify-between"
-                            >
+                            <Link to={isLocked ? "/auth" : item.path} className="flex items-center justify-between">
                               <span className={isLocked ? "text-muted-foreground" : ""}>{item.title}</span>
-                              {isLocked && (
-                                <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />
-                              )}
+                              {isLocked && <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />}
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -512,13 +542,33 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
             <SidebarTrigger />
             <Link to="/developer" className="flex items-center gap-2">
               <Code className="h-5 w-5" />
-              <span className="font-semibold">Developer Portal</span>
+              <span className="font-semibold">Kang Docs</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 ml-6">
-              <Link to="/developer/getting-started" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
-              <Link to="/developer/api-explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Explorer</Link>
-              <Link to="/developer/guides/sdks" className="text-sm text-muted-foreground hover:text-foreground transition-colors">SDKs</Link>
-              <Link to="/developer/changelog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Changelog</Link>
+              <Link
+                to="/developer/getting-started"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Docs
+              </Link>
+              <Link
+                to="/developer/api-explorer"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Explorer
+              </Link>
+              <Link
+                to="/developer/guides/sdks"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                SDKs
+              </Link>
+              <Link
+                to="/developer/changelog"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Changelog
+              </Link>
             </nav>
             <div className="flex-1" />
             <DocsSearch />
@@ -527,17 +577,21 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
               {isAuthenticated ? (
                 <>
                   <NotificationCenter />
-                  <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")}>
                     Dashboard
                   </Button>
                   <UserProfileMenu variant="developer" />
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
                     Sign In
                   </Button>
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate('/auth')}>
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => navigate("/auth")}
+                  >
                     Get API Keys
                   </Button>
                 </div>
