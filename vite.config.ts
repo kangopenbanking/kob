@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => ({
       },
       manifest: false, // Use existing public/manifest.json
     }),
+    prerenderDocsPlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
