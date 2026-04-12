@@ -87,6 +87,80 @@ export default function GoLiveChecklist() {
         ))}
 
         <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="logging-example">Structured API Logging</h2>
+          <p className="text-muted-foreground mb-4 text-sm">Log every API interaction with structured metadata for debugging and monitoring:</p>
+          <CodeBlock
+            title="Structured API Response Logging"
+            examples={[
+              {
+                language: "javascript",
+                label: "Node.js",
+                code: `async function loggedApiCall(method, url, body, idempotencyKey) {
+  const start = Date.now();
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': \`Bearer \${process.env.KOB_SECRET_KEY}\`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const latencyMs = Date.now() - start;
+  const data = await response.json();
+
+  // Structured log entry
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    method,
+    url,
+    status: response.status,
+    latency_ms: latencyMs,
+    request_id: data.error_id || data.id,
+    idempotency_key: idempotencyKey,
+    replayed: response.headers.get('X-Idempotent-Replayed') === 'true',
+    rate_limit_remaining: response.headers.get('X-RateLimit-Remaining'),
+    success: response.status < 400,
+  }));
+
+  return { response, data };
+}`
+              },
+              {
+                language: "python",
+                label: "Python",
+                code: `import logging, time, json, requests
+
+logger = logging.getLogger("kob_api")
+
+def logged_api_call(method, url, body=None, idempotency_key=None):
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+    }
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
+
+    start = time.monotonic()
+    resp = requests.request(method, url, json=body, headers=headers)
+    latency_ms = (time.monotonic() - start) * 1000
+
+    logger.info(json.dumps({
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "method": method, "url": url,
+        "status": resp.status_code,
+        "latency_ms": round(latency_ms, 1),
+        "request_id": resp.json().get("error_id") or resp.json().get("id"),
+        "success": resp.status_code < 400,
+    }))
+    return resp`
+              },
+            ]}
+          />
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="verify-code">Production Verification Code</h2>
           <p className="text-muted-foreground mb-4 text-sm">Run this quick verification after switching to production keys:</p>
           <CodeBlock
