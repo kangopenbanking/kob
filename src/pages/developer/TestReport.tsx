@@ -9,11 +9,21 @@ import { supabase } from "@/integrations/supabase/client";
 interface LiveTestResult {
   endpoint: string;
   method: string;
-  status: number;
+  status: number | null;
   latency: number;
   passed: boolean;
+  skipped?: boolean;
   error?: string;
 }
+
+type LiveEndpoint = {
+  method: "GET" | "POST";
+  path: string;
+  label: string;
+  query?: string;
+  body?: Record<string, unknown>;
+  auth: "public" | "session" | "merchant_context";
+};
 
 const testSuites = [
   {
@@ -77,17 +87,39 @@ const testSuites = [
   },
 ];
 
-const liveEndpoints = [
-  { method: "GET", path: "/api-health", label: "Health Check" },
-  { method: "GET", path: "/pos-store-browse", label: "Store Browse", query: "?action=list_stores" },
-  { method: "POST", path: "/banking-api-router", label: "Banking Router", body: { action: "list_banks" } },
-  { method: "GET", path: "/pos-catalog-products", label: "Product Catalog", requiresAuth: true },
-  { method: "POST", path: "/gateway-charges-router", label: "Charges Router", body: { action: "list" }, requiresAuth: true },
+const liveEndpoints: LiveEndpoint[] = [
+  { method: "GET", path: "/api-health", label: "Health Check", auth: "public" },
+  { method: "GET", path: "/pos-store-browse", label: "Store Browse", query: "?action=stores&limit=5", auth: "session" },
+  { method: "POST", path: "/banking-api-router", label: "Banking Router", body: { action: "list_banks" }, auth: "public" },
+  { method: "GET", path: "/pos-catalog-products", label: "Product Catalog", auth: "merchant_context" },
+  {
+    method: "GET",
+    path: "/gateway-charges-router",
+    label: "Charges Router",
+    query: "?action=fee_estimate&amount=1000&channel=mobile_money&currency=XAF",
+    auth: "public",
+  },
 ];
+
+const functionBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+
+function extractResponseError(payload: unknown, status: number) {
+  if (typeof payload === "object" && payload !== null) {
+    const errorPayload = payload as { error?: string; message?: string };
+    return errorPayload.message || errorPayload.error || `HTTP ${status}`;
+  }
+
+  if (typeof payload === "string" && payload.trim()) {
+    return payload;
+  }
+
+  return `HTTP ${status}`;
+}
 
 export default function TestReport() {
   const totalTests = testSuites.reduce((s, suite) => s + suite.tests.length, 0);
-  const passedTests = testSuites.reduce((s, suite) => s + suite.tests.filter(t => t.status === "pass").length, 0);
+  const passedTests = testSuites.reduce((s, suite) => s + suite.tests.filter((t) => t.status === "pass").length, 0);
   const [liveResults, setLiveResults] = useState<LiveTestResult[]>([]);
   const [liveRunning, setLiveRunning] = useState(false);
   const [latencyProfile, setLatencyProfile] = useState<{ p50: number; p95: number; p99: number; avg: number } | null>(null);
@@ -95,58 +127,101 @@ export default function TestReport() {
   const runLiveTests = useCallback(async () => {
     setLiveRunning(true);
     setLiveResults([]);
+    setLatencyProfile(null);
     const results: LiveTestResult[] = [];
 
-    for (const ep of liveEndpoints) {
-      const start = performance.now();
-      try {
-        const functionName = ep.path.replace("/", "");
-        const method = ep.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-        const invokeOptions: { method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown } = {
-          method,
-        };
-        if (method === "POST") {
-          invokeOptions.body = ep.body || {};
-        }
-        const res = await supabase.functions.invoke(functionName, invokeOptions);
-        const latency = Math.round(performance.now() - start);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const accessToken = session?.access_token ?? null;
 
-        // Auth-required endpoints returning 401 is a PASS (proves auth guard works)
-        const isAuthGuardPass =
-          (ep as { requiresAuth?: boolean }).requiresAuth &&
-          res.error?.message?.includes("non-2");
-        const passed = !res.error || isAuthGuardPass;
-        const displayStatus = isAuthGuardPass ? 401 : passed ? 200 : 500;
+    for (const ep of liveEndpoints) {
+      if (ep.auth === "merchant_context") {
+        results.push({
+          endpoint: ep.path,
+          method: ep.method,
+          status: null,
+          latency: 0,
+          passed: true,
+          skipped: true,
+          error: accessToken
+            ? "Skipped — this check needs a merchant_id context."
+            : "Skipped — sign in as a merchant to run this check.",
+        });
+        setLiveResults([...results]);
+        continue;
+      }
+
+      if (ep.auth === "session" && !accessToken) {
+        results.push({
+          endpoint: ep.path,
+          method: ep.method,
+          status: null,
+          latency: 0,
+          passed: true,
+          skipped: true,
+          error: "Skipped — sign in to run authenticated endpoint checks.",
+        });
+        setLiveResults([...results]);
+        continue;
+      }
+
+      const start = performance.now();
+
+      try {
+        const response = await fetch(`${functionBaseUrl}${ep.path}${ep.query ?? ""}`, {
+          method: ep.method,
+          headers: {
+            apikey: publishableKey,
+            "Content-Type": "application/json",
+            ...(ep.auth === "session" && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          ...(ep.method === "POST" ? { body: JSON.stringify(ep.body ?? {}) } : {}),
+        });
+
+        const latency = Math.round(performance.now() - start);
+        const rawPayload = await response.text();
+        let payload: unknown = rawPayload;
+
+        try {
+          payload = rawPayload ? JSON.parse(rawPayload) : null;
+        } catch {
+          payload = rawPayload;
+        }
 
         results.push({
           endpoint: ep.path,
           method: ep.method,
-          status: displayStatus,
+          status: response.status,
           latency,
-          passed,
-          error: isAuthGuardPass ? "Auth guard verified (401 expected)" : res.error?.message,
+          passed: response.ok,
+          error: response.ok ? undefined : extractResponseError(payload, response.status),
         });
       } catch (err) {
         const latency = Math.round(performance.now() - start);
         results.push({
           endpoint: ep.path,
           method: ep.method,
-          status: 0,
+          status: null,
           latency,
           passed: false,
           error: err instanceof Error ? err.message : "Unknown error",
         });
       }
+
       setLiveResults([...results]);
     }
 
-    // Calculate latency profile
-    const latencies = results.map(r => r.latency).sort((a, b) => a - b);
+    const latencies = results
+      .filter((result) => !result.skipped)
+      .map((result) => result.latency)
+      .sort((a, b) => a - b);
+
     if (latencies.length > 0) {
       const avg = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length);
-      const p50 = latencies[Math.floor(latencies.length * 0.5)];
-      const p95 = latencies[Math.floor(latencies.length * 0.95)];
-      const p99 = latencies[Math.floor(latencies.length * 0.99)];
+      const p50 = latencies[Math.floor(latencies.length * 0.5)] ?? latencies[0];
+      const p95 = latencies[Math.floor(latencies.length * 0.95)] ?? latencies[latencies.length - 1];
+      const p99 = latencies[Math.floor(latencies.length * 0.99)] ?? latencies[latencies.length - 1];
       setLatencyProfile({ p50, p95, p99, avg });
     }
 
@@ -162,7 +237,6 @@ export default function TestReport() {
         </p>
       </div>
 
-      {/* Summary */}
       <Card className="border border-border/50">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
@@ -181,19 +255,19 @@ export default function TestReport() {
         </CardContent>
       </Card>
 
-      {/* Live Endpoint Testing */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Activity className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Live Endpoint Testing</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <Activity className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-bold">Live Endpoint Testing</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Public smoke tests run for everyone. Signed-in users can also run authenticated checks without noisy 401s.
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={runLiveTests} disabled={liveRunning}>
-            {liveRunning ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Play className="h-4 w-4 mr-2" />
-            )}
+            {liveRunning ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
             {liveRunning ? "Running..." : "Run Live Tests"}
           </Button>
         </div>
@@ -201,21 +275,30 @@ export default function TestReport() {
         {liveResults.length > 0 && (
           <Card className="border border-border/50">
             <CardContent className="pt-6 space-y-2">
-              {liveResults.map((r, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg border border-border/20 px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    {r.passed ? (
-                      <CheckCircle className="h-4 w-4 text-primary" />
+              {liveResults.map((result, index) => (
+                <div key={`${result.endpoint}-${index}`} className="flex items-center justify-between gap-4 rounded-lg border border-border/20 px-3 py-3">
+                  <div className="flex min-w-0 items-start gap-2">
+                    {result.skipped ? (
+                      <Clock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    ) : result.passed ? (
+                      <CheckCircle className="mt-0.5 h-4 w-4 text-primary" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-destructive" />
+                      <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
                     )}
-                    <Badge variant="outline" className="text-xs font-mono">{r.method}</Badge>
-                    <span className="text-sm font-mono">{r.endpoint}</span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="text-xs font-mono">
+                          {result.method}
+                        </Badge>
+                        <span className="text-sm font-mono">{result.endpoint}</span>
+                      </div>
+                      {result.error ? <p className="mt-1 text-xs text-muted-foreground">{result.error}</p> : null}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground">{r.latency}ms</span>
-                    <Badge variant={r.passed ? "default" : "destructive"} className="text-xs">
-                      {r.passed ? `${r.status}` : r.error?.slice(0, 30) || "failed"}
+                    <span className="text-xs text-muted-foreground">{result.skipped ? "—" : `${result.latency}ms`}</span>
+                    <Badge variant={result.skipped ? "outline" : result.passed ? "default" : "destructive"} className="text-xs">
+                      {result.skipped ? "Skipped" : result.status}
                     </Badge>
                   </div>
                 </div>
@@ -224,7 +307,6 @@ export default function TestReport() {
           </Card>
         )}
 
-        {/* Latency Profile */}
         {latencyProfile && (
           <Card className="border border-border/50">
             <CardHeader>
@@ -234,7 +316,7 @@ export default function TestReport() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold">{latencyProfile.avg}ms</p>
                   <p className="text-xs text-muted-foreground">Average</p>
@@ -268,14 +350,13 @@ export default function TestReport() {
         )}
       </div>
 
-      {/* Static Test Suites */}
       {testSuites.map((suite) => (
         <Card key={suite.name} className="border border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{suite.name}</span>
               <Badge variant="outline" className="text-xs">
-                {suite.tests.filter(t => t.status === "pass").length}/{suite.tests.length} passed
+                {suite.tests.filter((test) => test.status === "pass").length}/{suite.tests.length} passed
               </Badge>
             </CardTitle>
           </CardHeader>
