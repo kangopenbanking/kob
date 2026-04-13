@@ -52,7 +52,15 @@ Deno.serve(async (req) => {
       headers,
     });
 
-    if (error) throw error;
+    if (error) {
+      // Forward downstream auth/client errors with their original status
+      const ctx = (error as any).context;
+      if (ctx && typeof ctx.status === 'number') {
+        const downstream = await ctx.json().catch(() => ({ error: 'downstream_error' }));
+        return jsonResp(downstream, ctx.status);
+      }
+      throw error;
+    }
     return jsonResp(data);
   } catch (err: any) {
     const errorId = crypto.randomUUID().slice(0, 8);
