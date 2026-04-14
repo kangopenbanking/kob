@@ -1,133 +1,101 @@
 
 
-# Direct Backend E2E Infrastructure Correction Plan
+# Direct Backend E2E Infrastructure Correction -- Remediation Plan
 
 ## Discovery Summary
 
-**Total matches found across the codebase:**
+After the previous bulk correction (90+ files), **11 files** still contain references to forbidden API domains. All have been classified below.
 
-| Domain | Files | Matches |
-|---|---|---|
-| `api.kangopenbanking.com` | 164 files | ~2,148 matches |
-| `sandbox.kangopenbanking.com` | 26 files | ~228 matches |
-| `mtls.api.kangopenbanking.com` | 4 files | ~34 matches |
+### Remaining Forbidden Domain Inventory
 
-**Classification of affected areas:**
+| File | Domain | Classification | Action |
+|---|---|---|---|
+| `vite-plugin-prerender-docs.ts` | `sandbox.kangopenbanking.com` (6x), `api.kangopenbanking.com` (1x) | **Docs/SEO prerender content** | REPLACE with direct backend URL |
+| `README.md` | `api.kangopenbanking.com` (2x) | **Docs example** | REPLACE with direct backend URL |
+| `docs/api-styleguide.md` | `api.kangopenbanking.com` (1x) | **Internal architecture docs** | UPDATE to reflect direct backend |
+| `docs/audit/api-docs-indexing-audit-2026-03-08.md` | `api.kangopenbanking.com` (1x) | **Historical audit note** | PRESERVE -- archived finding, not active |
+| `supabase/functions/api-contract-test/index.ts` | Both domains (2x) | **Domain liveness test** | PRESERVE -- tests DNS/SSL, not API routing |
+| `src/config/api.ts` | Both domains (1x each) | **Comment only** | PRESERVE -- warning comment |
+| `src/lib/kob-api-client.ts` | Both domains (1x each) | **Comment only** | PRESERVE -- warning comment |
+| `src/pages/developer/Changelog.tsx` | Both domains (1x each) | **Changelog description** | PRESERVE -- historical changelog entry |
+| `src/test/direct-backend-guard.test.ts` | All 3 domains | **Regression guard** | PRESERVE -- test definitions |
+| `src/test/api-config.test.ts` | `api.kangopenbanking.com` (3x) | **Regression guard** | PRESERVE -- negative assertions |
+| `src/test/gateway-integration.test.ts` | `api.kangopenbanking.com` (2x) | **Regression guard** | PRESERVE -- negative assertions |
 
-| Layer | Files Affected | Type |
-|---|---|---|
-| OpenAPI static specs (`public/openapi*.json`, `public/openapi*.yaml`) | 4 files | Spec contract |
-| OpenAPI dynamic spec (`supabase/functions/public-api-spec/index.ts`) | 1 file | Backend spec generator |
-| Central config (`src/config/api.ts`) | 1 file | Runtime config |
-| Frontend doc/example pages (`src/pages/developer/*.tsx`, `src/pages/*.tsx`) | ~60 files | Developer docs |
-| Backend edge functions (`supabase/functions/*/index.ts`) | ~20 files | Backend runtime |
-| SDK packages (`packages/sdk-node`, `packages/sdk-php`, `packages/sdk-python`) | ~6 files | SDK defaults |
-| Public metadata (`public/apis.json`) | 1 file | API discovery |
-| Tests (`src/test/*.test.ts`) | ~3 files | Test fixtures |
-| Docs markdown (`docs/`) | ~3 files | Markdown guides |
+### Classification Decision
+
+- **3 files need active remediation** (contain forbidden domains in content served to users/crawlers)
+- **8 files are safe** (comments, test assertions, changelog history, domain liveness checks)
 
 ---
 
-## Implementation Plan (7 Phases)
+## Implementation Plan
 
-### PHASE 1 -- Canonical Backend URL Constant
+### Phase 1 -- Fix `vite-plugin-prerender-docs.ts` (Critical)
 
-**File: `src/config/api.ts`**
+This file generates static HTML for SEO crawlers. It currently shows `sandbox.kangopenbanking.com/v1` and `api.kangopenbanking.com/v1` as API base URLs in prerendered content.
 
-- Replace `BASE_URL` with the direct Supabase URL: `${VITE_SUPABASE_URL}/functions/v1`
-- Remove `BASE_URL_FALLBACK` (the old hardcoded supabase.co URL)
-- Remove `API_EXAMPLE_BASE_URL` pointing to `api.kangopenbanking.com`
-- Keep `SITE_URL` (`kangopenbanking.com`) -- this is a website URL, not an API endpoint
-- Keep `DOCS_URL`, `EXPLORER_URL` as website URLs
-- Change `OPENAPI_SPEC` and `POSTMAN_COLLECTION` to use direct backend
-- Remove `fetchWithFallback` function -- no longer needed
-- Export a single `API_BACKEND_BASE` constant
+**Changes:**
+- Replace all `https://sandbox.kangopenbanking.com/v1/` curl examples with the direct backend URL pattern
+- Replace `Base URL: https://api.kangopenbanking.com/v1 | Sandbox: https://sandbox.kangopenbanking.com/v1` with the direct backend URL
+- Replace sandbox base URL display with direct backend URL
 
-### PHASE 2 -- OpenAPI Specification Correction
+### Phase 2 -- Fix `README.md`
 
-**4 static files + 1 dynamic generator = 5 files**
+The project README shows `api.kangopenbanking.com/v1` as the base URL and in the curl example.
 
-For all spec files (`public/openapi.json`, `public/openapi.yaml`, `public/openapi-sandbox.json`, `public/openapi-sandbox.yaml`, `supabase/functions/public-api-spec/index.ts`):
+**Changes:**
+- Replace base URL section with direct backend URL
+- Replace curl example to use direct backend URL
 
-- Replace `servers[]` block: remove `api.kangopenbanking.com/v1` and `sandbox.kangopenbanking.com/v1`, replace with single server entry using direct Supabase URL
-- Fix OAuth `authorizationUrl`, `tokenUrl`, `refreshUrl` to use direct backend path
-- Fix `mtls.api.kangopenbanking.com` examples to use direct backend
-- Fix `example` fields containing old domain URLs (OIDC discovery response examples, RFC 7807 error type URIs)
-- Keep non-API website URLs (terms, contact, changelog) unchanged
+### Phase 3 -- Fix `docs/api-styleguide.md`
 
-### PHASE 3 -- Backend Edge Function Corrections
+Line 26 describes the custom domain routing. This is an active architecture doc that should reflect current reality.
 
-**~20 edge functions** containing `api.kangopenbanking.com` in response bodies:
+**Changes:**
+- Update the routing description to state the direct backend URL is the canonical API endpoint
 
-- `aisp-accounts`, `aisp-standing-orders`, `aisp-direct-debits`, `aisp-beneficiaries`: Fix `Links.Self` URLs
-- `pisp-create-consent`: Fix `Links.Self` URL
-- `api-health`: Fix `documentation` URLs (openapi, postman, oidc_discovery)
-- `gateway-cancel-payout` and similar: Fix RFC 7807 `type` URI prefix
-- Keep email domains (`notify.kangopenbanking.com`, `support.kangopenbanking.com`) unchanged -- these are email infrastructure, not API endpoints
-- Keep website redirect URLs (`kangopenbanking.com/app/auth`, `kangopenbanking.com/gateway/callback`) unchanged -- these are browser redirect targets
+### Phase 4 -- Live Endpoint Validation
 
-### PHASE 4 -- Developer Portal / Docs Pages
+Test representative endpoints via `curl_edge_functions` to confirm JSON responses:
+- `GET /api-health`
+- `GET /oidc-config`
+- `GET /public-api-spec` (verify servers[] block)
+- `GET /gateway-charges-router?action=fee_estimate&amount=5000&channel=mobile_money&currency=XAF`
+- `POST /gateway-payouts-router` (expect 401 JSON)
 
-**~60 frontend files** with code examples:
+### Phase 5 -- Run `api-contract-test`
 
-All code examples in developer documentation pages must replace API domain references with a placeholder or the direct backend URL. Strategy:
+Execute the contract test suite and confirm 29/29 PASS.
 
-- Create a shared constant `API_DOCS_BASE_URL` that resolves to the direct Supabase URL
-- Update all `curl`, JavaScript, Python, and PHP code examples across:
-  - `QuickStart.tsx`, `GettingStarted.tsx`, `ForDevelopers.tsx`
-  - `ApiConsole.tsx`, `ApiReferenceOverview.tsx`
-  - `SandboxConsole.tsx`, `SandboxMobileMoney.tsx`
-  - `OpenBankingConsents.tsx`, `ComplianceAml.tsx`
-  - `PostmanGuide.tsx`, `ApiReferencePagination.tsx`, `ApiReferenceVersioning.tsx`
-  - `RemittanceCreateTransfer.tsx`
-  - `CreditAPIDocumentation.tsx`
-  - `Documentation.tsx`
-  - All other developer guide pages
-  - `docs/public/quickstarts/*.md`
-  - Integration pages (`WooCommerceGuide.tsx`, `MakeGuide.tsx`)
+### Phase 6 -- Final grep verification
 
-### PHASE 5 -- SDK and Package Corrections
+Run final forbidden domain count to confirm zero active references remain (excluding allowed categories: comments, test guards, changelog, domain liveness tests, archived audit notes).
 
-**6 files across 3 SDK packages:**
+### Phase 7 -- Generate final audit report
 
-- `packages/sdk-node/src/client.ts`: Change `DEFAULT_BASE_URL`
-- `packages/sdk-php/src/KangOpenBanking.php`: Change `DEFAULT_BASE_URL`
-- `packages/sdk-php/config/kob.php`: Change default `base_url`
-- `packages/sdk-php/src/Laravel/KOBServiceProvider.php`: Change fallback URL
-- `packages/sdk-python/kangopenbanking/client.py`: Change `DEFAULT_BASE_URL`
-- SDK README files: Update example URLs
-
-### PHASE 6 -- Public Metadata and Tests
-
-- `public/apis.json`: Update `baseURL` and function URLs
-- `src/test/api-config.test.ts`: Update assertions to match new URL pattern
-- `src/test/gateway-integration.test.ts`: Fix hardcoded URL assertions
-- `src/components/SEO.tsx`: Update API URL in structured data
-
-### PHASE 7 -- Regression Guards and Report
-
-- Add a new test file `src/test/direct-backend-guard.test.ts` that greps the codebase for forbidden domains and fails if found in active API references
-- Update `api-contract-test` edge function to validate servers[] in the spec
-- Update changelog entry
-- Produce final validation report
+Produce `direct-backend-final-audit-2026-04-14.md` with:
+- Before/after domain counts
+- Endpoint validation matrix
+- File-by-file change log
+- Remaining risks
+- Recommended next steps
 
 ---
 
 ## What Will NOT Change
 
-- Website URLs: `kangopenbanking.com/developer`, `/terms`, `/contact`, `/pricing` etc.
-- Email domains: `notify.kangopenbanking.com`, `support.kangopenbanking.com`
-- Firebase config: `kangopenbanking.com` as authDomain
-- Browser redirect URLs: `kangopenbanking.com/app/auth`, `/gateway/callback`
-- DNS verification targets: `checkout.kangopenbanking.com`
-- Status page: `status.kangopenbanking.com`
-- Logo/image URLs on `kangopenbanking.com`
-- No operationIds, schema names, route paths, or response shapes will change
-- No business logic modifications
+- Test guard files (they assert AGAINST forbidden domains)
+- Comment-only references (warnings to not use those domains)
+- Changelog historical entries
+- Domain liveness checks in contract test (validates DNS/SSL, not API routing)
+- Archived audit documents
+- All business logic, routes, schemas, operationIds
 
 ## Estimated Scope
 
-- ~90 files to modify
-- ~2,400 URL replacements
-- Zero breaking changes to API contracts, auth flows, or payment processing
+- 3 files to modify
+- ~12 URL replacements
+- Full validation pass with endpoint testing
+- Final audit report generation
 
