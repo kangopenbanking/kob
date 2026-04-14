@@ -1,18 +1,29 @@
 /**
  * Centralized API configuration for Kang Open Banking
- * All API URLs and endpoints should be referenced from here
- * 
- * Note: Using custom domain with automatic fallback to direct Supabase URL
- * until custom domain function routing is fully configured.
+ * All API URLs and endpoints should be referenced from here.
+ *
+ * DIRECT BACKEND MANDATE (PERMANENT — DO NOT CHANGE):
+ * All runtime API calls MUST use the direct Supabase Edge Functions URL.
+ * Custom domains (api.kangopenbanking.com, sandbox.kangopenbanking.com)
+ * serve the SPA frontend and must NEVER be used for API calls.
  */
+
+/** Single canonical backend base URL — the ONLY source of truth for runtime API access. */
+export const API_BACKEND_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
 export const API_CONFIG = {
+  /** Website URL (NOT an API endpoint) */
   SITE_URL: 'https://kangopenbanking.com',
-  BASE_URL: 'https://api.kangopenbanking.com/functions/v1',
-  BASE_URL_FALLBACK: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1',
+  /** Direct backend base URL for all API calls */
+  BASE_URL: API_BACKEND_BASE,
+  /** Developer documentation URL (website, not API) */
   DOCS_URL: 'https://kangopenbanking.com/documentation',
+  /** API Explorer URL (website, not API) */
   EXPLORER_URL: 'https://kangopenbanking.com/developer/api-explorer',
-  OPENAPI_SPEC: 'https://api.kangopenbanking.com/functions/v1/public-api-spec',
-  POSTMAN_COLLECTION: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
+  /** OpenAPI spec — served from direct backend */
+  OPENAPI_SPEC: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-api-spec`,
+  /** Postman collection — served from direct backend */
+  POSTMAN_COLLECTION: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/postman-collection`,
   /** Static spec files served from /public — no edge function cold-start */
   OPENAPI_JSON: '/openapi.json',
   OPENAPI_YAML: '/openapi.yaml',
@@ -21,38 +32,20 @@ export const API_CONFIG = {
 } as const;
 
 /**
- * Runtime API base URL — uses the working Supabase functions URL as primary,
- * falling back to custom domain. This ensures code examples and SDK calls
- * work even before custom domain DNS is configured.
+ * Runtime API base URL — always the direct Supabase Edge Functions backend.
+ * PERMANENT: This must never be changed to a custom domain or proxy.
  */
-export const API_RUNTIME_BASE_URL = API_CONFIG.BASE_URL_FALLBACK;
+export const API_RUNTIME_BASE_URL = API_BACKEND_BASE;
 
 /**
  * Display-facing API base URL for documentation and code examples.
- * Uses the canonical custom domain so examples look professional,
- * but developers can swap to API_RUNTIME_BASE_URL for immediate testing.
+ * Uses the direct backend URL so examples work immediately for developers.
  */
-export const API_EXAMPLE_BASE_URL = 'https://api.kangopenbanking.com';
+export const API_EXAMPLE_BASE_URL = API_BACKEND_BASE;
 
 /**
  * Returns a canonical public URL for the given path.
  * Always uses kangopenbanking.com regardless of the current browser origin.
+ * NOTE: This is for WEBSITE URLs, not API endpoints.
  */
 export const getCanonicalUrl = (path: string) => `${API_CONFIG.SITE_URL}${path}`;
-
-/**
- * Attempts to call the custom domain first, falls back to Supabase URL.
- * Use for runtime API calls in the application.
- */
-export async function fetchWithFallback(
-  path: string,
-  init?: RequestInit
-): Promise<Response> {
-  try {
-    const res = await fetch(`${API_CONFIG.BASE_URL}/${path}`, init);
-    if (res.ok) return res;
-  } catch {
-    // Custom domain unavailable — fall through to fallback
-  }
-  return fetch(`${API_CONFIG.BASE_URL_FALLBACK}/${path}`, init);
-}
