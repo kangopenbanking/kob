@@ -1,15 +1,9 @@
 import { describe, it, expect } from "vitest";
 
 describe("API Configuration", () => {
-  it("should have correct base URL format", async () => {
+  it("should have direct backend base URL using VITE_SUPABASE_URL", async () => {
     const { API_CONFIG } = await import("@/config/api");
-    expect(API_CONFIG.BASE_URL).toContain("kangopenbanking.com");
     expect(API_CONFIG.BASE_URL).toContain("functions/v1");
-  });
-
-  it("should have fallback URL configured", async () => {
-    const { API_CONFIG } = await import("@/config/api");
-    expect(API_CONFIG.BASE_URL_FALLBACK).toContain("supabase.co");
   });
 
   it("should have all required endpoints", async () => {
@@ -31,5 +25,18 @@ describe("API Configuration", () => {
   it("should have SITE_URL configured", async () => {
     const { API_CONFIG } = await import("@/config/api");
     expect(API_CONFIG.SITE_URL).toBe("https://kangopenbanking.com");
+  });
+
+  it("should NOT use legacy custom API domains", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    expect(API_CONFIG.BASE_URL).not.toContain("api.kangopenbanking.com");
+    expect(API_CONFIG.OPENAPI_SPEC).not.toContain("api.kangopenbanking.com");
+    expect(API_CONFIG.POSTMAN_COLLECTION).not.toContain("api.kangopenbanking.com");
+  });
+
+  it("should export API_BACKEND_BASE constant", async () => {
+    const { API_BACKEND_BASE } = await import("@/config/api");
+    expect(API_BACKEND_BASE).toContain("functions/v1");
+    expect(API_BACKEND_BASE).not.toContain("api.kangopenbanking.com");
   });
 });

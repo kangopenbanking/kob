@@ -41,12 +41,11 @@ const Documentation = () => {
           fetch(API_CONFIG.POSTMAN_COLLECTION, { method: 'HEAD' }),
         ]);
 
-        const fallbackOpenApi = API_CONFIG.OPENAPI_SPEC.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
-        const fallbackPostman = API_CONFIG.POSTMAN_COLLECTION.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
+        // Direct backend — no fallback needed, BASE_URL is already the direct Supabase URL
 
         if (!cancelled) {
-          setOpenApiUrl(specHead.status === 'fulfilled' && specHead.value.ok ? '/openapi.json' : fallbackOpenApi);
-          setPostmanUrl(postmanHead.status === 'fulfilled' && postmanHead.value.ok ? API_CONFIG.POSTMAN_COLLECTION : fallbackPostman);
+          setOpenApiUrl(specHead.status === 'fulfilled' && specHead.value.ok ? '/openapi.json' : API_CONFIG.OPENAPI_SPEC);
+          setPostmanUrl(postmanHead.status === 'fulfilled' && postmanHead.value.ok ? API_CONFIG.POSTMAN_COLLECTION : API_CONFIG.POSTMAN_COLLECTION);
         }
       } catch {
         if (!cancelled) {

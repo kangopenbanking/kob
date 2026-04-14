@@ -40,8 +40,7 @@ const ApiExplorer = () => {
       // Try static file first (longer timeout for large file), then edge function fallbacks
       const sources: { url: string; timeout: number }[] = [
         { url: `${window.location.origin}/openapi.json`, timeout: 30000 },
-        { url: `${API_CONFIG.BASE_URL_FALLBACK}/public-api-spec`, timeout: 20000 },
-        { url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 15000 },
+        { url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 20000 },
       ];
       for (const { url, timeout } of sources) {
         if (cancelled) return;
