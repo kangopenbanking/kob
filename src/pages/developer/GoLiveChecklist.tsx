@@ -64,7 +64,7 @@ export default function GoLiveChecklist() {
             "Health endpoint polling: check /v1/health every 60 seconds with alerting on consecutive failures",
           ]},
           { title: "Go-Live Action", id: "go-live", items: [
-            "Switch base URL from sandbox.kangopenbanking.com to api.kangopenbanking.com",
+            "Switch environment from sandbox to production in your API client configuration",
             "Switch API key from sk_test_... to sk_live_...",
             "Update webhook URLs to production endpoints",
             "Verify first production transaction with a small amount (100 XAF)",

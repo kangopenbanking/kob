@@ -124,7 +124,7 @@ export default function ApiDocumentation() {
       },
       servers: [
         {
-          url: "https://api.kangopenbanking.com/v1",
+          url: "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
           description: "Production server"
         }
       ],
