@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         database: dbOk ? 'operational' : 'degraded'
       },
       documentation: {
-        openapi: 'https://api.kangopenbanking.com/functions/v1/public-api-spec',
+        openapi: ''${Deno.env.get("SUPABASE_URL")!}/functions/v1/public-api-spec'',
         postman: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
         explorer: 'https://kangopenbanking.com/developer/api-explorer',
         oidc_discovery: 'https://api.kangopenbanking.com/functions/v1/oidc-config'
