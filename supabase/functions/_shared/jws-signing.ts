@@ -113,7 +113,7 @@ export async function generateResponseJws(responseBody: string): Promise<string>
     typ: 'JOSE',
     crit: ['http://openbanking.org.uk/iat', 'http://openbanking.org.uk/iss'],
     'http://openbanking.org.uk/iat': Math.floor(Date.now() / 1000),
-    'http://openbanking.org.uk/iss': 'https://api.kangopenbanking.com'
+    'http://openbanking.org.uk/iss': Deno.env.get('SUPABASE_URL') || 'https://wdzkzeahdtxlynetndqw.supabase.co'
   })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
   // Generate signature using HMAC-SHA256 (simulated PS256 — real impl needs RSA-PSS)

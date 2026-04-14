@@ -95,10 +95,10 @@ Deno.serve(async (req) => {
         database: dbOk ? 'operational' : 'degraded'
       },
       documentation: {
-        openapi: ''${Deno.env.get("SUPABASE_URL")!}/functions/v1/public-api-spec'',
-        postman: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
+        openapi: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/public-api-spec`,
+        postman: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/postman-collection`,
         explorer: 'https://kangopenbanking.com/developer/api-explorer',
-        oidc_discovery: 'https://api.kangopenbanking.com/functions/v1/oidc-config'
+        oidc_discovery: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/oidc-config`
       },
       fapi_compliance: {
         profile: 'FAPI 1.0 Advanced',
