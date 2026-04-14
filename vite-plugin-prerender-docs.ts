@@ -102,7 +102,7 @@ const DOC_ROUTES: DocRoute[] = [
     content: `<h2>10-Minute Integration Guide</h2>
 <p>Start accepting payments in Cameroon and the CEMAC region with minimal code.</p>
 <h3>Step 1: Create a Payment Intent</h3>
-<pre><code>curl -X POST https://sandbox.kangopenbanking.com/v1/gateway/charges \\
+<pre><code>curl -X POST \${SUPABASE_URL}/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
   -d '{"amount":10000,"currency":"XAF","description":"Test charge"}'</code></pre>
@@ -152,7 +152,7 @@ const isValid = signature === receivedSignature;</code></pre>
     content: `<h2>Free Developer Sandbox</h2>
 <p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
 <h3>Sandbox Base URL</h3>
-<p><code>https://sandbox.kangopenbanking.com/v1</code></p>
+<p><code>\${SUPABASE_URL}/functions/v1</code></p>
 <h3>Default Test Credentials</h3>
 <p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Test Phone Numbers (Mobile Money)</h3>

@@ -60,7 +60,7 @@ All features are accessible via RESTful endpoints with consistent request/respon
 ## Base URL
 
 ```bash
-https://api.kangopenbanking.com/v1
+https://<SUPABASE_URL>/functions/v1
 ```
 
 ---
@@ -90,7 +90,7 @@ Use your API credentials to authenticate and securely interact with endpoints.
 ## Example Request
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/payments \
+curl -X POST https://<SUPABASE_URL>/functions/v1/gateway-charges-router \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
