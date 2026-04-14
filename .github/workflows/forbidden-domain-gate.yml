@@ -1,0 +1,111 @@
+# ============================================================
+# CI Gate: Forbidden Deprecated API Domain Guard
+# Fails if any active source file contains legacy API domains
+# that should have been replaced with direct Supabase backend.
+# Justification: STANDING ORDER 2 (The Ratchet)
+# ============================================================
+
+name: Forbidden Domain Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan-forbidden-domains:
+    name: Scan for forbidden API domains
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for deprecated API domains in active code
+        run: |
+          echo "Scanning for forbidden deprecated API domains..."
+          echo ""
+
+          FORBIDDEN_DOMAINS=(
+            "api\.kangopenbanking\.com"
+            "sandbox\.kangopenbanking\.com"
+            "mtls\.api\.kangopenbanking\.com"
+          )
+
+          # Files/dirs that are ALLOWED to contain these domains:
+          #   - test files (regression guards that assert AGAINST forbidden domains)
+          #   - changelog entries (historical records)
+          #   - audit docs (archived findings)
+          #   - comment-only references (warnings)
+          #   - api-contract-test (DNS/SSL liveness check)
+          #   - this workflow file itself
+          EXCLUDE_PATTERNS="--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=.lovable --exclude-dir=coverage"
+          EXCLUDE_FILES="--exclude=*.test.ts --exclude=*.test.tsx --exclude=*.spec.ts --exclude=forbidden-domain-gate.yml"
+
+          FOUND=0
+
+          for DOMAIN in "${FORBIDDEN_DOMAINS[@]}"; do
+            echo "--- Checking: ${DOMAIN} ---"
+
+            # Find matches in active source files (ts, tsx, json, yaml, md, php, py)
+            MATCHES=$(grep -rn "${DOMAIN}" \
+              --include="*.ts" --include="*.tsx" --include="*.json" \
+              --include="*.yaml" --include="*.yml" --include="*.php" \
+              --include="*.py" --include="*.md" \
+              ${EXCLUDE_PATTERNS} ${EXCLUDE_FILES} \
+              . 2>/dev/null || true)
+
+            if [ -n "$MATCHES" ]; then
+              # Filter out allowed patterns:
+              # 1. Lines that are pure comments (// or # prefixed)
+              # 2. Changelog/historical description strings
+              # 3. Archived audit docs
+              # 4. api-contract-test DNS liveness checks
+              ACTIVE_MATCHES=$(echo "$MATCHES" \
+                | grep -v "^\./src/test/" \
+                | grep -v "^\./src/pages/developer/Changelog" \
+                | grep -v "^\./docs/audit/" \
+                | grep -v "^\./supabase/functions/api-contract-test/" \
+                | grep -v "^\./\.github/" \
+                | grep -v "// WARNING:" \
+                | grep -v "// DO NOT" \
+                | grep -v "// DEPRECATED" \
+                | grep -v "// These domains" \
+                | grep -v "// Old domain" \
+                | grep -v "// Custom domains" \
+                | grep -v "\* Custom domains" \
+                | grep -v "Custom domains.*serve the SPA" \
+                | grep -v "must never be used for API calls" \
+                | grep -v "description.*infrastructure correction" \
+                | grep -v "description.*Direct Backend" \
+                | grep -v "description.*deprecated" \
+                || true)
+
+              if [ -n "$ACTIVE_MATCHES" ]; then
+                echo "FORBIDDEN DOMAIN FOUND in active code:"
+                echo "$ACTIVE_MATCHES"
+                echo ""
+                FOUND=1
+              else
+                echo "  (only found in allowed locations -- OK)"
+              fi
+            else
+              echo "  No matches found -- OK"
+            fi
+            echo ""
+          done
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "============================================================"
+            echo "BUILD FAILED: Forbidden deprecated API domain detected."
+            echo ""
+            echo "All active API references must use the direct Supabase"
+            echo "Edge Functions backend URL:"
+            echo "  https://<SUPABASE_URL>/functions/v1"
+            echo ""
+            echo "Remove the legacy domain and replace with the direct"
+            echo "backend URL from src/config/api.ts"
+            echo "============================================================"
+            exit 1
+          fi
+
+          echo "All clear -- no forbidden domains in active code."

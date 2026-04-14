@@ -8,7 +8,7 @@ from .types import (
     ChargeChannel, ChargeStatus,
 )
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",
