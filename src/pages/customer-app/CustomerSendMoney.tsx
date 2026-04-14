@@ -331,8 +331,8 @@ function useRates(): CurrencyOption[] {
           for (const batch of batches) {
             const results = await Promise.allSettled(
               batch.map(async (code) => {
-                const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "wdzkzeahdtxlynetndqw";
-                const url = `https://${projectId}.supabase.co/functions/v1/exchange-rate-get?from=${code}&to=XAF`;
+                // DIRECT BACKEND ONLY — Standing Order: always use VITE_SUPABASE_URL
+                const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/exchange-rate-get?from=${code}&to=XAF`;
                 const res = await fetch(url, {
                   headers: { "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "" },
                 });

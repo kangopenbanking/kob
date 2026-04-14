@@ -12,11 +12,10 @@
  * Standards: FAPI 1.0 Advanced, RFC 7591, RFC 7807, RFC 7234
  */
 
-const SANDBOX_BASE = 'https://sandbox.kangopenbanking.com/v1';
-const PROD_BASE = 'https://api.kangopenbanking.com/v1';
-
-// Use sandbox for development, prod for production
-const BASE_URL = import.meta.env.DEV ? SANDBOX_BASE : PROD_BASE;
+// DIRECT BACKEND ONLY — Standing Order: always use VITE_SUPABASE_URL, never custom domains
+// Custom domains (api.kangopenbanking.com, sandbox.kangopenbanking.com) serve the SPA, not edge functions.
+const DIRECT_BACKEND_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+const BASE_URL = DIRECT_BACKEND_BASE;
 
 // ─── RFC 7807 ProblemDetails ──────────────────────────────────
 export interface ProblemDetails {
