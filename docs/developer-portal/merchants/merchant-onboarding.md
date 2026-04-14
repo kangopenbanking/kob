@@ -16,7 +16,7 @@ Register → Submit KYB → Under Review → Approved → Active
 Create a merchant account via the API or Merchant Portal:
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-charge \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
   -H "Authorization: Bearer <user_token>" \
   -H "Content-Type: application/json" \
   -d '{

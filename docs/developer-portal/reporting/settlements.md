@@ -15,7 +15,7 @@ KOB automatically generates settlement statements for merchants based on complet
 ## List Settlements
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/settlements?merchant_id=merch_uuid \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/settlements?merchant_id=merch_uuid \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -60,6 +60,6 @@ Each settlement includes a fee breakdown:
 ## CSV Export
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/reports/settlements?merchant_id=merch_uuid&format=csv \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reports/settlements?merchant_id=merch_uuid&format=csv \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```

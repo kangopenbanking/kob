@@ -14,7 +14,7 @@ KOB sends HTTP POST requests to your registered endpoint when payment events occ
 
 **Via API**:
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-webhook-endpoints \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhook-endpoints \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

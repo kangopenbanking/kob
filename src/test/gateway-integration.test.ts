@@ -115,13 +115,12 @@ describe("Gateway Adapters — PayPal Fee Calculation", () => {
 describe("API Configuration — Gateway Endpoints", () => {
   it("should have correct base URL", async () => {
     const { API_CONFIG } = await import("@/config/api");
-    expect(API_CONFIG.BASE_URL).toContain("kangopenbanking.com");
     expect(API_CONFIG.BASE_URL).toContain("functions/v1");
   });
 
-  it("should have fallback URL", async () => {
+  it("should use direct backend URL (not custom domain)", async () => {
     const { API_CONFIG } = await import("@/config/api");
-    expect(API_CONFIG.BASE_URL_FALLBACK).toContain("supabase.co");
+    expect(API_CONFIG.BASE_URL).not.toContain("api.kangopenbanking.com");
   });
 });
 
@@ -299,11 +298,10 @@ describe("WooCommerce Plugin — Production Readiness", () => {
     expect(new Set(endpoints).size).toBe(6);
   });
 
-  it("should use production API base URL pattern", () => {
-    const pluginApiBase = "https://api.kangopenbanking.com/functions/v1";
-    expect(pluginApiBase).toContain("kangopenbanking.com");
+  it("should use direct backend API base URL pattern", () => {
+    const pluginApiBase = `${import.meta.env.VITE_SUPABASE_URL || 'https://wdzkzeahdtxlynetndqw.supabase.co'}/functions/v1`;
     expect(pluginApiBase).toContain("functions/v1");
-    expect(pluginApiBase).not.toContain("supabase.co");
+    expect(pluginApiBase).not.toContain("api.kangopenbanking.com");
   });
 
   it("should have plugin version 1.0.0", () => {

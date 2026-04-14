@@ -16,7 +16,7 @@ KOB provides tools to test your webhook integration without making real payments
 ### Using the API
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-merchant-webhooks \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-merchant-webhooks \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

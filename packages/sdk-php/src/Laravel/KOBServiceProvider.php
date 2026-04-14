@@ -18,7 +18,7 @@ class KOBServiceProvider extends ServiceProvider
                 'client_id' => config('kob.client_id'),
                 'client_secret' => config('kob.client_secret'),
                 'api_key' => config('kob.api_key'),
-                'base_url' => config('kob.base_url', 'https://api.kangopenbanking.com/functions/v1'),
+                'base_url' => config('kob.base_url', 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1'),
                 'environment' => config('kob.environment', 'sandbox'),
                 'timeout' => config('kob.timeout', 30),
             ]);

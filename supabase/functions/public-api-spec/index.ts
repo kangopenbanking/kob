@@ -2299,8 +2299,7 @@ serve(async (req) => {
         license: { name: 'Proprietary', url: 'https://kangopenbanking.com/terms' },
       },
       servers: [
-        { url: 'https://api.kangopenbanking.com/v1', description: 'Production' },
-        { url: 'https://sandbox.kangopenbanking.com', description: 'Sandbox' },
+        { url: `${Deno.env.get('SUPABASE_URL')!}/functions/v1`, description: 'Direct Supabase Edge Functions Backend (Production)' },
       ],
       security: [{ bearerAuth: [] }],
       tags: [
@@ -2363,8 +2362,8 @@ serve(async (req) => {
             type: 'oauth2',
             flows: {
               authorizationCode: {
-                authorizationUrl: 'https://api.kangopenbanking.com/functions/v1/oauth-authorize',
-                tokenUrl: 'https://api.kangopenbanking.com/functions/v1/oauth-token',
+                authorizationUrl: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/oauth-authorize`,
+                tokenUrl: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/oauth-token`,
                 scopes: {
                   openid: 'OpenID Connect',
                   accounts: 'Read account information',

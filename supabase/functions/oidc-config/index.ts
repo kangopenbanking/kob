@@ -6,8 +6,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiBase = 'https://api.kangopenbanking.com/functions/v1';
-    const issuer = 'https://api.kangopenbanking.com/auth/v1';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const apiBase = `${supabaseUrl}/functions/v1`;
+    const issuer = `${supabaseUrl}/auth/v1`;
 
     const config = {
       issuer,

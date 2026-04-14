@@ -13,14 +13,14 @@ opened → under_review → won/lost
 ## List Disputes
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/disputes?merchant_id=merch_uuid \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes?merchant_id=merch_uuid \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ## Submit Evidence
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/disputes/{dispute_id}/evidence \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes/{dispute_id}/evidence \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: evidence_disp_001" \

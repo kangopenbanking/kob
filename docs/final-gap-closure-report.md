@@ -170,7 +170,7 @@ Domain prefixes: `AUTH_`, `AISP_`, `PISP_`, `PAY_`, `SAV_`, `LOAN_`, `LED_`, `CE
 ### Backend
 - 155 Supabase Edge Functions (Deno runtime)
 - Auto-deployed on code save
-- API base URL: `https://api.kangopenbanking.com/functions/v1`
+- API base URL: `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`
 
 ### Database
 - PostgreSQL via Lovable Cloud

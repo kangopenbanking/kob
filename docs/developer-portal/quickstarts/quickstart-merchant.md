@@ -3,7 +3,7 @@
 ## 1. Create a Merchant Account
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/merchants \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: merchant_setup_001" \
@@ -17,7 +17,7 @@ curl -X POST https://api.kangopenbanking.com/v1/merchants \
 ## 2. Submit KYB (Know Your Business)
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/merchants/kyb?merchant_id=merch_uuid&action=submit" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/kyb?merchant_id=merch_uuid&action=submit" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -31,7 +31,7 @@ curl -X POST "https://api.kangopenbanking.com/v1/merchants/kyb?merchant_id=merch
 Once your KYB is approved:
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/merchants/api-keys \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/api-keys \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -46,7 +46,7 @@ curl -X POST https://api.kangopenbanking.com/v1/merchants/api-keys \
 ## 4. Configure Webhooks
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/merchants/webhooks?merchant_id=merch_uuid" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/webhooks?merchant_id=merch_uuid" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -58,7 +58,7 @@ curl -X POST "https://api.kangopenbanking.com/v1/merchants/webhooks?merchant_id=
 ## 5. Accept Your First Payment
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: first_payment_001" \

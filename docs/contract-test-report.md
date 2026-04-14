@@ -149,7 +149,7 @@ All endpoints must return RFC 7807-style errors:
 ```bash
 # 1. Download collection from the API
 curl -o kob-collection.json \
-  https://api.kangopenbanking.com/functions/v1/postman-collection
+  https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection
 
 # 2. Run with Newman + schema validation
 newman run kob-collection.json \
@@ -157,7 +157,7 @@ newman run kob-collection.json \
   --reporters cli,json
 
 # 3. Validate responses against OpenAPI schemas using Portman or Prism
-prism proxy kob-openapi.json https://api.kangopenbanking.com
+prism proxy kob-openapi.json https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
 ```
 
 ### Programmatic Validation

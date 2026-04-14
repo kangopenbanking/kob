@@ -21,7 +21,7 @@ Your sandbox `client_id` and `client_secret` are issued immediately.
 
 ### Client Credentials (Server-to-Server)
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/oauth-token \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials&client_id=YOUR_CLIENT_ID&client_secret=YOUR_CLIENT_SECRET&scope=accounts+payments"
 ```
@@ -45,12 +45,12 @@ const challenge = btoa(String.fromCharCode(
 )).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 // 2. Redirect user to authorize
-const authUrl = `https://api.kangopenbanking.com/functions/v1/oauth-authorize?` +
+const authUrl = `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize?` +
   `client_id=YOUR_ID&redirect_uri=https://yourapp.com/callback` +
   `&response_type=code&scope=openid+accounts&code_challenge=${challenge}&code_challenge_method=S256`;
 
 // 3. Exchange code for token (on callback)
-const tokenRes = await fetch('https://api.kangopenbanking.com/functions/v1/oauth-token', {
+const tokenRes = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token', {
   method: 'POST',
   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   body: `grant_type=authorization_code&code=${code}&redirect_uri=https://yourapp.com/callback&client_id=YOUR_ID&code_verifier=${verifier}`
@@ -61,15 +61,15 @@ const tokenRes = await fetch('https://api.kangopenbanking.com/functions/v1/oauth
 
 ```bash
 # List accounts
-curl https://api.kangopenbanking.com/functions/v1/aisp-accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 
 # Get balances
-curl https://api.kangopenbanking.com/functions/v1/aisp-balances?account_id=ACCOUNT_UUID \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-balances?account_id=ACCOUNT_UUID \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 
 # Get transactions
-curl https://api.kangopenbanking.com/functions/v1/aisp-transactions?account_id=ACCOUNT_UUID&from=2026-01-01 \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-transactions?account_id=ACCOUNT_UUID&from=2026-01-01 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -77,18 +77,18 @@ curl https://api.kangopenbanking.com/functions/v1/aisp-transactions?account_id=A
 
 ```bash
 # Create test account
-curl -X POST https://api.kangopenbanking.com/functions/v1/sandbox-create-account \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox-create-account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "account_holder_name": "Test User", "currency": "XAF" }'
 
 # Generate test data
-curl -X POST https://api.kangopenbanking.com/functions/v1/sandbox-generate-data \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox-generate-data \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{ "type": "transactions", "count": 50 }'
 
 # Register test webhook
-curl -X POST https://api.kangopenbanking.com/functions/v1/sandbox-register-webhook \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox-register-webhook \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{ "url": "https://webhook.site/YOUR_ID", "events": ["charge.successful"] }'
 ```
@@ -119,11 +119,11 @@ Exceeding limits returns HTTP 429 with `Retry-After` header.
 
 ```bash
 # Sandbox request
-curl https://api.kangopenbanking.com/functions/v1/api-health \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-health \
   -H "X-API-Key: sbx_your_sandbox_key"
 
 # Production request
-curl https://api.kangopenbanking.com/functions/v1/aisp-accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts \
   -H "Authorization: Bearer eyJhbGciOi..."
 ```
 
@@ -132,5 +132,5 @@ curl https://api.kangopenbanking.com/functions/v1/aisp-accounts \
 - [OAuth & OIDC Reference](/docs/portal/authentication.md)
 - [Error Codes](/docs/public/errors.md)
 - [Status Lifecycle](/docs/public/statuses.md)
-- [OpenAPI Spec](https://api.kangopenbanking.com/functions/v1/public-api-spec)
-- [Postman Collection](https://api.kangopenbanking.com/functions/v1/postman-collection)
+- [OpenAPI Spec](https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec)
+- [Postman Collection](https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection)

@@ -22,7 +22,7 @@ return [
     | Base URL (override for custom deployments)
     |--------------------------------------------------------------------------
     */
-    'base_url' => env('KOB_BASE_URL', 'https://api.kangopenbanking.com/functions/v1'),
+    'base_url' => env('KOB_BASE_URL', 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1'),
 
     /*
     |--------------------------------------------------------------------------

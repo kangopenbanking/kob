@@ -14,7 +14,7 @@ from .types import (
     Charge, Refund, Payout, FeeEstimate,
 )
 
-DEFAULT_BASE_URL = "https://api.kangopenbanking.com/functions/v1"
+DEFAULT_BASE_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"
 
 
 class KOBError(Exception):

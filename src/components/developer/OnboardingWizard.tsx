@@ -23,7 +23,7 @@ function StepCredentials({ onNext }: StepProps) {
     ["Secret Key", "sk_test_sandbox_KangOB2026Demo"],
     ["Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
     ["Merchant ID", "merch_test_001"],
-    ["Base URL", "https://sandbox.kangopenbanking.com/v1"],
+    ["Base URL", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
   ];
 
   const copyAll = () => {
@@ -107,7 +107,7 @@ function StepFirstCall({ onNext, onPrev }: StepProps) {
         examples={[
           {
             language: "bash", label: "cURL",
-            code: `curl -X POST https://sandbox.kangopenbanking.com/v1/gateway/charges \\
+            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -311,7 +311,7 @@ def handle_webhook():
 function StepGoLive({ onPrev }: StepProps) {
   const checklist = [
     { label: "Replace sandbox keys with production keys", link: "/developer/auth/api-keys" },
-    { label: "Point to api.kangopenbanking.com/v1", link: null },
+    { label: "Point to direct Supabase Edge Functions backend", link: null },
     { label: "Verify webhook signatures in production", link: "/developer/webhooks" },
     { label: "Complete KYB verification", link: "/developer/onboarding" },
     { label: "Enable idempotency keys on all POST requests", link: "/developer/reference/idempotency" },

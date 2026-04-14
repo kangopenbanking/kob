@@ -1,6 +1,6 @@
 # PISP API Examples
 
-> **Base URL:** `https://api.kangopenbanking.com/functions/v1`
+> **Base URL:** `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`
 >
 > All requests require a valid Bearer token. Payment submissions require an `Idempotency-Key` header.
 
@@ -73,7 +73,7 @@ curl -X POST "${BASE_URL}/pisp-create-consent" \
     }
   },
   "Risk": { "payment_context_code": "EcommerceGoods" },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/pisp-consents/pdpc_550e..." },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp-consents/pdpc_550e..." },
   "Meta": {}
 }
 ```
@@ -182,7 +182,7 @@ curl -X POST "${BASE_URL}/pisp-payment-submission" \
     "ExpectedSettlementDateTime": "2026-02-18",
     "Initiation": { "..." }
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/pisp/domestic-payment-submissions/PAY-550e..." },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp/domestic-payment-submissions/PAY-550e..." },
   "Meta": {}
 }
 ```

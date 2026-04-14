@@ -3,7 +3,7 @@
 ## 1. Register as a Developer
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/developers/register \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/developers/register \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: dev_setup_001" \
   -d '{
@@ -25,7 +25,7 @@ CODE_VERIFIER=$(openssl rand -base64 64 | tr -d '=+/' | head -c 128)
 CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
 
 # Step 2: Redirect user to authorize
-https://api.kangopenbanking.com/v1/oauth/authorize?
+https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize?
   response_type=code&
   client_id=YOUR_CLIENT_ID&
   redirect_uri=https://app.example.com/callback&
@@ -34,7 +34,7 @@ https://api.kangopenbanking.com/v1/oauth/authorize?
   code_challenge_method=S256
 
 # Step 3: Exchange code for token
-curl -X POST https://api.kangopenbanking.com/v1/oauth/token \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \
   -d "grant_type=authorization_code" \
   -d "client_id=YOUR_CLIENT_ID" \
   -d "code=AUTH_CODE" \
@@ -45,7 +45,7 @@ curl -X POST https://api.kangopenbanking.com/v1/oauth/token \
 ## 4. Access Account Data
 
 ```bash
-curl https://api.kangopenbanking.com/v1/aisp/accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 

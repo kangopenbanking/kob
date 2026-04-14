@@ -32,7 +32,7 @@ After admin approval:
 ## 4. Register OAuth Client (DCR)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/dcr-register \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr-register \
   -H "Content-Type: application/json" \
   -d '{
     "software_statement": "eyJhbGciOi...",
@@ -55,7 +55,7 @@ Response:
 
 ### Create Consent
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/aisp-create-consent \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-create-consent \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,14 +66,14 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/aisp-create-consent \
 
 ### Fetch Accounts
 ```bash
-curl https://api.kangopenbanking.com/functions/v1/aisp-accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "X-Consent-ID: CONSENT_ID"
 ```
 
 ### Fetch Transactions (XAF)
 ```bash
-curl "https://api.kangopenbanking.com/functions/v1/aisp-transactions?account_id=ACC_UUID&from=2026-01-01&to=2026-03-15" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-transactions?account_id=ACC_UUID&from=2026-01-01&to=2026-03-15" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -81,7 +81,7 @@ curl "https://api.kangopenbanking.com/functions/v1/aisp-transactions?account_id=
 
 ### Create Payment Consent
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/pisp-create-consent \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp-create-consent \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -95,7 +95,7 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/pisp-create-consent \
 
 ### Submit Payment
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/pisp-domestic-payment \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp-domestic-payment \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -115,7 +115,7 @@ KOB supports Cameroon-specific account identification:
 
 Validate any format:
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/validate-account-identifier \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/validate-account-identifier \
   -d '{ "type": "DOMESTIC_RIB", "value": "10005001000123456789023", "country": "CM" }'
 ```
 
@@ -123,7 +123,7 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/validate-account-ident
 
 Upload your X.509 certificate for certificate-bound tokens:
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/certificate-upload \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/certificate-upload \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -F "certificate=@client-cert.pem" \
   -F "certificate_type=transport"

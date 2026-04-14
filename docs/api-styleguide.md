@@ -9,7 +9,7 @@
 All public endpoints live under the `/v1` prefix:
 
 ```
-https://api.kangopenbanking.com/v1/{domain}/{resource}
+https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/{domain}/{resource}
 ```
 
 ### Mapping to Edge Functions

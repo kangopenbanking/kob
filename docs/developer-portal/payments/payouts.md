@@ -3,7 +3,7 @@
 ## Single Payout
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/payouts \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: pay_salary_001" \
@@ -22,7 +22,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/payouts \
 ## Batch Payouts
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/payout-batches \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payout-batches \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: batch_march_salaries" \

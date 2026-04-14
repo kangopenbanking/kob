@@ -43,7 +43,7 @@ This guide walks through the complete lifecycle of a marketplace transaction:
 ## Step 1: Create the Buyer Charge
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \
   -H "Authorization: Bearer sk_test_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: order_2001_charge" \
@@ -135,7 +135,7 @@ def queue_seller_payout(charge_data):
 
     # Create payout to seller
     resp = requests.post(
-        "https://api.kangopenbanking.com/v1/gateway/payouts",
+        "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts",
         headers={
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json",
@@ -194,11 +194,11 @@ At the end of each day, reconcile your records:
 
 ```bash
 # Fetch all charges for the day
-curl "https://api.kangopenbanking.com/v1/gateway/charges?created_after=2026-03-23T00:00:00Z&created_before=2026-03-24T00:00:00Z&status=successful&limit=100" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges?created_after=2026-03-23T00:00:00Z&created_before=2026-03-24T00:00:00Z&status=successful&limit=100" \
   -H "Authorization: Bearer sk_test_YOUR_KEY"
 
 # Fetch all payouts for the day
-curl "https://api.kangopenbanking.com/v1/gateway/payouts?created_after=2026-03-23T00:00:00Z&created_before=2026-03-24T00:00:00Z&limit=100" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts?created_after=2026-03-23T00:00:00Z&created_before=2026-03-24T00:00:00Z&limit=100" \
   -H "Authorization: Bearer sk_test_YOUR_KEY"
 ```
 

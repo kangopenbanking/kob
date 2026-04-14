@@ -21,7 +21,7 @@ use KangOpenBanking\Exceptions\KOBException;
 
 class KangOpenBanking
 {
-    private const DEFAULT_BASE_URL = 'https://api.kangopenbanking.com/functions/v1';
+    private const DEFAULT_BASE_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
     private const DEFAULT_TIMEOUT = 30;
 
     private Client $http;

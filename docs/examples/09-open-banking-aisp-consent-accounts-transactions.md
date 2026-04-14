@@ -36,7 +36,7 @@ sequenceDiagram
 ## 1. Create Account Access Consent
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/aisp/account-access-consents \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/account-access-consents \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: consent_tpp_001_20260323" \
@@ -83,7 +83,7 @@ curl -X POST https://api.kangopenbanking.com/v1/aisp/account-access-consents \
 ## 2. List Accounts (after consent authorised)
 
 ```bash
-curl https://api.kangopenbanking.com/v1/aisp/accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "x-fapi-interaction-id: 93bac548-d2de-4546-b106-880a5018460d"
 ```
@@ -91,7 +91,7 @@ curl https://api.kangopenbanking.com/v1/aisp/accounts \
 ## 3. Get Transactions (with pagination)
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/aisp/accounts/acc_001/transactions?limit=25&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/acc_001/transactions?limit=25&offset=0" \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "x-fapi-interaction-id: 93bac548-d2de-4546-b106-880a5018460d"
 ```

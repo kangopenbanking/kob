@@ -21,7 +21,7 @@ import {
   ApiError,
 } from './types';
 
-const DEFAULT_BASE_URL = 'https://api.kangopenbanking.com/functions/v1';
+const DEFAULT_BASE_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
 const DEFAULT_TIMEOUT = 30000;
 
 class KOBError extends Error {

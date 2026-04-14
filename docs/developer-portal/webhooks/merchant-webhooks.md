@@ -7,7 +7,7 @@ Merchants can subscribe to real-time event notifications. KOB delivers webhooks 
 ## Register a Webhook
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/merchants/webhooks?merchant_id=merch_uuid \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/webhooks?merchant_id=merch_uuid \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: wh_setup_001" \
@@ -102,7 +102,7 @@ $valid = hash_equals($expected, $signature);
 Rotate your webhook secret without downtime:
 
 ```bash
-curl -X PATCH https://api.kangopenbanking.com/v1/merchants/webhooks?merchant_id=merch_uuid&webhook_id=wh_abc123&action=rotate_secret \
+curl -X PATCH https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/webhooks?merchant_id=merch_uuid&webhook_id=wh_abc123&action=rotate_secret \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

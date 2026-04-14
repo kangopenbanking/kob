@@ -5,7 +5,7 @@
 KOB uses URL-based versioning. The current production version is **v1**.
 
 ```
-https://api.kangopenbanking.com/v1/gateway/charges
+https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges
 ```
 
 ### Version Lifecycle

@@ -24,19 +24,19 @@ export default function QuickStart() {
 
   const codeExamples = {
     curl: {
-      auth: `curl -X POST "https://api.kangopenbanking.com/functions/v1/oauth-token" \\
+      auth: `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
   -d "client_secret=YOUR_CLIENT_SECRET" \\
   -d "scope=accounts payments"`,
-      accounts: `curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \\
+      accounts: `curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "x-consent-id: YOUR_CONSENT_ID"`
     },
     javascript: {
       auth: `const response = await fetch(
-  'https://api.kangopenbanking.com/functions/v1/oauth-token',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -50,7 +50,7 @@ export default function QuickStart() {
 );
 const { access_token } = await response.json();`,
       accounts: `const response = await fetch(
-  'https://api.kangopenbanking.com/v1/aisp/accounts',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts',
   {
     headers: {
       'Authorization': \`Bearer \${accessToken}\`,
@@ -64,7 +64,7 @@ const accounts = await response.json();`
       auth: `import requests
 
 response = requests.post(
-    'https://api.kangopenbanking.com/functions/v1/oauth-token',
+    'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
     data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',
@@ -79,7 +79,7 @@ access_token = response.json()['access_token']`,
 }
 
 response = requests.get(
-    'https://api.kangopenbanking.com/v1/aisp/accounts',
+    'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts',
     headers=headers
 )
 accounts = response.json()`

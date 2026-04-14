@@ -121,7 +121,7 @@ Each journey has a corresponding Postman folder in the collection. Run via:
 ```bash
 newman run kang-openbanking-api-v1.postman_collection.json \
   --folder "Journey 1 - Developer Sandbox" \
-  --env-var "base_url=https://api.kangopenbanking.com"
+  --env-var "base_url=https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"
 ```
 
 ### Automated

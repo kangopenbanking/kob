@@ -1,6 +1,6 @@
 # AISP API Examples
 
-> **Base URL:** `https://api.kangopenbanking.com/functions/v1`
+> **Base URL:** `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`
 >
 > All requests require a valid Bearer token and `x-consent-id` header (except consent creation).
 
@@ -42,7 +42,7 @@ curl -X POST "${BASE_URL}/aisp-create-consent" \
     "TransactionToDateTime": "2026-12-31T23:59:59Z"
   },
   "Risk": {},
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-consents/aac_550e..." },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-consents/aac_550e..." },
   "Meta": { "TotalPages": 1 }
 }
 ```
@@ -132,7 +132,7 @@ curl -X GET "${BASE_URL}/aisp-accounts" \
       }
     ]
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-accounts" },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts" },
   "Meta": { "TotalPages": 1 }
 }
 ```
@@ -161,7 +161,7 @@ curl -X GET "${BASE_URL}/aisp-balances/ACC-001/balances" \
       }
     ]
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-accounts/ACC-001/balances" },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts/ACC-001/balances" },
   "Meta": { "TotalPages": 1 }
 }
 ```
@@ -200,7 +200,7 @@ curl -X GET "${BASE_URL}/aisp-transactions/ACC-001/transactions?fromBookingDateT
     ]
   },
   "Links": {
-    "Self": "https://api.kangopenbanking.com/v1/aisp-accounts/ACC-001/transactions?limit=25&offset=0"
+    "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts/ACC-001/transactions?limit=25&offset=0"
   },
   "Meta": {
     "TotalPages": 4,
@@ -247,7 +247,7 @@ curl -X GET "${BASE_URL}/aisp-beneficiaries/ACC-001/beneficiaries" \
       }
     ]
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-accounts/ACC-001/beneficiaries" },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts/ACC-001/beneficiaries" },
   "Meta": { "TotalPages": 1 }
 }
 ```
@@ -278,7 +278,7 @@ curl -X GET "${BASE_URL}/aisp-direct-debits/ACC-001/direct-debits" \
       }
     ]
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-accounts/ACC-001/direct-debits" },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts/ACC-001/direct-debits" },
   "Meta": { "TotalPages": 1 }
 }
 ```
@@ -315,7 +315,7 @@ curl -X GET "${BASE_URL}/aisp-standing-orders/ACC-001/standing-orders" \
       }
     ]
   },
-  "Links": { "Self": "https://api.kangopenbanking.com/v1/aisp-accounts/ACC-001/standing-orders" },
+  "Links": { "Self": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp-accounts/ACC-001/standing-orders" },
   "Meta": { "TotalPages": 1 }
 }
 ```

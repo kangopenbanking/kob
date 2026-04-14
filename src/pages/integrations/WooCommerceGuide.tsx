@@ -36,7 +36,7 @@ const WooCommerceGuide = () => {
     setDownloading(true);
     try {
       const response = await fetch(
-        `https://api.kangopenbanking.com/functions/v1/woocommerce-download-plugin`,
+        `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/woocommerce-download-plugin`,
         { headers: { 'Content-Type': 'application/json' } }
       );
 

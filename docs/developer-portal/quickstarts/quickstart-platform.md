@@ -3,7 +3,7 @@
 ## 1. Register Your Institution
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/institutions/register \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/institutions/register \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: inst_setup_001" \
@@ -16,7 +16,7 @@ curl -X POST https://api.kangopenbanking.com/v1/institutions/register \
 ## 2. Create API Client
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/institutions/{institution_id}/clients" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/institutions/{institution_id}/clients" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -37,7 +37,7 @@ Choose your integration mode:
 | **Message Queue** | Kafka/RabbitMQ real-time |
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/banks/{bank_id}/connectors" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/banks/{bank_id}/connectors" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -51,7 +51,7 @@ curl -X POST "https://api.kangopenbanking.com/v1/banks/{bank_id}/connectors" \
 ## 4. Submit Business KYC
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/institutions/{institution_id}/kyb" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/institutions/{institution_id}/kyb" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

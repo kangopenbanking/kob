@@ -71,7 +71,7 @@ const { data, error } = await supabase.functions.invoke('gdpr-consent-retention'
 
 ```bash
 curl -X POST \
-  https://api.kangopenbanking.com/functions/v1/gdpr-consent-retention \
+  https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gdpr-consent-retention \
   -H "Authorization: Bearer YOUR_ANON_KEY" \
   -H "Content-Type: application/json" \
   -d '{"manual": true}'

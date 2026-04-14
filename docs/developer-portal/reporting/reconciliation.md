@@ -7,7 +7,7 @@ KOB provides automated reconciliation between internal records and payment provi
 ## Run Reconciliation
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/reconciliation \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reconciliation \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: recon_march_2026" \
@@ -22,7 +22,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/reconciliation \
 ## List Mismatches
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/reconciliation/{run_id}/mismatches?limit=50" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reconciliation/{run_id}/mismatches?limit=50" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -38,7 +38,7 @@ curl "https://api.kangopenbanking.com/v1/gateway/reconciliation/{run_id}/mismatc
 ## Resolve a Mismatch
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/reconciliation/{run_id}/mismatches/{mismatch_id}/resolve \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reconciliation/{run_id}/mismatches/{mismatch_id}/resolve \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

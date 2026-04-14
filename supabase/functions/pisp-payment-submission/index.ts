@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
         }
       },
       Links: {
-        Self: `https://api.kangopenbanking.com/v1/pisp/domestic-payment-submissions/${updatedPayment.payment_id}`
+        Self: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/pisp/domestic-payment-submissions/${updatedPayment.payment_id}`
       },
       Meta: {}
     };

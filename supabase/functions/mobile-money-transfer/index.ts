@@ -107,7 +107,7 @@ serve(async (req) => {
         currency: currency.toUpperCase(),
         reference: transaction_ref,
         beneficiary_name: beneficiary_name || 'Beneficiary',
-        callback_url: 'https://api.kangopenbanking.com/v1/mobile-money-verify',
+        callback_url: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/mobile-money-verify`,
       }),
     });
 
