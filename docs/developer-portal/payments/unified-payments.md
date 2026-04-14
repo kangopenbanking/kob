@@ -19,7 +19,7 @@ KOB provides a single `POST /v1/gateway/charges` endpoint that routes payments t
 ## Create a Charge
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: order_12345" \
@@ -67,7 +67,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
 Poll the provider for real-time status:
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/charges/{charge_id}/verify \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges/{charge_id}/verify \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

@@ -7,7 +7,7 @@
 | Requirement | Details |
 |---|---|
 | TPP Registration | Approved via [kangopenbanking.com/tpp-registration](https://kangopenbanking.com/tpp-registration) |
-| Base URL | `https://api.kangopenbanking.com/v1` |
+| Base URL | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1` |
 | Auth | OAuth 2.0 `client_credentials` or `authorization_code` |
 
 ---
@@ -15,7 +15,7 @@
 ## Step 1 — Register via Dynamic Client Registration (DCR)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/dcr/register \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr/register \
   -H "Content-Type: application/json" \
   -d '{
     "software_statement": "YOUR_SSA_JWT",
@@ -38,7 +38,7 @@ curl -X POST https://api.kangopenbanking.com/v1/dcr/register \
 ## Step 2 — Obtain an Access Token
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/oauth/token \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_CLIENT_ID" \
@@ -59,7 +59,7 @@ curl -X POST https://api.kangopenbanking.com/v1/oauth/token \
 ## Step 3 — Health Check
 
 ```bash
-curl https://api.kangopenbanking.com/v1/health
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/health
 ```
 
 ## Step 4 — Create an AISP Consent & List Accounts
@@ -67,7 +67,7 @@ curl https://api.kangopenbanking.com/v1/health
 ### 4a. Create Consent
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/aisp/consents \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -82,7 +82,7 @@ curl -X POST https://api.kangopenbanking.com/v1/aisp/consents \
 ### 4b. List Accounts
 
 ```bash
-curl https://api.kangopenbanking.com/v1/aisp/accounts \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "x-consent-id: consent_abc123"
 ```
@@ -94,7 +94,7 @@ curl https://api.kangopenbanking.com/v1/aisp/accounts \
 ### JavaScript / Node.js
 
 ```javascript
-const KOB_BASE = "https://api.kangopenbanking.com/v1";
+const KOB_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
 
 // Step 1: Obtain an access token
 async function getToken(clientId, clientSecret) {
@@ -151,7 +151,7 @@ async function createPayment(token, paymentData) {
 import requests
 import uuid
 
-KOB_BASE = "https://api.kangopenbanking.com/v1"
+KOB_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"
 
 # Step 1: Obtain an access token
 def get_token(client_id: str, client_secret: str) -> str:
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
 ```php
 <?php
-$KOB_BASE = "https://api.kangopenbanking.com/v1";
+$KOB_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
 
 // Step 1: Obtain an access token
 function getToken(string $clientId, string $clientSecret): string {

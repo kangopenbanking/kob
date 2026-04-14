@@ -15,7 +15,7 @@ KOB delivers webhook notifications via HTTPS POST to your registered endpoint wh
 ### Register a Webhook Endpoint
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/webhooks \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -40,21 +40,21 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/webhooks \
 ### List Webhook Endpoints
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/webhooks \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
 ### Get Webhook Deliveries
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId}/deliveries \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks/{webhookId}/deliveries \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
 ### Update a Webhook Endpoint
 
 ```bash
-curl -X PUT https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId} \
+curl -X PUT https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks/{webhookId} \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,7 +66,7 @@ curl -X PUT https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId} \
 ### Delete a Webhook Endpoint
 
 ```bash
-curl -X DELETE https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId} \
+curl -X DELETE https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks/{webhookId} \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
@@ -239,7 +239,7 @@ KOB retries failed webhook deliveries using exponential backoff:
 ### Monitoring Failed Deliveries
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId}/deliveries?status=failed \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/webhooks/{webhookId}/deliveries?status=failed \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 

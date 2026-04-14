@@ -28,7 +28,7 @@ sequenceDiagram
 ## 1. List Settlements
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/settlements?limit=10&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/settlements?limit=10&offset=0" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
@@ -61,7 +61,7 @@ curl "https://api.kangopenbanking.com/v1/gateway/settlements?limit=10&offset=0" 
 ## 2. Transaction Report
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/reports/transactions?from=2026-03-01&to=2026-03-23&format=json" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reports/transactions?from=2026-03-01&to=2026-03-23&format=json" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

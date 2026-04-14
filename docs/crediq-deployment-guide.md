@@ -100,14 +100,14 @@ Test scheduled functions immediately:
 ```bash
 # Weekly Digest
 curl -X POST \
-  'https://api.kangopenbanking.com/functions/v1/crediq-send-weekly-digest' \
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/crediq-send-weekly-digest' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "test-user-uuid"}'
 
 # Monthly Report
 curl -X POST \
-  'https://api.kangopenbanking.com/functions/v1/crediq-send-monthly-report' \
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/crediq-send-monthly-report' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "test-user-uuid"}'
@@ -154,7 +154,7 @@ CrediQ uses Cameroon flag colors:
 ### Edge Function Testing
 Health check endpoint:
 ```bash
-curl https://api.kangopenbanking.com/functions/v1/crediq-health-check
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/crediq-health-check
 ```
 
 Expected response:

@@ -27,7 +27,7 @@ After KYB approval, find your keys in **Merchant Portal → API Keys**:
 ### MoMo (Cameroon — XAF)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-charge \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
   -H "Authorization: Bearer kob_test_xxxx" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -47,7 +47,7 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-charge 
 ### Node.js
 ```javascript
 const response = await fetch(
-  'https://api.kangopenbanking.com/functions/v1/gateway-create-charge',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge',
   {
     method: 'POST',
     headers: {
@@ -107,7 +107,7 @@ function verifyWebhook(payload, signature, secret) {
 ## 6. Create a Refund
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-refund \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-refund \
   -H "Authorization: Bearer kob_test_xxxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -120,7 +120,7 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-refund 
 ## 7. Export Transactions
 
 ```bash
-curl -X GET "https://api.kangopenbanking.com/functions/v1/gateway-export-transactions?format=csv&from=2026-01-01&to=2026-03-15" \
+curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-export-transactions?format=csv&from=2026-01-01&to=2026-03-15" \
   -H "Authorization: Bearer kob_test_xxxx"
 ```
 
@@ -129,4 +129,4 @@ curl -X GET "https://api.kangopenbanking.com/functions/v1/gateway-export-transac
 - [Webhook Integration Guide](/docs/public/webhooks/merchant-webhooks.md)
 - [Error Codes Reference](/docs/public/errors.md)
 - [Status Lifecycle](/docs/public/statuses.md)
-- [Full API Reference](https://api.kangopenbanking.com/functions/v1/public-api-spec)
+- [Full API Reference](https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec)

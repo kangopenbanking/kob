@@ -7,7 +7,7 @@ All money-moving POST endpoints require an `Idempotency-Key` header to ensure sa
 ## How It Works
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-charge \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
   -H "Authorization: Bearer kob_test_xxxx" \
   -H "Idempotency-Key: charge_ord123_20260322" \
   -H "Content-Type: application/json" \

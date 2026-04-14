@@ -41,7 +41,7 @@ This document covers the authentication, directory, and infrastructure endpoints
 
 **Curl:**
 ```bash
-curl https://api.kangopenbanking.com/functions/v1/api-ready
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-ready
 ```
 
 ### 2. `oauth-token` (Token Exchange)

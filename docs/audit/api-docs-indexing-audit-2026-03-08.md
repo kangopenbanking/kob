@@ -76,7 +76,7 @@ The static OpenAPI file served at `https://kangopenbanking.com/openapi.json` is 
 
 ChatGPT, Claude, and other AI agents that consume this plugin manifest will only see the incomplete static spec from C1.
 
-**Fix:** Change `api.url` to `https://api.kangopenbanking.com/functions/v1/public-api-spec` (the dynamic endpoint).
+**Fix:** Change `api.url` to `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec` (the dynamic endpoint).
 
 ---
 
@@ -95,7 +95,7 @@ Current:
 ```json
 "auth": {
   "type": "oauth",
-  "authorization_url": "https://api.kangopenbanking.com/functions/v1/oauth-authorize",
+  "authorization_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
   "scope": "openid accounts balances transactions payments"
 }
 ```
@@ -104,8 +104,8 @@ Current:
 ```json
 "auth": {
   "type": "oauth",
-  "client_url": "https://api.kangopenbanking.com/functions/v1/oauth-authorize",
-  "authorization_url": "https://api.kangopenbanking.com/functions/v1/oauth-token",
+  "client_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
+  "authorization_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
   "authorization_content_type": "application/x-www-form-urlencoded",
   "scope": "openid accounts balances transactions payments"
 }
@@ -169,7 +169,7 @@ The guide uses `payment.*` and `mobilemoney.*` prefixes that **don't exist** in 
 
 **File:** `public/openapi.json` (lines 18-27)
 
-Both production and sandbox servers point to `https://api.kangopenbanking.com/v1`. No way for tools to distinguish environments.
+Both production and sandbox servers point to `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`. No way for tools to distinguish environments.
 
 **Fix:** Use a distinguishing marker (e.g., `x-environment: sandbox` is already there but add a description noting "Use sandbox API keys obtained from the developer portal").
 
@@ -199,7 +199,7 @@ No `version` property on the API entry. Aggregators like APIs.guru require this.
 
 **File:** `public/sitemap.xml` (lines 506-517)
 
-Includes `https://api.kangopenbanking.com/functions/v1/public-api-spec` and `postman-collection`. Sitemaps should only contain URLs from the same domain. Google ignores cross-domain entries.
+Includes `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec` and `postman-collection`. Sitemaps should only contain URLs from the same domain. Google ignores cross-domain entries.
 
 **Fix:** Remove the `api.kangopenbanking.com` URLs or serve them from the main domain.
 
@@ -402,7 +402,7 @@ Using `Data.Permissions` (UK Open Banking wrapper) vs `permissions` (flat KOB fo
 ```bash
 # 1. Static OpenAPI matches dynamic
 diff <(curl -s https://kangopenbanking.com/openapi.json | jq -S .) \
-     <(curl -s https://api.kangopenbanking.com/functions/v1/public-api-spec | jq -S .)
+     <(curl -s https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec | jq -S .)
 
 # 2. AI plugin spec is valid
 curl -s https://kangopenbanking.com/.well-known/ai-plugin.json | jq '.auth.client_url, .auth.authorization_url, .api.url'

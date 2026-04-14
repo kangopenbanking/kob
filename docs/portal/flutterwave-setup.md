@@ -15,7 +15,7 @@ Your App → KOB API (/v1/mobile-money/*) → Flutterwave → Mobile Operator �
 ## Mobile Money Charge
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/mobile-money/charge \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/mobile-money/charge \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -47,7 +47,7 @@ curl -X POST https://api.kangopenbanking.com/v1/mobile-money/charge \
 ## Bank Transfer
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/payments/bank-transfer \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payments/bank-transfer \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
@@ -65,13 +65,13 @@ curl -X POST https://api.kangopenbanking.com/v1/payments/bank-transfer \
 
 ### List Banks
 ```bash
-curl https://api.kangopenbanking.com/v1/payments/banks?country=CM \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payments/banks?country=CM \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
 ### Verify Account
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/payments/verify-account \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payments/verify-account \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -d '{ "account_number": "1234567890", "bank_code": "COBACMCX" }'
 ```
@@ -135,7 +135,7 @@ Use `event_id` to deduplicate webhook deliveries. Store processed event IDs and 
 
 Query stuck transactions:
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/mobile-money/verify \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/mobile-money/verify \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -d '{ "transaction_id": "4534334" }'
 ```

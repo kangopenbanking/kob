@@ -30,12 +30,12 @@
 
 ```bash
 # First request
-curl -i https://api.kangopenbanking.com/v1/accounts/acc_123/balances \
+curl -i https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/acc_123/balances \
   -H "Authorization: Bearer sk_live_..."
 # → ETag: "v1-balance-abc123"
 
 # Subsequent request with ETag
-curl -i https://api.kangopenbanking.com/v1/accounts/acc_123/balances \
+curl -i https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/acc_123/balances \
   -H "Authorization: Bearer sk_live_..." \
   -H "If-None-Match: \"v1-balance-abc123\""
 # → 304 Not Modified (no body)

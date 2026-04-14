@@ -28,7 +28,7 @@ sequenceDiagram
 ## 1. Single Payout (Mobile Money)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/payouts \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: payout_emp_001_march2026" \
@@ -63,7 +63,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/payouts \
 ## 2. Bulk Payout
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/payouts/bulk \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts/bulk \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: bulk_payout_march_salaries" \
@@ -171,7 +171,7 @@ def create_payout_with_retry(payout_data, idempotency_key, max_retries=3):
     }
     for attempt in range(max_retries + 1):
         resp = requests.post(
-            "https://api.kangopenbanking.com/v1/gateway/payouts",
+            "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts",
             json=payout_data, headers=headers,
         )
         if resp.status_code < 500 and resp.status_code not in (408, 429):

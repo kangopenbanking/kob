@@ -33,7 +33,7 @@ sequenceDiagram
 ## 1. Create a Merchant
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: merchant_create_cafe_douala_20260323" \
@@ -63,7 +63,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants \
 ## 2. Submit KYB Documents
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/mrc_abc123/kyb \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/mrc_abc123/kyb \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: kyb_submit_mrc_abc123" \
@@ -78,7 +78,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/mrc_abc123/kyb
 ## 3. Generate API Keys (after approval)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/mrc_abc123/api-keys \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/mrc_abc123/api-keys \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: apikey_create_mrc_abc123_sandbox" \

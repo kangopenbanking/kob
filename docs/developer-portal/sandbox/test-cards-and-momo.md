@@ -46,7 +46,7 @@ All sandbox requests should use the sandbox environment. Test data does not affe
 Test webhook delivery using the sandbox webhook trigger:
 
 ```bash
-curl -X POST "https://api.kangopenbanking.com/v1/merchants/webhooks?merchant_id=merch_uuid&webhook_id=wh_uuid&action=test" \
+curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants/webhooks?merchant_id=merch_uuid&webhook_id=wh_uuid&action=test" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -55,7 +55,7 @@ This sends a test `charge.successful` event to your registered webhook URL.
 ## Generate Test Data
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/generate \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

@@ -7,7 +7,7 @@ KOB supports three authentication methods depending on your integration type.
 Use your merchant API key as a Bearer token:
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-create-charge \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
   -H "Authorization: Bearer kob_test_xxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -76,7 +76,7 @@ For institutions requiring certificate-bound tokens:
 
 | Environment | Base URL | Keys |
 |---|---|---|
-| Sandbox | `https://api.kangopenbanking.com/functions/v1/` | `kob_test_*` |
-| Production | `https://api.kangopenbanking.com/functions/v1/` | `kob_live_*` |
+| Sandbox | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `kob_test_*` |
+| Production | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `kob_live_*` |
 
 Sandbox and production share the same URL — your API key determines the environment.

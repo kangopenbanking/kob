@@ -27,7 +27,7 @@ sequenceDiagram
 ## 1. Create a Funding Intent (Mobile Money)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/funding \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/funding \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: fund_wallet_user123_20260323" \
@@ -56,7 +56,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/funding \
 ## 2. Check Funding Status
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/funding/fund_xyz789 \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/funding/fund_xyz789 \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

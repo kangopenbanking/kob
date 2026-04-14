@@ -27,7 +27,7 @@ sequenceDiagram
 ## 1. Create a Full Refund
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/refunds \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/refunds \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: refund_order_1001_20260323" \
@@ -54,7 +54,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/refunds \
 ## 2. Create a Partial Refund
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/refunds \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/refunds \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: refund_partial_order_1001" \

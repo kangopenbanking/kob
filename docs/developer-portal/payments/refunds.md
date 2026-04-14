@@ -3,7 +3,7 @@
 ## Create a Refund
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/refunds \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/refunds \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: refund_order_12345" \

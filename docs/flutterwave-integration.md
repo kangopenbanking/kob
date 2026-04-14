@@ -47,7 +47,7 @@
 ### Endpoint
 
 ```
-POST https://api.kangopenbanking.com/functions/v1/flutterwave-transfer-webhook
+POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/flutterwave-transfer-webhook
 ```
 
 ### Signature Verification

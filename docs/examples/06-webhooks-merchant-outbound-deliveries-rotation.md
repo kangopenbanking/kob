@@ -32,7 +32,7 @@ sequenceDiagram
 ## 1. Register a Webhook Endpoint
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: webhook_create_mrc_abc123" \
@@ -60,7 +60,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks \
 ## 2. Rotate Webhook Secret
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/wh_xyz789/rotate-secret \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks/wh_xyz789/rotate-secret \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Idempotency-Key: rotate_secret_wh_xyz789"
 ```
@@ -68,7 +68,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/wh_xy
 ## 3. Check Delivery Logs
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/wh_xyz789/deliveries?limit=10&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks/wh_xyz789/deliveries?limit=10&offset=0" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

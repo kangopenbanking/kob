@@ -41,7 +41,7 @@ Use PayPal sandbox accounts from your PayPal developer dashboard.
 Test webhook delivery without real transactions:
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/functions/v1/gateway-webhook-endpoints \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhook-endpoints \
   -H "Authorization: Bearer kob_test_xxxx" \
   -H "Content-Type: application/json" \
   -d '{

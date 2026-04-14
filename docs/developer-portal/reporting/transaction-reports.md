@@ -7,14 +7,14 @@ Generate transaction reports for reconciliation, accounting, and compliance purp
 ## List Transactions
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/reports/transactions?merchant_id=merch_uuid&from=2026-03-01&to=2026-03-31" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reports/transactions?merchant_id=merch_uuid&from=2026-03-01&to=2026-03-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ## Export to CSV
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/export/transactions?merchant_id=merch_uuid&format=csv&from=2026-03-01&to=2026-03-31" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/export/transactions?merchant_id=merch_uuid&format=csv&from=2026-03-01&to=2026-03-31" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -o transactions.csv
 ```
@@ -37,7 +37,7 @@ curl "https://api.kangopenbanking.com/v1/gateway/export/transactions?merchant_id
 ## Fee Reports
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/reports/fees?merchant_id=merch_uuid&from=2026-03-01&to=2026-03-31" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/reports/fees?merchant_id=merch_uuid&from=2026-03-01&to=2026-03-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

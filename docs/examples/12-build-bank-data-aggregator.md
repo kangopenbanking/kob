@@ -47,7 +47,7 @@ This guide covers the complete AISP integration lifecycle:
 ## Step 1: Create an AISP Consent
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/aisp/consents \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents \
   -H "Authorization: Bearer <CLIENT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -68,7 +68,7 @@ curl -X POST https://api.kangopenbanking.com/v1/aisp/consents \
 {
   "consent_id": "cns_abc123",
   "status": "awaiting_authorization",
-  "authorization_url": "https://api.kangopenbanking.com/v1/oauth/authorize?request_uri=urn:kob:par:xyz",
+  "authorization_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize?request_uri=urn:kob:par:xyz",
   "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"],
   "expiration_date": "2026-06-23T00:00:00Z",
   "created_at": "2026-03-23T10:00:00Z"
@@ -84,7 +84,7 @@ Redirect the user to the `authorization_url`. After they log in and authorise at
 const { code, state } = req.query;
 
 // Exchange code for tokens (with PKCE)
-const tokenResponse = await fetch('https://api.kangopenbanking.com/v1/oauth/token', {
+const tokenResponse = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token', {
   method: 'POST',
   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   body: new URLSearchParams({
@@ -111,14 +111,14 @@ def fetch_accounts(access_token):
 
     # Get accounts
     accounts = requests.get(
-        "https://api.kangopenbanking.com/v1/aisp/accounts",
+        "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts",
         headers=headers,
     ).json()
 
     # Get balances for each account
     for account in accounts["data"]:
         balances = requests.get(
-            f"https://api.kangopenbanking.com/v1/aisp/accounts/{account['id']}/balances",
+            f"https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/{account['id']}/balances",
             headers=headers,
         ).json()
         account["balances"] = balances["data"]
@@ -138,7 +138,7 @@ async function syncTransactions(accountId, accessToken, lastSyncDate) {
 
   while (true) {
     const response = await fetch(
-      `https://api.kangopenbanking.com/v1/aisp/accounts/${accountId}/transactions` +
+      `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/${accountId}/transactions` +
       `?from_date=${lastSyncDate}&limit=${limit}&offset=${offset}`,
       { headers: { 'Authorization': `Bearer ${accessToken}` } }
     );
@@ -183,7 +183,7 @@ class TokenManager:
 
     def _refresh(self):
         resp = requests.post(
-            "https://api.kangopenbanking.com/v1/oauth/token",
+            "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token",
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": self.refresh_token,
@@ -214,7 +214,7 @@ Consents have a maximum lifetime (typically 90 days). Schedule renewal before ex
 ```javascript
 async function checkConsentStatus(consentId, accessToken) {
   const response = await fetch(
-    `https://api.kangopenbanking.com/v1/aisp/consents/${consentId}`,
+    `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents/${consentId}`,
     { headers: { 'Authorization': `Bearer ${accessToken}` } }
   );
   const consent = await response.json();

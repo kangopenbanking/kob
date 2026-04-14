@@ -7,7 +7,7 @@ Beneficiaries are pre-saved payout recipients. Create beneficiaries once, then r
 ## Create Beneficiary
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/beneficiaries \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/beneficiaries \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: ben_jean_momo" \
@@ -23,14 +23,14 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/beneficiaries \
 ## List Beneficiaries
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/beneficiaries?merchant_id=merch_uuid" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/beneficiaries?merchant_id=merch_uuid" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ## Delete Beneficiary
 
 ```bash
-curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/beneficiaries/ben_abc123" \
+curl -X DELETE "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/beneficiaries/ben_abc123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

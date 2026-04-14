@@ -29,7 +29,7 @@ sequenceDiagram
 ## 1. Create a Mobile Money Charge
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: charge_order_1001_20260323" \
@@ -62,14 +62,14 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \
 ## 2. Retrieve a Charge
 
 ```bash
-curl https://api.kangopenbanking.com/v1/gateway/charges/chg_abc123 \
+curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges/chg_abc123 \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
 ## 3. List Charges (with pagination)
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/charges?limit=20&offset=0&status=successful" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges?limit=20&offset=0&status=successful" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
@@ -170,7 +170,7 @@ When the upstream provider is temporarily unreachable:
 ```javascript
 async function createChargeWithRetry(chargeData, idempotencyKey, maxRetries = 3) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const response = await fetch('https://api.kangopenbanking.com/v1/gateway/charges', {
+    const response = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.KOB_SECRET_KEY}`,

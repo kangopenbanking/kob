@@ -34,7 +34,7 @@ sequenceDiagram
 ## 1. Create Payment Consent
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/pisp/domestic-payment-consents \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp/domestic-payment-consents \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: pisp_consent_inv_2001_20260323" \
@@ -90,7 +90,7 @@ curl -X POST https://api.kangopenbanking.com/v1/pisp/domestic-payment-consents \
 ## 2. Execute the Payment (after authorisation)
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/pisp/domestic-payments \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp/domestic-payments \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: pisp_pay_inv_2001_20260323" \

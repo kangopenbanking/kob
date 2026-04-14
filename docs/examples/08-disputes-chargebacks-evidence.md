@@ -28,7 +28,7 @@ sequenceDiagram
 ## 1. List Disputes
 
 ```bash
-curl "https://api.kangopenbanking.com/v1/gateway/disputes?limit=10&offset=0&status=open" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes?limit=10&offset=0&status=open" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
@@ -59,7 +59,7 @@ curl "https://api.kangopenbanking.com/v1/gateway/disputes?limit=10&offset=0&stat
 ## 2. Submit Evidence
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/gateway/disputes/dsp_abc123/evidence \
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes/dsp_abc123/evidence \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: evidence_dsp_abc123" \

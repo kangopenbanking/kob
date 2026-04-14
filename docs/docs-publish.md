@@ -70,10 +70,10 @@ curl -I https://kangopenbanking.com/documentation | grep -i "x-robots-tag"
 curl -s https://kangopenbanking.com/sitemap.xml | head -20
 
 # Verify OpenAPI spec is reachable
-curl -s https://api.kangopenbanking.com/functions/v1/public-api-spec | jq '.openapi'
+curl -s https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec | jq '.openapi'
 
 # Verify Postman collection
-curl -s https://api.kangopenbanking.com/functions/v1/postman-collection | jq '.info.name'
+curl -s https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection | jq '.info.name'
 ```
 
 ### Google Search Console:
