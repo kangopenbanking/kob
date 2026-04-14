@@ -61,7 +61,7 @@ describe("generateCodeExamples", () => {
   it("uses correct base URL", () => {
     const examples = generateCodeExamples("GET", "/v1/accounts");
     examples.forEach((ex) => {
-      expect(ex.code).toContain("api.kangopenbanking.com");
+      expect(ex.code).toContain("supabase.co/functions/v1");
     });
   });
 });

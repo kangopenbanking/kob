@@ -57,7 +57,7 @@
       "description": "Production"
     },
     {
-      "url": "https://sandbox.kangopenbanking.com/v1",
+      "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
       "description": "Sandbox"
     }
   ],
