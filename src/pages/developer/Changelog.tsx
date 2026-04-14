@@ -7,6 +7,21 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.7",
+      date: "2026-04-14",
+      type: "patch",
+      changes: [
+        { type: "improvement", description: "Direct Backend Infrastructure Correction -- all runtime API references standardized to direct Supabase Edge Functions backend URL across 90+ files" },
+        { type: "improvement", description: "OpenAPI servers[] corrected to single direct backend entry; legacy api.kangopenbanking.com and sandbox.kangopenbanking.com removed from active spec" },
+        { type: "improvement", description: "OAuth/OIDC endpoint references (tokenUrl, authorizationUrl, refreshUrl, jwks_uri) corrected to direct backend paths" },
+        { type: "improvement", description: "All 8 payment channel fee estimates verified returning JSON via direct backend" },
+        { type: "improvement", description: "SDK packages (Node, PHP, Python) DEFAULT_BASE_URL corrected to direct backend" },
+        { type: "improvement", description: "CORS headers verified on all edge functions -- Access-Control-Allow-Origin and comprehensive Access-Control-Allow-Headers present" },
+        { type: "improvement", description: "Regression guard test suite added (direct-backend-guard.test.ts) to prevent reintroduction of deprecated custom API domains" },
+        { type: "improvement", description: "Developer portal code examples (curl, JS, Python, PHP) across 60+ pages updated to direct backend URLs" },
+      ]
+    },
+    {
       version: "API Spec 4.9.6",
       date: "2026-04-12",
       type: "patch",
