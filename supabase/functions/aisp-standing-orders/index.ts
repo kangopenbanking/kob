@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         })) || []
       },
       Links: {
-        Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/standing-orders`
+        Self: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/aisp-accounts/${accountId}/standing-orders`
       },
       Meta: { TotalPages: 1 }
     };

@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
 
     const response = {
       Data: { Beneficiary: beneficiaryData },
-      Links: { Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/beneficiaries` },
+      Links: { Self: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/aisp-accounts/${accountId}/beneficiaries` },
       Meta: { TotalPages: 1, DataFreshness: dataFreshness }
     };
 

@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
         Account: [...coreFormatted, ...bankFormatted]
       },
       Links: {
-        Self: 'https://api.kangopenbanking.com/v1/aisp-accounts'
+        Self: '${Deno.env.get("SUPABASE_URL")!}/functions/v1/aisp-accounts'
       },
       Meta: {
         TotalPages: 1,

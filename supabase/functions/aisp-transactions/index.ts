@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const selfUrl = `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/transactions?limit=${limit}&offset=${offset}`;
+    const selfUrl = `${Deno.env.get("SUPABASE_URL")!}/functions/v1/aisp-accounts/${accountId}/transactions?limit=${limit}&offset=${offset}`;
     const paginationLinks = buildPaginationLinks(selfUrl, offset, limit, totalCount);
 
     const response = {
