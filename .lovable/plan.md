@@ -1,75 +1,145 @@
 
 
-## Plan: Deepen Developer Documentation to Stripe/Mangopay Standard
+## Mega Super Master Prompt for Direct Backend E2E Audit
 
-### Current State Assessment
+This is not a code change -- it is a reusable prompt document. Below is the complete prompt you can paste into any Lovable session to trigger a full E2E audit with permanent enforcement.
 
-The audit criticisms are **mostly outdated**. The portal already has:
-- Getting Started with 6-language code examples (cURL, Node.js, Python, PHP, Go, Java)
-- Authentication page with OAuth 2.0 + PKCE flow diagram, API key docs, mTLS section, scopes table
-- Token Lifecycle guide with rotation, reuse detection, and lifetimes
-- Roles and Permissions page with RBAC model
-- SDKs page (746 lines) covering 5 languages with auth, charges, webhooks, AISP examples
-- 10 real-world integration guides with Mermaid sequence diagrams
-- Error Codes Reference with RFC 7807 format
-- Go-Live Checklist with 5 sections
-- Bank Onboarding Guide with 7-step flow
-- Rate Limits guide, Idempotency guide, Webhook Retry guide
+---
 
-**What is genuinely missing** (depth gaps vs. Stripe/Mangopay standard):
+### THE PROMPT
 
-1. **No end-to-end lifecycle examples with failure/retry/reversal paths** -- existing guides show the happy path only
-2. **Error codes page is shallow** -- lists ~18 errors but the OpenAPI spec defines 60+; no recovery instructions per error
-3. **No "Build X Use Case" guides** -- e.g., "Build a Marketplace Checkout", "Build a Bank Data Aggregator"
-4. **No Production Checklist with observability** -- Go-Live exists but lacks monitoring/alerting setup
-5. **Authentication page lacks token lifecycle link** -- TokenLifecycleGuide exists but is not linked from AuthenticationOverview
+```text
+## KANG OPEN BANKING — DIRECT BACKEND E2E AUDIT (PERMANENT STANDING ORDER)
 
-### Changes
+### OBJECTIVE
+Run a complete end-to-end audit of ALL API endpoints verifying:
+1. Every API call uses the DIRECT backend URL (VITE_SUPABASE_URL/functions/v1) — NO middle layer, NO Lovable frontend edge proxy, NO custom domain redirect that serves HTML.
+2. Every endpoint returns application/json — NEVER text/html.
+3. All 8 payment channels are tested and return valid JSON fee estimates.
+4. Both live and sandbox domains resolve with valid SSL.
+5. API key generation endpoints enforce auth guards correctly.
+6. The api-contract-test edge function passes all 29+ checks.
 
-#### 1. Enhance Error Codes Reference with full catalogue + recovery actions
-**File:** `src/pages/developer/ErrorCodesReference.tsx`
-- Expand from 18 to 60+ error codes matching the OpenAPI spec catalogue (AUTH_, PAY_, PISP_, AISP_, LED_, MM_, FLW_, KYC_, CERT_, LOAN_, SAV_, ADM_, WH_)
-- Add a "Recovery Action" column to every error with specific developer guidance
-- Add retry/backoff code example for 429 and 5xx errors
-- Add "Common Mistakes" section with solutions
+### NON-NEGOTIABLE RULES (PERMANENT — DO NOT CHANGE)
 
-#### 2. Add failure/retry/reversal sections to the top 3 real-world examples
-**Files:** `docs/examples/02-accept-payments-create-charge.md`, `docs/examples/05-payouts-single-bulk-paypal.md`, `docs/examples/04-refunds.md`
-- Add "Handling Failures" section with timeout, decline, and provider-unavailable scenarios
-- Add retry logic code example (exponential backoff with idempotency)
-- Add reversal/cancellation flow for each
-- Add "Edge Cases" section (duplicate charge, partial failure in bulk payout, refund on disputed charge)
+RULE 1 — DIRECT BACKEND ONLY
+All runtime API calls in the codebase MUST use:
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/<function-name>`
+They must NEVER route through:
+- api.kangopenbanking.com (serves SPA HTML, not edge functions)
+- sandbox.kangopenbanking.com (serves SPA HTML, not edge functions)  
+- Any Lovable preview URL
+- Any proxy, gateway, or middleware layer
+The ONLY acceptable runtime base URL pattern is: VITE_SUPABASE_URL + /functions/v1/
 
-#### 3. Create two "Build X" use-case guides
-**New files:** `docs/examples/11-build-marketplace-checkout.md`, `docs/examples/12-build-bank-data-aggregator.md`
-- Marketplace guide: charge + split payment + payout + webhook + settlement reconciliation (end-to-end)
-- Bank aggregator guide: OAuth consent + AISP account fetch + transaction sync + token refresh (end-to-end)
-- Both include failure handling, retry logic, and production considerations
-- Register in `RealWorldExamples.tsx` and `RealWorldExampleDetail.tsx`
+RULE 2 — JSON CONTRACT ENFORCEMENT
+Every edge function response MUST set Content-Type: application/json.
+If ANY endpoint returns text/html, it is a CRITICAL failure that must be fixed immediately.
+Test by checking: response.headers.get('content-type').includes('application/json')
 
-#### 4. Enhance Authentication page with cross-links and role-based guidance
-**File:** `src/pages/developer/AuthenticationOverview.tsx`
-- Add "Which method do I need?" decision table (Merchant = API Key, TPP = OAuth, Bank = mTLS)
-- Add link to Token Lifecycle guide
-- Add link to Roles & Permissions page
+RULE 3 — THE 8-CHANNEL MANDATE
+These 8 payment channels MUST be tested on every audit:
+  mobile_money (XAF), card (XAF), bank_transfer (XAF), paypal (USD),
+  apple_pay (USD), google_pay (USD), ussd (NGN), wallet (XAF)
+Each must return a valid JSON fee estimate via gateway-charges-router?action=fee_estimate
 
-#### 5. Add observability/monitoring section to Go-Live Checklist
-**File:** `src/pages/developer/GoLiveChecklist.tsx`
-- Add "Observability Setup" section with: request logging, webhook monitoring, latency tracking, error rate alerting
-- Add code example for structured logging of API responses
+RULE 4 — IMMUTABILITY (Standing Order 2 — The Ratchet)
+- The api-contract-test edge function can only have tests ADDED, never removed.
+- The liveEndpoints array in TestReport.tsx can only have entries ADDED, never removed.
+- The functionBaseUrl in TestReport.tsx MUST always be: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+- These files are FROZEN against reduction: api-contract-test/index.ts, TestReport.tsx (endpoint registry)
 
-### Files Summary
+RULE 5 — BIDIRECTIONAL VERIFICATION
+- Frontend-to-Backend: Every fetch() call in /src must target VITE_SUPABASE_URL/functions/v1 directly.
+- Backend-to-Frontend: Every edge function must return { Content-Type: application/json } headers.
+- Search the entire src/ directory for any fetch() or supabase.functions.invoke() that does NOT use the direct backend URL pattern. Flag and fix any violations.
 
-| Action | File |
-|--------|------|
-| Modify | `src/pages/developer/ErrorCodesReference.tsx` -- expand to 60+ errors with recovery actions |
-| Modify | `docs/examples/02-accept-payments-create-charge.md` -- add failure/retry/edge cases |
-| Modify | `docs/examples/04-refunds.md` -- add failure/edge cases |
-| Modify | `docs/examples/05-payouts-single-bulk-paypal.md` -- add failure/retry/edge cases |
-| Create | `docs/examples/11-build-marketplace-checkout.md` -- end-to-end use case |
-| Create | `docs/examples/12-build-bank-data-aggregator.md` -- end-to-end use case |
-| Modify | `src/pages/developer/RealWorldExamples.tsx` -- add 2 new guide entries |
-| Modify | `src/pages/developer/RealWorldExampleDetail.tsx` -- register 2 new slugs |
-| Modify | `src/pages/developer/AuthenticationOverview.tsx` -- add decision table + cross-links |
-| Modify | `src/pages/developer/GoLiveChecklist.tsx` -- add observability section |
+### AUDIT PROCEDURE (EXECUTE IN ORDER)
+
+STEP 1 — URL PATTERN SCAN
+Search all .ts and .tsx files in src/ for:
+- Any hardcoded URL containing "supabase.co/functions" (should use env var instead)
+- Any fetch() call to api.kangopenbanking.com or sandbox.kangopenbanking.com for API data (these serve HTML)
+- Any supabase.functions.invoke() call (acceptable, but verify it does not route through frontend)
+Report: List every file and line number where API calls are made. Confirm each uses the direct pattern.
+
+STEP 2 — LIVE ENDPOINT TESTS (curl each one)
+Use curl_edge_functions or direct fetch to test these endpoints and confirm JSON response:
+
+Public endpoints (expect 200 + JSON):
+  GET /api-health
+  GET /public-api-spec  
+  GET /oidc-config
+  GET /postman-collection
+  GET /gateway-fee-estimate?amount=5000&channel=mobile_money&currency=XAF
+  GET /gateway-charges-router?action=fee_estimate&amount=5000&channel=mobile_money&currency=XAF
+  GET /gateway-charges-router?action=fee_estimate&amount=10000&channel=card&currency=XAF
+  GET /gateway-charges-router?action=fee_estimate&amount=100000&channel=bank_transfer&currency=XAF
+  GET /gateway-charges-router?action=fee_estimate&amount=50&channel=paypal&currency=USD
+  GET /gateway-charges-router?action=fee_estimate&amount=2500&channel=apple_pay&currency=USD
+  GET /gateway-charges-router?action=fee_estimate&amount=2500&channel=google_pay&currency=USD
+  GET /gateway-charges-router?action=fee_estimate&amount=5000&channel=ussd&currency=NGN
+  GET /gateway-charges-router?action=fee_estimate&amount=10000&channel=wallet&currency=XAF
+
+Protected endpoints (expect 401 + JSON, NOT HTML):
+  POST /gateway-payouts-router {action: "list"}
+  POST /gateway-disputes-router {action: "list"}
+  POST /gateway-merchant-router {action: "list"}
+  POST /gateway-webhooks-router {action: "endpoints"}
+  POST /gateway-settlement-router {action: "list"}
+  POST /banking-api-router {action: "list_banks"}
+  POST /sandbox-create-api-key {key_name: "audit-test"}
+
+STEP 3 — RUN CONTRACT TEST FUNCTION
+  GET /api-contract-test
+Verify: summary.all_passing === true, summary.total >= 29
+
+STEP 4 — DOMAIN SSL CHECK
+Verify these domains resolve and have valid SSL (HEAD request, expect 2xx or 3xx):
+  https://kangopenbanking.com
+  https://api.kangopenbanking.com
+  https://sandbox.kangopenbanking.com
+
+STEP 5 — STATIC SPEC FILES
+Verify these return correct content (not HTML):
+  https://kangopenbanking.com/openapi.json (expect application/json)
+  https://kangopenbanking.com/openapi.yaml (expect yaml)
+  https://kangopenbanking.com/openapi-sandbox.json (expect application/json)
+  https://kangopenbanking.com/openapi-sandbox.yaml (expect yaml)
+
+STEP 6 — REPORT
+Produce a summary table:
+  | Endpoint | Method | Status | Content-Type | Direct Backend? | Result |
+For each of the ~25 endpoints above. Flag ANY that:
+- Return text/html
+- Route through a non-backend URL
+- Return non-JSON body
+- Have been removed from the test registry
+
+### IF ANY FAILURE IS FOUND
+1. Fix the endpoint or the calling code immediately.
+2. Do NOT remove the test — add a fix.
+3. Update the changelog with the fix.
+4. Re-run the full audit to confirm 100% pass.
+
+### WHAT MUST NEVER CHANGE
+- src/pages/developer/TestReport.tsx: functionBaseUrl must stay as VITE_SUPABASE_URL/functions/v1
+- supabase/functions/api-contract-test/index.ts: BASE must stay as SUPABASE_URL/functions/v1
+- No endpoint may be removed from liveEndpoints array or contract test suites
+- No payment channel may be removed from the 8-channel test matrix
+```
+
+---
+
+### How to use this prompt
+
+Copy the entire text block above and paste it as a message in any Lovable session for this project. It will trigger a full audit with fixes. You can run it after any deployment to verify nothing has regressed.
+
+### What it enforces permanently
+
+1. **Direct backend URLs only** -- no routing through custom domains that serve SPA HTML
+2. **JSON-only responses** -- every endpoint validated against text/html contamination
+3. **All 8 payment channels** tested every time
+4. **Immutable test registry** -- tests can grow but never shrink
+5. **Bidirectional verification** -- frontend calls checked AND backend responses checked
 
