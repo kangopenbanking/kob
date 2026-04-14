@@ -37,6 +37,7 @@ for D in "${DOMAINS[@]}"; do
       | grep -v "// These domains" \
       | grep -v "// Old domain" \
       | grep -v "// Custom domains" \
+      | grep -v "\* Custom domains" \
       | grep -v "Custom domains.*serve the SPA" \
       | grep -v "must never be used for API calls" \
       | grep -v "description.*infrastructure correction" \
