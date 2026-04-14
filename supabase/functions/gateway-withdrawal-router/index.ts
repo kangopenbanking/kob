@@ -9,7 +9,7 @@ import { sendManagedEmail } from "../_shared/send-managed-email.ts";
 const jsonRes = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 const rfc7807 = (type: string, title: string, status: number, detail: string) =>
-  new Response(JSON.stringify({ type: `https://api.kangopenbanking.com/errors/${type}`, title, status, detail }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' } });
+  new Response(JSON.stringify({ type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`, title, status, detail }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' } });
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });

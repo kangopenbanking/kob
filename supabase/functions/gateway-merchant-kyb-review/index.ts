@@ -8,7 +8,7 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
 const rfc7807 = (type: string, title: string, status: number, detail: string) =>
-  new Response(JSON.stringify({ type: `https://api.kangopenbanking.com/errors/${type}`, title, status, detail }), {
+  new Response(JSON.stringify({ type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`, title, status, detail }), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
   });
 
