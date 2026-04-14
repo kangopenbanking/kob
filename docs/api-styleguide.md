@@ -23,7 +23,7 @@ Since the backend uses Supabase Edge Functions, each logical `/v1` path maps to 
 | `POST /v1/pisp/domestic-payment` | `pisp-domestic-payment` |
 | `POST /v1/ledger/journal` | `journal-post` |
 
-The custom domain (`api.kangopenbanking.com`) routes `/v1/{function-name}` to `/functions/v1/{function-name}`.
+All API calls use the direct Supabase Edge Functions URL (`${SUPABASE_URL}/functions/v1/{function-name}`). Custom domains (e.g. `api.kangopenbanking.com`) serve the SPA frontend only and must never be used for API calls.
 
 ---
 
