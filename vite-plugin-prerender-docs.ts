@@ -32,10 +32,10 @@ const DOC_ROUTES: DocRoute[] = [
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
-<pre><code>curl -X GET https://sandbox.kangopenbanking.com/v1/health \\
+<pre><code>curl -X GET ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-health \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024"</code></pre>
 <h3>Step 3: Try a Payment</h3>
-<pre><code>curl -X POST https://sandbox.kangopenbanking.com/v1/payments \\
+<pre><code>curl -X POST ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
   -d '{"amount":5000,"currency":"XAF","method":"momo","phone":"+237670000000"}'</code></pre>
@@ -48,7 +48,7 @@ const DOC_ROUTES: DocRoute[] = [
   <li>Go</li>
   <li>Ruby</li>
 </ul>
-<p>Base URL: <code>https://api.kangopenbanking.com/v1</code> | Sandbox: <code>https://sandbox.kangopenbanking.com/v1</code></p>`
+<p>Base URL: <code>${import.meta.env.VITE_SUPABASE_URL}/functions/v1</code></p>`
   },
   {
     path: '/developer/api-explorer',
