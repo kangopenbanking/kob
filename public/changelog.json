@@ -1,9 +1,34 @@
 {
-  "apiVersion": "4.9.6",
+  "apiVersion": "4.9.7",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-12",
+  "lastUpdated": "2026-04-14",
   "entries": [
+    {
+      "version": "4.9.7",
+      "date": "2026-04-14",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Direct Backend Infrastructure Correction -- all runtime API references standardized to direct Supabase Edge Functions URL; legacy custom API domains removed from active spec, SDKs, and docs",
+      "highlights": [
+        "OpenAPI servers[] corrected to single direct backend entry",
+        "OAuth/OIDC endpoint references corrected to direct backend paths",
+        "All 8 payment channels verified returning JSON via direct backend",
+        "SDK packages (Node, PHP, Python) DEFAULT_BASE_URL corrected",
+        "CORS headers verified on all edge functions",
+        "Regression guard test suite added to prevent domain reintroduction",
+        "60+ developer doc pages updated with direct backend code examples"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 3",
+        "ORDER P4",
+        "ORDER P5",
+        "ORDER P7",
+        "ORDER P10"
+      ]
+    },
     {
       "version": "4.9.6",
       "date": "2026-04-12",
