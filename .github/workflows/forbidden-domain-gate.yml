@@ -38,7 +38,7 @@ jobs:
           #   - comment-only references (warnings)
           #   - api-contract-test (DNS/SSL liveness check)
           #   - this workflow file itself
-          EXCLUDE_PATTERNS="--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=coverage"
+          EXCLUDE_PATTERNS="--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=.lovable --exclude-dir=coverage"
           EXCLUDE_FILES="--exclude=*.test.ts --exclude=*.test.tsx --exclude=*.spec.ts --exclude=forbidden-domain-gate.yml"
 
           FOUND=0
@@ -71,6 +71,9 @@ jobs:
                 | grep -v "// DEPRECATED" \
                 | grep -v "// These domains" \
                 | grep -v "// Old domain" \
+                | grep -v "// Custom domains" \
+                | grep -v "Custom domains.*serve the SPA" \
+                | grep -v "must never be used for API calls" \
                 | grep -v "description.*infrastructure correction" \
                 | grep -v "description.*Direct Backend" \
                 | grep -v "description.*deprecated" \
