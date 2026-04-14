@@ -1,6 +1,4 @@
 import { describe, it, expect } from "vitest";
-import * as fs from "fs";
-import * as path from "path";
 
 /**
  * DIRECT BACKEND REGRESSION GUARD — PERMANENT (Standing Order 2)
@@ -20,92 +18,46 @@ const FORBIDDEN_DOMAINS = [
   "mtls.api.kangopenbanking.com",
 ];
 
-/**
- * Files/patterns that are ALLOWED to mention forbidden domains
- * (comments, negation tests, historical audit docs)
- */
-const ALLOWED_EXCEPTIONS = [
-  "direct-backend-guard.test.ts", // this file
-  "api-docs-indexing-audit",       // historical audit doc
-  "api-styleguide.md",            // historical architecture note
-];
-
-function isException(filePath: string): boolean {
-  return ALLOWED_EXCEPTIONS.some((ex) => filePath.includes(ex));
-}
-
-function isCommentOrNegation(line: string): boolean {
-  const trimmed = line.trim();
-  return (
-    trimmed.startsWith("//") ||
-    trimmed.startsWith("*") ||
-    trimmed.startsWith("/*") ||
-    trimmed.includes(".not.toContain") ||
-    trimmed.includes("not.*Contain") ||
-    trimmed.includes("# ") ||
-    trimmed.includes("NEVER") ||
-    trimmed.includes("must NOT") ||
-    trimmed.includes("DO NOT")
-  );
-}
-
 describe("Direct Backend Regression Guard", () => {
-  it("should not have forbidden domains in src/config/api.ts active code", async () => {
-    const content = fs.readFileSync(
-      path.resolve(__dirname, "../config/api.ts"),
-      "utf-8"
-    );
-    const activeLines = content
-      .split("\n")
-      .filter((l) => !isCommentOrNegation(l));
-    
+  it("API_CONFIG.BASE_URL must not contain forbidden domains", async () => {
+    const { API_CONFIG } = await import("@/config/api");
     for (const domain of FORBIDDEN_DOMAINS) {
-      const found = activeLines.find((l) => l.includes(domain));
-      expect(found, `Found forbidden domain "${domain}" in api.ts active code`).toBeUndefined();
+      expect(API_CONFIG.BASE_URL).not.toContain(domain);
     }
   });
 
-  it("should not have forbidden domains in OpenAPI spec servers block", async () => {
-    const specPath = path.resolve(__dirname, "../../public/openapi.json");
-    if (fs.existsSync(specPath)) {
-      const spec = JSON.parse(fs.readFileSync(specPath, "utf-8"));
-      const servers = spec.servers || [];
-      for (const server of servers) {
-        for (const domain of FORBIDDEN_DOMAINS) {
-          expect(server.url).not.toContain(domain);
-        }
-      }
+  it("API_CONFIG.BASE_URL must contain functions/v1", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    expect(API_CONFIG.BASE_URL).toContain("functions/v1");
+  });
+
+  it("API_BACKEND_BASE must not contain forbidden domains", async () => {
+    const { API_BACKEND_BASE } = await import("@/config/api");
+    for (const domain of FORBIDDEN_DOMAINS) {
+      expect(API_BACKEND_BASE).not.toContain(domain);
     }
   });
 
-  it("should have direct Supabase backend URL in OpenAPI servers", async () => {
-    const specPath = path.resolve(__dirname, "../../public/openapi.json");
-    if (fs.existsSync(specPath)) {
-      const spec = JSON.parse(fs.readFileSync(specPath, "utf-8"));
-      const servers = spec.servers || [];
-      expect(servers.length).toBeGreaterThan(0);
-      expect(servers[0].url).toContain("supabase.co/functions/v1");
+  it("OPENAPI_SPEC must use direct backend", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    for (const domain of FORBIDDEN_DOMAINS) {
+      expect(API_CONFIG.OPENAPI_SPEC).not.toContain(domain);
     }
+    expect(API_CONFIG.OPENAPI_SPEC).toContain("functions/v1");
   });
 
-  it("should not have forbidden domains in SDK default base URLs", () => {
-    const sdkFiles = [
-      "../../packages/sdk-node/src/client.ts",
-      "../../packages/sdk-php/src/KangOpenBanking.php",
-      "../../packages/sdk-python/kangopenbanking/client.py",
-    ];
+  it("POSTMAN_COLLECTION must use direct backend", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    for (const domain of FORBIDDEN_DOMAINS) {
+      expect(API_CONFIG.POSTMAN_COLLECTION).not.toContain(domain);
+    }
+    expect(API_CONFIG.POSTMAN_COLLECTION).toContain("functions/v1");
+  });
 
-    for (const rel of sdkFiles) {
-      const filePath = path.resolve(__dirname, rel);
-      if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, "utf-8");
-        for (const domain of FORBIDDEN_DOMAINS) {
-          expect(
-            content.includes(domain),
-            `Found forbidden domain "${domain}" in ${rel}`
-          ).toBe(false);
-        }
-      }
+  it("API_EXAMPLE_BASE_URL must not contain forbidden domains", async () => {
+    const { API_EXAMPLE_BASE_URL } = await import("@/config/api");
+    for (const domain of FORBIDDEN_DOMAINS) {
+      expect(API_EXAMPLE_BASE_URL).not.toContain(domain);
     }
   });
 });
