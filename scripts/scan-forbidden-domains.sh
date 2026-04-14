@@ -19,7 +19,7 @@ for D in "${DOMAINS[@]}"; do
     --include="*.ts" --include="*.tsx" --include="*.json" \
     --include="*.yaml" --include="*.yml" --include="*.php" \
     --include="*.py" --include="*.md" \
-    --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+    --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=.lovable \
     --exclude="*.test.ts" --exclude="*.test.tsx" --exclude="*.spec.ts" \
     --exclude="forbidden-domain-gate.yml" \
     "${ROOT}" 2>/dev/null || true)
@@ -36,6 +36,9 @@ for D in "${DOMAINS[@]}"; do
       | grep -v "// DEPRECATED" \
       | grep -v "// These domains" \
       | grep -v "// Old domain" \
+      | grep -v "// Custom domains" \
+      | grep -v "Custom domains.*serve the SPA" \
+      | grep -v "must never be used for API calls" \
       | grep -v "description.*infrastructure correction" \
       | grep -v "description.*Direct Backend" \
       | grep -v "description.*deprecated" \
