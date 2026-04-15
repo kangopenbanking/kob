@@ -61,10 +61,10 @@ export default function AuthFapi() {
 # Key fields:
 {
   "issuer": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
-  "authorization_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize",
-  "token_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token",
-  "pushed_authorization_request_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par",
-  "backchannel_authentication_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/bc-authorize",
+  "authorization_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
+  "token_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
+  "pushed_authorization_request_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint",
+  "backchannel_authentication_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-bc-authorize",
   "jwks_uri": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/.well-known/jwks.json",
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],

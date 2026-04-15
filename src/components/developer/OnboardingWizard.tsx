@@ -107,7 +107,7 @@ function StepFirstCall({ onNext, onPrev }: StepProps) {
         examples={[
           {
             language: "bash", label: "cURL",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

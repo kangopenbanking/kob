@@ -7,6 +7,17 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.9.8",
+      date: "2026-04-15",
+      type: "patch",
+      changes: [
+        { type: "fix", description: "Fixed ~50 developer documentation code examples that referenced non-existent REST-style paths (e.g. /gateway/charges, /oauth/token) which returned 404 'Requested function was not found' -- all examples now use correct flat function entrypoints (gateway-charges-router, oauth-token, par-endpoint, etc.)" },
+        { type: "improvement", description: "Quickstart, Gateway Charges, Refunds, Mobile Money, Sandbox, Go-Live, Authentication, and OAuth2 guides corrected to match live runtime routing" },
+        { type: "improvement", description: "All 290 deployed Edge Functions verified reachable -- zero 404 errors on documented routes" },
+        { type: "improvement", description: "Full E2E contract test suite (29 tests) passing: Health, OpenAPI, OIDC, Postman, 8 payment channels, protected routers, static specs, API key guards" },
+      ]
+    },
+    {
       version: "API Spec 4.9.7",
       date: "2026-04-14",
       type: "patch",

@@ -10,7 +10,7 @@ import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
 import { TryItNowPlayground } from "@/components/developer/TryItNowPlayground";
 
 const curlFirstCall = `# 1. Create a charge using sandbox credentials (no signup required)
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

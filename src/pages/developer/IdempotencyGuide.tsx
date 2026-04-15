@@ -27,7 +27,7 @@ const IdempotencyGuide = () => (
     <div className="bg-muted/50 rounded-lg p-4 border">
       <h3 className="font-semibold mb-2">Example Request</h3>
       <pre className="bg-background rounded p-3 text-xs overflow-x-auto border">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\

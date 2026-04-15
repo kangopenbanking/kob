@@ -33,7 +33,7 @@ export default function OrangeMoneyGuide() {
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="example">Create Charge</h2>
           <CodeBlock examples={[
-            { code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+            { code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

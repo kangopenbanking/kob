@@ -6,7 +6,7 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 const curlExample = `# All API requests use Bearer token authentication
 curl -H "Authorization: Bearer sk_test_your_key_here" \\
      -H "Content-Type: application/json" \\
-     https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges`;
+     https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router`;
 
 const pkceFlow = `// Step 1: Generate PKCE code verifier & challenge
 import crypto from 'crypto';
@@ -19,7 +19,7 @@ const codeChallenge = crypto
 
 // Step 2: Build PAR request
 const parResponse = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -37,12 +37,12 @@ const parResponse = await fetch(
 const { request_uri } = await parResponse.json();
 
 // Step 3: Redirect user to authorize
-const authorizeUrl = \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize?request_uri=\${request_uri}\`;
+const authorizeUrl = \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize?request_uri=\${request_uri}\`;
 // window.location.href = authorizeUrl;
 
 // Step 4: Exchange code for tokens (in your callback handler)
 const tokenResponse = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -67,7 +67,7 @@ code_challenge = base64.urlsafe_b64encode(
 
 # Step 2: PAR request
 par = requests.post(
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par",
+    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint",
     data={
         "client_id": "your_client_id",
         "response_type": "code",
@@ -83,7 +83,7 @@ request_uri = par.json()["request_uri"]
 # Step 3: Redirect user to authorize URL
 # Step 4: Exchange code
 token = requests.post(
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token",
+    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
     data={
         "grant_type": "authorization_code",
         "code": "auth_code_from_callback",

@@ -362,7 +362,7 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
           <CodeBlock
             label="cURL — Initiate a Charge"
             id="example-charge"
-            code={`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges" \\
+            code={`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\

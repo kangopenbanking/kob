@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
-const parRequest = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par \\
+const parRequest = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "client_id=your_client_id" \\
   -d "response_type=code" \\
@@ -18,7 +18,7 @@ const parRequest = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functi
   "expires_in": 60
 }`;
 
-const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \\
+const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=authorization_code" \\
   -d "code=auth_code_from_redirect" \\
@@ -36,7 +36,7 @@ const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/fun
   "id_token": "eyJhbGciOiJSUzI1NiIs..."
 }`;
 
-const refreshToken = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \\
+const refreshToken = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=refresh_token" \\
   -d "refresh_token=rt_abc123def456" \\
@@ -81,7 +81,7 @@ export default function AuthOAuth2() {
           <p className="text-muted-foreground mb-4">
             Redirect the user to the authorization endpoint with the <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code>:
           </p>
-          <CodeBlock examples={[{ code: `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`, language: "text" }]} title="Authorization Redirect URL" />
+          <CodeBlock examples={[{ code: `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`, language: "text" }]} title="Authorization Redirect URL" />
           <p className="text-sm text-muted-foreground mt-2">The user authenticates with their bank and approves the consent. They are redirected back to your <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">redirect_uri</code> with a <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">code</code> parameter.</p>
         </section>
 

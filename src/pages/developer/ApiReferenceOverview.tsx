@@ -190,7 +190,7 @@ GET /v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=20`, language: "bash" }]} 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="idempotency">Idempotency</h2>
           <CodeBlock examples={[{ code: `# Safe to retry — server deduplicates by Idempotency-Key
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Idempotency-Key: order_12345_attempt_1" \\
   ...same body...
 
