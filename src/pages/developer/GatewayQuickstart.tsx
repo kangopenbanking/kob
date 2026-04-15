@@ -30,7 +30,7 @@ const GatewayQuickstart = () => (
       <CardHeader><CardTitle>Step 1 — Authenticate</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">Exchange your sandbox client credentials for a Bearer token.</p>
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \\
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials\\
 &client_id=sb_client_test_cm_001\\
@@ -83,7 +83,7 @@ const GatewayQuickstart = () => (
             {
               language: "bash",
               label: "cURL",
-              code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+              code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: charge-order-001" \\
@@ -148,7 +148,7 @@ print(charge["data"]["status"]) # "processing"`
     "tx_ref":         "order_001",
 })
 req, _ := http.NewRequest("POST",
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges",
+    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
     bytes.NewBuffer(body))
 req.Header.Set("Authorization", "Bearer YOUR_TOKEN")
 req.Header.Set("Content-Type", "application/json")
@@ -165,7 +165,7 @@ resp, _ := http.DefaultClient.Do(req)`
      "tx_ref":"order_001"}""";
 
 HttpRequest request = HttpRequest.newBuilder()
-    .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges"))
+    .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router"))
     .header("Authorization", "Bearer YOUR_TOKEN")
     .header("Content-Type", "application/json")
     .header("Idempotency-Key", "charge-order-001")
@@ -184,7 +184,7 @@ HttpResponse<String> response = HttpClient.newHttpClient()
     <Card>
       <CardHeader><CardTitle>Step 4 — Verify the Charge</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges/chg_test_xyz789/verify \\
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router?action=verify_charge&charge_id=chg_test_xyz789 \\
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Response
@@ -231,7 +231,7 @@ X-KOB-Timestamp: 1711100000
     <Card>
       <CardHeader><CardTitle>Step 6 — Issue a Refund</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/refunds \\
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-refund \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: refund-order-001" \\

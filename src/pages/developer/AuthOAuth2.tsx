@@ -18,7 +18,7 @@ const parRequest = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functi
   "expires_in": 60
 }`;
 
-const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \\
+const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=authorization_code" \\
   -d "code=auth_code_from_redirect" \\
@@ -36,7 +36,7 @@ const tokenExchange = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/fun
   "id_token": "eyJhbGciOiJSUzI1NiIs..."
 }`;
 
-const refreshToken = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token \\
+const refreshToken = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=refresh_token" \\
   -d "refresh_token=rt_abc123def456" \\

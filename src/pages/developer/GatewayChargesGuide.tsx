@@ -175,7 +175,7 @@ const GatewayChargesGuide = () => (
           {
             language: "bash",
             label: "cURL",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -266,7 +266,7 @@ func main() {
 		"tx_ref":         "order_001",
 	})
 	req, _ := http.NewRequest("POST",
-		"https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges",
+		"https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
 		bytes.NewBuffer(body))
 	req.Header.Set("Authorization", "Bearer sk_live_...")
 	req.Header.Set("Content-Type", "application/json")
@@ -292,7 +292,7 @@ public class CreateCharge {
              "tx_ref":"order_001"}""";
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges"))
+            .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router"))
             .header("Authorization", "Bearer sk_live_...")
             .header("Content-Type", "application/json")
             .header("Idempotency-Key", "unique-key-001")

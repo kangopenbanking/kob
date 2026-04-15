@@ -62,7 +62,7 @@ export default function AuthFapi() {
 {
   "issuer": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
   "authorization_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize",
-  "token_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/token",
+  "token_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
   "pushed_authorization_request_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par",
   "backchannel_authentication_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/bc-authorize",
   "jwks_uri": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/.well-known/jwks.json",

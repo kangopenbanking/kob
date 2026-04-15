@@ -9,7 +9,7 @@ Sunset: Sat, 01 Jan 2028 00:00:00 GMT
 Link: <https://kangopenbanking.com/developer/migrate>; rel="successor-version"`;
 
 const versionHeader = `# Check current API version in any response
-curl -I https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges \\
+curl -I https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"
 
 # Response headers include:
@@ -38,7 +38,7 @@ export default function ApiReferenceVersioning() {
           <p className="text-muted-foreground mb-4">
             All API endpoints include the version in the URL path:
           </p>
-          <CodeBlock examples={[{ code: "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges", language: "text" }]} />
+          <CodeBlock examples={[{ code: "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router", language: "text" }]} />
           <div className="overflow-x-auto mt-4">
             <table className="w-full text-sm border border-border rounded-lg">
               <thead className="bg-muted/50">
