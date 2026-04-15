@@ -19,7 +19,7 @@ const codeChallenge = crypto
 
 // Step 2: Build PAR request
 const parResponse = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par',
+  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -37,7 +37,7 @@ const parResponse = await fetch(
 const { request_uri } = await parResponse.json();
 
 // Step 3: Redirect user to authorize
-const authorizeUrl = \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/authorize?request_uri=\${request_uri}\`;
+const authorizeUrl = \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize?request_uri=\${request_uri}\`;
 // window.location.href = authorizeUrl;
 
 // Step 4: Exchange code for tokens (in your callback handler)
@@ -67,7 +67,7 @@ code_challenge = base64.urlsafe_b64encode(
 
 # Step 2: PAR request
 par = requests.post(
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par",
+    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint",
     data={
         "client_id": "your_client_id",
         "response_type": "code",
