@@ -212,7 +212,7 @@ export default function MtnMomoGuide() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="disbursement">MTN MoMo Disbursement (Payout)</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts \\
+          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-payouts-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '{

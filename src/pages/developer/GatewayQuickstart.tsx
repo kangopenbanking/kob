@@ -51,7 +51,7 @@ const GatewayQuickstart = () => (
     <Card>
       <CardHeader><CardTitle>Step 2 — Create a Merchant</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants \\
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-merchant-router \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: onboard-acme-001" \\
@@ -205,7 +205,7 @@ HttpResponse<String> response = HttpClient.newHttpClient()
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">Register a webhook URL and KOB will POST events like <code className="bg-muted px-1 rounded">charge.successful</code> to your server in real time.</p>
         <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs"><code>{`# Register webhook
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks \\
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhooks-router \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

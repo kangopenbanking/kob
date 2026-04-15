@@ -33,7 +33,7 @@ const result = await fetch(
 // result.data.status: 'successful' | 'failed'`;
 
 const payoutExample = `# Payout to mobile money wallet
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/payouts \\
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-payouts-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
