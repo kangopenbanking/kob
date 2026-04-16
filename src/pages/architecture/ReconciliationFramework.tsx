@@ -51,9 +51,9 @@ Three-Way Reconciliation
                     ↓
            ┌─────────────────┐
            │  Results        │
-           │  ✅ Matched    │
-           │  ⚠️  Mismatch  │
-           │  ❌ Unmatched  │
+           │  ✅ Matched     │
+           │  ⚠️  Mismatch   │
+           │  ❌ Unmatched   │
            └─────────────────┘`}
               </pre>
             </div>
