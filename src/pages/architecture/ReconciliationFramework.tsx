@@ -7,7 +7,9 @@ export default function ReconciliationFramework() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
       <div className="mb-8">
-        <Badge variant="outline" className="mb-4">Architecture</Badge>
+        <Badge variant="outline" className="mb-4">
+          Architecture
+        </Badge>
         <h1 className="text-4xl font-bold mb-4">Reconciliation Framework</h1>
         <p className="text-xl text-muted-foreground">
           Automated three-way reconciliation between Kang ledger, payment processors, and bank settlements.
@@ -26,7 +28,8 @@ export default function ReconciliationFramework() {
           </CardHeader>
           <CardContent>
             <div className="bg-muted p-6 rounded-lg overflow-x-auto">
-              <pre className="text-xs text-muted-foreground whitespace-pre">{`
+              <pre className="text-xs text-muted-foreground whitespace-pre">
+                {`
 Three-Way Reconciliation
 ════════════════════════
 
@@ -48,9 +51,9 @@ Three-Way Reconciliation
                     ↓
            ┌─────────────────┐
            │  Results        │
-           │  ✅ Matched     │
-           │  ⚠️  Mismatch   │
-           │  ❌ Unmatched   │
+           │  ✅ Matched    │
+           │  ⚠️  Mismatch  │
+           │  ❌ Unmatched  │
            └─────────────────┘`}
               </pre>
             </div>
@@ -78,7 +81,10 @@ Three-Way Reconciliation
               </div>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              <p>Amount or status differs between internal ledger and processor. Queued for manual review with discrepancy details.</p>
+              <p>
+                Amount or status differs between internal ledger and processor. Queued for manual review with
+                discrepancy details.
+              </p>
             </CardContent>
           </Card>
 
@@ -90,7 +96,10 @@ Three-Way Reconciliation
               </div>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              <p>Record exists in one system but not the other. Triggers investigation workflow and potential stuck-transaction recovery.</p>
+              <p>
+                Record exists in one system but not the other. Triggers investigation workflow and potential
+                stuck-transaction recovery.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -109,10 +118,26 @@ Three-Way Reconciliation
                   </tr>
                 </thead>
                 <tbody className="text-muted-foreground">
-                  <tr className="border-b"><td className="p-3 font-mono text-xs">reconciliation_runs</td><td className="p-3">Each reconciliation execution with period, provider, status, and summary counts</td></tr>
-                  <tr className="border-b"><td className="p-3 font-mono text-xs">reconciliation_mismatches</td><td className="p-3">Individual discrepancies with internal vs external amounts and resolution status</td></tr>
-                  <tr className="border-b"><td className="p-3 font-mono text-xs">bank_reconciliations</td><td className="p-3">Bank statement reconciliation with matched/unmatched counts</td></tr>
-                  <tr><td className="p-3 font-mono text-xs">bank_statements</td><td className="p-3">Imported bank statement records for three-way matching</td></tr>
+                  <tr className="border-b">
+                    <td className="p-3 font-mono text-xs">reconciliation_runs</td>
+                    <td className="p-3">
+                      Each reconciliation execution with period, provider, status, and summary counts
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="p-3 font-mono text-xs">reconciliation_mismatches</td>
+                    <td className="p-3">
+                      Individual discrepancies with internal vs external amounts and resolution status
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="p-3 font-mono text-xs">bank_reconciliations</td>
+                    <td className="p-3">Bank statement reconciliation with matched/unmatched counts</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-mono text-xs">bank_statements</td>
+                    <td className="p-3">Imported bank statement records for three-way matching</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -125,7 +150,11 @@ Three-Way Reconciliation
             <CardDescription>Stuck transaction detection via gateway-reconcile-stuck cron</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-3">
-            <p>A scheduled cron function identifies charges stuck in <code className="text-xs bg-muted px-1 rounded">pending</code> or <code className="text-xs bg-muted px-1 rounded">processing</code> status beyond configured thresholds:</p>
+            <p>
+              A scheduled cron function identifies charges stuck in{" "}
+              <code className="text-xs bg-muted px-1 rounded">pending</code> or{" "}
+              <code className="text-xs bg-muted px-1 rounded">processing</code> status beyond configured thresholds:
+            </p>
             <ul className="list-disc list-inside space-y-1">
               <li>Mobile money charges pending &gt; 30 minutes → re-query Flutterwave status</li>
               <li>Card charges processing &gt; 15 minutes → re-query Stripe payment intent</li>
