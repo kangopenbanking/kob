@@ -114,6 +114,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Rate Limiting", path: "/admin/rate-limits", icon: Shield },
       { title: "API Documentation", path: "/admin/api-docs", icon: FileText },
       { title: "Load Testing", path: "/admin/load-testing", icon: Activity },
+      { title: "Health Monitoring", path: "/admin/health", icon: Activity },
       { title: "AI Anomaly Detection", path: "/admin/anomaly-detection", icon: AlertTriangle },
     ],
   },
@@ -122,10 +123,13 @@ export const adminNavigation: AdminNavSection[] = [
     items: [
       { title: "Security Monitoring", path: "/admin/security", icon: Shield },
       { title: "Security Dashboard", path: "/admin/security-dashboard", icon: Shield },
+      { title: "RLS Monitoring", path: "/admin/rls-monitoring", icon: Lock },
+      { title: "PIN Lockout", path: "/admin/pin-lockout", icon: Key },
       { title: "Fraud Detection", path: "/admin/fraud-detection", icon: Search },
       { title: "Transaction Monitoring", path: "/admin/transactions", icon: Activity },
       { title: "Consent Data Management", path: "/admin/consent-data", icon: DatabaseIcon },
       { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
+      { title: "Audit Trail Viewer", path: "/admin/audit-trail", icon: ScrollText },
       { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
       { title: "Exchange Rates", path: "/admin/exchange-rates", icon: ArrowLeftRight },
       { title: "Bill Management", path: "/admin/bill-management", icon: Receipt },
@@ -155,6 +159,8 @@ export const adminNavigation: AdminNavSection[] = [
     items: [
       { title: "Interbank Payments", path: "/admin/interbank-payments", icon: ArrowLeftRight },
       { title: "Bank Directory", path: "/admin/bank-directory", icon: Building2 },
+      { title: "Bank Onboarding", path: "/admin/bank-onboarding", icon: CheckCircle2 },
+      { title: "Bank Operations Monitor", path: "/admin/bank-operations", icon: Activity },
     ],
   },
   {
