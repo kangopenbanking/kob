@@ -32,7 +32,7 @@ interface QueryRequest {
 }
 
 async function query(ctx: BankConnectorContext, req: QueryRequest): Promise<unknown> {
-  const cfg = ctx.config as SqlConfig;
+  const cfg = ctx.config as unknown as SqlConfig;
   if (!cfg.gateway_url) throw new Error('SQL adapter: gateway_url required');
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), cfg.timeout_ms ?? 20000);

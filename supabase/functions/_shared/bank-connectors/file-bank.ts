@@ -41,7 +41,7 @@ async function fetchFile(ctx: BankConnectorContext, path: string): Promise<strin
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? Deno.env.get('VITE_SUPABASE_URL');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !serviceKey) throw new Error('File adapter: storage credentials missing');
-  const cfg = ctx.config as FileConfig;
+  const cfg = ctx.config as unknown as FileConfig;
   const bucket = cfg.storage_bucket ?? 'bank-files';
   const url = `${supabaseUrl}/storage/v1/object/${bucket}/${path}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${serviceKey}` } });
@@ -60,7 +60,7 @@ export const fileBankConnector: BankConnector = {
   // (assignment workaround for type narrowing)
 
   async getAccountDetails(ctx, id): Promise<BankAccountDetails> {
-    const cfg = ctx.config as FileConfig;
+    const cfg = ctx.config as unknown as FileConfig;
     const path = expandPath(cfg.account_file_pattern ?? '{bank_id}/accounts/latest.csv', { bank_id: ctx.bank_id });
     const text = await fetchFile(ctx, path);
     const rows = parseCsv(text);
@@ -79,7 +79,7 @@ export const fileBankConnector: BankConnector = {
   },
 
   async getBalance(ctx, id): Promise<BankBalance> {
-    const cfg = ctx.config as FileConfig;
+    const cfg = ctx.config as unknown as FileConfig;
     const path = expandPath(cfg.balance_file_pattern ?? '{bank_id}/balances/latest.csv', { bank_id: ctx.bank_id });
     const text = await fetchFile(ctx, path);
     const rows = parseCsv(text);
@@ -96,7 +96,7 @@ export const fileBankConnector: BankConnector = {
   },
 
   async getTransactions(ctx, id, range): Promise<BankTransaction[]> {
-    const cfg = ctx.config as FileConfig;
+    const cfg = ctx.config as unknown as FileConfig;
     const dateKey = range.to.slice(0, 10);
     const path = expandPath(cfg.transaction_file_pattern ?? '{bank_id}/transactions/{date}.csv', {
       bank_id: ctx.bank_id, date: dateKey,
@@ -131,7 +131,7 @@ export const fileBankConnector: BankConnector = {
   async healthCheck(ctx): Promise<BankHealthResult> {
     const start = Date.now();
     try {
-      const cfg = ctx.config as FileConfig;
+      const cfg = ctx.config as unknown as FileConfig;
       const bucket = cfg.storage_bucket ?? 'bank-files';
       const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? Deno.env.get('VITE_SUPABASE_URL');
       const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');

@@ -43,7 +43,7 @@ function expandPath(template: string, vars: Record<string, string>): string {
 }
 
 async function call(ctx: BankConnectorContext, path: string, init?: RequestInit): Promise<unknown> {
-  const cfg = ctx.config as RestConfig;
+  const cfg = ctx.config as unknown as RestConfig;
   if (!cfg.base_url) throw new Error('REST adapter: base_url required');
   const url = `${cfg.base_url.replace(/\/$/, '')}${path}`;
   const controller = new AbortController();
@@ -70,7 +70,7 @@ export const restBankConnector: BankConnector = {
   requiredConfigFields: () => ['base_url'],
 
   async getAccountDetails(ctx, id): Promise<BankAccountDetails> {
-    const cfg = ctx.config as RestConfig;
+    const cfg = ctx.config as unknown as RestConfig;
     const path = expandPath(cfg.paths?.account ?? '/accounts/{id}', { id });
     const raw = await call(ctx, path) as Record<string, unknown>;
     return {
@@ -86,7 +86,7 @@ export const restBankConnector: BankConnector = {
   },
 
   async getBalance(ctx, id): Promise<BankBalance> {
-    const cfg = ctx.config as RestConfig;
+    const cfg = ctx.config as unknown as RestConfig;
     const path = expandPath(cfg.paths?.balance ?? '/accounts/{id}/balance', { id });
     const raw = await call(ctx, path) as Record<string, unknown>;
     return {
@@ -100,7 +100,7 @@ export const restBankConnector: BankConnector = {
   },
 
   async getTransactions(ctx, id, range): Promise<BankTransaction[]> {
-    const cfg = ctx.config as RestConfig;
+    const cfg = ctx.config as unknown as RestConfig;
     const path = expandPath(cfg.paths?.transactions ?? '/accounts/{id}/transactions?from={from}&to={to}', {
       id, from: range.from, to: range.to,
     });
@@ -121,7 +121,7 @@ export const restBankConnector: BankConnector = {
   },
 
   async initiateTransfer(ctx, payload): Promise<TransferResult> {
-    const cfg = ctx.config as RestConfig;
+    const cfg = ctx.config as unknown as RestConfig;
     const path = cfg.paths?.transfer ?? '/transfers';
     try {
       const raw = await call(ctx, path, { method: 'POST', body: JSON.stringify(payload) }) as Record<string, unknown>;
@@ -143,7 +143,7 @@ export const restBankConnector: BankConnector = {
   },
 
   async healthCheck(ctx): Promise<BankHealthResult> {
-    const cfg = ctx.config as RestConfig;
+    const cfg = ctx.config as unknown as RestConfig;
     const start = Date.now();
     try {
       await call(ctx, cfg.paths?.health ?? '/health');
