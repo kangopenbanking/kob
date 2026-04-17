@@ -162,6 +162,7 @@ const MobileMoneyIntegration = lazy(() => import("./pages/solutions/MobileMoneyI
 const CreditScoring = lazy(() => import("./pages/solutions/CreditScoring"));
 const ByoMobileMoney = lazy(() => import("./pages/products/ByoMobileMoney"));
 const AdminTenantConnectors = lazy(() => import("./pages/admin/AdminTenantConnectors"));
+const AdminBankOnboarding = lazy(() => import("./pages/admin/AdminBankOnboarding"));
 
 // Developer Portal
 const DeveloperHome = lazy(() => import("./pages/developer/DeveloperHome"));
@@ -264,6 +265,7 @@ const PollingAndWebhooks = lazy(() => import("./pages/developer/PollingAndWebhoo
 const SoapBankAdapter = lazy(() => import("./pages/developer/SoapBankAdapter"));
 const MultiRailFailover = lazy(() => import("./pages/developer/MultiRailFailover"));
 const BankAdapterFramework = lazy(() => import("./pages/developer/BankAdapterFramework"));
+const BankOnboardingFlow = lazy(() => import("./pages/developer/BankOnboardingFlow"));
 const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
 const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
@@ -901,6 +903,7 @@ function App() {
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminSupportChat />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
+              <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -1030,6 +1033,7 @@ function App() {
               <Route path="connectors/soap-bank-adapter" element={<SoapBankAdapter />} />
               <Route path="connectors/multi-rail-failover" element={<MultiRailFailover />} />
               <Route path="connectors/bank-adapter-framework" element={<BankAdapterFramework />} />
+              <Route path="connectors/bank-onboarding-flow" element={<BankOnboardingFlow />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
