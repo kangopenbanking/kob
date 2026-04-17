@@ -1,9 +1,25 @@
 {
-  "apiVersion": "4.10.0",
+  "apiVersion": "4.11.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.11.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "BYO Phase 2 — server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
+      "highlights": [
+        "New cron edge function byo-charge-poller reconciles pending MTN/Orange/SOAP charges and fires synthetic webhooks via existing dispatcher",
+        "New connector soap_bank with WS-Security UsernameToken authentication for T24, Flexcube, OBDX-class cores",
+        "payment-router-charge now performs multi-rail failover across ALL enabled tenant connectors before Flutterwave fallback",
+        "New tables byo_charge_polls and byo_routing_attempts with RLS scoped to owner + admin read-all",
+        "Three new developer guides under /developer/connectors with cURL, Node, Python examples",
+        "All v4.10.0 contracts preserved unchanged — additive only (STANDING ORDER 1)"
+      ],
+      "standard_citations": ["STANDING ORDER 1", "STANDING ORDER 4", "STANDING ORDER 6", "ORDER P5", "ORDER P7", "ORDER P9"]
+    },
     {
       "version": "4.10.0",
       "date": "2026-04-17",
