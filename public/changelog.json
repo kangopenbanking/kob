@@ -1,9 +1,24 @@
 {
-  "apiVersion": "4.14.0",
+  "apiVersion": "4.15.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.15.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "CEMAC Universal Bank Integration -- Wave 4: documentation, OpenAPI version bump, and architecture overview tying Waves 1-3 together",
+      "highlights": [
+        "New public developer page /developer/connectors/cemac-bank-integration documents the full BankConnector architecture, adapter decision matrix, delivery waves, and operating runbook (ORDER P6)",
+        "OpenAPI specification bumped to 4.15.0 (info.version only -- zero changes to operationIds, schemas, parameters, security schemes, or response codes per STANDING ORDER 1)",
+        "Architecture diagram, adapter table, and operating-surface table satisfy ORDER P6 (no nav-only pages)",
+        "Cross-links added between Bank Adapter Framework, Bank Onboarding Flow, and the new overview page",
+        "All Wave 4 content publicly accessible without authentication (ORDER P1, ORDER P4)"
+      ],
+      "standard_citations": ["STANDING ORDER 1", "STANDING ORDER 4", "STANDING ORDER 6", "ORDER P1", "ORDER P6", "ORDER P7", "ORDER P9"]
+    },
     {
       "version": "4.14.0",
       "date": "2026-04-17",
