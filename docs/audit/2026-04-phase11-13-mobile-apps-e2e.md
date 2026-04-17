@@ -97,9 +97,9 @@ After the user authenticated in-preview, drove additional surfaces live:
 
 ## 6. Sign-off
 
-- ✅ Consumer PWA: 47 pages, 48 routes, 0 alerts/forms/TODO issues, 2 broken refs **fixed**, splash + auth verified live.
-- ✅ Business PWA: 28 pages, 64 routes, 0 issues, 4 primary pages driven live with 100% 200 OK.
-- ✅ Banking PWA: 26 pages, 23+1 routes, 0 issues, auth screen + institution branding loads correctly.
-- ✅ All 3 apps: 0 console errors, 0 network errors, auth gates enforced.
+- ✅ Consumer PWA: 47 pages — Home, Activity, Linked Accounts, More, Transfer all driven live with active session; 0 alerts/forms/TODO issues; 2 broken refs **fixed (F16)**; 100% 200 OK; 0 console errors.
+- ✅ Business PWA: 28 pages — Home, Orders, Products, Wallet driven live; 100% 200 OK.
+- ✅ Banking PWA: 26 pages — auth gate + multi-tenant boundary verified live; institution branding loads correctly (13× 200 OK).
+- ✅ All 3 apps: 0 console errors, 0 network errors, auth gates enforced, tenant isolation intact.
 
-**Phases 11–13 complete.** Mobile triple-audit closed.
+**Phases 11–13 complete (extended).** Mobile triple-audit closed with authenticated Consumer drive-through.
