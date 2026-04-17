@@ -76,7 +76,58 @@ export default function AdminTenantConnectors() {
   const [healthFilter, setHealthFilter] = useState<string>("all");
   const [audit, setAudit] = useState<any[] | null>(null);
   const [auditTitle, setAuditTitle] = useState("");
+  const [pollHealth, setPollHealth] = useState<{ pending: number; oldest_minutes: number | null; terminal_24h: number; failed_24h: number } | null>(null);
+  const [trail, setTrail] = useState<any[] | null>(null);
+  const [trailTitle, setTrailTitle] = useState("");
   const { toast } = useToast();
+
+  const loadPollHealth = async () => {
+    const { data: pending } = await supabase
+      .from("byo_charge_polls")
+      .select("created_at", { count: "exact" })
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const { count: pendingCount } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: terminal24 } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["successful"])
+      .gte("terminal_at", since);
+    const { count: failed24 } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["failed", "expired"])
+      .gte("terminal_at", since);
+    const oldest = pending?.[0]?.created_at
+      ? Math.round((Date.now() - new Date(pending[0].created_at).getTime()) / 60000)
+      : null;
+    setPollHealth({
+      pending: pendingCount ?? 0,
+      oldest_minutes: oldest,
+      terminal_24h: terminal24 ?? 0,
+      failed_24h: failed24 ?? 0,
+    });
+  };
+
+  const viewRoutingTrail = async (row: Row) => {
+    setTrailTitle(`${row.connector_id} · routing attempts`);
+    const { data, error } = await supabase
+      .from("byo_routing_attempts")
+      .select("attempted_at, connector_id, attempt_index, success, error_message, charge_id")
+      .eq("tenant_connector_id", row.id)
+      .order("attempted_at", { ascending: false })
+      .limit(50);
+    if (error) {
+      toast({ title: "Could not load routing trail", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTrail(data ?? []);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -100,6 +151,7 @@ export default function AdminTenantConnectors() {
 
   useEffect(() => {
     load();
+    loadPollHealth();
   }, []);
 
   const filtered = rows.filter((r) => {
@@ -234,6 +286,26 @@ export default function AdminTenantConnectors() {
         <StatCard label="Disabled" value={counts.disabled} icon={PowerOff} />
       </div>
 
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Poll queue health (BYO direct rails)
+          </CardTitle>
+          <CardDescription>
+            Reconciliation status for MTN/Orange/SOAP charges that providers do not push reliably.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MiniStat label="Pending" value={pollHealth?.pending ?? 0} />
+            <MiniStat label="Oldest pending" value={pollHealth?.oldest_minutes != null ? `${pollHealth.oldest_minutes}m` : "—"} />
+            <MiniStat label="Settled (24h)" value={pollHealth?.terminal_24h ?? 0} />
+            <MiniStat label="Failed/expired (24h)" value={pollHealth?.failed_24h ?? 0} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Registered connectors</CardTitle>
@@ -358,6 +430,9 @@ export default function AdminTenantConnectors() {
                           <Button size="sm" variant="ghost" onClick={() => viewAudit(r)} title="Audit trail">
                             <ShieldCheck className="h-4 w-4" />
                           </Button>
+                          <Button size="sm" variant="ghost" onClick={() => viewRoutingTrail(r)} title="Routing attempts">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
                           <Button size="sm" variant="ghost" onClick={() => remove(r)} title="Delete">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -404,6 +479,46 @@ export default function AdminTenantConnectors() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={trail !== null} onOpenChange={(o) => !o && setTrail(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Routing trail · {trailTitle}</DialogTitle>
+            <DialogDescription>
+              Last 50 multi-rail failover attempts recorded for this connector.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-2">
+            {trail?.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No routing attempts recorded yet.
+              </p>
+            )}
+            {trail?.map((a, i) => (
+              <div key={i} className="border rounded-md p-3 text-xs flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold">#{a.attempt_index}</span>
+                    <span>{a.connector_id}</span>
+                    <Badge variant={a.success ? "default" : "destructive"} className="text-[10px]">
+                      {a.success ? "success" : "failed"}
+                    </Badge>
+                  </div>
+                  {a.error_message && (
+                    <div className="text-destructive font-mono break-all">{a.error_message}</div>
+                  )}
+                  {a.charge_id && (
+                    <div className="text-muted-foreground font-mono">charge: {a.charge_id}</div>
+                  )}
+                </div>
+                <span className="text-muted-foreground whitespace-nowrap">
+                  {new Date(a.attempted_at).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -429,5 +544,14 @@ function StatCard({
         <Icon className="h-8 w-8 text-primary opacity-80" />
       </CardContent>
     </Card>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border p-3 bg-muted/30">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
   );
 }
