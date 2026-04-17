@@ -97,16 +97,20 @@ Deno.serve(async (req) => {
         const healthPath = ep.paths?.health || '/health';
         const start = Date.now();
         try {
-          const resp = await fetch(`${ep.base_url}${healthPath}`, { method: 'GET', headers });
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 5000);
+          const resp = await fetch(`${ep.base_url}${healthPath}`, { method: 'GET', headers, signal: ctrl.signal });
+          clearTimeout(t);
           const latency = Date.now() - start;
           return jsonResp({
+            success: resp.ok,
             reachable: resp.ok,
             status: resp.status,
             latency_ms: latency,
             tested_at: new Date().toISOString(),
           });
         } catch (e: any) {
-          return jsonResp({ reachable: false, error: e.message, tested_at: new Date().toISOString() });
+          return jsonResp({ success: false, reachable: false, error: e.message, tested_at: new Date().toISOString() });
         }
       }
 

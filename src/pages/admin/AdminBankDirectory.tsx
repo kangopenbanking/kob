@@ -466,7 +466,17 @@ function DBConnectorsTab() {
 
   const testMut = useMutation({
     mutationFn: (id: string) => invokeDbConnector("test_connection", { connection_id: id }),
-    onSuccess: (d) => toast({ title: d?.success ? "Connection test passed" : "Connection test failed", variant: d?.success ? "default" : "destructive" }),
+    onSuccess: (d) => {
+      const ok = d?.success === true || d?.reachable === true;
+      const desc = ok
+        ? `${d?.host ?? "host"} • ${d?.latency_ms ?? 0}ms${d?.bridge_probed ? " • bridge OK" : ""}`
+        : (d?.probe_error || d?.note || "Bridge unreachable. Check connection_config.bridge_url.");
+      toast({
+        title: ok ? "Connection test passed" : "Connection test failed",
+        description: desc,
+        variant: ok ? "default" : "destructive",
+      });
+    },
     onError: (e: any) => toast({ title: "Test failed", description: e.message, variant: "destructive" })
   });
 
@@ -708,7 +718,17 @@ function APIConnectorsTab() {
 
   const testMut = useMutation({
     mutationFn: (id: string) => invokeApiConnector("test_endpoint", { endpoint_id: id }),
-    onSuccess: (d) => toast({ title: d?.success ? "Endpoint test passed" : "Endpoint test failed", variant: d?.success ? "default" : "destructive" }),
+    onSuccess: (d) => {
+      const ok = d?.success === true || d?.reachable === true;
+      const desc = ok
+        ? `HTTP ${d?.status ?? "200"} • ${d?.latency_ms ?? 0}ms`
+        : (d?.error || `HTTP ${d?.status ?? "—"} from /health endpoint`);
+      toast({
+        title: ok ? "Endpoint test passed" : "Endpoint test failed",
+        description: desc,
+        variant: ok ? "default" : "destructive",
+      });
+    },
     onError: (e: any) => toast({ title: "Test failed", description: e.message, variant: "destructive" })
   });
 

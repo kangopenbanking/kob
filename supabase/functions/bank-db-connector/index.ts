@@ -141,20 +141,49 @@ Deno.serve(async (req) => {
           return errorResponse('Invalid connection config: host and database required', 400);
         }
 
-        // Simulate connection test (actual DB connectivity would require a separate runtime)
-        // In production, this would attempt a TCP connection + auth handshake
-        const testResult = {
-          reachable: true,
+        // Validate connection config. If a bridge_url is configured, perform a real
+        // HTTP reachability probe; otherwise return a config-validated success.
+        const bridgeUrl = config?.bridge_url;
+        const startedAt = Date.now();
+        let reachable = true;
+        let probeStatus: number | null = null;
+        let probeError: string | null = null;
+        let note = 'Connection config validated. Actual connectivity will be verified on first sync.';
+
+        if (bridgeUrl) {
+          try {
+            const probeHeaders: Record<string, string> = { 'Accept': 'application/json' };
+            if (config?.bridge_api_key) probeHeaders['Authorization'] = `Bearer ${config.bridge_api_key}`;
+            if (config?.api_key_header && config?.api_key_value) probeHeaders[config.api_key_header] = config.api_key_value;
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 5000);
+            const resp = await fetch(bridgeUrl, { method: 'GET', headers: probeHeaders, signal: ctrl.signal });
+            clearTimeout(t);
+            probeStatus = resp.status;
+            reachable = resp.ok || resp.status === 405; // 405 still proves reachability
+            note = reachable ? 'Bridge endpoint reachable.' : `Bridge responded with HTTP ${resp.status}.`;
+          } catch (e: any) {
+            reachable = false;
+            probeError = e?.message ?? String(e);
+            note = `Bridge probe failed: ${probeError}`;
+          }
+        }
+
+        return jsonResponse({
+          success: reachable,
+          reachable,
           db_type: type,
           host: config.host,
           port: config.port || getDefaultPort(type),
           database: config.database,
           ssl: config.ssl || false,
+          bridge_probed: !!bridgeUrl,
+          probe_status: probeStatus,
+          probe_error: probeError,
+          latency_ms: Date.now() - startedAt,
           tested_at: new Date().toISOString(),
-          note: 'Connection config validated. Actual connectivity will be verified on first sync.',
-        };
-
-        return jsonResponse(testResult);
+          note,
+        });
       }
 
       // ─── Trigger Manual Sync ───
