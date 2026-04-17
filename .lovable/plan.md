@@ -1,68 +1,124 @@
 
-I audited the current code and backend state. Your three items are not fully “missing,” but they are still operationally incomplete.
 
-## Verified current state
-- **Polling exists**: `supabase/functions/bank-data-poller/index.ts` plus an active cron job `bank-data-poller-5min`.
-- **Reconciliation exists**: `supabase/functions/bank-reconcile-engine/index.ts` plus `reconciliation_reports`.
-- **Failover exists**: `supabase/functions/bank-data-router/index.ts` does priority-ordered adapter failover; `payment-router-charge` + `byo-charge-poller` already implement queue-style retry for payment rails.
+# E2E Audit Report — 5 Feature Areas
 
-## What is still actually missing
+I ran code + production database checks. Here is the truthful state of each item.
 
-### 1. Polling engine is only partially operational
-- `bank_sync_jobs` exists, but production currently has **0 rows**, so nothing is being polled.
-- `bank-data-poller` supports `transactions`, `balances`, `reconcile`, but the schema also allows `accounts` and the function does **not** handle it yet.
-- The poller comments say it should upsert balances / ledger data, but today it mostly updates watermarks and writes attempt logs; transaction and balance persistence is still thin.
+## Production state snapshot (key counts)
 
-### 2. Bank reconciliation engine is still mostly scaffolded
-- The edge function exists and writes `reconciliation_reports`.
-- But the generic adapters (`rest-bank.ts`, `sql-bank.ts`, `file-bank.ts`) currently return **stub/zeroed** `reconcile()` results.
-- So the new engine is not yet doing a full shared **ledger-vs-bank comparison** for REST / SQL / File banks.
-- Production currently has **0 reconciliation reports**, so it has not been operationalized.
+| Table | Row count | Status |
+|---|---|---|
+| `banks` | 0 | empty |
+| `bank_connector_configs` | 0 | empty |
+| `bank_sync_jobs` | 0 | empty |
+| `reconciliation_reports` | 0 | never run |
+| `bank_profile_presets` | 0 | seed missing |
+| `aisp_consents` | 0 | empty |
+| `pisp_consents` | 0 | empty |
+| `cbpii_consents` | 0 | empty |
+| `consent_events` | 0 | empty |
+| `bank_side_transactions` | does not exist | **migration missing** |
+| `bank_retry_queue` | does not exist | **migration missing** |
 
-### 3. Retry / fallback orchestration is still partial
-- Inline failover exists in `bank-data-router`.
-- Poller backoff exists in `bank-data-poller`.
-- But there is **no dedicated bank retry queue / replay worker / dead-letter flow** for failed bank operations.
-- The queue-based retry model exists today mainly for payment rails (`byo_charge_polls`), not for bank account sync / reconciliation flows.
+## Active cron jobs (8 total)
+None of these are bank-related: `bank-data-poller-5min`, `bank-retry-worker-2min` are **not scheduled**.
 
-### 4. One more real gap: SOAP in the unified bank adapter layer
-- In `_shared/bank-connectors/registry.ts`, `soap` is still mapped to a placeholder facade rather than a dedicated bank adapter implementation.
-- That means the architecture supports SOAP, but the unified bank adapter path is not fully specialized yet.
+---
 
-## Implementation plan
+## 1. Live bank connectors — PARTIAL
 
-### Wave 5A — Operationalize polling
-- Extend `bank-data-poller` to support `accounts` jobs.
-- Make `transactions` and `balances` branches actually persist normalized data into the intended banking tables/audit fields.
-- Add automatic creation of `bank_sync_jobs` when a bank is marked go-live in onboarding.
-- Add an admin monitor for last run, next run, failure count, and backoff state.
+| Layer | Status | Evidence |
+|---|---|---|
+| Adapter framework (REST/SQL/File/SOAP) | Built | `_shared/bank-connectors/*.ts` |
+| Provider connectors (MTN, Orange, Flutterwave, SOAP) | Built | `_shared/payment-connectors/*.ts` |
+| Bank Profile Catalog | Built but unseeded | `bank_profile_presets` table empty |
+| Real bank instances registered | None | `bank_connector_configs` = 0 rows |
+| Connection-test UI | Fixed last loop | `bank-db-connector`, `bank-api-connector` return `success` |
 
-### Wave 5B — Build real bank reconciliation
-- Create one shared reconciliation matcher that compares normalized bank-side transactions against KOB ledger/system transactions.
-- Wire each adapter’s `reconcile()` to fetch source data and call that matcher.
-- Keep the current safety rule: **flag-only, no auto-credit**.
-- Persist detailed mismatch categories into `reconciliation_reports`.
+**Verdict:** infrastructure ready, **no live tenant has actually been connected**.
 
-### Wave 5C — Add bank retry orchestration
-- Add a dedicated retry queue for failed bank operations.
-- Create a worker to replay transient failures with capped backoff and terminal dead-letter status.
-- Record every retry/failover decision in `bank_connector_attempts`.
-- Support async fallback to the next adapter after repeated failures on the primary adapter.
+## 2. Legacy adapters — BUILT, NOT EXERCISED
 
-### Wave 5D — Remove operational ambiguity
-- Consolidate the active path around `bank-data-poller` + `bank-reconcile-engine`.
-- Treat older parallel functions (`bank-sync`, `bank-reconcile`) as legacy/internal paths so there is one clear production flow.
+| Adapter | Code | Tested | Production usage |
+|---|---|---|---|
+| REST | `rest-bank.ts` | unit test | none |
+| SQL | `sql-bank.ts` | unit test | none |
+| File (CSV / pain.001 / MT940) | `file-bank.ts` | unit test | none |
+| SOAP | `payment-connectors/soap-bank.ts` | partial | none |
 
-### Wave 5E — Validation
-- Seed one sandbox bank with:
-  - polling jobs
-  - transaction import path
-  - reconciliation run
-  - forced adapter failure to verify retry/failover
-- Re-run the existing regression suite so `/v1/aisp-accounts`, `/v1/aisp-transactions`, and `mobile-money-charge` remain unchanged.
+`bank_file_uploads` / `bank_db_connections` / `bank_api_endpoints` tables exist but are empty. **Code path verified, real legacy traffic has never been processed.**
 
-## Non-breaking rules for implementation
-- Additive only; no breaking `/v1/*` changes.
-- Keep docs and spec public.
-- Keep all financial state changes server-mediated.
-- Reconciliation remains advisory/flagging only unless separately approved.
+## 3. Polling + reconciliation — INCOMPLETE (CRITICAL)
+
+| Component | Code | DB Migration | Cron | Verdict |
+|---|---|---|---|---|
+| `bank-data-poller` | exists | needs `bank_side_transactions`, `bank_side_balances` | **NOT scheduled** | broken |
+| `bank-side-transactions` table | referenced | **MISSING in production** | — | **breaks poller at runtime** |
+| `bank-side-balances` table | referenced | **MISSING in production** | — | **breaks poller at runtime** |
+| `bank_retry_queue` table | referenced | **MISSING in production** | — | **breaks retry worker** |
+| `bank-retry-worker` | exists | depends on missing table | **NOT scheduled** | broken |
+| `bank-reconcile-engine` | exists | reports table OK | n/a (admin-triggered) | functional but never run |
+| `reconciliation-matcher.ts` | exists | — | — | OK |
+
+**Root cause:** the Wave 5 migration (`20260417040404_*.sql`) created the tables in the migration file but it does not appear to have applied to production — `bank_side_transactions` and `bank_retry_queue` both return `NULL` from `to_regclass()`. The poller and retry worker will throw on first invocation.
+
+## 4. Consent lifecycle APIs — MOSTLY COMPLETE
+
+| Endpoint | Status |
+|---|---|
+| `aisp-create-consent` | Built |
+| `pisp-create-consent` | Built |
+| `cbpii-funds-confirmation` (create/get/revoke) | Built |
+| `consent-authorize` | Built |
+| `consent-revoke` | Built |
+| `admin-list-consents` | Built |
+| `api-consents-list` | Built |
+| `gdpr-consent-retention` (cron daily 02:00) | **Active** |
+| DB helpers: `log_consent_event`, `is_consent_valid`, `check_aisp_permission` | Present |
+| **Missing** | `consent-extend` / renewal, `consent-status` polling endpoint |
+
+**Verdict:** lifecycle is solid for create / authorize / revoke / retention. **Renewal/extension and a unified status-query endpoint are gaps.**
+
+## 5. Standardize schemas — PARTIAL
+
+`_shared/bank-connectors/types.ts` defines canonical `BankAccountDetails`, `BankTransaction`, `BankBalance`, `TransferPayload`, `ReconcileResult`. Adapters use these consistently. However:
+- `bank_sourced_transactions`, `bank_sourced_accounts`, `bank_sourced_balances` exist but are **separate** from `bank_side_transactions` referenced by Wave 5 code → **two parallel schemas for the same concept**
+- `consent_events` table exists; CBPII / AISP / PISP each store consents in **different tables** with non-identical column names
+- OpenAPI spec has not been bumped to publish `/v1/bank-connectors/*` operations as a single canonical group
+
+**Verdict:** code-level types are unified; database-level naming is fragmented; spec-level surface is not yet harmonized.
+
+---
+
+# Remediation Plan (proposed for next loop)
+
+### P0 — fix what is broken
+1. Re-apply Wave 5 migration so `bank_side_transactions`, `bank_side_balances`, `bank_retry_queue` exist in production
+2. Schedule the two missing cron jobs:
+   - `bank-data-poller-5min` (`*/5 * * * *`)
+   - `bank-retry-worker-2min` (`*/2 * * * *`)
+3. Seed `bank_profile_presets` (the 12 CEMAC banks the catalog promised)
+4. Smoke-test each cron path with a sandbox bank to verify real persistence
+
+### P1 — close the consent gap
+5. Add `consent-extend` (renewal) and `consent-status` (poll) edge functions; wire to `consent_events`
+6. Document them in OpenAPI v4.16.0 → v4.17.0 (additive)
+
+### P2 — schema harmonization
+7. Unify `bank_sourced_*` and `bank_side_*` into a single canonical set (or formally document the split with a view bridge — additive only, no rename per Order 1)
+8. Publish a single `/v1/bank-connectors/*` group in OpenAPI with one canonical schema reference
+
+### P3 — operationalization (already planned in earlier waves)
+9. Onboard one real sandbox bank end-to-end via `/admin/bank-directory` → presets → connector config → polling job → first reconciliation report
+
+### Standing Orders compliance for the fix
+- Order 1 (Lock): no renames, only additive
+- Order 4 (Surgeon): all fixes are additive; missing migration is re-applied as-is
+- Order 6 (Version Gate): patch bump v4.16.0 → v4.16.1 for the 2 new consent endpoints reclassified as minor (v4.17.0)
+- Order P5 (Working Code): every claim above will be backed by a runnable smoke test
+
+### Out of scope
+- Hard-coded per-bank adapters (anti-pattern)
+- Real production bank credentials (tenant-supplied)
+- ML-based reconciliation (rule-based remains)
+
