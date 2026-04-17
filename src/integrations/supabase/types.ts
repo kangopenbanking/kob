@@ -2521,6 +2521,54 @@ export type Database = {
           },
         ]
       }
+      bank_profile_presets: {
+        Row: {
+          bank_code: string
+          bank_name: string
+          certified: boolean
+          certified_at: string | null
+          country: string
+          created_at: string
+          default_config_json: Json
+          documentation_url: string | null
+          id: string
+          integration_notes: string | null
+          recommended_adapter_type: string
+          swift_bic: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_code: string
+          bank_name: string
+          certified?: boolean
+          certified_at?: string | null
+          country: string
+          created_at?: string
+          default_config_json?: Json
+          documentation_url?: string | null
+          id?: string
+          integration_notes?: string | null
+          recommended_adapter_type: string
+          swift_bic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_code?: string
+          bank_name?: string
+          certified?: boolean
+          certified_at?: string | null
+          country?: string
+          created_at?: string
+          default_config_json?: Json
+          documentation_url?: string | null
+          id?: string
+          integration_notes?: string | null
+          recommended_adapter_type?: string
+          swift_bic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bank_psu_links: {
         Row: {
           bank_customer_id: string | null

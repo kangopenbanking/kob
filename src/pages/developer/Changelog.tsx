@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.16.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Bank Profile Catalog — new public table bank_profile_presets seeded with 12 CEMAC banks (Afriland, UBA CM, Ecobank CM, BICEC, SGC, CCA, CBC, BGFI, NFC, Orabank GA, BOA CG, BEAC clearing) including recommended adapter type, endpoint templates, and integration notes" },
+        { type: "feature", description: "New public edge function bank-presets — GET /functions/v1/bank-presets supports country, adapter_type, certified, and bank_code filters; cached 5 minutes; no authentication required (ORDER P1)" },
+        { type: "feature", description: "New developer page /developer/connectors/cemac-bank-catalog — searchable, filterable catalog of supported CEMAC banks with one-click access to bank developer portals (ORDER P1, P5, P6)" },
+        { type: "improvement", description: "Audit rebuttal published at docs/bank-connectors/audit/2026-04-rebuttal.md — maps the April 2026 external audit's six 'still-open' gaps to live shipped artefacts (5/6 already shipped in Waves 1–4, 1/6 closed by this catalog)" },
+        { type: "improvement", description: "Onboarding wizard remains backwards compatible — presets are an opt-in pre-fill (STANDING ORDER 4 — additive only)" },
+      ]
+    },
+    {
       version: "API Spec 4.11.0",
       date: "2026-04-17",
       type: "minor",
