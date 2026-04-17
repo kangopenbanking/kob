@@ -22604,6 +22604,10 @@ export type Database = {
       cleanup_expired_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
+      compute_endpoint_hmac: {
+        Args: { p_endpoint_id: string; p_payload: string }
+        Returns: string
+      }
       compute_webhook_hmac: {
         Args: { p_merchant_id: string; p_payload: string }
         Returns: string

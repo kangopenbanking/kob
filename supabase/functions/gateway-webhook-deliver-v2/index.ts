@@ -32,8 +32,9 @@ serve(async (req) => {
       }
 
       // Find all active endpoints that subscribe to this event
+      // F6: do NOT select `secret` — signing is delegated to compute_endpoint_hmac RPC
       const { data: endpoints } = await supabase.from('gateway_webhook_endpoints')
-        .select('id, url, secret, events')
+        .select('id, url, events')
         .eq('merchant_id', merchant_id)
         .eq('is_active', true);
 
@@ -50,12 +51,16 @@ serve(async (req) => {
       // Create delivery records and attempt immediate delivery
       const results = [];
       for (const ep of matchingEndpoints) {
-        // Sign payload with endpoint-specific secret
+        // F6: sign via DB RPC — endpoint secret never leaves the database
         const payloadStr = JSON.stringify({ event: event_type, data: payload, timestamp: new Date().toISOString() });
-        const encoder = new TextEncoder();
-        const key = await crypto.subtle.importKey('raw', encoder.encode(ep.secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-        const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadStr));
-        const signature = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+        const { data: signature, error: sigErr } = await supabase.rpc('compute_endpoint_hmac', {
+          p_endpoint_id: ep.id,
+          p_payload: payloadStr,
+        });
+        if (sigErr || !signature) {
+          results.push({ endpoint_id: ep.id, delivery_id: null, status: 'failed', error: 'signing_failed' });
+          continue;
+        }
 
         let deliveryStatus = 'pending';
         let responseStatus: number | null = null;
@@ -120,17 +125,22 @@ serve(async (req) => {
       let processed = 0;
       for (const d of pendingDeliveries || []) {
         const { data: ep } = await supabase.from('gateway_webhook_endpoints')
-          .select('url, secret').eq('id', d.endpoint_id).eq('is_active', true).single();
+          .select('url').eq('id', d.endpoint_id).eq('is_active', true).single();
         if (!ep) {
           await supabase.from('gateway_webhook_deliveries_v2').update({ status: 'exhausted' }).eq('id', d.id);
           continue;
         }
 
+        // F6: sign via DB RPC — endpoint secret never leaves the database
         const payloadStr = JSON.stringify(d.payload);
-        const encoder = new TextEncoder();
-        const key = await crypto.subtle.importKey('raw', encoder.encode(ep.secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-        const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadStr));
-        const signature = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+        const { data: signature, error: sigErr } = await supabase.rpc('compute_endpoint_hmac', {
+          p_endpoint_id: d.endpoint_id,
+          p_payload: payloadStr,
+        });
+        if (sigErr || !signature) {
+          await supabase.from('gateway_webhook_deliveries_v2').update({ status: 'exhausted', response_body: 'signing_failed' }).eq('id', d.id);
+          continue;
+        }
 
         let newStatus = 'failed';
         let responseStatus: number | null = null;
