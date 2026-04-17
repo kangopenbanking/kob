@@ -1,9 +1,36 @@
 {
-  "apiVersion": "4.9.7",
+  "apiVersion": "4.10.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-14",
+  "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.10.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "BYO Mobile Money Connectors -- institutions, merchants, and developers can register their own MTN MoMo or Orange Money credentials and route charges through them while Flutterwave (KOB-managed) remains the default rail and automatic fallback",
+      "highlights": [
+        "New edge functions: tenant-connectors-manage, tenant-connectors-list, tenant-connectors-test, payment-router-charge",
+        "New table tenant_payment_connectors with AES-GCM credential encryption (PAYMENT_CONNECTOR_KEY) and RLS",
+        "Connector framework with unified PaymentConnector interface (initiateCharge, getStatus, refund, healthCheck)",
+        "Direct connectors: MTN MoMo Collection API, Orange Money Web Payment, Flutterwave (default + fallback)",
+        "PaymentConnectorsPanel mounted on Institution Settings and Business Settings",
+        "Developer guide /developer/connectors/byo-mobile-money with cURL, Node.js, Python examples",
+        "Existing mobile-money-charge route and Flutterwave default behaviour preserved unchanged (additive only)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P5",
+        "ORDER P6",
+        "ORDER P7",
+        "ORDER P9",
+        "ORDER P10"
+      ]
+    },
     {
       "version": "4.9.7",
       "date": "2026-04-14",
