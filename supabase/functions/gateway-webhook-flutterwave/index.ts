@@ -224,7 +224,9 @@ serve(async (req) => {
       }
 
       // ─── Remittance status sync: finalize remittance on payout completion ───
-      if (payout.metadata?.remittance_id) {
+      // Guard: payout may be null if reference didn't match a known payout row.
+      if (payout && payout.metadata?.remittance_id) {
+        const newStatus = mapFlutterwaveStatus(payload.data?.status || payload.status);
         const remittanceId = payout.metadata.remittance_id;
         const remittanceStatus = newStatus === 'successful' ? 'credited' : newStatus === 'failed' ? 'failed' : null;
         if (remittanceStatus) {
