@@ -1,82 +1,68 @@
 
-The user's audit is **outdated**. They're auditing against a snapshot from before Waves 1–4 + Validation Suite shipped. Looking at the current codebase:
+I audited the current code and backend state. Your three items are not fully “missing,” but they are still operationally incomplete.
 
-**Connectors actually shipped** (`_shared/payment-connectors/`): MTN MoMo, Orange Money, Flutterwave, SOAP Bank — confirmed in prior summaries.
+## Verified current state
+- **Polling exists**: `supabase/functions/bank-data-poller/index.ts` plus an active cron job `bank-data-poller-5min`.
+- **Reconciliation exists**: `supabase/functions/bank-reconcile-engine/index.ts` plus `reconciliation_reports`.
+- **Failover exists**: `supabase/functions/bank-data-router/index.ts` does priority-ordered adapter failover; `payment-router-charge` + `byo-charge-poller` already implement queue-style retry for payment rails.
 
-**Bank adapters shipped** (`_shared/bank-connectors/`): `rest-bank.ts`, `sql-bank.ts`, `file-bank.ts`, `soap` (registry placeholder → real impl in payment-connectors). Files are visible in current-code dump.
+## What is still actually missing
 
-**Polling shipped**: `bank-data-poller/index.ts` (cron 5min, exponential backoff) + `byo-charge-poller` (cron 1min). Visible in current-code.
+### 1. Polling engine is only partially operational
+- `bank_sync_jobs` exists, but production currently has **0 rows**, so nothing is being polled.
+- `bank-data-poller` supports `transactions`, `balances`, `reconcile`, but the schema also allows `accounts` and the function does **not** handle it yet.
+- The poller comments say it should upsert balances / ledger data, but today it mostly updates watermarks and writes attempt logs; transaction and balance persistence is still thin.
 
-**Bank reconciliation shipped**: `bank-reconcile-engine`, `reconciliation_reports` table, `bank-reconcile`, `bank-import-transactions`.
+### 2. Bank reconciliation engine is still mostly scaffolded
+- The edge function exists and writes `reconciliation_reports`.
+- But the generic adapters (`rest-bank.ts`, `sql-bank.ts`, `file-bank.ts`) currently return **stub/zeroed** `reconcile()` results.
+- So the new engine is not yet doing a full shared **ledger-vs-bank comparison** for REST / SQL / File banks.
+- Production currently has **0 reconciliation reports**, so it has not been operationalized.
 
-**Retry/failover shipped**: `bank-data-router` (priority-ordered failover, attempt audit), `payment-router-charge` (multi-rail).
+### 3. Retry / fallback orchestration is still partial
+- Inline failover exists in `bank-data-router`.
+- Poller backoff exists in `bank-data-poller`.
+- But there is **no dedicated bank retry queue / replay worker / dead-letter flow** for failed bank operations.
+- The queue-based retry model exists today mainly for payment rails (`byo_charge_polls`), not for bank account sync / reconciliation flows.
 
-So 5 of the 6 "still missing" items in their audit are **already live**. The only legitimate residual gap: **named real-world bank connector implementations** (Afriland, UBA, Ecobank specifics) — currently the REST/SQL/File/SOAP adapters are *generic and configurable* per-bank via `bank_connector_configs`, which is the correct pattern (one adapter, N bank configs). Hard-coding per-bank adapters would violate Standing Order 4 and create maintenance debt.
+### 4. One more real gap: SOAP in the unified bank adapter layer
+- In `_shared/bank-connectors/registry.ts`, `soap` is still mapped to a placeholder facade rather than a dedicated bank adapter implementation.
+- That means the architecture supports SOAP, but the unified bank adapter path is not fully specialized yet.
 
-Best response: **rebuttal report**, not new code. Show evidence (file paths + line refs) refuting each claimed gap, and propose one small additive: a **bank profile catalog** so onboarding a named bank (Afriland, UBA, Ecobank) becomes a one-click preset rather than a fresh config build.
+## Implementation plan
 
-# Plan — Audit Rebuttal + Bank Profile Catalog
+### Wave 5A — Operationalize polling
+- Extend `bank-data-poller` to support `accounts` jobs.
+- Make `transactions` and `balances` branches actually persist normalized data into the intended banking tables/audit fields.
+- Add automatic creation of `bank_sync_jobs` when a bank is marked go-live in onboarding.
+- Add an admin monitor for last run, next run, failure count, and backoff state.
 
-## Part 1 — Evidence Report (no code)
+### Wave 5B — Build real bank reconciliation
+- Create one shared reconciliation matcher that compares normalized bank-side transactions against KOB ledger/system transactions.
+- Wire each adapter’s `reconcile()` to fetch source data and call that matcher.
+- Keep the current safety rule: **flag-only, no auto-credit**.
+- Persist detailed mismatch categories into `reconciliation_reports`.
 
-Create `docs/bank-connectors/audit/2026-04-rebuttal.md` mapping each claimed gap to shipped artifacts:
+### Wave 5C — Add bank retry orchestration
+- Add a dedicated retry queue for failed bank operations.
+- Create a worker to replay transient failures with capped backoff and terminal dead-letter status.
+- Record every retry/failover decision in `bank_connector_attempts`.
+- Support async fallback to the next adapter after repeated failures on the primary adapter.
 
-| Claimed gap | Status | Evidence |
-|---|---|---|
-| Real connectors (MTN/Orange) | Shipped | `supabase/functions/_shared/payment-connectors/{mtn-momo,orange-money,flutterwave,soap-bank}.ts` |
-| SQL adapter | Shipped | `_shared/bank-connectors/sql-bank.ts` + tests |
-| SOAP adapter | Shipped | `_shared/payment-connectors/soap-bank.ts` |
-| File ingestion | Shipped | `_shared/bank-connectors/file-bank.ts`, `bank-file-connector` edge fn, `bank_file_uploads`/`bank_file_rows` tables |
-| Polling engine | Shipped | `bank-data-poller` (cron 5m), `byo-charge-poller` (cron 1m), `bank_sync_jobs` table |
-| Bank reconciliation | Shipped | `bank-reconcile-engine`, `reconciliation_reports`, `bank-reconcile` |
-| Retry/fallback | Shipped | `bank-data-router` priority loop, `payment-router-charge` multi-rail, `bank_connector_attempts` audit |
-| Routing logic | Shipped | priority-ordered config selection in both routers |
+### Wave 5D — Remove operational ambiguity
+- Consolidate the active path around `bank-data-poller` + `bank-reconcile-engine`.
+- Treat older parallel functions (`bank-sync`, `bank-reconcile`) as legacy/internal paths so there is one clear production flow.
 
-Include exact line refs and the architecture diagram from `CemacBankIntegration.tsx`.
+### Wave 5E — Validation
+- Seed one sandbox bank with:
+  - polling jobs
+  - transaction import path
+  - reconciliation run
+  - forced adapter failure to verify retry/failover
+- Re-run the existing regression suite so `/v1/aisp-accounts`, `/v1/aisp-transactions`, and `mobile-money-charge` remain unchanged.
 
-## Part 2 — Bank Profile Catalog (the one real gap)
-
-Add a **preset catalog** so admins onboarding a named CEMAC bank get pre-filled adapter config instead of starting blank.
-
-**New table** `bank_profile_presets` (additive, RLS admin-read):
-- `bank_code` (AFRILAND, UBA_CM, ECOBANK_CM, BICEC, SGC, CCA, CBC, BGFI, …)
-- `bank_name`, `country`, `swift_bic`
-- `recommended_adapter_type` (rest|sql|file|soap)
-- `default_config_json` (endpoint templates, auth scheme hints, file format hints)
-- `documentation_url`, `integration_notes`
-- `certified` boolean, `certified_at`
-
-**Seed migration**: ~12 CEMAC banks (Cameroon focus first: Afriland First Bank, UBA Cameroon, Ecobank, BICEC, SGC, CCA, CBC, BGFI, NFC; CEMAC neighbors: BEAC clearing, Orabank, Bank of Africa).
-
-**UI extension** to existing `AdminBankOnboarding.tsx` (Wave 3 wizard):
-- Step 2 "Adapter Selection" gains a "Choose from catalog" dropdown that pre-fills steps 2 + 3
-- Falls back to manual config (current behavior) — purely additive
-
-**Developer doc** `src/pages/developer/CemacBankCatalog.tsx` at `/developer/connectors/cemac-bank-catalog`:
-- Public list of supported bank presets, recommended adapter, certification status
-- Per-bank integration notes
-- Satisfies Order P5 (working code) — link each preset to a runnable sandbox test
-
-## Part 3 — Versioning
-
-OpenAPI v4.15.0 → **v4.16.0** (additive: `GET /v1/bank-connectors/presets`). Changelog entry.
-
-## Standing Orders compliance
-- Order 1 (Lock): no rename/remove
-- Order 4 (Surgeon): catalog is additive table + new wizard step, existing flow unchanged
-- Order 6 (Version Gate): minor bump for new endpoint
-- Order P7 (Changelog): within 48h
-- Order P5 (Working code): each preset ships with a sandbox smoke test
-
-## Out of scope
-- Hard-coded per-bank adapter classes (anti-pattern; presets+generic adapters is the correct design)
-- Production bank credentials (tenant-supplied per Order 3 free-sandbox rule)
-- Live bank certifications (requires bank-side legal sign-off)
-
-## Deliverables
-1. `docs/bank-connectors/audit/2026-04-rebuttal.md` — evidence report
-2. Migration: `bank_profile_presets` + seed
-3. `src/pages/developer/CemacBankCatalog.tsx` + route
-4. `AdminBankOnboarding.tsx` extension (preset dropdown)
-5. New edge function `bank-presets` (GET list, public for developer portal per Order P1)
-6. OpenAPI + changelog bump
+## Non-breaking rules for implementation
+- Additive only; no breaking `/v1/*` changes.
+- Keep docs and spec public.
+- Keep all financial state changes server-mediated.
+- Reconciliation remains advisory/flagging only unless separately approved.
