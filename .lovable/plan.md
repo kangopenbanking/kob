@@ -1,91 +1,170 @@
 
-The user wants all three previously out-of-scope items shipped as one coordinated follow-up. I'll keep the plan additive (Standing Order 1: The Lock) and version-gated (Order 6).
+The user is asking for a massive 11-phase extension that would transform KOB into a universal CEMAC bank integration platform. Critically, much of this is **already shipped** in prior turns:
 
-# BYO Mobile Money — Phase 2: Reliability, Legacy Banks & Cross-Bank Failover
+**Already live:**
+- Connector framework (`_shared/payment-connectors/` with types, registry, AES-GCM crypto)
+- MTN MoMo, Orange Money, Flutterwave, SOAP Bank connectors
+- `payment-router-charge` with multi-rail failover + attempt trail (Phase 6)
+- `byo-charge-poller` cron + synthetic webhooks (Phases 4 & 8)
+- `byo_routing_attempts`, `byo_charge_polls`, `tenant_payment_connectors` tables
+- Bank tables: `bank_connections`, `bank_reconciliations`, `bank_statements`, `bank_transaction_imports`
+- `bank-reconcile`, `bank-import-transactions`, `bank-sync` edge functions
+- Admin UI `/admin/tenant-connectors` with poll health + routing trail
+- Developer docs for SOAP, polling, failover; OpenAPI v4.11.0; changelog
+- Bank connector contract doc (`docs/public/banks/connector-contract.md`) with 6 integration modes
+- System inventory baseline (`docs/bank-connectors/baseline/system-inventory.md`)
+- mem://architecture/bank-connector-infrastructure-and-governance — 4 modes (File, DB, Queue, API)
 
-Three additive workstreams. Zero behavior change to existing rails.
+**Genuine gaps in what's requested:**
+1. **Unified `BankConnector` interface** — current `PaymentConnector` covers charges; bank-account-level ops (`getAccountDetails`, `getTransactions`, `initiateTransfer`, `reconcile`) aren't unified into one contract
+2. **SQL Adapter** — read from bank DB replicas (referenced in mode `db_connector` but no implementation)
+3. **File Adapter** — CSV/pain.001 ingestion exists piecemeal (`bank-transaction-imports`) but not as a pluggable adapter
+4. **Polling for account/balance** (not just charge status) — `byo-charge-poller` only handles charges
+5. **Reconciliation engine extension** — `bank-reconcile` exists but no auto-correction / anomaly flagging tied to connector framework
+6. **Ledger fields**: `reconciliation_status`, `sync_status`, `source_connector`, `audit_trail` — need to verify which exist
+7. **Bank onboarding wizard** UI (Phase 11) — admin-facing, step-by-step assessment → certification flow
 
-## 1. Polling & Synthetic Webhooks (MTN / Orange)
+This is large. To respect Standing Order 4 (Surgeon Rule — additive first) and avoid a 50-file dump that breaks things, I'll propose a **phased delivery** and ship Wave 1 first.
 
-Direct rails don't push reliably. Add server-side reconciliation.
+---
 
-**New table** `byo_charge_polls`
-- `charge_id`, `connector_id`, `provider_reference`, `tenant_owner_type`, `tenant_owner_id`, `status`, `attempt_count`, `next_poll_at`, `last_polled_at`, `terminal_at`
+# CEMAC Universal Bank Integration — Extension Plan
 
-**New edge function** `byo-charge-poller` (cron, every 30s)
-- Picks pending rows where `next_poll_at <= now()`
-- Calls `connector.getStatus()` via existing registry
-- On terminal status: updates `gateway_charges`, fires synthetic webhook through existing `webhook-dispatcher` (event types `charge.completed` / `charge.failed`), records fee
-- Backoff: 30s → 1m → 2m → 5m → 10m, max 30min, max 20 attempts
+Strict additive extension. Zero touch to `/v1/*`, OAuth2, schemas, or existing webhooks. Reuses everything already built (BYO connectors, router, poller, SOAP adapter, recon engine). Adds the missing layers.
 
-**Router integration**: `payment-router-charge` enqueues a poll row when MTN/Orange returns `pending`. No change to Flutterwave path.
+## What's already done (no rework)
 
-## 2. SOAP Bank Adapter (Legacy Core-Banking)
+| Phase | Coverage | Where |
+|---|---|---|
+| 1 — Audit | Done | `docs/bank-connectors/baseline/system-inventory.md` |
+| 2 — Connector framework (charges) | Done | `_shared/payment-connectors/*` |
+| 3 — SOAP adapter | Done | `soap-bank.ts` |
+| 4 — Polling (charges only) | Partial | `byo-charge-poller` |
+| 6 — Retry/failover | Done | `payment-router-charge` multi-rail |
+| 8 — Webhook synthesis | Done | poller → `webhook-dispatcher` |
+| 10 — Docs/OpenAPI | Done v4.11.0 | needs v4.12.0 bump for Wave 1 |
 
-For institutions on legacy SOAP-based cores (T24, Flexcube, OBDX).
+## What this plan adds (new work)
 
-**New connector** `_shared/payment-connectors/soap-bank.ts`
-- Implements same `PaymentConnector` interface
-- Handles WSDL endpoint, SOAP envelope construction (XML), WS-Security UsernameToken / X.509 signature
-- Credentials schema: `wsdl_url`, `username`, `password`, `cert_pem` (optional), `service_namespace`, `operation_initiate`, `operation_status`
-- New owner-type entry in `tenant_payment_connectors.connector_id` enum: `soap_bank`
+### Wave 1 — Unified Bank Connector Contract + SQL & File Adapters
 
-**Tenant UI**: extend `PaymentConnectorsPanel` with SOAP form (collapsible "Advanced" section for namespace/operation overrides, file upload for cert).
+**New shared interface** `_shared/bank-connectors/types.ts`
+```text
+BankConnector {
+  getAccountDetails(externalId)
+  getTransactions(externalId, dateRange)
+  getBalance(externalId)
+  initiateTransfer(payload)
+  reconcile(dateRange)
+  healthCheck()
+}
+```
+Sits *alongside* `PaymentConnector` (not replacing it). Existing payment connectors unchanged.
 
-**Constraint**: TLS terminated by edge proxy — document mTLS limitation per existing memory `mem://constraints/mtls-infrastructure-limitations`.
+**New adapters** under `_shared/bank-connectors/`:
+- `rest-bank.ts` — generic REST/JSON bank API
+- `sql-bank.ts` — PostgreSQL/MySQL replica reader with watermark-based incremental sync (read-only, parameterized queries only — no raw SQL exposure per security rules)
+- `file-bank.ts` — CSV / pain.001 / MT940 parser, hooks into existing `bank-import-transactions`
+- Re-exports `soap-bank.ts` (already built) for transfer ops
 
-## 3. Multi-Rail Cross-Bank Failover
+**New table** `bank_connector_configs`
+- `bank_id`, `adapter_type` (rest|sql|file|soap), `credentials_encrypted`, `polling_interval_seconds`, `last_sync_watermark`, `enabled`, `priority`
 
-Currently routing falls back: tenant rail → platform Flutterwave. Extend to: tenant rail A → tenant rail B → … → platform fallback.
+**New router** `bank-data-router` (mirrors `payment-router-charge` pattern):
+- Resolves bank → adapter → executes op → records attempt
+- Failover across configured adapters
 
-**Schema**: already supported by existing `priority` column. No migration needed.
+### Wave 2 — Account/Balance Polling + Reconciliation Auto-Correction
 
-**Router change** (`payment-router-charge`):
-- Resolve ALL enabled connectors for `(owner, country, environment)` ordered by `priority ASC`
-- Try each in order; on failure (network, 5xx, explicit `failed` status), advance to next
-- Record attempt trail in new `byo_routing_attempts` table (charge_id, connector_id, status, error, attempted_at) for admin debugging
-- Final fallback to platform Flutterwave unchanged
+**Extend** `byo-charge-poller` model to new `bank-data-poller`:
+- New table `bank_sync_jobs` (bank_id, op_type, watermark, next_run_at, backoff)
+- Cron every 5 min (configurable per bank)
+- Pulls accounts/balances/transactions via `BankConnector.getTransactions()`
+- Upserts into existing `bank_statements` / `transactions` (no schema break)
 
-**Admin UI**: extend `/admin/tenant-connectors` with a "Routing Trail" drawer per charge (read from `byo_routing_attempts`).
+**Extend** `bank-reconcile`:
+- Auto-correction rules engine: missing → insert with `reconciliation_status='auto_corrected'`; duplicates → soft-flag; mismatches → admin queue
+- Generates `reconciliation_reports` rows (new table)
 
-## Docs & Versioning (mandatory)
+### Wave 3 — Ledger Fields + Bank Onboarding UI
 
-- New page `/developer/connectors/polling-and-webhooks` — synthetic webhook contract, retry schedule
-- New page `/developer/connectors/soap-bank-adapter` — credential setup, sample WSDL, security model
-- New page `/developer/connectors/multi-rail-failover` — priority semantics, attempt trail
-- OpenAPI: add `soap_bank` to connector enum, add `GET /v1/connectors/:id/routing-attempts`, bump `info.version` 4.10.0 → **4.11.0** (Order 6 — minor, additive)
-- Changelog entry within 48h (Order P7) across `CHANGELOG.md`, `public/changelog.json`, `Changelog.tsx`
-- cURL + Node + Python examples for every new endpoint (Order P9)
-- Footer link: add "Reliability & Failover" under Products (optional — small)
+**Migration** (additive columns only, all nullable with defaults):
+- `transactions.source_connector TEXT`
+- `transactions.sync_status TEXT DEFAULT 'synced'`
+- `transactions.reconciliation_status TEXT DEFAULT 'pending'`
+- `transactions.connector_audit_trail JSONB DEFAULT '[]'::jsonb`
 
-## Migrations (additive only)
+Backfill via DEFAULT — no UPDATE needed. Existing reads ignore new columns.
+
+**New admin UI** `/admin/bank-onboarding`:
+Stepper wizard: Assessment → Adapter Selection → Credentials → Sandbox Test → Certification Checklist → Go-Live Toggle. Writes to `bank_connector_configs` + `bank_onboarding_records`.
+
+### Wave 4 — Docs, OpenAPI, Changelog
+
+- New page `/developer/connectors/bank-adapter-framework` (REST/SQL/File/SOAP comparison + decision tree)
+- New page `/developer/connectors/bank-onboarding-guide` (5-step certification flow)
+- OpenAPI v4.11.0 → **v4.12.0** (additive: `/v1/bank-connectors`, `/v1/bank-connectors/:id/sync`, `/v1/bank-connectors/:id/reconcile`)
+- cURL + Node + Python examples per Order P9
+- Changelog entry within 48h per Order P7
+
+## Architecture (additive)
 
 ```text
-1. byo_charge_polls table + RLS + cron job
-2. byo_routing_attempts table + RLS
-3. ALTER TYPE connector_id_enum ADD VALUE 'soap_bank'
+                 ┌────────────────────────────────────────┐
+                 │      EXISTING /v1/* — UNCHANGED        │
+                 │  AISP / PISP / mobile-money-charge     │
+                 └────────────────┬───────────────────────┘
+                                  │
+        ┌─────────────────────────┼─────────────────────────┐
+        ▼                         ▼                         ▼
+ payment-router-charge   bank-data-router (NEW)   bank-reconcile (extended)
+   (already live)                 │                         │
+        │                         │                         │
+        ▼                         ▼                         ▼
+ Payment connectors      Bank connectors (NEW)      Recon rules engine (NEW)
+ (MTN/Orange/FW/SOAP)    REST | SQL | File | SOAP        │
+        │                         │                         │
+        └────────► outbox ◄───────┴──────► webhook-dispatcher (existing)
+                       ▲
+                       │
+                bank-data-poller (NEW, cron 5m)
+                byo-charge-poller (already live, cron 1m)
 ```
 
-No changes to existing tables, enums, or RLS policies. Standing Order 1 preserved.
+## Security guardrails (mandatory)
 
-## Validation
+- SQL adapter: parameterized queries only, read-only DB role, never accept raw SQL from clients (per `<creating-or-editing-new-edge-function-native>` rules)
+- All credentials encrypted via existing AES-GCM `PAYMENT_CONNECTOR_KEY` (reused, no new secret)
+- All new tables: RLS on, `has_role()` for admin access, owner-scoped for institution access
+- All adapter ops audited via existing `log_audit_event`
+- mTLS limitation documented per `mem://constraints/mtls-infrastructure-limitations`
 
-- Unit tests per new connector via `api-contract-test`
-- E2E: simulate MTN pending → verify poller resolves → synthetic webhook fires
-- E2E: register two tenant rails (priority 1, 2) → fail rail 1 → verify rail 2 used → fail both → verify Flutterwave fallback
-- Confirm `mobile-money-charge` callers still see zero change
+## Migrations (Wave-by-Wave, additive only)
 
-## Admin Oversight
+```text
+W1: bank_connector_configs + RLS
+W2: bank_sync_jobs + reconciliation_reports + RLS, cron schedule
+W3: ALTER transactions ADD COLUMN (4 nullable cols with defaults), bank_onboarding_records
+```
 
-Extend `/admin/tenant-connectors`:
-- Poll queue health card (pending count, oldest pending age, terminal rate %)
-- Per-charge routing attempt drawer
-- SOAP connector form fields visible in admin read-only view (credentials remain encrypted)
+No destructive ops. No enum removals. No column renames. Standing Order 1 (The Lock) preserved.
 
-## Out of Scope (this round)
-- Auto-priority learning from health metrics
+## Validation per wave
+
+- Unit tests for each adapter via Deno test runner
+- E2E: register SQL bank → poller pulls 10 transactions → reconcile vs ledger → no diffs
+- E2E: file upload pain.001 → parsed → ingested → synthetic webhook fires
+- Confirm `/v1/aisp-accounts`, `/v1/aisp-transactions`, `mobile-money-charge` return identical responses pre/post (regression suite)
+
+## Out of scope (explicitly deferred)
+
+- Bank-side ISO 20022 SOAP (separate from generic SOAP)
 - Cross-country failover
-- Bank-side ISO 20022 SOAP adapters (separate from this generic SOAP)
+- ML-based anomaly detection (use rule-based for Wave 2)
+- Per-user OAuth to bank portals (out of CEMAC scope)
 
-## Secrets
-- None at platform level. SOAP TLS certs are tenant-supplied per connector.
+## Delivery proposal
+
+Ship **Wave 1 first** (interface + REST/SQL/File adapters + router + table). Verify zero regression. Then proceed to Wave 2 → 3 → 4 in subsequent approvals. This respects the Surgeon Rule and prevents big-bang risk.
+
+**Approve to start Wave 1.**
