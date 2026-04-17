@@ -479,6 +479,43 @@ export default function AdminTenantConnectors() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={trail !== null} onOpenChange={(o) => !o && setTrail(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Routing trail · {trailTitle}</DialogTitle>
+            <DialogDescription>
+              Last 50 multi-rail failover attempts recorded for this connector.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-2">
+            {trail?.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No routing attempts recorded yet.
+              </p>
+            )}
+            {trail?.map((a, i) => (
+              <div key={i} className="border rounded-md p-3 text-xs flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold">#{a.attempt_index}</span>
+                    <span>{a.connector_id}</span>
+                    <Badge variant={a.success ? "default" : "destructive"} className="text-[10px]">
+                      {a.success ? "success" : "failed"}
+                    </Badge>
+                  </div>
+                  {a.error_message && (
+                    <div className="text-destructive font-mono break-all">{a.error_message}</div>
+                  )}
+                  {a.charge_id && (
+                    <div className="text-muted-foreground font-mono">charge: {a.charge_id}</div>
+                  )}
+                </div>
+                <span className="text-muted-foreground whitespace-nowrap">
+                  {new Date(a.attempted_at).toLocaleString()}
+                </span>
+              </div>
+            ))}
     </div>
   );
 }
