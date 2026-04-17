@@ -122,3 +122,31 @@ Deno.test("POS Manage Locations - unauthenticated returns 401", async () => {
   const res = await invoke("pos-manage-locations", { action: "list_locations", merchant_id: "fake" });
   assertEquals(res.status, 401);
 });
+
+// ── Test I: F40 — Store browse is now PUBLIC (no auth required) ──
+Deno.test("POS Store Browse - public access returns 200 (F40)", async () => {
+  const res = await invokeGet("pos-store-browse", "action=stores&limit=3");
+  assertEquals(res.status, 200);
+  assertExists(res.data);
+});
+
+Deno.test("POS Store Browse - invalid action returns 400 (F40)", async () => {
+  const res = await invokeGet("pos-store-browse", "action=bogus");
+  assertEquals(res.status, 400);
+});
+
+// ── Test J: F38 — POS QR Pay still requires auth + idempotency ──
+Deno.test("POS QR Payment - unauthenticated returns 401 (F38 guard)", async () => {
+  const res = await invoke("pos-qr-payment", { action: "pay", merchant_id: "x", amount: 100 });
+  assertEquals(res.status, 401);
+});
+
+// ── Test K: F39 — Travel booking still requires auth ──
+Deno.test("Travel Book and Pay - unauthenticated returns 401 (F39 guard)", async () => {
+  const res = await invoke("travel-book-and-pay", {
+    trip_id: "00000000-0000-0000-0000-000000000000",
+    selected_seats: ["1A"],
+    passengers: { "1A": { name: "Test", phone: "0000", gender: "male" } },
+  });
+  assertEquals(res.status, 401);
+});
