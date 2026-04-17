@@ -19817,6 +19817,69 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_payment_connectors: {
+        Row: {
+          auto_disabled_at: string | null
+          connector_id: Database["public"]["Enums"]["tenant_connector_id"]
+          consecutive_failures: number
+          country: string
+          created_at: string
+          created_by: string | null
+          credentials_encrypted: Json
+          display_name: string | null
+          enabled: boolean
+          environment: Database["public"]["Enums"]["tenant_connector_environment"]
+          health_status: Database["public"]["Enums"]["tenant_connector_health"]
+          id: string
+          last_health_check_at: string | null
+          last_health_error: string | null
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          auto_disabled_at?: string | null
+          connector_id: Database["public"]["Enums"]["tenant_connector_id"]
+          consecutive_failures?: number
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          credentials_encrypted: Json
+          display_name?: string | null
+          enabled?: boolean
+          environment?: Database["public"]["Enums"]["tenant_connector_environment"]
+          health_status?: Database["public"]["Enums"]["tenant_connector_health"]
+          id?: string
+          last_health_check_at?: string | null
+          last_health_error?: string | null
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_disabled_at?: string | null
+          connector_id?: Database["public"]["Enums"]["tenant_connector_id"]
+          consecutive_failures?: number
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          credentials_encrypted?: Json
+          display_name?: string | null
+          enabled?: boolean
+          environment?: Database["public"]["Enums"]["tenant_connector_environment"]
+          health_status?: Database["public"]["Enums"]["tenant_connector_health"]
+          id?: string
+          last_health_check_at?: string | null
+          last_health_error?: string | null
+          owner_id?: string
+          owner_type?: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tpp_registrations: {
         Row: {
           client_id: string
@@ -22008,6 +22071,14 @@ export type Database = {
         Args: { _bill_id: string; _user_id: string }
         Returns: boolean
       }
+      is_tenant_connector_owner: {
+        Args: {
+          _owner_id: string
+          _owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_travel_service_owner: {
         Args: { _service_id: string; _user_id: string }
         Returns: boolean
@@ -22373,6 +22444,10 @@ export type Database = {
         | "system_notifications"
         | "api_notifications"
       template_type: "email" | "sms"
+      tenant_connector_environment: "sandbox" | "live"
+      tenant_connector_health: "unknown" | "healthy" | "degraded" | "unhealthy"
+      tenant_connector_id: "mtn_momo" | "orange_money" | "flutterwave"
+      tenant_connector_owner_type: "institution" | "merchant" | "developer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -22747,6 +22822,10 @@ export const Constants = {
         "api_notifications",
       ],
       template_type: ["email", "sms"],
+      tenant_connector_environment: ["sandbox", "live"],
+      tenant_connector_health: ["unknown", "healthy", "degraded", "unhealthy"],
+      tenant_connector_id: ["mtn_momo", "orange_money", "flutterwave"],
+      tenant_connector_owner_type: ["institution", "merchant", "developer"],
     },
   },
 } as const

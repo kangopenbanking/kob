@@ -257,6 +257,7 @@ const OpenBankingOverview = lazy(() => import("./pages/developer/OpenBankingOver
 const MobileMoneyOverview = lazy(() => import("./pages/developer/MobileMoneyOverview"));
 const MtnMomoGuide = lazy(() => import("./pages/developer/MtnMomoGuide"));
 const OrangeMoneyGuide = lazy(() => import("./pages/developer/OrangeMoneyGuide"));
+const ByoMobileMoneyGuide = lazy(() => import("./pages/developer/ByoMobileMoneyGuide"));
 const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
 const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
@@ -1017,6 +1018,7 @@ function App() {
               <Route path="mobile-money" element={<MobileMoneyOverview />} />
               <Route path="mobile-money/mtn" element={<MtnMomoGuide />} />
               <Route path="mobile-money/orange" element={<OrangeMoneyGuide />} />
+              <Route path="connectors/byo-mobile-money" element={<ByoMobileMoneyGuide />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
