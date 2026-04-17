@@ -7,6 +7,20 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.11.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "BYO Phase 2 — Polling & Synthetic Webhooks: new byo-charge-poller cron reconciles pending MTN/Orange/SOAP charges every 30s with exponential backoff (30s→30m, max 20 attempts) and fires charge.completed/charge.failed via existing webhook-dispatcher (ORDER P5)" },
+        { type: "feature", description: "BYO Phase 2 — SOAP Bank Adapter: new soap_bank connector implementing the unified PaymentConnector contract for legacy core-banking systems (T24, Flexcube, OBDX) with WS-Security UsernameToken authentication" },
+        { type: "feature", description: "BYO Phase 2 — Multi-Rail Cross-Bank Failover: payment-router-charge now tries ALL enabled tenant connectors in priority order (rail A → rail B → … → Flutterwave fallback) and records every attempt to byo_routing_attempts for admin debugging" },
+        { type: "feature", description: "New tables byo_charge_polls and byo_routing_attempts with RLS scoped to tenant owner + admin read-all; tenant_connector_id enum extended with soap_bank value (additive — STANDING ORDER 1 preserved)" },
+        { type: "feature", description: "New developer guides: /developer/connectors/polling-and-webhooks, /developer/connectors/soap-bank-adapter, /developer/connectors/multi-rail-failover with cURL + Node + Python examples (ORDER P9)" },
+        { type: "improvement", description: "PaymentConnectorsPanel extended with SOAP Bank credentials form (endpoint URL, WS-Security creds, namespace, operations); admin TenantConnectors visibility unchanged" },
+        { type: "improvement", description: "Existing mobile-money-charge route, Flutterwave default, and v4.10.0 BYO contract preserved unchanged (STANDING ORDER 1 — The Lock)" },
+      ]
+    },
+    {
       version: "API Spec 4.10.0",
       date: "2026-04-17",
       type: "minor",
