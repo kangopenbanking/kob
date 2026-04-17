@@ -332,10 +332,12 @@ Deno.serve(async (req) => {
         if (!userId) { statusCode = 401; result = { error: "Authentication required" }; break; }
         const txRefLookup = body.transaction_reference || url.searchParams.get("transaction_reference");
         if (!txRefLookup) { statusCode = 400; result = { error: "transaction_reference required" }; break; }
+        // Scope: only return transactions the requesting user owns
         const { data, error } = await supabase
           .from("transactions")
-          .select("id, account_id, amount, currency, credit_debit_indicator, status, transaction_reference, description, created_at")
-          .eq("transaction_reference", txRefLookup);
+          .select("id, account_id, amount, currency, credit_debit_indicator, status, transaction_reference, description, created_at, user_id")
+          .eq("transaction_reference", txRefLookup)
+          .eq("user_id", userId);
         if (error) throw error;
         result = { data, status: data?.[0]?.status || "unknown" };
         break;
@@ -350,7 +352,16 @@ Deno.serve(async (req) => {
           result = { error: "customer_id, document_type required" };
           break;
         }
-        // Update customer KYC status
+        // Verify caller is authorized for the customer's institution
+        const { data: cust } = await supabase
+          .from("banking_customers")
+          .select("institution_id")
+          .eq("id", customer_id)
+          .maybeSingle();
+        if (!cust) { statusCode = 404; result = { error: "Customer not found" }; break; }
+        const auth = await authorizeInstitution(cust.institution_id);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
+
         await supabase
           .from("banking_customers")
           .update({ kyc_status: "submitted" })
@@ -367,12 +378,15 @@ Deno.serve(async (req) => {
         if (!kycCustId) { statusCode = 400; result = { error: "customer_id required" }; break; }
         const { data, error } = await supabase
           .from("banking_customers")
-          .select("id, full_name, kyc_status, updated_at")
+          .select("id, full_name, kyc_status, updated_at, institution_id")
           .eq("id", kycCustId)
           .maybeSingle();
         if (error) throw error;
         if (!data) { statusCode = 404; result = { error: "Customer not found" }; break; }
-        result = { data };
+        const auth = await authorizeInstitution(data.institution_id);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
+        const { institution_id: _omit, ...safe } = data as Record<string, unknown>;
+        result = { data: safe };
         break;
       }
 
@@ -385,11 +399,14 @@ Deno.serve(async (req) => {
         const dateTo = body.date_to || url.searchParams.get("date_to");
 
         if (!reportInstId) { statusCode = 400; result = { error: "institution_id required" }; break; }
+        const auth = await authorizeInstitution(reportInstId);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
 
-        // Generate transaction summary
+        // Scope transactions to the institution
         const { data: txns, error: txErr } = await supabase
           .from("transactions")
           .select("amount, currency, credit_debit_indicator, status, created_at")
+          .eq("institution_id", reportInstId)
           .order("created_at", { ascending: false })
           .limit(1000);
 
