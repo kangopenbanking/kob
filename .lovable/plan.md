@@ -1,128 +1,92 @@
-<final-text>
-Current findings
 
-- The repo already contains `supabase/functions/gateway/index.ts`, `supabase/functions/oauth/index.ts`, and `supabase/functions/health/index.ts`, so the missing piece is not just “create the file”.
-- The current `gateway` wrapper is too thin for the documented REST contract. It only proxies the first path segment, but the downstream gateway functions are action-based, not path-based.
-- That means routes such as:
-  - `GET /gateway/charges`
-  - `GET /gateway/charges/:id`
-  - `POST /gateway/charges/:id/verify`
-  - `GET /gateway/refunds`
-  cannot reliably work through the current wrapper, even if `/gateway/charges` itself exists.
-- The codebase is still mixed:
-  - many frontend docs pages now use flat function names like `gateway-charges-router`
-  - several markdown docs still use nested public paths like `/functions/v1/gateway/charges`, `/functions/v1/oauth/token`, `/functions/v1/gateway/webhooks`
-- OpenAPI still documents nested REST paths (`/v1/gateway/*`, `/v1/oauth/*`, `/v1/health`), so runtime compatibility must match that public contract.
-- There is no dedicated route-existence CI guard yet. The existing guard only blocks deprecated domains, not missing public routes.
+Goal: Keep Flutterwave as KOB's default mobile-money middleware, and add direct MTN MoMo / Orange Money as an opt-in BYO-credentials rail for institutions, businesses, and developers who bring their own API keys.
 
-Implementation plan
+Approach: tenant-scoped connector credentials + per-tenant routing preference, fully additive, zero impact on existing `mobile-money-charge` behavior.
 
-1. Audit live deployment truth first
-   - In writable mode, verify test (sandbox) and live (production) backend function reachability for `gateway`, `oauth`, `health`, and any other documented top-level families still exposed in public docs.
-   - Produce a before-state matrix showing:
-     - root function existence
-     - representative nested route behavior
-     - whether failures are top-level 404s or internal route mismatches
+## Scope (additive only)
 
-2. Replace the thin `gateway` proxy with a real REST-to-action translator
-   - Keep the existing payment business logic functions unchanged.
-   - Upgrade `supabase/functions/gateway/index.ts` so it maps method + path to existing downstream logic, for example:
-     - `POST /charges` -> `gateway-charges-router`
-     - `GET /charges` -> `gateway-query?action=list-charges`
-     - `GET /charges/:id` -> `gateway-query?action=get-charge&id=:id`
-     - `POST /charges/:id/verify` -> `gateway-charges-router?action=verify&id=:id`
-     - `POST /charges/:id/validate` -> `gateway-charges-router?action=validate`
-     - `POST /refunds` -> `gateway-create-refund`
-     - `GET /refunds` -> `gateway-query?action=list-refunds`
-     - `GET /refunds/:id` -> `gateway-query?action=get-refund&id=:id`
-   - Apply the same pattern to payouts, disputes, settlements, merchants, webhooks, payment links, subscriptions, and other documented families where real downstream logic already exists.
-   - Preserve auth, idempotency, query params, body forwarding, and CORS.
-   - Remove the current automatic service-role header injection for protected routes so auth behavior remains correct.
+1. Tenant-scoped connector credentials
+   - New table `tenant_payment_connectors`:
+     - `id`, `owner_type` (`institution`|`merchant`|`developer`), `owner_id`, `connector_id` (`mtn_momo`|`orange_money`|`flutterwave`), `environment` (`sandbox`|`live`), `country`, `enabled`, `priority`, `credentials_encrypted` (jsonb), `last_health_check_at`, `health_status`, timestamps.
+   - Credentials encrypted at rest via existing `pgcrypto` + `hash_secret_value`-style pattern; never returned to the client (write-only API).
+   - RLS: owners manage only their own rows; admins read-all.
 
-3. Verify and tighten the other public compatibility entrypoints
-   - Confirm `oauth/index.ts` correctly supports `/oauth/token`, `/oauth/authorize`, `/oauth/introspect`, and `/oauth/revoke`.
-   - Confirm `health/index.ts` correctly supports `/health`.
-   - Add or adjust any other top-level wrappers only where public docs/examples truly require nested routes.
+2. Connector framework (shared, no behavior change to existing functions)
+   - `_shared/payment-connectors/types.ts` — `PaymentConnector` interface (`initiateCharge`, `getStatus`, `refund`, `healthCheck`).
+   - `_shared/payment-connectors/flutterwave.ts` — wraps existing platform Flutterwave logic (default rail).
+   - `_shared/payment-connectors/mtn-momo.ts` — direct MTN MoMo (sandbox + live).
+   - `_shared/payment-connectors/orange-money.ts` — direct Orange Money.
+   - `_shared/payment-connectors/registry.ts` — resolves connector + credentials per tenant.
 
-4. Correct contract drift surgically
-   - Audit each documented `/v1/gateway/*` path against real backend capability.
-   - If a documented route already has real backend support, map it through the compatibility wrapper.
-   - If a documented route has no real implementation today, correct the OpenAPI/docs/changelog instead of inventing new core behavior.
+3. Routing preference (opt-in, never silent)
+   - Resolution order per request:
+     1. If caller passes explicit `connector` field AND has matching `tenant_payment_connectors` row → use it.
+     2. Else if tenant has `tenant_payment_connectors` rows for the country, sorted by `priority` → try in order, fallback to platform Flutterwave on failure.
+     3. Else → platform Flutterwave (current default behavior, unchanged).
+   - Existing `mobile-money-charge` stays the public default. New optional flag `use_tenant_connectors: true` activates the new path. No silent rerouting.
 
-5. Align the public contract source of truth
-   - Update the OpenAPI source of truth and re-sync:
-     - `public/openapi.json`
-     - `public/openapi.yaml`
-     - `public/openapi-sandbox.json`
-     - `public/openapi-sandbox.yaml`
-   - Keep the public contract consistent with the direct backend base URL and nested documented paths.
-   - Re-sync any generated Postman/spec assets from the same source.
+4. New management endpoints (edge functions)
+   - `tenant-connectors-manage` (POST/PATCH/DELETE) — register/update/disable own connector credentials.
+   - `tenant-connectors-list` (GET) — list own connectors (no secrets returned).
+   - `tenant-connectors-test` (POST) — runs `healthCheck()` against stored credentials, updates `health_status`.
 
-6. Clean up the mixed documentation state
-   - Standardize all public docs and quickstarts to one public contract: nested documented URLs that resolve on the direct backend base URL.
-   - Fix the remaining stale markdown docs that still drift from runtime, especially:
-     - developer quickstarts
-     - unified payments
-     - refunds
-     - webhooks
-     - marketplace checkout
-     - bank data aggregator
-     - versioning references
-   - Update the changelog only after re-testing, so it reflects verified reality.
+5. Charge path integration
+   - New thin function `payment-router-charge` implementing the resolution order above. Reuses existing fee engine (`record_transaction_fee`), idempotency, and webhook delivery.
+   - Existing `mobile-money-charge` and `facilitated-mobile-money-charge` left untouched.
 
-7. Audit internal consumers without rewriting the platform
-   - Verify real executing callers across:
-     - shared API wrappers
-     - payment flows
-     - test-report pages
-     - backend function-to-function calls
-   - Keep internal flat invocations where they are intentional and safe.
-   - Only public-facing examples and external contract paths need nested compatibility guarantees.
+6. UI (additive, no changes to current screens)
+   - Institution/Business/Developer settings: new "Payment Connectors" section
+     - List rows from `tenant_payment_connectors`
+     - Add/edit form per connector with required-field hints (MTN: subscription key, API user, API key, target env; Orange: client id/secret, merchant key)
+     - "Test connection" button → calls `tenant-connectors-test`
+     - Priority drag-handle, enable/disable toggle
+   - Clear copy: "Flutterwave (managed by KOB) is always available as fallback."
 
-8. Add regression guards
-   - Extend `supabase/functions/api-contract-test/index.ts` to test the public nested contract, not just flat internal functions.
-   - Update `/developer/test-report` to surface nested-route checks.
-   - Add a route-existence CI workflow that fails if documented public routes return backend “Requested function was not found”.
-   - Add a docs consistency scan so public docs cannot drift back to the wrong route style.
+7. Docs (per Standing Orders P5/P7/P9/P10)
+   - New page `/developer/connectors/byo-mobile-money` — when to use, supported providers, credential setup, security model, fallback behavior.
+   - cURL + Node + Python examples for registering credentials and sending a charge with `use_tenant_connectors: true`.
+   - OpenAPI: add `POST /v1/connectors`, `GET /v1/connectors`, `POST /v1/connectors/:id/test`, and `connector` request field on existing charge endpoint (additive — Ratchet preserved). Bump `info.version` per Order 6.
+   - Changelog entry within 48h of deploy (Order P7).
 
-Validation plan
+8. Security
+   - Credentials encrypted; only the storing tenant (and admins) can mutate.
+   - All connector calls server-mediated via edge functions (no client-side credential use).
+   - Audit log every credential create/update/delete via existing `log_audit_event`.
+   - Health check failures auto-disable rail after N consecutive failures; tenant notified via existing notification infra.
 
-- Test sandbox first, then production after publish.
-- For each route, acceptable outcomes are:
-  - 200
-  - 400
-  - 401
-  - 403
-  - app-level 404 resource-not-found
-- Unacceptable outcome:
-  - backend “Requested function was not found”
-- Minimum live matrix:
-  - `/health`
-  - `/oauth/token`
-  - `/oauth/authorize`
-  - `/gateway/charges`
-  - `/gateway/charges/:id`
-  - `/gateway/charges/:id/verify`
-  - `/gateway/refunds`
-  - `/gateway/refunds/:id`
-  - `/gateway/payouts`
-  - `/gateway/webhooks`
-  - any other still-documented nested gateway families
+## Architecture
+```text
+Caller (Institution / Business / Developer)
+   │
+   ▼
+mobile-money-charge (UNCHANGED, default = Flutterwave)
+   │   (opt-in: use_tenant_connectors=true)
+   ▼
+payment-router-charge (NEW)
+   │
+   ├── resolve tenant_payment_connectors (priority order)
+   │       │
+   │       ▼
+   │   MTN MoMo / Orange Money (tenant credentials)
+   │       │  on failure
+   │       ▼
+   └── Flutterwave (KOB-managed fallback, existing path)
+```
 
-Deliverables after implementation
+## Migrations (additive)
+- `tenant_payment_connectors` table + RLS + audit triggers
+- No changes to existing tables or enums
 
-- before/after deployment inventory
-- sandbox vs production route matrix
-- wrapper/router mapping summary
-- OpenAPI correction summary
-- docs/examples correction summary
-- frontend/backend impact summary
-- regression guard summary
-- final readiness statement with live proof
+## Validation
+- Unit-style tests for each connector via existing `api-contract-test` extension
+- E2E: register sandbox MTN creds → charge with `use_tenant_connectors=true` → verify MTN path used → simulate failure → verify Flutterwave fallback
+- Confirm existing `mobile-money-charge` callers see zero behavior change
 
-Technical detail
+## Out of scope (this round)
+- Polling/synthetic webhooks for direct rails (separate proposal)
+- SOAP bank adapter (separate proposal)
+- Multi-rail bank-side routing
 
-- The key bug is not just missing deployment. The current `gateway` wrapper forwards path tails to downstream flat functions, but the downstream gateway functions expect `action`-style requests.
-- Example: `GET /gateway/charges` currently maps toward `gateway-charges-router`, but that function treats unactioned `GET` requests as `fee_estimate`, not “list charges”.
-- So the permanent fix is: keep the existing business functions, but make the public compatibility layer translate REST paths into the correct downstream actions, then prove that in sandbox and production with live tests.
-</final-text>
+## Secrets needed
+- None at platform level (tenants supply their own)
+- Existing `FLUTTERWAVE_SECRET_KEY` continues to power the default/fallback path
