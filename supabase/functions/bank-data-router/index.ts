@@ -1,4 +1,4 @@
-// bank-data-router: unified entrypoint for bank-account-level operations.
+// bank-data-router: unified entrypoint for bank-account-level operations. — redeploy 2026-04-17 phase3b
 // Resolves bank → enabled adapter (priority order) → executes op → records attempt.
 // Mirrors payment-router-charge pattern. Admin-only (verified via JWT + role).
 

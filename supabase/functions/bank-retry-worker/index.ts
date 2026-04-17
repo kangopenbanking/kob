@@ -1,4 +1,4 @@
-// Wave 5C — bank-retry-worker
+// Wave 5C — bank-retry-worker — redeploy 2026-04-17 phase3b
 // Cron-driven worker that replays failed bank operations from `bank_retry_queue`.
 // Picks pending rows whose next_attempt_at <= now(), invokes the matching edge
 // function, and applies capped exponential backoff. Marks rows as `dead_letter`

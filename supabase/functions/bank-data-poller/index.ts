@@ -1,4 +1,4 @@
-// Wave 5A — bank-data-poller (operationalized)
+// Wave 5A — bank-data-poller (operationalized) — redeploy 2026-04-17 phase3b
 // Cron-driven scheduler that pulls accounts/balances/transactions for every
 // enabled bank_sync_jobs row whose next_run_at <= now().
 //
