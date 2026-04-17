@@ -21,6 +21,8 @@ const TRANSACTION_TYPES = [
   { value: "bill_payment", label: "Bill Payment", icon: Receipt, category: "Core" },
   { value: "mobile_money_transfer", label: "Mobile Money Transfer", icon: Smartphone, category: "Mobile" },
   { value: "mobile_money_charge", label: "Mobile Money Charge", icon: PhoneCall, category: "Mobile" },
+  { value: "byo_mobile_money_routing", label: "BYO Routing Fee (Direct Rail)", icon: PhoneCall, category: "Mobile" },
+  { value: "byo_fallback_charge", label: "BYO Fallback Charge (Flutterwave Rescue)", icon: PhoneCall, category: "Mobile" },
   { value: "bank_transfer", label: "Bank Transfer", icon: Landmark, category: "Core" },
   { value: "card_payment", label: "Card Payment", icon: CreditCard, category: "Cards" },
   { value: "virtual_card_topup", label: "Virtual Card Top-up", icon: RefreshCw, category: "Cards" },

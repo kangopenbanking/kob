@@ -42,6 +42,8 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   bill_payment: { icon: Receipt, category: "Core", label: "Bill Payment" },
   mobile_money_transfer: { icon: Smartphone, category: "Mobile", label: "Mobile Money Transfer" },
   mobile_money_charge: { icon: PhoneCall, category: "Mobile", label: "Mobile Money Charge" },
+  byo_mobile_money_routing: { icon: PhoneCall, category: "Mobile", label: "BYO Routing Fee (Direct Rail)" },
+  byo_fallback_charge: { icon: PhoneCall, category: "Mobile", label: "BYO Fallback Charge (Flutterwave Rescue)" },
   bank_transfer: { icon: Landmark, category: "Core", label: "Bank Transfer" },
   card_payment: { icon: CreditCard, category: "Cards", label: "Card Payment" },
   virtual_card_topup: { icon: RefreshCw, category: "Cards", label: "Virtual Card Top-up" },

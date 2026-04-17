@@ -80,6 +80,33 @@ Deno.serve(async (req) => {
 
     const attempts: Array<{ connector_id: string; success: boolean; error?: string }> = [];
 
+    // Helper: record platform fee for BYO routing using existing fee engine.
+    // institution_id is the only fee scope we have today; merchants/developers fall back to platform-level structures by leaving institution null.
+    const recordByoFee = async (
+      txType: 'byo_mobile_money_routing' | 'byo_fallback_charge',
+      providerRef: string | undefined,
+      connectorUsed: string,
+    ) => {
+      if (body.owner_type !== 'institution') return; // institution-scoped fees only for now
+      try {
+        await userClient.rpc('record_transaction_fee', {
+          _institution_id: body.owner_id,
+          _transaction_type: txType,
+          _transaction_ref: body.reference,
+          _transaction_amount: body.amount,
+          _metadata: {
+            connector_used: connectorUsed,
+            provider_reference: providerRef,
+            currency: body.currency,
+            country: body.country,
+          },
+        });
+      } catch (feeErr) {
+        // Fee structure may simply not exist yet — never block the charge
+        console.warn('[payment-router-charge] fee record skipped', feeErr instanceof Error ? feeErr.message : feeErr);
+      }
+    };
+
     // Try tenant connectors in priority order
     for (const cand of (candidates || []) as CandidateRow[]) {
       try {
@@ -91,6 +118,7 @@ Deno.serve(async (req) => {
         );
         attempts.push({ connector_id: cand.connector_id, success: result.success, error: result.error });
         if (result.success) {
+          await recordByoFee('byo_mobile_money_routing', result.provider_reference, cand.connector_id);
           return json({
             success: true,
             connector_used: cand.connector_id,
@@ -119,6 +147,7 @@ Deno.serve(async (req) => {
         );
         attempts.push({ connector_id: 'flutterwave_platform', success: result.success, error: result.error });
         if (result.success) {
+          await recordByoFee('byo_fallback_charge', result.provider_reference, 'flutterwave_platform');
           return json({
             success: true, connector_used: 'flutterwave_platform',
             provider_reference: result.provider_reference,
