@@ -41,19 +41,8 @@ function nextBackoff(failures: number): number {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  console.log('[bank-data-poller] request received', {
-    method: req.method,
-    has_cron_secret: !!req.headers.get('x-cron-secret'),
-    has_auth: !!req.headers.get('authorization'),
-    cron_secret_env_set: !!Deno.env.get('CRON_SECRET'),
-  });
-
   const auth = verifyCronAuth(req);
-  if (!auth.authorized) {
-    console.log('[bank-data-poller] AUTH REJECTED');
-    return auth.response!;
-  }
-  console.log('[bank-data-poller] auth ok, proceeding');
+  if (!auth.authorized) return auth.response!;
 
   const admin = createClient(supabaseUrl, serviceKey);
   const startedAt = Date.now();
