@@ -135,6 +135,18 @@ verify_jwt = false
 [functions.bank-reconcile]
 verify_jwt = false
 
+[functions.bank-data-poller]
+verify_jwt = false
+
+[functions.bank-retry-worker]
+verify_jwt = false
+
+[functions.bank-data-router]
+verify_jwt = false
+
+[functions.bank-reconcile-engine]
+verify_jwt = false
+
 [functions.bank-sync]
 verify_jwt = false
 
