@@ -76,7 +76,58 @@ export default function AdminTenantConnectors() {
   const [healthFilter, setHealthFilter] = useState<string>("all");
   const [audit, setAudit] = useState<any[] | null>(null);
   const [auditTitle, setAuditTitle] = useState("");
+  const [pollHealth, setPollHealth] = useState<{ pending: number; oldest_minutes: number | null; terminal_24h: number; failed_24h: number } | null>(null);
+  const [trail, setTrail] = useState<any[] | null>(null);
+  const [trailTitle, setTrailTitle] = useState("");
   const { toast } = useToast();
+
+  const loadPollHealth = async () => {
+    const { data: pending } = await supabase
+      .from("byo_charge_polls")
+      .select("created_at", { count: "exact" })
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const { count: pendingCount } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: terminal24 } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["successful"])
+      .gte("terminal_at", since);
+    const { count: failed24 } = await supabase
+      .from("byo_charge_polls")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["failed", "expired"])
+      .gte("terminal_at", since);
+    const oldest = pending?.[0]?.created_at
+      ? Math.round((Date.now() - new Date(pending[0].created_at).getTime()) / 60000)
+      : null;
+    setPollHealth({
+      pending: pendingCount ?? 0,
+      oldest_minutes: oldest,
+      terminal_24h: terminal24 ?? 0,
+      failed_24h: failed24 ?? 0,
+    });
+  };
+
+  const viewRoutingTrail = async (row: Row) => {
+    setTrailTitle(`${row.connector_id} · routing attempts`);
+    const { data, error } = await supabase
+      .from("byo_routing_attempts")
+      .select("attempted_at, connector_id, attempt_index, success, error_message, charge_id")
+      .eq("tenant_connector_id", row.id)
+      .order("attempted_at", { ascending: false })
+      .limit(50);
+    if (error) {
+      toast({ title: "Could not load routing trail", description: error.message, variant: "destructive" });
+      return;
+    }
+    setTrail(data ?? []);
+  };
 
   const load = async () => {
     setLoading(true);
