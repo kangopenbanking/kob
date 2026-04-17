@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'invalid_amount' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Get consumer's account & balance
+      // Get consumer's account & source balance row
       const { data: consumerAccounts } = await supabase.from('accounts')
         .select('id').eq('user_id', user.id).limit(1);
       if (!consumerAccounts?.length) {
@@ -96,13 +96,20 @@ Deno.serve(async (req) => {
       }
       const consumerAccountId = consumerAccounts[0].id;
 
-      const { data: balance } = await supabase.from('account_balances')
-        .select('amount')
+      const { data: sourceBalance } = await supabase.from('account_balances')
+        .select('id, amount')
         .eq('account_id', consumerAccountId)
         .eq('balance_type', 'ClosingAvailable')
+        .eq('credit_debit_indicator', 'Credit')
         .maybeSingle();
 
-      const available = balance?.amount || 0;
+      if (!sourceBalance) {
+        return new Response(JSON.stringify({ error: 'no_balance', message: 'Consumer wallet has no balance row' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const available = Number(sourceBalance.amount) || 0;
       if (available < total) {
         return new Response(JSON.stringify({ error: 'insufficient_balance', available, required: total }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -114,7 +121,6 @@ Deno.serve(async (req) => {
       let orderNumber: string | null = null;
 
       if (!orderId) {
-        // Create a new POS order
         const { data: newOrder, error: orderErr } = await supabase.from('pos_orders').insert({
           merchant_id,
           channel: 'consumer_app',
@@ -133,7 +139,6 @@ Deno.serve(async (req) => {
         orderId = newOrder.id;
         orderNumber = newOrder.order_number;
       } else {
-        // Update existing order to paid
         const { data: existingOrder } = await supabase.from('pos_orders')
           .select('order_number').eq('id', orderId).single();
         orderNumber = existingOrder?.order_number || null;
@@ -152,38 +157,40 @@ Deno.serve(async (req) => {
         provider_reference: `qr_wallet_${idempotencyKey}`,
       });
 
-      // Debit consumer
-      await supabase.from('account_balances').upsert({
-        account_id: consumerAccountId,
-        balance_type: 'ClosingAvailable',
-        amount: available - total,
-        currency: 'XAF',
-        credit_debit_indicator: 'Debit',
-        balance_datetime: new Date().toISOString(),
-      }, { onConflict: 'account_id,balance_type' });
-
-      // Credit merchant wallet
-      await supabase.rpc('atomic_charge_wallet_credit', {
-        _charge_id: orderId, // reuse order id for linking
+      // F38: Atomic merchant credit (no fallback upsert race)
+      const { error: creditErr } = await supabase.rpc('atomic_charge_wallet_credit', {
+        _charge_id: orderId,
         _new_status: 'successful',
         _merchant_id: merchant_id,
         _currency: 'XAF',
         _credit_amount: total,
-      }).catch(async () => {
-        // Fallback: direct upsert
-        const { data: mw } = await supabase.from('gateway_merchant_wallets')
-          .select('id, available_balance').eq('merchant_id', merchant_id).eq('currency', 'XAF').maybeSingle();
-        if (mw) {
-          await supabase.from('gateway_merchant_wallets').update({
-            available_balance: (mw.available_balance || 0) + total,
-            ledger_balance: (mw.available_balance || 0) + total,
-          }).eq('id', mw.id);
-        } else {
-          await supabase.from('gateway_merchant_wallets').insert({
-            merchant_id, currency: 'XAF', available_balance: total, pending_balance: 0, ledger_balance: total,
-          });
-        }
       });
+      if (creditErr) {
+        console.error('atomic_charge_wallet_credit failed:', creditErr.message);
+        return new Response(JSON.stringify({ error: 'wallet_credit_failed' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // F38: Debit consumer via atomic RPC instead of upsert (prevents lost-update race)
+      const { error: debitErr } = await supabase.rpc('atomic_debit_balance', {
+        _account_id: consumerAccountId,
+        _amount: total,
+        _currency: 'XAF',
+      });
+      if (debitErr) {
+        console.error('atomic_debit_balance failed:', debitErr.message);
+        // Compensating reversal: roll back merchant credit
+        await supabase.rpc('atomic_dispute_wallet_adjust', {
+          _merchant_id: merchant_id,
+          _currency: 'XAF',
+          _amount: total,
+          _direction: 'debit',
+        });
+        return new Response(JSON.stringify({ error: 'debit_failed', message: debitErr.message }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       // Status history
       await supabase.from('pos_order_status_history').insert({
