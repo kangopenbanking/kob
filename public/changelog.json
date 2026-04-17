@@ -1,9 +1,24 @@
 {
-  "apiVersion": "4.13.0",
+  "apiVersion": "4.14.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.14.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "CEMAC Universal Bank Integration -- Wave 3: ledger audit fields, six-stage bank onboarding wizard, and public certification flow guide",
+      "highlights": [
+        "Additive ledger columns on transactions (source_connector, sync_status, reconciliation_status, connector_audit_trail) -- all nullable with defaults; existing reads unaffected (STANDING ORDER 1)",
+        "New table bank_onboarding_records tracks the six-stage certification flow per bank with admin-only RLS",
+        "New admin route /admin/bank-onboarding provides a stepper wizard: Assessment -> Adapter -> Credentials -> Sandbox Test -> Certification -> Go Live",
+        "New public developer guide /developer/connectors/bank-onboarding-flow documents the certification path, checklist, and ledger audit fields",
+        "Zero impact on existing /v1/* endpoints, AISP, PISP, payment rails, or prior Wave 1/2 components"
+      ],
+      "standard_citations": ["STANDING ORDER 1", "STANDING ORDER 4", "STANDING ORDER 6", "ORDER P1", "ORDER P6", "ORDER P7"]
+    },
     {
       "version": "4.13.0",
       "date": "2026-04-17",
