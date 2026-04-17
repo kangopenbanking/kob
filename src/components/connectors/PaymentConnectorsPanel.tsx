@@ -12,7 +12,7 @@ import { Plug, Plus, Trash2, Activity, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type OwnerType = "institution" | "merchant" | "developer";
-type ConnectorId = "mtn_momo" | "orange_money" | "flutterwave";
+type ConnectorId = "mtn_momo" | "orange_money" | "flutterwave" | "soap_bank";
 
 interface Props {
   ownerType: OwnerType;
@@ -47,12 +47,21 @@ const CONNECTOR_FIELDS: Record<ConnectorId, { label: string; key: string; placeh
   flutterwave: [
     { label: "Secret Key", key: "secret_key", placeholder: "FLWSECK-..." },
   ],
+  soap_bank: [
+    { label: "Endpoint URL", key: "endpoint_url", placeholder: "https://core.bank.example/services/PaymentService" },
+    { label: "WS-Security Username", key: "username" },
+    { label: "WS-Security Password", key: "password" },
+    { label: "Service Namespace", key: "service_namespace", placeholder: "http://bank.example/payments" },
+    { label: "Initiate Operation", key: "operation_initiate", placeholder: "InitiatePayment" },
+    { label: "Status Operation", key: "operation_status", placeholder: "GetPaymentStatus" },
+  ],
 };
 
 const CONNECTOR_LABELS: Record<ConnectorId, string> = {
   mtn_momo: "MTN MoMo (Direct)",
   orange_money: "Orange Money (Direct)",
   flutterwave: "Flutterwave (Tenant)",
+  soap_bank: "SOAP Bank (Legacy Core)",
 };
 
 export function PaymentConnectorsPanel({ ownerType, ownerId }: Props) {
@@ -220,6 +229,7 @@ export function PaymentConnectorsPanel({ ownerType, ownerId }: Props) {
                         <SelectItem value="mtn_momo">MTN MoMo</SelectItem>
                         <SelectItem value="orange_money">Orange Money</SelectItem>
                         <SelectItem value="flutterwave">Flutterwave</SelectItem>
+                        <SelectItem value="soap_bank">SOAP Bank (Legacy Core)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

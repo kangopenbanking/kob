@@ -7,16 +7,18 @@
 import { flutterwaveConnector } from './flutterwave.ts';
 import { mtnMomoConnector } from './mtn-momo.ts';
 import { orangeMoneyConnector } from './orange-money.ts';
+import { soapBankConnector } from './soap-bank.ts';
 import type { ConnectorId, PaymentConnector } from './types.ts';
 
-const REGISTRY: Record<ConnectorId, PaymentConnector> = {
+const REGISTRY: Record<string, PaymentConnector> = {
   flutterwave: flutterwaveConnector,
   mtn_momo: mtnMomoConnector,
   orange_money: orangeMoneyConnector,
+  soap_bank: soapBankConnector,
 };
 
-export function getConnector(id: ConnectorId): PaymentConnector {
-  const c = REGISTRY[id];
+export function getConnector(id: ConnectorId | string): PaymentConnector {
+  const c = REGISTRY[id as string];
   if (!c) throw new Error(`Unknown connector: ${id}`);
   return c;
 }

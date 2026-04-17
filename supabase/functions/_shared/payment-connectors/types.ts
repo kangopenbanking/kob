@@ -1,7 +1,7 @@
 // Shared PaymentConnector contract for BYO mobile-money rails.
 // Every connector (MTN MoMo, Orange Money, Flutterwave) implements this.
 
-export type ConnectorId = 'mtn_momo' | 'orange_money' | 'flutterwave';
+export type ConnectorId = 'mtn_momo' | 'orange_money' | 'flutterwave' | 'soap_bank';
 export type ConnectorEnvironment = 'sandbox' | 'live';
 
 export interface ChargePayload {
