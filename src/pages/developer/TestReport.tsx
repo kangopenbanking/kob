@@ -193,8 +193,8 @@ const liveEndpoints: LiveEndpoint[] = [
   { method: "GET", path: "/public-api-spec", label: "OpenAPI Spec", auth: "public" },
   { method: "GET", path: "/oidc-config", label: "OIDC Discovery", auth: "public" },
   { method: "GET", path: "/postman-collection", label: "Postman Collection", auth: "public" },
+  { method: "GET", path: "/pos-store-browse", label: "Store Browse", query: "?action=stores&limit=5", auth: "public" },
   // --- Auth-guarded endpoints (expect 401 JSON) ---
-  { method: "GET", path: "/pos-store-browse", label: "Store Browse", query: "?action=stores&limit=5", auth: "session" },
   { method: "GET", path: "/pos-catalog-products", label: "Product Catalog", auth: "merchant_context" },
   { method: "POST", path: "/banking-api-router", label: "Banking Router", body: { action: "list_banks" }, auth: "session" },
 ];
