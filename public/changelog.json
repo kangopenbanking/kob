@@ -1,9 +1,25 @@
 {
-  "apiVersion": "4.11.0",
+  "apiVersion": "4.12.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.12.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "CEMAC Universal Bank Integration -- Wave 1: unified BankConnector interface with REST, SQL, File, and SOAP adapters, new bank-data-router with priority-based failover, full attempt audit trail",
+      "highlights": [
+        "New shared module supabase/functions/_shared/bank-connectors with a single contract: getAccountDetails, getBalance, getTransactions, initiateTransfer, reconcile, healthCheck",
+        "Four pluggable adapters: REST (modern APIs), SQL (read-only via parameterized gateway), File (CSV/pain.001/MT940 from Storage), SOAP (legacy cores)",
+        "New edge function bank-data-router resolves enabled adapters by priority and fails over automatically; admin-only via JWT + role check",
+        "New tables bank_connector_configs (per-bank adapter setup) and bank_connector_attempts (full audit trail) with admin RLS",
+        "New developer guide /developer/connectors/bank-adapter-framework with cURL, Node, Python examples and adapter decision matrix",
+        "Zero changes to existing /v1/* endpoints, AISP, PISP, mobile-money-charge -- additive only (STANDING ORDER 1)"
+      ],
+      "standard_citations": ["STANDING ORDER 1", "STANDING ORDER 4", "STANDING ORDER 6", "ORDER P5", "ORDER P7", "ORDER P9"]
+    },
     {
       "version": "4.11.0",
       "date": "2026-04-17",

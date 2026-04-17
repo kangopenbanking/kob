@@ -1588,6 +1588,63 @@ export type Database = {
           },
         ]
       }
+      bank_connector_attempts: {
+        Row: {
+          attempted_at: string
+          bank_id: string
+          config_id: string
+          correlation_id: string | null
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          operation: string
+          request_meta: Json | null
+          response_meta: Json | null
+          status: string
+        }
+        Insert: {
+          attempted_at?: string
+          bank_id: string
+          config_id: string
+          correlation_id?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          operation: string
+          request_meta?: Json | null
+          response_meta?: Json | null
+          status: string
+        }
+        Update: {
+          attempted_at?: string
+          bank_id?: string
+          config_id?: string
+          correlation_id?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          operation?: string
+          request_meta?: Json | null
+          response_meta?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_connector_attempts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_connector_attempts_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_connector_certificates: {
         Row: {
           bank_id: string
@@ -1635,6 +1692,74 @@ export type Database = {
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "bank_connector_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_connector_configs: {
+        Row: {
+          adapter_type: string
+          bank_id: string
+          config_json: Json
+          created_at: string
+          credentials_encrypted: Json
+          display_name: string
+          enabled: boolean
+          environment: string
+          health_status: string
+          id: string
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          last_sync_watermark: string | null
+          polling_interval_seconds: number
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          adapter_type: string
+          bank_id: string
+          config_json?: Json
+          created_at?: string
+          credentials_encrypted?: Json
+          display_name: string
+          enabled?: boolean
+          environment?: string
+          health_status?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_watermark?: string | null
+          polling_interval_seconds?: number
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          adapter_type?: string
+          bank_id?: string
+          config_json?: Json
+          created_at?: string
+          credentials_encrypted?: Json
+          display_name?: string
+          enabled?: boolean
+          environment?: string
+          health_status?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_watermark?: string | null
+          polling_interval_seconds?: number
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_connector_configs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
             referencedColumns: ["id"]
           },
         ]
