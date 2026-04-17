@@ -30,6 +30,27 @@ Deno.serve(async (req) => {
 
     if (!action) return jsonResp({ error: 'missing_action', message: 'action is required: create, request, cancel, retry, process_withdrawal, withdraw_to_bank' }, 400);
 
+    // F27 — Server-side amount/currency validation at the router edge.
+    // Downstream functions also validate, but rejecting invalid input here
+    // saves a function-to-function invocation and prevents bypass via
+    // direct router calls.
+    const ACTIONS_REQUIRING_AMOUNT = new Set([
+      'create', 'request', 'process_withdrawal', 'withdraw_to_bank', 'retry',
+    ]);
+    if (ACTIONS_REQUIRING_AMOUNT.has(action)) {
+      const amt = body.amount;
+      if (typeof amt !== 'number' || !Number.isFinite(amt) || amt <= 0) {
+        return jsonResp({ error: 'invalid_amount', message: 'amount must be a positive finite number' }, 400);
+      }
+      if (amt > 100_000_000) {
+        return jsonResp({ error: 'amount_exceeds_cap', message: 'amount exceeds 100,000,000 hard cap' }, 400);
+      }
+      const currency = body.currency ?? 'XAF';
+      if (typeof currency !== 'string' || !/^[A-Z]{3}$/.test(currency)) {
+        return jsonResp({ error: 'invalid_currency', message: 'currency must be an ISO 4217 three-letter code' }, 400);
+      }
+    }
+
     // Map action to the individual function name
     const functionMap: Record<string, string> = {
       create: 'gateway-create-payout',
