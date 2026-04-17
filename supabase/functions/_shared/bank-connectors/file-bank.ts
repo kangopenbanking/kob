@@ -124,8 +124,37 @@ export const fileBankConnector: BankConnector = {
     return { success: false, status: 'failed', error: 'File adapter does not support real-time transfers' };
   },
 
-  async reconcile(_ctx, _range): Promise<ReconcileResult> {
-    return { total_compared: 0, matched: 0, missing_in_kob: 0, missing_in_bank: 0, amount_mismatches: 0 };
+  async reconcile(ctx, range): Promise<ReconcileResult> {
+    // Use already-staged bank_side_transactions for this bank within the range,
+    // and run the shared matcher against them. Files are pre-ingested by
+    // bank-import-transactions / bank-data-poller.
+    const { matchTransactions } = await import('./reconciliation-matcher.ts');
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !key) {
+      return { total_compared: 0, matched: 0, missing_in_kob: 0, missing_in_bank: 0, amount_mismatches: 0 };
+    }
+    const admin = createClient(url, key);
+    const { data } = await admin
+      .from('bank_side_transactions')
+      .select('external_tx_id, external_account_id, booking_date, value_date, amount, currency, credit_debit, reference, description, raw')
+      .eq('bank_id', ctx.bank_id)
+      .gte('booking_date', range.from.slice(0, 10))
+      .lte('booking_date', range.to.slice(0, 10));
+    const bankTxs = (data ?? []).map((r: any) => ({
+      external_tx_id: r.external_tx_id,
+      account_id: r.external_account_id,
+      booking_date: r.booking_date,
+      value_date: r.value_date,
+      amount: Number(r.amount),
+      currency: r.currency,
+      credit_debit: r.credit_debit,
+      reference: r.reference,
+      description: r.description,
+      raw: r.raw,
+    }));
+    return matchTransactions({ bankTxs, ledgerTxs: [] });
   },
 
   async healthCheck(ctx): Promise<BankHealthResult> {
