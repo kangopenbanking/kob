@@ -686,7 +686,9 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
                     const file = e.target.files?.[0];
                     if (!file) return;
                     setUploading(true);
-                    const path = `walkthrough/${Date.now()}_${file.name}`;
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
+                    const path = `${user.id}/walkthrough/${Date.now()}_${file.name}`;
                     const { error } = await supabase.storage.from('pwa-media').upload(path, file);
                     if (error) { toast.error('Upload failed'); setUploading(false); return; }
                     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);

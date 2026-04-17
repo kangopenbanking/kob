@@ -346,7 +346,9 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
 
   const handleImageUpload = async (id: string, file: File) => {
     setUploading(true);
-    const path = `media/${Date.now()}_${file.name}`;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
+    const path = `${user.id}/media/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('pwa-media').upload(path, file);
     if (error) { toast.error('Upload failed'); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
@@ -559,7 +561,9 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
                     const file = e.target.files?.[0];
                     if (!file) return;
                     setUploading(true);
-                    const path = `walkthrough/${Date.now()}_${file.name}`;
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
+                    const path = `${user.id}/walkthrough/${Date.now()}_${file.name}`;
                     const { error } = await supabase.storage.from('pwa-media').upload(path, file);
                     if (error) { toast.error('Upload failed'); setUploading(false); return; }
                     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
@@ -1035,7 +1039,9 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
     setUploading(true);
     try {
       const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
-      const fileName = `hero-bg-${institutionId}-${Date.now()}.${ext}`;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
+      const fileName = `${user.id}/hero-bg-${institutionId}-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, {
         upsert: true,
         contentType: file.type,
