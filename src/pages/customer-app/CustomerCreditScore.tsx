@@ -176,7 +176,7 @@ const CustomerCreditScore: React.FC = () => {
       icon: Home,
       iconBg: 'bg-[hsl(45,70%,90%)]',
       iconColor: 'text-[hsl(45,60%,35%)]',
-      route: '/app/rent',
+      route: '/app/rent-reporting',
     });
   }
 
@@ -484,7 +484,7 @@ function PreApprovedOffersSection({ score }: { score: number }) {
             <div className="flex items-center gap-2 mt-3">
               {offer.requires_existing_account ? (
                 <button
-                  onClick={() => navigate('/app/accounts')}
+                  onClick={() => navigate('/app/linked-accounts')}
                   className="flex-1 rounded-xl bg-muted py-2 text-[11px] font-bold text-foreground text-center active:scale-[0.98] transition-transform"
                 >
                   Open Account & Apply
