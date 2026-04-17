@@ -2679,6 +2679,198 @@ export type Database = {
           },
         ]
       }
+      bank_retry_queue: {
+        Row: {
+          attempt_count: number
+          bank_id: string
+          completed_at: string | null
+          config_id: string | null
+          correlation_id: string | null
+          created_at: string
+          dead_lettered_at: string | null
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          max_attempts: number
+          next_attempt_at: string
+          operation: string
+          payload: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          bank_id: string
+          completed_at?: string | null
+          config_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          dead_lettered_at?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          operation: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          bank_id?: string
+          completed_at?: string | null
+          config_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          dead_lettered_at?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          operation?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_retry_queue_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_retry_queue_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_side_balances: {
+        Row: {
+          amount: number
+          as_of_datetime: string
+          balance_type: string
+          bank_id: string
+          config_id: string | null
+          currency: string
+          external_account_id: string
+          id: string
+          raw: Json | null
+          recorded_at: string
+        }
+        Insert: {
+          amount: number
+          as_of_datetime: string
+          balance_type?: string
+          bank_id: string
+          config_id?: string | null
+          currency?: string
+          external_account_id: string
+          id?: string
+          raw?: Json | null
+          recorded_at?: string
+        }
+        Update: {
+          amount?: number
+          as_of_datetime?: string
+          balance_type?: string
+          bank_id?: string
+          config_id?: string | null
+          currency?: string
+          external_account_id?: string
+          id?: string
+          raw?: Json | null
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_side_balances_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_side_balances_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_side_transactions: {
+        Row: {
+          amount: number
+          bank_id: string
+          booking_date: string | null
+          config_id: string | null
+          credit_debit: string
+          currency: string
+          description: string | null
+          external_account_id: string
+          external_tx_id: string
+          id: string
+          ingested_at: string
+          raw: Json | null
+          reference: string | null
+          value_date: string | null
+        }
+        Insert: {
+          amount: number
+          bank_id: string
+          booking_date?: string | null
+          config_id?: string | null
+          credit_debit: string
+          currency?: string
+          description?: string | null
+          external_account_id: string
+          external_tx_id: string
+          id?: string
+          ingested_at?: string
+          raw?: Json | null
+          reference?: string | null
+          value_date?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_id?: string
+          booking_date?: string | null
+          config_id?: string | null
+          credit_debit?: string
+          currency?: string
+          description?: string | null
+          external_account_id?: string
+          external_tx_id?: string
+          id?: string
+          ingested_at?: string
+          raw?: Json | null
+          reference?: string | null
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_side_transactions_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_side_transactions_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_sourced_accounts: {
         Row: {
           account_type: string

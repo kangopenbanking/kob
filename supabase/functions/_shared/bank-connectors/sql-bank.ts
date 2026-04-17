@@ -1,11 +1,7 @@
 // SQL bank adapter — read-only, parameterized queries ONLY.
-// Connects to a bank-supplied PostgreSQL/MySQL replica via HTTPS query gateway.
-//
-// SECURITY: Per project rules, no raw SQL is accepted from clients. The bank
-// supplies a fixed query gateway URL that exposes 4 named operations
-// (account, balance, transactions, beneficiaries) with positional parameters.
-// We never construct SQL strings dynamically.
+// Wave 5B: real reconcile() using shared matcher.
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import type {
   BankConnector,
   BankConnectorContext,
@@ -18,12 +14,14 @@ import type {
   BankHealthResult,
   DateRange,
 } from './types.ts';
+import { matchTransactions, type LedgerTransaction } from './reconciliation-matcher.ts';
 
 interface SqlConfig {
-  gateway_url: string;     // bank-hosted query gateway (HTTPS)
+  gateway_url: string;
   db_type?: 'postgres' | 'mysql' | 'oracle';
   schema?: string;
   timeout_ms?: number;
+  reconcile_account_ids?: string[];
 }
 
 interface QueryRequest {
@@ -54,6 +52,27 @@ async function query(ctx: BankConnectorContext, req: QueryRequest): Promise<unkn
   } finally {
     clearTimeout(t);
   }
+}
+
+async function fetchLedgerTxs(bank_id: string, range: DateRange): Promise<LedgerTransaction[]> {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return [];
+  const admin = createClient(url, key);
+  const { data } = await admin
+    .from('bank_side_transactions')
+    .select('id, external_tx_id, amount, currency, credit_debit, booking_date, reference')
+    .eq('bank_id', bank_id)
+    .gte('booking_date', range.from.slice(0, 10))
+    .lte('booking_date', range.to.slice(0, 10));
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    external_reference: r.reference ?? r.external_tx_id ?? null,
+    amount: Number(r.amount),
+    currency: r.currency,
+    credit_debit: r.credit_debit,
+    booking_date: r.booking_date,
+  }));
 }
 
 export const sqlBankConnector: BankConnector = {
@@ -107,12 +126,21 @@ export const sqlBankConnector: BankConnector = {
   },
 
   async initiateTransfer(_ctx, _payload): Promise<TransferResult> {
-    // SQL adapter is READ-ONLY by policy. Transfers must use REST or SOAP adapters.
     return { success: false, status: 'failed', error: 'SQL adapter is read-only; transfers not supported' };
   },
 
-  async reconcile(_ctx, _range): Promise<ReconcileResult> {
-    return { total_compared: 0, matched: 0, missing_in_kob: 0, missing_in_bank: 0, amount_mismatches: 0 };
+  async reconcile(ctx, range): Promise<ReconcileResult> {
+    const cfg = ctx.config as unknown as SqlConfig;
+    const accountIds = cfg.reconcile_account_ids ?? [];
+    const allBankTxs: BankTransaction[] = [];
+    for (const acctId of accountIds) {
+      try {
+        const txs = await this.getTransactions(ctx, acctId, range);
+        allBankTxs.push(...txs);
+      } catch { /* per-account failure tolerated */ }
+    }
+    const ledgerTxs = await fetchLedgerTxs(ctx.bank_id, range);
+    return matchTransactions({ bankTxs: allBankTxs, ledgerTxs });
   },
 
   async healthCheck(ctx): Promise<BankHealthResult> {

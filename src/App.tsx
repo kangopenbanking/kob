@@ -163,6 +163,7 @@ const CreditScoring = lazy(() => import("./pages/solutions/CreditScoring"));
 const ByoMobileMoney = lazy(() => import("./pages/products/ByoMobileMoney"));
 const AdminTenantConnectors = lazy(() => import("./pages/admin/AdminTenantConnectors"));
 const AdminBankOnboarding = lazy(() => import("./pages/admin/AdminBankOnboarding"));
+const BankOperationsMonitor = lazy(() => import("./pages/admin/BankOperationsMonitor"));
 
 // Developer Portal
 const DeveloperHome = lazy(() => import("./pages/developer/DeveloperHome"));
@@ -906,6 +907,7 @@ function App() {
               <Route path="support-chat" element={<AdminSupportChat />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
+              <Route path="bank-operations" element={<BankOperationsMonitor />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
