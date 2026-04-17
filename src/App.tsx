@@ -263,6 +263,7 @@ const ByoMobileMoneyGuide = lazy(() => import("./pages/developer/ByoMobileMoneyG
 const PollingAndWebhooks = lazy(() => import("./pages/developer/PollingAndWebhooks"));
 const SoapBankAdapter = lazy(() => import("./pages/developer/SoapBankAdapter"));
 const MultiRailFailover = lazy(() => import("./pages/developer/MultiRailFailover"));
+const BankAdapterFramework = lazy(() => import("./pages/developer/BankAdapterFramework"));
 const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
 const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
@@ -1028,6 +1029,7 @@ function App() {
               <Route path="connectors/polling-and-webhooks" element={<PollingAndWebhooks />} />
               <Route path="connectors/soap-bank-adapter" element={<SoapBankAdapter />} />
               <Route path="connectors/multi-rail-failover" element={<MultiRailFailover />} />
+              <Route path="connectors/bank-adapter-framework" element={<BankAdapterFramework />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
