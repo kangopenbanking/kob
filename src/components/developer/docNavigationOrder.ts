@@ -65,6 +65,7 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "Disputes", path: "/developer/gateway/disputes" },
   { title: "Settlements", path: "/developer/gateway/settlements" },
   { title: "Split Payments", path: "/developer/gateway/split-payments" },
+  { title: "BYO Mobile Money", path: "/developer/connectors/byo-mobile-money" },
   { title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" },
   { title: "Verification", path: "/developer/gateway/verification" },
   { title: "Funding", path: "/developer/gateway/funding" },

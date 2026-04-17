@@ -7,6 +7,20 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.10.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "BYO (Bring-Your-Own) Mobile Money Connectors -- Institutions, merchants, and developers can register their own MTN MoMo or Orange Money API credentials and route charges through them while Flutterwave (KOB-managed) remains the default rail and automatic fallback (STANDING ORDER 4 -- additive only)" },
+        { type: "feature", description: "New edge functions: tenant-connectors-manage (CRUD), tenant-connectors-list (list without secrets), tenant-connectors-test (health check), payment-router-charge (priority-ordered routing with Flutterwave fallback)" },
+        { type: "feature", description: "New table tenant_payment_connectors with AES-GCM (PAYMENT_CONNECTOR_KEY) credential encryption at rest, RLS scoped to owner, and full audit trail via log_audit_event" },
+        { type: "feature", description: "Connector framework (_shared/payment-connectors/) implementing a unified PaymentConnector interface across MTN MoMo Collection API, Orange Money Web Payment, and Flutterwave -- new providers can be added without touching public routes" },
+        { type: "feature", description: "Developer guide /developer/connectors/byo-mobile-money with cURL, Node.js, and Python examples (ORDER P9)" },
+        { type: "feature", description: "Payment Connectors panel added to Institution Settings and Business Settings for self-service credential management with live health-check testing" },
+        { type: "improvement", description: "Existing /functions/v1/mobile-money-charge route and Flutterwave default behaviour preserved unchanged (STANDING ORDER 1 -- The Lock); BYO is opt-in via the new payment-router-charge endpoint" },
+      ]
+    },
+    {
       version: "API Spec 4.9.8",
       date: "2026-04-15",
       type: "patch",

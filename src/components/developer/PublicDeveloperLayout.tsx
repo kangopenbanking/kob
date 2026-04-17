@@ -138,6 +138,7 @@ const navSections = [
       { title: "Disputes", path: "/developer/gateway/disputes" },
       { title: "Settlements", path: "/developer/gateway/settlements" },
       { title: "Split Payments", path: "/developer/gateway/split-payments" },
+      { title: "BYO Mobile Money", path: "/developer/connectors/byo-mobile-money" },
     ],
   },
   {

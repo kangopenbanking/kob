@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PaymentConnectorsPanel } from '@/components/connectors/PaymentConnectorsPanel';
 
 const settingsLinks = [
   { icon: CreditCard, label: 'Settlement Accounts', subtitle: 'Bank, MoMo, Kang Wallet (max 2)', path: '/biz/settlement-accounts', color: 'text-emerald-600 bg-emerald-500/10' },
@@ -237,6 +238,12 @@ export default function BusinessSettings() {
           )}
         </div>
       </div>
+
+      {merchantId && (
+        <div className="mt-6">
+          <PaymentConnectorsPanel ownerType="merchant" ownerId={merchantId} />
+        </div>
+      )}
     </div>
   );
 }
