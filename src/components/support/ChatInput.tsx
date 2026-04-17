@@ -46,16 +46,30 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
 
     if (file) {
       setUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Sign-in required', description: 'Please sign in to attach files.', variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
       const ext = file.name.split('.').pop();
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from('support-attachments').upload(path, file);
       if (error) {
         toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
         setUploading(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('support-attachments').getPublicUrl(path);
-      fileUrl = urlData.publicUrl;
+      // Bucket is private — issue a 7-day signed URL for inline display.
+      const { data: signed, error: signErr } = await supabase.storage
+        .from('support-attachments')
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+      if (signErr || !signed?.signedUrl) {
+        toast({ title: 'Upload failed', description: signErr?.message ?? 'Could not generate link.', variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
+      fileUrl = signed.signedUrl;
       fileType = file.type;
       setUploading(false);
     }
