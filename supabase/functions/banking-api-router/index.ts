@@ -119,6 +119,8 @@ Deno.serve(async (req) => {
           result = { error: "institution_id, external_customer_id, full_name required" };
           break;
         }
+        const auth = await authorizeInstitution(institution_id);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
         const { data, error } = await supabase
           .from("banking_customers")
           .insert({ institution_id, external_customer_id, full_name, phone, email, metadata: custMeta || {} })
@@ -144,6 +146,8 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (error) throw error;
         if (!data) { statusCode = 404; result = { error: "Customer not found" }; break; }
+        const auth = await authorizeInstitution(data.institution_id);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
         result = { data };
         break;
       }
@@ -152,6 +156,8 @@ Deno.serve(async (req) => {
         if (!userId) { statusCode = 401; result = { error: "Authentication required" }; break; }
         const instId = body.institution_id || url.searchParams.get("institution_id");
         if (!instId) { statusCode = 400; result = { error: "institution_id required" }; break; }
+        const auth = await authorizeInstitution(instId);
+        if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
         const page = parseInt(body.page || url.searchParams.get("page") || "1");
         const perPage = Math.min(parseInt(body.per_page || url.searchParams.get("per_page") || "20"), 100);
         const from = (page - 1) * perPage;
