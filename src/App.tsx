@@ -267,6 +267,7 @@ const MultiRailFailover = lazy(() => import("./pages/developer/MultiRailFailover
 const BankAdapterFramework = lazy(() => import("./pages/developer/BankAdapterFramework"));
 const BankOnboardingFlow = lazy(() => import("./pages/developer/BankOnboardingFlow"));
 const CemacBankIntegration = lazy(() => import("./pages/developer/CemacBankIntegration"));
+const CemacBankCatalog = lazy(() => import("./pages/developer/CemacBankCatalog"));
 const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
 const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
@@ -1036,6 +1037,7 @@ function App() {
               <Route path="connectors/bank-adapter-framework" element={<BankAdapterFramework />} />
               <Route path="connectors/bank-onboarding-flow" element={<BankOnboardingFlow />} />
               <Route path="connectors/cemac-bank-integration" element={<CemacBankIntegration />} />
+              <Route path="connectors/cemac-bank-catalog" element={<CemacBankCatalog />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
