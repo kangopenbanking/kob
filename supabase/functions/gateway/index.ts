@@ -44,27 +44,30 @@ const ROUTES: Array<{ pattern: RegExp; method: string; map: Mapping }> = [
   { method: "POST", pattern: /^refunds$/,          map: { fn: "gateway-create-refund" } },
 
   // ─── PAYOUTS ───
-  { method: "POST", pattern: /^payouts\/([^/]+)\/cancel$/, map: { fn: "gateway-payouts-router", action: "cancel", passIdAs: "payout_id" } },
-  { method: "POST", pattern: /^payouts\/([^/]+)\/retry$/,  map: { fn: "gateway-payouts-router", action: "retry",  passIdAs: "payout_id" } },
+  // NOTE: bypass gateway-payouts-router (uses functions.invoke which masks
+  // downstream non-2xx as 500) — call leaf functions directly so 401/400
+  // propagate correctly to API consumers.
+  { method: "POST", pattern: /^payouts\/([^/]+)\/cancel$/, map: { fn: "gateway-cancel-payout", passIdAs: "payout_id" } },
+  { method: "POST", pattern: /^payouts\/([^/]+)\/retry$/,  map: { fn: "gateway-retry-payout", passIdAs: "payout_id" } },
   { method: "GET",  pattern: /^payouts\/([^/]+)$/,         map: { fn: "gateway-query", action: "get-payout", passIdAs: "id" } },
   { method: "GET",  pattern: /^payouts$/,                  map: { fn: "gateway-query", action: "list-payouts" } },
-  { method: "POST", pattern: /^payouts$/,                  map: { fn: "gateway-payouts-router", action: "create" } },
+  { method: "POST", pattern: /^payouts$/,                  map: { fn: "gateway-create-payout" } },
 
   // ─── DISPUTES ───
-  { method: "POST", pattern: /^disputes\/([^/]+)\/evidence$/, map: { fn: "gateway-disputes-router", action: "submit_evidence", passIdAs: "dispute_id" } },
+  { method: "POST", pattern: /^disputes\/([^/]+)\/evidence$/, map: { fn: "gateway-submit-dispute-evidence", passIdAs: "dispute_id" } },
   { method: "GET",  pattern: /^disputes\/([^/]+)$/,           map: { fn: "gateway-query", action: "get-dispute", passIdAs: "id" } },
   { method: "GET",  pattern: /^disputes$/,                    map: { fn: "gateway-query", action: "list-disputes" } },
-  { method: "POST", pattern: /^disputes$/,                    map: { fn: "gateway-disputes-router", action: "file" } },
+  { method: "POST", pattern: /^disputes$/,                    map: { fn: "gateway-file-dispute" } },
 
   // ─── SETTLEMENTS ───
   { method: "GET",  pattern: /^settlements\/([^/]+)$/, map: { fn: "gateway-query", action: "get-settlement", passIdAs: "id" } },
   { method: "GET",  pattern: /^settlements$/,          map: { fn: "gateway-query", action: "list-settlements" } },
 
-  // ─── MERCHANTS ───
-  { method: "GET",  pattern: /^merchants\/([^/]+)\/balance$/,  map: { fn: "gateway-merchant-router", action: "balance", passIdAs: "merchant_id" } },
-  { method: "GET",  pattern: /^merchants\/([^/]+)\/statement$/,map: { fn: "gateway-merchant-router", action: "statement", passIdAs: "merchant_id" } },
-  { method: "POST", pattern: /^merchants\/([^/]+)\/keys$/,     map: { fn: "gateway-merchant-router", action: "keys", passIdAs: "merchant_id" } },
-  { method: "POST", pattern: /^merchants\/([^/]+)\/kyb$/,      map: { fn: "gateway-merchant-router", action: "kyb", passIdAs: "merchant_id" } },
+  // ─── MERCHANTS — bypass gateway-merchant-router; call leaves directly ───
+  { method: "GET",  pattern: /^merchants\/([^/]+)\/balance$/,  map: { fn: "gateway-get-merchant-balance", passIdAs: "merchant_id" } },
+  { method: "GET",  pattern: /^merchants\/([^/]+)\/statement$/,map: { fn: "gateway-merchant-statement", passIdAs: "merchant_id" } },
+  { method: "POST", pattern: /^merchants\/([^/]+)\/keys$/,     map: { fn: "gateway-merchant-keys", passIdAs: "merchant_id" } },
+  { method: "POST", pattern: /^merchants\/([^/]+)\/kyb$/,      map: { fn: "gateway-merchant-kyb", passIdAs: "merchant_id" } },
 
   // ─── PAYMENT LINKS ───
   { method: "GET",  pattern: /^payment-links\/([^/]+)$/, map: { fn: "gateway-query", action: "get-payment-link", passIdAs: "id" } },
@@ -77,13 +80,13 @@ const ROUTES: Array<{ pattern: RegExp; method: string; map: Mapping }> = [
   { method: "GET",  pattern: /^subscriptions$/,                  map: { fn: "gateway-query", action: "list-subscriptions" } },
   { method: "POST", pattern: /^subscriptions$/,                  map: { fn: "gateway-create-subscription" } },
 
-  // ─── WEBHOOKS ───
-  { method: "GET",  pattern: /^webhooks$/,  map: { fn: "gateway-webhooks-router", action: "endpoints" } },
-  { method: "POST", pattern: /^webhooks$/,  map: { fn: "gateway-webhooks-router", action: "endpoints" } },
+  // ─── WEBHOOKS — call leaf directly ───
+  { method: "GET",  pattern: /^webhooks$/,  map: { fn: "gateway-webhook-endpoints" } },
+  { method: "POST", pattern: /^webhooks$/,  map: { fn: "gateway-webhook-endpoints" } },
 
-  // ─── FUNDING ───
-  { method: "POST", pattern: /^funding\/intents$/,   map: { fn: "gateway-funding-router", action: "create_intent" } },
-  { method: "POST", pattern: /^funding\/confirm$/,   map: { fn: "gateway-funding-router", action: "confirm" } },
+  // ─── FUNDING — call leaves directly ───
+  { method: "POST", pattern: /^funding\/intents$/,   map: { fn: "gateway-create-funding-intent" } },
+  { method: "POST", pattern: /^funding\/confirm$/,   map: { fn: "gateway-confirm-funding" } },
   { method: "GET",  pattern: /^funding\/intents\/([^/]+)$/, map: { fn: "gateway-query", action: "get-funding-intent", passIdAs: "id" } },
   { method: "GET",  pattern: /^funding\/intents$/,   map: { fn: "gateway-query", action: "list-funding-intents" } },
 
