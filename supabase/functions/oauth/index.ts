@@ -45,10 +45,11 @@ Deno.serve(async (req) => {
   const remainingPath = parts.slice(1).join("/");
   const targetUrl = `${SUPABASE_URL}/functions/v1/${targetFn}${remainingPath ? `/${remainingPath}` : ""}${url.search}`;
 
+  // Forward headers as-is. Do NOT inject service role — OAuth endpoints
+  // must authenticate the actual caller (client credentials, etc.).
   const headers = new Headers(req.headers);
-  if (!headers.get("authorization")) {
-    headers.set("authorization", `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`);
-  }
+  headers.delete("host");
+  headers.delete("content-length");
 
   const init: RequestInit = {
     method: req.method,
