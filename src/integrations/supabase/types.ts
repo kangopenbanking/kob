@@ -4192,6 +4192,125 @@ export type Database = {
           },
         ]
       }
+      byo_charge_polls: {
+        Row: {
+          attempt_count: number
+          charge_id: string | null
+          connector_id: Database["public"]["Enums"]["tenant_connector_id"]
+          created_at: string
+          id: string
+          last_error: string | null
+          last_polled_at: string | null
+          max_attempts: number
+          metadata: Json | null
+          next_poll_at: string
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference: string
+          status: string
+          tenant_connector_id: string | null
+          terminal_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          charge_id?: string | null
+          connector_id: Database["public"]["Enums"]["tenant_connector_id"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_polled_at?: string | null
+          max_attempts?: number
+          metadata?: Json | null
+          next_poll_at?: string
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference: string
+          status?: string
+          tenant_connector_id?: string | null
+          terminal_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          charge_id?: string | null
+          connector_id?: Database["public"]["Enums"]["tenant_connector_id"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_polled_at?: string | null
+          max_attempts?: number
+          metadata?: Json | null
+          next_poll_at?: string
+          owner_id?: string
+          owner_type?: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference?: string
+          status?: string
+          tenant_connector_id?: string | null
+          terminal_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "byo_charge_polls_tenant_connector_id_fkey"
+            columns: ["tenant_connector_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_payment_connectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      byo_routing_attempts: {
+        Row: {
+          attempt_index: number
+          attempted_at: string
+          charge_reference: string
+          connector_id: string
+          duration_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference: string | null
+          status: string | null
+          success: boolean
+          tenant_connector_id: string | null
+        }
+        Insert: {
+          attempt_index: number
+          attempted_at?: string
+          charge_reference: string
+          connector_id: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference?: string | null
+          status?: string | null
+          success: boolean
+          tenant_connector_id?: string | null
+        }
+        Update: {
+          attempt_index?: number
+          attempted_at?: string
+          charge_reference?: string
+          connector_id?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          owner_id?: string
+          owner_type?: Database["public"]["Enums"]["tenant_connector_owner_type"]
+          provider_reference?: string | null
+          status?: string | null
+          success?: boolean
+          tenant_connector_id?: string | null
+        }
+        Relationships: []
+      }
       captcha_challenges: {
         Row: {
           attempts: number | null
@@ -22446,7 +22565,11 @@ export type Database = {
       template_type: "email" | "sms"
       tenant_connector_environment: "sandbox" | "live"
       tenant_connector_health: "unknown" | "healthy" | "degraded" | "unhealthy"
-      tenant_connector_id: "mtn_momo" | "orange_money" | "flutterwave"
+      tenant_connector_id:
+        | "mtn_momo"
+        | "orange_money"
+        | "flutterwave"
+        | "soap_bank"
       tenant_connector_owner_type: "institution" | "merchant" | "developer"
     }
     CompositeTypes: {
@@ -22824,7 +22947,12 @@ export const Constants = {
       template_type: ["email", "sms"],
       tenant_connector_environment: ["sandbox", "live"],
       tenant_connector_health: ["unknown", "healthy", "degraded", "unhealthy"],
-      tenant_connector_id: ["mtn_momo", "orange_money", "flutterwave"],
+      tenant_connector_id: [
+        "mtn_momo",
+        "orange_money",
+        "flutterwave",
+        "soap_bank",
+      ],
       tenant_connector_owner_type: ["institution", "merchant", "developer"],
     },
   },
