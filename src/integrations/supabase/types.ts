@@ -2907,6 +2907,75 @@ export type Database = {
           },
         ]
       }
+      bank_sync_jobs: {
+        Row: {
+          backoff_seconds: number
+          bank_id: string
+          config_id: string
+          consecutive_failures: number
+          created_at: string
+          enabled: boolean
+          external_account_id: string | null
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          next_run_at: string
+          op_type: string
+          updated_at: string
+          watermark: string | null
+        }
+        Insert: {
+          backoff_seconds?: number
+          bank_id: string
+          config_id: string
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          external_account_id?: string | null
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          next_run_at?: string
+          op_type: string
+          updated_at?: string
+          watermark?: string | null
+        }
+        Update: {
+          backoff_seconds?: number
+          bank_id?: string
+          config_id?: string
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          external_account_id?: string | null
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          next_run_at?: string
+          op_type?: string
+          updated_at?: string
+          watermark?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_sync_jobs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sync_jobs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transaction_imports: {
         Row: {
           bank_connection_id: string
@@ -16257,6 +16326,78 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "reconciliation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_reports: {
+        Row: {
+          amount_mismatches: number
+          auto_corrected: number
+          bank_id: string
+          config_id: string | null
+          created_at: string
+          details: Json
+          flagged_for_review: number
+          generated_by: string | null
+          id: string
+          matched: number
+          missing_in_bank: number
+          missing_in_kob: number
+          period_end: string
+          period_start: string
+          status: string
+          total_compared: number
+        }
+        Insert: {
+          amount_mismatches?: number
+          auto_corrected?: number
+          bank_id: string
+          config_id?: string | null
+          created_at?: string
+          details?: Json
+          flagged_for_review?: number
+          generated_by?: string | null
+          id?: string
+          matched?: number
+          missing_in_bank?: number
+          missing_in_kob?: number
+          period_end: string
+          period_start: string
+          status?: string
+          total_compared?: number
+        }
+        Update: {
+          amount_mismatches?: number
+          auto_corrected?: number
+          bank_id?: string
+          config_id?: string | null
+          created_at?: string
+          details?: Json
+          flagged_for_review?: number
+          generated_by?: string | null
+          id?: string
+          matched?: number
+          missing_in_bank?: number
+          missing_in_kob?: number
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_compared?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_reports_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_reports_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_configs"
             referencedColumns: ["id"]
           },
         ]
