@@ -516,6 +516,9 @@ export default function AdminTenantConnectors() {
                 </span>
               </div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
