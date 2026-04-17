@@ -1071,6 +1071,25 @@ function App() {
               <Route path="remittance/webhooks" element={<DevRemittanceWebhooks />} />
               <Route path="remittance/sandbox" element={<DevRemittanceSandbox />} />
               <Route path="remittance/errors" element={<DevRemittanceErrors />} />
+              {/* Phase 10 — Redirect aliases for legacy / cross-portal references (keep URLs working, preserve Public Mandate) */}
+              <Route path="api-keys" element={<Navigate to="/developer-tools/api-keys" replace />} />
+              <Route path="console" element={<Navigate to="/developer-tools/console" replace />} />
+              <Route path="api-testing" element={<Navigate to="/developer-tools/api-testing" replace />} />
+              <Route path="certificates" element={<Navigate to="/developer-tools/certificates" replace />} />
+              <Route path="sandbox/webhook-testing" element={<Navigate to="/developer-tools/sandbox/webhook-testing" replace />} />
+              <Route path="sandbox/data-generator" element={<Navigate to="/developer-tools/sandbox/data-generator" replace />} />
+              <Route path="sandbox/webhooks" element={<Navigate to="/developer-tools/sandbox/webhooks" replace />} />
+              <Route path="auth/api-keys" element={<Navigate to="/developer/authentication/api-keys" replace />} />
+              <Route path="gateway/authentication" element={<Navigate to="/developer/authentication" replace />} />
+              <Route path="go-live" element={<Navigate to="/developer/guides/go-live" replace />} />
+              <Route path="guides/authentication" element={<Navigate to="/developer/authentication" replace />} />
+              <Route path="guides/charges" element={<Navigate to="/developer/gateway/charges" replace />} />
+              <Route path="guides/roles-permissions" element={<Navigate to="/developer/roles-permissions" replace />} />
+              <Route path="guides/token-lifecycle" element={<Navigate to="/developer/api-reference/token-lifecycle" replace />} />
+              <Route path="onboarding" element={<Navigate to="/developer/onboarding-guide" replace />} />
+              <Route path="reference/error-codes" element={<Navigate to="/developer/api-reference/errors" replace />} />
+              <Route path="reference/idempotency" element={<Navigate to="/developer/api-reference/idempotency" replace />} />
+              <Route path="webhooks" element={<Navigate to="/developer/gateway/webhooks" replace />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
 
