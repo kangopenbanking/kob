@@ -28,6 +28,7 @@ const WAIVER_TYPES = [
 
 const TRANSACTION_TYPES = [
   "transfer", "payment", "bill_payment", "mobile_money_transfer", "mobile_money_charge",
+  "byo_mobile_money_routing", "byo_fallback_charge",
   "bank_transfer", "card_payment", "virtual_card_topup", "qr_payment",
   "piggybank_deposit", "piggybank_withdrawal", "njangi_contribution", "njangi_payout",
   "rent_payment", "loan_disbursement", "loan_repayment", "savings_deposit", "savings_withdrawal",
