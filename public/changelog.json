@@ -1,9 +1,24 @@
 {
-  "apiVersion": "4.12.0",
+  "apiVersion": "4.13.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-17",
   "entries": [
+    {
+      "version": "4.13.0",
+      "date": "2026-04-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "CEMAC Universal Bank Integration -- Wave 2: scheduled bank polling engine, rule-based reconciliation with auto-flagging, every-5-minute cron sweep across all enabled bank connectors",
+      "highlights": [
+        "New edge function bank-data-poller (cron */5 min) processes bank_sync_jobs, pulls accounts/balances/transactions via configured adapters, applies exponential backoff on failure (60s base, 1h cap)",
+        "New edge function bank-reconcile-engine performs admin-triggered reconciliation against any enabled bank connector and persists outcomes to reconciliation_reports",
+        "New tables bank_sync_jobs (per-config polling schedule with watermarks) and reconciliation_reports (rule-based recon outcomes) with admin-only RLS",
+        "Safety: reconciliation engine flags discrepancies for review only -- never auto-credits or moves funds (financial integrity preserved)",
+        "Zero impact on existing /v1/* endpoints, byo-charge-poller, payment-router-charge, or any production rail (STANDING ORDER 1)"
+      ],
+      "standard_citations": ["STANDING ORDER 1", "STANDING ORDER 4", "STANDING ORDER 6", "ORDER P7"]
+    },
     {
       "version": "4.12.0",
       "date": "2026-04-17",
