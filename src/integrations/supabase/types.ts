@@ -22871,6 +22871,10 @@ export type Database = {
           phone_masked: string
         }[]
       }
+      travel_reserve_seats: {
+        Args: { _seats: string[]; _trip_id: string }
+        Returns: Json
+      }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
         Returns: undefined
