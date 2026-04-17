@@ -1,92 +1,91 @@
 
-Goal: Keep Flutterwave as KOB's default mobile-money middleware, and add direct MTN MoMo / Orange Money as an opt-in BYO-credentials rail for institutions, businesses, and developers who bring their own API keys.
+The user wants all three previously out-of-scope items shipped as one coordinated follow-up. I'll keep the plan additive (Standing Order 1: The Lock) and version-gated (Order 6).
 
-Approach: tenant-scoped connector credentials + per-tenant routing preference, fully additive, zero impact on existing `mobile-money-charge` behavior.
+# BYO Mobile Money — Phase 2: Reliability, Legacy Banks & Cross-Bank Failover
 
-## Scope (additive only)
+Three additive workstreams. Zero behavior change to existing rails.
 
-1. Tenant-scoped connector credentials
-   - New table `tenant_payment_connectors`:
-     - `id`, `owner_type` (`institution`|`merchant`|`developer`), `owner_id`, `connector_id` (`mtn_momo`|`orange_money`|`flutterwave`), `environment` (`sandbox`|`live`), `country`, `enabled`, `priority`, `credentials_encrypted` (jsonb), `last_health_check_at`, `health_status`, timestamps.
-   - Credentials encrypted at rest via existing `pgcrypto` + `hash_secret_value`-style pattern; never returned to the client (write-only API).
-   - RLS: owners manage only their own rows; admins read-all.
+## 1. Polling & Synthetic Webhooks (MTN / Orange)
 
-2. Connector framework (shared, no behavior change to existing functions)
-   - `_shared/payment-connectors/types.ts` — `PaymentConnector` interface (`initiateCharge`, `getStatus`, `refund`, `healthCheck`).
-   - `_shared/payment-connectors/flutterwave.ts` — wraps existing platform Flutterwave logic (default rail).
-   - `_shared/payment-connectors/mtn-momo.ts` — direct MTN MoMo (sandbox + live).
-   - `_shared/payment-connectors/orange-money.ts` — direct Orange Money.
-   - `_shared/payment-connectors/registry.ts` — resolves connector + credentials per tenant.
+Direct rails don't push reliably. Add server-side reconciliation.
 
-3. Routing preference (opt-in, never silent)
-   - Resolution order per request:
-     1. If caller passes explicit `connector` field AND has matching `tenant_payment_connectors` row → use it.
-     2. Else if tenant has `tenant_payment_connectors` rows for the country, sorted by `priority` → try in order, fallback to platform Flutterwave on failure.
-     3. Else → platform Flutterwave (current default behavior, unchanged).
-   - Existing `mobile-money-charge` stays the public default. New optional flag `use_tenant_connectors: true` activates the new path. No silent rerouting.
+**New table** `byo_charge_polls`
+- `charge_id`, `connector_id`, `provider_reference`, `tenant_owner_type`, `tenant_owner_id`, `status`, `attempt_count`, `next_poll_at`, `last_polled_at`, `terminal_at`
 
-4. New management endpoints (edge functions)
-   - `tenant-connectors-manage` (POST/PATCH/DELETE) — register/update/disable own connector credentials.
-   - `tenant-connectors-list` (GET) — list own connectors (no secrets returned).
-   - `tenant-connectors-test` (POST) — runs `healthCheck()` against stored credentials, updates `health_status`.
+**New edge function** `byo-charge-poller` (cron, every 30s)
+- Picks pending rows where `next_poll_at <= now()`
+- Calls `connector.getStatus()` via existing registry
+- On terminal status: updates `gateway_charges`, fires synthetic webhook through existing `webhook-dispatcher` (event types `charge.completed` / `charge.failed`), records fee
+- Backoff: 30s → 1m → 2m → 5m → 10m, max 30min, max 20 attempts
 
-5. Charge path integration
-   - New thin function `payment-router-charge` implementing the resolution order above. Reuses existing fee engine (`record_transaction_fee`), idempotency, and webhook delivery.
-   - Existing `mobile-money-charge` and `facilitated-mobile-money-charge` left untouched.
+**Router integration**: `payment-router-charge` enqueues a poll row when MTN/Orange returns `pending`. No change to Flutterwave path.
 
-6. UI (additive, no changes to current screens)
-   - Institution/Business/Developer settings: new "Payment Connectors" section
-     - List rows from `tenant_payment_connectors`
-     - Add/edit form per connector with required-field hints (MTN: subscription key, API user, API key, target env; Orange: client id/secret, merchant key)
-     - "Test connection" button → calls `tenant-connectors-test`
-     - Priority drag-handle, enable/disable toggle
-   - Clear copy: "Flutterwave (managed by KOB) is always available as fallback."
+## 2. SOAP Bank Adapter (Legacy Core-Banking)
 
-7. Docs (per Standing Orders P5/P7/P9/P10)
-   - New page `/developer/connectors/byo-mobile-money` — when to use, supported providers, credential setup, security model, fallback behavior.
-   - cURL + Node + Python examples for registering credentials and sending a charge with `use_tenant_connectors: true`.
-   - OpenAPI: add `POST /v1/connectors`, `GET /v1/connectors`, `POST /v1/connectors/:id/test`, and `connector` request field on existing charge endpoint (additive — Ratchet preserved). Bump `info.version` per Order 6.
-   - Changelog entry within 48h of deploy (Order P7).
+For institutions on legacy SOAP-based cores (T24, Flexcube, OBDX).
 
-8. Security
-   - Credentials encrypted; only the storing tenant (and admins) can mutate.
-   - All connector calls server-mediated via edge functions (no client-side credential use).
-   - Audit log every credential create/update/delete via existing `log_audit_event`.
-   - Health check failures auto-disable rail after N consecutive failures; tenant notified via existing notification infra.
+**New connector** `_shared/payment-connectors/soap-bank.ts`
+- Implements same `PaymentConnector` interface
+- Handles WSDL endpoint, SOAP envelope construction (XML), WS-Security UsernameToken / X.509 signature
+- Credentials schema: `wsdl_url`, `username`, `password`, `cert_pem` (optional), `service_namespace`, `operation_initiate`, `operation_status`
+- New owner-type entry in `tenant_payment_connectors.connector_id` enum: `soap_bank`
 
-## Architecture
+**Tenant UI**: extend `PaymentConnectorsPanel` with SOAP form (collapsible "Advanced" section for namespace/operation overrides, file upload for cert).
+
+**Constraint**: TLS terminated by edge proxy — document mTLS limitation per existing memory `mem://constraints/mtls-infrastructure-limitations`.
+
+## 3. Multi-Rail Cross-Bank Failover
+
+Currently routing falls back: tenant rail → platform Flutterwave. Extend to: tenant rail A → tenant rail B → … → platform fallback.
+
+**Schema**: already supported by existing `priority` column. No migration needed.
+
+**Router change** (`payment-router-charge`):
+- Resolve ALL enabled connectors for `(owner, country, environment)` ordered by `priority ASC`
+- Try each in order; on failure (network, 5xx, explicit `failed` status), advance to next
+- Record attempt trail in new `byo_routing_attempts` table (charge_id, connector_id, status, error, attempted_at) for admin debugging
+- Final fallback to platform Flutterwave unchanged
+
+**Admin UI**: extend `/admin/tenant-connectors` with a "Routing Trail" drawer per charge (read from `byo_routing_attempts`).
+
+## Docs & Versioning (mandatory)
+
+- New page `/developer/connectors/polling-and-webhooks` — synthetic webhook contract, retry schedule
+- New page `/developer/connectors/soap-bank-adapter` — credential setup, sample WSDL, security model
+- New page `/developer/connectors/multi-rail-failover` — priority semantics, attempt trail
+- OpenAPI: add `soap_bank` to connector enum, add `GET /v1/connectors/:id/routing-attempts`, bump `info.version` 4.10.0 → **4.11.0** (Order 6 — minor, additive)
+- Changelog entry within 48h (Order P7) across `CHANGELOG.md`, `public/changelog.json`, `Changelog.tsx`
+- cURL + Node + Python examples for every new endpoint (Order P9)
+- Footer link: add "Reliability & Failover" under Products (optional — small)
+
+## Migrations (additive only)
+
 ```text
-Caller (Institution / Business / Developer)
-   │
-   ▼
-mobile-money-charge (UNCHANGED, default = Flutterwave)
-   │   (opt-in: use_tenant_connectors=true)
-   ▼
-payment-router-charge (NEW)
-   │
-   ├── resolve tenant_payment_connectors (priority order)
-   │       │
-   │       ▼
-   │   MTN MoMo / Orange Money (tenant credentials)
-   │       │  on failure
-   │       ▼
-   └── Flutterwave (KOB-managed fallback, existing path)
+1. byo_charge_polls table + RLS + cron job
+2. byo_routing_attempts table + RLS
+3. ALTER TYPE connector_id_enum ADD VALUE 'soap_bank'
 ```
 
-## Migrations (additive)
-- `tenant_payment_connectors` table + RLS + audit triggers
-- No changes to existing tables or enums
+No changes to existing tables, enums, or RLS policies. Standing Order 1 preserved.
 
 ## Validation
-- Unit-style tests for each connector via existing `api-contract-test` extension
-- E2E: register sandbox MTN creds → charge with `use_tenant_connectors=true` → verify MTN path used → simulate failure → verify Flutterwave fallback
-- Confirm existing `mobile-money-charge` callers see zero behavior change
 
-## Out of scope (this round)
-- Polling/synthetic webhooks for direct rails (separate proposal)
-- SOAP bank adapter (separate proposal)
-- Multi-rail bank-side routing
+- Unit tests per new connector via `api-contract-test`
+- E2E: simulate MTN pending → verify poller resolves → synthetic webhook fires
+- E2E: register two tenant rails (priority 1, 2) → fail rail 1 → verify rail 2 used → fail both → verify Flutterwave fallback
+- Confirm `mobile-money-charge` callers still see zero change
 
-## Secrets needed
-- None at platform level (tenants supply their own)
-- Existing `FLUTTERWAVE_SECRET_KEY` continues to power the default/fallback path
+## Admin Oversight
+
+Extend `/admin/tenant-connectors`:
+- Poll queue health card (pending count, oldest pending age, terminal rate %)
+- Per-charge routing attempt drawer
+- SOAP connector form fields visible in admin read-only view (credentials remain encrypted)
+
+## Out of Scope (this round)
+- Auto-priority learning from health metrics
+- Cross-country failover
+- Bank-side ISO 20022 SOAP adapters (separate from this generic SOAP)
+
+## Secrets
+- None at platform level. SOAP TLS certs are tenant-supplied per connector.
