@@ -169,7 +169,7 @@ export default function AdminTenantConnectors() {
     toast({ title: "Running health check…" });
     const { data, error } = await supabase.functions.invoke(
       "tenant-connectors-test",
-      { body: { connector_id: row.id } }
+      { body: { id: row.id } }
     );
     if (error) {
       toast({
