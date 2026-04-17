@@ -184,7 +184,13 @@ Deno.serve(async (req) => {
           .from("accounts")
           .select("id, account_id, account_holder_name, account_type, account_subtype, currency, identification_value, is_active, institution_id, created_at");
         if (bankFilter) {
+          // Authorize: requester must be admin/owner/staff of that institution
+          const auth = await authorizeInstitution(bankFilter);
+          if (!auth.ok) { statusCode = 403; result = { error: auth.reason }; break; }
           query = query.eq("institution_id", bankFilter);
+        } else {
+          // No filter: scope to caller's own accounts
+          query = query.eq("user_id", userId);
         }
         const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
         if (error) throw error;
@@ -196,6 +202,8 @@ Deno.serve(async (req) => {
         if (!userId) { statusCode = 401; result = { error: "Authentication required" }; break; }
         const accountId = body.account_id || url.searchParams.get("account_id");
         if (!accountId) { statusCode = 400; result = { error: "account_id required" }; break; }
+        const auth = await authorizeAccount(accountId);
+        if (!auth.ok) { statusCode = auth.reason === "Account not found" ? 404 : 403; result = { error: auth.reason }; break; }
         const { data, error } = await supabase
           .from("account_balances")
           .select("id, account_id, amount, currency, balance_type, credit_debit_indicator, balance_datetime")
@@ -212,6 +220,8 @@ Deno.serve(async (req) => {
         if (!userId) { statusCode = 401; result = { error: "Authentication required" }; break; }
         const txAccId = body.account_id || url.searchParams.get("account_id");
         if (!txAccId) { statusCode = 400; result = { error: "account_id required" }; break; }
+        const auth = await authorizeAccount(txAccId);
+        if (!auth.ok) { statusCode = auth.reason === "Account not found" ? 404 : 403; result = { error: auth.reason }; break; }
         const txPage = parseInt(body.page || url.searchParams.get("page") || "1");
         const txPerPage = Math.min(parseInt(body.per_page || url.searchParams.get("per_page") || "25"), 100);
         const txFrom = (txPage - 1) * txPerPage;
@@ -237,6 +247,19 @@ Deno.serve(async (req) => {
         if (!source_account_id || !destination_account_id || !amount) {
           statusCode = 400;
           result = { error: "source_account_id, destination_account_id, amount required" };
+          break;
+        }
+        // CRITICAL: validate amount and authorize source account ownership
+        if (typeof amount !== "number" || !isFinite(amount) || amount <= 0) {
+          statusCode = 400; result = { error: "amount must be a positive number" }; break;
+        }
+        if (source_account_id === destination_account_id) {
+          statusCode = 400; result = { error: "source and destination must differ" }; break;
+        }
+        const srcAuth = await authorizeAccount(source_account_id);
+        if (!srcAuth.ok) {
+          statusCode = srcAuth.reason === "Account not found" ? 404 : 403;
+          result = { error: srcAuth.reason };
           break;
         }
 
