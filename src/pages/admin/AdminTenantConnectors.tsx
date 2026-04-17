@@ -430,6 +430,9 @@ export default function AdminTenantConnectors() {
                           <Button size="sm" variant="ghost" onClick={() => viewAudit(r)} title="Audit trail">
                             <ShieldCheck className="h-4 w-4" />
                           </Button>
+                          <Button size="sm" variant="ghost" onClick={() => viewRoutingTrail(r)} title="Routing attempts">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
                           <Button size="sm" variant="ghost" onClick={() => remove(r)} title="Delete">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -501,5 +504,14 @@ function StatCard({
         <Icon className="h-8 w-8 text-primary opacity-80" />
       </CardContent>
     </Card>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border p-3 bg-muted/30">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
   );
 }
