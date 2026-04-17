@@ -56,6 +56,7 @@ const navSections = [
       { title: "Payment Links", path: "/developer/gateway/payment-links" },
       { title: "Subscriptions", path: "/developer/gateway/subscriptions" },
       { title: "Mobile Money", path: "/developer/api/mobile-money" },
+      { title: "BYO Mobile Money", path: "/developer/connectors/byo-mobile-money" },
       { title: "PISP (Bank Pay)", path: "/developer/api/pisp" },
       { title: "Gateway Webhooks", path: "/developer/gateway/webhooks" },
     ],

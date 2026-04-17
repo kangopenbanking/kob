@@ -5,6 +5,53 @@ All notable changes to the Kang Open Banking API will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.10.0] — 2026-04-17
+
+### Added — BYO Mobile Money Connectors (Bring-Your-Own Credentials)
+
+Strictly additive release. Flutterwave remains the default KOB-managed rail and the automatic
+fallback for every charge. Institutions, merchants, and developers may now optionally register
+their own MTN MoMo or Orange Money API credentials and route charges through their own provider
+accounts via the new `payment-router-charge` endpoint.
+
+#### Edge Functions (new)
+- `tenant-connectors-manage` — create / update / delete a tenant's connector credentials. Owners only.
+- `tenant-connectors-list` — list a tenant's registered connectors (secrets never returned).
+- `tenant-connectors-test` — runs `healthCheck()` against stored credentials and updates `health_status`.
+- `payment-router-charge` — opt-in router. Resolves the caller's `tenant_payment_connectors` rows in
+  priority order, attempts each, and falls back to platform Flutterwave on failure. Returns the full
+  attempt trail.
+
+#### Connector Framework (new — `_shared/payment-connectors/`)
+- `types.ts` — unified `PaymentConnector` interface (`initiateCharge`, `getStatus`, `refund`, `healthCheck`).
+- `flutterwave.ts`, `mtn-momo.ts`, `orange-money.ts` — provider implementations.
+- `registry.ts` — connector resolution + AES-GCM encryption / decryption of stored credentials using
+  the project secret `PAYMENT_CONNECTOR_KEY` (32-byte base64). Falls back to plain JSON only when the
+  key is unset (sandbox convenience).
+
+#### Database (additive)
+- `tenant_payment_connectors` — owner-scoped (`institution` / `merchant` / `developer`) credential rows
+  with environment, country, priority, enabled flag, encrypted credentials, and health-check status.
+- RLS: `is_tenant_connector_owner` + admin read-all.
+- Audit trigger: `audit_tenant_connector_change` writes every create / update / delete via
+  `log_audit_event`.
+
+#### Frontend
+- `PaymentConnectorsPanel` mounted on Institution Settings and Business Settings.
+- New developer guide at `/developer/connectors/byo-mobile-money` (cURL / Node.js / Python — ORDER P9).
+- BYO link added to the public developer portal navigation, the authenticated developer layout, and
+  `docNavigationOrder.ts`.
+
+#### Security
+- Credentials encrypted at rest with AES-GCM when `PAYMENT_CONNECTOR_KEY` is configured.
+- All connector calls server-mediated through edge functions — credentials never reach the browser.
+- Owner-only RLS + audit trail on every mutation.
+
+#### Compatibility
+- Existing `mobile-money-charge`, `facilitated-mobile-money-charge`, and the Flutterwave default rail
+  are unchanged. BYO is purely opt-in via the new endpoint. STANDING ORDER 1 (The Lock) preserved —
+  no operationId, schema, or path renamed or removed.
+
 ## [4.4.0] — 2026-03-25
 
 ### Added — BaaS Remittance Module Enhancement
