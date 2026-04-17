@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import byoHeroImage from "@/assets/byo-kob-hero.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +103,8 @@ export default function ByoMobileMoney() {
         {/* HERO */}
         <section className="relative overflow-hidden border-b border-border/60 bg-primary text-primary-foreground">
           <div className="container mx-auto max-w-6xl px-4 py-20 md:py-28">
-            <div className="max-w-3xl animate-fade-in">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="animate-fade-in">
               <Badge
                 variant="secondary"
                 className="mb-6 bg-primary-foreground text-primary border-none font-semibold tracking-wide"
@@ -140,6 +142,15 @@ export default function ByoMobileMoney() {
                   <Link to="/developer/api/mobile-money">View API reference</Link>
                 </Button>
               </div>
+            </div>
+            <div className="hidden lg:flex justify-center items-center animate-fade-in">
+              <img
+                src={byoHeroImage}
+                alt="Bring Your Own Mobile Money connector grid illustration"
+                className="w-full max-w-lg h-auto object-contain animate-float"
+                loading="eager"
+              />
+            </div>
             </div>
           </div>
           <div
