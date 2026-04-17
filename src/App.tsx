@@ -768,6 +768,7 @@ function App() {
               <Route path="banking/transfers" element={<BankTransferManager />} />
               <Route path="banking/reports" element={<BankReports />} />
               <Route path="banking/api-logs" element={<BankApiLogs />} />
+              <Route path="*" element={<NestedNotFound portalName="FI Portal" homePath="/fi-portal" />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
