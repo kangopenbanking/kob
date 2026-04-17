@@ -35,6 +35,7 @@ import {
   Landmark,
   MessageCircle,
   Plug,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
