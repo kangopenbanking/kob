@@ -32,7 +32,7 @@ The full changelog is available at:
 - **Markdown**: [`/CHANGELOG.md`](https://github.com/kangopenbanking/kob/blob/main/CHANGELOG.md)
 - **Machine-readable**: [`/changelog.json`](https://kangopenbanking.com/changelog.json)
 
-### Current Version: 4.9.6
+### Current Version: 4.10.0
 
 See [CHANGELOG.md](/CHANGELOG.md) for full release notes.
 
