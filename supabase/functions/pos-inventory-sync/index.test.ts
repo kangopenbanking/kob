@@ -73,16 +73,24 @@ Deno.test("POS Submit Order - unauthenticated returns 401", async () => {
   assertEquals(res.status, 401);
 });
 
-// ── Test D: POS Finalize Payment - requires valid payload ──
-Deno.test("POS Finalize Payment - invalid charge returns error", async () => {
+// ── Test D: POS Finalize Payment — anonymous request now BLOCKED (F37) ──
+Deno.test("POS Finalize Payment - anonymous returns 401 (F37)", async () => {
   const res = await invoke("pos-finalize-payment", {
     charge_id: "00000000-0000-0000-0000-000000000000",
     status: "successful",
     provider: "flutterwave",
   });
-  // Should return an error status OR indicate charge was not found/skipped
-  const isHandled = res.status >= 400 || (res.data && (res.data.error || res.data.skipped === true));
-  assertEquals(isHandled, true);
+  // F37 fix: caller must be service-role or internal secret
+  assertEquals(res.status, 401);
+});
+
+Deno.test("POS Finalize Payment - anon-key bearer also returns 401 (F37)", async () => {
+  const res = await invoke("pos-finalize-payment", {
+    charge_id: "00000000-0000-0000-0000-000000000000",
+    status: "successful",
+  }, SUPABASE_ANON_KEY);
+  // anon JWT must NOT be accepted
+  assertEquals(res.status, 401);
 });
 
 // ── Test E: WooCommerce Connector - invalid action ──
