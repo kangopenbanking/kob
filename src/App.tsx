@@ -260,6 +260,9 @@ const MobileMoneyOverview = lazy(() => import("./pages/developer/MobileMoneyOver
 const MtnMomoGuide = lazy(() => import("./pages/developer/MtnMomoGuide"));
 const OrangeMoneyGuide = lazy(() => import("./pages/developer/OrangeMoneyGuide"));
 const ByoMobileMoneyGuide = lazy(() => import("./pages/developer/ByoMobileMoneyGuide"));
+const PollingAndWebhooks = lazy(() => import("./pages/developer/PollingAndWebhooks"));
+const SoapBankAdapter = lazy(() => import("./pages/developer/SoapBankAdapter"));
+const MultiRailFailover = lazy(() => import("./pages/developer/MultiRailFailover"));
 const ComplianceKyc = lazy(() => import("./pages/developer/ComplianceKyc"));
 const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
@@ -1022,6 +1025,9 @@ function App() {
               <Route path="mobile-money/mtn" element={<MtnMomoGuide />} />
               <Route path="mobile-money/orange" element={<OrangeMoneyGuide />} />
               <Route path="connectors/byo-mobile-money" element={<ByoMobileMoneyGuide />} />
+              <Route path="connectors/polling-and-webhooks" element={<PollingAndWebhooks />} />
+              <Route path="connectors/soap-bank-adapter" element={<SoapBankAdapter />} />
+              <Route path="connectors/multi-rail-failover" element={<MultiRailFailover />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />
