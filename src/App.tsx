@@ -160,6 +160,8 @@ const RentReportingInfo = lazy(() => import("./pages/RentReportingInfo"));
 const FintechDevelopers = lazy(() => import("./pages/solutions/FintechDevelopers"));
 const MobileMoneyIntegration = lazy(() => import("./pages/solutions/MobileMoneyIntegration"));
 const CreditScoring = lazy(() => import("./pages/solutions/CreditScoring"));
+const ByoMobileMoney = lazy(() => import("./pages/products/ByoMobileMoney"));
+const AdminTenantConnectors = lazy(() => import("./pages/admin/AdminTenantConnectors"));
 
 // Developer Portal
 const DeveloperHome = lazy(() => import("./pages/developer/DeveloperHome"));
@@ -894,6 +896,7 @@ function App() {
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminSupportChat />} />
+              <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -1087,6 +1090,7 @@ function App() {
             <Route path="/solutions/fintech-developers" element={<Layout><FintechDevelopers /></Layout>} />
             <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />
             <Route path="/solutions/credit-scoring" element={<Layout><CreditScoring /></Layout>} />
+            <Route path="/products/byo-mobile-money" element={<Layout><ByoMobileMoney /></Layout>} />
             
             {/* Widget standalone routes - public */}
             <Route path="/widgets/payment" element={<EmbeddablePaymentWidget />} />
