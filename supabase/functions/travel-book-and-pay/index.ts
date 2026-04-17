@@ -239,6 +239,7 @@ Deno.serve(async (req) => {
 
       if (debitErr) {
         console.error("Debit error:", debitErr);
+        await releaseSeats();
         return new Response(
           JSON.stringify({ error: "Payment processing failed. Please try again." }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -297,6 +298,7 @@ Deno.serve(async (req) => {
           { onConflict: "account_id,balance_type" }
         );
       }
+      await releaseSeats();
       return new Response(
         JSON.stringify({ error: "Booking creation failed. Payment has been refunded." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -321,11 +323,7 @@ Deno.serve(async (req) => {
       console.error("Ticket creation error:", tickErr);
     }
 
-    // 9. Update available seats
-    await supabaseAdmin
-      .from("travel_trips")
-      .update({ available_seats: Math.max(0, trip.available_seats - selected_seats.length) })
-      .eq("id", trip_id);
+    // 9. (Seat decrement performed atomically by travel_reserve_seats RPC — F39)
 
     // 10. Increment discount usage if applicable
     if (appliedDiscount) {
