@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings, Save, Shield, DollarSign, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PaymentConnectorsPanel } from "@/components/connectors/PaymentConnectorsPanel";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -128,6 +129,10 @@ export default function InstitutionSettings() {
       </motion.div>
 
       <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
+        <PaymentConnectorsPanel ownerType="institution" ownerId={institution.id} />
+      </motion.div>
+
+      <motion.div initial="hidden" animate="visible" custom={4} variants={fadeUp}>
         <Card className="border-border/60">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2.5">
