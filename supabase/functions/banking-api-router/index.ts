@@ -21,6 +21,36 @@ Deno.serve(async (req) => {
       : {};
     const action = body.action || url.searchParams.get("action") || "";
 
+    // F34 — Edge-level validation for monetary actions.
+    // Rejects malformed amount/currency before any DB work, in addition to
+    // the per-action checks below. Returns a clear 400 with a stable error
+    // code consumed by the shared API error handler.
+    const MONETARY_ACTIONS = new Set([
+      "internal_transfer", "external_transfer", "create_payout",
+    ]);
+    if (MONETARY_ACTIONS.has(action)) {
+      const amt = body.amount;
+      if (typeof amt !== "number" || !Number.isFinite(amt) || amt <= 0) {
+        return new Response(
+          JSON.stringify({ error: "invalid_amount", message: "amount must be a positive finite number" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (amt > 1_000_000_000) {
+        return new Response(
+          JSON.stringify({ error: "amount_exceeds_cap", message: "amount exceeds 1,000,000,000 hard cap" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const cur = body.currency ?? "XAF";
+      if (typeof cur !== "string" || !/^[A-Z]{3}$/.test(cur)) {
+        return new Response(
+          JSON.stringify({ error: "invalid_currency", message: "currency must be an ISO 4217 three-letter code" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Optional auth - extract user if token provided

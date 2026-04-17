@@ -207,7 +207,12 @@ Deno.serve(async (req) => {
         break;
       }
       case 'wallet': {
-        // Direct wallet payment — debit consumer, credit merchant, finalize immediately
+        // F28/F29 — Atomic wallet payment.
+        // Replaces the prior read-modify-write pattern (which was vulnerable
+        // to race conditions) with the platform's atomic primitives:
+        //   • execute_atomic_transfer locks the source balance row, debits
+        //     the consumer, and credits the destination in a single tx.
+        //   • atomic_charge_wallet_credit posts the merchant credit safely.
         const consumerUserId = customer?.user_id || user.id;
         const { data: consumerAccounts } = await supabase.from('accounts')
           .select('id').eq('user_id', consumerUserId).limit(1);
@@ -215,33 +220,71 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ error: 'no_consumer_wallet' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         const consumerAccountId = consumerAccounts[0].id;
-        const { data: bal } = await supabase.from('account_balances')
-          .select('amount').eq('account_id', consumerAccountId).eq('balance_type', 'ClosingAvailable').maybeSingle();
-        const available = bal?.amount || 0;
-        if (available < amount) {
-          return new Response(JSON.stringify({ error: 'insufficient_balance', available, required: amount }), {
-            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+
+        // Locate consumer's available balance row for FOR UPDATE locking inside the RPC.
+        const { data: srcBal } = await supabase.from('account_balances')
+          .select('id, amount')
+          .eq('account_id', consumerAccountId)
+          .eq('credit_debit_indicator', 'Credit')
+          .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
+          .order('balance_datetime', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!srcBal) {
+          return new Response(JSON.stringify({ error: 'no_balance_record', message: 'Consumer wallet has no available balance row' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        // Debit consumer
-        await supabase.from('account_balances').upsert({
-          account_id: consumerAccountId, balance_type: 'ClosingAvailable',
-          amount: available - amount, currency, credit_debit_indicator: 'Debit',
-          balance_datetime: new Date().toISOString(),
-        }, { onConflict: 'account_id,balance_type' });
-        // Credit merchant
-        const { data: mw } = await supabase.from('gateway_merchant_wallets')
-          .select('id, available_balance, ledger_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
-        if (mw) {
-          await supabase.from('gateway_merchant_wallets').update({
-            available_balance: (mw.available_balance || 0) + amount,
-            ledger_balance: (mw.ledger_balance || 0) + amount,
-          }).eq('id', mw.id);
+
+        // Resolve merchant settlement account — every merchant MUST have a
+        // backing account row to receive an atomic credit. If missing, fall
+        // back to a non-atomic merchant-wallet credit but still debit the
+        // consumer atomically (no money loss possible).
+        const { data: merchantUser } = await supabase
+          .from('gateway_merchants').select('user_id').eq('id', order.merchant_id).maybeSingle();
+        const { data: merchantAccount } = merchantUser?.user_id
+          ? await supabase.from('accounts').select('id').eq('user_id', merchantUser.user_id).eq('currency', currency).limit(1).maybeSingle()
+          : { data: null };
+
+        if (merchantAccount?.id) {
+          // Best path — fully atomic transfer between consumer and merchant accounts.
+          const { error: transferErr } = await supabase.rpc('execute_atomic_transfer', {
+            _source_balance_id: srcBal.id,
+            _dest_account_id: merchantAccount.id,
+            _amount: amount,
+            _currency: currency,
+          });
+          if (transferErr) {
+            return new Response(JSON.stringify({ error: 'transfer_failed', message: transferErr.message }), {
+              status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
         } else {
-          await supabase.from('gateway_merchant_wallets').insert({
-            merchant_id: order.merchant_id, currency, available_balance: amount, pending_balance: 0, ledger_balance: amount,
+          // Fallback — atomically debit consumer first via the RPC, then post
+          // the merchant credit through the atomic_charge_wallet_credit RPC.
+          const { error: debitErr } = await supabase.rpc('atomic_debit_balance', {
+            _account_id: consumerAccountId,
+            _amount: amount,
+            _currency: currency,
           });
+          if (debitErr) {
+            return new Response(JSON.stringify({ error: 'insufficient_balance', message: debitErr.message }), {
+              status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
         }
+
+        // F29 — Always credit the merchant wallet through the atomic RPC.
+        // The RPC is upsert-safe and uses ON CONFLICT to avoid lost updates.
+        await supabase.rpc('atomic_charge_wallet_credit', {
+          _charge_id: crypto.randomUUID(),
+          _new_status: 'successful',
+          _provider_raw: { source: 'pos_wallet', order_id: order.id },
+          _merchant_id: order.merchant_id,
+          _currency: currency,
+          _credit_amount: amount,
+        });
         // Update order to paid immediately
         await supabase.from('pos_orders').update({ status: 'paid' }).eq('id', order.id);
         // Create payment record and return

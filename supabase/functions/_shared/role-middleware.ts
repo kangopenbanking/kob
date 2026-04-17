@@ -33,7 +33,9 @@ export async function validateUserRole(
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
   if (authError || !user) {
-    console.error('Auth error:', authError);
+    // F36 — Never log raw token, header value, or full error body. Only the
+    // error name + status are safe to emit to function logs.
+    console.error('Auth error:', authError?.name || 'unknown', authError?.status ?? '');
     return { valid: false, error: 'Invalid or expired token' };
   }
 
