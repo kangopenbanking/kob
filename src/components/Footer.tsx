@@ -34,6 +34,7 @@ const footerSections = [
       { label: "Rent Reporting", to: "/rent-reporting", title: "Build credit through rent payments" },
       { label: "CrediQ Credit Score", to: "/crediq", title: "AI-powered credit scoring system" },
       { label: "Credit Scores Info", to: "/credit-scores-info", title: "How credit scores work in Cameroon" },
+      { label: "BYO Mobile Money", to: "/products/byo-mobile-money", title: "Bring your own MTN MoMo or Orange Money credentials" },
     ],
   },
   {

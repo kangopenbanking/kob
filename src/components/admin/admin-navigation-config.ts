@@ -34,6 +34,7 @@ import {
   CheckCircle2,
   Landmark,
   MessageCircle,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 
@@ -83,6 +84,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Settlement Approval", path: "/admin/settlement-approval", icon: CheckCircle2 },
       { title: "Invoice Management", path: "/admin/invoice-management", icon: Receipt },
       { title: "Payment Command Center", path: "/admin/payment-command-center", icon: Activity },
+      { title: "Tenant Connectors (BYO)", path: "/admin/tenant-connectors", icon: Plug },
     ],
   },
   {
