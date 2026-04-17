@@ -151,6 +151,7 @@ export default function AdminTenantConnectors() {
 
   useEffect(() => {
     load();
+    loadPollHealth();
   }, []);
 
   const filtered = rows.filter((r) => {
@@ -284,6 +285,26 @@ export default function AdminTenantConnectors() {
         <StatCard label="Degraded / Unhealthy" value={counts.degraded} icon={Activity} />
         <StatCard label="Disabled" value={counts.disabled} icon={PowerOff} />
       </div>
+
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Poll queue health (BYO direct rails)
+          </CardTitle>
+          <CardDescription>
+            Reconciliation status for MTN/Orange/SOAP charges that providers do not push reliably.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MiniStat label="Pending" value={pollHealth?.pending ?? 0} />
+            <MiniStat label="Oldest pending" value={pollHealth?.oldest_minutes != null ? `${pollHealth.oldest_minutes}m` : "—"} />
+            <MiniStat label="Settled (24h)" value={pollHealth?.terminal_24h ?? 0} />
+            <MiniStat label="Failed/expired (24h)" value={pollHealth?.failed_24h ?? 0} />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
