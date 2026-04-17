@@ -1,101 +1,128 @@
+<final-text>
+Current findings
 
+- The repo already contains `supabase/functions/gateway/index.ts`, `supabase/functions/oauth/index.ts`, and `supabase/functions/health/index.ts`, so the missing piece is not just “create the file”.
+- The current `gateway` wrapper is too thin for the documented REST contract. It only proxies the first path segment, but the downstream gateway functions are action-based, not path-based.
+- That means routes such as:
+  - `GET /gateway/charges`
+  - `GET /gateway/charges/:id`
+  - `POST /gateway/charges/:id/verify`
+  - `GET /gateway/refunds`
+  cannot reliably work through the current wrapper, even if `/gateway/charges` itself exists.
+- The codebase is still mixed:
+  - many frontend docs pages now use flat function names like `gateway-charges-router`
+  - several markdown docs still use nested public paths like `/functions/v1/gateway/charges`, `/functions/v1/oauth/token`, `/functions/v1/gateway/webhooks`
+- OpenAPI still documents nested REST paths (`/v1/gateway/*`, `/v1/oauth/*`, `/v1/health`), so runtime compatibility must match that public contract.
+- There is no dedicated route-existence CI guard yet. The existing guard only blocks deprecated domains, not missing public routes.
 
-# Direct Backend E2E Infrastructure Correction -- Remediation Plan
+Implementation plan
 
-## Discovery Summary
+1. Audit live deployment truth first
+   - In writable mode, verify test (sandbox) and live (production) backend function reachability for `gateway`, `oauth`, `health`, and any other documented top-level families still exposed in public docs.
+   - Produce a before-state matrix showing:
+     - root function existence
+     - representative nested route behavior
+     - whether failures are top-level 404s or internal route mismatches
 
-After the previous bulk correction (90+ files), **11 files** still contain references to forbidden API domains. All have been classified below.
+2. Replace the thin `gateway` proxy with a real REST-to-action translator
+   - Keep the existing payment business logic functions unchanged.
+   - Upgrade `supabase/functions/gateway/index.ts` so it maps method + path to existing downstream logic, for example:
+     - `POST /charges` -> `gateway-charges-router`
+     - `GET /charges` -> `gateway-query?action=list-charges`
+     - `GET /charges/:id` -> `gateway-query?action=get-charge&id=:id`
+     - `POST /charges/:id/verify` -> `gateway-charges-router?action=verify&id=:id`
+     - `POST /charges/:id/validate` -> `gateway-charges-router?action=validate`
+     - `POST /refunds` -> `gateway-create-refund`
+     - `GET /refunds` -> `gateway-query?action=list-refunds`
+     - `GET /refunds/:id` -> `gateway-query?action=get-refund&id=:id`
+   - Apply the same pattern to payouts, disputes, settlements, merchants, webhooks, payment links, subscriptions, and other documented families where real downstream logic already exists.
+   - Preserve auth, idempotency, query params, body forwarding, and CORS.
+   - Remove the current automatic service-role header injection for protected routes so auth behavior remains correct.
 
-### Remaining Forbidden Domain Inventory
+3. Verify and tighten the other public compatibility entrypoints
+   - Confirm `oauth/index.ts` correctly supports `/oauth/token`, `/oauth/authorize`, `/oauth/introspect`, and `/oauth/revoke`.
+   - Confirm `health/index.ts` correctly supports `/health`.
+   - Add or adjust any other top-level wrappers only where public docs/examples truly require nested routes.
 
-| File | Domain | Classification | Action |
-|---|---|---|---|
-| `vite-plugin-prerender-docs.ts` | `sandbox.kangopenbanking.com` (6x), `api.kangopenbanking.com` (1x) | **Docs/SEO prerender content** | REPLACE with direct backend URL |
-| `README.md` | `api.kangopenbanking.com` (2x) | **Docs example** | REPLACE with direct backend URL |
-| `docs/api-styleguide.md` | `api.kangopenbanking.com` (1x) | **Internal architecture docs** | UPDATE to reflect direct backend |
-| `docs/audit/api-docs-indexing-audit-2026-03-08.md` | `api.kangopenbanking.com` (1x) | **Historical audit note** | PRESERVE -- archived finding, not active |
-| `supabase/functions/api-contract-test/index.ts` | Both domains (2x) | **Domain liveness test** | PRESERVE -- tests DNS/SSL, not API routing |
-| `src/config/api.ts` | Both domains (1x each) | **Comment only** | PRESERVE -- warning comment |
-| `src/lib/kob-api-client.ts` | Both domains (1x each) | **Comment only** | PRESERVE -- warning comment |
-| `src/pages/developer/Changelog.tsx` | Both domains (1x each) | **Changelog description** | PRESERVE -- historical changelog entry |
-| `src/test/direct-backend-guard.test.ts` | All 3 domains | **Regression guard** | PRESERVE -- test definitions |
-| `src/test/api-config.test.ts` | `api.kangopenbanking.com` (3x) | **Regression guard** | PRESERVE -- negative assertions |
-| `src/test/gateway-integration.test.ts` | `api.kangopenbanking.com` (2x) | **Regression guard** | PRESERVE -- negative assertions |
+4. Correct contract drift surgically
+   - Audit each documented `/v1/gateway/*` path against real backend capability.
+   - If a documented route already has real backend support, map it through the compatibility wrapper.
+   - If a documented route has no real implementation today, correct the OpenAPI/docs/changelog instead of inventing new core behavior.
 
-### Classification Decision
+5. Align the public contract source of truth
+   - Update the OpenAPI source of truth and re-sync:
+     - `public/openapi.json`
+     - `public/openapi.yaml`
+     - `public/openapi-sandbox.json`
+     - `public/openapi-sandbox.yaml`
+   - Keep the public contract consistent with the direct backend base URL and nested documented paths.
+   - Re-sync any generated Postman/spec assets from the same source.
 
-- **3 files need active remediation** (contain forbidden domains in content served to users/crawlers)
-- **8 files are safe** (comments, test assertions, changelog history, domain liveness checks)
+6. Clean up the mixed documentation state
+   - Standardize all public docs and quickstarts to one public contract: nested documented URLs that resolve on the direct backend base URL.
+   - Fix the remaining stale markdown docs that still drift from runtime, especially:
+     - developer quickstarts
+     - unified payments
+     - refunds
+     - webhooks
+     - marketplace checkout
+     - bank data aggregator
+     - versioning references
+   - Update the changelog only after re-testing, so it reflects verified reality.
 
----
+7. Audit internal consumers without rewriting the platform
+   - Verify real executing callers across:
+     - shared API wrappers
+     - payment flows
+     - test-report pages
+     - backend function-to-function calls
+   - Keep internal flat invocations where they are intentional and safe.
+   - Only public-facing examples and external contract paths need nested compatibility guarantees.
 
-## Implementation Plan
+8. Add regression guards
+   - Extend `supabase/functions/api-contract-test/index.ts` to test the public nested contract, not just flat internal functions.
+   - Update `/developer/test-report` to surface nested-route checks.
+   - Add a route-existence CI workflow that fails if documented public routes return backend “Requested function was not found”.
+   - Add a docs consistency scan so public docs cannot drift back to the wrong route style.
 
-### Phase 1 -- Fix `vite-plugin-prerender-docs.ts` (Critical)
+Validation plan
 
-This file generates static HTML for SEO crawlers. It currently shows `sandbox.kangopenbanking.com/v1` and `api.kangopenbanking.com/v1` as API base URLs in prerendered content.
+- Test sandbox first, then production after publish.
+- For each route, acceptable outcomes are:
+  - 200
+  - 400
+  - 401
+  - 403
+  - app-level 404 resource-not-found
+- Unacceptable outcome:
+  - backend “Requested function was not found”
+- Minimum live matrix:
+  - `/health`
+  - `/oauth/token`
+  - `/oauth/authorize`
+  - `/gateway/charges`
+  - `/gateway/charges/:id`
+  - `/gateway/charges/:id/verify`
+  - `/gateway/refunds`
+  - `/gateway/refunds/:id`
+  - `/gateway/payouts`
+  - `/gateway/webhooks`
+  - any other still-documented nested gateway families
 
-**Changes:**
-- Replace all `https://sandbox.kangopenbanking.com/v1/` curl examples with the direct backend URL pattern
-- Replace `Base URL: https://api.kangopenbanking.com/v1 | Sandbox: https://sandbox.kangopenbanking.com/v1` with the direct backend URL
-- Replace sandbox base URL display with direct backend URL
+Deliverables after implementation
 
-### Phase 2 -- Fix `README.md`
+- before/after deployment inventory
+- sandbox vs production route matrix
+- wrapper/router mapping summary
+- OpenAPI correction summary
+- docs/examples correction summary
+- frontend/backend impact summary
+- regression guard summary
+- final readiness statement with live proof
 
-The project README shows `api.kangopenbanking.com/v1` as the base URL and in the curl example.
+Technical detail
 
-**Changes:**
-- Replace base URL section with direct backend URL
-- Replace curl example to use direct backend URL
-
-### Phase 3 -- Fix `docs/api-styleguide.md`
-
-Line 26 describes the custom domain routing. This is an active architecture doc that should reflect current reality.
-
-**Changes:**
-- Update the routing description to state the direct backend URL is the canonical API endpoint
-
-### Phase 4 -- Live Endpoint Validation
-
-Test representative endpoints via `curl_edge_functions` to confirm JSON responses:
-- `GET /api-health`
-- `GET /oidc-config`
-- `GET /public-api-spec` (verify servers[] block)
-- `GET /gateway-charges-router?action=fee_estimate&amount=5000&channel=mobile_money&currency=XAF`
-- `POST /gateway-payouts-router` (expect 401 JSON)
-
-### Phase 5 -- Run `api-contract-test`
-
-Execute the contract test suite and confirm 29/29 PASS.
-
-### Phase 6 -- Final grep verification
-
-Run final forbidden domain count to confirm zero active references remain (excluding allowed categories: comments, test guards, changelog, domain liveness tests, archived audit notes).
-
-### Phase 7 -- Generate final audit report
-
-Produce `direct-backend-final-audit-2026-04-14.md` with:
-- Before/after domain counts
-- Endpoint validation matrix
-- File-by-file change log
-- Remaining risks
-- Recommended next steps
-
----
-
-## What Will NOT Change
-
-- Test guard files (they assert AGAINST forbidden domains)
-- Comment-only references (warnings to not use those domains)
-- Changelog historical entries
-- Domain liveness checks in contract test (validates DNS/SSL, not API routing)
-- Archived audit documents
-- All business logic, routes, schemas, operationIds
-
-## Estimated Scope
-
-- 3 files to modify
-- ~12 URL replacements
-- Full validation pass with endpoint testing
-- Final audit report generation
-
+- The key bug is not just missing deployment. The current `gateway` wrapper forwards path tails to downstream flat functions, but the downstream gateway functions expect `action`-style requests.
+- Example: `GET /gateway/charges` currently maps toward `gateway-charges-router`, but that function treats unactioned `GET` requests as `fee_estimate`, not “list charges”.
+- So the permanent fix is: keep the existing business functions, but make the public compatibility layer translate REST paths into the correct downstream actions, then prove that in sandbox and production with live tests.
+</final-text>
