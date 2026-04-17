@@ -14,7 +14,27 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    // F37: Require either service_role bearer or shared internal secret.
+    // This function mutates orders + inventory and must NEVER be callable anonymously.
+    const authHeader = req.headers.get('Authorization') || '';
+    const internalSecret = req.headers.get('x-internal-secret') || '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const expectedInternalSecret = Deno.env.get('POS_FINALIZE_INTERNAL_SECRET') || '';
+
+    const isServiceRole =
+      authHeader === `Bearer ${serviceRoleKey}` ||
+      authHeader.replace(/^Bearer\s+/i, '') === serviceRoleKey;
+    const isInternalCaller =
+      expectedInternalSecret.length > 0 && internalSecret === expectedInternalSecret;
+
+    if (!isServiceRole && !isInternalCaller) {
+      return new Response(
+        JSON.stringify({ error: 'unauthorized', message: 'pos-finalize-payment is internal-only' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceRoleKey);
 
     const body = await req.json();
     const { charge_id, status, provider_ref } = body;

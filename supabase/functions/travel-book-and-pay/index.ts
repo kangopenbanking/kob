@@ -95,38 +95,52 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Validate seats still available
-    if (trip.available_seats < selected_seats.length) {
-      return new Response(
-        JSON.stringify({ error: "Not enough seats available", available: trip.available_seats }),
-        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // F39: Atomic seat reservation under row lock (prevents overselling).
+    // travel_reserve_seats locks the trip row, validates availability + conflicts,
+    // and decrements available_seats in a single transaction.
+    const { data: reserveResult, error: reserveErr } = await supabaseAdmin.rpc(
+      "travel_reserve_seats",
+      { _trip_id: trip_id, _seats: selected_seats }
+    );
 
-    // Check seats aren't already booked
-    const { data: confirmedBookings } = await supabaseAdmin
-      .from("travel_bookings")
-      .select("id")
-      .eq("trip_id", trip_id)
-      .in("booking_status", ["confirmed"]);
-
-    if (confirmedBookings?.length) {
-      const bookingIds = confirmedBookings.map((b: any) => b.id);
-      const { data: existingTickets } = await supabaseAdmin
-        .from("travel_tickets")
-        .select("seat_label")
-        .in("booking_id", bookingIds)
-        .in("ticket_status", ["valid", "used"]);
-
-      const takenSeats = (existingTickets || []).map((t: any) => t.seat_label);
-      const conflicts = selected_seats.filter((s: string) => takenSeats.includes(s));
-      if (conflicts.length > 0) {
+    if (reserveErr) {
+      const msg = reserveErr.message || "";
+      if (msg.includes("seat_conflict")) {
+        const conflicts = msg.split("seat_conflict:")[1]?.trim().split(",") || [];
         return new Response(
           JSON.stringify({ error: "Some seats are already taken", conflicting_seats: conflicts }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (msg.includes("insufficient_seats")) {
+        return new Response(
+          JSON.stringify({ error: "Not enough seats available", detail: msg }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (msg.includes("trip_not_found")) {
+        return new Response(JSON.stringify({ error: "Trip not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.error("travel_reserve_seats error:", reserveErr);
+      return new Response(
+        JSON.stringify({ error: "Reservation failed", detail: msg }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    // Helper to release the reservation if a downstream step fails
+    const releaseSeats = async () => {
+      try {
+        await supabaseAdmin
+          .from("travel_trips")
+          .update({ available_seats: trip.available_seats })
+          .eq("id", trip_id);
+      } catch (_) {
+        // best-effort
+      }
+    };
 
     // 3. Calculate price with discount
     const basePrice = selected_seats.length * (trip.price || 0);
