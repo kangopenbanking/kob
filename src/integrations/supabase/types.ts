@@ -2340,6 +2340,71 @@ export type Database = {
           },
         ]
       }
+      bank_onboarding_records: {
+        Row: {
+          adapter_type: string | null
+          assessment_data: Json | null
+          bank_id: string | null
+          bank_name: string
+          certification_checklist: Json | null
+          certification_passed: boolean | null
+          created_at: string
+          created_by: string | null
+          credentials_configured: boolean | null
+          go_live_at: string | null
+          id: string
+          notes: string | null
+          sandbox_test_passed: boolean | null
+          sandbox_test_results: Json | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          adapter_type?: string | null
+          assessment_data?: Json | null
+          bank_id?: string | null
+          bank_name: string
+          certification_checklist?: Json | null
+          certification_passed?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          credentials_configured?: boolean | null
+          go_live_at?: string | null
+          id?: string
+          notes?: string | null
+          sandbox_test_passed?: boolean | null
+          sandbox_test_results?: Json | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          adapter_type?: string | null
+          assessment_data?: Json | null
+          bank_id?: string | null
+          bank_name?: string
+          certification_checklist?: Json | null
+          certification_passed?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          credentials_configured?: boolean | null
+          go_live_at?: string | null
+          id?: string
+          notes?: string | null
+          sandbox_test_passed?: boolean | null
+          sandbox_test_results?: Json | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_onboarding_records_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_payment_status_events: {
         Row: {
           details_json: Json | null
@@ -20530,6 +20595,7 @@ export type Database = {
           amount: number | null
           balance_after: Json | null
           booking_datetime: string | null
+          connector_audit_trail: Json | null
           created_at: string
           credit_debit_indicator: string | null
           creditor_account: Json | null
@@ -20539,7 +20605,10 @@ export type Database = {
           institution_id: string
           merchant_details: Json | null
           metadata: Json | null
+          reconciliation_status: string | null
+          source_connector: string | null
           status: string
+          sync_status: string | null
           transaction_information: string | null
           transaction_type: string
           user_id: string | null
@@ -20550,6 +20619,7 @@ export type Database = {
           amount?: number | null
           balance_after?: Json | null
           booking_datetime?: string | null
+          connector_audit_trail?: Json | null
           created_at?: string
           credit_debit_indicator?: string | null
           creditor_account?: Json | null
@@ -20559,7 +20629,10 @@ export type Database = {
           institution_id: string
           merchant_details?: Json | null
           metadata?: Json | null
+          reconciliation_status?: string | null
+          source_connector?: string | null
           status: string
+          sync_status?: string | null
           transaction_information?: string | null
           transaction_type: string
           user_id?: string | null
@@ -20570,6 +20643,7 @@ export type Database = {
           amount?: number | null
           balance_after?: Json | null
           booking_datetime?: string | null
+          connector_audit_trail?: Json | null
           created_at?: string
           credit_debit_indicator?: string | null
           creditor_account?: Json | null
@@ -20579,7 +20653,10 @@ export type Database = {
           institution_id?: string
           merchant_details?: Json | null
           metadata?: Json | null
+          reconciliation_status?: string | null
+          source_connector?: string | null
           status?: string
+          sync_status?: string | null
           transaction_information?: string | null
           transaction_type?: string
           user_id?: string | null
