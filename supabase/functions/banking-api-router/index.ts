@@ -36,6 +36,34 @@ Deno.serve(async (req) => {
     let result: Record<string, unknown>;
     let statusCode = 200;
 
+    // ── Authorization helpers ──
+    // Verify the requesting user is admin OR owner/staff of the institution
+    const authorizeInstitution = async (instId: string | null | undefined): Promise<{ ok: boolean; reason?: string }> => {
+      if (!userId) return { ok: false, reason: "Authentication required" };
+      if (!instId) return { ok: false, reason: "institution_id required" };
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+      if (isAdmin) return { ok: true };
+      const { data: isOwner } = await supabase.rpc("is_institution_owner", { _user_id: userId, _institution_id: instId });
+      if (isOwner) return { ok: true };
+      const { data: isStaff } = await supabase.rpc("is_institution_staff_admin", { _user_id: userId, _institution_id: instId });
+      if (isStaff) return { ok: true };
+      return { ok: false, reason: "Forbidden: not authorized for this institution" };
+    };
+
+    // Verify the user owns the account or is admin/staff of its institution
+    const authorizeAccount = async (accountId: string): Promise<{ ok: boolean; reason?: string; institutionId?: string | null }> => {
+      if (!userId) return { ok: false, reason: "Authentication required" };
+      const { data: account } = await supabase
+        .from("accounts")
+        .select("user_id, institution_id")
+        .eq("id", accountId)
+        .maybeSingle();
+      if (!account) return { ok: false, reason: "Account not found" };
+      if (account.user_id === userId) return { ok: true, institutionId: account.institution_id };
+      const inst = await authorizeInstitution(account.institution_id);
+      return inst.ok ? { ok: true, institutionId: account.institution_id } : { ok: false, reason: inst.reason };
+    };
+
     switch (action) {
       // ── Bank Discovery ──
       case "list_banks": {
