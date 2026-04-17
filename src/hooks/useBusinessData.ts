@@ -19,17 +19,17 @@ export const useBusinessData = (merchantId?: string) => {
     staleTime: 5 * 60 * 1000, // 5 min
   });
 
-  // Fetch wallet balances — edge function, can be slow
+  // Fetch wallet balances — direct DB query (faster, RLS-protected, avoids edge fn 400)
   const { data: wallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
     queryKey: ['merchant-wallets', merchantId],
     queryFn: async () => {
       if (!merchantId) return [];
-      const { data, error } = await supabase.functions.invoke('gateway-get-merchant-balance', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const { data, error } = await supabase
+        .from('gateway_merchant_wallets')
+        .select('*')
+        .eq('merchant_id', merchantId);
       if (error) throw error;
-      return data?.data || [];
+      return data || [];
     },
     enabled: !!merchantId,
     staleTime: 2 * 60 * 1000, // 2 min

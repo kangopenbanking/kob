@@ -48,9 +48,14 @@ serve(async (req) => {
       throw new Error('PIN must be exactly 6 digits');
     }
 
-    // Validate password strength
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+    // Validate password strength (NIST 800-63B aligned: ≥8 chars + mixed case + digit)
+    if (
+      password.length < 8 ||
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/\d/.test(password)
+    ) {
+      throw new Error('Password must be at least 8 characters and include uppercase, lowercase, and a digit');
     }
 
     // Check if staff email already exists in this merchant's staff
