@@ -59,6 +59,7 @@ const CustomerTransfer: React.FC = () => {
   const [nameSuggestions, setNameSuggestions] = useState<any[]>([]);
   const [nameSearching, setNameSearching] = useState(false);
   const [selectedRecipientName, setSelectedRecipientName] = useState('');
+  const [selectedRecipientHasAccount, setSelectedRecipientHasAccount] = useState<boolean | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
