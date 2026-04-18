@@ -304,12 +304,24 @@ const CustomerTransfer: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{transferResult.rail}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)]/50 px-4 py-2">
-              <Clock className="h-3.5 w-3.5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
-              <p className="text-[11px] font-semibold text-[hsl(150,40%,35%)]">
-                {transferResult?.status === 'Booked' ? 'Completed' : 'Processing · Usually instant'}
-              </p>
-            </div>
+            {transferResult?.held_pending_activation ? (
+              <div className="w-full rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-700 dark:text-amber-400" strokeWidth={1.5} />
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-300">Funds Held — Pending Activation</p>
+                </div>
+                <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                  The recipient hasn't fully activated their Kang account yet. We've debited your wallet and are holding the funds securely. They will be released automatically the moment <span className="font-semibold">{transferResult?.receiver || recipient}</span> verifies their phone and sets a PIN. Please notify them to complete activation.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)]/50 px-4 py-2">
+                <Clock className="h-3.5 w-3.5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
+                <p className="text-[11px] font-semibold text-[hsl(150,40%,35%)]">
+                  {transferResult?.status === 'Booked' ? 'Completed' : 'Processing · Usually instant'}
+                </p>
+              </div>
+            )}
             {transferResult?.transaction_reference && (
               <p className="font-mono text-[10px] text-muted-foreground">Ref: {transferResult.transaction_reference}</p>
             )}
