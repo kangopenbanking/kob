@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,8 +37,17 @@ const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
 const CustomerRegister: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refCodeFromUrl = searchParams.get('ref') || '';
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Persist referral code in localStorage so it survives auth round-trips
+  useEffect(() => {
+    if (refCodeFromUrl) {
+      localStorage.setItem('pending_referral_code', refCodeFromUrl.toUpperCase().trim());
+    }
+  }, [refCodeFromUrl]);
 
   // Step 0 - Reasons
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -182,6 +191,19 @@ const CustomerRegister: React.FC = () => {
         });
         if (pinError) throw pinError;
         if (pinData?.error) throw new Error(pinData.error);
+      }
+
+      // Link referral if code was captured during signup
+      const pendingRefCode = localStorage.getItem('pending_referral_code');
+      if (pendingRefCode) {
+        try {
+          await supabase.functions.invoke('customer-rewards', {
+            body: { action: 'link_referral', referral_code: pendingRefCode },
+          });
+          localStorage.removeItem('pending_referral_code');
+        } catch (refErr) {
+          console.error('Referral link failed (non-blocking):', refErr);
+        }
       }
 
       toast.success('Registration complete!');
