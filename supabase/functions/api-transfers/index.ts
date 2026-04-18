@@ -398,6 +398,25 @@ serve(async (req) => {
       }
     }
 
+    // ══════════════════════════════════════════════
+    // ACTIVATION GATE: Detect if recipient has fully activated their account.
+    // An "activated" recipient has BOTH a PIN set AND a verified phone number.
+    // Unverified recipients receive funds via the pending_inbound_transfers hold table.
+    // ══════════════════════════════════════════════
+    let recipientIsActivated = true;
+    let recipientProfile: any = null;
+    if (destAccount.user_id && destAccount.user_id !== user.id) {
+      const { data: rp } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number, pin_code_hash')
+        .eq('id', destAccount.user_id)
+        .maybeSingle();
+      recipientProfile = rp;
+      if (!rp?.pin_code_hash || !rp?.phone_number) {
+        recipientIsActivated = false;
+      }
+    }
+
     // Generate transaction reference
     const transactionRef = reference || `TXN-${Date.now()}-${crypto.randomUUID().substring(0, 8)}`;
     const now = new Date().toISOString();
