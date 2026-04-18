@@ -510,6 +510,39 @@ const CustomerCashOut: React.FC = () => {
               </div>
             </div>
 
+            {selectedAccount?.account_type === 'bank_account' && (
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Network className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                  <p className="text-xs font-bold text-foreground">Payout Rail</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Choose how this transfer reaches your bank. Open Banking uses the Kang Open Banking API for direct, lower-cost settlement when your bank is a registered KOB institution.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'auto', label: 'Auto', sub: 'Recommended' },
+                    { key: 'kob_open_banking', label: 'Open Banking', sub: 'KOB API' },
+                    { key: 'flutterwave', label: 'Card Network', sub: 'Flutterwave' },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPreferredRail(opt.key)}
+                      className={`rounded-xl border-2 p-2 text-left transition-colors ${
+                        preferredRail === opt.key
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                    >
+                      <p className="text-[11px] font-bold text-foreground">{opt.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{opt.sub}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button onClick={() => setShowPin(true)} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
