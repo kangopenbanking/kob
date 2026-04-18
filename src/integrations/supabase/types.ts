@@ -16826,15 +16826,25 @@ export type Database = {
           category: string
           created_at: string
           currency: string
+          destination_account_id: string | null
           end_date: string | null
           frequency: string
           id: string
           is_active: boolean
+          last_run_at: string | null
+          last_run_error: string | null
+          last_run_status: string | null
           metadata: Json | null
           name: string
           next_payment_date: string
+          notes: string | null
           notify: boolean
+          payment_type: string
           payments_made: number
+          recipient_name: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
+          source_account_id: string | null
           start_date: string
           updated_at: string
           user_id: string
@@ -16844,15 +16854,25 @@ export type Database = {
           category?: string
           created_at?: string
           currency?: string
+          destination_account_id?: string | null
           end_date?: string | null
           frequency?: string
           id?: string
           is_active?: boolean
+          last_run_at?: string | null
+          last_run_error?: string | null
+          last_run_status?: string | null
           metadata?: Json | null
           name: string
           next_payment_date: string
+          notes?: string | null
           notify?: boolean
+          payment_type?: string
           payments_made?: number
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          source_account_id?: string | null
           start_date: string
           updated_at?: string
           user_id: string
@@ -16862,15 +16882,25 @@ export type Database = {
           category?: string
           created_at?: string
           currency?: string
+          destination_account_id?: string | null
           end_date?: string | null
           frequency?: string
           id?: string
           is_active?: boolean
+          last_run_at?: string | null
+          last_run_error?: string | null
+          last_run_status?: string | null
           metadata?: Json | null
           name?: string
           next_payment_date?: string
+          notes?: string | null
           notify?: boolean
+          payment_type?: string
           payments_made?: number
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          source_account_id?: string | null
           start_date?: string
           updated_at?: string
           user_id?: string
