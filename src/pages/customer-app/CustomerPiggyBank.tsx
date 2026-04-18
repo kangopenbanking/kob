@@ -527,7 +527,7 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
   );
 }
 
-function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void }) {
+function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void; onDelete?: (planId: string, planName: string, isCancelled: boolean) => void }) {
   const payments = plan.piggybank_payments || [];
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const missedPayments = payments.filter((p: any) => p.status === 'missed' || p.status === 'late');
