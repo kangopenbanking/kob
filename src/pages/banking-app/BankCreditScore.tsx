@@ -486,7 +486,13 @@ function BankPreApprovedOffers({ score }: { score: number }) {
             <div className="flex items-center gap-2 mt-3">
               {offer.requires_existing_account ? (
                 <button
-                  onClick={() => navigate('/banking/accounts')}
+                  onClick={() => {
+                    if (offer.apply_path) {
+                      navigate(offer.apply_path);
+                    } else {
+                      toast.message('Account required', { description: 'This bank requires you to open an account first.' });
+                    }
+                  }}
                   className="flex-1 rounded-xl bg-[hsl(var(--bank-sky))] py-2.5 text-xs font-bold text-white text-center active:scale-[0.98] transition-transform"
                 >
                   Open Account & Apply
