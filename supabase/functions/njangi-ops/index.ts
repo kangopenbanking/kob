@@ -337,6 +337,13 @@ async function handlePayout(req: Request, body: any) {
   if (!group) throw new Error('Group not found');
   if (group.creator_id !== user.id) throw new Error('Only the group creator can trigger payouts');
 
+  // ✅ G8: Defensive guard — block duplicate payouts for the same group/cycle
+  const { data: existingPayout } = await supabase.from('njangi_payouts')
+    .select('id, recipient_member_id, amount').eq('group_id', group_id).eq('cycle_number', group.current_cycle).maybeSingle();
+  if (existingPayout) {
+    return json({ success: true, idempotent_replay: true, payout: existingPayout, reason: 'cycle_already_paid' });
+  }
+
   const { data: members } = await supabase.from('njangi_members').select('*').eq('group_id', group_id).eq('status', 'active');
   const { data: contributions } = await supabase.from('njangi_contributions').select('*').eq('group_id', group_id).eq('cycle_number', group.current_cycle).in('status', ['paid', 'late']);
 
