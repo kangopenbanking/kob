@@ -5701,6 +5701,33 @@ export type Database = {
           },
         ]
       }
+      crediq_reminder_log: {
+        Row: {
+          id: string
+          metadata: Json | null
+          period_key: string
+          reminder_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          period_key: string
+          reminder_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          period_key?: string
+          reminder_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crediq_report_dispatch_log: {
         Row: {
           completed_at: string | null
@@ -5734,6 +5761,57 @@ export type Database = {
           started_at?: string
           total_users?: number
           triggered_by?: string
+        }
+        Relationships: []
+      }
+      crediq_subscriptions: {
+        Row: {
+          amount: number
+          auto_renew: boolean
+          cancelled_at: string | null
+          created_at: string
+          currency: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          last_charge_id: string | null
+          metadata: Json | null
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          last_charge_id?: string | null
+          metadata?: Json | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          last_charge_id?: string | null
+          metadata?: Json | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -5882,7 +5960,9 @@ export type Database = {
           is_active: boolean | null
           is_sandbox: boolean | null
           last_query_at: string | null
+          monthly_query_cap_override: number | null
           pricing_tier: string | null
+          pricing_tier_id: string | null
           rate_limit_per_day: number | null
           rate_limit_per_minute: number | null
           total_queries: number | null
@@ -5904,7 +5984,9 @@ export type Database = {
           is_active?: boolean | null
           is_sandbox?: boolean | null
           last_query_at?: string | null
+          monthly_query_cap_override?: number | null
           pricing_tier?: string | null
+          pricing_tier_id?: string | null
           rate_limit_per_day?: number | null
           rate_limit_per_minute?: number | null
           total_queries?: number | null
@@ -5926,7 +6008,9 @@ export type Database = {
           is_active?: boolean | null
           is_sandbox?: boolean | null
           last_query_at?: string | null
+          monthly_query_cap_override?: number | null
           pricing_tier?: string | null
+          pricing_tier_id?: string | null
           rate_limit_per_day?: number | null
           rate_limit_per_minute?: number | null
           total_queries?: number | null
@@ -5940,7 +6024,100 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "credit_api_clients_pricing_tier_id_fkey"
+            columns: ["pricing_tier_id"]
+            isOneToOne: false
+            referencedRelation: "credit_api_pricing_tiers"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      credit_api_monthly_usage: {
+        Row: {
+          client_id: string
+          created_at: string
+          currency: string
+          id: string
+          period_month: string
+          report_queries: number
+          score_queries: number
+          total_billed: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          period_month: string
+          report_queries?: number
+          score_queries?: number
+          total_billed?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          period_month?: string
+          report_queries?: number
+          score_queries?: number
+          total_billed?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_api_monthly_usage_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "credit_api_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_api_pricing_tiers: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          included_queries: number
+          is_active: boolean
+          monthly_base_fee: number
+          monthly_query_cap: number | null
+          per_query_report_fee: number
+          per_query_score_fee: number
+          tier_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          included_queries?: number
+          is_active?: boolean
+          monthly_base_fee?: number
+          monthly_query_cap?: number | null
+          per_query_report_fee?: number
+          per_query_score_fee?: number
+          tier_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          included_queries?: number
+          is_active?: boolean
+          monthly_base_fee?: number
+          monthly_query_cap?: number | null
+          per_query_report_fee?: number
+          per_query_score_fee?: number
+          tier_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       credit_api_usage_logs: {
         Row: {
@@ -22846,6 +23023,7 @@ export type Database = {
           verified_at: string
         }[]
       }
+      has_crediq_premium: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: {
           _action: Database["public"]["Enums"]["permission_action"]
@@ -22863,6 +23041,15 @@ export type Database = {
       }
       hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
       hash_secret_value: { Args: { secret: string }; Returns: string }
+      increment_credit_api_usage: {
+        Args: {
+          _billed_amount: number
+          _client_id: string
+          _currency?: string
+          _query_kind: string
+        }
+        Returns: Json
+      }
       increment_remittance_usage: {
         Args: {
           _amount: number
