@@ -178,9 +178,29 @@ async function handlePreapprovedOffers(req: Request, body: any) {
     (banks || []).forEach((b: any) => bankMap.set(b.institution_id, b));
   }
 
+  // Look up the user's existing applications for these offers so we can hide the
+  // Apply button and show a "pending review" indicator instead. We treat any
+  // non-terminal status (pending_review, approved, disbursed) as "already applied".
+  const offerIds = (offers || []).map((o: any) => o.id);
+  const existingAppByOffer = new Map<string, any>();
+  if (offerIds.length > 0) {
+    const { data: existingApps } = await serviceClient
+      .from('preapproved_loan_applications')
+      .select('id, offer_id, status, application_number, created_at')
+      .eq('user_id', user.id)
+      .in('offer_id', offerIds)
+      .in('status', ['pending_review', 'approved', 'disbursed'])
+      .order('created_at', { ascending: false });
+    (existingApps || []).forEach((a: any) => {
+      // Keep the most recent per offer (first wins because we ordered desc)
+      if (!existingAppByOffer.has(a.offer_id)) existingAppByOffer.set(a.offer_id, a);
+    });
+  }
+
   const enrichedOffers = (offers || []).map((offer: any) => {
     const hasAccount = userInstitutionIds.has(offer.institution_id);
     const bank = bankMap.get(offer.institution_id);
+    const existing = existingAppByOffer.get(offer.id) || null;
     return {
       id: offer.id,
       institution_id: offer.institution_id,
@@ -199,6 +219,15 @@ async function handlePreapprovedOffers(req: Request, body: any) {
       bank_id: bank?.id || null,
       bank_name: bank?.display_name || null,
       apply_path: bank?.id ? `/bank/${bank.id}/apply` : null,
+      already_applied: !!existing,
+      existing_application: existing
+        ? {
+            id: existing.id,
+            status: existing.status,
+            application_number: existing.application_number,
+            applied_at: existing.created_at,
+          }
+        : null,
     };
   });
 

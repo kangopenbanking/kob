@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { AlertTriangle, Building2, CheckCircle, Percent, Clock, Banknote, Loader2, ExternalLink } from 'lucide-react';
+import { AlertTriangle, Building2, CheckCircle, Percent, Clock, Banknote, Loader2, ExternalLink, Hourglass } from 'lucide-react';
 import { toast } from 'sonner';
 import { showApplyResult, showNetworkApplyError } from '@/lib/applyErrorMessage';
 
@@ -35,6 +35,22 @@ interface Offer {
   bank_id?: string | null;
   bank_name?: string | null;
   apply_path?: string | null;
+  already_applied?: boolean;
+  existing_application?: {
+    id: string;
+    status: string;
+    application_number?: string | null;
+    applied_at?: string | null;
+  } | null;
+}
+
+function statusLabel(status?: string) {
+  switch (status) {
+    case 'pending_review': return 'Pending bank review';
+    case 'approved': return 'Approved — awaiting disbursement';
+    case 'disbursed': return 'Disbursed';
+    default: return 'Application in progress';
+  }
 }
 
 export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffersCardProps) {
@@ -173,14 +189,29 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                className="w-full rounded-full"
-                onClick={() => openApplyDialog(offer)}
-              >
-                {offer.requires_existing_account ? 'Open Account & Apply' : 'Apply Now'}
-                {offer.requires_existing_account && <ExternalLink className="h-3 w-3 ml-1" />}
-              </Button>
+              {offer.already_applied ? (
+                <div className="w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 flex items-start gap-2">
+                  <Hourglass className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                      You have already applied
+                    </p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                      {statusLabel(offer.existing_application?.status)}
+                      {offer.existing_application?.application_number ? ` · Ref ${offer.existing_application.application_number}` : ''}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  className="w-full rounded-full"
+                  onClick={() => openApplyDialog(offer)}
+                >
+                  {offer.requires_existing_account ? 'Open Account & Apply' : 'Apply Now'}
+                  {offer.requires_existing_account && <ExternalLink className="h-3 w-3 ml-1" />}
+                </Button>
+              )}
             </div>
           ))}
         </CardContent>
