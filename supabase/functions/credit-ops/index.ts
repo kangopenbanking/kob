@@ -362,6 +362,30 @@ async function handleApplyPreapproved(req: Request, body: any) {
     );
   }
 
+  // Create the application FIRST so a failed inquiry insert doesn't leave an
+  // orphaned -5 score impact with no corresponding loan application.
+  const { data: application, error: appErr } = await serviceClient
+    .from('preapproved_loan_applications')
+    .insert({
+      offer_id,
+      user_id: user.id,
+      institution_id: offer.institution_id,
+      requested_amount,
+      requested_tenure_months: requested_tenure_months || offer.max_tenure_months,
+      status: 'pending_review',
+      credit_score_at_application: currentScore,
+      has_existing_account: hasExistingAccount,
+      score_impact: -5,
+    })
+    .select('id')
+    .single();
+
+  if (appErr) {
+    console.error('apply-preapproved: application insert failed', appErr);
+    return appError('APPLICATION_FAILED', 'We could not submit your application.', 'A temporary issue prevented submission. Please try again. No credit inquiry was recorded.');
+  }
+
+  // Now log the hard inquiry tied to this application.
   const { data: inquiry, error: inqErr } = await serviceClient
     .from('credit_inquiries')
     .insert({
@@ -379,32 +403,20 @@ async function handleApplyPreapproved(req: Request, body: any) {
     .single();
 
   if (inqErr) {
-    console.error('apply-preapproved: hard inquiry insert failed', inqErr);
+    // Roll back the application so the user can retry cleanly.
+    console.error('apply-preapproved: hard inquiry insert failed, rolling back application', inqErr);
+    await serviceClient.from('preapproved_loan_applications').delete().eq('id', application.id);
     return appError('INQUIRY_FAILED', 'We could not record your credit inquiry.', 'Please try again in a moment. No application has been created.');
   }
 
-  const { data: application, error: appErr } = await serviceClient
+  // Link inquiry back to the application.
+  await serviceClient
     .from('preapproved_loan_applications')
-    .insert({
-      offer_id,
-      user_id: user.id,
-      institution_id: offer.institution_id,
-      requested_amount,
-      requested_tenure_months: requested_tenure_months || offer.max_tenure_months,
-      status: 'pending_review',
-      credit_score_at_application: currentScore,
-      hard_inquiry_id: inquiry.id,
-      has_existing_account: hasExistingAccount,
-      score_impact: -5,
-    })
-    .select('id')
-    .single();
+    .update({ hard_inquiry_id: inquiry.id })
+    .eq('id', application.id);
 
-  if (appErr) {
-    console.error('apply-preapproved: application insert failed', appErr);
-    return appError('APPLICATION_FAILED', 'We could not submit your application.', 'A temporary issue prevented submission. Please try again. The credit inquiry has been logged.');
-  }
-
+  // Emit credit event for the engine and trigger an async recompute so the
+  // user's displayed score reflects the -5 hard-inquiry impact immediately.
   try {
     await serviceClient.from('credit_events').insert({
       user_id: user.id,
@@ -414,9 +426,20 @@ async function handleApplyPreapproved(req: Request, body: any) {
       description: `Hard credit check for ${offer.product_name} loan application`,
       value_numeric: -5,
       institution_id: offer.institution_id,
-      metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
+      metadata: { offer_id, application_id: application.id, inquiry_id: inquiry.id, institution_id: offer.institution_id },
     });
   } catch (e) { console.warn('credit_events insert (non-critical) failed', e); }
+
+  // Fire-and-forget recompute via the engine so the next score read is fresh.
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    fetch(`${supabaseUrl}/functions/v1/credit-score-engine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+      body: JSON.stringify({ user_id: user.id }),
+    }).catch((e) => console.warn('async recompute trigger failed', e));
+  } catch (e) { console.warn('recompute fire-and-forget failed', e); }
 
   return new Response(JSON.stringify({
     success: true,
