@@ -10,6 +10,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins, notifyUser } from "../_shared/admin-notify.ts";
 import { sendManagedEmail } from "../_shared/send-managed-email.ts";
 import { selectBankPayoutRail, describeRailDecision } from "../_shared/bank-payout-router.ts";
+import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -508,6 +509,35 @@ serve(async (req) => {
       fee_amount: fee,
       metadata: { withdrawal: true, account_id, user_id: user.id, destination_type },
     });
+
+    // F52 — Record fee for the admin Fees tab / billing engine
+    if (fee > 0) {
+      await recordTransactionFee({
+        supabase,
+        institutionId: KANG_PLATFORM_ID,
+        transactionType: 'withdrawal',
+        transactionRef: txRef,
+        transactionAmount: amount,
+        transactionCurrency: currency,
+        feeModel: (feeStructure as any)?.fee_model || 'hybrid',
+        feeStructureId: (feeStructure as any)?.id || null,
+        calculatedFee: fee,
+        finalFee: fee,
+        metadata: { destination_type, provider: providerName, user_id: user.id },
+      });
+    }
+
+    // F54 — Trigger bank ledger reconciliation poll when KOB rail was used so
+    // the user's bank-side balance is refreshed in our system as soon as the
+    // upstream bank confirms posting (best-effort, non-blocking).
+    if (providerName.startsWith('kob:')) {
+      const railMeta: any = providerResult?.provider_raw?.rail || providerResult?.provider_raw?.rail_decision;
+      if (railMeta?.bank_id) {
+        supabase.functions.invoke('bank-data-poller', {
+          body: { bank_id: railMeta.bank_id, reason: 'post_withdrawal_refresh', tx_ref: txRef },
+        }).then(() => {}).catch(() => {});
+      }
+    }
 
     // Audit log
     await supabase.from('audit_logs').insert({
