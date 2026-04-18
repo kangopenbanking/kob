@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,11 @@ interface Offer {
   max_tenure_months: number;
   currency: string;
   requires_existing_account: boolean;
+  has_existing_account?: boolean;
   institution_name?: string;
+  bank_id?: string | null;
+  bank_name?: string | null;
+  apply_path?: string | null;
 }
 
 export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffersCardProps) {
@@ -36,6 +41,7 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
   const [requestedAmount, setRequestedAmount] = useState<number>(0);
   const [requestedTenure, setRequestedTenure] = useState<number>(12);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: offers, isLoading } = useQuery({
     queryKey: ['preapproved-offers', creditScore],
@@ -63,10 +69,22 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
           requested_tenure_months: requestedTenure,
         }
       });
+      // Surface structured 409 ACCOUNT_REQUIRED gracefully
+      if (data?.code === 'ACCOUNT_REQUIRED') {
+        const path = data?.onboarding?.apply_path;
+        toast.message(data.message || 'Account required', {
+          description: 'Open an account to continue your loan application.',
+          action: path ? { label: 'Open account', onClick: () => navigate(path) } : undefined,
+        });
+        setSelectedOffer(null);
+        return data;
+      }
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (data) => {
+      if (data?.code === 'ACCOUNT_REQUIRED') return;
       toast.success('Application submitted successfully', {
         description: `Reference: ${data?.application_id?.slice(0, 8)}...`
       });
@@ -80,6 +98,11 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
   });
 
   const openApplyDialog = (offer: Offer) => {
+    // If account is required and user is not yet a customer, route to bank apply
+    if (offer.requires_existing_account && offer.apply_path) {
+      navigate(offer.apply_path);
+      return;
+    }
     setSelectedOffer(offer);
     setRequestedAmount(offer.min_amount);
     setRequestedTenure(Math.min(12, offer.max_tenure_months));

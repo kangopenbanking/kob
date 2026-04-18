@@ -140,21 +140,41 @@ async function handlePreapprovedOffers(req: Request, body: any) {
     score_provided: creditScore,
   });
 
-  const enrichedOffers = (offers || []).map((offer: any) => ({
-    id: offer.id,
-    institution_id: offer.institution_id,
-    product_name: offer.product_name,
-    description: offer.description,
-    min_credit_score: offer.min_credit_score,
-    max_credit_score: offer.max_credit_score,
-    min_amount: offer.min_amount,
-    max_amount: offer.max_amount,
-    interest_rate_annual: offer.interest_rate_annual,
-    max_tenure_months: offer.max_tenure_months,
-    currency: offer.currency,
-    requires_existing_account: offer.requires_existing_account && !userInstitutionIds.has(offer.institution_id),
-    institution_name: offer.institutions?.institution_name || 'Financial Institution',
-  }));
+  // Resolve bank deep-link info per institution (one query for all unique institutions)
+  const institutionIds = Array.from(new Set((offers || []).map((o: any) => o.institution_id)));
+  const bankMap = new Map<string, any>();
+  if (institutionIds.length > 0) {
+    const { data: banks } = await serviceClient
+      .from('banks')
+      .select('id, display_name, short_code, institution_id, status')
+      .in('institution_id', institutionIds)
+      .eq('status', 'active');
+    (banks || []).forEach((b: any) => bankMap.set(b.institution_id, b));
+  }
+
+  const enrichedOffers = (offers || []).map((offer: any) => {
+    const hasAccount = userInstitutionIds.has(offer.institution_id);
+    const bank = bankMap.get(offer.institution_id);
+    return {
+      id: offer.id,
+      institution_id: offer.institution_id,
+      product_name: offer.product_name,
+      description: offer.description,
+      min_credit_score: offer.min_credit_score,
+      max_credit_score: offer.max_credit_score,
+      min_amount: offer.min_amount,
+      max_amount: offer.max_amount,
+      interest_rate_annual: offer.interest_rate_annual,
+      max_tenure_months: offer.max_tenure_months,
+      currency: offer.currency,
+      requires_existing_account: offer.requires_existing_account && !hasAccount,
+      has_existing_account: hasAccount,
+      institution_name: offer.institutions?.institution_name || 'Financial Institution',
+      bank_id: bank?.id || null,
+      bank_name: bank?.display_name || null,
+      apply_path: bank?.id ? `/bank/${bank.id}/apply` : null,
+    };
+  });
 
   return new Response(JSON.stringify({ offers: enrichedOffers }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
@@ -200,7 +220,7 @@ async function handleApplyPreapproved(req: Request, body: any) {
     return new Response(JSON.stringify({ error: `Amount must be between ${offer.min_amount} and ${offer.max_amount}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  // Check for existing account
+  // Check for existing account at the lending institution
   const { data: existingAccounts } = await serviceClient
     .from('accounts')
     .select('id')
@@ -210,6 +230,38 @@ async function handleApplyPreapproved(req: Request, body: any) {
     .limit(1);
 
   const hasExistingAccount = (existingAccounts || []).length > 0;
+
+  // GATE: if the offer requires an existing account and the user has none,
+  // do NOT trigger a hard inquiry — return an onboarding handoff payload.
+  if (offer.requires_existing_account && !hasExistingAccount) {
+    // Resolve the bank tied to this institution so the consumer app can deep-link
+    const { data: bank } = await serviceClient
+      .from('banks')
+      .select('id, display_name, short_code')
+      .eq('institution_id', offer.institution_id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    const { data: institution } = await serviceClient
+      .from('institutions')
+      .select('institution_name')
+      .eq('id', offer.institution_id)
+      .maybeSingle();
+
+    return new Response(JSON.stringify({
+      error: 'account_required',
+      code: 'ACCOUNT_REQUIRED',
+      message: `You need an account with ${institution?.institution_name || 'this bank'} before applying for this loan.`,
+      onboarding: {
+        institution_id: offer.institution_id,
+        institution_name: institution?.institution_name || null,
+        bank_id: bank?.id || null,
+        bank_name: bank?.display_name || null,
+        bank_short_code: bank?.short_code || null,
+        apply_path: bank?.id ? `/bank/${bank.id}/apply` : null,
+      },
+    }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
 
   // Log hard inquiry
   const { data: inquiry, error: inqErr } = await serviceClient
