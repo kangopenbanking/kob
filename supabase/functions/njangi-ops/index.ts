@@ -67,26 +67,12 @@ async function debitWallet(supabase: any, accountId: string, amount: number, use
 }
 
 async function creditWallet(supabase: any, accountId: string, amount: number, userId: string, description: string, metadata: any) {
-  // Find or create credit balance
-  const { data: bal } = await supabase.from('account_balances')
-    .select('id')
-    .eq('account_id', accountId)
-    .eq('credit_debit_indicator', 'Credit')
-    .eq('balance_type', 'ClosingAvailable')
-    .maybeSingle();
-  if (bal?.id) {
-    await supabase.from('account_balances').update({
-      amount: amount, // will use RPC instead
-    }).eq('id', bal.id);
-    // Use raw increment via update
-    await supabase.rpc('atomic_consumer_withdrawal_reverse', { _balance_id: bal.id, _reverse_amount: amount });
-  } else {
-    await supabase.from('account_balances').insert({
-      account_id: accountId, amount, currency: 'XAF',
-      balance_type: 'ClosingAvailable', credit_debit_indicator: 'Credit',
-      balance_datetime: new Date().toISOString(),
-    });
-  }
+  // ✅ G8: Atomic credit via single RPC (row-locked, currency-validated, auto-creates balance)
+  const { error: rpcErr } = await supabase.rpc('atomic_credit_balance', {
+    _account_id: accountId, _amount: amount, _currency: 'XAF',
+  });
+  if (rpcErr) throw new Error(rpcErr.message || 'Failed to credit wallet');
+
   const now = new Date().toISOString();
   await supabase.from('transactions').insert({
     account_id: accountId, amount, currency: 'XAF',
