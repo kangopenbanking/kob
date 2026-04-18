@@ -523,7 +523,7 @@ const CustomerTransfer: React.FC = () => {
                       </div>
                       <span className="text-sm font-semibold text-foreground">{selectedRecipientName}</span>
                     </div>
-                    <button onClick={() => { setSelectedRecipientName(''); setRecipient(''); setNameSuggestions([]); }}>
+                    <button onClick={() => { setSelectedRecipientName(''); setSelectedRecipientHasAccount(null); setRecipient(''); setNameSuggestions([]); }}>
                       <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     </button>
                   </div>
