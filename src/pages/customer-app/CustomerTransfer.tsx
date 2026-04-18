@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useCustomerAccounts, useAccountBalances, useCustomerTransactions } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
@@ -23,6 +23,29 @@ const CustomerTransfer: React.FC = () => {
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
+  const { data: recentTx = [] } = useCustomerTransactions(user?.id, undefined, 30);
+
+  // Derive last 5 unique outbound recipients from transaction history
+  const recentRecipients = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { label: string; identifier: string; type: RecipientType }[] = [];
+    for (const tx of (recentTx as any[])) {
+      if (tx.credit_debit_indicator !== 'Debit') continue;
+      const md = tx.merchant_details || {};
+      const info = (tx.transaction_information as string) || '';
+      // "Transfer to <name|recipient>"
+      const m = info.match(/^Transfer to (.+?)(?: -.*)?$/i);
+      const label = (m?.[1] || md.recipient_name || '').trim();
+      const identifier = (md.destination_account_id || md.recipient || '').toString().trim();
+      if (!label || !identifier) continue;
+      const key = `${label}|${identifier}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ label, identifier, type: 'name' });
+      if (out.length >= 5) break;
+    }
+    return out;
+  }, [recentTx]);
 
   const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
   const [amount, setAmount] = useState('');
@@ -162,6 +185,10 @@ const CustomerTransfer: React.FC = () => {
     if (!amount || amountNum <= 0) { toast.error('Please enter an amount to send'); return; }
     if (amountNum < 100) { toast.error('Minimum transfer amount is 100 XAF'); return; }
     if (!recipient.trim()) { toast.error('Please enter the recipient\'s phone number, name, or account details'); return; }
+    if (recipientType === 'name' && !selectedRecipientName) {
+      toast.error('Please pick a recipient from the search suggestions');
+      return;
+    }
     if (!validation.valid && (recipientType === 'rib' || recipientType === 'iban')) { toast.error(`Please enter a valid ${recipientType === 'rib' ? 'RIB (23 digits)' : 'IBAN'} number`); return; }
     if (isOverBalance) { toast.error(`Insufficient balance. You have ${availableBalance.toLocaleString()} ${currency} available`); return; }
     setStep('confirm');
@@ -298,7 +325,9 @@ const CustomerTransfer: React.FC = () => {
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Recipient</span>
-                  <span className="text-sm font-bold text-foreground font-mono">{recipient}</span>
+                  <span className="text-sm font-bold text-foreground font-mono text-right max-w-[60%] break-all">
+                    {selectedRecipientName || recipient}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Type</span>
@@ -392,7 +421,50 @@ const CustomerTransfer: React.FC = () => {
 
             {/* Recipient Section */}
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/app/send-money')}
+                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary"
+                >
+                  <Smartphone className="h-3 w-3" strokeWidth={2} />
+                  <Landmark className="h-3 w-3" strokeWidth={2} />
+                  <Mail className="h-3 w-3" strokeWidth={2} />
+                  <span>MoMo · Bank · PayPal</span>
+                  <ChevronRight className="h-3 w-3" strokeWidth={2} />
+                </button>
+              </div>
+
+              {/* Recent Recipients */}
+              {recentRecipients.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1">
+                    <History className="h-3 w-3" strokeWidth={1.5} /> Recent
+                  </p>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                    {recentRecipients.map((r, i) => (
+                      <button
+                        key={`${r.identifier}-${i}`}
+                        type="button"
+                        onClick={() => {
+                          setRecipientType('name');
+                          setRecipient(r.identifier);
+                          setSelectedRecipientName(r.label);
+                          setNameSuggestions([]);
+                          setShowSuggestions(false);
+                        }}
+                        className="shrink-0 flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 hover:bg-muted/80 transition-colors"
+                      >
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                          <User className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                        </div>
+                        <span className="text-xs font-semibold text-foreground max-w-[120px] truncate">{r.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Type Toggle */}
               <div className="grid grid-cols-5 gap-1.5">
@@ -456,7 +528,7 @@ const CustomerTransfer: React.FC = () => {
                       : recipientType === 'name' ? 'Search by name...'
                       : recipientType === 'rib' ? '10005-00100-01234567890-23'
                       : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
-                      : 'Enter account ID'
+                      : 'KOB account ID or account number'
                     }
                     className={`h-12 rounded-2xl pl-10 text-sm ${recipientType === 'rib' || recipientType === 'iban' ? 'font-mono tracking-wider' : ''}`}
                   />
@@ -578,7 +650,14 @@ const CustomerTransfer: React.FC = () => {
             {/* CTA */}
             <Button
               className="w-full rounded-2xl h-12 text-sm font-bold mt-auto"
-              disabled={!amount || !recipient.trim() || isOverBalance || acctLoading || ((recipientType === 'rib' || recipientType === 'iban') && !validation.valid)}
+              disabled={
+                !amount ||
+                !recipient.trim() ||
+                isOverBalance ||
+                acctLoading ||
+                ((recipientType === 'rib' || recipientType === 'iban') && !validation.valid) ||
+                (recipientType === 'name' && !selectedRecipientName)
+              }
               onClick={handleContinue}
             >
               <Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Continue
