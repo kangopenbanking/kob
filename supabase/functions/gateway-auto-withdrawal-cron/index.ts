@@ -165,35 +165,40 @@ serve(async (req) => {
             continue;
           }
 
-          // Get merchant user_id for auth context
+          // F42 — Merchant payouts must invoke the actual payout function (not insert a pending row)
           const { data: merchant } = await supabase
             .from('gateway_merchants')
-            .select('user_id')
+            .select('user_id, default_payout_destination_id, default_payout_destination_type')
             .eq('id', schedule.owner_id)
             .single();
 
           if (!merchant) throw new Error('Merchant not found');
 
-          // For merchant payouts, we create the payout directly since PIN bypass for cron
+          const internalSecret = Deno.env.get('INTERNAL_FUNCTION_SECRET') || '';
           const tx_ref = `AUTO_${schedule.schedule_type.toUpperCase()}_${Date.now()}`;
-          
-          const { error: payoutErr } = await supabase.from('gateway_payouts').insert({
-            merchant_id: schedule.owner_id,
-            amount: withdrawalAmount,
-            currency: schedule.currency,
-            channel: 'bank_transfer',
-            status: 'pending',
-            provider: 'flutterwave',
-            beneficiary_name: 'Auto-withdrawal',
-            tx_ref,
-            metadata: {
-              auto_withdrawal: true,
-              schedule_id: schedule.id,
-              schedule_type: schedule.schedule_type,
+          const idemKey = `auto_payout_${schedule.id}_${Math.floor(Date.now() / 60000)}`;
+
+          const { data: payoutRes, error: payoutErr } = await supabase.functions.invoke('gateway-create-payout', {
+            body: {
+              merchant_id: schedule.owner_id,
+              amount: withdrawalAmount,
+              currency: schedule.currency,
+              channel: schedule.destination_type || 'bank_transfer',
+              destination_id: schedule.destination_id,
+              tx_ref,
+              narration: `Auto-payout: ${schedule.schedule_type} rule`,
+              idempotency_key: idemKey,
+            },
+            headers: {
+              'x-internal-secret': internalSecret,
+              'x-on-behalf-of': merchant.user_id,
+              'idempotency-key': idemKey,
             },
           });
 
-          if (payoutErr) throw payoutErr;
+          if (payoutErr || payoutRes?.error) {
+            throw new Error(payoutRes?.message || payoutErr?.message || 'Auto-payout invocation failed');
+          }
         }
 
         // Success — reset failures, update schedule
