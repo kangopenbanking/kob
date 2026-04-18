@@ -381,33 +381,7 @@ const ZapierGuide = () => {
             ]}
           />
 
-          {/* Video Tutorials */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Tutorials</CardTitle>
-              <CardDescription>Watch step-by-step video guides</CardDescription>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h4 className="font-semibold mb-2">Zapier Integration in 5 Minutes</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Complete walkthrough from setup to first automation
-                  </p>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h4 className="font-semibold mb-2">Advanced Webhook Triggers</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Learn to build complex multi-step workflows
-                  </p>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Video Tutorials hidden until content is published */}
 
           {/* Next Steps */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5">

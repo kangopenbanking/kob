@@ -61,7 +61,7 @@ const dashboardNavigation = [
       { title: "Payments", path: "/payments", icon: Wallet },
       { title: "Savings", path: "/savings", icon: PiggyBank },
       { title: "Loans", path: "/loans", icon: DollarSign },
-      { title: "Virtual Cards (Soon)", path: "/virtual-cards", icon: CreditCard },
+      { title: "Virtual Cards", path: "/virtual-cards", icon: CreditCard },
       { title: "Banking Operations", path: "/banking-ops", icon: Landmark },
     ],
   },

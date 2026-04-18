@@ -417,33 +417,7 @@ const RetoolGuide = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Video Tutorials */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Tutorials</CardTitle>
-              <CardDescription>Master Retool for banking operations</CardDescription>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h4 className="font-semibold mb-2">Admin Dashboard in 15 Minutes</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Create transaction monitoring tool fast
-                  </p>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h4 className="font-semibold mb-2">Advanced Query Techniques</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Optimize performance and data handling
-                  </p>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Video Tutorials hidden until content is published */}
 
           {/* Interactive Demo */}
           <InteractiveDemoWidget
