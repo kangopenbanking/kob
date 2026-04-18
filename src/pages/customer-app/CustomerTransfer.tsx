@@ -23,6 +23,29 @@ const CustomerTransfer: React.FC = () => {
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
+  const { data: recentTx = [] } = useCustomerTransactions(user?.id, undefined, 30);
+
+  // Derive last 5 unique outbound recipients from transaction history
+  const recentRecipients = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { label: string; identifier: string; type: RecipientType }[] = [];
+    for (const tx of (recentTx as any[])) {
+      if (tx.credit_debit_indicator !== 'Debit') continue;
+      const md = tx.merchant_details || {};
+      const info = (tx.transaction_information as string) || '';
+      // "Transfer to <name|recipient>"
+      const m = info.match(/^Transfer to (.+?)(?: -.*)?$/i);
+      const label = (m?.[1] || md.recipient_name || '').trim();
+      const identifier = (md.destination_account_id || md.recipient || '').toString().trim();
+      if (!label || !identifier) continue;
+      const key = `${label}|${identifier}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ label, identifier, type: 'name' });
+      if (out.length >= 5) break;
+    }
+    return out;
+  }, [recentTx]);
 
   const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
   const [amount, setAmount] = useState('');
