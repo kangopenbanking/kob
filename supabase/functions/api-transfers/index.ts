@@ -125,6 +125,55 @@ serve(async (req) => {
       destAccount = data;
     }
 
+    // Tier 1.5: UUID matched no account — try resolving as a profile (user_id).
+    // Registered users without a provisioned account can still receive transfers;
+    // we auto-create a default wallet on their behalf.
+    if (!destAccount && uuidRegex.test(destination_account_id)) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number')
+        .eq('id', destination_account_id)
+        .maybeSingle();
+
+      if (profile && profile.id !== user.id) {
+        const { data: existing } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          destAccount = existing;
+        } else {
+          const newAccountId = `ACC-${profile.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+          const { data: created, error: createErr } = await supabase
+            .from('accounts')
+            .insert({
+              user_id: profile.id,
+              account_id: newAccountId,
+              account_holder_name: profile.full_name || 'Kang User',
+              account_type: 'Personal',
+              account_subtype: 'CurrentAccount',
+              currency: currency || 'XAF',
+              identification_scheme: 'IBAN',
+              identification_value: newAccountId,
+              is_active: true,
+            })
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .single();
+
+          if (!createErr && created) {
+            destAccount = created;
+            console.log('Auto-provisioned destination wallet for profile:', profile.id);
+          } else if (createErr) {
+            console.warn('Failed to auto-provision wallet:', createErr.message);
+          }
+        }
+      }
+    }
+
     // Fallback: try by human-readable account_id (e.g. ACC-...)
     if (!destAccount) {
       const { data } = await supabase
