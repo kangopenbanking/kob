@@ -649,6 +649,28 @@ serve(async (req) => {
       console.error('Fee recording failed (non-blocking):', feeErr);
     }
 
+    // ══════════════════════════════════════════════
+    // STEP 7: Award cashback + complete referral (non-blocking)
+    // ══════════════════════════════════════════════
+    try {
+      if (debitTxn?.id) {
+        const rewardsUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/customer-rewards`;
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        };
+        // fire-and-forget
+        fetch(rewardsUrl, { method: 'POST', headers, body: JSON.stringify({
+          action: 'award_cashback', user_id: user.id, transaction_id: debitTxn.id, amount: transferAmount,
+        }) }).catch(e => console.error('cashback hook err:', e));
+        fetch(rewardsUrl, { method: 'POST', headers, body: JSON.stringify({
+          action: 'complete_referral', triggering_user_id: user.id,
+        }) }).catch(e => console.error('referral complete hook err:', e));
+      }
+    } catch (rewardErr) {
+      console.error('Reward hook failed (non-blocking):', rewardErr);
+    }
+
     console.log(`Transfer ${transactionRef} completed: ${transferAmount} ${txCurrency} from ${source_account_id} to ${destAccount.id}`);
 
     return new Response(JSON.stringify({
