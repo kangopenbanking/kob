@@ -4,6 +4,7 @@ import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/admin-notify.ts";
 import { sendManagedEmail } from "../_shared/send-managed-email.ts";
+import { selectBankPayoutRail, describeRailDecision } from "../_shared/bank-payout-router.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -23,7 +24,7 @@ serve(async (req) => {
     if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const body = await req.json();
-    const { amount, account_id, bank_code, account_number, beneficiary_name, narration, channel = 'bank_transfer' } = body;
+    const { amount, account_id, bank_code, account_number, beneficiary_name, narration, channel = 'bank_transfer', preferred_rail, swift_bic } = body;
 
     // Validate
     if (!amount || !account_id || !account_number || !beneficiary_name) {
@@ -133,17 +134,61 @@ serve(async (req) => {
       merchant_details: { transaction_ref: txRef }, user_id: user.id,
     }).then(() => {}).catch(() => {});
 
-    // Initiate Flutterwave payout
-    let payoutResult;
+    // ─── Phase 25 — KOB rail attempt with Flutterwave fallback ───
+    const railSelection = await selectBankPayoutRail({
+      supabase,
+      bank_code,
+      swift_bic,
+      environment: (Deno.env.get('KOB_RAIL_ENV') as 'sandbox' | 'live') || 'sandbox',
+      preferred_rail: (preferred_rail as any) || 'auto',
+      source_account: 'KANG-PLATFORM',
+    });
+    console.log('[withdraw-to-bank] rail decision', describeRailDecision(railSelection));
+
+    let payoutResult: any;
+    let providerName: 'flutterwave' | string = 'flutterwave';
     try {
-      payoutResult = await createFlutterwavePayout({
-        amount, currency: account.currency, channel,
-        beneficiary_account: account_number,
-        beneficiary_bank: bank_code,
-        beneficiary_name,
-        narration: narration || `Withdrawal from KOB account`,
-        tx_ref: txRef,
-      });
+      if (railSelection.rail === 'kob_open_banking' && railSelection.execute) {
+        try {
+          const kob = await railSelection.execute({
+            to_account: account_number,
+            amount,
+            currency: account.currency,
+            reference: txRef,
+            description: narration || `KOB Open Banking payout`,
+            beneficiary_name,
+            beneficiary_bank_code: bank_code,
+          });
+          if (!kob.success) throw new Error(kob.error || 'KOB connector returned failure');
+          providerName = `kob:${railSelection.adapter_type}`;
+          payoutResult = {
+            provider_ref: kob.bank_tx_id || txRef,
+            status: kob.status === 'executed' ? 'successful' : 'pending',
+            provider_raw: { ...kob, rail: describeRailDecision(railSelection) },
+          };
+        } catch (kobErr: any) {
+          console.warn(`[withdraw-to-bank] KOB rail failed, falling back: ${kobErr.message}`);
+          payoutResult = await createFlutterwavePayout({
+            amount, currency: account.currency, channel,
+            beneficiary_account: account_number,
+            beneficiary_bank: bank_code,
+            beneficiary_name,
+            narration: narration || `Withdrawal from KOB account (KOB fallback)`,
+            tx_ref: txRef,
+          });
+          payoutResult.provider_raw = { ...payoutResult.provider_raw, kob_attempt_failed: kobErr.message, rail_decision: describeRailDecision(railSelection) };
+        }
+      } else {
+        payoutResult = await createFlutterwavePayout({
+          amount, currency: account.currency, channel,
+          beneficiary_account: account_number,
+          beneficiary_bank: bank_code,
+          beneficiary_name,
+          narration: narration || `Withdrawal from KOB account`,
+          tx_ref: txRef,
+        });
+        payoutResult.provider_raw = { ...payoutResult.provider_raw, rail_decision: describeRailDecision(railSelection) };
+      }
     } catch (payoutErr: any) {
       // Reverse debit on provider failure — restore original balance
       await supabase.from('account_balances')
@@ -163,7 +208,7 @@ serve(async (req) => {
       merchant_id: null,
       amount, currency: account.currency, channel,
       status: payoutResult.status === 'successful' ? 'completed' : 'processing',
-      provider: 'flutterwave',
+      provider: providerName,
       provider_ref: payoutResult.provider_ref,
       provider_raw: payoutResult.provider_raw,
       beneficiary_name, beneficiary_phone: null,

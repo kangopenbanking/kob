@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell, Network } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -36,6 +36,8 @@ const CustomerCashOut: React.FC = () => {
   const [showPin, setShowPin] = useState(false);
   // F44 — stable idempotency key for the current confirm-attempt (regenerated on new confirm)
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
+  // Phase 25 — Preferred bank payout rail: 'auto' (router decides), 'kob_open_banking', or 'flutterwave'
+  const [preferredRail, setPreferredRail] = useState<'auto' | 'kob_open_banking' | 'flutterwave'>('auto');
 
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = kangAccounts.map((a: any) => a.id);
@@ -201,6 +203,7 @@ const CustomerCashOut: React.FC = () => {
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
           idempotency_key: idemKey,
+          preferred_rail: destinationType === 'bank_account' ? preferredRail : 'auto',
         },
         headers: { 'idempotency-key': idemKey },
       });
@@ -506,6 +509,39 @@ const CustomerCashOut: React.FC = () => {
                 <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
               </div>
             </div>
+
+            {selectedAccount?.account_type === 'bank_account' && (
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Network className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                  <p className="text-xs font-bold text-foreground">Payout Rail</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Choose how this transfer reaches your bank. Open Banking uses the Kang Open Banking API for direct, lower-cost settlement when your bank is a registered KOB institution.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'auto', label: 'Auto', sub: 'Recommended' },
+                    { key: 'kob_open_banking', label: 'Open Banking', sub: 'KOB API' },
+                    { key: 'flutterwave', label: 'Card Network', sub: 'Flutterwave' },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPreferredRail(opt.key)}
+                      className={`rounded-xl border-2 p-2 text-left transition-colors ${
+                        preferredRail === opt.key
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                    >
+                      <p className="text-[11px] font-bold text-foreground">{opt.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{opt.sub}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Button onClick={() => setShowPin(true)} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
