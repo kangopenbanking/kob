@@ -151,6 +151,7 @@ const CustomerTransfer: React.FC = () => {
     // For name type: clear selected state and trigger debounced search
     if (recipientType === 'name') {
       setSelectedRecipientName('');
+      setSelectedRecipientHasAccount(null);
       if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
       nameDebounceRef.current = setTimeout(() => searchByName(raw), 300);
     }
