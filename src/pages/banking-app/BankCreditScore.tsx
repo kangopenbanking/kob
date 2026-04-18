@@ -438,28 +438,22 @@ function BankPreApprovedOffers({ score }: { score: number }) {
       const { data, error } = await supabase.functions.invoke('credit-ops', {
         body: { action: 'apply-preapproved', offer_id: offerId, requested_amount: amount }
       });
-      if (data?.code === 'ACCOUNT_REQUIRED') {
-        const path = data?.onboarding?.apply_path;
-        toast.message(data.message || 'Account required', {
-          description: 'Open an account with this bank to continue.',
-          action: path ? { label: 'Open account', onClick: () => navigate(path) } : undefined,
-        });
-        return data;
-      }
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error && !data) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      if (data?.code === 'ACCOUNT_REQUIRED') {
-        setApplyingId(null);
-        return;
-      }
-      toast.success('Application submitted successfully');
+    onSuccess: (data: any) => {
+      showApplyResult(data, {
+        navigate,
+        onScoreCTA: () => navigate('/bank/credit'),
+        onViewApplication: () => navigate('/bank/credit'),
+      });
+      setApplyingId(null);
       queryClient.invalidateQueries({ queryKey: ['preapproved-offers-bank'] });
+    },
+    onError: (err: unknown) => {
+      showNetworkApplyError(err);
       setApplyingId(null);
     },
-    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Failed to apply')),
   });
 
   if (isLoading || !offers.length) return null;
