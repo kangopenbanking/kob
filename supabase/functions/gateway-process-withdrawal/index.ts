@@ -161,7 +161,7 @@ serve(async (req) => {
     try {
       const complianceResp = await supabase.functions.invoke('gateway-compliance-screen', {
         body: { user_id: user.id, amount, currency, destination_type },
-        headers: { Authorization: authHeader },
+        headers: authHeader ? { Authorization: authHeader } : {},
       });
       const complianceResult = complianceResp.data;
       if (complianceResult?.decision === 'denied') {
