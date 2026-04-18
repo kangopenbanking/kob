@@ -20,6 +20,7 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   NJANGI_CONTRIBUTION_ON_TIME: { min: 3, max: 5 },
   NJANGI_CONTRIBUTION_LATE: { min: -15, max: -5 },
   NJANGI_CONTRIBUTION_MISSED: { min: -25, max: -25 },
+  NJANGI_PAYOUT_RECEIVED: { min: 8, max: 8 },
   // Rent
   RENT_PAYMENT_ON_TIME: { min: 5, max: 10 },
   RENT_PAYMENT_LATE: { min: -25, max: -10 },
@@ -145,6 +146,9 @@ Deno.serve(async (req) => {
         }
         case 'NJANGI_CONTRIBUTION_MISSED':
           points = rule.min; // -25
+          break;
+        case 'NJANGI_PAYOUT_RECEIVED':
+          points = rule.max; // +8 — proves reliable group standing
           break;
         // Rent events
         case 'RENT_PAYMENT_ON_TIME':
