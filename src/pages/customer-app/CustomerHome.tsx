@@ -103,6 +103,14 @@ const CustomerHome: React.FC = () => {
 
   const isViewOnly = user?.isViewOnly ?? false;
 
+  // Auto-release any pending inbound transfers held while the account was unverified
+  React.useEffect(() => {
+    if (!user?.id) return;
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      supabase.functions.invoke('release-pending-inbound', { body: {} }).catch(() => {});
+    });
+  }, [user?.id]);
+
   // ─── Live Data ───
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);

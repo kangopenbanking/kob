@@ -14439,6 +14439,57 @@ export type Database = {
           },
         ]
       }
+      pending_inbound_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string
+          id: string
+          notes: string | null
+          recipient_phone: string | null
+          recipient_user_id: string
+          released_at: string | null
+          sender_name: string | null
+          sender_user_id: string
+          source_transaction_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          recipient_phone?: string | null
+          recipient_user_id: string
+          released_at?: string | null
+          sender_name?: string | null
+          sender_user_id: string
+          source_transaction_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string
+          released_at?: string | null
+          sender_name?: string | null
+          sender_user_id?: string
+          source_transaction_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       phone_otp_codes: {
         Row: {
           attempts: number | null

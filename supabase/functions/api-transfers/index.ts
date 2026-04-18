@@ -398,6 +398,25 @@ serve(async (req) => {
       }
     }
 
+    // ══════════════════════════════════════════════
+    // ACTIVATION GATE: Detect if recipient has fully activated their account.
+    // An "activated" recipient has BOTH a PIN set AND a verified phone number.
+    // Unverified recipients receive funds via the pending_inbound_transfers hold table.
+    // ══════════════════════════════════════════════
+    let recipientIsActivated = true;
+    let recipientProfile: any = null;
+    if (destAccount.user_id && destAccount.user_id !== user.id) {
+      const { data: rp } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number, pin_code_hash')
+        .eq('id', destAccount.user_id)
+        .maybeSingle();
+      recipientProfile = rp;
+      if (!rp?.pin_code_hash || !rp?.phone_number) {
+        recipientIsActivated = false;
+      }
+    }
+
     // Generate transaction reference
     const transactionRef = reference || `TXN-${Date.now()}-${crypto.randomUUID().substring(0, 8)}`;
     const now = new Date().toISOString();
@@ -425,21 +444,39 @@ serve(async (req) => {
 
     // ══════════════════════════════════════════════
     // C1 FIX: Atomic debit-credit via PL/pgSQL with row locks
+    // BRANCH: If recipient is unverified, only debit sender; funds go to hold table.
     // ══════════════════════════════════════════════
-    const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
-      _source_balance_id: sourceBalance.id,
-      _dest_account_id: destAccount.id,
-      _amount: transferAmount,
-      _currency: txCurrency,
-    });
-
-    if (atomicError) {
-      console.error('Atomic transfer failed:', atomicError);
-      const errMsg = atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
-      return new Response(JSON.stringify({ error: errMsg }), {
-        status: atomicError.message?.includes('Insufficient funds') ? 400 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (recipientIsActivated) {
+      const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
+        _source_balance_id: sourceBalance.id,
+        _dest_account_id: destAccount.id,
+        _amount: transferAmount,
+        _currency: txCurrency,
       });
+
+      if (atomicError) {
+        console.error('Atomic transfer failed:', atomicError);
+        const errMsg = atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: atomicError.message?.includes('Insufficient funds') ? 400 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else {
+      // Unverified recipient: debit sender only (no credit yet)
+      const { error: debitOnlyErr } = await supabase.rpc('atomic_debit_balance', {
+        _account_id: source_account_id,
+        _amount: transferAmount,
+        _currency: txCurrency,
+      });
+      if (debitOnlyErr) {
+        console.error('Debit-only failed:', debitOnlyErr);
+        const errMsg = debitOnlyErr.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: debitOnlyErr.message?.includes('Insufficient funds') ? 400 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Use resolved destination account ID for all subsequent operations
@@ -482,17 +519,20 @@ serve(async (req) => {
 
     // ══════════════════════════════════════════════
     // STEP 4: Create credit transaction for receiver
+    // If recipient is unverified, mark Pending and create hold record.
     // ══════════════════════════════════════════════
-    const creditDescription = description || `Received from ${sourceAccount.account_holder_name}`;
+    const creditDescription = recipientIsActivated
+      ? (description || `Received from ${sourceAccount.account_holder_name}`)
+      : `Funds held — pending account activation. From ${sourceAccount.account_holder_name}`;
 
-    const { error: creditTxnErr } = await supabase
+    const { data: creditTxn, error: creditTxnErr } = await supabase
       .from('transactions')
       .insert({
         user_id: destAccount.user_id,
         account_id: destAccount.id,
         institution_id: destAccount.institution_id || sourceAccount.institution_id || '00000000-0000-0000-0000-000000000000',
         credit_debit_indicator: 'Credit',
-        status: 'Booked',
+        status: recipientIsActivated ? 'Booked' : 'Pending',
         booking_datetime: now,
         value_datetime: now,
         transaction_type: 'Transfer',
@@ -505,8 +545,41 @@ serve(async (req) => {
           source_account_holder: sourceAccount.account_holder_name,
           transfer_type: transferRail,
           rail: transferRail,
+          held_pending_activation: !recipientIsActivated,
+        },
+      })
+      .select('id')
+      .single();
+
+    // Create the hold record + notify recipient if unverified
+    if (!recipientIsActivated && destAccount.user_id) {
+      await supabase.from('pending_inbound_transfers').insert({
+        sender_user_id: user.id,
+        sender_name: sourceAccount.account_holder_name,
+        recipient_user_id: destAccount.user_id,
+        recipient_phone: recipientProfile?.phone_number || null,
+        amount: transferAmount,
+        currency: txCurrency,
+        source_transaction_id: debitTxn?.id || null,
+        status: 'pending_activation',
+        notes: description || null,
+      });
+
+      await supabase.from('app_notifications').insert({
+        user_id: destAccount.user_id,
+        type: 'info',
+        title: 'Funds Waiting for You',
+        message: `${sourceAccount.account_holder_name} sent you ${txCurrency} ${transferAmount.toLocaleString()}. Verify your account (phone + PIN) to receive the funds in your wallet.`,
+        icon: 'wallet',
+        metadata: {
+          amount: transferAmount,
+          currency: txCurrency,
+          sender_name: sourceAccount.account_holder_name,
+          held_pending_activation: true,
+          transaction_ref: transactionRef,
         },
       });
+    }
 
     if (creditTxnErr) {
       console.error('Failed to create credit transaction:', creditTxnErr);
@@ -582,7 +655,8 @@ serve(async (req) => {
       success: true,
       transaction_reference: transactionRef,
       transaction_id: debitTxn?.id,
-      status: 'Booked',
+      status: recipientIsActivated ? 'Booked' : 'HeldPendingActivation',
+      held_pending_activation: !recipientIsActivated,
       amount: transferAmount,
       currency: txCurrency,
       sender: sourceAccount.account_holder_name,
