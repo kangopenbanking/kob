@@ -63,6 +63,7 @@ serve(async (req) => {
       linked_account_id,
       currency = 'XAF',
       narration,
+      preferred_rail,       // 'auto' | 'kob_open_banking' | 'flutterwave'  (Phase 25)
     } = body;
 
     const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
