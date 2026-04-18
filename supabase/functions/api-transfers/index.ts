@@ -519,17 +519,20 @@ serve(async (req) => {
 
     // ══════════════════════════════════════════════
     // STEP 4: Create credit transaction for receiver
+    // If recipient is unverified, mark Pending and create hold record.
     // ══════════════════════════════════════════════
-    const creditDescription = description || `Received from ${sourceAccount.account_holder_name}`;
+    const creditDescription = recipientIsActivated
+      ? (description || `Received from ${sourceAccount.account_holder_name}`)
+      : `Funds held — pending account activation. From ${sourceAccount.account_holder_name}`;
 
-    const { error: creditTxnErr } = await supabase
+    const { data: creditTxn, error: creditTxnErr } = await supabase
       .from('transactions')
       .insert({
         user_id: destAccount.user_id,
         account_id: destAccount.id,
         institution_id: destAccount.institution_id || sourceAccount.institution_id || '00000000-0000-0000-0000-000000000000',
         credit_debit_indicator: 'Credit',
-        status: 'Booked',
+        status: recipientIsActivated ? 'Booked' : 'Pending',
         booking_datetime: now,
         value_datetime: now,
         transaction_type: 'Transfer',
@@ -542,8 +545,41 @@ serve(async (req) => {
           source_account_holder: sourceAccount.account_holder_name,
           transfer_type: transferRail,
           rail: transferRail,
+          held_pending_activation: !recipientIsActivated,
+        },
+      })
+      .select('id')
+      .single();
+
+    // Create the hold record + notify recipient if unverified
+    if (!recipientIsActivated && destAccount.user_id) {
+      await supabase.from('pending_inbound_transfers').insert({
+        sender_user_id: user.id,
+        sender_name: sourceAccount.account_holder_name,
+        recipient_user_id: destAccount.user_id,
+        recipient_phone: recipientProfile?.phone_number || null,
+        amount: transferAmount,
+        currency: txCurrency,
+        source_transaction_id: debitTxn?.id || null,
+        status: 'pending_activation',
+        notes: description || null,
+      });
+
+      await supabase.from('app_notifications').insert({
+        user_id: destAccount.user_id,
+        type: 'info',
+        title: 'Funds Waiting for You',
+        message: `${sourceAccount.account_holder_name} sent you ${txCurrency} ${transferAmount.toLocaleString()}. Verify your account (phone + PIN) to receive the funds in your wallet.`,
+        icon: 'wallet',
+        metadata: {
+          amount: transferAmount,
+          currency: txCurrency,
+          sender_name: sourceAccount.account_holder_name,
+          held_pending_activation: true,
+          transaction_ref: transactionRef,
         },
       });
+    }
 
     if (creditTxnErr) {
       console.error('Failed to create credit transaction:', creditTxnErr);
