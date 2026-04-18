@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerNjangi } from '@/hooks/useCustomerData';
-import { useCreateNjangiGroup, useJoinNjangiGroup, useNjangiContribute, useNjangiPayout } from '@/hooks/useNjangiData';
+import { useCreateNjangiGroup, useJoinNjangiGroup, useNjangiContribute, useNjangiPayout, useLeaveNjangiGroup } from '@/hooks/useNjangiData';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -37,6 +39,7 @@ const CustomerNjangi: React.FC = () => {
   const joinMutation = useJoinNjangiGroup();
   const contributeMutation = useNjangiContribute();
   const payoutMutation = useNjangiPayout();
+  const leaveMutation = useLeaveNjangiGroup();
 
   const [view, setView] = useState<ViewMode>('list');
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
