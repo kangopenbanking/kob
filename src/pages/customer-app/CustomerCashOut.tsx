@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell, Network } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -36,6 +36,8 @@ const CustomerCashOut: React.FC = () => {
   const [showPin, setShowPin] = useState(false);
   // F44 — stable idempotency key for the current confirm-attempt (regenerated on new confirm)
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
+  // Phase 25 — Preferred bank payout rail: 'auto' (router decides), 'kob_open_banking', or 'flutterwave'
+  const [preferredRail, setPreferredRail] = useState<'auto' | 'kob_open_banking' | 'flutterwave'>('auto');
 
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = kangAccounts.map((a: any) => a.id);
@@ -201,6 +203,7 @@ const CustomerCashOut: React.FC = () => {
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
           idempotency_key: idemKey,
+          preferred_rail: destinationType === 'bank_account' ? preferredRail : 'auto',
         },
         headers: { 'idempotency-key': idemKey },
       });
