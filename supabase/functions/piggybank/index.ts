@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
       case 'create': return handleCreate(req, body);
       case 'pay': return handlePay(req, body);
       case 'cancel': return handleCancel(req, body);
+      case 'delete': return handleDelete(req, body);
       case 'auto-fund': return handleAutoFund(req);
       case 'overdue-detect': return handleOverdueDetect(req);
       default: return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
