@@ -107,7 +107,9 @@ serve(async (req) => {
 
           if (!linkedAccount) throw new Error('Destination account not found or inactive');
 
-          // Invoke withdrawal function via service role
+          // F43 — Invoke withdrawal with internal-secret + on-behalf-of header
+          const internalSecret = Deno.env.get('INTERNAL_FUNCTION_SECRET') || '';
+          const idemKey = `auto_wd_${schedule.id}_${Math.floor(Date.now() / 60000)}`;
           const { data: result, error: wdErr } = await supabase.functions.invoke('gateway-process-withdrawal', {
             body: {
               amount: withdrawalAmount,
@@ -116,6 +118,12 @@ serve(async (req) => {
               linked_account_id: schedule.destination_id,
               currency: schedule.currency,
               narration: `Auto-withdrawal: ${schedule.schedule_type} rule`,
+              idempotency_key: idemKey,
+            },
+            headers: {
+              'x-internal-secret': internalSecret,
+              'x-on-behalf-of': schedule.owner_id,
+              'idempotency-key': idemKey,
             },
           });
 
