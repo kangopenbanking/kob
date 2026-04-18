@@ -238,7 +238,11 @@ const CustomerTransfer: React.FC = () => {
       ]);
 
       setStep('success');
-      toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
+      if (data?.held_pending_activation) {
+        toast.success(`${amountNum.toLocaleString()} ${currency} debited. Funds held until ${selectedRecipientName || recipient} activates their account.`);
+      } else {
+        toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
+      }
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Transfer could not be completed. Please verify recipient details and try again.'));
     } finally {
