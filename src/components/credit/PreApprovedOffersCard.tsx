@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,11 @@ interface Offer {
   max_tenure_months: number;
   currency: string;
   requires_existing_account: boolean;
+  has_existing_account?: boolean;
   institution_name?: string;
+  bank_id?: string | null;
+  bank_name?: string | null;
+  apply_path?: string | null;
 }
 
 export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffersCardProps) {
