@@ -13,7 +13,8 @@ jobs:
       - name: Send Monthly Report Emails
         run: |
           curl -X POST \
-            'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-monthly-report' \
+            'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/crediq-send-monthly-report' \
             -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
             -H 'Content-Type: application/json' \
+            -H 'x-trigger-source: github-actions' \
             -d '{}'

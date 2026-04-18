@@ -5701,6 +5701,42 @@ export type Database = {
           },
         ]
       }
+      crediq_report_dispatch_log: {
+        Row: {
+          completed_at: string | null
+          dispatch_type: string
+          error_details: Json | null
+          failed_count: number
+          id: string
+          sent_count: number
+          started_at: string
+          total_users: number
+          triggered_by: string
+        }
+        Insert: {
+          completed_at?: string | null
+          dispatch_type: string
+          error_details?: Json | null
+          failed_count?: number
+          id?: string
+          sent_count?: number
+          started_at?: string
+          total_users?: number
+          triggered_by?: string
+        }
+        Update: {
+          completed_at?: string | null
+          dispatch_type?: string
+          error_details?: Json | null
+          failed_count?: number
+          id?: string
+          sent_count?: number
+          started_at?: string
+          total_users?: number
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       crediq_user_profiles: {
         Row: {
           average_monthly_savings_range: string | null
