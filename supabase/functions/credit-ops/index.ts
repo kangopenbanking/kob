@@ -179,48 +179,108 @@ async function handlePreapprovedOffers(req: Request, body: any) {
   return new Response(JSON.stringify({ offers: enrichedOffers }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
+// Structured error helper. We return HTTP 200 with success:false so that
+// supabase.functions.invoke surfaces the JSON body to the client (otherwise
+// non-2xx responses are reduced to a generic FunctionsHttpError). The client
+// inspects `success` and `code` to render an actionable message.
+function appError(code: string, message: string, details?: string, extra: Record<string, any> = {}) {
+  return new Response(JSON.stringify({
+    success: false,
+    code,
+    error: code,
+    message,
+    details,
+    ...extra,
+  }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
 async function handleApplyPreapproved(req: Request, body: any) {
-  const { user } = await getUser(req);
+  let user: any;
+  try {
+    ({ user } = await getUser(req));
+  } catch {
+    return appError('UNAUTHENTICATED', 'Please sign in again to continue.', 'Your session has expired or is invalid.');
+  }
+
   const { offer_id, requested_amount, requested_tenure_months } = body;
 
   if (!offer_id || !requested_amount) {
-    return new Response(JSON.stringify({ error: 'offer_id and requested_amount are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return appError('INVALID_INPUT', 'Missing application details.', 'An offer and a requested amount are required to submit your application.');
   }
 
   const serviceClient = getServiceClient();
 
-  // Fetch offer details
   const { data: offer, error: offerErr } = await serviceClient
     .from('preapproved_loan_offers')
-    .select('*')
+    .select('*, institutions!inner(institution_name)')
     .eq('id', offer_id)
-    .eq('is_active', true)
     .maybeSingle();
 
-  if (offerErr || !offer) {
-    return new Response(JSON.stringify({ error: 'Offer not found or no longer active' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  if (offerErr) {
+    console.error('apply-preapproved: offer lookup failed', offerErr);
+    return appError('OFFER_LOOKUP_FAILED', 'We could not load this loan offer.', 'Please refresh and try again. If the issue persists, contact support.');
+  }
+  if (!offer) {
+    return appError('OFFER_NOT_FOUND', 'This loan offer is no longer available.', 'Please refresh the offer list and pick a current offer.');
+  }
+  if (!offer.is_active) {
+    return appError('OFFER_INACTIVE', 'This loan offer is no longer active.', 'The bank has paused this offer. Please choose another offer.');
+  }
+  const today = new Date().toISOString().split('T')[0];
+  if (offer.effective_to && offer.effective_to < today) {
+    return appError('OFFER_EXPIRED', 'This pre-approved offer has expired.', `Offer ended on ${offer.effective_to}. Please pick a current offer.`);
   }
 
-  // Get current credit score
-  const { data: scoreData } = await serviceClient
-    .from('credit_score_history')
-    .select('score')
-    .eq('user_id', user.id)
-    .order('recorded_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const institutionName = offer.institutions?.institution_name || 'the bank';
 
-  const currentScore = scoreData?.score || 0;
+  // Canonical score from credit_profiles, fall back to history
+  let currentScore = 0;
+  const { data: profile } = await serviceClient
+    .from('credit_profiles')
+    .select('current_score')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (profile?.current_score) {
+    currentScore = profile.current_score;
+  } else {
+    const { data: hist } = await serviceClient
+      .from('credit_score_history')
+      .select('score')
+      .eq('user_id', user.id)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    currentScore = hist?.score || 0;
+  }
+
+  if (currentScore <= 0) {
+    return appError(
+      'NO_CREDIT_SCORE',
+      'You need a CrediQ score before applying.',
+      'Complete your free CrediQ assessment to unlock pre-approved offers.',
+      { next_step: { action: 'complete_assessment', label: 'Start free assessment' } }
+    );
+  }
 
   if (currentScore < offer.min_credit_score) {
-    return new Response(JSON.stringify({ error: 'Your credit score no longer meets the minimum requirement for this offer' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return appError(
+      'SCORE_TOO_LOW',
+      `Your CrediQ score of ${currentScore} no longer meets the minimum (${offer.min_credit_score}) for this offer.`,
+      'Your score may have changed since the offer was generated. Improve your score by paying bills on time, or browse other offers that match your current score.',
+      { current_score: currentScore, required_score: offer.min_credit_score }
+    );
   }
 
   if (requested_amount < offer.min_amount || requested_amount > offer.max_amount) {
-    return new Response(JSON.stringify({ error: `Amount must be between ${offer.min_amount} and ${offer.max_amount}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const fmt = (n: number) => new Intl.NumberFormat('en-US').format(n);
+    return appError(
+      'AMOUNT_OUT_OF_RANGE',
+      `Amount must be between ${fmt(offer.min_amount)} and ${fmt(offer.max_amount)} ${offer.currency}.`,
+      'Adjust the loan amount within the allowed range and try again.',
+      { min_amount: offer.min_amount, max_amount: offer.max_amount, currency: offer.currency }
+    );
   }
 
-  // Check for existing account at the lending institution
   const { data: existingAccounts } = await serviceClient
     .from('accounts')
     .select('id')
@@ -231,10 +291,7 @@ async function handleApplyPreapproved(req: Request, body: any) {
 
   const hasExistingAccount = (existingAccounts || []).length > 0;
 
-  // GATE: if the offer requires an existing account and the user has none,
-  // do NOT trigger a hard inquiry — return an onboarding handoff payload.
   if (offer.requires_existing_account && !hasExistingAccount) {
-    // Resolve the bank tied to this institution so the consumer app can deep-link
     const { data: bank } = await serviceClient
       .from('banks')
       .select('id, display_name, short_code')
@@ -242,35 +299,50 @@ async function handleApplyPreapproved(req: Request, body: any) {
       .eq('status', 'active')
       .maybeSingle();
 
-    const { data: institution } = await serviceClient
-      .from('institutions')
-      .select('institution_name')
-      .eq('id', offer.institution_id)
-      .maybeSingle();
-
     return new Response(JSON.stringify({
+      success: false,
       error: 'account_required',
       code: 'ACCOUNT_REQUIRED',
-      message: `You need an account with ${institution?.institution_name || 'this bank'} before applying for this loan.`,
+      message: `You need an account with ${institutionName} before applying for this loan.`,
+      details: 'Open an account with this bank to continue. Your loan eligibility will be preserved.',
       onboarding: {
         institution_id: offer.institution_id,
-        institution_name: institution?.institution_name || null,
+        institution_name: institutionName,
         bank_id: bank?.id || null,
         bank_name: bank?.display_name || null,
         bank_short_code: bank?.short_code || null,
         apply_path: bank?.id ? `/bank/${bank.id}/apply` : null,
       },
-    }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  // Log hard inquiry
+  // Idempotency: prevent duplicate active applications for the same offer
+  const { data: existingApp } = await serviceClient
+    .from('preapproved_loan_applications')
+    .select('id, status, created_at')
+    .eq('user_id', user.id)
+    .eq('offer_id', offer_id)
+    .in('status', ['pending_review', 'approved'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingApp) {
+    return appError(
+      'DUPLICATE_APPLICATION',
+      'You already have an active application for this offer.',
+      `Application reference ${existingApp.id.slice(0, 8)} is currently ${String(existingApp.status).replace('_', ' ')}. The bank will contact you with next steps.`,
+      { application_id: existingApp.id, status: existingApp.status }
+    );
+  }
+
   const { data: inquiry, error: inqErr } = await serviceClient
     .from('credit_inquiries')
     .insert({
       user_id: user.id,
       inquiry_type: 'hard',
       inquirer_type: 'institution',
-      inquirer_name: `Loan Application - ${offer.product_name}`,
+      inquirer_name: `${institutionName} - ${offer.product_name}`,
       inquirer_id: offer.institution_id,
       purpose: `Pre-approved loan application: ${offer.product_name}`,
       score_impact: -5,
@@ -280,9 +352,11 @@ async function handleApplyPreapproved(req: Request, body: any) {
     .select('id')
     .single();
 
-  if (inqErr) throw inqErr;
+  if (inqErr) {
+    console.error('apply-preapproved: hard inquiry insert failed', inqErr);
+    return appError('INQUIRY_FAILED', 'We could not record your credit inquiry.', 'Please try again in a moment. No application has been created.');
+  }
 
-  // Create application
   const { data: application, error: appErr } = await serviceClient
     .from('preapproved_loan_applications')
     .insert({
@@ -295,13 +369,16 @@ async function handleApplyPreapproved(req: Request, body: any) {
       credit_score_at_application: currentScore,
       hard_inquiry_id: inquiry.id,
       has_existing_account: hasExistingAccount,
+      score_impact: -5,
     })
     .select('id')
     .single();
 
-  if (appErr) throw appErr;
+  if (appErr) {
+    console.error('apply-preapproved: application insert failed', appErr);
+    return appError('APPLICATION_FAILED', 'We could not submit your application.', 'A temporary issue prevented submission. Please try again. The credit inquiry has been logged.');
+  }
 
-  // Log credit event for the hard check
   try {
     await serviceClient.from('credit_events').insert({
       user_id: user.id,
@@ -310,17 +387,22 @@ async function handleApplyPreapproved(req: Request, body: any) {
       source: 'preapproved_loan',
       description: `Hard credit check for ${offer.product_name} loan application`,
       value_numeric: -5,
+      institution_id: offer.institution_id,
       metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
     });
-  } catch (_) { /* non-critical */ }
+  } catch (e) { console.warn('credit_events insert (non-critical) failed', e); }
 
   return new Response(JSON.stringify({
+    success: true,
     application_id: application.id,
     status: 'pending_review',
     hard_inquiry_logged: true,
     score_impact: -5,
-    message: 'Your application has been submitted. The bank will perform additional checks before making a final decision.',
-  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    institution_name: institutionName,
+    product_name: offer.product_name,
+    message: `Your ${offer.product_name} application has been submitted to ${institutionName}.`,
+    details: 'The bank will perform additional checks and contact you with a decision. A small temporary score impact (~5 points) has been recorded for the hard inquiry.',
+  }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleReviewApplication(req: Request, body: any) {
