@@ -16348,6 +16348,7 @@ export type Database = {
           pin_code_set_at: string | null
           pin_locked_until: string | null
           preferred_otp_method: string | null
+          referral_code: string | null
           suspended_at: string | null
           suspended_reason: string | null
           updated_at: string
@@ -16379,6 +16380,7 @@ export type Database = {
           pin_code_set_at?: string | null
           pin_locked_until?: string | null
           preferred_otp_method?: string | null
+          referral_code?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
           updated_at?: string
@@ -16410,6 +16412,7 @@ export type Database = {
           pin_code_set_at?: string | null
           pin_locked_until?: string | null
           preferred_otp_method?: string | null
+          referral_code?: string | null
           suspended_at?: string | null
           suspended_reason?: string | null
           updated_at?: string
@@ -22757,6 +22760,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_admin_portal_sections: {
         Args: { _user_id: string }
         Returns: {
