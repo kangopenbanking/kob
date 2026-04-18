@@ -140,21 +140,41 @@ async function handlePreapprovedOffers(req: Request, body: any) {
     score_provided: creditScore,
   });
 
-  const enrichedOffers = (offers || []).map((offer: any) => ({
-    id: offer.id,
-    institution_id: offer.institution_id,
-    product_name: offer.product_name,
-    description: offer.description,
-    min_credit_score: offer.min_credit_score,
-    max_credit_score: offer.max_credit_score,
-    min_amount: offer.min_amount,
-    max_amount: offer.max_amount,
-    interest_rate_annual: offer.interest_rate_annual,
-    max_tenure_months: offer.max_tenure_months,
-    currency: offer.currency,
-    requires_existing_account: offer.requires_existing_account && !userInstitutionIds.has(offer.institution_id),
-    institution_name: offer.institutions?.institution_name || 'Financial Institution',
-  }));
+  // Resolve bank deep-link info per institution (one query for all unique institutions)
+  const institutionIds = Array.from(new Set((offers || []).map((o: any) => o.institution_id)));
+  const bankMap = new Map<string, any>();
+  if (institutionIds.length > 0) {
+    const { data: banks } = await serviceClient
+      .from('banks')
+      .select('id, display_name, short_code, institution_id, status')
+      .in('institution_id', institutionIds)
+      .eq('status', 'active');
+    (banks || []).forEach((b: any) => bankMap.set(b.institution_id, b));
+  }
+
+  const enrichedOffers = (offers || []).map((offer: any) => {
+    const hasAccount = userInstitutionIds.has(offer.institution_id);
+    const bank = bankMap.get(offer.institution_id);
+    return {
+      id: offer.id,
+      institution_id: offer.institution_id,
+      product_name: offer.product_name,
+      description: offer.description,
+      min_credit_score: offer.min_credit_score,
+      max_credit_score: offer.max_credit_score,
+      min_amount: offer.min_amount,
+      max_amount: offer.max_amount,
+      interest_rate_annual: offer.interest_rate_annual,
+      max_tenure_months: offer.max_tenure_months,
+      currency: offer.currency,
+      requires_existing_account: offer.requires_existing_account && !hasAccount,
+      has_existing_account: hasAccount,
+      institution_name: offer.institutions?.institution_name || 'Financial Institution',
+      bank_id: bank?.id || null,
+      bank_name: bank?.display_name || null,
+      apply_path: bank?.id ? `/bank/${bank.id}/apply` : null,
+    };
+  });
 
   return new Response(JSON.stringify({ offers: enrichedOffers }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
