@@ -282,7 +282,7 @@ const CustomerPiggyBank: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {displayPlans.map((plan: any, i: number) => (
-                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} onCancel={(id, name) => setCancelConfirm({ planId: id, planName: name })} />
+                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} onCancel={(id, name) => setCancelConfirm({ planId: id, planName: name })} onDelete={selectedCategory === 'personal' ? (id, name, isCancelled) => setDeleteConfirm({ planId: id, planName: name, isCancelled }) : undefined} />
                 ))}
               </div>
             )}
