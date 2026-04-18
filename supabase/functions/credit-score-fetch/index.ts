@@ -51,6 +51,20 @@ Deno.serve(async (req) => {
       useEventSourced = hoursSinceCompute < 24;
     }
 
+    // Auto-init: if no profile exists yet but the user has events, trigger an initial computation.
+    // This guarantees first-time visitors get a real score instead of a 0/placeholder.
+    if (!eventProfile && !force_refresh) {
+      const { count: bootEventCount } = await supabase
+        .from('credit_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user_id);
+      if (bootEventCount && bootEventCount > 0) {
+        // Defer to the force_refresh branch below to call the engine
+        // by flipping the flag for this request only.
+        (body as any).force_refresh = true;
+      }
+    }
+
     if (useEventSourced && eventProfile) {
       // Use event-sourced score
       scoreData = {
