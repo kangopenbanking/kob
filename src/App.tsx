@@ -610,6 +610,7 @@ const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompl
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
 const BusinessWebhookLogs = lazy(() => import("./pages/business-app/BusinessWebhookLogs"));
 const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDisputes"));
+const BusinessTrustScore = lazy(() => import("./pages/business-app/BusinessTrustScore"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
@@ -1384,6 +1385,7 @@ function App() {
               <Route path="disputes" element={<BusinessDisputesPage />} />
               <Route path="support" element={<BusinessSupport />} />
               <Route path="kyb" element={<MerchantKYB />} />
+              <Route path="trust-score" element={<BusinessTrustScore />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />
