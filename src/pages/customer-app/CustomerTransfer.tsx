@@ -253,6 +253,7 @@ const CustomerTransfer: React.FC = () => {
     setNote('');
     setTransferResult(null);
     setSelectedRecipientName('');
+    setSelectedRecipientHasAccount(null);
     setNameSuggestions([]);
     setShowSuggestions(false);
   };
