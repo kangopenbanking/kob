@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useCustomerAccounts, useAccountBalances, useCustomerTransactions } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
