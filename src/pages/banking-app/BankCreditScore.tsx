@@ -491,7 +491,21 @@ function BankPreApprovedOffers({ score }: { score: number }) {
               </span>
             </div>
             <div className="flex items-center gap-2 mt-3">
-              {offer.requires_existing_account ? (
+              {offer.already_applied ? (
+                <div className="flex-1 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                  <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                    You have already applied
+                  </p>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                    {offer.existing_application?.status === 'approved'
+                      ? 'Approved — awaiting disbursement'
+                      : offer.existing_application?.status === 'disbursed'
+                      ? 'Disbursed'
+                      : 'Pending bank review'}
+                    {offer.existing_application?.application_number ? ` · Ref ${offer.existing_application.application_number}` : ''}
+                  </p>
+                </div>
+              ) : offer.requires_existing_account ? (
                 <button
                   onClick={() => {
                     if (offer.apply_path) {
@@ -517,10 +531,12 @@ function BankPreApprovedOffers({ score }: { score: number }) {
                 </button>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground mt-2 flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 shrink-0" />
-              Applying triggers a hard credit check
-            </p>
+            {!offer.already_applied && (
+              <p className="text-[9px] text-muted-foreground mt-2 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                Applying triggers a hard credit check
+              </p>
+            )}
           </motion.div>
         ))}
       </div>

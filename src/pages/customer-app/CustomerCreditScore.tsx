@@ -520,7 +520,21 @@ function PreApprovedOffersSection({ score }: { score: number }) {
               </div>
             </div>
             <div className="flex items-center gap-2 mt-3">
-              {offer.requires_existing_account ? (
+              {offer.already_applied ? (
+                <div className="flex-1 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                  <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
+                    You have already applied
+                  </p>
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                    {offer.existing_application?.status === 'approved'
+                      ? 'Approved — awaiting disbursement'
+                      : offer.existing_application?.status === 'disbursed'
+                      ? 'Disbursed'
+                      : 'Pending bank review'}
+                    {offer.existing_application?.application_number ? ` · Ref ${offer.existing_application.application_number}` : ''}
+                  </p>
+                </div>
+              ) : offer.requires_existing_account ? (
                 <button
                   onClick={() => navigate('/app/linked-accounts')}
                   className="flex-1 rounded-xl bg-muted py-2 text-[11px] font-bold text-foreground text-center active:scale-[0.98] transition-transform"
@@ -540,10 +554,12 @@ function PreApprovedOffersSection({ score }: { score: number }) {
                 </button>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground mt-2 flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 shrink-0" />
-              Applying triggers a hard credit check that may impact your score
-            </p>
+            {!offer.already_applied && (
+              <p className="text-[9px] text-muted-foreground mt-2 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                Applying triggers a hard credit check that may impact your score
+              </p>
+            )}
           </motion.div>
         ))}
       </div>
