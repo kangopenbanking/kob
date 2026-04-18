@@ -139,6 +139,11 @@ const Dashboard = () => {
             {widgets.some(w => w.widget_type === "credit_score") && creditScore && (
               <CreditScoreWidget id={widgets.find(w => w.widget_type === "credit_score")?.id} score={creditScore} onHide={hideWidget} onRemove={removeWidget} />
             )}
+            {widgets.some(w => w.widget_type === "credit_score") && !creditScore && (
+              <div className="md:col-span-1">
+                <NoCreditScoreCTA variant="dashboard" invalidateKeys={[['dashboard-data']]} />
+              </div>
+            )}
             {widgets.some(w => w.widget_type === "savings_goals") && (
               <SavingsGoalsWidget id={widgets.find(w => w.widget_type === "savings_goals")?.id} goals={savingsGoals} onHide={hideWidget} onRemove={removeWidget} />
             )}
