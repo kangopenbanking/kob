@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts, useCancelPiggyBankPlan } from '@/hooks/usePiggyBankData';
+import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts, useCancelPiggyBankPlan, useDeletePiggyBankPlan } from '@/hooks/usePiggyBankData';
 import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
