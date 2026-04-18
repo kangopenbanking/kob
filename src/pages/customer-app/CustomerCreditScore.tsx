@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
 
 const CustomerCreditScore: React.FC = () => {
   const navigate = useNavigate();
@@ -284,6 +285,14 @@ const CustomerCreditScore: React.FC = () => {
           ))}
         </div>
       </motion.div>
+
+      {/* No-score CTA — shown only when the user hasn't been assessed yet */}
+      {score === 0 && (
+        <NoCreditScoreCTA
+          variant="customer"
+          invalidateKeys={[['customer-credit-score', user?.id], ['credit-events', user?.id]]}
+        />
+      )}
 
       {/* Pre-Approved Loan Offers */}
       <PreApprovedOffersSection score={score} />

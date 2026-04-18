@@ -17,6 +17,7 @@ import { CreditScoreWidget } from "@/components/dashboard/widgets/CreditScoreWid
 import { SavingsGoalsWidget } from "@/components/dashboard/widgets/SavingsGoalsWidget";
 import { ActivityFeedWidget } from "@/components/dashboard/widgets/ActivityFeedWidget";
 import { WidgetCustomizer } from "@/components/dashboard/WidgetCustomizer";
+import { NoCreditScoreCTA } from "@/components/credit/NoCreditScoreCTA";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -137,6 +138,11 @@ const Dashboard = () => {
             )}
             {widgets.some(w => w.widget_type === "credit_score") && creditScore && (
               <CreditScoreWidget id={widgets.find(w => w.widget_type === "credit_score")?.id} score={creditScore} onHide={hideWidget} onRemove={removeWidget} />
+            )}
+            {widgets.some(w => w.widget_type === "credit_score") && !creditScore && (
+              <div className="md:col-span-1">
+                <NoCreditScoreCTA variant="dashboard" invalidateKeys={[['dashboard-data']]} />
+              </div>
             )}
             {widgets.some(w => w.widget_type === "savings_goals") && (
               <SavingsGoalsWidget id={widgets.find(w => w.widget_type === "savings_goals")?.id} goals={savingsGoals} onHide={hideWidget} onRemove={removeWidget} />

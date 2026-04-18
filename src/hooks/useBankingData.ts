@@ -281,6 +281,7 @@ export function useCreditScore() {
       return data;
     },
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 

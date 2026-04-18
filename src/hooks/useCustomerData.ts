@@ -187,6 +187,7 @@ export function useCustomerCreditScore(userId?: string) {
   return useQuery({
     queryKey: ['customer-credit-score', userId],
     enabled: !!userId,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('credit-score-fetch', {
         body: { user_id: userId, include_report: false },

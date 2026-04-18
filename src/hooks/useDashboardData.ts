@@ -48,8 +48,17 @@ export function useDashboardData() {
   }, []);
 
   const fetchCreditScore = useCallback(async (userId: string) => {
-    const { data } = await supabase.from("credit_scores").select("score").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).single();
-    if (data) setCreditScore(data.score);
+    // Use the canonical engine via credit-score-fetch so the dashboard
+    // shows the same score as the Customer and Banking apps.
+    try {
+      const { data } = await supabase.functions.invoke("credit-score-fetch", {
+        body: { user_id: userId, include_report: false },
+      });
+      if (data?.score) setCreditScore(data.score);
+      else setCreditScore(null);
+    } catch {
+      setCreditScore(null);
+    }
   }, []);
 
   const fetchSavingsGoals = useCallback(async (userId: string) => {
