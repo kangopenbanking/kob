@@ -447,6 +447,50 @@ const CustomerPiggyBank: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Personal Plan Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent className="rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.5} />
+              </div>
+              <AlertDialogTitle className="text-base">Delete Personal Savings?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Permanently remove <span className="font-semibold text-foreground">"{deleteConfirm?.planName}"</span> from your records.
+                </p>
+                <div className="rounded-2xl bg-muted/50 p-3 space-y-1">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {deleteConfirm?.isCancelled
+                      ? 'This plan is already cancelled. Deleting it will remove it from your history. No further credit impact.'
+                      : 'This personal plan will be deleted. If it has paid contributions, please cancel it first.'}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl">Keep</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletePlan.isPending}
+              onClick={() => {
+                if (deleteConfirm) {
+                  deletePlan.mutate({ plan_id: deleteConfirm.planId }, {
+                    onSettled: () => setDeleteConfirm(null),
+                  });
+                }
+              }}
+            >
+              {deletePlan.isPending ? 'Deleting...' : 'Delete Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
