@@ -444,21 +444,39 @@ serve(async (req) => {
 
     // ══════════════════════════════════════════════
     // C1 FIX: Atomic debit-credit via PL/pgSQL with row locks
+    // BRANCH: If recipient is unverified, only debit sender; funds go to hold table.
     // ══════════════════════════════════════════════
-    const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
-      _source_balance_id: sourceBalance.id,
-      _dest_account_id: destAccount.id,
-      _amount: transferAmount,
-      _currency: txCurrency,
-    });
-
-    if (atomicError) {
-      console.error('Atomic transfer failed:', atomicError);
-      const errMsg = atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
-      return new Response(JSON.stringify({ error: errMsg }), {
-        status: atomicError.message?.includes('Insufficient funds') ? 400 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (recipientIsActivated) {
+      const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
+        _source_balance_id: sourceBalance.id,
+        _dest_account_id: destAccount.id,
+        _amount: transferAmount,
+        _currency: txCurrency,
       });
+
+      if (atomicError) {
+        console.error('Atomic transfer failed:', atomicError);
+        const errMsg = atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: atomicError.message?.includes('Insufficient funds') ? 400 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else {
+      // Unverified recipient: debit sender only (no credit yet)
+      const { error: debitOnlyErr } = await supabase.rpc('atomic_debit_balance', {
+        _account_id: source_account_id,
+        _amount: transferAmount,
+        _currency: txCurrency,
+      });
+      if (debitOnlyErr) {
+        console.error('Debit-only failed:', debitOnlyErr);
+        const errMsg = debitOnlyErr.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: debitOnlyErr.message?.includes('Insufficient funds') ? 400 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Use resolved destination account ID for all subsequent operations
