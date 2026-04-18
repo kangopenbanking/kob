@@ -604,6 +604,18 @@ const CustomerTransfer: React.FC = () => {
                   {validation.hint}
                 </p>
               ) : null}
+
+              {/* Auto-provisioning notice for new (unprovisioned) recipients */}
+              {recipientType === 'name' && selectedRecipientName && selectedRecipientHasAccount === false && (
+                <div className="mt-2 rounded-xl border border-[hsl(40,80%,75%)] bg-[hsl(40,90%,96%)] p-3">
+                  <p className="text-[11px] font-semibold text-[hsl(35,70%,30%)] mb-1">
+                    {selectedRecipientName} doesn't have an active Kang wallet yet
+                  </p>
+                  <p className="text-[10px] leading-relaxed text-[hsl(35,60%,30%)]">
+                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Source Account */}
