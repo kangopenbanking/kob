@@ -5,6 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/admin-notify.ts";
 import { sendManagedEmail } from "../_shared/send-managed-email.ts";
 import { selectBankPayoutRail, describeRailDecision } from "../_shared/bank-payout-router.ts";
+import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -117,10 +118,14 @@ serve(async (req) => {
 
     const txRef = `withdraw_${account_id.substring(0, 8)}_${Date.now()}`;
 
-    // Debit user's account immediately by updating balance row (platform standard)
-    await supabase.from('account_balances')
-      .update({ amount: availableBalance - totalDebit, balance_datetime: new Date().toISOString() })
-      .eq('id', balanceRecord.id);
+    // F53 — Atomic debit (row-locked) replaces raw UPDATE to prevent race conditions
+    const { data: debitRes, error: debitErr } = await supabase.rpc('atomic_consumer_withdrawal_debit', {
+      _balance_id: balanceRecord.id,
+      _debit_amount: totalDebit,
+    });
+    if (debitErr || !debitRes?.success) {
+      return new Response(JSON.stringify({ error: 'debit_failed', message: debitRes?.error || debitErr?.message || 'Debit failed' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Record debit transaction
     await supabase.from('transactions').insert({
@@ -190,10 +195,11 @@ serve(async (req) => {
         payoutResult.provider_raw = { ...payoutResult.provider_raw, rail_decision: describeRailDecision(railSelection) };
       }
     } catch (payoutErr: any) {
-      // Reverse debit on provider failure — restore original balance
-      await supabase.from('account_balances')
-        .update({ amount: availableBalance, balance_datetime: new Date().toISOString() })
-        .eq('id', balanceRecord.id);
+      // F53 — Atomic reversal (adds back debit instead of overwriting) prevents lost concurrent credits
+      await supabase.rpc('atomic_consumer_withdrawal_reverse', {
+        _balance_id: balanceRecord.id,
+        _reverse_amount: totalDebit,
+      });
 
       await supabase.from('audit_logs').insert({
         action_type: 'gateway_withdraw_failed_reversed', entity_type: 'account', entity_id: account_id,
@@ -218,10 +224,34 @@ serve(async (req) => {
       metadata: { withdraw_to_bank: true, account_id, user_id: user.id },
     }).select().single();
 
+    // F52 — Record fee for billing
+    if (fee > 0) {
+      await recordTransactionFee({
+        supabase,
+        institutionId: account.institution_id || null,
+        transactionType: 'withdrawal',
+        transactionRef: txRef,
+        transactionAmount: amount,
+        transactionCurrency: account.currency,
+        feeModel: 'hybrid',
+        calculatedFee: fee,
+        finalFee: fee,
+        metadata: { destination_type: 'bank_account', provider: providerName, bank_code, payout_id: payout?.id },
+      });
+    }
+
+    // F54 — Trigger bank reconciliation poll for KOB rail so the bank-side balance
+    // is reflected in our ledger as soon as the upstream bank acknowledges.
+    if (providerName.startsWith('kob:') && railSelection.bank_id) {
+      supabase.functions.invoke('bank-data-poller', {
+        body: { bank_id: railSelection.bank_id, reason: 'post_payout_refresh', tx_ref: txRef },
+      }).then(() => {}).catch(() => {});
+    }
+
     // Audit trail
     await supabase.from('audit_logs').insert({
       action_type: 'gateway_withdraw_initiated', entity_type: 'account', entity_id: account_id,
-      performed_by: user.id, details: { amount, fee, bank_code, account_number, tx_ref: txRef, provider_status: payoutResult.status },
+      performed_by: user.id, details: { amount, fee, bank_code, account_number, tx_ref: txRef, provider_status: payoutResult.status, provider: providerName, rail: describeRailDecision(railSelection) },
     }).then(() => {}).catch(() => {});
 
     // ═══ ADMIN ALERT ═══
