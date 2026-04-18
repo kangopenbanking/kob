@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +59,7 @@ const CustomerTransfer: React.FC = () => {
   const [nameSuggestions, setNameSuggestions] = useState<any[]>([]);
   const [nameSearching, setNameSearching] = useState(false);
   const [selectedRecipientName, setSelectedRecipientName] = useState('');
+  const [selectedRecipientHasAccount, setSelectedRecipientHasAccount] = useState<boolean | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
@@ -150,6 +151,7 @@ const CustomerTransfer: React.FC = () => {
     // For name type: clear selected state and trigger debounced search
     if (recipientType === 'name') {
       setSelectedRecipientName('');
+      setSelectedRecipientHasAccount(null);
       if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
       nameDebounceRef.current = setTimeout(() => searchByName(raw), 300);
     }
@@ -251,6 +253,7 @@ const CustomerTransfer: React.FC = () => {
     setNote('');
     setTransferResult(null);
     setSelectedRecipientName('');
+    setSelectedRecipientHasAccount(null);
     setNameSuggestions([]);
     setShowSuggestions(false);
   };
@@ -486,7 +489,7 @@ const CustomerTransfer: React.FC = () => {
                   };
                   const colors = colorMap[key] || { active: 'bg-foreground text-background', inactive: 'bg-muted text-muted-foreground' };
                   return (
-                    <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setNameSuggestions([]); setShowSuggestions(false); }}
+                    <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setSelectedRecipientHasAccount(null); setNameSuggestions([]); setShowSuggestions(false); }}
                       className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all border-2 ${
                         recipientType === key ? `${colors.active} border-transparent` : `${colors.inactive} border-transparent`
                       }`}>
@@ -520,7 +523,7 @@ const CustomerTransfer: React.FC = () => {
                       </div>
                       <span className="text-sm font-semibold text-foreground">{selectedRecipientName}</span>
                     </div>
-                    <button onClick={() => { setSelectedRecipientName(''); setRecipient(''); setNameSuggestions([]); }}>
+                    <button onClick={() => { setSelectedRecipientName(''); setSelectedRecipientHasAccount(null); setRecipient(''); setNameSuggestions([]); }}>
                       <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     </button>
                   </div>
@@ -566,6 +569,7 @@ const CustomerTransfer: React.FC = () => {
                           // Use accountId (UUID) if available for direct resolution
                           setRecipient(s.accountId || s.name);
                           setSelectedRecipientName(s.name);
+                          setSelectedRecipientHasAccount(!!s.hasAccount);
                           setShowSuggestions(false);
                         }}
                       >
@@ -578,7 +582,15 @@ const CustomerTransfer: React.FC = () => {
                             <p className="text-[10px] text-muted-foreground">{s.phone}</p>
                           )}
                         </div>
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />
+                        {s.hasAccount ? (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">
+                            New
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -598,6 +610,21 @@ const CustomerTransfer: React.FC = () => {
                   {validation.hint}
                 </p>
               ) : null}
+
+              {/* Notice: recipient has no active Kang wallet yet */}
+              {recipientType === 'name' && selectedRecipientName && selectedRecipientHasAccount === false && (
+                <div className="flex items-start gap-2 rounded-2xl border border-[hsl(40,80%,75%)] bg-[hsl(40,90%,96%)] px-3 py-2.5">
+                  <Info className="h-4 w-4 text-[hsl(35,70%,35%)] shrink-0 mt-0.5" strokeWidth={1.75} />
+                  <div className="flex-1">
+                    <p className="text-[11px] font-bold text-[hsl(35,70%,30%)]">
+                      {selectedRecipientName} doesn't have an active Kang wallet yet
+                    </p>
+                    <p className="text-[10px] text-[hsl(35,40%,30%)] mt-0.5 leading-relaxed">
+                      We'll automatically create one for them when you send. Funds will be available as soon as they sign in.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Source Account */}
