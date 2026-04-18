@@ -576,15 +576,26 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             </div>
           </div>
         </div>
-        {!isCancelled && plan.status === 'active' && (
-          <button
-            onClick={() => onCancel(plan.id, plan.plan_name)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Cancel plan"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {!isCancelled && plan.status === 'active' && (
+            <button
+              onClick={() => onCancel(plan.id, plan.plan_name)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Cancel plan"
+            >
+              <StopCircle className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+          {onDelete && !isBank && (
+            <button
+              onClick={() => onDelete(plan.id, plan.plan_name, isCancelled)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Delete plan"
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Progress */}
