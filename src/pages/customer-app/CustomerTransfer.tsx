@@ -185,6 +185,10 @@ const CustomerTransfer: React.FC = () => {
     if (!amount || amountNum <= 0) { toast.error('Please enter an amount to send'); return; }
     if (amountNum < 100) { toast.error('Minimum transfer amount is 100 XAF'); return; }
     if (!recipient.trim()) { toast.error('Please enter the recipient\'s phone number, name, or account details'); return; }
+    if (recipientType === 'name' && !selectedRecipientName) {
+      toast.error('Please pick a recipient from the search suggestions');
+      return;
+    }
     if (!validation.valid && (recipientType === 'rib' || recipientType === 'iban')) { toast.error(`Please enter a valid ${recipientType === 'rib' ? 'RIB (23 digits)' : 'IBAN'} number`); return; }
     if (isOverBalance) { toast.error(`Insufficient balance. You have ${availableBalance.toLocaleString()} ${currency} available`); return; }
     setStep('confirm');
