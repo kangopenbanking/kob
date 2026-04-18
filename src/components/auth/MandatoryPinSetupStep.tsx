@@ -52,6 +52,15 @@ export const MandatoryPinSetupStep: React.FC<MandatoryPinSetupStepProps> = ({
 
       setStep('success');
       toast.success('PIN set successfully!');
+      // Release any held inbound transfers now that the account is fully activated
+      supabase.functions.invoke('release-pending-inbound', { body: {} })
+        .then((res: any) => {
+          const count = res?.data?.released_count || 0;
+          if (count > 0) {
+            toast.success(`${count} pending transfer${count > 1 ? 's' : ''} released to your wallet!`);
+          }
+        })
+        .catch(() => {});
       setTimeout(() => onComplete(), 1500);
     } catch (err: any) {
       setError(extractEdgeFunctionError(err, 'Failed to set PIN. Please try again.'));
