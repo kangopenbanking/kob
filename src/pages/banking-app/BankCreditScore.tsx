@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight, Building2, Banknote, Percent, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight, Building2, Banknote, Percent, AlertTriangle, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCreditScore } from '@/hooks/useBankingData';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,9 +52,26 @@ const defaultFactors = [
 
 const BankCreditScore: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: creditData, isLoading } = useCreditScore();
   const [overdraftLoading, setOverdraftLoading] = useState(false);
   const [overdraftResult, setOverdraftResult] = useState<any>(null);
+
+  const recomputeMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-recompute', { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const delta = data?.delta ?? 0;
+      const sign = delta > 0 ? '+' : '';
+      toast.success(`Score recomputed: ${data?.score} (${sign}${delta} points)`);
+      queryClient.invalidateQueries({ queryKey: ['credit-score'] });
+    },
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not refresh score')),
+  });
 
   const score = creditData?.score || 0;
   const maxScore = 850;
@@ -119,10 +136,22 @@ const BankCreditScore: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col px-4 py-6">
-      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-        <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-        Back
-      </button>
+      <div className="mb-4 flex items-center justify-between">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
+          Back
+        </button>
+        <button
+          onClick={() => recomputeMutation.mutate()}
+          disabled={recomputeMutation.isPending}
+          className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground active:scale-95 transition disabled:opacity-50"
+        >
+          {recomputeMutation.isPending
+            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            : <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} />}
+          Recompute
+        </button>
+      </div>
 
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">Credit Score</h1>
       <p className="mb-6 text-sm font-medium text-muted-foreground">

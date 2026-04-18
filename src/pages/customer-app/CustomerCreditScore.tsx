@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCreditScore } from '@/hooks/useCustomerData';
@@ -13,7 +13,26 @@ import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 const CustomerCreditScore: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: scoreData, isLoading } = useCustomerCreditScore(user?.id);
+
+  // Recompute mutation
+  const recomputeMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-recompute', { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      const delta = data?.delta ?? 0;
+      const sign = delta > 0 ? '+' : '';
+      toast.success(`Score recomputed: ${data?.score} (${sign}${delta} points)`);
+      queryClient.invalidateQueries({ queryKey: ['customer-credit-score', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['credit-events', user?.id] });
+    },
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not refresh score')),
+  });
 
   // Fetch recent credit events
   const { data: events = [] } = useQuery({
@@ -197,7 +216,17 @@ const CustomerCreditScore: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground">Credit Score</h1>
+        <h1 className="text-xl font-bold text-foreground flex-1">Credit Score</h1>
+        <button
+          onClick={() => recomputeMutation.mutate()}
+          disabled={recomputeMutation.isPending}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border active:scale-95 transition disabled:opacity-50"
+          aria-label="Refresh score"
+        >
+          {recomputeMutation.isPending
+            ? <Loader2 className="h-4 w-4 animate-spin text-foreground" />
+            : <RefreshCw className="h-4 w-4 text-foreground" strokeWidth={1.8} />}
+        </button>
       </div>
 
       {/* Score Gauge Card */}

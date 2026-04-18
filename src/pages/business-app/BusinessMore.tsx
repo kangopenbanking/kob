@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2 } from 'lucide-react';
+import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,6 +76,7 @@ const BusinessMore: React.FC = () => {
     {
       title: 'Management',
       items: [
+        { icon: ShieldCheck, label: 'Trust Score', subtitle: 'Credibility & risk profile', path: `${basePath}/trust-score`, color: 'bg-violet-500/10 text-violet-600' },
         { icon: Settings, label: 'Settings', subtitle: 'Business profile & config', path: `${basePath}/settings`, color: 'bg-slate-500/10 text-slate-600' },
         { icon: QrCode, label: 'Compliance', subtitle: 'KYB & verification', path: `${basePath}/compliance`, color: 'bg-emerald-500/10 text-emerald-700' },
         { icon: Star, label: 'Enterprise', subtitle: 'Advanced features', path: `${basePath}/enterprise`, color: 'bg-amber-500/10 text-amber-700' },

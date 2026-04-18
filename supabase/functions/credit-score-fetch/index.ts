@@ -44,10 +44,11 @@ Deno.serve(async (req) => {
     let useEventSourced = false;
     let scoreData: any = null;
 
-    if (eventProfile?.current_score && eventProfile.last_computed_at) {
+    if (eventProfile?.current_score && eventProfile.last_computed_at && !force_refresh) {
       const lastComputed = new Date(eventProfile.last_computed_at);
       const hoursSinceCompute = (Date.now() - lastComputed.getTime()) / (1000 * 60 * 60);
-      useEventSourced = hoursSinceCompute < 24 || !force_refresh;
+      // Only use cached event-sourced score if fresh (< 24h) AND no force refresh requested
+      useEventSourced = hoursSinceCompute < 24;
     }
 
     if (useEventSourced && eventProfile) {
