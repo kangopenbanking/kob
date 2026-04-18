@@ -22515,6 +22515,10 @@ export type Database = {
         Args: { _balance_id: string; _debit_amount: number }
         Returns: Json
       }
+      atomic_consumer_withdrawal_reverse: {
+        Args: { _balance_id: string; _reverse_amount: number }
+        Returns: Json
+      }
       atomic_debit_balance: {
         Args: { _account_id: string; _amount: number; _currency?: string }
         Returns: Json
