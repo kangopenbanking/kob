@@ -105,8 +105,34 @@ async function handleRecompute(req: Request) {
 
 async function handlePreapprovedOffers(req: Request, body: any) {
   const { user } = await getUser(req);
-  const creditScore = body.credit_score || 0;
   const serviceClient = getServiceClient();
+
+  // SECURITY: resolve the score server-side from the canonical engine.
+  // Never trust a client-supplied score for offer eligibility — that would let
+  // anyone view (and trigger inquiries on) offers they don't qualify for.
+  let creditScore = 0;
+  const { data: scoreProfile } = await serviceClient
+    .from('credit_profiles')
+    .select('current_score')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (scoreProfile?.current_score) {
+    creditScore = scoreProfile.current_score;
+  } else {
+    const { data: hist } = await serviceClient
+      .from('credit_score_history')
+      .select('score')
+      .eq('user_id', user.id)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    creditScore = hist?.score || 0;
+  }
+
+  // No score yet → no offers; the UI will prompt the user to complete an assessment.
+  if (creditScore <= 0) {
+    return new Response(JSON.stringify({ offers: [], current_score: 0, reason: 'NO_SCORE' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
 
   // Fetch active offers where user's score meets benchmark
   const { data: offers, error } = await serviceClient
