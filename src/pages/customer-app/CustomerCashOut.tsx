@@ -34,6 +34,8 @@ const CustomerCashOut: React.FC = () => {
   const [step, setStep] = useState<'dest' | 'amount' | 'confirm' | 'success'>('dest');
   const [processing, setProcessing] = useState(false);
   const [showPin, setShowPin] = useState(false);
+  // F44 — stable idempotency key for the current confirm-attempt (regenerated on new confirm)
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
 
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = kangAccounts.map((a: any) => a.id);
@@ -178,6 +180,8 @@ const CustomerCashOut: React.FC = () => {
     if (isOverBalance) { toast.error(`Insufficient balance. You have ${walletBalance.toLocaleString()} XAF available`); return; }
     if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal amount is ${cashoutLimits.min_amount.toLocaleString()} XAF`); return; }
     if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal amount is ${cashoutLimits.max_amount.toLocaleString()} XAF per transaction`); return; }
+    // F44 — generate stable key once per confirm so PIN-retry/network-retry de-duplicate
+    setIdempotencyKey(`wd_${primaryAccount?.id}_${selectedAccount?.id}_${numAmount}_${Date.now()}`);
     setStep('confirm');
   };
 
@@ -186,8 +190,8 @@ const CustomerCashOut: React.FC = () => {
     try {
       const destinationType = selectedAccount?.account_type;
 
-      // Call the unified withdrawal edge function
-      const idempotencyKey = `withdrawal_${primaryAccount?.id}_${Date.now()}`;
+      // Call the unified withdrawal edge function (stable idempotency key)
+      const idemKey = idempotencyKey || `wd_${primaryAccount?.id}_${selectedAccount?.id}_${numAmount}_${Date.now()}`;
       const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
         body: {
           amount: numAmount,
@@ -196,8 +200,9 @@ const CustomerCashOut: React.FC = () => {
           linked_account_id: selectedAccount?.id,
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
-          idempotency_key: idempotencyKey,
+          idempotency_key: idemKey,
         },
+        headers: { 'idempotency-key': idemKey },
       });
 
       if (error) throw new Error(error.message || 'Withdrawal failed');

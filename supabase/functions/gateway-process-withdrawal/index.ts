@@ -19,17 +19,36 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Auth
+    // Auth — supports user JWT OR internal cron call (service-role + x-internal-secret + on_behalf_of)
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const internalSecret = req.headers.get('x-internal-secret');
+    const onBehalfOf = req.headers.get('x-on-behalf-of');
+    const expectedInternal = Deno.env.get('INTERNAL_FUNCTION_SECRET');
+
+    let user: { id: string; email?: string } | null = null;
+
+    if (internalSecret && expectedInternal && internalSecret === expectedInternal && onBehalfOf) {
+      // F43 — internal cron-driven withdrawal on behalf of a user
+      const { data: profile } = await supabase
+        .from('profiles').select('id, email').eq('id', onBehalfOf).maybeSingle();
+      if (profile) user = { id: profile.id, email: profile.email || undefined };
+    } else {
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authUser) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = { id: authUser.id, email: authUser.email };
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
+    if (!user) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -142,7 +161,7 @@ serve(async (req) => {
     try {
       const complianceResp = await supabase.functions.invoke('gateway-compliance-screen', {
         body: { user_id: user.id, amount, currency, destination_type },
-        headers: { Authorization: authHeader },
+        headers: authHeader ? { Authorization: authHeader } : {},
       });
       const complianceResult = complianceResp.data;
       if (complianceResult?.decision === 'denied') {
@@ -322,10 +341,11 @@ serve(async (req) => {
         throw new Error(`Unsupported destination type: ${destination_type}`);
       }
     } catch (providerErr: any) {
-      // Reverse debit on provider failure
-      await supabase.from('account_balances')
-        .update({ amount: currentBalance, balance_datetime: new Date().toISOString() })
-        .eq('id', balanceRecord.id);
+      // F41 — Atomic reversal (adds back the debit instead of overwriting)
+      await supabase.rpc('atomic_consumer_withdrawal_reverse', {
+        _balance_id: balanceRecord.id,
+        _reverse_amount: totalDebit,
+      });
 
       // Record failed transaction
       await supabase.from('transactions').insert({
