@@ -82,8 +82,12 @@ const CustomerTransfer: React.FC = () => {
       }
 
       if (profiles && profiles.length > 0) {
-        // Get accounts for these users to ensure they can receive transfers
-        const userIds = profiles.map((p: any) => p.id);
+        // Look up accounts for these users (optional — registered users without
+        // a provisioned account can still receive funds via their user_id, the
+        // transfer engine resolves/creates a destination wallet on the fly).
+        const userIds = profiles
+          .map((p: any) => p.id)
+          .filter((id: string) => id !== user?.id); // exclude self
         const { data: accts } = await supabase
           .from('accounts')
           .select('id, account_holder_name, user_id')
@@ -91,13 +95,17 @@ const CustomerTransfer: React.FC = () => {
           .eq('is_active', true);
 
         const suggestions = profiles
-          .filter((p: any) => accts?.some(a => a.user_id === p.id))
-          .map((p: any) => ({
-            userId: p.id,
-            name: p.full_name,
-            phone: p.phone_masked, // Already masked by RPC (e.g. +237677****)
-            accountId: accts?.find(a => a.user_id === p.id)?.id,
-          }));
+          .filter((p: any) => p.id !== user?.id)
+          .map((p: any) => {
+            const acct = accts?.find(a => a.user_id === p.id);
+            return {
+              userId: p.id,
+              name: p.full_name,
+              phone: p.phone_masked, // Already masked by RPC (e.g. +237677****)
+              accountId: acct?.id || p.id, // fall back to user_id when no account
+              hasAccount: !!acct,
+            };
+          });
         setNameSuggestions(suggestions);
       } else {
         setNameSuggestions([]);
