@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight, Info } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -583,13 +583,9 @@ const CustomerTransfer: React.FC = () => {
                           )}
                         </div>
                         {s.hasAccount ? (
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">
-                            Active
-                          </span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">Active</span>
                         ) : (
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">
-                            New
-                          </span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">New</span>
                         )}
                       </button>
                     ))}
@@ -611,18 +607,15 @@ const CustomerTransfer: React.FC = () => {
                 </p>
               ) : null}
 
-              {/* Notice: recipient has no active Kang wallet yet */}
+              {/* Auto-provisioning notice for new (unprovisioned) recipients */}
               {recipientType === 'name' && selectedRecipientName && selectedRecipientHasAccount === false && (
-                <div className="flex items-start gap-2 rounded-2xl border border-[hsl(40,80%,75%)] bg-[hsl(40,90%,96%)] px-3 py-2.5">
-                  <Info className="h-4 w-4 text-[hsl(35,70%,35%)] shrink-0 mt-0.5" strokeWidth={1.75} />
-                  <div className="flex-1">
-                    <p className="text-[11px] font-bold text-[hsl(35,70%,30%)]">
-                      {selectedRecipientName} doesn't have an active Kang wallet yet
-                    </p>
-                    <p className="text-[10px] text-[hsl(35,40%,30%)] mt-0.5 leading-relaxed">
-                      We'll automatically create one for them when you send. Funds will be available as soon as they sign in.
-                    </p>
-                  </div>
+                <div className="mt-2 rounded-xl border border-[hsl(40,80%,75%)] bg-[hsl(40,90%,96%)] p-3">
+                  <p className="text-[11px] font-semibold text-[hsl(35,70%,30%)] mb-1">
+                    {selectedRecipientName} doesn't have an active Kang wallet yet
+                  </p>
+                  <p className="text-[10px] leading-relaxed text-[hsl(35,60%,30%)]">
+                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
+                  </p>
                 </div>
               )}
             </div>
