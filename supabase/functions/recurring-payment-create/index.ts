@@ -52,7 +52,11 @@ Deno.serve(async (req) => {
     }
 
     // Default: create action
-    const { name, category, amount, frequency, start_date, end_date, next_payment_date, notify } = body;
+    const {
+      name, category, amount, frequency, start_date, end_date, next_payment_date, notify,
+      payment_type, recipient_user_id, recipient_name, recipient_phone,
+      source_account_id, destination_account_id, notes,
+    } = body;
 
     if (!name || !amount || amount <= 0) {
       return new Response(JSON.stringify({ error: 'name and valid amount required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -63,6 +67,13 @@ Deno.serve(async (req) => {
     const validFrequencies = ['Daily', 'Weekly', 'Monthly', 'Quarterly'];
     if (frequency && !validFrequencies.includes(frequency)) {
       return new Response(JSON.stringify({ error: 'frequency must be Daily, Weekly, Monthly, or Quarterly' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const ptype = payment_type || 'bill';
+    if (!['bill', 'salary', 'p2p'].includes(ptype)) {
+      return new Response(JSON.stringify({ error: 'payment_type must be bill, salary, or p2p' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (ptype === 'p2p' && !recipient_user_id) {
+      return new Response(JSON.stringify({ error: 'recipient_user_id required for P2P recurring payments' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { data, error } = await supabase.from('recurring_payments').insert({
@@ -76,6 +87,13 @@ Deno.serve(async (req) => {
       next_payment_date: next_payment_date || start_date,
       is_active: true,
       notify: notify !== false,
+      payment_type: ptype,
+      recipient_user_id: recipient_user_id || null,
+      recipient_name: recipient_name || null,
+      recipient_phone: recipient_phone || null,
+      source_account_id: source_account_id || null,
+      destination_account_id: destination_account_id || null,
+      notes: notes || null,
     }).select().single();
 
     if (error) throw error;
