@@ -81,9 +81,10 @@ const CustomerHelp: React.FC = () => {
   ];
 
   const quickLinks = [
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
-    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Help Centre', path: '/help-centre' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'FAQ', path: '/faq' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms & Privacy', path: '/legal' },
+    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Contact Support', path: '/contact' },
   ];
 
   const stagger = {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +16,7 @@ const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(2
 const CustomerCards: React.FC = () => {
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -76,7 +78,7 @@ const CustomerCards: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-muted-foreground">No cards yet</p>
           <p className="text-xs text-muted-foreground text-center">Add a virtual card to start making payments</p>
-          <Button variant="outline" className="rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
+          <Button variant="outline" className="rounded-2xl" onClick={() => navigate('/virtual-cards')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </div>
@@ -144,7 +146,7 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button onClick={() => toast.info('Card settings coming soon')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => navigate('/virtual-cards')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>
@@ -174,7 +176,7 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <Button variant="outline" className="w-full rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
+          <Button variant="outline" className="w-full rounded-2xl" onClick={() => navigate('/virtual-cards')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </>
