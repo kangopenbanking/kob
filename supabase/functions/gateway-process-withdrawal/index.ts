@@ -9,6 +9,7 @@ import {
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins, notifyUser } from "../_shared/admin-notify.ts";
 import { sendManagedEmail } from "../_shared/send-managed-email.ts";
+import { selectBankPayoutRail, describeRailDecision } from "../_shared/bank-payout-router.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
