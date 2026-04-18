@@ -67,26 +67,12 @@ async function debitWallet(supabase: any, accountId: string, amount: number, use
 }
 
 async function creditWallet(supabase: any, accountId: string, amount: number, userId: string, description: string, metadata: any) {
-  // Find or create credit balance
-  const { data: bal } = await supabase.from('account_balances')
-    .select('id')
-    .eq('account_id', accountId)
-    .eq('credit_debit_indicator', 'Credit')
-    .eq('balance_type', 'ClosingAvailable')
-    .maybeSingle();
-  if (bal?.id) {
-    await supabase.from('account_balances').update({
-      amount: amount, // will use RPC instead
-    }).eq('id', bal.id);
-    // Use raw increment via update
-    await supabase.rpc('atomic_consumer_withdrawal_reverse', { _balance_id: bal.id, _reverse_amount: amount });
-  } else {
-    await supabase.from('account_balances').insert({
-      account_id: accountId, amount, currency: 'XAF',
-      balance_type: 'ClosingAvailable', credit_debit_indicator: 'Credit',
-      balance_datetime: new Date().toISOString(),
-    });
-  }
+  // ✅ G8: Atomic credit via single RPC (row-locked, currency-validated, auto-creates balance)
+  const { error: rpcErr } = await supabase.rpc('atomic_credit_balance', {
+    _account_id: accountId, _amount: amount, _currency: 'XAF',
+  });
+  if (rpcErr) throw new Error(rpcErr.message || 'Failed to credit wallet');
+
   const now = new Date().toISOString();
   await supabase.from('transactions').insert({
     account_id: accountId, amount, currency: 'XAF',
@@ -334,17 +320,29 @@ async function handlePayout(req: Request, body: any) {
   const { group_id, recipient_member_id, idempotency_key } = body;
   if (!group_id) throw new Error('group_id required');
 
-  // Idempotency for payouts
+  // ✅ G8: Hardened idempotency — scoped to group + cycle to prevent cross-group key collisions
   if (idempotency_key) {
     const { data: existingTx } = await supabase.from('transactions')
-      .select('id').eq('transaction_type', 'njangi_payout')
-      .filter('metadata->>idempotency_key', 'eq', idempotency_key).maybeSingle();
-    if (existingTx) return json({ success: true, idempotent_replay: true });
+      .select('id, amount, metadata')
+      .eq('transaction_type', 'njangi_payout')
+      .filter('metadata->>idempotency_key', 'eq', idempotency_key)
+      .filter('metadata->>group_id', 'eq', group_id)
+      .maybeSingle();
+    if (existingTx) {
+      return json({ success: true, idempotent_replay: true, transaction_id: existingTx.id, amount: existingTx.amount });
+    }
   }
 
   const { data: group } = await supabase.from('njangi_groups').select('*').eq('id', group_id).single();
   if (!group) throw new Error('Group not found');
   if (group.creator_id !== user.id) throw new Error('Only the group creator can trigger payouts');
+
+  // ✅ G8: Defensive guard — block duplicate payouts for the same group/cycle
+  const { data: existingPayout } = await supabase.from('njangi_payouts')
+    .select('id, recipient_member_id, amount').eq('group_id', group_id).eq('cycle_number', group.current_cycle).maybeSingle();
+  if (existingPayout) {
+    return json({ success: true, idempotent_replay: true, payout: existingPayout, reason: 'cycle_already_paid' });
+  }
 
   const { data: members } = await supabase.from('njangi_members').select('*').eq('group_id', group_id).eq('status', 'active');
   const { data: contributions } = await supabase.from('njangi_contributions').select('*').eq('group_id', group_id).eq('cycle_number', group.current_cycle).in('status', ['paid', 'late']);
