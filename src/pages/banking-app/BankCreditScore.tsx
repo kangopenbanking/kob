@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
 
 function getScoreLabel(score: number): string {
   if (score >= 800) return 'Excellent';
@@ -200,6 +201,13 @@ const BankCreditScore: React.FC = () => {
               </span>
             )}
           </motion.div>
+
+          {/* No-score CTA — shown only when the user hasn't been assessed */}
+          {score === 0 && (
+            <div className="mb-6">
+              <NoCreditScoreCTA variant="banking" invalidateKeys={[['credit-score']]} />
+            </div>
+          )}
 
           {/* Pre-Approved Loan Offers */}
           <BankPreApprovedOffers score={score} />

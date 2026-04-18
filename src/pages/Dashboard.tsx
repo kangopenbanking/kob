@@ -17,6 +17,7 @@ import { CreditScoreWidget } from "@/components/dashboard/widgets/CreditScoreWid
 import { SavingsGoalsWidget } from "@/components/dashboard/widgets/SavingsGoalsWidget";
 import { ActivityFeedWidget } from "@/components/dashboard/widgets/ActivityFeedWidget";
 import { WidgetCustomizer } from "@/components/dashboard/WidgetCustomizer";
+import { NoCreditScoreCTA } from "@/components/credit/NoCreditScoreCTA";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
