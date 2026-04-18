@@ -501,8 +501,10 @@ function BankPreApprovedOffers({ score }: { score: number }) {
                       ? 'Approved — awaiting disbursement'
                       : offer.existing_application?.status === 'disbursed'
                       ? 'Disbursed'
+                      : offer.existing_application?.status === 'hard_check_initiated'
+                      ? 'Credit check in progress'
                       : 'Pending bank review'}
-                    {offer.existing_application?.application_number ? ` · Ref ${offer.existing_application.application_number}` : ''}
+                    {offer.existing_application?.reference ? ` · Ref ${offer.existing_application.reference}` : ''}
                   </p>
                 </div>
               ) : offer.requires_existing_account ? (
