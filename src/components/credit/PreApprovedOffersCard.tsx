@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { AlertTriangle, Building2, CheckCircle, Percent, Clock, Banknote, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { showApplyResult, showNetworkApplyError } from '@/lib/applyErrorMessage';
 
 interface PreApprovedOffersCardProps {
   creditScore: number;
