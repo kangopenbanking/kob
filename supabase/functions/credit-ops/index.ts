@@ -184,13 +184,16 @@ async function handlePreapprovedOffers(req: Request, body: any) {
   const offerIds = (offers || []).map((o: any) => o.id);
   const existingAppByOffer = new Map<string, any>();
   if (offerIds.length > 0) {
-    const { data: existingApps } = await serviceClient
+    const { data: existingApps, error: existingErr } = await serviceClient
       .from('preapproved_loan_applications')
-      .select('id, offer_id, status, application_number, created_at')
+      .select('id, offer_id, status, created_at')
       .eq('user_id', user.id)
       .in('offer_id', offerIds)
-      .in('status', ['pending_review', 'approved', 'disbursed'])
+      .in('status', ['pending_review', 'hard_check_initiated', 'approved', 'disbursed'])
       .order('created_at', { ascending: false });
+    if (existingErr) {
+      console.error('preapproved-offers: existing applications lookup failed', existingErr);
+    }
     (existingApps || []).forEach((a: any) => {
       // Keep the most recent per offer (first wins because we ordered desc)
       if (!existingAppByOffer.has(a.offer_id)) existingAppByOffer.set(a.offer_id, a);
@@ -224,7 +227,7 @@ async function handlePreapprovedOffers(req: Request, body: any) {
         ? {
             id: existing.id,
             status: existing.status,
-            application_number: existing.application_number,
+            reference: existing.id.slice(0, 8).toUpperCase(),
             applied_at: existing.created_at,
           }
         : null,
@@ -377,7 +380,7 @@ async function handleApplyPreapproved(req: Request, body: any) {
     .select('id, status, created_at')
     .eq('user_id', user.id)
     .eq('offer_id', offer_id)
-    .in('status', ['pending_review', 'approved'])
+    .in('status', ['pending_review', 'hard_check_initiated', 'approved', 'disbursed'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -386,7 +389,7 @@ async function handleApplyPreapproved(req: Request, body: any) {
     return appError(
       'DUPLICATE_APPLICATION',
       'You already have an active application for this offer.',
-      `Application reference ${existingApp.id.slice(0, 8)} is currently ${String(existingApp.status).replace('_', ' ')}. The bank will contact you with next steps.`,
+      `Application reference ${existingApp.id.slice(0, 8).toUpperCase()} is currently ${String(existingApp.status).replace(/_/g, ' ')}. The bank will contact you with next steps.`,
       { application_id: existingApp.id, status: existingApp.status }
     );
   }
