@@ -296,18 +296,79 @@ serve(async (req) => {
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'bank_account') {
-        providerName = 'flutterwave';
-        providerResult = await createFlutterwavePayout({
-          amount: netAmount,
-          currency,
-          channel: 'bank_transfer',
-          beneficiary_account: linkedAccount?.account_number,
-          beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
-          beneficiary_name: linkedAccount?.account_name || user.email || '',
-          narration: narration || `Automated withdrawal from Kang wallet`,
-          tx_ref: txRef,
+        // ─── Phase 25 — Try KOB Open Banking rail first, fall back to Flutterwave ───
+        const railSelection = await selectBankPayoutRail({
+          supabase,
+          bank_code: linkedAccount?.metadata?.bank_code,
+          swift_bic: linkedAccount?.metadata?.swift_bic,
+          environment: (Deno.env.get('KOB_RAIL_ENV') as 'sandbox' | 'live') || 'sandbox',
+          preferred_rail: (preferred_rail as any) || 'auto',
+          source_account: 'KANG-PLATFORM',
         });
-        payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
+
+        console.log(`[withdrawal] rail decision`, describeRailDecision(railSelection));
+
+        if (railSelection.rail === 'kob_open_banking' && railSelection.execute) {
+          try {
+            const kobResult = await railSelection.execute({
+              to_account: linkedAccount?.account_number || '',
+              amount: netAmount,
+              currency,
+              reference: txRef,
+              description: narration || `KOB Open Banking payout`,
+              beneficiary_name: linkedAccount?.account_name || user.email || '',
+              beneficiary_bank_code: linkedAccount?.metadata?.bank_code,
+            });
+
+            if (kobResult.success) {
+              providerName = `kob:${railSelection.adapter_type}`;
+              providerResult = {
+                provider_ref: kobResult.bank_tx_id || txRef,
+                status: kobResult.status === 'executed' ? 'successful' : 'pending',
+                provider_raw: { ...kobResult, rail: describeRailDecision(railSelection) },
+              };
+              payoutStatus = kobResult.status === 'executed' ? 'completed' : 'processing';
+            } else {
+              throw new Error(kobResult.error || 'KOB connector returned failure');
+            }
+          } catch (kobErr: any) {
+            console.warn(`[withdrawal] KOB rail failed, falling back to Flutterwave: ${kobErr.message}`);
+            providerName = 'flutterwave';
+            providerResult = await createFlutterwavePayout({
+              amount: netAmount,
+              currency,
+              channel: 'bank_transfer',
+              beneficiary_account: linkedAccount?.account_number,
+              beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
+              beneficiary_name: linkedAccount?.account_name || user.email || '',
+              narration: narration || `Automated withdrawal from Kang wallet (KOB fallback)`,
+              tx_ref: txRef,
+            });
+            providerResult.provider_raw = {
+              ...providerResult.provider_raw,
+              kob_attempt_failed: kobErr.message,
+              rail_decision: describeRailDecision(railSelection),
+            };
+            payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
+          }
+        } else {
+          providerName = 'flutterwave';
+          providerResult = await createFlutterwavePayout({
+            amount: netAmount,
+            currency,
+            channel: 'bank_transfer',
+            beneficiary_account: linkedAccount?.account_number,
+            beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
+            beneficiary_name: linkedAccount?.account_name || user.email || '',
+            narration: narration || `Automated withdrawal from Kang wallet`,
+            tx_ref: txRef,
+          });
+          providerResult.provider_raw = {
+            ...providerResult.provider_raw,
+            rail_decision: describeRailDecision(railSelection),
+          };
+          payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
+        }
 
       } else if (destination_type === 'momo_mtn' || destination_type === 'momo_orange') {
         providerName = 'flutterwave';
