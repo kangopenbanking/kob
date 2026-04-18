@@ -235,8 +235,18 @@ const CustomerNjangi: React.FC = () => {
           </div>
         </div>
 
+        {/* Status hints */}
+        {selectedGroup.status === 'forming' && (
+          <div className="rounded-2xl bg-[hsl(45,70%,90%)] p-3 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
+            <p className="text-[11px] text-[hsl(45,60%,25%)]">
+              Circle is forming. Contributions and payouts unlock once {selectedGroup.max_members} members join. Share the Group ID below to invite others.
+            </p>
+          </div>
+        )}
+
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {!iHavePaid && selectedGroup.status === 'active' && (
             <Button onClick={() => requestContribute(selectedGroup.id)} disabled={contributeMutation.isPending}
               className="flex-1 rounded-2xl h-11 gap-2">
@@ -256,6 +266,30 @@ const CustomerNjangi: React.FC = () => {
               Trigger Payout
             </Button>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="rounded-2xl h-11 gap-2 border-destructive/40 text-destructive">
+                <LogOut className="h-4 w-4" strokeWidth={1.5} /> Leave
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Leave this circle?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You can only leave if you have no pending contributions. {isCreator ? 'As the creator, the circle will be deleted if you are the only member.' : 'You will lose access to this group.'}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => leaveMutation.mutate({ group_id: selectedGroup.id }, {
+                    onSuccess: () => { setView('list'); setSelectedGroup(null); refetch(); },
+                  })}>
+                  Confirm
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Group ID for sharing */}
