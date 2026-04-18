@@ -485,7 +485,7 @@ const CustomerTransfer: React.FC = () => {
                       : recipientType === 'name' ? 'Search by name...'
                       : recipientType === 'rib' ? '10005-00100-01234567890-23'
                       : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
-                      : 'Enter account ID'
+                      : 'KOB account ID or account number'
                     }
                     className={`h-12 rounded-2xl pl-10 text-sm ${recipientType === 'rib' || recipientType === 'iban' ? 'font-mono tracking-wider' : ''}`}
                   />
