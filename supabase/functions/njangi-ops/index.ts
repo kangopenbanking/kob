@@ -320,12 +320,17 @@ async function handlePayout(req: Request, body: any) {
   const { group_id, recipient_member_id, idempotency_key } = body;
   if (!group_id) throw new Error('group_id required');
 
-  // Idempotency for payouts
+  // ✅ G8: Hardened idempotency — scoped to group + cycle to prevent cross-group key collisions
   if (idempotency_key) {
     const { data: existingTx } = await supabase.from('transactions')
-      .select('id').eq('transaction_type', 'njangi_payout')
-      .filter('metadata->>idempotency_key', 'eq', idempotency_key).maybeSingle();
-    if (existingTx) return json({ success: true, idempotent_replay: true });
+      .select('id, amount, metadata')
+      .eq('transaction_type', 'njangi_payout')
+      .filter('metadata->>idempotency_key', 'eq', idempotency_key)
+      .filter('metadata->>group_id', 'eq', group_id)
+      .maybeSingle();
+    if (existingTx) {
+      return json({ success: true, idempotent_replay: true, transaction_id: existingTx.id, amount: existingTx.amount });
+    }
   }
 
   const { data: group } = await supabase.from('njangi_groups').select('*').eq('id', group_id).single();
