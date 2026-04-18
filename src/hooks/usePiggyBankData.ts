@@ -143,3 +143,24 @@ export function useCancelPiggyBankPlan() {
     onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not cancel the plan.')),
   });
 }
+
+// ─── Delete Personal Plan (no credit impact) ───
+export function useDeletePiggyBankPlan() {
+  const qc = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async (body: { plan_id: string }) => {
+      const { data, error } = await supabase.functions.invoke('piggybank', {
+        body: { action: 'delete', ...body },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
+      toast.success('Personal savings plan deleted.');
+    },
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not delete the plan.')),
+  });
+}

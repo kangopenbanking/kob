@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts, useCancelPiggyBankPlan } from '@/hooks/usePiggyBankData';
+import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay, useUserAccounts, useCancelPiggyBankPlan, useDeletePiggyBankPlan } from '@/hooks/usePiggyBankData';
 import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
@@ -53,10 +53,12 @@ const CustomerPiggyBank: React.FC = () => {
   const createPlan = useCreatePiggyBankPlan();
   const payMutation = usePiggyBankPay();
   const cancelPlan = useCancelPiggyBankPlan();
+  const deletePlan = useDeletePiggyBankPlan();
   const [showPin, setShowPin] = useState(false);
   const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
   const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<{ planId: string; planName: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ planId: string; planName: string; isCancelled: boolean } | null>(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
@@ -280,7 +282,7 @@ const CustomerPiggyBank: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {displayPlans.map((plan: any, i: number) => (
-                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} onCancel={(id, name) => setCancelConfirm({ planId: id, planName: name })} />
+                  <PlanCard key={plan.id} plan={plan} index={i} onPay={handlePayRequest} isBank={selectedCategory === 'bank'} userAccounts={userAccounts} onCancel={(id, name) => setCancelConfirm({ planId: id, planName: name })} onDelete={selectedCategory === 'personal' ? (id, name, isCancelled) => setDeleteConfirm({ planId: id, planName: name, isCancelled }) : undefined} />
                 ))}
               </div>
             )}
@@ -445,6 +447,50 @@ const CustomerPiggyBank: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Personal Plan Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent className="rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.5} />
+              </div>
+              <AlertDialogTitle className="text-base">Delete Personal Savings?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Permanently remove <span className="font-semibold text-foreground">"{deleteConfirm?.planName}"</span> from your records.
+                </p>
+                <div className="rounded-2xl bg-muted/50 p-3 space-y-1">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {deleteConfirm?.isCancelled
+                      ? 'This plan is already cancelled. Deleting it will remove it from your history. No further credit impact.'
+                      : 'This personal plan will be deleted. If it has paid contributions, please cancel it first.'}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl">Keep</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletePlan.isPending}
+              onClick={() => {
+                if (deleteConfirm) {
+                  deletePlan.mutate({ plan_id: deleteConfirm.planId }, {
+                    onSettled: () => setDeleteConfirm(null),
+                  });
+                }
+              }}
+            >
+              {deletePlan.isPending ? 'Deleting...' : 'Delete Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -525,7 +571,7 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
   );
 }
 
-function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void }) {
+function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void; onDelete?: (planId: string, planName: string, isCancelled: boolean) => void }) {
   const payments = plan.piggybank_payments || [];
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const missedPayments = payments.filter((p: any) => p.status === 'missed' || p.status === 'late');
@@ -574,15 +620,26 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel }: { plan
             </div>
           </div>
         </div>
-        {!isCancelled && plan.status === 'active' && (
-          <button
-            onClick={() => onCancel(plan.id, plan.plan_name)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Cancel plan"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {!isCancelled && plan.status === 'active' && (
+            <button
+              onClick={() => onCancel(plan.id, plan.plan_name)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Cancel plan"
+            >
+              <StopCircle className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+          {onDelete && !isBank && (
+            <button
+              onClick={() => onDelete(plan.id, plan.plan_name, isCancelled)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Delete plan"
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Progress */}

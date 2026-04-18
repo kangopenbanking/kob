@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
       case 'create': return handleCreate(req, body);
       case 'pay': return handlePay(req, body);
       case 'cancel': return handleCancel(req, body);
+      case 'delete': return handleDelete(req, body);
       case 'auto-fund': return handleAutoFund(req);
       case 'overdue-detect': return handleOverdueDetect(req);
       default: return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -221,6 +222,46 @@ async function handleCancel(req: Request, body: any) {
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
 
   return new Response(JSON.stringify({ success: true, credit_impact: -5, new_score: scoreResult?.score || null }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// ─── Delete Personal Plan (no credit impact, removes from history) ───
+// Only allowed for personal plans (institution_id IS NULL) that are cancelled or have no paid payments.
+async function handleDelete(req: Request, body: any) {
+  const { user, supabase } = await getAuthUser(req);
+  const { plan_id } = body;
+  if (!plan_id) throw new Error('plan_id required');
+
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(plan_id)) {
+    return new Response(JSON.stringify({ error: 'invalid_plan_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const { data: plan, error: planErr } = await supabase
+    .from('piggybank_plans')
+    .select('*, piggybank_payments(id, status)')
+    .eq('id', plan_id)
+    .eq('user_id', user.id)
+    .single();
+  if (planErr || !plan) {
+    return new Response(JSON.stringify({ error: 'plan_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Only personal plans can be deleted (no institution attached)
+  if (plan.institution_id) {
+    return new Response(JSON.stringify({ error: 'bank_plan_not_deletable', message: 'Bank-linked plans cannot be deleted. Cancel it instead.' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const hasPaidPayments = (plan.piggybank_payments || []).some((p: any) => p.status === 'paid' || p.status === 'late');
+  // If plan has paid payments AND is still active, require cancellation first to preserve credit history
+  if (hasPaidPayments && plan.status === 'active') {
+    return new Response(JSON.stringify({ error: 'must_cancel_first', message: 'Cancel the plan before deleting it (it has recorded payments).' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Delete payments then plan
+  await supabase.from('piggybank_payments').delete().eq('plan_id', plan_id);
+  await supabase.from('piggybank_plans').delete().eq('id', plan_id).eq('user_id', user.id);
+
+  return new Response(JSON.stringify({ success: true, deleted: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 // ─── Auto-Fund Cron: processes due payments for auto-funded plans ───
