@@ -39,7 +39,7 @@ interface Offer {
   existing_application?: {
     id: string;
     status: string;
-    application_number?: string | null;
+    reference?: string | null;
     applied_at?: string | null;
   } | null;
 }
@@ -47,6 +47,7 @@ interface Offer {
 function statusLabel(status?: string) {
   switch (status) {
     case 'pending_review': return 'Pending bank review';
+    case 'hard_check_initiated': return 'Credit check in progress';
     case 'approved': return 'Approved — awaiting disbursement';
     case 'disbursed': return 'Disbursed';
     default: return 'Application in progress';
@@ -198,7 +199,7 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
                     </p>
                     <p className="text-[11px] text-amber-700 dark:text-amber-400">
                       {statusLabel(offer.existing_application?.status)}
-                      {offer.existing_application?.application_number ? ` · Ref ${offer.existing_application.application_number}` : ''}
+                      {offer.existing_application?.reference ? ` · Ref ${offer.existing_application.reference}` : ''}
                     </p>
                   </div>
                 </div>
