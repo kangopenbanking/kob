@@ -88,6 +88,27 @@ export function useJoinNjangiGroup() {
   });
 }
 
+// ─── Leave Group ───
+export function useLeaveNjangiGroup() {
+  const qc = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async (body: { group_id: string }) => {
+      const { data, error } = await supabase.functions.invoke('njangi-ops', {
+        body: { action: 'leave', ...body },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      toast.success(data?.deleted ? 'Group deleted.' : 'You have left the circle.');
+    },
+    onError: (err: any) => toast.error(extractEdgeFunctionError(err, 'Could not leave the group.')),
+  });
+}
+
 // ─── Contribute ───
 export function useNjangiContribute() {
   const qc = useQueryClient();
