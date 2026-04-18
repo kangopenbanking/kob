@@ -567,6 +567,7 @@ const CustomerTransfer: React.FC = () => {
                           // Use accountId (UUID) if available for direct resolution
                           setRecipient(s.accountId || s.name);
                           setSelectedRecipientName(s.name);
+                          setSelectedRecipientHasAccount(!!s.hasAccount);
                           setShowSuggestions(false);
                         }}
                       >
@@ -579,7 +580,11 @@ const CustomerTransfer: React.FC = () => {
                             <p className="text-[10px] text-muted-foreground">{s.phone}</p>
                           )}
                         </div>
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />
+                        {s.hasAccount ? (
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">Active</span>
+                        ) : (
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">New</span>
+                        )}
                       </button>
                     ))}
                   </div>
