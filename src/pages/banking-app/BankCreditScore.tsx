@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { showApplyResult, showNetworkApplyError } from '@/lib/applyErrorMessage';
 import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
 
 function getScoreLabel(score: number): string {
