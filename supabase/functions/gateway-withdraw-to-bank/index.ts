@@ -208,7 +208,7 @@ serve(async (req) => {
       merchant_id: null,
       amount, currency: account.currency, channel,
       status: payoutResult.status === 'successful' ? 'completed' : 'processing',
-      provider: 'flutterwave',
+      provider: providerName,
       provider_ref: payoutResult.provider_ref,
       provider_raw: payoutResult.provider_raw,
       beneficiary_name, beneficiary_phone: null,
