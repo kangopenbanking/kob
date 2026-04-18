@@ -321,7 +321,9 @@ const CustomerTransfer: React.FC = () => {
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Recipient</span>
-                  <span className="text-sm font-bold text-foreground font-mono">{recipient}</span>
+                  <span className="text-sm font-bold text-foreground font-mono text-right max-w-[60%] break-all">
+                    {selectedRecipientName || recipient}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Type</span>
