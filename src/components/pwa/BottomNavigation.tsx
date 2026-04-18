@@ -20,10 +20,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ basePath }) 
   const navigate = useNavigate();
   const tenant = useTenant();
 
+  // Virtual Cards intentionally hidden from the Banking app navigation.
   const allItems: NavItem[] = [
     { label: 'Home', icon: Home, path: `${basePath}/home` },
     { label: 'Pay', icon: ArrowLeftRight, path: `${basePath}/payments` },
-    { label: 'Cards', icon: CreditCard, path: `${basePath}/cards`, featureKey: 'cards' },
     { label: 'History', icon: Clock, path: `${basePath}/history` },
     { label: 'More', icon: MoreHorizontal, path: `${basePath}/more` },
   ];
@@ -32,6 +32,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ basePath }) 
     if (!item.featureKey) return true;
     return tenant.features[item.featureKey as keyof typeof tenant.features] !== false;
   });
+
+  // Remove unused icon warning
+  void CreditCard;
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 

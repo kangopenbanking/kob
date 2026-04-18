@@ -114,7 +114,7 @@ const defaultBranding: TenantBranding = {
   cardColors: {},
   supportPhone: '',
   supportEmail: '',
-  fontSizeMultiplier: 0.7,
+  fontSizeMultiplier: 1,
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -179,7 +179,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cardColors,
         supportPhone,
         supportEmail,
-        fontSizeMultiplier: typeof appConfig.font_size_multiplier === 'number' ? appConfig.font_size_multiplier : 0.7,
+        fontSizeMultiplier: typeof appConfig.font_size_multiplier === 'number' ? appConfig.font_size_multiplier : 1,
       });
     };
 
