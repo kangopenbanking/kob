@@ -603,7 +603,14 @@ const CustomerTransfer: React.FC = () => {
             {/* CTA */}
             <Button
               className="w-full rounded-2xl h-12 text-sm font-bold mt-auto"
-              disabled={!amount || !recipient.trim() || isOverBalance || acctLoading || ((recipientType === 'rib' || recipientType === 'iban') && !validation.valid)}
+              disabled={
+                !amount ||
+                !recipient.trim() ||
+                isOverBalance ||
+                acctLoading ||
+                ((recipientType === 'rib' || recipientType === 'iban') && !validation.valid) ||
+                (recipientType === 'name' && !selectedRecipientName)
+              }
               onClick={handleContinue}
             >
               <Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Continue
