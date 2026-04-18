@@ -489,7 +489,7 @@ const CustomerTransfer: React.FC = () => {
                   };
                   const colors = colorMap[key] || { active: 'bg-foreground text-background', inactive: 'bg-muted text-muted-foreground' };
                   return (
-                    <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setNameSuggestions([]); setShowSuggestions(false); }}
+                    <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setSelectedRecipientHasAccount(null); setNameSuggestions([]); setShowSuggestions(false); }}
                       className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all border-2 ${
                         recipientType === key ? `${colors.active} border-transparent` : `${colors.inactive} border-transparent`
                       }`}>
