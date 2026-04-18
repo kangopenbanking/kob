@@ -69,31 +69,26 @@ export default function PreApprovedOffersCard({ creditScore }: PreApprovedOffers
           requested_tenure_months: requestedTenure,
         }
       });
-      // Surface structured 409 ACCOUNT_REQUIRED gracefully
-      if (data?.code === 'ACCOUNT_REQUIRED') {
-        const path = data?.onboarding?.apply_path;
-        toast.message(data.message || 'Account required', {
-          description: 'Open an account to continue your loan application.',
-          action: path ? { label: 'Open account', onClick: () => navigate(path) } : undefined,
-        });
-        setSelectedOffer(null);
-        return data;
-      }
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      // Network/transport error — function unreachable
+      if (error && !data) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      if (data?.code === 'ACCOUNT_REQUIRED') return;
-      toast.success('Application submitted successfully', {
-        description: `Reference: ${data?.application_id?.slice(0, 8)}...`
+    onSuccess: (data: any) => {
+      showApplyResult(data, {
+        navigate,
+        onScoreCTA: () => navigate('/app/credit'),
+        onViewApplication: () => navigate('/app/credit'),
       });
-      setSelectedOffer(null);
+      // Close dialog only when terminal (success or business error that requires user re-action elsewhere)
+      if (data?.success || data?.code === 'ACCOUNT_REQUIRED' || data?.code === 'DUPLICATE_APPLICATION' || data?.code === 'OFFER_EXPIRED' || data?.code === 'OFFER_INACTIVE' || data?.code === 'OFFER_NOT_FOUND' || data?.code === 'NO_CREDIT_SCORE') {
+        setSelectedOffer(null);
+      }
       queryClient.invalidateQueries({ queryKey: ['credit-inquiries'] });
       queryClient.invalidateQueries({ queryKey: ['preapproved-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['preapproved-offers'] });
     },
-    onError: (err: any) => {
-      toast.error('Application failed', { description: err.message });
+    onError: (err: unknown) => {
+      showNetworkApplyError(err);
     }
   });
 
