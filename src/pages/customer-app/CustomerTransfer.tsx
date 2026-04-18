@@ -608,6 +608,21 @@ const CustomerTransfer: React.FC = () => {
                   {validation.hint}
                 </p>
               ) : null}
+
+              {/* Notice: recipient has no active Kang wallet yet */}
+              {recipientType === 'name' && selectedRecipientName && selectedRecipientHasAccount === false && (
+                <div className="flex items-start gap-2 rounded-2xl border border-[hsl(40,80%,75%)] bg-[hsl(40,90%,96%)] px-3 py-2.5">
+                  <Info className="h-4 w-4 text-[hsl(35,70%,35%)] shrink-0 mt-0.5" strokeWidth={1.75} />
+                  <div className="flex-1">
+                    <p className="text-[11px] font-bold text-[hsl(35,70%,30%)]">
+                      {selectedRecipientName} doesn't have an active Kang wallet yet
+                    </p>
+                    <p className="text-[10px] text-[hsl(35,40%,30%)] mt-0.5 leading-relaxed">
+                      We'll automatically create one for them when you send. Funds will be available as soon as they sign in.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Source Account */}
