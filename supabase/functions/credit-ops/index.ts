@@ -202,7 +202,7 @@ async function handlePreapprovedOffers(req: Request, body: any) {
     };
   });
 
-  return new Response(JSON.stringify({ offers: enrichedOffers }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ offers: enrichedOffers, current_score: creditScore }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 // Structured error helper. We return HTTP 200 with success:false so that
