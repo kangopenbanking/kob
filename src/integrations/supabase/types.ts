@@ -15298,6 +15298,48 @@ export type Database = {
           },
         ]
       }
+      pos_merchant_trial_usage: {
+        Row: {
+          converted_to_paid: boolean
+          created_at: string
+          first_trial_ended_at: string | null
+          first_trial_plan_id: string | null
+          first_trial_started_at: string
+          merchant_id: string
+        }
+        Insert: {
+          converted_to_paid?: boolean
+          created_at?: string
+          first_trial_ended_at?: string | null
+          first_trial_plan_id?: string | null
+          first_trial_started_at?: string
+          merchant_id: string
+        }
+        Update: {
+          converted_to_paid?: boolean
+          created_at?: string
+          first_trial_ended_at?: string | null
+          first_trial_plan_id?: string | null
+          first_trial_started_at?: string
+          merchant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_merchant_trial_usage_first_trial_plan_id_fkey"
+            columns: ["first_trial_plan_id"]
+            isOneToOne: false
+            referencedRelation: "pos_subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_merchant_trial_usage_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pos_order_items: {
         Row: {
           created_at: string
@@ -16071,33 +16113,95 @@ export type Database = {
           },
         ]
       }
+      pos_store_subscription_events: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          merchant_id: string
+          subscription_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          merchant_id: string
+          subscription_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          merchant_id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_store_subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "pos_store_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pos_store_subscriptions: {
         Row: {
+          auto_renew: boolean
+          cancelled_at: string | null
           created_at: string
           expires_at: string
           id: string
+          last_renewal_error: string | null
           merchant_id: string
+          next_billing_attempt_at: string | null
+          payment_method: string
           plan_id: string
+          renewal_attempts: number
           starts_at: string
           status: string
+          trial_ends_at: string | null
         }
         Insert: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
           created_at?: string
           expires_at: string
           id?: string
+          last_renewal_error?: string | null
           merchant_id: string
+          next_billing_attempt_at?: string | null
+          payment_method?: string
           plan_id: string
+          renewal_attempts?: number
           starts_at?: string
           status?: string
+          trial_ends_at?: string | null
         }
         Update: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
           created_at?: string
           expires_at?: string
           id?: string
+          last_renewal_error?: string | null
           merchant_id?: string
+          next_billing_attempt_at?: string | null
+          payment_method?: string
           plan_id?: string
+          renewal_attempts?: number
           starts_at?: string
           status?: string
+          trial_ends_at?: string | null
         }
         Relationships: [
           {
@@ -16118,6 +16222,7 @@ export type Database = {
       }
       pos_subscription_plans: {
         Row: {
+          auto_renew_default: boolean
           created_at: string
           currency: string
           description: string | null
@@ -16125,12 +16230,15 @@ export type Database = {
           features_json: Json | null
           id: string
           is_active: boolean
+          is_publishing_plan: boolean
           name: string
           price: number
           tier: string
+          trial_days: number
           updated_at: string
         }
         Insert: {
+          auto_renew_default?: boolean
           created_at?: string
           currency?: string
           description?: string | null
@@ -16138,12 +16246,15 @@ export type Database = {
           features_json?: Json | null
           id?: string
           is_active?: boolean
+          is_publishing_plan?: boolean
           name: string
           price?: number
           tier?: string
+          trial_days?: number
           updated_at?: string
         }
         Update: {
+          auto_renew_default?: boolean
           created_at?: string
           currency?: string
           description?: string | null
@@ -16151,9 +16262,11 @@ export type Database = {
           features_json?: Json | null
           id?: string
           is_active?: boolean
+          is_publishing_plan?: boolean
           name?: string
           price?: number
           tier?: string
+          trial_days?: number
           updated_at?: string
         }
         Relationships: []
@@ -23151,6 +23264,16 @@ export type Database = {
           _metadata?: Json
           _user_agent?: string
           _user_id: string
+        }
+        Returns: string
+      }
+      log_subscription_event: {
+        Args: {
+          _amount?: number
+          _currency?: string
+          _details?: Json
+          _event_type: string
+          _subscription_id: string
         }
         Returns: string
       }
