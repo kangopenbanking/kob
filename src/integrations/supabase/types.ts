@@ -15724,6 +15724,7 @@ export type Database = {
       }
       pos_products: {
         Row: {
+          category: string | null
           created_at: string
           currency: string
           description: string | null
@@ -15732,10 +15733,12 @@ export type Database = {
           name: string
           source: Database["public"]["Enums"]["pos_product_source"]
           status: string
+          sub_category: string | null
           tax_class: string | null
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           currency?: string
           description?: string | null
@@ -15744,10 +15747,12 @@ export type Database = {
           name: string
           source?: Database["public"]["Enums"]["pos_product_source"]
           status?: string
+          sub_category?: string | null
           tax_class?: string | null
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           currency?: string
           description?: string | null
@@ -15756,6 +15761,7 @@ export type Database = {
           name?: string
           source?: Database["public"]["Enums"]["pos_product_source"]
           status?: string
+          sub_category?: string | null
           tax_class?: string | null
           updated_at?: string
         }
