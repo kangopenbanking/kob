@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { ImageUpload } from '@/components/storefront/ImageUpload';
 
 export default function BusinessStorefront() {
   const navigate = useNavigate();
@@ -159,14 +160,22 @@ export default function BusinessStorefront() {
                 </div>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Logo URL</label>
-              <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." className="rounded-xl" />
-            </div>
-            <div>
-              <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Cover Image URL</label>
-              <Input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://..." className="rounded-xl" />
-            </div>
+            <ImageUpload
+              label="Store Logo"
+              value={logoUrl}
+              onChange={setLogoUrl}
+              folder="logos"
+              previewClass="w-20 h-20 rounded-xl object-cover"
+              placeholder="Paste image URL or upload from device"
+            />
+            <ImageUpload
+              label="Cover Image"
+              value={coverUrl}
+              onChange={setCoverUrl}
+              folder="covers"
+              previewClass="w-full h-32 rounded-xl object-cover"
+              placeholder="Paste image URL or upload from device"
+            />
           </div>
         </Section>
 
