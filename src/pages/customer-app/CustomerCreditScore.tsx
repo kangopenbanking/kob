@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
+import { CrediQPremiumCard } from '@/components/credit/CrediQPremiumCard';
 
 const CustomerCreditScore: React.FC = () => {
   const navigate = useNavigate();
@@ -292,6 +293,13 @@ const CustomerCreditScore: React.FC = () => {
           variant="customer"
           invalidateKeys={[['customer-credit-score', user?.id], ['credit-events', user?.id]]}
         />
+      )}
+
+      {/* CrediQ Premium upsell / management */}
+      {score > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <CrediQPremiumCard />
+        </motion.div>
       )}
 
       {/* Pre-Approved Loan Offers */}
