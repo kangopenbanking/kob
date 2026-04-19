@@ -242,6 +242,59 @@ export default function BusinessStorefront() {
             </div>
           </Section>
         </div>
+
+        {/* Template + Live Preview - full width */}
+        <div className={cn(!isMobile && 'col-span-2')}>
+          <Section icon={LayoutTemplate} title="Storefront Template & Live Preview">
+            <div className={cn('gap-5', isMobile ? 'space-y-5' : 'grid grid-cols-2')}>
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground mb-2">Choose a layout style. Preview updates instantly.</p>
+                {STOREFRONT_TEMPLATES.map((t) => {
+                  const selected = t.id === templateId;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTemplateId(t.id)}
+                      className={cn(
+                        'w-full text-left rounded-xl border p-3 transition-all',
+                        selected ? 'border-primary bg-primary/5 ring-1 ring-primary/40' : 'border-border/50 hover:border-border'
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{t.description}</div>
+                        </div>
+                        {selected && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5 mb-3 text-[11px] text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" /> Live preview
+                </div>
+                <StorePreview
+                  storeName={tagline || businessName}
+                  description={description}
+                  category=""
+                  city={city}
+                  country="CM"
+                  currency="XAF"
+                  logoUrl={logoUrl}
+                  bannerUrl={coverUrl}
+                  isPublished={false}
+                  templateId={templateId}
+                  primaryColor={primaryColor}
+                  accentColor={accentColor}
+                />
+              </div>
+            </div>
+          </Section>
+        </div>
       </div>
     </div>
   );
