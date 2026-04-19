@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Loader2, Ticket, MapPin, Clock, Search, Filter } from 'lucide-react';
+import { ChevronLeft, Loader2, Ticket, Clock, Search, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
   confirmed: { bg: '#dcfce7', text: '#166534', label: 'Confirmed' },
