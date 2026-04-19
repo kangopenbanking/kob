@@ -156,7 +156,7 @@ export function SubscriptionManager({ merchantId }: Props) {
             </div>
             <div className="rounded-lg border border-border p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {subscription.auto_renew ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                {subscription.auto_renew ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
                 Auto-renew
               </div>
               <div className="mt-1 flex items-center gap-2">
@@ -172,10 +172,10 @@ export function SubscriptionManager({ merchantId }: Props) {
 
           {/* Past-due warning */}
           {isPastDue && (
-            <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+            <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              <AlertTriangle className="h-4 w-4 text-foreground mt-0.5" />
               <div>
-                <div className="font-medium text-amber-900">Renewal failed — top up your wallet</div>
+                <div className="font-medium text-foreground">Renewal failed — top up your wallet</div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   Attempt {subscription.renewal_attempts}/3. {subscription.last_renewal_error}
                 </div>
