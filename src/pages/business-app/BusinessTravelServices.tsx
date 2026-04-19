@@ -118,10 +118,16 @@ const BusinessTravelServices: React.FC = () => {
   };
 
   const cancelBooking = async (id: string) => {
-    await supabase.from('travel_bookings').update({ booking_status: 'cancelled', payment_status: 'refunded' } as any).eq('id', id);
-    await supabase.from('travel_tickets').update({ ticket_status: 'cancelled' } as any).in('booking_id', [id]);
-    toast.success('Booking cancelled');
-    refetchBookings();
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-cancel-booking', {
+        body: { booking_id: id, reason: 'Cancelled by merchant' },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success(`Booking cancelled · refund ${(data as any)?.refund_amount?.toLocaleString() || 0} XAF`);
+      refetchBookings();
+    } catch (e: any) {
+      toast.error(extractEdgeFunctionError(e));
+    }
   };
 
   const formatXAF = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
