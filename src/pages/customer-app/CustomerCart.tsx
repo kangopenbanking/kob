@@ -132,6 +132,7 @@ const CustomerCart: React.FC = () => {
     if (ok) setShowPin(true);
   };
 
+  const handleCheckout = async () => {
     if (!cart) return;
     setCheckingOut(true);
     setOrderFailed(false);
