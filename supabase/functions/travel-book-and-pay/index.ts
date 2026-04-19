@@ -347,7 +347,23 @@ Deno.serve(async (req) => {
         .eq("id", appliedDiscount.id);
     }
 
-    // 11. Send notification (non-blocking)
+    // 11. Record platform fee (transaction_fees ledger) — non-fatal
+    if (platformFee > 0) {
+      try {
+        await supabaseAdmin.rpc("record_transaction_fee", {
+          _institution_id: null,
+          _transaction_type: "travel_booking",
+          _transaction_ref: bookingRef,
+          _transaction_amount: totalPrice,
+          _transaction_id: null,
+          _metadata: { booking_id: bookingData.id, trip_id, category, seats: selected_seats.length },
+        });
+      } catch (feeRecErr) {
+        console.error("record_transaction_fee error (non-fatal):", feeRecErr);
+      }
+    }
+
+    // 12. Send notification (non-blocking)
     try {
       await supabaseAdmin.functions.invoke("travel-booking-notification", {
         body: { booking_id: bookingData.id, event_type: "booking_confirmed" },
