@@ -38,7 +38,7 @@ const CustomerStoreDetail: React.FC = () => {
         supabase.from('pos_store_profiles')
           .select('*').eq('merchant_id', merchantId!).eq('is_published', true).single(),
         supabase.from('pos_products')
-          .select('*, pos_product_variants(*), pos_product_images(url, sort_order)')
+          .select('*, pos_product_variants(*), pos_product_images(image_url)')
           .eq('merchant_id', merchantId!)
           .eq('status', 'active')
           .order('name'),
@@ -203,7 +203,7 @@ const CustomerStoreDetail: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             {filteredProducts.map((product, i) => {
               const variants = product.pos_product_variants || [];
-              const image = product.pos_product_images?.[0]?.url;
+              const image = product.pos_product_images?.[0]?.image_url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
               const maxPrice = variants.length ? Math.max(...variants.map((v: any) => v.price)) : 0;
               const defaultVariant = variants[0];
@@ -279,7 +279,7 @@ const CustomerStoreDetail: React.FC = () => {
           <div className="space-y-2.5">
             {filteredProducts.map((product, i) => {
               const variants = product.pos_product_variants || [];
-              const image = product.pos_product_images?.[0]?.url;
+              const image = product.pos_product_images?.[0]?.image_url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
 
               return (

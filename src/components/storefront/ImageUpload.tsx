@@ -96,7 +96,7 @@ export function ImageUpload({
         )}
       </div>
       {value && (
-        <div className="rounded-xl border border-border/40 p-3 bg-muted/20 inline-block">
+        <div className="rounded-xl border border-border/40 p-3 bg-muted/20 block">
           <img src={value} alt={label} className={previewClass} onError={(e) => (e.currentTarget.style.display = 'none')} />
         </div>
       )}

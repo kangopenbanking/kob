@@ -2,8 +2,6 @@ import { Store, MapPin, Star, ShoppingBag, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getTemplate, type StorefrontTemplateId } from '@/lib/storefront-templates';
-import { cn } from '@/lib/utils';
 
 interface StorePreviewProps {
   storeName: string;
@@ -16,49 +14,34 @@ interface StorePreviewProps {
   bannerUrl: string;
   isPublished: boolean;
   rating?: number;
-  template?: StorefrontTemplateId | null;
-  primaryColor?: string;
 }
 
-export function StorePreview({
-  storeName, description, category, city, country, currency,
-  logoUrl, bannerUrl, isPublished, rating, template, primaryColor,
-}: StorePreviewProps) {
-  const tpl = getTemplate(template);
-  const accent = primaryColor || 'hsl(var(--primary))';
-
+export function StorePreview({ storeName, description, category, city, country, currency, logoUrl, bannerUrl, isPublished, rating }: StorePreviewProps) {
   return (
-    <div className={cn('max-w-sm mx-auto bg-background overflow-hidden border border-border/50 shadow-lg', tpl.preview.radius)}>
+    <div className="max-w-sm mx-auto bg-background rounded-2xl overflow-hidden border border-border/50 shadow-lg">
       {/* Banner */}
-      <div className={cn('relative bg-muted', tpl.preview.bannerHeight)}>
+      <div className="relative h-36 bg-muted">
         {bannerUrl ? (
           <img src={bannerUrl} alt="Store banner" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: `${accent}15` }}>
-            <Store className="w-10 h-10 opacity-40" style={{ color: accent }} />
+          <div className="w-full h-full bg-[hsl(var(--fi-purple))]/20 flex items-center justify-center">
+            <Store className="w-10 h-10 text-[hsl(var(--fi-purple))]/40" />
           </div>
         )}
-        {tpl.preview.showBannerOverlay && (
-          <div className="absolute inset-0 bg-black" style={{ opacity: tpl.preview.overlayOpacity / 100 }} />
-        )}
+        <div className="absolute inset-0 bg-black/20" />
         {isPublished && (
-          <Badge
-            className={cn(
-              'absolute top-3 right-3 bg-emerald-500/90 text-white border-0 text-[10px]',
-              tpl.preview.badgeStyle === 'square' ? 'rounded-md' : 'rounded-full',
-            )}
-          >Open</Badge>
+          <Badge className="absolute top-3 right-3 bg-emerald-500/90 text-white border-0 text-[10px]">Open</Badge>
         )}
       </div>
 
       {/* Logo + Name */}
       <div className="relative px-4 -mt-8">
-        <div className={cn('w-16 h-16 border-4 border-background overflow-hidden bg-muted shadow-sm', tpl.preview.radius)}>
+        <div className="w-16 h-16 rounded-2xl border-4 border-background overflow-hidden bg-muted shadow-sm">
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: `${accent}15` }}>
-              <Store className="w-6 h-6" style={{ color: accent }} />
+            <div className="w-full h-full bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center">
+              <Store className="w-6 h-6 text-[hsl(var(--fi-purple))]" />
             </div>
           )}
         </div>
@@ -67,13 +50,8 @@ export function StorePreview({
       <div className="px-4 pt-2 pb-5 space-y-3">
         <div>
           <h3 className="text-base font-bold text-foreground">{storeName || 'Your Store Name'}</h3>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {category && (
-              <Badge
-                variant="secondary"
-                className={cn('text-[10px] h-5', tpl.preview.badgeStyle === 'square' ? 'rounded-md' : 'rounded-full')}
-              >{category}</Badge>
-            )}
+          <div className="flex items-center gap-2 mt-1">
+            {category && <Badge variant="secondary" className="text-[10px] h-5">{category}</Badge>}
             {city && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <MapPin className="w-3 h-3" /> {city}, {country}
@@ -100,14 +78,10 @@ export function StorePreview({
         </div>
 
         <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            className={cn('flex-1 h-9 text-xs text-white hover:opacity-90', tpl.preview.radius)}
-            style={{ background: accent }}
-          >
+          <Button size="sm" className="flex-1 h-9 text-xs rounded-lg bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white">
             Browse Products
           </Button>
-          <Button size="sm" variant="outline" className={cn('h-9 text-xs', tpl.preview.radius)}>
+          <Button size="sm" variant="outline" className="h-9 text-xs rounded-lg">
             Store Info
           </Button>
         </div>
