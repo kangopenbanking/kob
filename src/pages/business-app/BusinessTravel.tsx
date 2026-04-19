@@ -44,15 +44,73 @@ const BusinessTravel: React.FC = () => {
     enabled: !!merchantId,
   });
 
+  const [busy, setBusy] = useState<null | 'seed' | 'clear'>(null);
   const activeCount = services?.filter(s => s.is_active).length || 0;
+
+  const seedDemo = async () => {
+    if (!merchantId) return;
+    setBusy('seed');
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-seed-demo-data', { body: { merchant_id: merchantId } });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success('Demo travel data added.');
+      window.location.reload();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to seed demo data');
+    } finally { setBusy(null); }
+  };
+
+  const clearMine = async () => {
+    if (!merchantId) return;
+    setBusy('clear');
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-admin-reset-data', {
+        body: { scope: 'merchant', merchant_id: merchantId },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      const c = (data as any)?.deleted || {};
+      toast.success(`Cleared · ${c.services || 0} services, ${c.bookings || 0} bookings`);
+      window.location.reload();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to clear data');
+    } finally { setBusy(null); }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
-      <header className="pt-4 md:pt-0 mb-5">
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Travel Services</h1>
-        <p className="text-xs text-muted-foreground font-medium mt-0.5">
-          {isLoading ? 'Loading...' : `${activeCount} active service${activeCount !== 1 ? 's' : ''}`}
-        </p>
+      <header className="pt-4 md:pt-0 mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Travel Services</h1>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+            {isLoading ? 'Loading...' : `${activeCount} active service${activeCount !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-[11px] rounded-xl" disabled={!!busy} onClick={seedDemo}>
+            {busy === 'seed' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />}
+            Demo Data
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-[11px] rounded-xl border-destructive/40 text-destructive hover:bg-destructive/5" disabled={!!busy}>
+                {busy === 'clear' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />}
+                Clear
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear all travel data?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently removes all your travel services, routes, trips, bookings, and tickets. Confirmed bookings will not be refunded automatically — cancel them first if needed. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={clearMine} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Clear Everything</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </header>
 
       {/* Quick Stats */}
