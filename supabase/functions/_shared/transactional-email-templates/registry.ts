@@ -27,6 +27,10 @@ import { template as supportTicketCreated } from './support-ticket-created.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as apiKeyCreated } from './api-key-created.tsx'
 import { template as chatAssigned } from './chat-assigned.tsx'
+import { template as crediqWeeklyDigest } from './crediq-weekly-digest.tsx'
+import { template as crediqMonthlyReport } from './crediq-monthly-report.tsx'
+import { template as crediqScoreChange } from './crediq-score-change.tsx'
+import { template as crediqTipRecommendation } from './crediq-tip-recommendation.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
@@ -47,4 +51,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-reply': supportReply,
   'api-key-created': apiKeyCreated,
   'chat-assigned': chatAssigned,
+  'crediq-weekly-digest': crediqWeeklyDigest,
+  'crediq-monthly-report': crediqMonthlyReport,
+  'crediq-score-change': crediqScoreChange,
+  'crediq-tip-recommendation': crediqTipRecommendation,
 }

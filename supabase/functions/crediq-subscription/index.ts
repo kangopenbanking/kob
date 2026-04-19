@@ -86,10 +86,56 @@ async function handleStatus(service: any, userId: string) {
 }
 
 async function handleSubscribe(service: any, userId: string, body: any) {
-  // Caller must have already debited the wallet / settled payment.
-  // We accept an optional `payment_reference` and `institution_id` (for fee attribution).
+  // ── Wallet debit (server-mediated) ──
+  // Resolve user's primary XAF wallet, atomically debit PLAN_AMOUNT, then
+  // write a transactions row. We attribute the institution from the wallet.
+  const { data: wallet, error: walletErr } = await service
+    .from('accounts')
+    .select('id, institution_id, currency')
+    .eq('user_id', userId)
+    .eq('account_type', 'wallet')
+    .eq('is_active', true)
+    .eq('currency', PLAN_CURRENCY)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (walletErr || !wallet) {
+    return jsonError('No active XAF wallet found. Please fund your wallet first.', 400);
+  }
+
   const paymentRef = body.payment_reference || `crq-prem-${crypto.randomUUID().slice(0, 12)}`;
-  const institutionId = body.institution_id || null;
+  const institutionId = body.institution_id || wallet.institution_id || null;
+
+  // Atomic debit
+  const { error: debitErr } = await service.rpc('atomic_debit_balance', {
+    _account_id: wallet.id,
+    _amount: PLAN_AMOUNT,
+    _currency: PLAN_CURRENCY,
+  });
+  if (debitErr) {
+    const msg = debitErr.message || 'Wallet debit failed';
+    if (msg.includes('Insufficient funds')) {
+      return jsonError('Insufficient wallet balance for CrediQ Premium (1,500 XAF).', 402);
+    }
+    return jsonError(msg, 400);
+  }
+
+  // Record the wallet transaction (best-effort)
+  const nowIso = new Date().toISOString();
+  await service.from('transactions').insert({
+    account_id: wallet.id,
+    amount: PLAN_AMOUNT,
+    currency: PLAN_CURRENCY,
+    credit_debit_indicator: 'Debit',
+    status: 'Booked',
+    booking_datetime: nowIso,
+    value_datetime: nowIso,
+    transaction_type: 'subscription_fee',
+    transaction_information: 'CrediQ Premium subscription (30 days)',
+    user_id: userId,
+    metadata: { source: 'crediq_premium', plan: 'premium', payment_reference: paymentRef },
+  });
 
   // Look for active sub
   const { data: existing } = await service
