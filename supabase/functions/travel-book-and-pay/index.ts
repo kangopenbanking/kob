@@ -263,7 +263,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 7. Create booking
+    // 7. Calculate platform fee (KOB earnings) using fee engine
+    let platformFee = 0;
+    try {
+      const { data: feeRes } = await supabaseAdmin.rpc("calculate_transaction_fee", {
+        _institution_id: null,
+        _transaction_type: "travel_booking",
+        _transaction_amount: totalPrice,
+      });
+      platformFee = Number((feeRes as any)?.final_fee || 0);
+    } catch (feeErr) {
+      console.error("fee calc error (non-fatal):", feeErr);
+    }
+
+    // 8. Create booking
     const bookingRef = `KOB-${(category || "TRV").toUpperCase().slice(0, 3)}-${Date.now().toString(36).toUpperCase()}`;
 
     const { data: bookingData, error: bookErr } = await supabaseAdmin
@@ -278,6 +291,7 @@ Deno.serve(async (req) => {
         booking_status: "confirmed",
         payment_method: "wallet",
         idempotency_key: idempotency_key || null,
+        fee_amount: platformFee,
       })
       .select("id")
       .single();
@@ -333,7 +347,23 @@ Deno.serve(async (req) => {
         .eq("id", appliedDiscount.id);
     }
 
-    // 11. Send notification (non-blocking)
+    // 11. Record platform fee (transaction_fees ledger) — non-fatal
+    if (platformFee > 0) {
+      try {
+        await supabaseAdmin.rpc("record_transaction_fee", {
+          _institution_id: null,
+          _transaction_type: "travel_booking",
+          _transaction_ref: bookingRef,
+          _transaction_amount: totalPrice,
+          _transaction_id: null,
+          _metadata: { booking_id: bookingData.id, trip_id, category, seats: selected_seats.length },
+        });
+      } catch (feeRecErr) {
+        console.error("record_transaction_fee error (non-fatal):", feeRecErr);
+      }
+    }
+
+    // 12. Send notification (non-blocking)
     try {
       await supabaseAdmin.functions.invoke("travel-booking-notification", {
         body: { booking_id: bookingData.id, event_type: "booking_confirmed" },

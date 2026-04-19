@@ -21291,12 +21291,16 @@ export type Database = {
         Row: {
           booking_ref: string
           booking_status: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
           created_at: string
           currency: string
+          fee_amount: number | null
           id: string
           idempotency_key: string | null
           payment_method: string | null
           payment_status: string
+          refund_amount: number | null
           total_amount: number
           trip_id: string
           user_id: string
@@ -21304,12 +21308,16 @@ export type Database = {
         Insert: {
           booking_ref: string
           booking_status?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
+          fee_amount?: number | null
           id?: string
           idempotency_key?: string | null
           payment_method?: string | null
           payment_status?: string
+          refund_amount?: number | null
           total_amount?: number
           trip_id: string
           user_id: string
@@ -21317,12 +21325,16 @@ export type Database = {
         Update: {
           booking_ref?: string
           booking_status?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
+          fee_amount?: number | null
           id?: string
           idempotency_key?: string | null
           payment_method?: string | null
           payment_status?: string
+          refund_amount?: number | null
           total_amount?: number
           trip_id?: string
           user_id?: string
