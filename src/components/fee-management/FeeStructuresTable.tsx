@@ -9,6 +9,7 @@ import {
   QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
   Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
   Plus, RefreshCw, Search, LayoutGrid, List, Filter,
+  Building2, Plane, Hotel, MapPin, Gauge, ShieldCheck, XCircle,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
