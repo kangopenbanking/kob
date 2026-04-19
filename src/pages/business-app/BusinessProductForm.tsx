@@ -168,10 +168,10 @@ export default function BusinessProductForm() {
               price: v.price, cost_price: v.cost_price || null, track_inventory: v.track_inventory,
             }).eq('id', v.id);
           } else {
-            await supabase.from('pos_product_variants').insert({
-              product_id: productId, name: v.name, sku: v.sku || null, barcode: v.barcode || null,
+            await supabase.from('pos_product_variants').insert([{
+              product_id: productId, merchant_id: merchantId, name: v.name, sku: v.sku || null, barcode: v.barcode || null,
               price: v.price, cost_price: v.cost_price || null, track_inventory: v.track_inventory,
-            });
+            }]);
           }
         }
       } else {
