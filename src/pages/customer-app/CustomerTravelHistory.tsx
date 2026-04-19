@@ -57,9 +57,32 @@ const CustomerTravelHistory: React.FC = () => {
         setRoutes(routeData || []);
       }
       setLoading(false);
-    };
-    fetchHistory();
-  }, []);
+  };
+
+  useEffect(() => { fetchHistory(); }, []);
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-cancel-booking', {
+        body: { booking_id: cancelTarget.id, reason: 'customer_request' },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      toast.success(
+        data.refund_amount > 0
+          ? `Booking cancelled. ${data.refund_amount.toLocaleString()} ${data.currency} refunded to your wallet.`
+          : 'Booking cancelled. No refund applies for late cancellation.'
+      );
+      setCancelTarget(null);
+      await fetchHistory();
+    } catch (e: any) {
+      toast.error(e.message || 'Cancellation failed');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
 
   const filtered = bookings.filter(b => {
     if (statusFilter !== 'all' && b.booking_status !== statusFilter) return false;
