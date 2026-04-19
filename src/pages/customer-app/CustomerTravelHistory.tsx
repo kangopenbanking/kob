@@ -188,12 +188,57 @@ const CustomerTravelHistory: React.FC = () => {
                       Cash Payment
                     </span>
                   )}
+
+                  {b.booking_status === 'confirmed' && trip && new Date(trip.departure_at).getTime() > Date.now() && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCancelTarget({ ...b, _trip: trip, _route: route }); }}
+                      className="mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
+                    >
+                      <XCircle className="h-3 w-3" /> Cancel & Refund
+                    </button>
+                  )}
+
+                  {b.booking_status === 'cancelled' && b.refund_amount > 0 && (
+                    <span className="inline-block mt-2 ml-2 rounded-full px-2 py-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Refunded {b.refund_amount?.toLocaleString()} {b.currency}
+                    </span>
+                  )}
                 </div>
               </motion.div>
             );
           })
         )}
       </div>
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              {cancelTarget ? (
+                <div>
+                  <p>
+                    Reference <strong>{cancelTarget.booking_ref}</strong> · {cancelTarget._route?.origin} → {cancelTarget._route?.destination}
+                  </p>
+                  <p className="mt-2">Refund policy:</p>
+                  <ul className="mt-1 ml-4 list-disc text-xs">
+                    <li>More than 24h before departure: <strong>100% refund</strong></li>
+                    <li>Between 12h and 24h: <strong>50% refund</strong></li>
+                    <li>Less than 12h: <strong>no refund</strong></li>
+                  </ul>
+                  <p className="mt-2 text-xs">A 200 XAF cancellation fee is deducted from the refund.</p>
+                </div>
+              ) : <span />}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancel} disabled={cancelling} className="bg-red-600 hover:bg-red-700">
+              {cancelling ? 'Cancelling...' : 'Cancel & Refund'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
