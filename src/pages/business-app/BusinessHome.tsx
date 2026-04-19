@@ -28,27 +28,47 @@ const BusinessHome: React.FC = () => {
   } = useBusinessData(merchantId);
   const queryClient = useQueryClient();
 
-  // Realtime payment notifications
+  // Realtime payment notifications — keeps dashboard, wallet & orders in sync with API
   useEffect(() => {
     if (!merchantId) return;
+
+    const refreshAll = () => {
+      queryClient.invalidateQueries({ queryKey: ['merchant-wallets', merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['merchant-charges', merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['merchant-settlements', merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['merchant-payouts', merchantId] });
+    };
+
     const channel = supabase
-      .channel(`biz-payments-${merchantId}`)
+      .channel(`biz-sync-${merchantId}`)
       .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'pos_order_payments',
+        event: 'INSERT', schema: 'public', table: 'pos_order_payments',
         filter: `merchant_id=eq.${merchantId}`,
       }, (payload: any) => {
         if (payload.new?.status === 'succeeded') {
-          const amount = payload.new.amount;
           sounds.success();
-          toast.success(`Payment received: ${formatXAF(amount)}`, {
+          toast.success(`Payment received: ${formatXAF(payload.new.amount)}`, {
             description: `Via ${payload.new.method || 'wallet'}`,
           });
-          queryClient.invalidateQueries({ queryKey: ['business-data', merchantId] });
+          refreshAll();
         }
       })
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'gateway_charges',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, (payload: any) => {
+        if (payload.eventType === 'INSERT' && payload.new?.status === 'successful') {
+          sounds.success();
+          toast.success(`Charge confirmed: ${formatXAF(payload.new.amount || 0)}`);
+        }
+        refreshAll();
+      })
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'gateway_merchant_wallets',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, () => refreshAll())
       .subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, [merchantId, queryClient]);
 
