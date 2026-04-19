@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2, XCircle, Receipt } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2, XCircle, Receipt, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,6 +27,15 @@ const CustomerCart: React.FC = () => {
   const [orderComplete, setOrderComplete] = useState<any>(null);
   const [orderFailed, setOrderFailed] = useState(false);
   const [showPin, setShowPin] = useState(false);
+  const [savingShipping, setSavingShipping] = useState(false);
+
+  // Shipping form state — synced from cart on load
+  const [recipientName, setRecipientName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
+  const SHIPPING_FLAT_FEE = 1500; // XAF — standard delivery flat rate
 
   const walletBalance = balances.find((b: any) => b.balance_type === 'ClosingAvailable')?.amount || 0;
 
@@ -44,6 +55,14 @@ const CustomerCart: React.FC = () => {
         .limit(1)
         .maybeSingle();
       setCart(data);
+      if (data) {
+        const d = data as any;
+        setRecipientName(d.shipping_recipient_name || '');
+        setPhone(d.shipping_phone || '');
+        setAddressLine(d.shipping_address_line || '');
+        setCity(d.shipping_city || '');
+        setRegion(d.shipping_region || '');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,8 +72,10 @@ const CustomerCart: React.FC = () => {
 
   const items = cart?.pos_consumer_cart_items || [];
   const subtotal = items.reduce((s: number, i: any) => s + i.unit_price * i.quantity, 0);
-  const taxes = Math.round(subtotal * 0.0); // No tax for now
-  const total = subtotal + taxes;
+  const shippingFee = items.length > 0 && addressLine ? SHIPPING_FLAT_FEE : 0;
+  const taxes = 0;
+  const total = subtotal + taxes + shippingFee;
+  const shippingComplete = !!(recipientName && phone && addressLine && city);
 
   const updateQuantity = async (itemId: string, newQty: number) => {
     try {
@@ -71,6 +92,44 @@ const CustomerCart: React.FC = () => {
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Could not update cart. Please try again.'));
     }
+  };
+
+  const saveShipping = async (): Promise<boolean> => {
+    if (!cart) return false;
+    if (!shippingComplete) {
+      toast.error('Please complete the delivery address before paying.');
+      return false;
+    }
+    setSavingShipping(true);
+    try {
+      const { error } = await supabase.functions.invoke('pos-consumer-cart', {
+        body: {
+          action: 'set_shipping',
+          cart_id: cart.id,
+          shipping: {
+            recipient_name: recipientName,
+            phone,
+            address_line: addressLine,
+            city,
+            region,
+            country: 'CM',
+            shipping_fee: SHIPPING_FLAT_FEE,
+          },
+        },
+      });
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not save delivery address.'));
+      return false;
+    } finally {
+      setSavingShipping(false);
+    }
+  };
+
+  const startCheckout = async () => {
+    const ok = await saveShipping();
+    if (ok) setShowPin(true);
   };
 
   const handleCheckout = async () => {
@@ -262,11 +321,32 @@ const CustomerCart: React.FC = () => {
           </div>
 
           {/* Summary panel */}
-          <div className="lg:w-72">
+          <div className="lg:w-72 space-y-3">
+            {/* Shipping address */}
+            <div className="bg-card border border-border/50 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Truck className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Delivery Address</span>
+              </div>
+              <div className="space-y-2">
+                <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Recipient name" className="h-9 text-sm" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (e.g. +237...)" className="h-9 text-sm" />
+                <Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street address" className="h-9 text-sm" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="h-9 text-sm" />
+                  <Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Region" className="h-9 text-sm" />
+                </div>
+              </div>
+            </div>
+
             <div className="bg-card border border-border/50 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-semibold text-foreground">{subtotal.toLocaleString()} XAF</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Shipping</span>
+                <span className="font-semibold text-foreground">{shippingFee.toLocaleString()} XAF</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Taxes</span>
@@ -279,7 +359,7 @@ const CustomerCart: React.FC = () => {
             </div>
 
             {/* Wallet balance */}
-            <div className="mt-3 flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
               <Wallet className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">Wallet Balance:</span>
               <span className="text-xs font-bold text-foreground">{walletBalance.toLocaleString()} XAF</span>
@@ -299,12 +379,14 @@ const CustomerCart: React.FC = () => {
           className="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-50"
         >
           <Button
-            onClick={() => setShowPin(true)}
-            disabled={checkingOut || walletBalance < total}
+            onClick={startCheckout}
+            disabled={checkingOut || savingShipping || walletBalance < total || !shippingComplete}
             className="w-full h-12 rounded-2xl font-semibold shadow-lg"
           >
-            {checkingOut ? (
+            {checkingOut || savingShipping ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
+            ) : !shippingComplete ? (
+              <><Truck className="w-4 h-4 mr-2" />Add delivery address</>
             ) : (
               <><Wallet className="w-4 h-4 mr-2" />Pay {total.toLocaleString()} XAF</>
             )}

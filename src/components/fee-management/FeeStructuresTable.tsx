@@ -98,6 +98,11 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   overdraft_interest: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Interest" },
   overdraft_setup_fee: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Setup Fee" },
   overdraft_renewal_fee: { icon: RefreshCw, category: "Lending", label: "Overdraft Renewal Fee" },
+  // WooCommerce & Enterprise packages
+  woocommerce_transaction: { icon: ShieldCheck, category: "Gateway", label: "WooCommerce Transaction Fee" },
+  enterprise_subscription_starter: { icon: ShieldCheck, category: "Services", label: "Enterprise Starter Package (Monthly)" },
+  enterprise_subscription_growth: { icon: ShieldCheck, category: "Services", label: "Enterprise Growth Package (Monthly)" },
+  enterprise_subscription_scale: { icon: ShieldCheck, category: "Services", label: "Enterprise Scale Package (Monthly)" },
 };
 
 const CATEGORY_ORDER = ["Core", "Banking", "Mobile", "Cards", "Savings", "Lending", "Travel", "Remittance", "International", "Social", "Gateway", "CrediQ", "Services", "Other"];
