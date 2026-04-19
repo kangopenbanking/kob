@@ -44,6 +44,7 @@ export default function BusinessStorefront() {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [templateId, setTemplateId] = useState<StorefrontTemplateId>('classic');
   const [hours, setHours] = useState({
     monday: { open: '09:00', close: '18:00', closed: false },
     tuesday: { open: '09:00', close: '18:00', closed: false },
