@@ -849,6 +849,9 @@ verify_jwt = false
 [functions.pos-store-subscription]
 verify_jwt = false
 
+[functions.pos-subscription-renewal-cron]
+verify_jwt = false
+
 [functions.pos-submit-order]
 verify_jwt = false
 
