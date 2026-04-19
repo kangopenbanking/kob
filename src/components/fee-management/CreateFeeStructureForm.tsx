@@ -23,7 +23,9 @@ const TRANSACTION_TYPES = [
   { value: "mobile_money_charge", label: "Mobile Money Charge", icon: PhoneCall, category: "Mobile" },
   { value: "byo_mobile_money_routing", label: "BYO Routing Fee (Direct Rail)", icon: PhoneCall, category: "Mobile" },
   { value: "byo_fallback_charge", label: "BYO Fallback Charge (Flutterwave Rescue)", icon: PhoneCall, category: "Mobile" },
-  { value: "bank_transfer", label: "Bank Transfer", icon: Landmark, category: "Core" },
+  { value: "bank_transfer", label: "Bank Transfer (Generic)", icon: Landmark, category: "Banking" },
+  { value: "intra_bank_transfer", label: "Intra-Bank Transfer (same bank)", icon: ArrowLeftRight, category: "Banking" },
+  { value: "inter_bank_transfer", label: "Inter-Bank Transfer (different banks)", icon: Send, category: "Banking" },
   { value: "card_payment", label: "Card Payment", icon: CreditCard, category: "Cards" },
   { value: "virtual_card_topup", label: "Virtual Card Top-up", icon: RefreshCw, category: "Cards" },
   { value: "qr_payment", label: "QR Payment", icon: QrCode, category: "Core" },
@@ -65,6 +67,16 @@ const TRANSACTION_TYPES = [
   { value: "overdraft_interest", label: "Overdraft Interest", icon: ArrowDownToLine, category: "Lending" },
   { value: "overdraft_setup_fee", label: "Overdraft Setup Fee", icon: ArrowDownToLine, category: "Lending" },
   { value: "overdraft_renewal_fee", label: "Overdraft Renewal Fee", icon: RefreshCw, category: "Lending" },
+  // Travel & Tourism
+  { value: "travel_booking", label: "Travel Booking (Generic)", icon: Globe2, category: "Travel" },
+  { value: "hotel_booking", label: "Hotel Booking", icon: Home, category: "Travel" },
+  { value: "flight_booking", label: "Flight Booking", icon: Send, category: "Travel" },
+  { value: "tour_booking", label: "Tour Booking", icon: Globe, category: "Travel" },
+  { value: "travel_cancellation_fee", label: "Travel Cancellation Fee", icon: Lock, category: "Travel" },
+  // Credit Score (CrediQ)
+  { value: "credit_score_inquiry", label: "Credit Score Inquiry (Bank)", icon: Hash, category: "CrediQ" },
+  { value: "credit_report_inquiry", label: "Credit Report Inquiry (Bank)", icon: FileText, category: "CrediQ" },
+  { value: "credit_premium_subscription", label: "CrediQ Premium Subscription (User)", icon: Sparkles, category: "CrediQ" },
 ];
 
 const FEE_MODELS = [

@@ -13,7 +13,9 @@ import { cn } from "@/lib/utils";
 const CHANNELS = [
   { value: "mobile_money_charge", label: "Mobile Money" },
   { value: "card_payment", label: "Card Payment" },
-  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "bank_transfer", label: "Bank Transfer (Generic)" },
+  { value: "intra_bank_transfer", label: "Intra-Bank Transfer (same bank)" },
+  { value: "inter_bank_transfer", label: "Inter-Bank Transfer (different banks)" },
   { value: "transfer", label: "Account Transfer" },
   { value: "bill_payment", label: "Bill Payment" },
   { value: "gateway_charge", label: "Gateway Charge" },
@@ -37,6 +39,27 @@ const CHANNELS = [
   { value: "overdraft_interest", label: "Overdraft Interest" },
   { value: "overdraft_setup_fee", label: "Overdraft Setup Fee" },
   { value: "overdraft_renewal_fee", label: "Overdraft Renewal Fee" },
+  // Travel & Tourism
+  { value: "travel_booking", label: "Travel Booking (Generic)" },
+  { value: "hotel_booking", label: "Hotel Booking" },
+  { value: "flight_booking", label: "Flight Booking" },
+  { value: "tour_booking", label: "Tour Booking" },
+  { value: "travel_cancellation_fee", label: "Travel Cancellation Fee" },
+  // CrediQ
+  { value: "credit_score_inquiry", label: "Credit Score Inquiry (Bank)" },
+  { value: "credit_report_inquiry", label: "Credit Report Inquiry (Bank)" },
+  { value: "credit_premium_subscription", label: "CrediQ Premium Subscription (User)" },
+  // Other
+  { value: "fx_conversion", label: "FX Conversion" },
+  { value: "escrow_payment", label: "Escrow Payment" },
+  { value: "mobile_recharge", label: "Mobile Recharge" },
+  { value: "atm_withdrawal", label: "ATM Withdrawal" },
+  { value: "standing_order", label: "Standing Order" },
+  { value: "dormancy_fee", label: "Dormancy Fee" },
+  { value: "account_funding", label: "Account Funding" },
+  { value: "credit_report_purchase", label: "Credit Report Purchase" },
+  { value: "loan_processing_fee", label: "Loan Processing Fee" },
+  { value: "invoice_create", label: "Invoice Create" },
 ];
 
 const PRESETS = [1000, 5000, 10000, 50000, 100000, 500000, 1000000];
