@@ -56,11 +56,12 @@ const CustomerCart: React.FC = () => {
         .maybeSingle();
       setCart(data);
       if (data) {
-        setRecipientName(data.shipping_recipient_name || '');
-        setPhone(data.shipping_phone || '');
-        setAddressLine(data.shipping_address_line || '');
-        setCity(data.shipping_city || '');
-        setRegion(data.shipping_region || '');
+        const d = data as any;
+        setRecipientName(d.shipping_recipient_name || '');
+        setPhone(d.shipping_phone || '');
+        setAddressLine(d.shipping_address_line || '');
+        setCity(d.shipping_city || '');
+        setRegion(d.shipping_region || '');
       }
     } catch (err) {
       console.error(err);
