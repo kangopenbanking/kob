@@ -263,7 +263,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 7. Create booking
+    // 7. Calculate platform fee (KOB earnings) using fee engine
+    let platformFee = 0;
+    try {
+      const { data: feeRes } = await supabaseAdmin.rpc("calculate_transaction_fee", {
+        _institution_id: null,
+        _transaction_type: "travel_booking",
+        _transaction_amount: totalPrice,
+      });
+      platformFee = Number((feeRes as any)?.final_fee || 0);
+    } catch (feeErr) {
+      console.error("fee calc error (non-fatal):", feeErr);
+    }
+
+    // 8. Create booking
     const bookingRef = `KOB-${(category || "TRV").toUpperCase().slice(0, 3)}-${Date.now().toString(36).toUpperCase()}`;
 
     const { data: bookingData, error: bookErr } = await supabaseAdmin
@@ -278,6 +291,7 @@ Deno.serve(async (req) => {
         booking_status: "confirmed",
         payment_method: "wallet",
         idempotency_key: idempotency_key || null,
+        fee_amount: platformFee,
       })
       .select("id")
       .single();
