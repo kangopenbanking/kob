@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Download, RefreshCw, Eye, EyeOff, Copy, CheckCircle, XCircle, Clock, ShoppingCart} from "lucide-react";
+import { Store, Download, RefreshCw, Eye, EyeOff, Copy, CheckCircle, XCircle, Clock, ShoppingCart, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
@@ -241,10 +241,33 @@ export default function WooCommerceManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <AdminPageHeader icon={ShoppingCart} title="WooCommerce Integration" description="Manage merchants, monitor transactions, and clear demo data" />
+      <div className="flex items-center justify-end gap-2">
         <Button onClick={loadData} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            if (!confirm('Clear ALL WooCommerce demo data (legacy merchants, transactions, POS connector imports)? This cannot be undone.')) return;
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              const res = await supabase.functions.invoke('woocommerce-admin-clear-demo', {
+                body: { scope: 'all' },
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+              });
+              if (res.error) throw res.error;
+              toast({ title: 'Demo data cleared', description: `Removed: ${JSON.stringify((res.data as any)?.counts || {})}` });
+              loadData();
+            } catch (e: any) {
+              toast({ title: 'Clear failed', description: e.message, variant: 'destructive' });
+            }
+          }}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Clear Demo Data
         </Button>
       </div>
 
