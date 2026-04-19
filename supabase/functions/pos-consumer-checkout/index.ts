@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'cart_empty' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Calculate total
+    // Calculate total (subtotal + shipping fee captured during cart)
     let subtotal = 0;
     const orderItems: any[] = [];
     for (const item of items) {
@@ -72,7 +72,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const total = subtotal;
+    const shippingFee = Number(cart.shipping_fee || 0);
+    const total = subtotal + shippingFee;
 
     // Get consumer's wallet (account balance)
     const { data: consumerAccounts } = await supabase.from('accounts')
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create POS order with channel=consumer_app
+    // Create POS order with channel=consumer_app and full shipping snapshot
     const { data: order, error: orderErr } = await supabase.from('pos_orders').insert({
       merchant_id: cart.merchant_id,
       channel: 'consumer_app',
@@ -106,9 +107,18 @@ Deno.serve(async (req) => {
       tax_total: 0,
       discount_total: 0,
       total,
-      customer_name: user.user_metadata?.full_name || user.email,
+      shipping_fee: shippingFee,
+      shipping_recipient_name: cart.shipping_recipient_name,
+      shipping_phone: cart.shipping_phone,
+      shipping_address_line: cart.shipping_address_line,
+      shipping_city: cart.shipping_city,
+      shipping_region: cart.shipping_region,
+      shipping_country: cart.shipping_country,
+      shipping_postal_code: cart.shipping_postal_code,
+      delivery_notes: cart.delivery_notes,
+      customer_name: cart.shipping_recipient_name || user.user_metadata?.full_name || user.email,
       customer_email: user.email,
-      customer_phone: user.phone || null,
+      customer_phone: cart.shipping_phone || user.phone || null,
       metadata_json: { idempotency_key: idempotencyKey, consumer_user_id: user.id },
     }).select().single();
     if (orderErr) throw orderErr;
@@ -193,6 +203,8 @@ Deno.serve(async (req) => {
       success: true,
       order_id: order.id,
       order_number: order.order_number,
+      subtotal,
+      shipping_fee: shippingFee,
       total,
       currency: 'XAF',
       payment_method: 'wallet',

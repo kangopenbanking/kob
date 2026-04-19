@@ -160,7 +160,32 @@ Deno.serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ error: 'invalid_action', message: 'Use action=add|update_quantity|remove|clear' }), {
+      if (action === 'set_shipping') {
+        const targetCartId = cart_id || body.cart_id;
+        if (!targetCartId) {
+          return new Response(JSON.stringify({ error: 'cart_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const shipping = body.shipping || {};
+        const update: Record<string, unknown> = {
+          shipping_recipient_name: shipping.recipient_name ?? null,
+          shipping_phone: shipping.phone ?? null,
+          shipping_address_line: shipping.address_line ?? null,
+          shipping_city: shipping.city ?? null,
+          shipping_region: shipping.region ?? null,
+          shipping_country: shipping.country ?? 'CM',
+          shipping_postal_code: shipping.postal_code ?? null,
+          delivery_notes: shipping.delivery_notes ?? null,
+          shipping_fee: typeof shipping.shipping_fee === 'number' ? shipping.shipping_fee : 0,
+          updated_at: new Date().toISOString(),
+        };
+        const { error } = await supabase.from('pos_consumer_carts').update(update).eq('id', targetCartId).eq('user_id', user.id);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      return new Response(JSON.stringify({ error: 'invalid_action', message: 'Use action=add|update_quantity|remove|clear|set_shipping' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
