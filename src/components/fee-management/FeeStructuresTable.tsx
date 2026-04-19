@@ -9,6 +9,7 @@ import {
   QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
   Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
   Plus, RefreshCw, Search, LayoutGrid, List, Filter,
+  Building2, Plane, Hotel, MapPin, Gauge, ShieldCheck, XCircle,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -44,7 +45,9 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   mobile_money_charge: { icon: PhoneCall, category: "Mobile", label: "Mobile Money Charge" },
   byo_mobile_money_routing: { icon: PhoneCall, category: "Mobile", label: "BYO Routing Fee (Direct Rail)" },
   byo_fallback_charge: { icon: PhoneCall, category: "Mobile", label: "BYO Fallback Charge (Flutterwave Rescue)" },
-  bank_transfer: { icon: Landmark, category: "Core", label: "Bank Transfer" },
+  bank_transfer: { icon: Landmark, category: "Banking", label: "Bank Transfer (Generic)" },
+  intra_bank_transfer: { icon: Building2, category: "Banking", label: "Intra-Bank Transfer (Same Bank)" },
+  inter_bank_transfer: { icon: ArrowLeftRight, category: "Banking", label: "Inter-Bank Transfer (Different Banks)" },
   card_payment: { icon: CreditCard, category: "Cards", label: "Card Payment" },
   virtual_card_topup: { icon: RefreshCw, category: "Cards", label: "Virtual Card Top-up" },
   qr_payment: { icon: QrCode, category: "Core", label: "QR Payment" },
@@ -69,12 +72,21 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   api_request: { icon: Plug, category: "Gateway", label: "API Request" },
   mobile_recharge: { icon: Radio, category: "Mobile", label: "Mobile Recharge" },
   invoice_create: { icon: FileText, category: "Core", label: "Invoice Create" },
-  credit_report_purchase: { icon: FileText, category: "Services", label: "Credit Report Purchase" },
+  credit_report_purchase: { icon: FileText, category: "CrediQ", label: "Credit Report Purchase" },
+  credit_score_inquiry: { icon: Gauge, category: "CrediQ", label: "Credit Score Inquiry (Bank)" },
+  credit_report_inquiry: { icon: FileText, category: "CrediQ", label: "Credit Report Inquiry (Bank)" },
+  credit_premium_subscription: { icon: ShieldCheck, category: "CrediQ", label: "CrediQ Premium Subscription" },
   overdraft_fee: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Fee" },
   loan_processing_fee: { icon: ArrowUpFromLine, category: "Lending", label: "Loan Processing Fee" },
   atm_withdrawal: { icon: Banknote, category: "Banking", label: "ATM Withdrawal" },
   standing_order: { icon: RefreshCw, category: "Banking", label: "Standing Order" },
   dormancy_fee: { icon: Lock, category: "Banking", label: "Dormancy Fee" },
+  // Travel & Tourism
+  hotel_booking: { icon: Hotel, category: "Travel", label: "Hotel Booking" },
+  flight_booking: { icon: Plane, category: "Travel", label: "Flight Booking" },
+  tour_booking: { icon: MapPin, category: "Travel", label: "Tour Booking" },
+  travel_booking: { icon: Plane, category: "Travel", label: "Travel Booking (Generic)" },
+  travel_cancellation_fee: { icon: XCircle, category: "Travel", label: "Travel Cancellation Fee" },
   // Remittance
   remittance_inbound: { icon: ArrowDownToLine, category: "Remittance", label: "Remittance Inbound" },
   remittance_outbound: { icon: Send, category: "Remittance", label: "Remittance Outbound" },
@@ -88,20 +100,23 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   overdraft_renewal_fee: { icon: RefreshCw, category: "Lending", label: "Overdraft Renewal Fee" },
 };
 
-const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Banking", "Savings", "Lending", "Remittance", "Social", "International", "Gateway", "Services"];
+const CATEGORY_ORDER = ["Core", "Banking", "Mobile", "Cards", "Savings", "Lending", "Travel", "Remittance", "International", "Social", "Gateway", "CrediQ", "Services", "Other"];
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: any }> = {
   Core: { bg: "bg-blue-500/5", border: "border-blue-200 dark:border-blue-800", text: "text-blue-700 dark:text-blue-400", icon: ArrowLeftRight },
+  Banking: { bg: "bg-slate-500/5", border: "border-slate-200 dark:border-slate-800", text: "text-slate-700 dark:text-slate-400", icon: Landmark },
   Mobile: { bg: "bg-violet-500/5", border: "border-violet-200 dark:border-violet-800", text: "text-violet-700 dark:text-violet-400", icon: Smartphone },
   Cards: { bg: "bg-rose-500/5", border: "border-rose-200 dark:border-rose-800", text: "text-rose-700 dark:text-rose-400", icon: CreditCard },
   Savings: { bg: "bg-emerald-500/5", border: "border-emerald-200 dark:border-emerald-800", text: "text-emerald-700 dark:text-emerald-400", icon: Wallet },
   Lending: { bg: "bg-orange-500/5", border: "border-orange-200 dark:border-orange-800", text: "text-orange-700 dark:text-orange-400", icon: ArrowUpFromLine },
-  Social: { bg: "bg-pink-500/5", border: "border-pink-200 dark:border-pink-800", text: "text-pink-700 dark:text-pink-400", icon: Users },
-  International: { bg: "bg-cyan-500/5", border: "border-cyan-200 dark:border-cyan-800", text: "text-cyan-700 dark:text-cyan-400", icon: Globe2 },
-  Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
-  Services: { bg: "bg-teal-500/5", border: "border-teal-200 dark:border-teal-800", text: "text-teal-700 dark:text-teal-400", icon: FileText },
-  Banking: { bg: "bg-slate-500/5", border: "border-slate-200 dark:border-slate-800", text: "text-slate-700 dark:text-slate-400", icon: Landmark },
+  Travel: { bg: "bg-sky-500/5", border: "border-sky-200 dark:border-sky-800", text: "text-sky-700 dark:text-sky-400", icon: Plane },
   Remittance: { bg: "bg-indigo-500/5", border: "border-indigo-200 dark:border-indigo-800", text: "text-indigo-700 dark:text-indigo-400", icon: Send },
+  International: { bg: "bg-cyan-500/5", border: "border-cyan-200 dark:border-cyan-800", text: "text-cyan-700 dark:text-cyan-400", icon: Globe2 },
+  Social: { bg: "bg-pink-500/5", border: "border-pink-200 dark:border-pink-800", text: "text-pink-700 dark:text-pink-400", icon: Users },
+  Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
+  CrediQ: { bg: "bg-fuchsia-500/5", border: "border-fuchsia-200 dark:border-fuchsia-800", text: "text-fuchsia-700 dark:text-fuchsia-400", icon: Gauge },
+  Services: { bg: "bg-teal-500/5", border: "border-teal-200 dark:border-teal-800", text: "text-teal-700 dark:text-teal-400", icon: FileText },
+  Other: { bg: "bg-muted", border: "border-border", text: "text-muted-foreground", icon: FileText },
 };
 
 function getFeeDisplay(s: any) {
