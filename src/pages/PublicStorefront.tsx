@@ -27,11 +27,14 @@ export default function PublicStorefront() {
   const loadStore = async () => {
     setLoading(true);
     try {
+      // Public storefront visibility must match the in-app marketplace rule:
+      // published + moderation-approved.
       const { data } = await supabase
         .from('pos_store_profiles')
         .select('*')
         .eq('merchant_id', merchantId)
         .eq('is_published', true)
+        .eq('status', 'approved')
         .maybeSingle();
       setStore(data);
     } catch (err) {
