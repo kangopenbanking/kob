@@ -200,8 +200,8 @@ export function WooConnectTab({ merchantId }: WooConnectTabProps) {
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{int.base_url || 'Unknown Store'}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant={int.status === 'active' ? 'default' : 'secondary'} className="text-[10px] h-5 gap-1">
-                          {int.status === 'active' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                        <Badge variant={int.status === 'connected' ? 'default' : int.status === 'error' ? 'destructive' : 'secondary'} className="text-[10px] h-5 gap-1">
+                          {int.status === 'connected' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                           {int.status || 'unknown'}
                         </Badge>
                         {int.last_sync_at && (

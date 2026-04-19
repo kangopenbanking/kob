@@ -49,12 +49,12 @@ export default function MerchantWooSync() {
       .from("merchant_integrations")
       .select("*")
       .eq("merchant_id", merchant.id)
-      .eq("integration_type", "woocommerce")
+      .eq("type", "woocommerce")
       .order("created_at", { ascending: false });
 
     const runRes = await (supabase as any)
       .from("integration_sync_runs")
-      .select("*")
+      .select("*, merchant_integrations(base_url)")
       .eq("merchant_id", merchant.id)
       .order("started_at", { ascending: false })
       .limit(50);
