@@ -60,25 +60,31 @@ const AdminTravelManagement: React.FC = () => {
   };
 
   const cancelBooking = async (id: string) => {
-    await supabase.from('travel_bookings').update({ booking_status: 'cancelled', payment_status: 'refunded' } as any).eq('id', id);
-    await supabase.from('travel_tickets').update({ ticket_status: 'cancelled' } as any).in('booking_id', [id]);
-    toast.success('Booking cancelled');
-    fetchAll();
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-cancel-booking', {
+        body: { booking_id: id, reason: 'Cancelled by admin' },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success(`Booking cancelled · refund ${(data as any)?.refund_amount?.toLocaleString() || 0} XAF`);
+      fetchAll();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to cancel booking');
+    }
   };
 
   const resetAllDemoData = async () => {
-    if (!confirm('This will DELETE all travel data. Are you sure?')) return;
-    await Promise.all([
-      supabase.from('travel_tickets').delete().neq('id', ''),
-      supabase.from('travel_bookings').delete().neq('id', ''),
-    ]);
-    await supabase.from('travel_trips').delete().neq('id', '');
-    await supabase.from('travel_timetables').delete().neq('id', '');
-    await supabase.from('travel_seating_plans').delete().neq('id', '');
-    await supabase.from('travel_routes').delete().neq('id', '');
-    await supabase.from('travel_services').delete().neq('id', '');
-    toast.success('All travel data reset');
-    fetchAll();
+    if (!confirm('This will DELETE ALL travel data across the entire platform (services, routes, trips, bookings, tickets). This cannot be undone. Continue?')) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-admin-reset-data', {
+        body: { scope: 'all' },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      const c = (data as any)?.deleted || {};
+      toast.success(`Reset complete · ${c.services || 0} services, ${c.bookings || 0} bookings, ${c.tickets || 0} tickets removed`);
+      fetchAll();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to reset data');
+    }
   };
 
   // Stats

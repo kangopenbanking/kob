@@ -31,7 +31,29 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!booking) return j({ error: "Booking not found" }, 404);
-    if (booking.user_id !== user.id) return j({ error: "Forbidden" }, 403);
+
+    // Allow self-cancel, admin override, or merchant who owns the underlying service
+    let isPrivileged = false;
+    if (booking.user_id !== user.id) {
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" as any });
+      if (isAdmin) {
+        isPrivileged = true;
+      } else {
+        // Check merchant ownership of trip → service → merchant
+        const { data: trip2 } = await admin.from("travel_trips").select("route_id").eq("id", booking.trip_id).maybeSingle();
+        if (trip2?.route_id) {
+          const { data: route2 } = await admin.from("travel_routes").select("service_id").eq("id", trip2.route_id).maybeSingle();
+          if (route2?.service_id) {
+            const { data: svc2 } = await admin.from("travel_services").select("merchant_id").eq("id", route2.service_id).maybeSingle();
+            if (svc2?.merchant_id) {
+              const { data: merch } = await admin.from("gateway_merchants").select("user_id").eq("id", svc2.merchant_id).maybeSingle();
+              if (merch?.user_id === user.id) isPrivileged = true;
+            }
+          }
+        }
+        if (!isPrivileged) return j({ error: "Forbidden" }, 403);
+      }
+    }
     if (booking.booking_status !== "confirmed") return j({ error: "Booking already cancelled or completed" }, 400);
 
     const { data: trip } = await admin
