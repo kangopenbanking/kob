@@ -321,11 +321,32 @@ const CustomerCart: React.FC = () => {
           </div>
 
           {/* Summary panel */}
-          <div className="lg:w-72">
+          <div className="lg:w-72 space-y-3">
+            {/* Shipping address */}
+            <div className="bg-card border border-border/50 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Truck className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Delivery Address</span>
+              </div>
+              <div className="space-y-2">
+                <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Recipient name" className="h-9 text-sm" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (e.g. +237...)" className="h-9 text-sm" />
+                <Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street address" className="h-9 text-sm" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="h-9 text-sm" />
+                  <Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Region" className="h-9 text-sm" />
+                </div>
+              </div>
+            </div>
+
             <div className="bg-card border border-border/50 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-semibold text-foreground">{subtotal.toLocaleString()} XAF</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Shipping</span>
+                <span className="font-semibold text-foreground">{shippingFee.toLocaleString()} XAF</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Taxes</span>
@@ -338,7 +359,7 @@ const CustomerCart: React.FC = () => {
             </div>
 
             {/* Wallet balance */}
-            <div className="mt-3 flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
               <Wallet className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">Wallet Balance:</span>
               <span className="text-xs font-bold text-foreground">{walletBalance.toLocaleString()} XAF</span>
@@ -358,12 +379,14 @@ const CustomerCart: React.FC = () => {
           className="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-50"
         >
           <Button
-            onClick={() => setShowPin(true)}
-            disabled={checkingOut || walletBalance < total}
+            onClick={startCheckout}
+            disabled={checkingOut || savingShipping || walletBalance < total || !shippingComplete}
             className="w-full h-12 rounded-2xl font-semibold shadow-lg"
           >
-            {checkingOut ? (
+            {checkingOut || savingShipping ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
+            ) : !shippingComplete ? (
+              <><Truck className="w-4 h-4 mr-2" />Add delivery address</>
             ) : (
               <><Wallet className="w-4 h-4 mr-2" />Pay {total.toLocaleString()} XAF</>
             )}
