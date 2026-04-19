@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Clock, MapPin, Save, ExternalLink } from 'lucide-react';
+import { Palette, Clock, MapPin, Save, ExternalLink, LayoutTemplate, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
+import { STOREFRONT_TEMPLATES, type StorefrontTemplateId } from '@/lib/storefront-templates';
+import { StorePreview } from '@/components/storefront/StorePreview';
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
   <div className="rounded-2xl border border-border/40 bg-card p-5">
@@ -42,6 +44,7 @@ export default function BusinessStorefront() {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [templateId, setTemplateId] = useState<StorefrontTemplateId>('classic');
   const [hours, setHours] = useState({
     monday: { open: '09:00', close: '18:00', closed: false },
     tuesday: { open: '09:00', close: '18:00', closed: false },
@@ -77,6 +80,7 @@ export default function BusinessStorefront() {
       setPhone(brandData?.phone || '');
       setEmail(brandData?.email || '');
       if (brandData?.operating_hours) setHours(brandData.operating_hours as any);
+      if (brandData?.template_id) setTemplateId(brandData.template_id as StorefrontTemplateId);
     }
   };
 
@@ -89,7 +93,7 @@ export default function BusinessStorefront() {
         store_name: tagline || businessName,
         description, logo_url: logoUrl, banner_url: coverUrl,
         city, country: 'CM',
-        custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours },
+        custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours, template_id: templateId },
       }, { onConflict: 'merchant_id' });
       if (error) throw error;
       toast.success('Storefront updated');
@@ -235,6 +239,59 @@ export default function BusinessStorefront() {
                   )}
                 </div>
               ))}
+            </div>
+          </Section>
+        </div>
+
+        {/* Template + Live Preview - full width */}
+        <div className={cn(!isMobile && 'col-span-2')}>
+          <Section icon={LayoutTemplate} title="Storefront Template & Live Preview">
+            <div className={cn('gap-5', isMobile ? 'space-y-5' : 'grid grid-cols-2')}>
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground mb-2">Choose a layout style. Preview updates instantly.</p>
+                {STOREFRONT_TEMPLATES.map((t) => {
+                  const selected = t.id === templateId;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTemplateId(t.id)}
+                      className={cn(
+                        'w-full text-left rounded-xl border p-3 transition-all',
+                        selected ? 'border-primary bg-primary/5 ring-1 ring-primary/40' : 'border-border/50 hover:border-border'
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{t.description}</div>
+                        </div>
+                        {selected && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5 mb-3 text-[11px] text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" /> Live preview
+                </div>
+                <StorePreview
+                  storeName={tagline || businessName}
+                  description={description}
+                  category=""
+                  city={city}
+                  country="CM"
+                  currency="XAF"
+                  logoUrl={logoUrl}
+                  bannerUrl={coverUrl}
+                  isPublished={false}
+                  templateId={templateId}
+                  primaryColor={primaryColor}
+                  accentColor={accentColor}
+                />
+              </div>
             </div>
           </Section>
         </div>
