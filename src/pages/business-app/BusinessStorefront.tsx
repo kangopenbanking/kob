@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Clock, MapPin, Save, ExternalLink } from 'lucide-react';
+import { Palette, Clock, MapPin, Save, ExternalLink, LayoutTemplate, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
+import { STOREFRONT_TEMPLATES, type StorefrontTemplateId } from '@/lib/storefront-templates';
+import { StorePreview } from '@/components/storefront/StorePreview';
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
   <div className="rounded-2xl border border-border/40 bg-card p-5">
