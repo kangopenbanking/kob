@@ -90,7 +90,7 @@ export function SubscriptionManager({ merchantId }: Props) {
         {trialUsed && (
           <CardContent>
             <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5" />
               <span>You have already used your one-time free trial. New subscriptions will be charged immediately.</span>
             </div>
           </CardContent>
@@ -109,9 +109,9 @@ export function SubscriptionManager({ merchantId }: Props) {
   const nextBilling = subscription.next_billing_attempt_at ? new Date(subscription.next_billing_attempt_at) : null;
 
   const statusBadge = () => {
-    if (isTrialing) return <Badge className="bg-blue-500/10 text-blue-700 border-blue-500/30">Free Trial</Badge>;
-    if (isPastDue) return <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30">Past Due</Badge>;
-    if (subscription.status === 'active') return <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30">Active</Badge>;
+    if (isTrialing) return <Badge variant="outline" className="border-primary/40 text-primary">Free Trial</Badge>;
+    if (isPastDue) return <Badge variant="outline" className="border-border text-foreground">Past Due</Badge>;
+    if (subscription.status === 'active') return <Badge variant="outline" className="border-primary/40 text-primary">Active</Badge>;
     return <Badge variant="outline">{subscription.status}</Badge>;
   };
 
