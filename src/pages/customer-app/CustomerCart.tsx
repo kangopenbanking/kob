@@ -48,7 +48,7 @@ const CustomerCart: React.FC = () => {
     setLoading(true);
     try {
       const { data } = await supabase.from('pos_consumer_carts')
-        .select('*, pos_consumer_cart_items(*, pos_product_variants(id, name, price, pos_products(name, pos_product_images(image_url))))')
+        .select('*, pos_consumer_cart_items(*, pos_product_variants(id, name, price, pos_products(name, pos_product_images(url))))')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -273,7 +273,7 @@ const CustomerCart: React.FC = () => {
               const variant = item.pos_product_variants;
               const productName = variant?.pos_products?.name || '';
               const variantName = variant?.name || '';
-              const image = variant?.pos_products?.pos_product_images?.[0]?.image_url;
+              const image = variant?.pos_products?.pos_product_images?.[0]?.url;
               return (
                 <motion.div
                   key={item.id}
