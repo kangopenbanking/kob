@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Bus, Route, Armchair, Calendar, BookOpen, ScanLine, Ticket, Users, Bell, MapPin } from 'lucide-react';
+import { Bus, Route, Armchair, Calendar, BookOpen, ScanLine, Ticket, Users, Bell, MapPin, Sparkles, Trash2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 const travelMenuItems = [
   { icon: Bus, label: 'Services', subtitle: 'Manage transport services', path: 'services', color: 'text-amber-600 bg-amber-500/10' },
