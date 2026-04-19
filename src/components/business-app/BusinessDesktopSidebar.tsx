@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, FileText, Package, ShoppingBag, Wallet, Monitor, ScanLine,
   Users, BarChart3, Store, Settings, Shield, Truck, Tag, Star,
-  ChevronRight, LogOut, Building2, Crown, MessageCircle,
+  LogOut, Crown, MessageCircle, Receipt, Banknote, Repeat, Link2,
+  Key, Webhook, AlertCircle, Bell, Layers, Palette, MapPin, FileCheck,
+  Briefcase, ListChecks, FileBarChart, ShieldCheck, History, Globe,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +43,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Dashboard', icon: Home, path: `${basePath}/home` },
       { label: 'Analytics', icon: BarChart3, path: `${basePath}/analytics` },
+      { label: 'Advanced Analytics', icon: FileBarChart, path: `${basePath}/advanced-analytics` },
     ],
   },
   {
@@ -50,6 +53,8 @@ const navGroups: NavGroup[] = [
       { label: 'Products', icon: Package, path: `${basePath}/products` },
       { label: 'Inventory', icon: ShoppingBag, path: `${basePath}/inventory` },
       { label: 'Customers', icon: Users, path: `${basePath}/customers` },
+      { label: 'Refunds', icon: Receipt, path: `${basePath}/refunds` },
+      { label: 'Disputes', icon: AlertCircle, path: `${basePath}/disputes` },
     ],
   },
   {
@@ -58,7 +63,20 @@ const navGroups: NavGroup[] = [
       { label: 'Wallet', icon: Wallet, path: `${basePath}/wallet` },
       { label: 'Receive', icon: ScanLine, path: `${basePath}/receive` },
       { label: 'POS Till', icon: Monitor, path: `${basePath}/till` },
-      { label: 'Refunds', icon: FileText, path: `${basePath}/refunds` },
+      { label: 'Transactions', icon: History, path: `${basePath}/transactions` },
+      { label: 'Payment Links', icon: Link2, path: `${basePath}/payment-links` },
+      { label: 'Fees', icon: Banknote, path: `${basePath}/fees` },
+    ],
+  },
+  {
+    title: 'Payouts & Settlement',
+    items: [
+      { label: 'Payouts', icon: Banknote, path: `${basePath}/payouts` },
+      { label: 'Settlements', icon: FileBarChart, path: `${basePath}/settlements` },
+      { label: 'Settlement Accounts', icon: Briefcase, path: `${basePath}/settlement-accounts` },
+      { label: 'Subaccounts', icon: Layers, path: `${basePath}/subaccounts` },
+      { label: 'Escrow', icon: Shield, path: `${basePath}/escrow` },
+      { label: 'Fund Wallet', icon: Wallet, path: `${basePath}/fund-wallet` },
     ],
   },
   {
@@ -67,26 +85,56 @@ const navGroups: NavGroup[] = [
       { label: 'Storefront', icon: Store, path: `${basePath}/storefront` },
       { label: 'Coupons', icon: Tag, path: `${basePath}/coupons` },
       { label: 'Reviews', icon: Star, path: `${basePath}/reviews` },
+      { label: 'Branding', icon: Palette, path: `${basePath}/branding` },
+      { label: 'White-Label', icon: Globe, path: `${basePath}/white-label` },
+    ],
+  },
+  {
+    title: 'Subscriptions',
+    items: [
+      { label: 'Subscriptions', icon: Repeat, path: `${basePath}/subscriptions` },
+      { label: 'Plans', icon: ListChecks, path: `${basePath}/plans` },
     ],
   },
   {
     title: 'Operations',
     items: [
       { label: 'Staff', icon: Users, path: `${basePath}/staff` },
+      { label: 'Locations', icon: MapPin, path: `${basePath}/locations` },
       { label: 'Travel', icon: Truck, path: `${basePath}/travel` },
+      { label: 'Bulk Operations', icon: Layers, path: `${basePath}/bulk-operations` },
+    ],
+  },
+  {
+    title: 'Developer',
+    items: [
+      { label: 'API Keys', icon: Key, path: `${basePath}/api-keys` },
+      { label: 'Webhooks', icon: Webhook, path: `${basePath}/webhooks` },
+      { label: 'Webhook Logs', icon: History, path: `${basePath}/webhook-logs` },
+      { label: 'Woo Sync', icon: Repeat, path: `${basePath}/woo-sync` },
+    ],
+  },
+  {
+    title: 'Trust & Compliance',
+    items: [
+      { label: 'Trust Score', icon: ShieldCheck, path: `${basePath}/trust-score` },
+      { label: 'Compliance', icon: Shield, path: `${basePath}/compliance` },
+      { label: 'KYB', icon: FileCheck, path: `${basePath}/kyb` },
     ],
   },
   {
     title: 'Support',
     items: [
       { label: 'Support Chat', icon: MessageCircle, path: `${basePath}/support` },
+      { label: 'Notifications', icon: Bell, path: `${basePath}/notifications` },
+      { label: 'Notification History', icon: History, path: `${basePath}/notification-history` },
     ],
   },
   {
     title: 'Settings',
     items: [
       { label: 'Settings', icon: Settings, path: `${basePath}/settings` },
-      { label: 'Compliance', icon: Shield, path: `${basePath}/compliance` },
+      { label: 'Profile', icon: Users, path: `${basePath}/profile` },
       { label: 'Enterprise', icon: Crown, path: `${basePath}/enterprise` },
     ],
   },
