@@ -176,16 +176,16 @@ export default function MerchantWooSync() {
                   <div key={integration.id} className="flex items-center justify-between rounded-lg border bg-card p-4 gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">{integration.store_url || "Unknown Store"}</p>
+                        <p className="font-medium text-sm truncate">{integration.base_url || "Unknown Store"}</p>
                         <Badge variant={cfg.variant} className="shrink-0 gap-1 text-xs">
                           <StatusIcon className="h-3 w-3" />
                           {cfg.label}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Merge strategy: <span className="font-mono">{integration.config?.merge_strategy || "woo_source_of_truth"}</span>
-                        {integration.last_synced_at && (
-                          <> · Last sync: {format(new Date(integration.last_synced_at), "MMM d, HH:mm")}</>
+                        Merge strategy: <span className="font-mono">{integration.settings_json?.sync_strategy || "woo_source_of_truth"}</span>
+                        {integration.last_sync_at && (
+                          <> · Last sync: {format(new Date(integration.last_sync_at), "MMM d, HH:mm")}</>
                         )}
                       </p>
                     </div>
@@ -252,20 +252,21 @@ export default function MerchantWooSync() {
               <TableBody>
                 {syncRuns.map(run => {
                   const runCfg = RUN_STATUS_CONFIG[run.status] || { label: run.status, variant: "outline" as const };
-                  const duration = run.completed_at && run.started_at
-                    ? Math.round((new Date(run.completed_at).getTime() - new Date(run.started_at).getTime()) / 1000)
+                  const duration = run.finished_at && run.started_at
+                    ? Math.round((new Date(run.finished_at).getTime() - new Date(run.started_at).getTime()) / 1000)
                     : null;
+                  const productsSynced = run.summary_json?.products_synced ?? run.summary_json?.imported ?? null;
                   return (
                     <TableRow key={run.id}>
                       <TableCell className="text-xs font-mono text-muted-foreground max-w-[160px] truncate">
-                        {run.merchant_integrations?.store_url || run.integration_id?.slice(0, 8) + "..."}
+                        {run.merchant_integrations?.base_url || run.integration_id?.slice(0, 8) + "..."}
                       </TableCell>
                       <TableCell>
                         <Badge variant={runCfg.variant} className="text-xs">{runCfg.label}</Badge>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {run.products_synced != null ? (
-                          <span>{run.products_synced} synced</span>
+                        {productsSynced != null ? (
+                          <span>{productsSynced} synced</span>
                         ) : "—"}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
