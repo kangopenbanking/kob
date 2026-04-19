@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Clock, MapPin, Save, ExternalLink } from 'lucide-react';
+import { Palette, Clock, MapPin, Save, ExternalLink, Tag, Eye, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { CAMEROON_CITIES } from '@/lib/storefront-data';
+import { STORE_CATEGORIES, COUNTRY_CURRENCIES } from '@/lib/storefront-data';
+import { STOREFRONT_TEMPLATES, type StorefrontTemplateId } from '@/lib/storefront-templates';
+import { CitySelector } from '@/components/storefront/CitySelector';
+import { StorePreview } from '@/components/storefront/StorePreview';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -31,6 +34,10 @@ export default function BusinessStorefront() {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [category, setCategory] = useState('');
+  const [subCategory, setSubCategory] = useState('');
+  const [template, setTemplate] = useState<StorefrontTemplateId>('classic');
+  const [isPublished, setIsPublished] = useState(false);
   const [hours, setHours] = useState({
     monday: { open: '09:00', close: '18:00', closed: false },
     tuesday: { open: '09:00', close: '18:00', closed: false },
@@ -41,14 +48,15 @@ export default function BusinessStorefront() {
     sunday: { open: '', close: '', closed: true },
   });
 
+  const selectedCategoryObj = useMemo(() => STORE_CATEGORIES.find(c => c.name === category), [category]);
+
   useEffect(() => {
     if (!merchantId) return;
-    const init = async () => {
+    (async () => {
       const { data: merchant } = await supabase.from('gateway_merchants').select('business_name').eq('id', merchantId).single();
       if (merchant) setBusinessName(merchant.business_name || '');
       loadStorefront(merchantId);
-    };
-    init();
+    })();
   }, [merchantId]);
 
   const loadStorefront = async (mId: string) => {
@@ -58,14 +66,19 @@ export default function BusinessStorefront() {
       setDescription(data.description || '');
       setLogoUrl(data.logo_url || '');
       setCoverUrl(data.banner_url || '');
-      const brandData = data.custom_brand_json as any;
-      setPrimaryColor(brandData?.primary_color || '#7c3aed');
-      setAccentColor(brandData?.accent_color || '#c084fc');
+      setCategory(data.category || '');
+      setSubCategory(data.sub_category || '');
+      setIsPublished(!!data.is_published);
+      const brand = data.custom_brand_json as any;
+      setPrimaryColor(brand?.primary_color || '#7c3aed');
+      setAccentColor(brand?.accent_color || '#c084fc');
+      setRegion(brand?.region || 'Centre');
       setCity(data.city || '');
-      setAddress(brandData?.address || '');
-      setPhone(brandData?.phone || '');
-      setEmail(brandData?.email || '');
-      if (brandData?.operating_hours) setHours(brandData.operating_hours as any);
+      setAddress(brand?.address || '');
+      setPhone(brand?.phone || '');
+      setEmail(brand?.email || '');
+      if (brand?.template) setTemplate(brand.template);
+      if (brand?.operating_hours) setHours(brand.operating_hours as any);
     }
   };
 
@@ -77,8 +90,12 @@ export default function BusinessStorefront() {
         merchant_id: merchantId,
         store_name: tagline || businessName,
         description, logo_url: logoUrl, banner_url: coverUrl,
+        category, sub_category: subCategory,
         city, country: 'CM',
-        custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours },
+        custom_brand_json: {
+          primary_color: primaryColor, accent_color: accentColor, region, address, phone, email,
+          operating_hours: hours, template,
+        },
       });
       if (error) throw error;
       toast.success('Storefront updated');
@@ -98,8 +115,7 @@ export default function BusinessStorefront() {
   const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
     <div className="rounded-2xl border border-border/40 bg-card p-5">
       <h2 className="font-bold text-[15px] mb-4 flex items-center gap-2 text-foreground">
-        <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
-        {title}
+        <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} /> {title}
       </h2>
       {children}
     </div>
@@ -107,7 +123,6 @@ export default function BusinessStorefront() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
-      {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">
           <div>
@@ -117,17 +132,65 @@ export default function BusinessStorefront() {
           <div className="flex gap-2">
             {merchantId && (
               <Button size="sm" variant="outline" className="rounded-xl gap-1.5" onClick={() => window.open(storeUrl, '_blank')}>
-                <ExternalLink className="h-3.5 w-3.5" /> Preview
+                <ExternalLink className="h-3.5 w-3.5" /> Open
               </Button>
             )}
             <Button size="sm" className="rounded-xl gap-1.5" onClick={handleSave} disabled={loading}>
-              <Save className="h-3.5 w-3.5" /> {loading ? 'Saving...' : 'Save'}
+              <Save className="h-3.5 w-3.5" /> {loading ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </div>
       </header>
 
       <div className={cn(isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-5')}>
+        {/* Style Templates */}
+        <div className={cn(!isMobile && 'col-span-2')}>
+          <Section icon={Layout} title="Storefront Style">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {STOREFRONT_TEMPLATES.map(tpl => {
+                const Icon = tpl.icon;
+                const active = tpl.id === template;
+                return (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => setTemplate(tpl.id)}
+                    className={cn(
+                      'rounded-2xl border p-4 text-left transition-all hover:border-primary/60',
+                      active ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border/40 bg-card',
+                    )}
+                  >
+                    <Icon className={cn('h-5 w-5 mb-2', active ? 'text-primary' : 'text-muted-foreground')} strokeWidth={1.8} />
+                    <h3 className="text-sm font-bold text-foreground">{tpl.name}</h3>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{tpl.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        </div>
+
+        {/* Live Preview */}
+        <div className={cn(!isMobile && 'col-span-2')}>
+          <Section icon={Eye} title="Live Preview">
+            <div className="bg-muted/30 rounded-xl p-6 flex justify-center">
+              <StorePreview
+                storeName={tagline || businessName}
+                description={description}
+                category={category}
+                city={city}
+                country="CM"
+                currency="FCFA"
+                logoUrl={logoUrl}
+                bannerUrl={coverUrl}
+                isPublished={isPublished}
+                template={template}
+                primaryColor={primaryColor}
+              />
+            </div>
+          </Section>
+        </div>
+
         {/* Branding */}
         <Section icon={Palette} title="Branding">
           <div className="space-y-4">
@@ -141,7 +204,7 @@ export default function BusinessStorefront() {
             </div>
             <div>
               <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Description</label>
-              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell customers about your business..." rows={3} className="rounded-xl" />
+              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell customers about your business…" rows={3} className="rounded-xl" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -161,33 +224,35 @@ export default function BusinessStorefront() {
             </div>
             <div>
               <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Logo URL</label>
-              <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." className="rounded-xl" />
+              <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://…" className="rounded-xl" />
             </div>
             <div>
               <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Cover Image URL</label>
-              <Input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://..." className="rounded-xl" />
+              <Input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://…" className="rounded-xl" />
             </div>
           </div>
         </Section>
 
-        {/* Location & Contact */}
-        <Section icon={MapPin} title="Location & Contact">
+        {/* Category & Location */}
+        <Section icon={Tag} title="Category & Location">
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Region</label>
-                <select value={region} onChange={e => { setRegion(e.target.value); setCity(''); }} className="w-full h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm">
-                  {Object.keys(CAMEROON_CITIES).map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">City</label>
-                <select value={city} onChange={e => setCity(e.target.value)} className="w-full h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm">
-                  <option value="">Select city...</option>
-                  {CAMEROON_CITIES[region]?.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
+            <div>
+              <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Main Category</label>
+              <select value={category} onChange={e => { setCategory(e.target.value); setSubCategory(''); }} className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm">
+                <option value="">Select…</option>
+                {STORE_CATEGORIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
             </div>
+            {selectedCategoryObj && selectedCategoryObj.subs.length > 0 && (
+              <div>
+                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Sub-category</label>
+                <select value={subCategory} onChange={e => setSubCategory(e.target.value)} className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm">
+                  <option value="">Select…</option>
+                  {selectedCategoryObj.subs.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
+            <CitySelector region={region} city={city} onRegionChange={setRegion} onCityChange={setCity} />
             <div>
               <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Street Address</label>
               <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Rue de la Paix" className="rounded-xl" />
@@ -205,7 +270,7 @@ export default function BusinessStorefront() {
           </div>
         </Section>
 
-        {/* Operating Hours - full width */}
+        {/* Operating Hours */}
         <div className={cn(!isMobile && 'col-span-2')}>
           <Section icon={Clock} title="Operating Hours">
             <div className={cn('gap-2', isMobile ? 'space-y-2' : 'grid grid-cols-2 gap-x-6 gap-y-2')}>
