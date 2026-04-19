@@ -80,6 +80,7 @@ export default function BusinessStorefront() {
       setPhone(brandData?.phone || '');
       setEmail(brandData?.email || '');
       if (brandData?.operating_hours) setHours(brandData.operating_hours as any);
+      if (brandData?.template_id) setTemplateId(brandData.template_id as StorefrontTemplateId);
     }
   };
 
@@ -92,7 +93,7 @@ export default function BusinessStorefront() {
         store_name: tagline || businessName,
         description, logo_url: logoUrl, banner_url: coverUrl,
         city, country: 'CM',
-        custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours },
+        custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours, template_id: templateId },
       }, { onConflict: 'merchant_id' });
       if (error) throw error;
       toast.success('Storefront updated');
