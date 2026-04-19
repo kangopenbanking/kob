@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
+import { CitySelector } from '@/components/storefront/CitySelector';
 import { STOREFRONT_TEMPLATES, type StorefrontTemplateId } from '@/lib/storefront-templates';
 import { StorePreview } from '@/components/storefront/StorePreview';
 
@@ -195,11 +196,8 @@ export default function BusinessStorefront() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">City</label>
-                <select value={city} onChange={e => setCity(e.target.value)} className="w-full h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm">
-                  <option value="">Select city...</option>
-                  {CAMEROON_CITIES[region]?.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">City / Village</label>
+                <CitySelector region={region} value={city} onChange={setCity} />
               </div>
             </div>
             <div>
