@@ -1,15 +1,60 @@
-// Cameroon cities/towns by region
+// Cameroon cities/towns/villages by region — expanded to 200+ across all 10 regions
 export const CAMEROON_CITIES: Record<string, string[]> = {
-  'Centre': ['Yaoundé', 'Mbalmayo', 'Obala', 'Monatélé', 'Nanga Eboko', 'Akonolinga', 'Esse', 'Mfou', 'Soa', 'Ngoumou'],
-  'Littoral': ['Douala', 'Nkongsamba', 'Edéa', 'Loum', 'Manjo', 'Mbanga', 'Dibombari', 'Bonabéri', 'Japoma'],
-  'West': ['Bafoussam', 'Dschang', 'Mbouda', 'Foumban', 'Foumbot', 'Bangangté', 'Bandjoun', 'Bafang', 'Tonga'],
-  'Northwest': ['Bamenda', 'Kumbo', 'Ndop', 'Wum', 'Bali', 'Mbengwi', 'Fundong', 'Nkambe', 'Bafut'],
-  'Southwest': ['Buea', 'Limbe', 'Kumba', 'Tiko', 'Mamfe', 'Muyuka', 'Mutengene', 'Ekona', 'Idenau'],
-  'South': ['Ebolowa', 'Kribi', 'Sangmélima', 'Ambam', 'Lolodorf', 'Campo', 'Mvangan'],
-  'East': ['Bertoua', 'Batouri', 'Abong-Mbang', 'Yokadouma', 'Moloundou', 'Belabo', 'Doumé'],
-  'Adamawa': ['Ngaoundéré', 'Meiganga', 'Tibati', 'Banyo', 'Tignère', 'Djohong'],
-  'North': ['Garoua', 'Guider', 'Pitoa', 'Figuil', 'Lagdo', 'Tchéboa', 'Poli'],
-  'Far North': ['Maroua', 'Kousséri', 'Mokolo', 'Mora', 'Yagoua', 'Kaélé', 'Mindif', 'Maga'],
+  'Centre': [
+    'Yaoundé', 'Mbalmayo', 'Obala', 'Monatélé', 'Nanga Eboko', 'Akonolinga', 'Esse', 'Mfou', 'Soa', 'Ngoumou',
+    'Bafia', 'Mbandjock', 'Saa', 'Ntui', 'Yoko', 'Bokito', 'Ombessa', 'Ngoro', 'Nkoteng', 'Awae',
+    'Mbankomo', 'Okola', 'Lobo', 'Évodoula', 'Endom', 'Ayos', 'Eseka', 'Makak', 'Matomb',
+  ],
+  'Littoral': [
+    'Douala', 'Nkongsamba', 'Edéa', 'Loum', 'Manjo', 'Mbanga', 'Dibombari', 'Bonabéri', 'Japoma',
+    'Mélong', 'Yabassi', 'Penja', 'Njombé', 'Bonalea', 'Pouma', 'Ndobian', 'Dizangué', 'Mouanko',
+    'Bafang', 'Yingui', 'Nkondjock', 'Souza', 'Ngwei',
+  ],
+  'West': [
+    'Bafoussam', 'Dschang', 'Mbouda', 'Foumban', 'Foumbot', 'Bangangté', 'Bandjoun', 'Bafang', 'Tonga',
+    'Bafou', 'Baham', 'Bana', 'Bandja', 'Bangou', 'Batié', 'Bayangam', 'Penka-Michel', 'Santchou',
+    'Fokoué', 'Galim', 'Kekem', 'Magba', 'Massangam', 'Bagangté', 'Bansoa', 'Bansoa-Fondjomekwet',
+    'Fongo-Tongo', 'Nkong-Ni', 'Bamendjou', 'Demdeng',
+  ],
+  'Northwest': [
+    'Bamenda', 'Kumbo', 'Ndop', 'Wum', 'Bali', 'Mbengwi', 'Fundong', 'Nkambe', 'Bafut',
+    'Batibo', 'Nkwen', 'Bamendankwe', 'Belo', 'Njinikom', 'Oku', 'Mbiame', 'Tatum', 'Misaje',
+    'Ndu', 'Ako', 'Nwa', 'Jakiri', 'Babungo', 'Babanki', 'Bambili', 'Bambui', 'Mankon', 'Santa',
+    'Bafanji', 'Balikumbat',
+  ],
+  'Southwest': [
+    'Buea', 'Limbe', 'Kumba', 'Tiko', 'Mamfe', 'Muyuka', 'Mutengene', 'Ekona', 'Idenau',
+    'Bota', 'Bakassi', 'Bangem', 'Tombel', 'Loum', 'Konye', 'Toko', 'Mundemba', 'Akwaya',
+    'Eyumojock', 'Tinto', 'Nguti', 'Bamusso', 'Isangele', 'Dikome Balue', 'Mbonge', 'West Coast',
+    'Fontem', 'Wabane', 'Lebialem',
+  ],
+  'South': [
+    'Ebolowa', 'Kribi', 'Sangmélima', 'Ambam', 'Lolodorf', 'Campo', 'Mvangan',
+    'Akom II', 'Niété', 'Bipindi', 'Lokoundjé', 'Mvengue', 'Olamze', 'Meyomessala', 'Djoum',
+    'Mintom', 'Oveng', 'Zoétélé', 'Bengbis', 'Efoulan', 'Ma\'an', 'Kye-Ossi',
+  ],
+  'East': [
+    'Bertoua', 'Batouri', 'Abong-Mbang', 'Yokadouma', 'Moloundou', 'Belabo', 'Doumé',
+    'Garoua-Boulaï', 'Kentzou', 'Kette', 'Lomié', 'Mboma', 'Messamena', 'Mindourou', 'Ngoura',
+    'Nguelemendouka', 'Salapoumbé', 'Dimako', 'Mandjou', 'Mbang', 'Ndelele', 'Ouli', 'Diang',
+  ],
+  'Adamawa': [
+    'Ngaoundéré', 'Meiganga', 'Tibati', 'Banyo', 'Tignère', 'Djohong',
+    'Galim-Tignère', 'Mayo-Darlé', 'Ngaoundal', 'Bankim', 'Belel', 'Dir', 'Mbé', 'Nyambaka',
+    'Martap', 'Kontcha', 'Ngan-Ha', 'Nganha',
+  ],
+  'North': [
+    'Garoua', 'Guider', 'Pitoa', 'Figuil', 'Lagdo', 'Tchéboa', 'Poli',
+    'Bibémi', 'Rey-Bouba', 'Touboro', 'Tcholliré', 'Mayo-Oulo', 'Beka', 'Bashéo', 'Madingrin',
+    'Ngong', 'Demsa', 'Gashiga', 'Dembo', 'Bawan',
+  ],
+  'Far North': [
+    'Maroua', 'Kousséri', 'Mokolo', 'Mora', 'Yagoua', 'Kaélé', 'Mindif', 'Maga',
+    'Mokong', 'Méri', 'Bogo', 'Pétté', 'Tokombéré', 'Waza', 'Logone-Birni', 'Makary',
+    'Goulfey', 'Hile-Alifa', 'Blangoua', 'Fotokol', 'Hina', 'Mozogo', 'Koza', 'Tourou',
+    'Roua', 'Kar-Hay', 'Bourrah', 'Guéré', 'Doukoula', 'Tchatibali', 'Datcheka', 'Gobo',
+    'Wina', 'Kalfou', 'Touloum', 'Moulvoudaye', 'Moutourwa',
+  ],
 };
 
 export function getAllCitiesForCountry(countryCode: string): string[] {
