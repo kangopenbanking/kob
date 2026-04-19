@@ -90,7 +90,7 @@ export default function BusinessStorefront() {
         description, logo_url: logoUrl, banner_url: coverUrl,
         city, country: 'CM',
         custom_brand_json: { primary_color: primaryColor, accent_color: accentColor, region, address, phone, email, operating_hours: hours },
-      });
+      }, { onConflict: 'merchant_id' });
       if (error) throw error;
       toast.success('Storefront updated');
     } catch (error: any) {
