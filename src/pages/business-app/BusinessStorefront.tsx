@@ -14,6 +14,16 @@ import { getCanonicalUrl } from '@/config/api';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
 
+const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
+  <div className="rounded-2xl border border-border/40 bg-card p-5">
+    <h2 className="font-bold text-[15px] mb-4 flex items-center gap-2 text-foreground">
+      <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
+      {title}
+    </h2>
+    {children}
+  </div>
+);
+
 export default function BusinessStorefront() {
   const navigate = useNavigate();
   const { merchantId } = useMerchantContext();
@@ -96,15 +106,6 @@ export default function BusinessStorefront() {
 
   const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
 
-  const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
-    <div className="rounded-2xl border border-border/40 bg-card p-5">
-      <h2 className="font-bold text-[15px] mb-4 flex items-center gap-2 text-foreground">
-        <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
