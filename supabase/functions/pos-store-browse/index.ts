@@ -26,11 +26,13 @@ Deno.serve(async (req) => {
       const limit = parseInt(url.searchParams.get('limit') || '20');
       const offset = parseInt(url.searchParams.get('offset') || '0');
 
-      // Get merchant_ids with active subscriptions first (no FK exists between these tables)
+      // Get merchant_ids with currently-active, non-expired subscriptions.
+      // No FK exists between subscriptions and profiles, so we filter in two steps.
       const { data: activeSubs } = await supabase
         .from('pos_store_subscriptions')
         .select('merchant_id')
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .gte('expires_at', new Date().toISOString());
 
       const activeMerchantIds = (activeSubs || []).map((s: any) => s.merchant_id);
 
@@ -40,9 +42,12 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Marketplace visibility rule (must match CustomerStores.tsx):
+      //   is_published = true  AND  status = 'approved'  AND  active subscription
       let query = supabase.from('pos_store_profiles')
         .select('*', { count: 'exact' })
         .eq('is_published', true)
+        .eq('status', 'approved')
         .in('merchant_id', activeMerchantIds)
         .order('rating', { ascending: false });
 
@@ -70,7 +75,8 @@ Deno.serve(async (req) => {
         .select('*')
         .eq('merchant_id', merchantId)
         .eq('is_published', true)
-        .single();
+        .eq('status', 'approved')
+        .maybeSingle();
       if (error || !store) {
         return new Response(JSON.stringify({ error: 'store_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -93,12 +99,13 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'merchant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Verify store is published
+      // Verify store is published AND moderation-approved
       const { data: store } = await supabase.from('pos_store_profiles')
         .select('id')
         .eq('merchant_id', merchantId)
         .eq('is_published', true)
-        .single();
+        .eq('status', 'approved')
+        .maybeSingle();
       if (!store) {
         return new Response(JSON.stringify({ error: 'store_not_published' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
