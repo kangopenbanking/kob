@@ -94,7 +94,44 @@ const CustomerCart: React.FC = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const saveShipping = async (): Promise<boolean> => {
+    if (!cart) return false;
+    if (!shippingComplete) {
+      toast.error('Please complete the delivery address before paying.');
+      return false;
+    }
+    setSavingShipping(true);
+    try {
+      const { error } = await supabase.functions.invoke('pos-consumer-cart', {
+        body: {
+          action: 'set_shipping',
+          cart_id: cart.id,
+          shipping: {
+            recipient_name: recipientName,
+            phone,
+            address_line: addressLine,
+            city,
+            region,
+            country: 'CM',
+            shipping_fee: SHIPPING_FLAT_FEE,
+          },
+        },
+      });
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not save delivery address.'));
+      return false;
+    } finally {
+      setSavingShipping(false);
+    }
+  };
+
+  const startCheckout = async () => {
+    const ok = await saveShipping();
+    if (ok) setShowPin(true);
+  };
+
     if (!cart) return;
     setCheckingOut(true);
     setOrderFailed(false);
