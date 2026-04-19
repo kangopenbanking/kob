@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2, XCircle, Receipt } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2, XCircle, Receipt, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,6 +27,15 @@ const CustomerCart: React.FC = () => {
   const [orderComplete, setOrderComplete] = useState<any>(null);
   const [orderFailed, setOrderFailed] = useState(false);
   const [showPin, setShowPin] = useState(false);
+  const [savingShipping, setSavingShipping] = useState(false);
+
+  // Shipping form state — synced from cart on load
+  const [recipientName, setRecipientName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
+  const SHIPPING_FLAT_FEE = 1500; // XAF — standard delivery flat rate
 
   const walletBalance = balances.find((b: any) => b.balance_type === 'ClosingAvailable')?.amount || 0;
 
@@ -44,6 +55,13 @@ const CustomerCart: React.FC = () => {
         .limit(1)
         .maybeSingle();
       setCart(data);
+      if (data) {
+        setRecipientName(data.shipping_recipient_name || '');
+        setPhone(data.shipping_phone || '');
+        setAddressLine(data.shipping_address_line || '');
+        setCity(data.shipping_city || '');
+        setRegion(data.shipping_region || '');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,8 +71,10 @@ const CustomerCart: React.FC = () => {
 
   const items = cart?.pos_consumer_cart_items || [];
   const subtotal = items.reduce((s: number, i: any) => s + i.unit_price * i.quantity, 0);
-  const taxes = Math.round(subtotal * 0.0); // No tax for now
-  const total = subtotal + taxes;
+  const shippingFee = items.length > 0 && addressLine ? SHIPPING_FLAT_FEE : 0;
+  const taxes = 0;
+  const total = subtotal + taxes + shippingFee;
+  const shippingComplete = !!(recipientName && phone && addressLine && city);
 
   const updateQuantity = async (itemId: string, newQty: number) => {
     try {
