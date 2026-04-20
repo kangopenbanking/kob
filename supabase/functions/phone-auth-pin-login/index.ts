@@ -125,10 +125,21 @@ serve(async (req) => {
         );
       }
 
-      // Generate magic link and verify server-side to get a real session
+      // Generate magic link and verify server-side to get a real session.
       // Prefer the auth user's actual email; fall back to the canonical
-      // {user_id}@temp.kob.cm placeholder used by all newly-provisioned accounts.
-      const userEmail = authData.user.email || `${profile.id}@temp.kob.cm`;
+      // {kang_id}@kang.id placeholder used by all newly-provisioned accounts.
+      let userEmail = authData.user.email as string | undefined;
+      if (!userEmail) {
+        const { data: kangRow } = await supabase
+          .from('profiles')
+          .select('kang_id')
+          .eq('id', profile.id)
+          .maybeSingle();
+        const kangId = (kangRow as any)?.kang_id as string | undefined;
+        userEmail = kangId
+          ? `${kangId.toLowerCase()}@kang.id`
+          : `${profile.id}@kang.id`;
+      }
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'magiclink',
         email: userEmail,

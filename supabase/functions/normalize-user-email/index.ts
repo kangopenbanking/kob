@@ -3,13 +3,20 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 /**
  * Normalizes the authenticated user's email to the canonical
- * `{kang_id}@temp.kob.cm` placeholder, but ONLY when the current email is
- * itself a temp placeholder (i.e. ends with `@temp.kob.cm`). Real customer
+ * `{kang_id}@kang.id` placeholder, but ONLY when the current email is itself a
+ * placeholder (legacy `@temp.kob.cm` or current `@kang.id`). Real customer
  * email addresses are never modified.
  *
  * The KANG ID is auto-assigned by a DB trigger when the profile row is
  * inserted, so it is always present by the time this function is invoked.
  */
+const PLACEHOLDER_DOMAINS = ['@kang.id', '@temp.kob.cm'];
+
+function isPlaceholder(email: string): boolean {
+  const e = email.toLowerCase();
+  return PLACEHOLDER_DOMAINS.some((d) => e.endsWith(d));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -41,7 +48,7 @@ Deno.serve(async (req) => {
     }
 
     const currentEmail = (user.email || '').toLowerCase();
-    if (!currentEmail.endsWith('@temp.kob.cm')) {
+    if (currentEmail && !isPlaceholder(currentEmail)) {
       return new Response(JSON.stringify({ normalized: false, reason: 'real_email' }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -63,7 +70,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const canonical = `${kangId.toLowerCase()}@temp.kob.cm`;
+    const canonical = `${kangId.toLowerCase()}@kang.id`;
     if (currentEmail === canonical) {
       return new Response(JSON.stringify({ normalized: false, reason: 'already_canonical', kang_id: kangId }), {
         status: 200,

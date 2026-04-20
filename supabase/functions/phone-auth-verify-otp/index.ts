@@ -111,10 +111,11 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Use a phone-derived placeholder for initial signup; we'll rewrite to
-      // the canonical {user_id}@temp.kob.cm placeholder right after createUser
-      // so the email is unique and stable per account.
-      const userEmail = email || `${phone_number.replace(/[^0-9]/g, '')}@temp.kob.cm`;
+      // Use a phone-derived bootstrap placeholder for initial signup; we'll
+      // rewrite it to the canonical {kang_id}@kang.id placeholder right after
+      // createUser so the email is unique, stable, and tied to the user's
+      // permanent KANG ID. The `temp.kob.cm` domain is no longer used.
+      const userEmail = email || `${phone_number.replace(/[^0-9]/g, '')}@kang.id`;
 
       // Pre-check if phone already exists; if yes, treat as login
       let targetUserId: string | undefined;
@@ -196,7 +197,7 @@ Deno.serve(async (req) => {
         authData = signupData;
         targetUserId = signupData.user.id;
 
-        // Normalize placeholder email to {kang_id}@temp.kob.cm so it is unique,
+        // Normalize placeholder email to {kang_id}@kang.id so it is unique,
         // human-friendly and tied to the user's permanent KANG ID. The KANG ID
         // is auto-assigned by a DB trigger when handle_new_user inserts the
         // profile row, so it is always available here.
@@ -209,7 +210,7 @@ Deno.serve(async (req) => {
 
           const kangId = (kangRow as any)?.kang_id as string | undefined;
           if (kangId) {
-            const canonicalEmail = `${kangId.toLowerCase()}@temp.kob.cm`;
+            const canonicalEmail = `${kangId.toLowerCase()}@kang.id`;
             const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(
               targetUserId,
               { email: canonicalEmail, email_confirm: true }

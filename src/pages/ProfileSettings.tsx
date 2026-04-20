@@ -440,13 +440,13 @@ export default function ProfileSettings() {
             Email Address
           </CardTitle>
           <CardDescription>
-            {profile?.email && !profile.email.includes('@temp.kob.cm')
+            {profile?.email && !/@(kang\.id|temp\.kob\.cm)$/i.test(profile.email)
               ? 'Your email address for notifications' 
               : 'Add an email address for notifications (optional)'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {profile?.email && !profile.email.includes('@temp.kob.cm') ? (
+          {profile?.email && !/@(kang\.id|temp\.kob\.cm)$/i.test(profile.email) ? (
             <div className="space-y-2">
               <Label>Current Email</Label>
               <Input value={profile.email} disabled />
@@ -458,7 +458,7 @@ export default function ProfileSettings() {
                 <Input
                   type="email"
                   placeholder="your@email.com"
-                  value={profile?.email?.includes('@temp.kob.cm') ? '' : profile?.email || ''}
+                  value={profile?.email && /@(kang\.id|temp\.kob\.cm)$/i.test(profile.email) ? '' : profile?.email || ''}
                   onChange={async (e) => {
                     const newEmail = e.target.value;
                     if (newEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
