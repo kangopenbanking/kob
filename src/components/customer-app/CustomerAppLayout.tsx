@@ -12,6 +12,7 @@ import { SessionGuard } from '@/components/auth/SessionGuard';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 import { HealthBanner } from '@/components/HealthBanner';
 import { useConsumerWebhookEvents } from '@/hooks/useConsumerWebhookEvents';
+import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 
 const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
@@ -44,6 +45,7 @@ const CustomerAppInner: React.FC = () => {
       } as React.CSSProperties}
     >
       <HealthBanner />
+      <TranslationHarvester category="customer" />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-20">
           <Outlet />
