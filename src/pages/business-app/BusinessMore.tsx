@@ -191,7 +191,13 @@ const BusinessMore: React.FC = () => {
     {
       title: 'Other Apps',
       items: [
-        { icon: Building2, label: 'Banking App', subtitle: 'Access your bank accounts', path: '/bank', color: 'bg-violet-500/10 text-violet-600' },
+        { icon: Building2, label: 'Banking App', subtitle: 'Browse banking institutions', path: '/apps', color: 'bg-violet-500/10 text-violet-600' },
+      ],
+    },
+    {
+      title: 'Danger Zone',
+      items: [
+        { icon: Trash2, label: 'Delete Account', subtitle: 'Permanently remove your business and data', action: () => setShowDeleteDialog(true), color: 'bg-rose-500/10 text-rose-600' },
       ],
     },
   ];
