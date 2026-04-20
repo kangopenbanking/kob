@@ -98,7 +98,50 @@ export default function MerchantSettlements() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Settlements</h1><p className="text-muted-foreground">Settlement batches and breakdowns</p></div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Settlements</h1>
+          <p className="text-muted-foreground">Settlement batches and breakdowns</p>
+        </div>
+        <Button onClick={settleNow} disabled={settlingNow} variant="outline">
+          {settlingNow ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+          Settle Now
+        </Button>
+      </div>
+
+      {/* Settlement cycle */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Settlement Cycle</CardTitle>
+          <CardDescription>Choose how often pending funds are released to your available balance.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={cycle} onValueChange={updateCycle} disabled={savingCycle}>
+              <SelectTrigger className="w-full sm:w-[280px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CYCLE_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {savingCycle && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {CYCLE_OPTIONS.find(o => o.value === cycle)?.description}
+          </p>
+          {cycle === "instant" && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-600 shrink-0" />
+              <span className="text-foreground">
+                Instant settlement runs every minute and may incur additional payout-rail fees. Daily is recommended for most merchants.
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
