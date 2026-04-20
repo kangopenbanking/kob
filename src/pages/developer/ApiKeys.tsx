@@ -71,29 +71,15 @@ export default function ApiKeys() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const profileQuery = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', user.id)
-        .single();
-
-      const profile = profileQuery.data;
-      const userEmail = profile?.email || user.email;
-      
-      // Query all api_clients and filter client-side since developer_email field may not exist yet
-      const clientsQuery: any = await supabase
+      // RLS-scoped query: developers see only their own apps via developer_user_id policy
+      const { data, error } = await supabase
         .from('api_clients')
         .select('*')
+        .eq('developer_user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (clientsQuery.error) throw clientsQuery.error;
-      
-      // Filter for current user's email
-      const userClients = (clientsQuery.data || []).filter((client: any) => 
-        client.developer_email === userEmail
-      );
-      
-      setApiKeys(userClients as ApiClient[]);
+      if (error) throw error;
+      setApiKeys((data || []) as ApiClient[]);
     } catch (error) {
       console.error('Error loading API keys:', error);
       toast({
