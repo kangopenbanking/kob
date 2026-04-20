@@ -12,6 +12,17 @@ const PWA_ALLOWED_PREFIXES = [
   '/pay/',
   '/setup-pin',
   '/biz',
+  // Post-login routing: DashboardRouter resolves the user's role and forwards
+  // them to the correct portal. These destinations must remain reachable in
+  // PWA standalone mode so role-based redirects do not get bounced back.
+  '/dashboard',
+  '/admin',
+  '/merchant',
+  '/fi-portal',
+  '/developer',
+  '/credit-score',
+  '/pending-approval',
+  '/auth',
 ] as const;
 
 /**
