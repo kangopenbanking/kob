@@ -34,7 +34,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { user_id, institution_id, type, title, message, icon, metadata } = body;
+    const {
+      user_id, institution_id, type, title, message, icon, metadata,
+      // Optional bilingual payloads — if provided we localize the push.
+      title_fr, message_fr, locale: explicitLocale,
+    } = body;
 
     if (!user_id || !title || !message) {
       return new Response(
@@ -43,17 +47,35 @@ serve(async (req) => {
       );
     }
 
-    // Insert notification into database
+    // Resolve recipient locale: explicit override -> user_preferences -> 'en'
+    let recipientLocale: 'en' | 'fr' = 'en';
+    if (explicitLocale === 'fr' || explicitLocale === 'en') {
+      recipientLocale = explicitLocale;
+    } else {
+      const { data: pref } = await supabase
+        .from('user_preferences')
+        .select('language')
+        .eq('user_id', user_id)
+        .maybeSingle();
+      if (pref?.language === 'fr' || pref?.language === 'en') {
+        recipientLocale = pref.language as 'en' | 'fr';
+      }
+    }
+
+    // Insert notification into database (use the recipient's locale for the stored copy)
+    const storedTitle = recipientLocale === 'fr' && title_fr ? title_fr : title;
+    const storedMessage = recipientLocale === 'fr' && message_fr ? message_fr : message;
+
     const { data: notification, error: insertError } = await supabase
       .from("app_notifications")
       .insert({
         user_id,
         institution_id: institution_id || null,
         type: type || "info",
-        title,
-        message,
+        title: storedTitle,
+        message: storedMessage,
         icon: icon || "default",
-        metadata: metadata || {},
+        metadata: { ...(metadata || {}), locale: recipientLocale },
       })
       .select()
       .single();
@@ -73,6 +95,8 @@ serve(async (req) => {
         institution_id,
         title,
         message,
+        title_fr,
+        message_fr,
         type: type || "info",
         notificationId: notification.id,
       });
@@ -116,6 +140,8 @@ async function sendOneSignalPush(
     institution_id?: string;
     title: string;
     message: string;
+    title_fr?: string;
+    message_fr?: string;
     type: string;
     notificationId: string;
   }
@@ -131,11 +157,18 @@ async function sendOneSignalPush(
     );
   }
 
+  // Build per-locale payloads. OneSignal picks the recipient's locale automatically
+  // when multiple language keys are provided in headings/contents.
+  const headings: Record<string, string> = { en: params.title };
+  const contents: Record<string, string> = { en: params.message };
+  if (params.title_fr)   headings.fr = params.title_fr;
+  if (params.message_fr) contents.fr = params.message_fr;
+
   const payload: Record<string, unknown> = {
     app_id: appId,
     filters,
-    headings: { en: params.title },
-    contents: { en: params.message },
+    headings,
+    contents,
     data: {
       notification_id: params.notificationId,
       type: params.type,
@@ -144,6 +177,27 @@ async function sendOneSignalPush(
     // Chrome/Firefox web push icon
     chrome_web_icon: "https://kangopenbanking.com/favicon.png",
   };
+
+  try {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${restApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("OneSignal push failed:", errBody);
+    } else {
+      console.log("OneSignal push sent for user:", params.user_id);
+    }
+  } catch (err) {
+    console.error("OneSignal push error:", err);
+  }
+}
 
   try {
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
