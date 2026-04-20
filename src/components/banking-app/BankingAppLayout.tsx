@@ -15,6 +15,7 @@ import { HealthBanner } from '@/components/HealthBanner';
 import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { loadAppNamespaces } from '@/lib/i18n/i18next';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -22,6 +23,9 @@ const BankingAppInner: React.FC = () => {
   const queryClient = useQueryClient();
   const tenant = useTenant();
   useAppCacheClear();
+
+  // Per-app namespace scoping: Banking loads only general+auto+banking bundles.
+  useEffect(() => { void loadAppNamespaces('banking'); }, []);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

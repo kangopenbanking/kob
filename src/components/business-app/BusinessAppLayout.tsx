@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
+import { loadAppNamespaces } from '@/lib/i18n/i18next';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { motion } from 'framer-motion';
@@ -133,6 +134,9 @@ const BusinessBottomNav: React.FC = () => {
 /* ── Inner wrapper ─────────────────────────────────────────── */
 const BusinessAppInner: React.FC = () => {
   const queryClient = useQueryClient();
+
+  // Per-app namespace scoping: Business loads only general+auto+business bundles.
+  useEffect(() => { void loadAppNamespaces('business'); }, []);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
