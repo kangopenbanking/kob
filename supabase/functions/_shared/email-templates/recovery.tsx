@@ -4,30 +4,32 @@ import {
   Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { recovery as R, pickLocale } from './i18n.ts'
 
-interface RecoveryEmailProps { siteName: string; confirmationUrl: string }
+interface RecoveryEmailProps { siteName: string; confirmationUrl: string; locale?: 'en' | 'fr' }
 
-export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Reset your password — Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>Reset your password</Heading>
-        <Text style={text}>
-          We received a request to reset your Kang Open Banking account password. Click the button below to choose a new password.
-        </Text>
-        <Button style={button} href={confirmationUrl}>Reset Password</Button>
-        <Section style={divider} />
-        <Text style={footer}>If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const RecoveryEmail = ({ confirmationUrl, locale }: RecoveryEmailProps) => {
+  const L = R[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>{L.body}</Text>
+          <Button style={button} href={confirmationUrl}>{L.cta}</Button>
+          <Section style={divider} />
+          <Text style={footer}>{L.ignore}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default RecoveryEmail
 

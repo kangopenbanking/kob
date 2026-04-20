@@ -4,33 +4,37 @@ import {
   Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { emailChange as E, pickLocale } from './i18n.ts'
 
-interface EmailChangeEmailProps { siteName: string; email: string; newEmail: string; confirmationUrl: string }
+interface EmailChangeEmailProps { siteName: string; email: string; newEmail: string; confirmationUrl: string; locale?: 'en' | 'fr' }
 
-export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email change — Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your Kang account email from{' '}
-          <Link href={`mailto:${email}`} style={link}>{email}</Link> to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
-        </Text>
-        <Text style={text}>Click the button below to confirm this change:</Text>
-        <Button style={button} href={confirmationUrl}>Confirm Email Change</Button>
-        <Section style={divider} />
-        <Text style={footer}>If you didn't request this change, please secure your account immediately.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const EmailChangeEmail = ({ email, newEmail, confirmationUrl, locale }: EmailChangeEmailProps) => {
+  const L = E[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>
+            {L.intro}{' '}
+            <Link href={`mailto:${email}`} style={link}>{email}</Link> {L.to}{' '}
+            <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
+          </Text>
+          <Text style={text}>{L.clickToConfirm}</Text>
+          <Button style={button} href={confirmationUrl}>{L.cta}</Button>
+          <Section style={divider} />
+          <Text style={footer}>{L.secure}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default EmailChangeEmail
 
