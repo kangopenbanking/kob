@@ -23332,6 +23332,11 @@ export type Database = {
         }
         Returns: Json
       }
+      increment_qr_payment: {
+        Args: { _amount: number; _qr_id: string }
+        Returns: undefined
+      }
+      increment_qr_scan: { Args: { _qr_id: string }; Returns: undefined }
       increment_remittance_usage: {
         Args: {
           _amount: number
