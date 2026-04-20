@@ -21,6 +21,11 @@ import {
 const UnifiedBusinessInner: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { merchantId } = useMerchantContext();
+
+  // Layout-level realtime: every page in /biz reacts live to orders, payments,
+  // wallet, payouts, catalog, inventory, storefront, coupons, staff & disputes.
+  useMerchantRealtime(merchantId);
 
   // Persistently swap manifest to business-specific PWA config
   useEffect(() => {
@@ -75,9 +80,11 @@ const UnifiedBusinessInner: React.FC = () => {
 export const UnifiedBusinessLayout: React.FC = () => {
   return (
     <SessionGuard logoutPath="/biz/auth" appName="Kang Business" appContext="biz">
-      <TenantProvider>
-        <UnifiedBusinessInner />
-      </TenantProvider>
+      <BusinessAppAuthGuard>
+        <TenantProvider>
+          <UnifiedBusinessInner />
+        </TenantProvider>
+      </BusinessAppAuthGuard>
     </SessionGuard>
   );
 };
