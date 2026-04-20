@@ -53,6 +53,10 @@ const BankQRPay: React.FC = () => {
   /* ─── QR Scan Detection ─── */
   const handleScanDetected = useCallback((data: any) => {
     if (data.type === 'kob_store' && data.merchant_id) {
+      if (data.v === 2 && data.pay_enabled && data.pay?.decoded) {
+        setStoreChoice(data);
+        return;
+      }
       toast.success('Store found! Redirecting you to the store page...');
       navigate(`/app/stores/${data.merchant_id}`);
       return;
