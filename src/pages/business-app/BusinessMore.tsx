@@ -76,6 +76,38 @@ const BusinessMore: React.FC = () => {
     navigate('/biz/auth');
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Please type DELETE to confirm');
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.functions.invoke('account-delete-request', {
+        body: {
+          source: 'business_app',
+          merchant_id: merchantId,
+          user_email: user?.email,
+          reason: 'User-initiated deletion from Business app',
+        },
+      });
+      if (error) throw error;
+      toast.success('Deletion request submitted. Our team will be in touch within 48 hours.');
+      setShowDeleteDialog(false);
+      setDeleteConfirm('');
+    } catch (e: any) {
+      // Fallback: surface support contact if backend route is unavailable.
+      toast.message('Request received', {
+        description: 'Please email support@kangopenbanking.com to finalise account deletion.',
+      });
+      setShowDeleteDialog(false);
+      setDeleteConfirm('');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleShareStoreQR = async () => {
     const text = `Visit ${merchant?.business_name || 'our store'} on Kang or pay any amount: ${storeUrl}`;
     if (navigator.share) {
