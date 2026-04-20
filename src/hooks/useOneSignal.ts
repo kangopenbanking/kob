@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 declare global {
   interface Window {
@@ -14,10 +15,14 @@ declare global {
  */
 export function useOneSignal(institutionId?: string) {
   const registered = useRef(false);
+  // Read current language so push targeting can localize per recipient.
+  // Falls back gracefully if Provider isn't mounted (e.g. unit tests).
+  let language: 'en' | 'fr' = 'en';
+  try {
+    language = useLanguage().language as 'en' | 'fr';
+  } catch { /* no provider in this tree */ }
 
   useEffect(() => {
-    if (registered.current) return;
-
     const register = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -31,14 +36,18 @@ export function useOneSignal(institutionId?: string) {
             return;
           }
 
-          // Login with external user id for cross-device targeting
-          await OneSignal.login(user.id);
+          // Login with external user id for cross-device targeting (idempotent)
+          if (!registered.current) {
+            await OneSignal.login(user.id);
+          }
 
-          // Set tags for multi-tenancy filtering — guard User namespace
+          // Set tags for multi-tenancy filtering + locale targeting.
+          // We re-emit on every language change so the language tag stays current.
           if (OneSignal.User && typeof OneSignal.User.addTags === 'function') {
             const tags: Record<string, string> = {
               user_id: user.id,
               email: user.email || '',
+              language,           // 'en' | 'fr' — used by push-notification fn for headings/contents
             };
 
             if (institutionId) {
@@ -51,11 +60,11 @@ export function useOneSignal(institutionId?: string) {
           registered.current = true;
         } catch (err) {
           // Silently handle — OneSignal failures should not break the app
-          console.warn('[OneSignal] Registration skipped:', err?.message || err);
+          console.warn('[OneSignal] Registration skipped:', (err as any)?.message || err);
         }
       });
     };
 
     register();
-  }, [institutionId]);
+  }, [institutionId, language]);
 }
