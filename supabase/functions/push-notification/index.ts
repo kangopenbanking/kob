@@ -199,26 +199,6 @@ async function sendOneSignalPush(
   }
 }
 
-  try {
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${restApiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errBody = await response.text();
-      console.error("OneSignal push failed:", errBody);
-    } else {
-      console.log("OneSignal push sent for user:", params.user_id);
-    }
-  } catch (err) {
-    console.error("OneSignal push error:", err);
-  }
-}
 
 // ── Pusher Batch ────────────────────────────────────────────────
 async function triggerPusherBatch(
