@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations as staticTranslations } from "@/lib/i18n/translations";
+import { scanAllSourceStrings, type ScanReport } from "@/lib/i18n/sourceStringScanner";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -398,41 +399,51 @@ export default function TranslationManager() {
 
   const handleScanAllStrings = async () => {
     setScanning(true);
+    setScanReport(null);
     try {
+      // ---------- Stage 1: scan static dictionary --------------------------
       const enStrings = staticTranslations.en;
-      const allKeys = Object.keys(enStrings) as (keyof typeof enStrings)[];
-      
-      const batch = allKeys.map((key) => {
+      const dictBatch = (Object.keys(enStrings) as (keyof typeof enStrings)[]).map((key) => {
         const keyStr = String(key);
-        const category = keyStr.includes('.')
-          ? keyStr.split('.')[0]
-          : inferCategory(keyStr);
-        return {
-          key: keyStr,
-          default_value: enStrings[key],
-          category,
-        };
+        const category = keyStr.includes('.') ? keyStr.split('.')[0] : inferCategory(keyStr);
+        return { key: keyStr, default_value: enStrings[key], category };
       });
 
-      // Send in chunks of 50
+      // ---------- Stage 2: deep-scan source code (every .tsx/.ts) ----------
+      const report = scanAllSourceStrings();
+      const sourceBatch = report.strings.map((s) => ({
+        key: s.key,
+        default_value: s.default_value,
+        category: s.category,
+        context: s.context,
+      }));
+
+      const allBatch = [...dictBatch, ...sourceBatch];
+
+      // ---------- Stage 3: register in chunks of 50 ------------------------
       let totalRegistered = 0;
       const chunkSize = 50;
-      for (let i = 0; i < batch.length; i += chunkSize) {
-        const chunk = batch.slice(i, i + chunkSize);
+      for (let i = 0; i < allBatch.length; i += chunkSize) {
+        const chunk = allBatch.slice(i, i + chunkSize);
         const { data, error } = await supabase.functions.invoke('register-translation-strings', {
           body: { strings: chunk },
         });
-        if (error) throw error;
+        if (error) {
+          console.error("Register batch error:", error);
+          continue; // keep going on partial failure
+        }
         totalRegistered += data?.registered || 0;
       }
 
-      if (totalRegistered > 0) {
-        toast({ title: "Scan Complete", description: `${totalRegistered} new strings registered` });
-      } else {
-        toast({ title: "All Synced", description: "All strings are already in the database" });
-      }
+      // ---------- Stage 4: surface a useful report -------------------------
+      setScanReport(report);
+      toast({
+        title: "Scan & Sync Complete",
+        description: `${totalRegistered} new strings registered. Scanned ${report.filesScanned} files, found ${report.uniqueStrings} unique source strings. Auto-translation runs in the background.`,
+      });
       fetchData();
     } catch (e: any) {
+      console.error("Scan error:", e);
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
     } finally {
       setScanning(false);
