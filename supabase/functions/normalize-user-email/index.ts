@@ -1,0 +1,85 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { corsHeaders } from "../_shared/cors.ts";
+
+/**
+ * Normalizes the authenticated user's email to the canonical
+ * `{user_id}@temp.kob.cm` placeholder, but ONLY when the current email is
+ * itself a temp placeholder (i.e. ends with `@temp.kob.cm`). Real customer
+ * email addresses are never modified.
+ *
+ * This is invoked from client signup flows that cannot know the user id
+ * before calling supabase.auth.signUp.
+ */
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Missing bearer token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const currentEmail = (user.email || '').toLowerCase();
+    if (!currentEmail.endsWith('@temp.kob.cm')) {
+      return new Response(JSON.stringify({ normalized: false, reason: 'real_email' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const canonical = `${user.id}@temp.kob.cm`;
+    if (currentEmail === canonical) {
+      return new Response(JSON.stringify({ normalized: false, reason: 'already_canonical' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { error: updErr } = await supabase.auth.admin.updateUserById(user.id, {
+      email: canonical,
+      email_confirm: true,
+    });
+
+    if (updErr) {
+      console.error('normalize-user-email update failed:', updErr);
+      return new Response(JSON.stringify({ error: updErr.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    await supabase.from('profiles').update({ email: canonical }).eq('id', user.id);
+
+    return new Response(JSON.stringify({ normalized: true, email: canonical }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (err: any) {
+    console.error('normalize-user-email error:', err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

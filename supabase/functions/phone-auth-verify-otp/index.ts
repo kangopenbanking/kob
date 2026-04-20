@@ -111,6 +111,9 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Use a phone-derived placeholder for initial signup; we'll rewrite to
+      // the canonical {user_id}@temp.kob.cm placeholder right after createUser
+      // so the email is unique and stable per account.
       const userEmail = email || `${phone_number.replace(/[^0-9]/g, '')}@temp.kob.cm`;
 
       // Pre-check if phone already exists; if yes, treat as login
@@ -192,6 +195,23 @@ Deno.serve(async (req) => {
 
         authData = signupData;
         targetUserId = signupData.user.id;
+
+        // Normalize placeholder email to {user_id}@temp.kob.cm so it is unique
+        // and stable for the lifetime of the account. Skip if a real email was
+        // provided by the user at signup.
+        if (!email && targetUserId) {
+          const canonicalEmail = `${targetUserId}@temp.kob.cm`;
+          const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(
+            targetUserId,
+            { email: canonicalEmail, email_confirm: true }
+          );
+          if (emailUpdateError) {
+            console.warn('Failed to normalize placeholder email (non-blocking):', emailUpdateError);
+          } else {
+            await supabase.from('profiles').update({ email: canonicalEmail }).eq('id', targetUserId);
+          }
+        }
+
         console.log(`User created successfully: ${phone_number}`);
       }
 

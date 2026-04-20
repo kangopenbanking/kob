@@ -126,7 +126,9 @@ serve(async (req) => {
       }
 
       // Generate magic link and verify server-side to get a real session
-      const userEmail = authData.user.email || `${phone_number.replace('+', '')}@temp.kob.cm`;
+      // Prefer the auth user's actual email; fall back to the canonical
+      // {user_id}@temp.kob.cm placeholder used by all newly-provisioned accounts.
+      const userEmail = authData.user.email || `${profile.id}@temp.kob.cm`;
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'magiclink',
         email: userEmail,
