@@ -282,6 +282,9 @@ verify_jwt = false
 [functions.firebase-phone-verify]
 verify_jwt = false
 
+[functions.i18n-bundle]
+verify_jwt = false
+
 [functions.flutterwave-bank-transfer]
 verify_jwt = false
 
