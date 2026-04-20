@@ -19,27 +19,27 @@ const CustomerRequest: React.FC = () => {
   const [generated, setGenerated] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Derive the user's account ID for the QR code
-  const accountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
+  // Use the user's permanent KANG ID as the receiving identifier
+  const kangId = user?.kangId || '';
   const displayName = profile?.full_name || profile?.phone_number || 'User';
 
-  // Build payment request data
+  // Build payment request data using KANG ID
   const paymentData = useMemo(() => JSON.stringify({
     type: 'kob_pay',
-    account: accountId,
+    kang_id: kangId,
     ...(amount ? { amount: Number(amount) } : {}),
     name: displayName,
-  }), [accountId, amount, displayName]);
+  }), [kangId, amount, displayName]);
 
   // Build a shareable payment link
   const payLink = useMemo(() => {
     const base = API_CONFIG.SITE_URL;
     const params = new URLSearchParams({
-      to: accountId,
+      to: kangId,
       ...(amount ? { amt: amount } : {}),
     });
     return `${base}/app/transfer?${params.toString()}`;
-  }, [accountId, amount]);
+  }, [kangId, amount]);
 
   const handleGenerate = () => {
     if (!amount) return;
@@ -58,7 +58,7 @@ const CustomerRequest: React.FC = () => {
   };
 
   const handleShare = async () => {
-    const shareText = `Pay me ${Number(amount).toLocaleString()} XAF via KOB\nAccount: ${accountId}\n\n${payLink}`;
+    const shareText = `Pay me ${Number(amount).toLocaleString()} XAF via KOB\nKANG ID: ${kangId}\n\n${payLink}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -116,11 +116,11 @@ const CustomerRequest: React.FC = () => {
             </div>
 
             {/* Account Info */}
-            {accountId && (
+            {kangId && (
               <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Receiving Account</p>
-                  <p className="font-mono text-sm font-bold text-foreground mt-0.5">{accountId}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Your KANG ID</p>
+                  <p className="font-mono text-sm font-bold text-foreground mt-0.5">{kangId}</p>
                 </div>
               </div>
             )}
@@ -147,7 +147,7 @@ const CustomerRequest: React.FC = () => {
                 <p className="text-xs font-semibold text-[hsl(150,40%,35%)]">Payment Request Created</p>
               </div>
               <p className="text-2xl font-bold text-foreground">{Number(amount).toLocaleString()} XAF</p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">{accountId}</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">{kangId}</p>
             </div>
 
             {/* Share Options */}

@@ -11,7 +11,7 @@ interface KangIdBadgeProps {
 }
 
 /**
- * Read-only display of a user's permanent KANG ID with copy-to-clipboard.
+ * Read-only display of a user's permanent KANG ID (KANG-XXXXXXXX) with copy-to-clipboard.
  * Use `inline` for headers/lists; use `card` for prominent profile placement.
  */
 export function KangIdBadge({ kangId, variant = "inline", className }: KangIdBadgeProps) {
