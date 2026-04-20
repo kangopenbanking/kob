@@ -34,6 +34,7 @@ const BankingAppInner: React.FC = () => {
     >
       <HealthBanner />
       <OfflineIndicator />
+      <TranslationHarvester category="banking" />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-16">
           <Outlet />
