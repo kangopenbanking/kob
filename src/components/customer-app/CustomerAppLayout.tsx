@@ -14,6 +14,8 @@ import { HealthBanner } from '@/components/HealthBanner';
 import { useConsumerWebhookEvents } from '@/hooks/useConsumerWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { loadAppNamespaces } from '@/lib/i18n/i18next';
+import { useEffect } from 'react';
 
 const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
@@ -21,6 +23,9 @@ const CustomerAppInner: React.FC = () => {
   const { user } = useCustomerAuth();
   const tenant = useCustomerTenant();
   useAppCacheClear();
+
+  // Per-app namespace scoping: Consumer loads only general+auto+customer bundles.
+  useEffect(() => { void loadAppNamespaces('customer'); }, []);
 
   useOneSignal(undefined);
   useRealtimeBalanceSync(user?.id);

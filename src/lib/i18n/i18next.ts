@@ -25,10 +25,21 @@ import { translations as staticTranslations } from './translations';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const BUNDLE_URL = `${SUPABASE_URL}/functions/v1/i18n-bundle`;
 
-// Namespaces correspond to translation_strings.category values used by the
-// harvester (TranslationHarvester `category` prop). `auto` is the catch-all
-// for runtime-discovered strings; `general` for the legacy static keys.
-const NAMESPACES = ['general', 'auto', 'customer', 'business', 'banking'];
+// All known namespaces (translation_strings.category values).
+// `auto` = harvester catch-all, `general` = legacy static keys.
+export const ALL_NAMESPACES = ['general', 'auto', 'customer', 'business', 'banking'] as const;
+export type Namespace = typeof ALL_NAMESPACES[number];
+
+// Per-app namespace scoping — keeps bundles small.
+export const APP_NAMESPACES: Record<string, Namespace[]> = {
+  customer: ['general', 'auto', 'customer'],
+  business: ['general', 'auto', 'business'],
+  banking:  ['general', 'auto', 'banking'],
+  all:      [...ALL_NAMESPACES],
+};
+
+// Default load set: everything (safe for shared layouts / admin).
+const NAMESPACES = [...ALL_NAMESPACES];
 
 // Seed `general` namespace from the static translations file so legacy
 // TranslationKey lookups work instantly on first paint (zero FOUT for known keys).
@@ -102,10 +113,33 @@ export async function reloadAll(lang: string) {
 }
 
 /** Switch language and ensure all namespaces are loaded. */
-export async function switchLanguage(lang: 'en' | 'fr') {
+export async function switchLanguage(lang: 'en' | 'fr', namespaces: readonly string[] = NAMESPACES) {
   await initI18n(lang);
   await i18n.changeLanguage(lang);
-  await i18n.loadNamespaces(NAMESPACES);
+  await i18n.loadNamespaces(namespaces as string[]);
+}
+
+/** Load a specific app's namespace subset on demand (per-app scoping). */
+export async function loadAppNamespaces(app: keyof typeof APP_NAMESPACES) {
+  if (!i18n.isInitialized) return;
+  await i18n.loadNamespaces(APP_NAMESPACES[app] as string[]);
+}
+
+/**
+ * Plural helper. Uses i18next's built-in CLDR plural rules.
+ * Usage in DB: register two keys `key_one` and `key_other` (i18next convention).
+ *   t('cart.items', { count: 1 })  → "1 item"
+ *   t('cart.items', { count: 5 })  → "5 items"
+ */
+export function tPlural(key: string, count: number, opts: Record<string, unknown> = {}): string {
+  if (!i18n.isInitialized) return String(count);
+  return i18n.t(key, { count, ...opts, defaultValue: '' }) as string;
+}
+
+/** Interpolation helper: t('hi', { name: 'Ada' }) → "Hi, Ada" */
+export function tInterp(key: string, vars: Record<string, unknown>): string {
+  if (!i18n.isInitialized) return key;
+  return i18n.t(key, { ...vars, defaultValue: '' }) as string;
 }
 
 export { i18n };
