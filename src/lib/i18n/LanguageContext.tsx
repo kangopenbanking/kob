@@ -14,15 +14,37 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 // Batch queue for auto-registering missing keys
 let pendingKeys: { key: string; default_value: string; category: string }[] = [];
 let flushTimeout: ReturnType<typeof setTimeout> | null = null;
+const seenAutoKeys = new Set<string>();
 
-function queueKeyForRegistration(key: string, defaultValue: string) {
+function queueKeyForRegistration(key: string, defaultValue: string, category?: string) {
   // Determine category from key prefix
-  const category = key.includes('.') ? key.split('.')[0] : 'general';
+  const cat = category || (key.includes('.') ? key.split('.')[0] : 'general');
   if (pendingKeys.some(p => p.key === key)) return;
-  pendingKeys.push({ key, default_value: defaultValue, category });
+  pendingKeys.push({ key, default_value: defaultValue, category: cat });
 
   if (flushTimeout) clearTimeout(flushTimeout);
   flushTimeout = setTimeout(flushPendingKeys, 3000);
+}
+
+/**
+ * Public API for the runtime DOM harvester.
+ * Accepts a raw English UI string, generates a stable hash key,
+ * and queues it for auto-registration + auto-translation.
+ */
+export function queueAutoHarvestedString(text: string, category = 'auto'): string | null {
+  const clean = text.trim();
+  if (!clean) return null;
+  // Stable FNV-1a 32-bit hash → 8 hex chars
+  let h = 0x811c9dc5;
+  for (let i = 0; i < clean.length; i++) {
+    h ^= clean.charCodeAt(i);
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  const key = `${category}.${h.toString(16).padStart(8, '0')}`;
+  if (seenAutoKeys.has(key)) return key;
+  seenAutoKeys.add(key);
+  queueKeyForRegistration(key, clean, category);
+  return key;
 }
 
 async function flushPendingKeys(onSuccess?: (keys: string[]) => void) {
