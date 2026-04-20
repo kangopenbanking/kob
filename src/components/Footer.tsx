@@ -133,7 +133,7 @@ export const Footer = () => {
   return (
     <footer className="border-t py-12 bg-card" aria-label="Site footer">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-8 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-8">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
