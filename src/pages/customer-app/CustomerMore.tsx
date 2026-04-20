@@ -79,7 +79,7 @@ const CustomerMore: React.FC = () => {
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Bill Payments</p>
-            <button onClick={() => go('bills') className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+            <button onClick={() => go('bills')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
               View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
           </div>

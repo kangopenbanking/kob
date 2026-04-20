@@ -55,7 +55,7 @@ const CustomerTravelAgencies: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-7">
-            <button onClick={() => navigate('/app/travel') className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
+            <button onClick={() => navigate('/app/travel')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
               <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex-1" />

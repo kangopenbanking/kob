@@ -258,10 +258,10 @@ const CustomerTravelTrips: React.FC = () => {
                   <RouteIcon className="h-3.5 w-3.5" /> Popular Routes
                 </p>
                 <div className="flex gap-1">
-                  <button onClick={() => scrollSlider('left') className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
+                  <button onClick={() => scrollSlider('left')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
                     <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
                   </button>
-                  <button onClick={() => scrollSlider('right') className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
+                  <button onClick={() => scrollSlider('right')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
                     <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                   </button>
                 </div>

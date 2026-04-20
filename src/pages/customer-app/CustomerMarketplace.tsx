@@ -122,14 +122,14 @@ export function CustomerMarketplace() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate('/app/wishlist')
+                onClick={() => navigate('/app/wishlist')}
                 className="p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
                 aria-label="Wishlist"
               >
                 <Heart className="w-4 h-4 text-foreground" />
               </button>
               <button
-                onClick={() => navigate('/app/cart')
+                onClick={() => navigate('/app/cart')}
                 className="relative p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
                 aria-label="Cart"
               >
@@ -199,16 +199,16 @@ export function CustomerMarketplace() {
         {/* ── QUICK ACTIONS ─────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-2.5">
           <QuickAction icon={Truck} label="Track order" tint="bg-[hsl(217,90%,95%)]" iconColor="text-primary"
-            onClick={() => navigate('/app/orders />
+            onClick={() => navigate('/app/orders /')}>
           <QuickAction icon={Heart} label="Wishlist" tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
-            onClick={() => navigate('/app/wishlist />
+            onClick={() => navigate('/app/wishlist /')}>
           <QuickAction icon={Receipt} label="My orders" tint="bg-[hsl(150,60%,93%)]" iconColor="text-secondary"
-            onClick={() => navigate('/app/orders />
+            onClick={() => navigate('/app/orders /')}>
         </div>
 
         {/* ── CATEGORIES ────────────────────────────────────── */}
         <section>
-          <SectionHeader title="Shop by category" actionLabel="See all" onAction={() => navigate('/app/stores />
+          <SectionHeader title="Shop by category" actionLabel="See all" onAction={() => navigate('/app/stores /')}>
           <div className="grid grid-cols-4 gap-2.5">
             {CATEGORY_TILES.map((tile, i) => {
               const Icon = tile.icon;
@@ -238,7 +238,7 @@ export function CustomerMarketplace() {
 
         {/* ── FEATURED STORES ───────────────────────────────── */}
         <section>
-          <SectionHeader title="Featured stores" actionLabel="See all" onAction={() => navigate('/app/stores />
+          <SectionHeader title="Featured stores" actionLabel="See all" onAction={() => navigate('/app/stores /')}>
           {storesLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -298,7 +298,7 @@ export function CustomerMarketplace() {
 
         {/* ── TRENDING PRODUCTS ─────────────────────────────── */}
         <section>
-          <SectionHeader title="Trending products" actionLabel="Browse" onAction={() => navigate('/app/stores />
+          <SectionHeader title="Trending products" actionLabel="Browse" onAction={() => navigate('/app/stores /')}>
           {trendingLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />

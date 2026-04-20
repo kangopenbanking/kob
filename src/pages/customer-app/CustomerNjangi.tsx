@@ -546,10 +546,10 @@ const CustomerNjangi: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <Button className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('create>
+        <Button className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('create')}>
           <Plus className="h-4 w-4" strokeWidth={1.5} /> Create Circle
         </Button>
-        <Button variant="outline" className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('join>
+        <Button variant="outline" className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('join')}>
           <UserPlus className="h-4 w-4" strokeWidth={1.5} /> Join Circle
         </Button>
       </div>

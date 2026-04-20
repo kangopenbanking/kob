@@ -158,7 +158,7 @@ const CustomerTravelTicket: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-5">
-            <button onClick={() => navigate('/app/home') className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: overlayBg }}>
+            <button onClick={() => navigate('/app/home')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: overlayBg }}>
               <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex items-center gap-2">
@@ -311,7 +311,7 @@ const CustomerTravelTicket: React.FC = () => {
           </Button>
         </div>
 
-        <Button variant="outline" className="w-full h-11 rounded-xl" onClick={() => navigate('/app/home>
+        <Button variant="outline" className="w-full h-11 rounded-xl" onClick={() => navigate('/app/home')}>
           Back to Home
         </Button>
       </div>

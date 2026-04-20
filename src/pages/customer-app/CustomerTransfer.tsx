@@ -395,7 +395,7 @@ const CustomerTransfer: React.FC = () => {
                   <><Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm & Send</>
                 )}
               </Button>
-              <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={() => setStep('form>
+              <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={() => setStep('form')}>
                 Go Back
               </Button>
             </div>
@@ -452,7 +452,7 @@ const CustomerTransfer: React.FC = () => {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
                 <button
                   type="button"
-                  onClick={() => navigate('/app/send-money')
+                  onClick={() => navigate('/app/send-money')}
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary"
                 >
                   <Smartphone className="h-3 w-3" strokeWidth={2} />
@@ -568,7 +568,7 @@ const CustomerTransfer: React.FC = () => {
 
                 {/* Clear button for non-name types */}
                 {recipient && recipientType !== 'name' && (
-                  <button onClick={() => setRecipient('') className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  <button onClick={() => setRecipient('')} className="absolute right-3.5 top-1/2 -translate-y-1/2">
                     <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </button>
                 )}
@@ -630,7 +630,7 @@ const CustomerTransfer: React.FC = () => {
                     {selectedRecipientName} doesn't have an active Kang wallet yet
                   </p>
                   <p className="text-[10px] leading-relaxed text-[hsl(35,60%,30%)]">
-                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
+                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation')</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
                   </p>
                 </div>
               )}

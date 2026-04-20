@@ -125,7 +125,7 @@ const CustomerStores: React.FC = () => {
             </h1>
           </div>
           <button
-            onClick={() => navigate('/app/cart')
+            onClick={() => navigate('/app/cart')}
             className="relative h-11 w-11 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
           >
             <ShoppingBag className="w-[18px] h-[18px] text-foreground" />

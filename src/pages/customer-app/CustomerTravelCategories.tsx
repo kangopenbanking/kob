@@ -81,11 +81,11 @@ const CustomerTravelCategories: React.FC = () => {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-8">
-            <button onClick={() => navigate('/app/home') className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 active:bg-white/20 transition-colors">
+            <button onClick={() => navigate('/app/home')} className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 active:bg-white/20 transition-colors">
               <ChevronLeft className="h-5 w-5 text-white" />
             </button>
             <div className="flex-1" />
-            <button onClick={() => navigate('/app/travel/history') className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 active:bg-white/20 transition-colors">
+            <button onClick={() => navigate('/app/travel/history')} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 active:bg-white/20 transition-colors">
               <History className="h-3.5 w-3.5 text-white/80" />
               <span className="text-[11px] font-semibold text-white/80">My Bookings</span>
             </button>

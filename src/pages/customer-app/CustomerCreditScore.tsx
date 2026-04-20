@@ -412,7 +412,7 @@ const CustomerCreditScore: React.FC = () => {
                     <EIcon className={`h-3.5 w-3.5 ${color}`} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' </p>
+                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' ')')</p>
                     <p className="text-[10px] text-muted-foreground">
                       {ev.event_time ? format(new Date(ev.event_time), 'MMM d, yyyy') : ''}
                     </p>
@@ -546,7 +546,7 @@ function PreApprovedOffersSection({ score }: { score: number }) {
                 </div>
               ) : offer.requires_existing_account ? (
                 <button
-                  onClick={() => navigate('/app/linked-accounts')
+                  onClick={() => navigate('/app/linked-accounts')}
                   className="flex-1 rounded-xl bg-muted py-2 text-[11px] font-bold text-foreground text-center active:scale-[0.98] transition-transform"
                 >
                   Open Account & Apply

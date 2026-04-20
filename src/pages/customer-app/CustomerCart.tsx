@@ -157,7 +157,7 @@ const CustomerCart: React.FC = () => {
           {orderComplete.total?.toLocaleString()} {orderComplete.currency || 'XAF'} paid · Order #{orderComplete.order_number}
         </p>
         <div className="w-full max-w-xs mt-8 space-y-3">
-          <Button onClick={() => navigate('/app/orders') className="w-full h-12 rounded-2xl font-semibold">
+          <Button onClick={() => navigate('/app/orders')} className="w-full h-12 rounded-2xl font-semibold">
             Track order
           </Button>
           <Button variant="outline" onClick={() => { setOrderComplete(null); navigate('/app/stores'); }} className="w-full h-12 rounded-2xl font-semibold">
@@ -223,7 +223,7 @@ const CustomerCart: React.FC = () => {
           </div>
           <p className="text-base font-semibold text-foreground">Your cart is empty</p>
           <p className="text-xs text-muted-foreground mt-1">Find something special in the marketplace</p>
-          <Button onClick={() => navigate('/app/stores') className="mt-6 h-11 px-6 rounded-2xl font-semibold">
+          <Button onClick={() => navigate('/app/stores')} className="mt-6 h-11 px-6 rounded-2xl font-semibold">
             Browse stores
           </Button>
         </div>

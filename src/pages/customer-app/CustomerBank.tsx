@@ -96,7 +96,7 @@ const CustomerBank: React.FC = () => {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Balance</p>
           <p className="text-2xl font-bold text-foreground">{totalBalance.toLocaleString()} XAF</p>
           <p className="text-[11px] text-muted-foreground">{accounts.length} account{accounts.length > 1 ? 's' : ''} linked</p>
-          <button onClick={() => navigate('/app/linked-accounts')
+          <button onClick={() => navigate('/app/linked-accounts')}
             className="mt-2 flex items-center gap-1 text-xs font-bold text-primary">
             <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} /> Manage Linked Accounts
           </button>

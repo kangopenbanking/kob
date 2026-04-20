@@ -177,7 +177,7 @@ const CustomerRemittances: React.FC = () => {
                             {idx < detail.events.length - 1 && <div className="w-px flex-1 bg-border" />}
                           </div>
                           <div className="pb-3">
-                            <p className="text-sm font-medium capitalize">{(evt.event_type || '').replace(/_/g, ' </p>
+                            <p className="text-sm font-medium capitalize">{(evt.event_type || '').replace(/_/g, ' ')')</p>
                             <p className="text-xs text-muted-foreground">{format(new Date(evt.created_at), 'MMM d, yyyy HH:mm</p>
                           </div>
                         </div>

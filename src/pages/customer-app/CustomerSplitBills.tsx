@@ -328,13 +328,13 @@ const CustomerSplitBills: React.FC = () => {
       {/* Tab Switcher */}
       <div className="flex gap-2 rounded-2xl bg-muted p-1">
         <button
-          onClick={() => setActiveTab('my_bills')
+          onClick={() => setActiveTab('my_bills')}
           className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all ${activeTab === 'my_bills' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
         >
           My Bills
         </button>
         <button
-          onClick={() => setActiveTab('bills_owed')
+          onClick={() => setActiveTab('bills_owed')}
           className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all relative ${activeTab === 'bills_owed' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
         >
           Bills I Owe
@@ -535,7 +535,7 @@ const CustomerSplitBills: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}')</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-foreground">{Number(bill.total_amount).toLocaleString()}</p>
@@ -553,7 +553,7 @@ const CustomerSplitBills: React.FC = () => {
                           {parts.map((p: any) => (
                             <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2.5">
                               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${p.is_owner ? 'bg-[hsl(210,80%,93%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
-                                <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                                <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}')</span>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-foreground truncate">{p.name}{p.is_owner ? ' (You)' : ''}</p>

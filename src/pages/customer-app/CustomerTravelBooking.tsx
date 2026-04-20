@@ -326,7 +326,7 @@ const CustomerTravelBooking: React.FC = () => {
                       {Array.from({ length: planCols }, (_, c) => {
                         const cell = layout.find(l => l.row === r && l.col === c);
                         if (!cell || cell.type === 'aisle') return <div key={c} className="h-10 w-10" />;
-                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×</div>;
+                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×')</div>;
                         const isBooked = bookedSeats.includes(cell.seat_label);
                         const isSelected = selectedSeats.includes(cell.seat_label);
                         const seatStyle = getSeatColor(cell);
@@ -448,8 +448,8 @@ const CustomerTravelBooking: React.FC = () => {
             })}
 
             <div className="flex gap-3 pt-1">
-              <Button variant="outline" onClick={() => setStep('seats') className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
-              <Button onClick={() => setStep('confirm') className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
+              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back')</Button>
+              <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
                 Review & Pay →
               </Button>
@@ -571,7 +571,7 @@ const CustomerTravelBooking: React.FC = () => {
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                   <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: theme.accentLight }}>
                     <p className="text-[9px] text-gray-500 uppercase font-semibold">Seats</p>
-                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')</p>
+                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')')</p>
                   </div>
                   <div className="rounded-xl bg-blue-50 p-2.5 text-center">
                     <p className="text-[9px] text-gray-500 uppercase font-semibold">Passengers</p>
@@ -615,7 +615,7 @@ const CustomerTravelBooking: React.FC = () => {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('details') className="flex-1 h-11 rounded-xl">Back</Button>
+              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back')</Button>
               {hasInsufficientFunds ? (
                 <Button onClick={handleAddMoney} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg bg-[#0f1729] text-white hover:bg-[#1a2744]">
                   <Plus className="mr-2 h-4 w-4" />

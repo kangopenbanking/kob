@@ -56,7 +56,7 @@ export function CustomerLoyalty() {
           <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
           <p className="text-muted-foreground mb-4">Please sign in to view your rewards</p>
-          <Button onClick={() => navigate('/app/auth>Sign In')</Button>
+          <Button onClick={() => navigate('/app/auth')}>Sign In')</Button>
         </Card>
       </div>
     );
@@ -188,7 +188,7 @@ export function CustomerLoyalty() {
                 <Card key={txn.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium capitalize">{txn.transaction_type.replace('_', ' </p>
+                      <p className="font-medium capitalize">{txn.transaction_type.replace('_', ' ')')</p>
                       <p className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(txn.created_at), { addSuffix: true })}
                       </p>
@@ -207,7 +207,7 @@ export function CustomerLoyalty() {
             <Card className="p-12 text-center">
               <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">No activity yet</p>
-              <Button className="mt-4" onClick={() => navigate('/app/marketplace>
+              <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>
                 Start Earning
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>

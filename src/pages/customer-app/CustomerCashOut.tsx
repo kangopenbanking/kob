@@ -365,7 +365,7 @@ const CustomerCashOut: React.FC = () => {
                     ? 'Your linked account types are currently disabled for withdrawals by the platform.'
                     : 'Link an account first to withdraw funds.'}
                 </p>
-                <Button onClick={() => navigate('/app/linked-accounts') className="rounded-2xl mt-2">
+                <Button onClick={() => navigate('/app/linked-accounts')} className="rounded-2xl mt-2">
                   <Plus className="h-4 w-4 mr-1" /> Link Account
                 </Button>
               </div>

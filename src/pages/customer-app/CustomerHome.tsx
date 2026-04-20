@@ -230,7 +230,7 @@ const CustomerHome: React.FC = () => {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => go('alerts')
+                  onClick={() => go('alerts')}
                   className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm"
                 >
                   <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
@@ -252,7 +252,7 @@ const CustomerHome: React.FC = () => {
                   <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
                   <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
                 </div>
-                <button onClick={() => go('onboarding') className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
+                <button onClick={() => go('onboarding')} className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link')</button>
               </motion.div>
             )}
 
@@ -380,7 +380,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[hsl(0,0%,100%)]">{tr(item.label)}</p>
-                    <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{tr(item.description || '</p>
+                    <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{tr(item.description || '')')</p>
                   </div>
                 </motion.button>
               );
@@ -430,7 +430,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-bold text-foreground">{tr(visibleSavings[0].label)}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(visibleSavings[0].description || '</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(visibleSavings[0].description || '')')</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                 </motion.button>
@@ -449,7 +449,7 @@ const CustomerHome: React.FC = () => {
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
                   <p className="text-xs font-bold text-foreground">{tr(item.label)}</p>
-                  <p className="text-[10px] text-muted-foreground text-center">{tr(item.description || '</p>
+                  <p className="text-[10px] text-muted-foreground text-center">{tr(item.description || '')')</p>
                 </motion.button>
               ))}
             </div>
@@ -505,7 +505,7 @@ const CustomerHome: React.FC = () => {
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(210,80%,93%)] p-4 text-left">
                   <img src={rentKobImage} alt="Rent Report" className="h-24 w-24 object-contain" />
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(210,60%,45%)]">{tr(item.label)}</p>
-                  <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr(item.description || 'Open</span>
+                  <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr(item.description || 'Open')')</span>
                 </button>
               );
             })()}
@@ -522,7 +522,7 @@ const CustomerHome: React.FC = () => {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => go('travel')
+              onClick={() => go('travel')}
               className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
@@ -590,7 +590,7 @@ const CustomerHome: React.FC = () => {
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Activities</p>
-          <button onClick={() => go('activity') className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+          <button onClick={() => go('activity')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
             See All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>
