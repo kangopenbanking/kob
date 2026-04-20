@@ -23,6 +23,7 @@ const travelMenuItems = [
   { icon: Ticket, label: 'Discounts', subtitle: 'Promo codes & offers', path: 'discounts', color: 'text-orange-600 bg-orange-500/10' },
   { icon: Users, label: 'Staff Roles', subtitle: 'Manage travel staff', path: 'staff-roles', color: 'text-indigo-600 bg-indigo-500/10' },
   { icon: Bell, label: 'Notifications', subtitle: 'Alerts & messages', path: 'notifications', color: 'text-pink-600 bg-pink-500/10' },
+  { icon: BookOpen, label: 'Guide', subtitle: 'How to use Travel Services', path: 'guide', color: 'text-foreground bg-muted' },
 ];
 
 const BusinessTravel: React.FC = () => {
