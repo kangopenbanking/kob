@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 export default function BusinessProducts() {
   const navigate = useNavigate();
@@ -49,6 +50,15 @@ export default function BusinessProducts() {
 
   return (
     <div className="space-y-4 px-5 md:px-0 pt-4 pb-6">
+      <PageGuide
+        title="Products"
+        summary="Build and maintain your catalog — add items, set prices, manage variants, and toggle availability."
+        steps={[
+          { title: 'Add a product', description: 'Tap New product to enter a name, price, photos, and inventory details.' },
+          { title: 'Search and filter', description: 'Find items quickly with the search bar or by Active / Draft status.' },
+          { title: 'Edit or remove', description: 'Open any product to update details, change variants, or archive it.' },
+        ]}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

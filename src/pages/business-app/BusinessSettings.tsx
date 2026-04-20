@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PaymentConnectorsPanel } from '@/components/connectors/PaymentConnectorsPanel';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const settingsLinks = [
   { icon: CreditCard, label: 'Settlement Accounts', subtitle: 'Bank, MoMo, Kang Wallet (max 2)', path: '/biz/settlement-accounts', color: 'text-emerald-600 bg-emerald-500/10' },
@@ -114,6 +115,15 @@ export default function BusinessSettings() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Business Settings"
+        summary="Update your business profile, payout accounts, API keys, webhooks, and notification preferences."
+        steps={[
+          { title: 'Confirm business details', description: 'Keep your name, contact, and support information accurate — they appear on receipts.' },
+          { title: 'Connect payouts and APIs', description: 'Link settlement accounts, manage API keys, and register webhook endpoints.' },
+          { title: 'Save your changes', description: 'Tap Save to apply updates instantly across your store and integrations.' },
+        ]}
+      />
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">
           <div>

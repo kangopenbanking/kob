@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 export default function BusinessRefunds() {
   const queryClient = useQueryClient();
@@ -79,6 +80,16 @@ export default function BusinessRefunds() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Refunds"
+        summary="Issue full or partial refunds to customers and keep a record of every reversal."
+        steps={[
+          { title: 'Find the original charge', description: 'Search by reference number to locate the successful payment you want to refund.' },
+          { title: 'Enter amount and reason', description: 'Refund the full amount or a partial value, and add an internal reason for audit.' },
+          { title: 'Confirm with PIN', description: 'Refunds require your secure PIN; the customer is paid back through the original method.' },
+        ]}
+        learnMoreHref="/developer/gateway/refunds"
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">

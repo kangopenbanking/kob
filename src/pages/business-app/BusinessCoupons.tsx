@@ -16,6 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const BusinessCoupons: React.FC = () => {
   const { merchantId } = useMerchantContext();
@@ -77,6 +78,15 @@ const BusinessCoupons: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Coupons"
+        summary="Create discount codes to drive sales and reward returning customers."
+        steps={[
+          { title: 'Create a coupon', description: 'Tap New, then choose a percentage or fixed-amount discount and a code customers will type.' },
+          { title: 'Set rules', description: 'Optionally limit by minimum order value or total uses to control your campaign.' },
+          { title: 'Activate and share', description: 'Toggle a coupon on or off any time, and share the code through your usual channels.' },
+        ]}
+      />
       <header className="mb-4 flex items-center justify-between pt-4 md:pt-0">
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Coupons</h1>

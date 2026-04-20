@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageGuide } from "@/components/business-app/PageGuide";
 
 const STATUS_FILTERS = [
   { label: "All", value: "all" },
@@ -166,6 +167,16 @@ export default function BusinessDisputes() {
 
   return (
     <div className="min-h-screen bg-background p-4 pb-24 space-y-4">
+      <PageGuide
+        title="Disputes"
+        summary="Respond to chargebacks with evidence and track every case from open to resolution."
+        steps={[
+          { title: 'Open a disputed charge', description: 'Pick a case to see the customer claim, deadlines, and current status.' },
+          { title: 'Upload evidence', description: 'Attach receipts, shipping proof, communications, or your refund policy.' },
+          { title: 'Submit and monitor', description: 'Send your response and watch the status move through Investigating to Won or Lost.' },
+        ]}
+        learnMoreHref="/developer/gateway/disputes"
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>

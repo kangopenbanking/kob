@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const STAFF_ROLES = [
   { value: 'merchant_admin', label: 'Admin', description: 'Full access to all features', color: 'text-violet-600 bg-violet-500/10' },
@@ -94,6 +95,15 @@ export default function BusinessStaff() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Staff Management"
+        summary="Invite teammates, assign roles, and control who can sell, manage, or administer your business."
+        steps={[
+          { title: 'Invite a teammate', description: 'Send an email invite and choose Admin, Manager, or Cashier permissions.' },
+          { title: 'Set a secure PIN', description: 'Each staff member receives a PIN used at the till and for sensitive actions.' },
+          { title: 'Edit or remove access', description: 'Update roles or revoke access instantly when teammates change or leave.' },
+        ]}
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">

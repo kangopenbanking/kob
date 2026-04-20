@@ -16,6 +16,7 @@ import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { CitySelector } from '@/components/storefront/CitySelector';
 import { STOREFRONT_TEMPLATES, type StorefrontTemplateId } from '@/lib/storefront-templates';
 import { StorePreview } from '@/components/storefront/StorePreview';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
   <div className="rounded-2xl border border-border/40 bg-card p-5">
@@ -114,6 +115,15 @@ export default function BusinessStorefront() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Storefront"
+        summary="Customise the public store your customers see — branding, location, hours, and a chosen template."
+        steps={[
+          { title: 'Add branding and details', description: 'Set your business name, tagline, logo, cover photo, and short description.' },
+          { title: 'Choose a template', description: 'Pick a layout that fits your brand; preview before publishing.' },
+          { title: 'Save and share', description: 'Publish, then use Preview to copy your live store URL and share it anywhere.' },
+        ]}
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">

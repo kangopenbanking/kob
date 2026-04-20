@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 export default function BusinessCompliance() {
   const navigate = useNavigate();
@@ -82,6 +83,16 @@ export default function BusinessCompliance() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Compliance"
+        summary="Track your KYB verification, open disputes, and the setup steps required to stay compliant."
+        steps={[
+          { title: 'Complete KYB verification', description: 'Submit business documents to unlock higher limits and full payout access.' },
+          { title: 'Resolve open disputes', description: 'Address chargebacks quickly to protect your standing with payment networks.' },
+          { title: 'Follow the setup checklist', description: 'Tick off remaining items (settlement account, webhooks, policies) for full readiness.' },
+        ]}
+        learnMoreHref="/developer/compliance"
+      />
       <header className="pt-4 md:pt-0 mb-5">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Compliance</h1>
         <p className="text-xs text-muted-foreground font-medium mt-0.5">KYB verification, disputes & setup checklist</p>

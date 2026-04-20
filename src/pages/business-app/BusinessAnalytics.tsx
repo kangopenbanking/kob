@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 export default function BusinessAnalytics() {
   const { merchantId } = useMerchantContext();
@@ -81,6 +82,15 @@ export default function BusinessAnalytics() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Business Analytics"
+        summary="Understand how your store is performing with revenue, order, and conversion trends."
+        steps={[
+          { title: 'Pick a timeframe', description: 'Switch between 7, 30, or 90 days to spot short-term spikes or longer trends.' },
+          { title: 'Read the headline metrics', description: 'Track total revenue, orders, average basket, and conversion rate at a glance.' },
+          { title: 'Export for reporting', description: 'Download the data to share with your accountant or investors.' },
+        ]}
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-4">
         <div className="flex items-center justify-between mb-3">

@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const BusinessWallet: React.FC = () => {
   const navigate = useNavigate();
@@ -172,6 +173,16 @@ const BusinessWallet: React.FC = () => {
 
   return (
     <div className="space-y-6 px-5 md:px-0 pt-4 pb-6">
+      <PageGuide
+        title="Wallet"
+        summary="See your available and pending balance, withdraw funds, and link the bank or mobile money accounts that receive your payouts."
+        steps={[
+          { title: 'Check your balances', description: 'Available is ready to withdraw; Pending will clear after the standard settlement window.' },
+          { title: 'Link a payout account', description: 'Add up to two accounts (bank or mobile money) before requesting a withdrawal.' },
+          { title: 'Withdraw securely', description: 'Enter an amount, choose an account, and confirm with your PIN to send funds.' },
+        ]}
+        learnMoreHref="/developer/payouts"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Wallet</h1>
