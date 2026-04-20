@@ -611,6 +611,8 @@ const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnter
 const BusinessWebhookLogs = lazy(() => import("./pages/business-app/BusinessWebhookLogs"));
 const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDisputes"));
 const BusinessTrustScore = lazy(() => import("./pages/business-app/BusinessTrustScore"));
+const BusinessQRCode = lazy(() => import("./pages/business-app/BusinessQRCode"));
+const PayMerchantSlug = lazy(() => import("./pages/PayMerchantSlug"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
@@ -1346,6 +1348,7 @@ function App() {
               <Route path="home" element={<BusinessHome />} />
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
+              <Route path="qr-code" element={<BusinessQRCode />} />
               <Route path="orders" element={<BusinessOrders />} />
               <Route path="refunds" element={<BusinessRefunds />} />
               <Route path="fees" element={<MerchantFees />} />
@@ -1411,6 +1414,7 @@ function App() {
             </Route>
 
             <Route path="/pay/authorize" element={<PayByBankAuthorize />} />
+            <Route path="/pay/m/:slug" element={<PayMerchantSlug />} />
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
