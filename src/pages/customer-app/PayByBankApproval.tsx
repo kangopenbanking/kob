@@ -6,6 +6,7 @@ import { Shield, CheckCircle, XCircle, Loader2, Building2, ArrowLeft, ExternalLi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Intent = {
   id: string;
@@ -23,11 +24,12 @@ type Intent = {
 type Step = "loading" | "approve" | "processing" | "success" | "rejected" | "error" | "expired";
 
 export default function PayByBankApproval() {
-  const { intentId } = useParams<{ intentId: string }>();
+  const tr = useHarvestedT('customer');
+  const { intentId } = useParams<{ intentId: string }>{tr('();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("loading");
-  const [intent, setIntent] = useState<Intent | null>(null);
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [step, setStep] = useState')}<Step>{tr('("loading");
+  const [intent, setIntent] = useState')}<Intent | null>{tr('(null);
+  const [redirectUrl, setRedirectUrl] = useState')}<string | null>(null);
 
   useEffect(() => {
     if (!intentId) { setStep("error"); return; }
@@ -84,7 +86,7 @@ export default function PayByBankApproval() {
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="max-w-md mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground mb-6">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> {tr('Back')}
         </button>
 
         <div className="text-center mb-6">
@@ -99,7 +101,7 @@ export default function PayByBankApproval() {
               {step === "loading" && (
                 <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center py-12 gap-4">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Loading payment...</p>
+                  <p className="text-sm text-muted-foreground">{tr('Loading payment...')}</p>
                 </motion.div>
               )}
 
@@ -123,9 +125,9 @@ export default function PayByBankApproval() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={handleReject} className="flex-1" size="lg">Reject</Button>
+                    <Button variant="outline" onClick={handleReject} className="flex-1" size="lg">{tr('Reject')}</Button>
                     <Button onClick={handleApprove} className="flex-1" size="lg">
-                      <Shield className="h-4 w-4 mr-2" /> Approve
+                      <Shield className="h-4 w-4 mr-2" /> {tr('Approve')}
                     </Button>
                   </div>
                 </motion.div>
@@ -134,7 +136,7 @@ export default function PayByBankApproval() {
               {step === "processing" && (
                 <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-12 gap-4">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Processing...</p>
+                  <p className="text-sm text-muted-foreground">{tr('Processing...')}</p>
                 </motion.div>
               )}
 
@@ -144,7 +146,7 @@ export default function PayByBankApproval() {
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
                   <h2 className="text-xl font-bold">Payment Successful</h2>
-                  <p className="text-sm text-muted-foreground">Your payment has been authorized and processed.</p>
+                  <p className="text-sm text-muted-foreground">{tr('Your payment has been authorized and processed.')}</p>
                   {redirectUrl && (
                     <Button variant="outline" onClick={() => window.location.href = redirectUrl} className="mt-2">
                       <ExternalLink className="h-4 w-4 mr-2" /> Return to Merchant

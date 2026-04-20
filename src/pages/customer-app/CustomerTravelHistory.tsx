@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { toast } from 'sonner';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,17 +19,18 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
 };
 
 const CustomerTravelHistory: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [loading, setLoading] = useState(true);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [trips, setTrips] = useState<any[]>([]);
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [bookings, setBookings] = useState<any[]>{tr('([]);
+  const [tickets, setTickets] = useState')}<any[]>{tr('([]);
+  const [trips, setTrips] = useState')}<any[]>{tr('([]);
+  const [routes, setRoutes] = useState')}<any[]>{tr('([]);
+  const [search, setSearch] = useState(\'\');
+  const [statusFilter, setStatusFilter] = useState(\'all\');
 
-  const [cancelTarget, setCancelTarget] = useState<any>(null);
+  const [cancelTarget, setCancelTarget] = useState')}<any>(null);
   const [cancelling, setCancelling] = useState(false);
 
   const fetchHistory = async () => {
@@ -113,7 +115,7 @@ const CustomerTravelHistory: React.FC = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
           <input
-            placeholder="Search by reference or route..."
+            placeholder={tr('Search by reference or route...')}
             className="w-full rounded-xl bg-white/10 border-none text-white placeholder:text-white/30 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20"
             value={search} onChange={e => setSearch(e.target.value)}
           />
@@ -136,7 +138,7 @@ const CustomerTravelHistory: React.FC = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-7 w-7 animate-spin text-gray-300" />
           </div>
-        ) : filtered.length === 0 ? (
+        {tr(') : filtered.length === 0 ? (')}
           <div className="text-center py-16">
             <Ticket className="h-12 w-12 text-gray-200 mx-auto mb-3" />
             <p className="text-gray-400 font-medium">No bookings found</p>
@@ -144,11 +146,13 @@ const CustomerTravelHistory: React.FC = () => {
           </div>
         ) : (
           filtered.map((b, i) => {
+  const tr = useHarvestedT('customer');
             const trip = trips.find(t => t.id === b.trip_id);
             const route = trip ? routes.find(r => r.id === trip.route_id) : null;
-            const bTickets = tickets.filter(t => t.booking_id === b.id);
+            const bTickets = tickets.filter(t => {
+  const tr = useHarvestedT('customer');tr('t.booking_id === b.id);
             const status = statusStyles[b.booking_status] || statusStyles.confirmed;
-            return (
+            return (')}
               <motion.div key={b.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
                 onClick={() => {
@@ -189,12 +193,12 @@ const CustomerTravelHistory: React.FC = () => {
                     </span>
                   )}
 
-                  {b.booking_status === 'confirmed' && trip && new Date(trip.departure_at).getTime() > Date.now() && (
+                  {b.booking_status === 'confirmed' && trip && new Date(trip.departure_at).getTime() > {tr('Date.now() && (')}
                     <button
                       onClick={(e) => { e.stopPropagation(); setCancelTarget({ ...b, _trip: trip, _route: route }); }}
                       className="mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
                     >
-                      <XCircle className="h-3 w-3" /> Cancel & Refund
+                      <XCircle className="h-3 w-3" /> {tr('Cancel & Refund')}
                     </button>
                   )}
 
@@ -213,20 +217,20 @@ const CustomerTravelHistory: React.FC = () => {
       <AlertDialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogTitle>{tr('Cancel this booking?')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               {cancelTarget ? (
                 <div>
                   <p>
-                    Reference <strong>{cancelTarget.booking_ref}</strong> · {cancelTarget._route?.origin} → {cancelTarget._route?.destination}
+                    {tr('Reference')} <strong>{cancelTarget.booking_ref}</strong> · {cancelTarget._route?.origin} → {cancelTarget._route?.destination}
                   </p>
                   <p className="mt-2">Refund policy:</p>
                   <ul className="mt-1 ml-4 list-disc text-xs">
-                    <li>More than 24h before departure: <strong>100% refund</strong></li>
-                    <li>Between 12h and 24h: <strong>50% refund</strong></li>
+                    <li>More than 24h before departure: <strong>{tr('100% refund')}</strong></li>
+                    <li>Between 12h and 24h: <strong>{tr('50% refund')}</strong></li>
                     <li>Less than 12h: <strong>no refund</strong></li>
                   </ul>
-                  <p className="mt-2 text-xs">A 200 XAF cancellation fee is deducted from the refund.</p>
+                  <p className="mt-2 text-xs">{tr('A 200 XAF cancellation fee is deducted from the refund.')}</p>
                 </div>
               ) : <span />}
             </AlertDialogDescription>

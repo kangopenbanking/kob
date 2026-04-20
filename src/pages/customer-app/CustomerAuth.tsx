@@ -20,18 +20,20 @@ import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
 const CustomerAuth: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { data: supportedCountries = [] } = useSupportedCountries('consumer');
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<AuthMode>('welcome');
-  const [tab, setTab] = useState<AuthTab>('phone');
-  const [intent, setIntent] = useState<AuthIntent>('signin');
+  const [mode, setMode] = useState<AuthMode>{tr('(\'welcome\');
+  const [tab, setTab] = useState')}<AuthTab>{tr('(\'phone\');
+  const [intent, setIntent] = useState')}<AuthIntent>('signin');
 
   // Phone state
   const [countryCode, setCountryCode] = useState('+237');
@@ -366,7 +368,7 @@ const CustomerAuth: React.FC = () => {
           className="relative z-10 flex flex-col items-center text-center"
         >
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
-            <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-xl object-contain" />
+            <img src={kangLogo} alt={tr('Kang')} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">{headerTitle()}</h1>
           <p className="mt-1 text-sm text-primary-foreground/70">{headerSubtitle()}</p>
@@ -390,7 +392,7 @@ const CustomerAuth: React.FC = () => {
                     <Shield className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Secure & Simple</p>
+                    <p className="text-xs font-semibold text-foreground">{tr('Secure & Simple')}</p>
                     <p className="text-[11px] text-muted-foreground">PIN-protected access to your finances</p>
                   </div>
                 </div>
@@ -425,14 +427,14 @@ const CustomerAuth: React.FC = () => {
                     className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${tab === 'phone' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     <Phone className="h-4 w-4" strokeWidth={1.5} />
-                    Phone
+                    {tr('Phone')}
                   </button>
                   <button
                     onClick={() => setTab('email')}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${tab === 'email' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     <Mail className="h-4 w-4" strokeWidth={1.5} />
-                    Email
+                    {tr('Email')}
                   </button>
                 </div>
 
@@ -474,7 +476,7 @@ const CustomerAuth: React.FC = () => {
                         {loading ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                          <>Continue <ArrowRight className="h-4 w-4" strokeWidth={2} /></>
+                          <>{tr('Continue')} <ArrowRight className="h-4 w-4" strokeWidth={2} /></>
                         )}
                       </Button>
                     </motion.div>
@@ -494,7 +496,7 @@ const CustomerAuth: React.FC = () => {
                         )}
 
                         <div className="space-y-2">
-                          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                          <Label htmlFor="email" className="text-sm font-medium">{tr('Email')}</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                             <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl border-border/60 pl-10" required />
@@ -502,7 +504,7 @@ const CustomerAuth: React.FC = () => {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                          <Label htmlFor="password" className="text-sm font-medium">{tr('Password')}</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                             <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="Min 8 characters" value={password} onChange={e => setPassword(e.target.value)} className="rounded-xl border-border/60 pl-10 pr-10" required minLength={8} />
@@ -525,7 +527,7 @@ const CustomerAuth: React.FC = () => {
                             className="w-full text-sm text-primary"
                             onClick={() => { setForgotEmail(email); setMode('forgot-password'); }}
                           >
-                            Forgot Password?
+                            {tr('Forgot Password?')}
                           </Button>
                         )}
                       </form>
@@ -564,7 +566,7 @@ const CustomerAuth: React.FC = () => {
                 {pinLoading && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying PIN...
+                    {tr('Verifying PIN...')}
                   </motion.div>
                 )}
 
@@ -579,7 +581,7 @@ const CustomerAuth: React.FC = () => {
                     className="w-full gap-2 text-sm"
                   >
                     <KeyRound className="h-4 w-4" strokeWidth={1.5} />
-                    Forgot PIN? Use OTP instead
+                    {tr('Forgot PIN? Use OTP instead')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -652,7 +654,7 @@ const CustomerAuth: React.FC = () => {
                   <p className="text-sm font-semibold text-foreground">Verification email sent to</p>
                   <p className="text-sm font-bold text-primary">{email}</p>
                   <p className="text-xs text-muted-foreground max-w-[260px]">
-                    Please check your inbox and click the verification link to activate your account. Check your spam folder if you don't see it.
+                    {tr('Please check your inbox and click the verification link to activate your account. Check your spam folder if you don\'t see it.')}
                   </p>
                 </div>
                 <Button
@@ -694,10 +696,10 @@ const CustomerAuth: React.FC = () => {
 
                 {forgotSent ? (
                   <div className="text-center space-y-3 w-full">
-                    <p className="text-sm font-semibold text-foreground">Reset link sent!</p>
+                    <p className="text-sm font-semibold text-foreground">{tr('Reset link sent!')}</p>
                     <p className="text-sm font-bold text-primary">{forgotEmail}</p>
                     <p className="text-xs text-muted-foreground max-w-[260px] mx-auto">
-                      Check your email and click the link to reset your password. Check spam if you don't see it.
+                      {tr('Check your email and click the link to reset your password. Check spam if you don\'t see it.')}
                     </p>
                     <Button onClick={() => { setMode('input'); setForgotSent(false); }} variant="outline" className="w-full gap-2 rounded-xl py-5 mt-4">
                       <ArrowLeft className="h-4 w-4" /> Back to Sign In
@@ -737,7 +739,7 @@ const CustomerAuth: React.FC = () => {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">First, verify your OTP above</p>
+                  <p className="text-sm font-medium text-foreground">{tr('First, verify your OTP above')}</p>
                   <p className="text-xs text-muted-foreground mt-1">Then enter your new 6-digit PIN below</p>
                 </div>
 
@@ -774,7 +776,7 @@ const CustomerAuth: React.FC = () => {
                   </Button>
 
                   <Button variant="ghost" size="sm" onClick={() => { setMode('input'); setNewPin(''); setConfirmNewPin(''); }} className="w-full gap-1.5 text-xs text-muted-foreground">
-                    <ArrowLeft className="h-3 w-3" /> Cancel
+                    <ArrowLeft className="h-3 w-3" /> {tr('Cancel')}
                   </Button>
                 </div>
               </motion.div>
@@ -790,7 +792,7 @@ const CustomerAuth: React.FC = () => {
             {mode === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-12">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-sm font-semibold text-foreground">Verifying...</p>
+                <p className="text-sm font-semibold text-foreground">{tr('Verifying...')}</p>
               </motion.div>
             )}
           </AnimatePresence>

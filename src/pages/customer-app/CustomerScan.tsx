@@ -15,28 +15,30 @@ import { useQRScanner } from '@/hooks/useQRScanner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Tab = 'scan' | 'receive';
 
 const CustomerScan: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
   const { data: profile } = useCustomerProfile(user?.id);
 
-  const [activeTab, setActiveTab] = useState<Tab>('scan');
-  const [manualCode, setManualCode] = useState('');
+  const [activeTab, setActiveTab] = useState<Tab>{tr('(\'scan\');
+  const [manualCode, setManualCode] = useState(\'\');
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [scanResult, setScanResult] = useState<{ account: string; amount?: number } | null>(null);
-  const [payAmount, setPayAmount] = useState('');
-  const [merchantQR, setMerchantQR] = useState<any>(null);
-  const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
+  const [scanResult, setScanResult] = useState')}<{ account: string; amount?: number } | null>{tr('(null);
+  const [payAmount, setPayAmount] = useState(\'\');
+  const [merchantQR, setMerchantQR] = useState')}<any>{tr('(null);
+  const [paymentSuccess, setPaymentSuccess] = useState')}<any>{tr('(null);
   const [showPin, setShowPin] = useState(false);
-  const [storeChoice, setStoreChoice] = useState<any>(null); // v2 kob_store payload — show Visit/Pay chooser
+  const [storeChoice, setStoreChoice] = useState')}<any>{tr('(null); // v2 kob_store payload — show Visit/Pay chooser
   const queryClient = useQueryClient();
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef')}<HTMLCanvasElement>(null);
 
   // Receive tab state
   const [receiveAmount, setReceiveAmount] = useState('');
@@ -233,8 +235,8 @@ const CustomerScan: React.FC = () => {
                 timestamp={paymentSuccess.timestamp}
                 onDone={resetScan}
               />
-            ) : scanResult ? (
-              /* ─── Scan Result ─── */
+            {tr(') : scanResult ? (
+              /* ─── Scan Result ─── */')}
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
                   <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
@@ -294,7 +296,7 @@ const CustomerScan: React.FC = () => {
                     {processing ? (
                       <span className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                        Processing...
+                        {tr('Processing...')}
                       </span>
                     ) : (
                       `Pay ${payAmount ? `${Number(payAmount).toLocaleString('fr-CM')} XAF` : 'Now'}`
@@ -305,8 +307,8 @@ const CustomerScan: React.FC = () => {
                   </Button>
                 </div>
               </motion.div>
-            ) : showManualEntry ? (
-              /* ─── Manual Entry ─── */
+            {tr(') : showManualEntry ? (
+              /* ─── Manual Entry ─── */')}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col gap-5 p-5">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-foreground">Enter Payment Code</p>
@@ -316,14 +318,14 @@ const CustomerScan: React.FC = () => {
                 </div>
                 <div className="flex flex-col gap-4">
                   <Input
-                    placeholder="e.g. KOB-XXXX-XXXX-XXXX"
+                    placeholder={tr('e.g. KOB-XXXX-XXXX-XXXX')}
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                     className="h-14 rounded-2xl text-center text-lg font-mono font-bold tracking-wider"
                     maxLength={19}
                   />
                   <p className="text-center text-xs text-muted-foreground">
-                    Enter the recipient's KOB account code
+                    {tr('Enter the recipient\'s KOB account code')}
                   </p>
                   <Button
                     className="w-full rounded-2xl h-12 text-sm font-bold"
@@ -333,7 +335,7 @@ const CustomerScan: React.FC = () => {
                     {processing ? (
                       <span className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                        Verifying...
+                        {tr('Verifying...')}
                       </span>
                     ) : (
                       'Verify Code'
@@ -341,8 +343,8 @@ const CustomerScan: React.FC = () => {
                   </Button>
                 </div>
               </motion.div>
-            ) : (
-              /* ─── Camera Scanner ─── */
+            {tr(') : (
+              /* ─── Camera Scanner ─── */')}
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
                 {/* Scanner viewport — uses width calc to stay within safe area */}
                 <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
@@ -390,7 +392,7 @@ const CustomerScan: React.FC = () => {
                   {!qrCameraActive && !qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
-                      <p className="text-xs text-muted-foreground">Starting camera…</p>
+                      <p className="text-xs text-muted-foreground">{tr('Starting camera…')}</p>
                     </div>
                   )}
 
@@ -443,7 +445,7 @@ const CustomerScan: React.FC = () => {
             {/* Amount Input */}
             <div className="w-full">
               <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Request Amount (optional)
+                {tr('Request Amount (optional)')}
               </label>
               <Input
                 type="number"
@@ -476,7 +478,7 @@ const CustomerScan: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="text-center text-base">{storeChoice?.merchant_name || 'Store'}</DialogTitle>
           </DialogHeader>
-          <p className="text-center text-xs text-muted-foreground -mt-2 mb-2">What would you like to do?</p>
+          <p className="text-center text-xs text-muted-foreground -mt-2 mb-2">{tr('What would you like to do?')}</p>
           <div className="grid grid-cols-1 gap-2.5">
             <button
               onClick={() => {

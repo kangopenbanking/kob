@@ -12,19 +12,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerStoreDetail: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { merchantId } = useParams<{ merchantId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const [store, setStore] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [store, setStore] = useState<any>{tr('(null);
+  const [products, setProducts] = useState')}<any[]>{tr('([]);
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
-  const [addingToCart, setAddingToCart] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [addingToCart, setAddingToCart] = useState')}<string | null>{tr('(null);
+  const [viewMode, setViewMode] = useState')}<'grid' | 'list'>{tr('(\'grid\');
+  const [searchQuery, setSearchQuery] = useState(\'\');
+  const [activeCategory, setActiveCategory] = useState')}<string>('All');
 
   useEffect(() => {
     if (merchantId) { fetchStoreAndProducts(); fetchCartCount(); }
@@ -168,7 +170,7 @@ const CustomerStoreDetail: React.FC = () => {
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Truck className="w-3.5 h-3.5 text-primary" />
-              <span>Delivery in 30–60 min</span>
+              <span>{tr('Delivery in 30–60 min')}</span>
             </div>
           </div>
         </div>
@@ -179,7 +181,7 @@ const CustomerStoreDetail: React.FC = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-muted-foreground" />
           <Input
-            placeholder="Search products in this store…"
+            placeholder={tr('Search products in this store…')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-11 h-11 rounded-2xl bg-card border-border/60 text-sm shadow-sm"
@@ -209,7 +211,7 @@ const CustomerStoreDetail: React.FC = () => {
       {/* ─── View toggle ─── */}
       <div className="px-5 mt-4 flex items-center justify-between">
         <h2 className="text-[15px] font-bold text-foreground">
-          Products <span className="text-muted-foreground font-medium">· {filteredProducts.length}</span>
+          {tr('Products')} <span className="text-muted-foreground font-medium">· {filteredProducts.length}</span>
         </h2>
         <div className="flex items-center gap-1 bg-card border border-border/60 rounded-xl p-1">
           <button
@@ -241,16 +243,18 @@ const CustomerStoreDetail: React.FC = () => {
             <p className="text-sm font-semibold text-foreground">No products yet</p>
             <p className="text-xs text-muted-foreground mt-0.5">Check back soon</p>
           </div>
-        ) : viewMode === 'grid' ? (
+        {tr(') : viewMode === \'grid\' ? (')}
           <div className="grid grid-cols-2 gap-3.5">
             {filteredProducts.map((product, i) => {
+  const tr = useHarvestedT('customer');
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
-              const maxPrice = variants.length ? Math.max(...variants.map((v: any) => v.price)) : 0;
+              const maxPrice = variants.length ? Math.max(...variants.map((v: any) => {
+  const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (
+              return (')}
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -306,12 +310,14 @@ const CustomerStoreDetail: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {filteredProducts.map((product, i) => {
+  const tr = useHarvestedT('customer');
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
-              const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
+              const minPrice = variants.length ? Math.min(...variants.map((v: any) => {
+  const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (
+              return (')}
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: -8 }}

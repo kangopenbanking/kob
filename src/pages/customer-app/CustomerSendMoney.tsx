@@ -24,6 +24,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 /* CM_BANKS removed — local_bank_transfer now uses KOB v1 institutions from DB */
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
@@ -221,11 +222,11 @@ function MobileCurrencyPicker({ items, selectedIdx, onSelect, label }: {
   onSelect: (i: number) => void;
   label?: string;
 }) {
-  const safe = selectedIdx >= 0 && selectedIdx < items.length ? selectedIdx : 0;
+  const safe = selectedIdx >{tr('= 0 && selectedIdx')} < items.length ? selectedIdx : 0;
   const selected = items[safe];
-  if (!selected) return <div className="h-14 flex items-center px-3 text-xs text-muted-foreground">Loading…</div>;
+  if (!selected) return <div className="h-14 flex items-center px-3 text-xs text-muted-foreground">{tr('Loading…')}</div>{tr(';
 
-  return (
+  return (')}
     <Select value={String(safe)} onValueChange={(v) => onSelect(Number(v))}>
       <SelectTrigger className="h-14 w-[115px] shrink-0 rounded-none rounded-r-2xl border-0 border-l border-border/30 bg-muted/40 px-2.5 font-semibold text-sm shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:ml-0">
         <SelectValue>
@@ -296,7 +297,9 @@ function useRates(): CurrencyOption[] {
   const [currencies, setCurrencies] = useState<CurrencyOption[]>(DEFAULTS);
 
   useEffect(() => {
+  const tr = useHarvestedT('customer');
     (async () => {
+  const tr = useHarvestedT('customer');
       try {
         // 1) Load admin-set rates (authoritative)
         const { data: adminData } = await supabase
@@ -349,8 +352,8 @@ function useRates(): CurrencyOption[] {
           }
         }
 
-        // 4) Merge all sources: admin > live > hardcoded defaults
-        const finalMap = new Map<string, CurrencyOption>();
+        // 4) Merge all sources: admin > live > {tr('hardcoded defaults
+        const finalMap = new Map')}<string, CurrencyOption>();
 
         // Start with defaults
         DEFAULTS.forEach(d => finalMap.set(d.code, { ...d }));
@@ -410,6 +413,7 @@ const stagger = {
    ═══════════════════════════════════════════════════════════════ */
 
 export default function CustomerSendMoney() {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const currencies = useRates();
   const { data: supportedCountries } = useSupportedCountries("consumer");
@@ -428,8 +432,8 @@ export default function CustomerSendMoney() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const [tab, setTab] = useState<Tab>("send");
-  const [step, setStep] = useState<Step>("amount");
+  const [tab, setTab] = useState<Tab>{tr('("send");
+  const [step, setStep] = useState')}<Step>("amount");
   const [dir, setDir] = useState(1);
 
   // Form state — matches desktop HeroSendForm pattern
@@ -448,18 +452,18 @@ export default function CustomerSendMoney() {
   const [billRef, setBillRef] = useState("");
   const [narration, setNarration] = useState("");
 
-  const [suggestions, setSuggestions] = useState<{ id: string; full_name: string; phone: string }[]>([]);
+  const [suggestions, setSuggestions] = useState<{ id: string; full_name: string; phone: string }[]>{tr('([]);
   const [showSugg, setShowSugg] = useState(false);
   const [searching, setSearching] = useState(false);
-  const nameRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef')}<HTMLDivElement>{tr('(null);
 
-  const [quote, setQuote] = useState<any>(null);
+  const [quote, setQuote] = useState')}<any>{tr('(null);
   const [txRef, setTxRef] = useState("");
-  const [result, setResult] = useState<any>(null);
-  const [liveStatus, setLiveStatus] = useState<string>("pending");
-  const [trackDialog, setTrackDialog] = useState<any>(null);
+  const [result, setResult] = useState')}<any>{tr('(null);
+  const [liveStatus, setLiveStatus] = useState')}<string>{tr('("pending");
+  const [trackDialog, setTrackDialog] = useState')}<any>{tr('(null);
   const [showPin, setShowPin] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingRef = useRef')}<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((s: Step, d = 1) => { setDir(d); setStep(s); }, []);
 
@@ -503,11 +507,11 @@ export default function CustomerSendMoney() {
   const feePct = feeEstimate.feePercent;
   const feeXAF = feeEstimate.totalFee; // fee in XAF
   // Convert fee back to source currency for display
-  const fee = srcRate.rate > 0 ? Math.round(feeXAF / srcRate.rate * 100) / 100 : 0;
+  const fee = srcRate.rate > {tr('0 ? Math.round(feeXAF / srcRate.rate * 100) / 100 : 0;
   const feeSource = feeEstimate.source;
 
   /* ── Destination countries filtered by source ── */
-  const destCountries = useMemo<DestOption[]>(() => {
+  const destCountries = useMemo')}<DestOption[]>(() => {
     if (!corridors?.length || !srcCountry) return [];
     const seen = new Set<string>();
     const res: DestOption[] = [];
@@ -862,13 +866,13 @@ export default function CustomerSendMoney() {
                 {loadingCorridors && (
                   <div className="flex items-center gap-2 bg-muted/30 rounded-2xl p-3 mb-3">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">Loading corridors…</span>
+                    <span className="text-xs text-muted-foreground">{tr('Loading corridors…')}</span>
                   </div>
                 )}
                 {errorCorridors && (
                   <div className="flex items-center gap-2 bg-destructive/10 rounded-2xl p-3 mb-3">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <span className="text-xs text-destructive">Failed to load corridors.</span>
+                    <span className="text-xs text-destructive">{tr('Failed to load corridors.')}</span>
                   </div>
                 )}
 
@@ -932,7 +936,7 @@ export default function CustomerSendMoney() {
                       </div>
                       <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
                         <Banknote className="h-3 w-3" />
-                        <span>Fee: <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
+                        <span>{tr('Fee:')} <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
                       </div>
                     </div>
                   </CardContent>
@@ -968,10 +972,10 @@ export default function CustomerSendMoney() {
                   </div>
                 )}
 
-                {destCountries.length > 0 && methods.length === 0 && !loadingCorridors && (
+                {destCountries.length > {tr('0 && methods.length === 0 && !loadingCorridors && (')}
                   <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>No receiving method available for this route combination.</span>
+                    <span>{tr('No receiving method available for this route combination.')}</span>
                   </div>
                 )}
 
@@ -986,7 +990,7 @@ export default function CustomerSendMoney() {
                       goTo("recipient");
                     }}
                   >
-                    Continue <ArrowRight className="h-4 w-4 ml-2" />
+                    {tr('Continue')} <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </motion.div>
               </motion.div>
@@ -998,7 +1002,7 @@ export default function CustomerSendMoney() {
                 <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   onClick={() => goTo("amount", -1)}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowLeft className="h-3.5 w-3.5" /> Back
+                  <ArrowLeft className="h-3.5 w-3.5" /> {tr('Back')}
                 </motion.button>
 
                 {/* Transfer summary */}
@@ -1019,14 +1023,14 @@ export default function CustomerSendMoney() {
                     {/* Recipient name with autocomplete */}
                     <div className="space-y-1.5 relative" ref={nameRef}>
                       <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
-                        <User className="h-3 w-3" /> Recipient Name *
+                        <User className="h-3 w-3" /> {tr('Recipient Name *')}
                       </Label>
                       <div className="relative">
                         <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
                           className="h-11 rounded-xl border-border/40 pr-12" placeholder="Full name" />
                         {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
-                        {!searching && recipientName.length >= 2 && suggestions.length === 0 && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-md">New</span>
+                        {!searching && recipientName.length >{tr('= 2 && suggestions.length === 0 && (')}
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-md">{tr('New')}</span>
                         )}
                       </div>
                       <AnimatePresence>
@@ -1059,7 +1063,7 @@ export default function CustomerSendMoney() {
                       {(method === "mobile_money" || method === "wallet" || method === "mobile_wallet") && (
                         <motion.div key="phone" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-1.5 overflow-hidden">
                           <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
-                            <Phone className="h-3 w-3" /> Phone Number *
+                            <Phone className="h-3 w-3" /> {tr('Phone Number *')}
                           </Label>
                           <div className="flex gap-2">
                             <Select value={dialCode} onValueChange={setDialCode}>
@@ -1083,11 +1087,11 @@ export default function CustomerSendMoney() {
                       {method === "bank_transfer" && (
                         <motion.div key="bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">SWIFT/BIC Code *</Label>
-                            <Input placeholder="e.g. ECOCCMCX" value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('SWIFT/BIC Code *')}</Label>
+                            <Input placeholder={tr('e.g. ECOCCMCX')} value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Account / IBAN *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Account / IBAN *')}</Label>
                             <Input placeholder="Account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
@@ -1097,7 +1101,7 @@ export default function CustomerSendMoney() {
                         <motion.div key="local-bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
-                              <Building2 className="h-3 w-3" /> Credit Union / Financial Institution *
+                              <Building2 className="h-3 w-3" /> {tr('Credit Union / Financial Institution *')}
                             </Label>
                             <Select value={bankCode} onValueChange={setBankCode}>
                               <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select institution" /></SelectTrigger>
@@ -1116,13 +1120,13 @@ export default function CustomerSendMoney() {
                                       </SelectItem>
                                     ))}
                                     {kobInstitutions.filter(i => i.institution_type === "bank").length > 0 && (
-                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Banks</div>
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Banks')}</div>
                                     )}
                                     {kobInstitutions.filter(i => i.institution_type === "bank").map((inst) => (
                                       <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
                                     ))}
                                     {kobInstitutions.filter(i => i.institution_type === "fintech").length > 0 && (
-                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fintech</div>
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Fintech')}</div>
                                     )}
                                     {kobInstitutions.filter(i => i.institution_type === "fintech").map((inst) => (
                                       <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
@@ -1135,11 +1139,11 @@ export default function CustomerSendMoney() {
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">RIB / Account Number *</Label>
-                            <Input placeholder="23-digit RIB (e.g. 10005 00001 12345678901 23)" value={accountNumber}
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('RIB / Account Number *')}</Label>
+                            <Input placeholder={tr('23-digit RIB (e.g. 10005 00001 12345678901 23)')} value={accountNumber}
                               onChange={(e) => setAccountNumber(e.target.value)}
                               className="h-11 rounded-xl border-border/40 font-mono tracking-wide" maxLength={27} />
-                            <p className="text-[9px] text-muted-foreground">Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)</p>
+                            <p className="text-[9px] text-muted-foreground">{tr('Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)')}</p>
                           </div>
                         </motion.div>
                       )}
@@ -1147,7 +1151,7 @@ export default function CustomerSendMoney() {
                       {method === "bill_payment" && (
                         <motion.div key="bill" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bill Type *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Bill Type *')}</Label>
                             <Select value={billPurpose} onValueChange={setBillPurpose}>
                               <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select type" /></SelectTrigger>
                               <SelectContent>
@@ -1158,7 +1162,7 @@ export default function CustomerSendMoney() {
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bill Reference *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Bill Reference *')}</Label>
                             <Input placeholder="Reference number" value={billRef} onChange={(e) => setBillRef(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
@@ -1166,7 +1170,7 @@ export default function CustomerSendMoney() {
 
                       {(method === "paypal_email" || method === "paypal") && (
                         <motion.div key="paypal" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-1.5 overflow-hidden">
-                          <Label className="text-[11px] font-semibold text-muted-foreground">PayPal Email *</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">{tr('PayPal Email *')}</Label>
                           <Input placeholder="paypal@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} className="h-11 rounded-xl border-border/40" />
                         </motion.div>
                       )}
@@ -1174,8 +1178,8 @@ export default function CustomerSendMoney() {
 
                     {/* Note */}
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Note (optional)</Label>
-                      <Textarea placeholder="Message to recipient..." value={narration}
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Note (optional)')}</Label>
+                      <Textarea placeholder={tr('Message to recipient...')} value={narration}
                         onChange={(e) => setNarration(e.target.value)} rows={2} className="rounded-xl border-border/40 resize-none" />
                     </div>
                   </CardContent>
@@ -1188,9 +1192,9 @@ export default function CustomerSendMoney() {
                     onClick={() => quoteMut.mutate()}
                   >
                     {quoteMut.isPending ? (
-                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Getting Quote...</>
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {tr('Getting Quote...')}</>
                     ) : (
-                      <>Get Quote & Review <ArrowRight className="h-4 w-4 ml-2" /></>
+                      <>{tr('Get Quote & Review')} <ArrowRight className="h-4 w-4 ml-2" /></>
                     )}
                   </Button>
                 </motion.div>
@@ -1251,17 +1255,17 @@ export default function CustomerSendMoney() {
                     <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/10 p-3">
                       <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                       <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        By confirming, you agree this transfer is lawful and recipient details are correct.
+                        {tr('By confirming, you agree this transfer is lawful and recipient details are correct.')}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
 
                 <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => goTo("recipient", -1)}>Edit</Button>
+                  <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => goTo("recipient", -1)}>{tr('Edit')}</Button>
                   <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
                     <Button className="w-full rounded-2xl h-12 font-bold" disabled={!canSubmitRoute} onClick={confirmAndSend}>
-                      <Send className="h-4 w-4 mr-2" /> Confirm & Send
+                      <Send className="h-4 w-4 mr-2" /> {tr('Confirm & Send')}
                     </Button>
                   </motion.div>
                 </div>
@@ -1287,8 +1291,9 @@ export default function CustomerSendMoney() {
                 {/* Status dots */}
                 <div className="flex items-center gap-3">
                   {["pending", "received", "credited"].map((s, i) => {
-                    const reached = ["pending", "received", "credited"].indexOf(liveStatus) >= i;
-                    return (
+  const tr = useHarvestedT('customer');
+                    const reached = ["pending", "received", "credited"].indexOf(liveStatus) >{tr('= i;
+                    return (')}
                       <div key={s} className="flex items-center gap-1.5">
                         <motion.div
                           className={`h-3 w-3 rounded-full ${reached ? "bg-primary" : "bg-muted"}`}
@@ -1325,7 +1330,7 @@ export default function CustomerSendMoney() {
                     </motion.div>
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                       <h2 className="text-xl font-extrabold text-foreground flex items-center justify-center gap-2">
-                        Transfer Sent! <PartyPopper className="h-5 w-5" style={{ color: "hsl(38 92% 50%)" }} />
+                        {tr('Transfer Sent!')} <PartyPopper className="h-5 w-5" style={{ color: "hsl(38 92% 50%)" }} />
                       </h2>
                       <p className="text-xs text-muted-foreground mt-1">
                         <strong className="text-foreground">{numAmt.toLocaleString()} {srcRate.code}</strong> is on its way
@@ -1457,7 +1462,7 @@ export default function CustomerSendMoney() {
                 </div>
                 {trackDialog.events?.length > 0 && (
                   <div>
-                    <p className="text-xs font-bold text-foreground mb-3">Timeline</p>
+                    <p className="text-xs font-bold text-foreground mb-3">{tr('Timeline')}</p>
                     {trackDialog.events.map((ev: any, idx: number) => {
                       const isLast = idx === trackDialog.events.length - 1;
                       return (

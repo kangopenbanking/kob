@@ -10,6 +10,7 @@ import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvi
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useRecentBillPayments } from '@/hooks/useCustomerData';
 import { format } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const allQuickActions = [
   { key: 'transfer', label: 'Transfer', icon: Send, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
@@ -38,6 +39,7 @@ const utilityItems = [
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
 const CustomerMore: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
@@ -47,11 +49,12 @@ const CustomerMore: React.FC = () => {
 
   const go = (path: string) => navigate(`/app/${path}`);
   const isFeatureVisible = (featureKey?: string) => !featureKey || tenant.features[featureKey as keyof typeof tenant.features] !== false;
-  const enabledActions = allQuickActions.filter((a) => isFeatureVisible(a.featureKey));
+  const enabledActions = allQuickActions.filter((a) => {
+  const tr = useHarvestedT('customer');tr('isFeatureVisible(a.featureKey));
 
-  return (
+  return (')}
     <div className="flex flex-col gap-6 p-5 pb-8">
-      <h1 className="text-xl font-bold text-foreground">More</h1>
+      <h1 className="text-xl font-bold text-foreground">{tr('More')}</h1>
 
       {/* Quick Actions */}
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
@@ -84,7 +87,7 @@ const CustomerMore: React.FC = () => {
           </div>
           {billsLoading ? (
             <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-          ) : recentBills.length === 0 ? (
+          {tr(') : recentBills.length === 0 ? (')}
             <p className="py-4 text-center text-xs text-muted-foreground">No recent bill payments</p>
           ) : (
             <div className="space-y-2">
@@ -104,7 +107,7 @@ const CustomerMore: React.FC = () => {
 
       {/* Account */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Account')}</p>
         <div className="space-y-2">
           {utilityItems.map((item) => (
             <button key={item.path} onClick={() => go(item.path)}

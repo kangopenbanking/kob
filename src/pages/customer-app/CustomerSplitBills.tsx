@@ -11,6 +11,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
 type TabView = 'my_bills' | 'bills_owed';
@@ -43,15 +44,16 @@ const makeParticipant = (name: string, phone: string, color: string, paid: boole
 };
 
 const CustomerSplitBills: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabView>('my_bills');
-  const [pinPaymentId, setPinPaymentId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>{tr('(null);
+  const [actionLoading, setActionLoading] = useState')}<string | null>{tr('(null);
+  const [activeTab, setActiveTab] = useState')}<TabView>{tr('(\'my_bills\');
+  const [pinPaymentId, setPinPaymentId] = useState')}<string | null>(null);
   const [pinPaymentAmount, setPinPaymentAmount] = useState(0);
   const [pinPaymentTitle, setPinPaymentTitle] = useState('');
 
@@ -103,16 +105,16 @@ const CustomerSplitBills: React.FC = () => {
   // Form state
   const [title, setTitle] = useState('');
   const [total, setTotal] = useState('');
-  const [splitMode, setSplitMode] = useState<SplitMode>('equal');
-  const [notes, setNotes] = useState('');
-  const [participants, setParticipants] = useState<Participant[]>([
+  const [splitMode, setSplitMode] = useState<SplitMode>{tr('(\'equal\');
+  const [notes, setNotes] = useState(\'\');
+  const [participants, setParticipants] = useState')}<Participant[]>([
     makeParticipant('You', '', colors[0], true, user?.id || null),
   ]);
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>{tr('([]);
   const [searching, setSearching] = useState(false);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchDebounceRef = useRef')}<ReturnType<typeof setTimeout> | null>(null);
 
   const totalNum = Number(total || 0);
   const perPerson = participants.length > 0 ? Math.ceil(totalNum / participants.length) : 0;
@@ -184,8 +186,8 @@ const CustomerSplitBills: React.FC = () => {
     if (!total || totalNum <= 0) { toast.error('Enter a valid total amount'); return; }
     if (participants.length < 2) { toast.error('Add at least one other person'); return; }
     if (splitMode === 'custom') {
-      const othersTotal = participants.slice(1).reduce((s, p) => s + (p.customAmount || 0), 0);
-      if (othersTotal <= 0) { toast.error('Enter amounts for each participant'); return; }
+      const othersTotal = participants.slice(1).reduce((s, p) => {tr('s + (p.customAmount || 0), 0);
+      if (othersTotal')} <= 0) { toast.error('Enter amounts for each participant'); return; }
       if (othersTotal > totalNum) { toast.error('Participant amounts exceed the total bill'); return; }
     }
     if (splitMode === 'percentage') {
@@ -300,9 +302,10 @@ const CustomerSplitBills: React.FC = () => {
     setSearchQuery(''); setSearchResults([]);
   };
 
-  const unpaidOwedCount = owedBills.filter((b: any) => !b.myParticipation?.paid).length;
+  const unpaidOwedCount = owedBills.filter((b: any) => {
+  const tr = useHarvestedT('customer');tr('!b.myParticipation?.paid).length;
 
-  return (
+  return (')}
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -358,10 +361,10 @@ const CustomerSplitBills: React.FC = () => {
 
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bill Details</p>
-                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bill title (e.g. Friday Dinner)" className="rounded-xl" />
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={tr('Bill title (e.g. Friday Dinner)')} className="rounded-xl" />
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input type="text" inputMode="numeric" value={total} onChange={e => setTotal(e.target.value.replace(/\D/g, ''))} placeholder="Total amount (XAF)" className="rounded-xl pl-10" />
+                  <Input type="text" inputMode="numeric" value={total} onChange={e => setTotal(e.target.value.replace(/\D/g, ''))} placeholder={tr('Total amount (XAF)')} className="rounded-xl pl-10" />
                 </div>
               </div>
 
@@ -400,7 +403,7 @@ const CustomerSplitBills: React.FC = () => {
                       <p className="text-xs font-bold text-foreground truncate">{p.name}</p>
                       {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
                       {i === 0 && splitMode !== 'equal' && (
-                        <p className="text-[9px] text-primary font-semibold">Auto-calculated</p>
+                        <p className="text-[9px] text-primary font-semibold">{tr('Auto-calculated')}</p>
                       )}
                       {p.userId && i > 0 && (
                         <p className="text-[9px] text-[hsl(150,60%,40%)] font-semibold">Registered user</p>
@@ -480,27 +483,27 @@ const CustomerSplitBills: React.FC = () => {
                       </div>
                     )}
 
-                    {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+                    {searchQuery.length >{tr('= 2 && !searching && searchResults.length === 0 && (')}
                       <p className="text-[10px] text-muted-foreground text-center py-2">No registered users found for "{searchQuery}"</p>
                     )}
 
                     <Button size="sm" variant="outline" className="rounded-xl text-xs" onClick={() => { setShowAddPerson(false); setSearchQuery(''); setSearchResults([]); }}>
-                      Cancel
+                      {tr('Cancel')}
                     </Button>
                   </div>
                 ) : (
                   <button onClick={() => setShowAddPerson(true)} className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border p-3">
                     <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    <span className="text-[11px] font-bold text-muted-foreground">Search & Add Person</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">{tr('Search & Add Person')}</span>
                   </button>
                 )}
               </div>
 
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)"
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tr('Notes (optional)')}
                 className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-14" />
 
               <Button onClick={handleCreate} disabled={sending} className="rounded-2xl h-11 text-xs font-bold">
-                {sending ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sending...</span>
+                {sending ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Sending...')}</span>
                   : <><Users className="mr-2 h-4 w-4" strokeWidth={1.5} /> Send Split Request</>}
               </Button>
             </div>
@@ -514,14 +517,16 @@ const CustomerSplitBills: React.FC = () => {
           <>
             {isLoading ? (
               <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
-            ) : bills.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
+            {tr(') : bills.length === 0 ? (')}
+              <p className="py-8 text-center text-xs text-muted-foreground">{tr('No split bills yet. Create your first one!')}</p>
             ) : bills.map((bill: any, i: number) => {
+  const tr = useHarvestedT('customer');
               const parts = bill.split_bill_participants || [];
-              const paidCount = parts.filter((p: any) => p.paid).length;
+              const paidCount = parts.filter((p: any) => {
+  const tr = useHarvestedT('customer');tr('p.paid).length;
               const isExpanded = expandedId === bill.id;
-              const isSettled = bill.status === 'settled';
-              return (
+              const isSettled = bill.status === \'settled\';
+              return (')}
                 <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
                   <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
@@ -592,22 +597,24 @@ const CustomerSplitBills: React.FC = () => {
           <>
             {owedLoading ? (
               <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
-            ) : owedBills.length === 0 ? (
+            {tr(') : owedBills.length === 0 ? (')}
               <div className="flex flex-col items-center gap-3 py-12">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(150,40%,90%)]">
                   <CheckCircle2 className="h-7 w-7 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-bold text-foreground">You're all clear!</p>
+                <p className="text-sm font-bold text-foreground">{tr('You\'re all clear!')}</p>
                 <p className="text-xs text-muted-foreground text-center">No pending split bills to pay</p>
               </div>
             ) : owedBills.map((bill: any, i: number) => {
+  const tr = useHarvestedT('customer');
               const myPart = bill.myParticipation;
               const isPaid = myPart?.paid;
               const shareAmount = Number(myPart?.share_amount || 0);
-              const ownerParticipant = (bill.split_bill_participants || []).find((p: any) => p.is_owner);
+              const ownerParticipant = (bill.split_bill_participants || []).find((p: any) => {
+  const tr = useHarvestedT('customer');tr('p.is_owner);
               const isExpanded = expandedId === bill.id;
 
-              return (
+              return (')}
                 <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   className={`rounded-3xl bg-card border-2 overflow-hidden ${isPaid ? 'border-[hsl(150,40%,80%)]' : 'border-[hsl(340,60%,85%)]'}`}
@@ -652,7 +659,7 @@ const CustomerSplitBills: React.FC = () => {
                               <span className="text-xs font-bold text-foreground">{shareAmount.toLocaleString()} XAF</span>
                             </div>
                             <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
-                              <span className="text-xs text-muted-foreground">Participants</span>
+                              <span className="text-xs text-muted-foreground">{tr('Participants')}</span>
                               <span className="text-xs font-bold text-foreground">{(bill.split_bill_participants || []).length} people</span>
                             </div>
                           </div>
@@ -674,7 +681,7 @@ const CustomerSplitBills: React.FC = () => {
                               className="w-full rounded-2xl h-12 text-sm font-bold bg-primary hover:bg-primary/90"
                             >
                               {actionLoading === `pay-${myPart.id}` ? (
-                                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing Payment...</span>
+                                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing Payment...')}</span>
                               ) : (
                                 <span className="flex items-center gap-2">
                                   <Wallet className="h-4 w-4" strokeWidth={1.5} />

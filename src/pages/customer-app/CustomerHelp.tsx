@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const faqCategories = [
   {
@@ -51,6 +52,7 @@ const faqs = [
 ];
 
 const CustomerHelp: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
 
   const contactOptions = [
@@ -158,10 +160,10 @@ const CustomerHelp: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5 text-primary-foreground" strokeWidth={2} />
           </motion.button>
-          <h1 className="text-xl font-bold text-primary-foreground">Help & Support</h1>
+          <h1 className="text-xl font-bold text-primary-foreground">{tr('Help & Support')}</h1>
         </div>
         <p className="relative text-sm text-primary-foreground/80 mb-4">
-          How can we help you today?
+          {tr('How can we help you today?')}
         </p>
 
         {/* Search bar */}
@@ -170,7 +172,7 @@ const CustomerHelp: React.FC = () => {
           <Input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search for help..."
+            placeholder={tr('Search for help...')}
             className="h-11 rounded-2xl border-0 bg-background pl-10 text-sm shadow-md placeholder:text-muted-foreground/60"
           />
         </div>
@@ -283,13 +285,13 @@ const CustomerHelp: React.FC = () => {
               <Input
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
-                placeholder="Subject"
+                placeholder={tr('Subject')}
                 className="h-11 rounded-xl border-border bg-background"
               />
               <Textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Describe the issue..."
+                placeholder={tr('Describe the issue...')}
                 className="min-h-[100px] rounded-xl border-border bg-background"
               />
               <Button
@@ -333,7 +335,7 @@ const CustomerHelp: React.FC = () => {
         <motion.div variants={fadeUp} className="flex items-center justify-center gap-2 py-3">
           <Headphones className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
           <p className="text-[11px] text-muted-foreground/60">
-            Support available Mon–Sat, 8AM–6PM WAT
+            {tr('Support available Mon–Sat, 8AM–6PM WAT')}
           </p>
         </motion.div>
       </div>

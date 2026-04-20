@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type AlertType = 'transaction' | 'security' | 'promotion' | 'system';
 
@@ -25,10 +26,10 @@ const typeMap: Record<string, AlertType> = {
 };
 
 const alertIcon: Record<AlertType, React.ReactNode> = {
-  transaction: <ArrowUpRight className="h-5 w-5" strokeWidth={1.5} />,
-  security: <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />,
-  promotion: <Gift className="h-5 w-5" strokeWidth={1.5} />,
-  system: <Info className="h-5 w-5" strokeWidth={1.5} />,
+  transaction: <ArrowUpRight className="h-5 w-5" strokeWidth={1.5} />{tr(',
+  security:')} <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />{tr(',
+  promotion:')} <Gift className="h-5 w-5" strokeWidth={1.5} />{tr(',
+  system:')} <Info className="h-5 w-5" strokeWidth={1.5} />,
 };
 
 const alertColor: Record<AlertType, string> = {
@@ -39,6 +40,7 @@ const alertColor: Record<AlertType, string> = {
 };
 
 const CustomerAlerts: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(undefined, false, true);
   const [filter, setFilter] = useState<AlertType | 'all'>('all');
@@ -60,7 +62,7 @@ const CustomerAlerts: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Alerts</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Alerts')}</h1>
           {unreadCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{unreadCount}</span>
           )}
@@ -86,7 +88,7 @@ const CustomerAlerts: React.FC = () => {
       {isLoading ? (
         <div className="flex flex-col items-center gap-3 py-16">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading alerts...</p>
+          <p className="text-sm text-muted-foreground">{tr('Loading alerts...')}</p>
         </div>
       ) : (
         <AnimatePresence mode="popLayout">

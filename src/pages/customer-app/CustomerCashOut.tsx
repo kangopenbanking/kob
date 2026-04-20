@@ -12,6 +12,7 @@ import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { KANG_PLATFORM_ID } from '@/constants/platform';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 
 
@@ -26,18 +27,19 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
 const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 const CustomerCashOut: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
-  const [step, setStep] = useState<'dest' | 'amount' | 'confirm' | 'success'>('dest');
+  const [selectedAccount, setSelectedAccount] = useState<any>{tr('(null);
+  const [step, setStep] = useState')}<'dest' | 'amount' | 'confirm' | 'success'>('dest');
   const [processing, setProcessing] = useState(false);
   const [showPin, setShowPin] = useState(false);
   // F44 — stable idempotency key for the current confirm-attempt (regenerated on new confirm)
-  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
-  // Phase 25 — Preferred bank payout rail: 'auto' (router decides), 'kob_open_banking', or 'flutterwave'
-  const [preferredRail, setPreferredRail] = useState<'auto' | 'kob_open_banking' | 'flutterwave'>('auto');
+  const [idempotencyKey, setIdempotencyKey] = useState<string>{tr('(\'\');
+  // Phase 25 — Preferred bank payout rail: \'auto\' (router decides), \'kob_open_banking\', or \'flutterwave\'
+  const [preferredRail, setPreferredRail] = useState')}<'auto' | 'kob_open_banking' | 'flutterwave'>('auto');
 
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = kangAccounts.map((a: any) => a.id);
@@ -178,9 +180,9 @@ const CustomerCashOut: React.FC = () => {
 
   const handleConfirm = () => {
     if (!amount || numAmount <= 0) { toast.error('Please enter an amount to withdraw'); return; }
-    if (fee > 0 && numAmount <= fee) { toast.error(`Amount must be greater than the ${fee.toLocaleString()} XAF processing fee`); return; }
+    if (fee > {tr('0 && numAmount')} <= fee) { toast.error(`Amount must be greater than the ${fee.toLocaleString()} XAF processing fee`); return; }
     if (isOverBalance) { toast.error(`Insufficient balance. You have ${walletBalance.toLocaleString()} XAF available`); return; }
-    if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal amount is ${cashoutLimits.min_amount.toLocaleString()} XAF`); return; }
+    if (cashoutLimits.min_amount > {tr('0 && numAmount')} < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal amount is ${cashoutLimits.min_amount.toLocaleString()} XAF`); return; }
     if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal amount is ${cashoutLimits.max_amount.toLocaleString()} XAF per transaction`); return; }
     // F44 — generate stable key once per confirm so PIN-retry/network-retry de-duplicate
     setIdempotencyKey(`wd_${primaryAccount?.id}_${selectedAccount?.id}_${numAmount}_${Date.now()}`);
@@ -294,7 +296,7 @@ const CustomerCashOut: React.FC = () => {
               <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
+              <p className="text-lg font-bold text-foreground">{tr('Withdrawal Initiated!')}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}
               </p>
@@ -323,15 +325,15 @@ const CustomerCashOut: React.FC = () => {
             <div className="w-full space-y-2">
               <div className="flex items-center gap-2 rounded-xl bg-[hsl(150,30%,94%)] px-3 py-2.5">
                 <Mail className="h-4 w-4 text-[hsl(150,40%,35%)] shrink-0" strokeWidth={1.5} />
-                <p className="text-[11px] text-[hsl(150,30%,25%)]">A confirmation email has been sent to your inbox.</p>
+                <p className="text-[11px] text-[hsl(150,30%,25%)]">{tr('A confirmation email has been sent to your inbox.')}</p>
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-[hsl(210,30%,94%)] px-3 py-2.5">
                 <Bell className="h-4 w-4 text-[hsl(210,50%,45%)] shrink-0" strokeWidth={1.5} />
-                <p className="text-[11px] text-[hsl(210,30%,25%)]">You'll be notified when the transfer is complete.</p>
+                <p className="text-[11px] text-[hsl(210,30%,25%)]">{tr('You\'ll be notified when the transfer is complete.')}</p>
               </div>
             </div>
           </motion.div>
-        ) : step === 'dest' ? (
+        {tr(') : step === \'dest\' ? (')}
           <motion.div key="dest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
             {feeDesc && (
               <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
@@ -352,7 +354,7 @@ const CustomerCashOut: React.FC = () => {
 
             {acctLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : (filteredAccounts.length === 0 && standaloneMethodCards.length === 0) ? (
+            {tr(') : (filteredAccounts.length === 0 && standaloneMethodCards.length === 0) ? (')}
               <div className="flex flex-col items-center gap-3 py-12">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                   <Banknote className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
@@ -410,7 +412,7 @@ const CustomerCashOut: React.FC = () => {
               </div>
             )}
           </motion.div>
-        ) : step === 'amount' ? (
+        {tr(') : step === \'amount\' ? (')}
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
             {selectedAccount && (() => {
               const iconKey = selectedAccount._isAgent ? 'agent' : selectedAccount.account_type;
@@ -461,7 +463,7 @@ const CustomerCashOut: React.FC = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="rounded-2xl bg-card border border-border p-4 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Amount</span>
+                  <span className="text-muted-foreground">{tr('Amount')}</span>
                   <span className="font-semibold text-foreground">XAF {numAmount.toLocaleString()}</span>
                 </div>
                 {fee > 0 && (
@@ -477,8 +479,8 @@ const CustomerCashOut: React.FC = () => {
               </motion.div>
             )}
 
-            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || (fee > 0 && numAmount <= fee) || isOverBalance || (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) || (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount)} className="w-full rounded-2xl h-12 text-sm font-bold">
-              Continue
+            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || (fee > {tr('0 && numAmount')} <= fee) || isOverBalance || (cashoutLimits.min_amount > {tr('0 && numAmount')} < cashoutLimits.min_amount) || (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount)} className="w-full rounded-2xl h-12 text-sm font-bold">
+              {tr('Continue')}
             </Button>
           </motion.div>
         ) : (
@@ -497,7 +499,7 @@ const CustomerCashOut: React.FC = () => {
                 </div>
               )}
               <div className="border-t border-border pt-3 flex justify-between text-sm">
-                <span className="text-muted-foreground">To</span>
+                <span className="text-muted-foreground">{tr('To')}</span>
                 <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -517,7 +519,7 @@ const CustomerCashOut: React.FC = () => {
                   <p className="text-xs font-bold text-foreground">Payout Rail</p>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Choose how this transfer reaches your bank. Open Banking uses the Kang Open Banking API for direct, lower-cost settlement when your bank is a registered KOB institution.
+                  {tr('Choose how this transfer reaches your bank. Open Banking uses the Kang Open Banking API for direct, lower-cost settlement when your bank is a registered KOB institution.')}
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {([
@@ -545,7 +547,7 @@ const CustomerCashOut: React.FC = () => {
 
             <Button onClick={() => setShowPin(true)} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing...')}</span>
               ) : (
                 <><Banknote className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm Cash Out</>
               )}

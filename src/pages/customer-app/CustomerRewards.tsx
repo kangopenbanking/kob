@@ -8,8 +8,10 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { API_CONFIG } from '@/config/api';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRewards: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [tab, setTab] = useState<'cashback' | 'coupons' | 'referrals'>('cashback');
@@ -146,10 +148,10 @@ const CustomerRewards: React.FC = () => {
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} aria-label="Back">
+        <button onClick={() => navigate(-1)} aria-label={tr('Back')}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Rewards</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Rewards')}</h1>
       </div>
 
       {/* Summary Card */}
@@ -170,17 +172,17 @@ const CustomerRewards: React.FC = () => {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-background/50 p-2.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Cashback</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{tr('Cashback')}</p>
             <p className="text-sm font-bold text-foreground">{totalCashback.toLocaleString()}</p>
           </div>
           <div className="rounded-2xl bg-background/50 p-2.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Referrals</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{tr('Referrals')}</p>
             <p className="text-sm font-bold text-foreground">{totalReferralBonus.toLocaleString()}</p>
           </div>
         </div>
         <div className="mt-3 rounded-2xl bg-background/50 p-3">
           <p className="text-[11px] text-foreground font-medium">
-            Earn <span className="font-bold">{cashbackRate}% cashback</span> on transfers of at least{' '}
+            {tr('Earn')} <span className="font-bold">{cashbackRate}% cashback</span> on transfers of at least{' '}
             <span className="font-bold">{cashbackMinTransfer.toLocaleString()} XAF</span>
           </p>
         </div>
@@ -271,7 +273,7 @@ const CustomerRewards: React.FC = () => {
                 <div className="flex items-center justify-between rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2">
                   <span className="font-mono text-sm font-bold text-foreground">{c.code}</span>
                   <Button variant="outline" size="sm" onClick={() => copyCouponCode(c.code)} className="h-7 gap-1 text-[11px]">
-                    <Copy className="h-3 w-3" /> Copy
+                    <Copy className="h-3 w-3" /> {tr('Copy')}
                   </Button>
                 </div>
                 {c.expires_at && (
@@ -293,7 +295,7 @@ const CustomerRewards: React.FC = () => {
                 <UserPlus className="h-6 w-6 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
               </div>
               <div>
-                <p className="text-sm font-bold text-foreground">Invite & Earn</p>
+                <p className="text-sm font-bold text-foreground">{tr('Invite & Earn')}</p>
                 <p className="text-[11px] text-muted-foreground">
                   You and your friend each earn {referralBonus.toLocaleString()} XAF after their first transfer
                 </p>
@@ -315,22 +317,22 @@ const CustomerRewards: React.FC = () => {
               </Button>
               <Button onClick={shareReferralLink} disabled={!referralLink}
                 className="flex-1 rounded-2xl h-10 gap-2 text-xs">
-                <Share2 className="h-3.5 w-3.5" /> Share
+                <Share2 className="h-3.5 w-3.5" /> {tr('Share')}
               </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Invited</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Invited')}</p>
               <p className="text-lg font-bold text-foreground">{referrals.length}</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Completed</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Completed')}</p>
               <p className="text-lg font-bold text-foreground">{referrals.filter((r: any) => r.status === 'completed').length}</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Earned</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Earned')}</p>
               <p className="text-lg font-bold text-foreground">{totalReferralBonus.toLocaleString()}</p>
             </div>
           </div>

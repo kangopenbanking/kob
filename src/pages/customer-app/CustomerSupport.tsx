@@ -9,6 +9,7 @@ import { ConversationList } from '@/components/support/ConversationList';
 import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import {
   useSupportDepartments,
   useSupportConversations,
@@ -27,14 +28,15 @@ const supportFlowSteps: FlowStep[] = [
 ];
 
 const CustomerSupport: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const userId = user?.id;
 
-  const [step, setStep] = useState<Step>('list');
-  const [selectedDept, setSelectedDept] = useState<Department>();
-  const [subject, setSubject] = useState('');
-  const [activeConvId, setActiveConvId] = useState<string>();
+  const [step, setStep] = useState<Step>{tr('(\'list\');
+  const [selectedDept, setSelectedDept] = useState')}<Department>{tr('();
+  const [subject, setSubject] = useState(\'\');
+  const [activeConvId, setActiveConvId] = useState')}<string>();
 
   const { departments, loading: deptsLoading } = useSupportDepartments();
   const { conversations, loading: convsLoading, refresh } = useSupportConversations(userId);
@@ -96,8 +98,8 @@ const CustomerSupport: React.FC = () => {
 
       {step === 'subject' && (
         <div className="flex flex-col gap-4 p-4">
-          <p className="text-sm font-medium">What can we help you with?</p>
-          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Briefly describe your issue..." className="rounded-xl" />
+          <p className="text-sm font-medium">{tr('What can we help you with?')}</p>
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={tr('Briefly describe your issue...')} className="rounded-xl" />
           <Button onClick={handleStartChat} className="rounded-xl">Start Chat</Button>
         </div>
       )}

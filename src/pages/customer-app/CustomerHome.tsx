@@ -215,7 +215,7 @@ const CustomerHome: React.FC = () => {
                 {tenant.logoUrl ? (
                   <img src={tenant.logoUrl} alt={tenant.name} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20" />
                 ) : (
-                  <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
+                  <img src={kangLogo} alt={tr('Kang')} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
                 )}
                 <div>
                   <p className="text-[10px] font-medium text-primary-foreground/50">{tr('Welcome back')}</p>
@@ -469,11 +469,11 @@ const CustomerHome: React.FC = () => {
               const item = visibleHealth.find(i => i.featureKey === 'credit_score')!;
               const scoreVal = creditData?.score ?? 0;
               const maxVal = 850;
-              const pct = maxVal > 0 ? scoreVal / maxVal : 0;
+              const pct = maxVal > {tr('0 ? scoreVal / maxVal : 0;
               const r = 40;
               const circ = 2 * Math.PI * r;
               const offset = circ * (1 - pct);
-              return (
+              return (')}
                 <button key={item.path} onClick={() => go(item.path)}
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(150,40%,90%)] p-4 text-left">
                   <div className="relative flex h-24 w-24 items-center justify-center">
@@ -501,8 +501,8 @@ const CustomerHome: React.FC = () => {
 
             {/* Rent Report Card with Image */}
             {visibleHealth.find(i => i.featureKey === 'rent_reporting') && (() => {
-              const item = visibleHealth.find(i => i.featureKey === 'rent_reporting')!;
-              return (
+              const item = visibleHealth.find(i => {tr('i.featureKey === \'rent_reporting\')!;
+              return (')}
                 <button key={item.path} onClick={() => go(item.path)}
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(210,80%,93%)] p-4 text-left">
                   <img src={rentKobImage} alt="Rent Report" className="h-24 w-24 object-contain" />
@@ -528,7 +528,7 @@ const CustomerHome: React.FC = () => {
               className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
-              <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={bgImg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
               {/* Dark overlay */}
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
 
@@ -602,9 +602,9 @@ const CustomerHome: React.FC = () => {
             <p className="text-sm font-semibold text-muted-foreground">{tr('No transactions yet')}</p>
             <p className="text-xs text-muted-foreground">{tr('Link an account to see activity')}</p>
           </div>
-        ) : txnLoading ? (
+        {tr(') : txnLoading ? (')}
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : recentTxns.length === 0 ? (
+        {tr(') : recentTxns.length === 0 ? (')}
           <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-muted/30 p-10">
             <p className="text-sm font-semibold text-muted-foreground">{tr('No transactions yet')}</p>
           </div>

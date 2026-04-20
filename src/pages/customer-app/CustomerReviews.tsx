@@ -10,6 +10,7 @@ import { Star, ThumbsUp, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface ReviewFormProps {
   orderId: string;
@@ -66,7 +67,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
       </div>
 
       <Textarea
-        placeholder="Share your experience (optional)"
+        placeholder={tr('Share your experience (optional)')}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         rows={4}
@@ -80,6 +81,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
 }
 
 export function CustomerReviews() {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [showReviewForm, setShowReviewForm] = useState<string | null>(null);
@@ -177,7 +179,7 @@ export function CustomerReviews() {
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold">Reviews & Ratings</h1>
+            <h1 className="text-2xl font-bold">{tr('Reviews & Ratings')}</h1>
             <p className="text-muted-foreground">Share your shopping experiences</p>
           </div>
         </div>

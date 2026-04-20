@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownLeft, Globe, ChevronRight, Clock, CheckCircle2, XCircle, Banknote, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
   created: { label: 'Created', color: 'bg-muted text-muted-foreground', icon: Clock },
@@ -24,6 +25,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 const FILTERS = ['all', 'pending', 'received', 'credited', 'settled', 'failed'] as const;
 
 const CustomerRemittances: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const [filter, setFilter] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -61,9 +63,10 @@ const CustomerRemittances: React.FC = () => {
 
   const totalReceived = remittances.filter((r: any) => ['credited', 'settled'].includes(r.status))
     .reduce((s: number, r: any) => s + (r.amount_out || 0), 0);
-  const pendingCount = remittances.filter((r: any) => ['pending', 'received'].includes(r.status)).length;
+  const pendingCount = remittances.filter((r: any) => {
+  const tr = useHarvestedT('customer');tr('[\'pending\', \'received\'].includes(r.status)).length;
 
-  return (
+  return (')}
     <div className="flex flex-col gap-5 p-5 pb-8">
       {/* Header */}
       <div>
@@ -82,7 +85,7 @@ const CustomerRemittances: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-4">
           <Clock className="h-5 w-5 text-amber-600 mb-1" />
-          <p className="text-[11px] text-muted-foreground font-medium">Pending</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{tr('Pending')}</p>
           <p className="text-lg font-bold text-foreground">{pendingCount}</p>
         </motion.div>
       </div>
@@ -102,7 +105,7 @@ const CustomerRemittances: React.FC = () => {
       {/* List */}
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
-      ) : filtered.length === 0 ? (
+      {tr(') : filtered.length === 0 ? (')}
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Globe className="h-12 w-12 text-muted-foreground/30 mb-3" />
           <p className="text-sm text-muted-foreground">No inbound remittances found</p>
@@ -146,7 +149,7 @@ const CustomerRemittances: React.FC = () => {
           </DialogHeader>
           {loadingDetail ? (
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : detail?.remittance ? (
+          {tr(') : detail?.remittance ? (')}
             <ScrollArea className="max-h-[60vh]">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -167,7 +170,7 @@ const CustomerRemittances: React.FC = () => {
 
                 {detail.events.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Timeline</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">{tr('Timeline')}</p>
                     <div className="space-y-3">
                       {detail.events.map((evt: any, idx: number) => (
                         <div key={evt.id} className="flex gap-3">

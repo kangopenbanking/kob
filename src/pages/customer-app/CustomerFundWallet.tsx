@@ -15,6 +15,7 @@ import { FundingResult } from '@/components/funding/FundingResult';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -56,23 +57,24 @@ interface BankOption {
 }
 
 const CustomerFundWallet: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState('');
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>('source');
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>{tr('(null);
+  const [phone, setPhone] = useState(\'\');
+  const [email, setEmail] = useState(\'\');
+  const [step, setStep] = useState')}<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>{tr('(\'source\');
   const [processing, setProcessing] = useState(false);
-  const [fundingResult, setFundingResult] = useState<any>(null);
+  const [fundingResult, setFundingResult] = useState')}<any>{tr('(null);
   const [showPin, setShowPin] = useState(false);
 
   // Bank selection state (for bank_transfer method)
-  const [banks, setBanks] = useState<BankOption[]>([]);
+  const [banks, setBanks] = useState')}<BankOption[]>{tr('([]);
   const [banksLoading, setBanksLoading] = useState(false);
-  const [selectedBank, setSelectedBank] = useState<BankOption | null>(null);
+  const [selectedBank, setSelectedBank] = useState')}<BankOption | null>(null);
   const [bankSearch, setBankSearch] = useState('');
 
   // Invalidate caches on redirect return (e.g. after Flutterwave/PayPal redirect)
@@ -243,9 +245,10 @@ const CustomerFundWallet: React.FC = () => {
     else navigate(-1);
   };
 
-  const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
+  const filteredBanks = banks.filter(b => {
+  const tr = useHarvestedT('customer');tr('b.name.toLowerCase().includes(bankSearch.toLowerCase()));
 
-  return (
+  return (')}
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
         <button onClick={goBack}>
@@ -259,14 +262,14 @@ const CustomerFundWallet: React.FC = () => {
           <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <FundingResult result={fundingResult} fmt={fmt} onSuccess={handleSuccess} />
           </motion.div>
-        ) : step === 'source' ? (
+        {tr(') : step === \'source\' ? (')}
           <motion.div key="source" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
             {/* Info banner */}
             <div className="flex items-start gap-3 rounded-2xl bg-primary/10 p-4">
               <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" strokeWidth={1.5} />
               <div>
                 <p className="text-xs font-bold text-foreground">Fund from Linked Accounts</p>
-                <p className="text-[11px] text-muted-foreground">Select one of your linked accounts as the funding source. All payments are processed securely.</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Select one of your linked accounts as the funding source. All payments are processed securely.')}</p>
               </div>
             </div>
 
@@ -274,8 +277,8 @@ const CustomerFundWallet: React.FC = () => {
               <div className="flex justify-center py-10">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : linkedAccounts.length === 0 ? (
-              /* No linked accounts — prompt to link */
+            {tr(') : linkedAccounts.length === 0 ? (
+              /* No linked accounts — prompt to link */')}
               <div className="flex flex-col items-center gap-4 py-10 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                   <LinkIcon className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
@@ -283,7 +286,7 @@ const CustomerFundWallet: React.FC = () => {
                 <div>
                   <p className="text-sm font-bold text-foreground">No Linked Accounts</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    You need at least one linked account (bank, mobile money, card, or PayPal) to add funds to your wallet.
+                    {tr('You need at least one linked account (bank, mobile money, card, or PayPal) to add funds to your wallet.')}
                   </p>
                 </div>
                 <Button asChild className="rounded-2xl">
@@ -298,6 +301,7 @@ const CustomerFundWallet: React.FC = () => {
 
                 <div className="space-y-2">
                   {linkedAccounts.map((acc: any) => {
+  const tr = useHarvestedT('customer');
                     const Icon = providerTypeIcon(acc.provider_type);
                     const colors = providerTypeColors(acc.provider_type, selectedAccountId === acc.id);
                     const selected = selectedAccountId === acc.id;
@@ -327,7 +331,7 @@ const CustomerFundWallet: React.FC = () => {
                           </p>
                         </div>
                         {acc.is_primary && (
-                          <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Primary</span>
+                          <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{tr('Primary')}</span>
                         )}
                         {selected && (
                           <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
@@ -338,12 +342,12 @@ const CustomerFundWallet: React.FC = () => {
                 </div>
 
                 <Button onClick={handleSourceContinue} disabled={!selectedAccountId} className="w-full rounded-2xl h-12 text-sm font-bold">
-                  Continue
+                  {tr('Continue')}
                 </Button>
               </>
             )}
           </motion.div>
-        ) : step === 'bank_select' ? (
+        {tr(') : step === \'bank_select\' ? (')}
           <motion.div key="bank_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-4">
             <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -351,30 +355,30 @@ const CustomerFundWallet: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Select Your Bank</p>
-                <p className="text-[10px] text-muted-foreground">Choose from KOB partner banks & financial institutions</p>
+                <p className="text-[10px] text-muted-foreground">{tr('Choose from KOB partner banks & financial institutions')}</p>
               </div>
             </div>
 
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search banks..." value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} className="h-11 rounded-xl pl-9" />
+              <Input placeholder={tr('Search banks...')} value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} className="h-11 rounded-xl pl-9" />
             </div>
 
             <div className="flex flex-col gap-1.5 max-h-[50vh] overflow-y-auto">
               {banksLoading ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-3">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <p className="text-xs text-muted-foreground">Fetching banks...</p>
+                  <p className="text-xs text-muted-foreground">{tr('Fetching banks...')}</p>
                 </div>
-              ) : filteredBanks.length === 0 ? (
+              {tr(') : filteredBanks.length === 0 ? (')}
                 <div className="flex flex-col items-center justify-center py-10 gap-2">
                   <Building2 className="h-8 w-8 text-muted-foreground/40" />
                   <p className="text-xs text-muted-foreground">No banks found</p>
                 </div>
               ) : (
                 <>
-                  {filteredBanks.some(b => b.source === 'kob') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">🏦 KOB Partner Banks</p>
+                  {filteredBanks.some(b => {tr('b.source === \'kob\') && (')}
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">{tr('🏦 KOB Partner Banks')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'kob').map((bank) => (
                     <button key={`kob-${bank.code}`} onClick={() => handleBankSelect(bank)}
@@ -386,14 +390,14 @@ const CustomerFundWallet: React.FC = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
-                        <p className="text-[10px] text-primary font-medium">Instant • KOB Network</p>
+                        <p className="text-[10px] text-primary font-medium">{tr('Instant • KOB Network')}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
                   ))}
 
-                  {filteredBanks.some(b => b.source === 'flutterwave') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">🌍 Other Banks via Flutterwave</p>
+                  {filteredBanks.some(b => {tr('b.source === \'flutterwave\') && (')}
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('🌍 Other Banks via Flutterwave')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'flutterwave').map((bank) => (
                     <button key={`fw-${bank.code}`} onClick={() => handleBankSelect(bank)}
@@ -405,7 +409,7 @@ const CustomerFundWallet: React.FC = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
-                        <p className="text-[10px] text-muted-foreground">Standard • Flutterwave</p>
+                        <p className="text-[10px] text-muted-foreground">{tr('Standard • Flutterwave')}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
@@ -418,10 +422,11 @@ const CustomerFundWallet: React.FC = () => {
               {banks.length} banks available • KOB + Flutterwave networks
             </p>
           </motion.div>
-        ) : step === 'amount' ? (
+        {tr(') : step === \'amount\' ? (')}
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
             {/* Selected source account */}
             {selectedAccount && (() => {
+  const tr = useHarvestedT('customer');
               const Icon = providerTypeIcon(selectedAccount.provider_type);
               return (
                 <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
@@ -435,7 +440,7 @@ const CustomerFundWallet: React.FC = () => {
                       {method === 'bank_transfer' && selectedBank ? ` → ${selectedBank.name}` : ''}
                     </p>
                   </div>
-                  <button onClick={() => setStep('source')} className="text-[10px] font-bold text-primary">Change</button>
+                  <button onClick={() => setStep('source')} className="text-[10px] font-bold text-primary">{tr('Change')}</button>
                 </div>
               );
             })()}
@@ -470,7 +475,7 @@ const CustomerFundWallet: React.FC = () => {
             )}
             {(method === 'card' || method === 'paypal') && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Email</Label>
+                <Label className="text-xs font-bold">{tr('Email')}</Label>
                 <Input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11 rounded-xl" />
               </div>
             )}
@@ -479,7 +484,7 @@ const CustomerFundWallet: React.FC = () => {
             {numAmount > 0 && (
               <div className="rounded-2xl bg-muted/50 p-4 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Amount</span>
+                  <span className="text-muted-foreground">{tr('Amount')}</span>
                   <span className="font-bold text-foreground">{fmt(numAmount)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
@@ -496,7 +501,7 @@ const CustomerFundWallet: React.FC = () => {
             <Button onClick={() => setShowPin(true)} disabled={processing || !numAmount || numAmount <= 0}
               className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing...')}</span>
               ) : (
                 `Pay ${numAmount > 0 ? fmt(numAmount) : ''}`
               )}

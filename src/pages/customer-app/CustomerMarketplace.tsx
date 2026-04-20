@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { toast } from 'sonner';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 /**
  * CustomerMarketplace — modern marketplace landing.
@@ -47,6 +48,7 @@ const CATEGORY_TILES: CategoryTile[] = [
 ];
 
 export function CustomerMarketplace() {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [search, setSearch] = useState('');
@@ -105,9 +107,10 @@ export function CustomerMarketplace() {
     // CustomerStores reads its own state — keep this simple deep-link.
   };
 
-  const featured = useMemo(() => stores.slice(0, 6), [stores]);
+  const featured = useMemo(() => {
+  const tr = useHarvestedT('customer');tr('stores.slice(0, 6), [stores]);
 
-  return (
+  return (')}
     <div className="min-h-screen bg-muted/30 pb-24">
       {/* ── HERO ─────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
@@ -116,21 +119,21 @@ export function CustomerMarketplace() {
           {/* top bar */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Marketplace</p>
-              <h1 className="text-xl font-bold text-foreground">Shop local, shop better</h1>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{tr('Marketplace')}</p>
+              <h1 className="text-xl font-bold text-foreground">{tr('Shop local, shop better')}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate('/app/wishlist')}
                 className="p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
-                aria-label="Wishlist"
+                aria-label={tr('Wishlist')}
               >
                 <Heart className="w-4 h-4 text-foreground" />
               </button>
               <button
                 onClick={() => navigate('/app/cart')}
                 className="relative p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
-                aria-label="Cart"
+                aria-label={tr('Cart')}
               >
                 <ShoppingBag className="w-4 h-4 text-foreground" />
                 {cartCount > 0 && (
@@ -151,7 +154,7 @@ export function CustomerMarketplace() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <Badge className="bg-secondary-foreground/15 text-secondary-foreground border-0 text-[10px] mb-2">
-                  ✨ Free delivery over 25,000 XAF
+                  {tr('✨ Free delivery over 25,000 XAF')}
                 </Badge>
                 <h2 className="text-2xl font-bold leading-tight">
                   Discover great<br />merchants near you
@@ -180,7 +183,7 @@ export function CustomerMarketplace() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search stores, products…"
+              placeholder={tr('Search stores, products…')}
               className="pl-11 pr-24 h-12 rounded-2xl bg-card border-border/50 shadow-sm text-sm"
             />
             <Button
@@ -188,7 +191,7 @@ export function CustomerMarketplace() {
               size="sm"
               className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 rounded-xl px-4 text-xs font-semibold"
             >
-              Search
+              {tr('Search')}
             </Button>
           </div>
         </div>
@@ -199,7 +202,7 @@ export function CustomerMarketplace() {
         <div className="grid grid-cols-3 gap-2.5">
           <QuickAction icon={Truck} label="Track order" tint="bg-[hsl(217,90%,95%)]" iconColor="text-primary"
             onClick={() => navigate('/app/orders')} />
-          <QuickAction icon={Heart} label="Wishlist" tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
+          <QuickAction icon={Heart} label={tr('Wishlist')} tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
             onClick={() => navigate('/app/wishlist')} />
           <QuickAction icon={Receipt} label="My orders" tint="bg-[hsl(150,60%,93%)]" iconColor="text-secondary"
             onClick={() => navigate('/app/orders')} />
@@ -242,7 +245,7 @@ export function CustomerMarketplace() {
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
-          ) : featured.length === 0 ? (
+          {tr(') : featured.length === 0 ? (')}
             <EmptyState icon={Store} text="No stores published yet" />
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory no-scrollbar">
@@ -302,15 +305,17 @@ export function CustomerMarketplace() {
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
-          ) : trending.length === 0 ? (
+          {tr(') : trending.length === 0 ? (')}
             <EmptyState icon={Package} text="No trending products yet" />
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {trending.slice(0, 6).map((product, i) => {
+  const tr = useHarvestedT('customer');
                 const variants = product.pos_product_variants || [];
-                const price = variants.length ? Math.min(...variants.map((v: any) => v.price || 0)) : 0;
+                const price = variants.length ? Math.min(...variants.map((v: any) => {
+  const tr = useHarvestedT('customer');tr('v.price || 0)) : 0;
                 const image = product.pos_product_images?.[0]?.url;
-                return (
+                return (')}
                   <motion.button
                     key={product.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -348,9 +353,9 @@ export function CustomerMarketplace() {
               <Truck className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Standard delivery — 1,500 XAF</p>
+              <p className="text-sm font-semibold text-foreground">{tr('Standard delivery — 1,500 XAF')}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Add a delivery address at checkout. Track your order from the Orders page.
+                {tr('Add a delivery address at checkout. Track your order from the Orders page.')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />

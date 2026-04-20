@@ -17,6 +17,7 @@ import {
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 // ─── Icon mapping ───
 const iconMap: Record<string, React.ElementType> = {
@@ -24,10 +25,10 @@ const iconMap: Record<string, React.ElementType> = {
   tv: Tv, phone: Phone, shield: Shield, landmark: Landmark,
   receipt: Receipt, 'building-2': Building2,
 };
-const getIcon = (name?: string) => iconMap[name || ''] || Receipt;
+const getIcon = (name?: string) => {tr('iconMap[name || \'\'] || Receipt;
 
 // Category card solid bg colors (no gradients)
-const catCardColor: Record<string, string> = {
+const catCardColor: Record')}<string, string> = {
   'graduation-cap': 'bg-indigo-100 dark:bg-indigo-900/40',
   zap: 'bg-amber-100 dark:bg-amber-900/40',
   droplets: 'bg-sky-100 dark:bg-sky-900/40',
@@ -60,21 +61,22 @@ const slideIn = { initial: { opacity: 0, x: 24 }, animate: { opacity: 1, x: 0 },
 const fadeIn = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -12 } };
 
 const CustomerBillsV2: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const [step, setStep] = useState<Step>('home');
-  const [search, setSearch] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [providerId, setProviderId] = useState<string | null>(null);
-  const [locationId, setLocationId] = useState<string | null>(null);
-  const [productId, setProductId] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [selectedProvider, setSelectedProvider] = useState<any>(null);
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
-  const [payerDetails, setPayerDetails] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<Step>{tr('(\'home\');
+  const [search, setSearch] = useState(\'\');
+  const [categoryId, setCategoryId] = useState')}<string | null>{tr('(null);
+  const [providerId, setProviderId] = useState')}<string | null>{tr('(null);
+  const [locationId, setLocationId] = useState')}<string | null>{tr('(null);
+  const [productId, setProductId] = useState')}<string | null>{tr('(null);
+  const [selectedProduct, setSelectedProduct] = useState')}<any>{tr('(null);
+  const [selectedProvider, setSelectedProvider] = useState')}<any>{tr('(null);
+  const [selectedLocation, setSelectedLocation] = useState')}<any>{tr('(null);
+  const [payerDetails, setPayerDetails] = useState')}<Record<string, string>>({});
   const [amount, setAmount] = useState('');
-  const [intent, setIntent] = useState<any>(null);
-  const [payment, setPayment] = useState<any>(null);
+  const [intent, setIntent] = useState<any>{tr('(null);
+  const [payment, setPayment] = useState')}<any>(null);
   const [showPin, setShowPin] = useState(false);
 
   const { data: categories = [], isLoading: catLoading } = useBillCategories();
@@ -212,7 +214,7 @@ const CustomerBillsV2: React.FC = () => {
           <motion.div key="home" {...fadeIn} className="flex flex-col gap-5">
             <motion.div variants={fadeUp} initial="initial" animate="animate" className="relative">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-              <Input placeholder="Search categories…" value={search} onChange={e => setSearch(e.target.value)}
+              <Input placeholder={tr('Search categories…')} value={search} onChange={e => setSearch(e.target.value)}
                 className="h-11 rounded-2xl border-border/50 bg-muted/40 pl-10 text-sm shadow-sm" />
             </motion.div>
 
@@ -246,7 +248,7 @@ const CustomerBillsV2: React.FC = () => {
                 <Clock className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                 <h2 className="text-sm font-bold text-foreground">Recent Payments</h2>
               </div>
-              {recentLoading ? <SkeletonList count={3} /> : recentPayments.length === 0 ? (
+              {recentLoading ? <SkeletonList count={3} /> {tr(': recentPayments.length === 0 ? (')}
                 <motion.div variants={fadeUp} initial="initial" animate="animate"
                   className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 py-10 ring-1 ring-border/30">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -257,6 +259,7 @@ const CustomerBillsV2: React.FC = () => {
               ) : (
                 <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-2.5">
                   {recentPayments.map((p: any) => {
+  const tr = useHarvestedT('customer');
                     const pIcon = p.bill_providers?.icon;
                     const bgColor = catCardColor[pIcon] || 'bg-muted';
                     const iconColor = catIconBg[pIcon] || 'bg-primary';
@@ -273,7 +276,7 @@ const CustomerBillsV2: React.FC = () => {
                         <div className="flex flex-col items-end gap-0.5">
                           <span className="text-sm font-bold text-foreground">{Number(p.total_amount).toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">XAF</span></span>
                           <span className="flex items-center gap-1 text-[10px] font-medium text-primary">
-                            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Paid
+                            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> {tr('Paid')}
                           </span>
                         </div>
                       </motion.div>
@@ -288,7 +291,7 @@ const CustomerBillsV2: React.FC = () => {
         {/* ─── PROVIDERS ─── */}
         {step === 'providers' && (
           <motion.div key="providers" {...slideIn} className="flex flex-col gap-3">
-            {provLoading ? <SkeletonList count={5} /> : providers.length === 0 ? (
+            {provLoading ? <SkeletonList count={5} /> {tr(': providers.length === 0 ? (')}
               <EmptyState message="No providers found in this category" />
             ) : providers.map((prov: any, i: number) => {
               const Icon = getIcon(prov.icon);
@@ -365,7 +368,7 @@ const CustomerBillsV2: React.FC = () => {
               <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                 <FileText className="h-3.5 w-3.5" strokeWidth={1.5} /> Select Product
               </h3>
-              {prodLoading ? <SkeletonList count={3} /> : products.length === 0 ? (
+              {prodLoading ? <SkeletonList count={3} /> {tr(': products.length === 0 ? (')}
                 <EmptyState message="No products available" />
               ) : products.map((prod: any, i: number) => (
                 <motion.button key={prod.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -382,7 +385,7 @@ const CustomerBillsV2: React.FC = () => {
                         {Number(prod.fixed_amount).toLocaleString()} XAF
                       </span>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground">Variable</span>
+                      <span className="text-[11px] text-muted-foreground">{tr('Variable')}</span>
                     )}
                     <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </div>
@@ -424,7 +427,7 @@ const CustomerBillsV2: React.FC = () => {
 
               {/* Amount */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Amount (XAF)</label>
+                <label className="text-xs font-medium text-muted-foreground">{tr('Amount (XAF)')}</label>
                 {selectedProduct.amount_type === 'fixed' ? (
                   <div className="flex h-12 items-center justify-center rounded-xl bg-muted/50 text-lg font-bold text-foreground">
                     {Number(selectedProduct.fixed_amount).toLocaleString()} XAF
@@ -438,7 +441,7 @@ const CustomerBillsV2: React.FC = () => {
 
             <Button onClick={handleSubmitForm} disabled={createIntent.isPending}
               className="h-12 rounded-2xl text-sm font-semibold gap-2">
-              {createIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating...</> : <>Review Payment <ChevronRight className="h-4 w-4" /></>}
+              {createIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> {tr('Creating...')}</> : <>Review Payment <ChevronRight className="h-4 w-4" /></>}
             </Button>
           </motion.div>
         )}
@@ -457,22 +460,23 @@ const CustomerBillsV2: React.FC = () => {
 
             <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-3">
               <h3 className="text-sm font-bold text-foreground mb-3">Payment Summary</h3>
-              <SummaryRow label="Provider" value={selectedProvider?.name || ''} />
-              {selectedLocation && <SummaryRow label="Location" value={selectedLocation.name} />}
-              <SummaryRow label="Product" value={selectedProduct?.name || ''} />
+              <SummaryRow label={tr('Provider')} value={selectedProvider?.name || ''} />
+              {selectedLocation && <SummaryRow label={tr('Location')} value={selectedLocation.name} />}
+              <SummaryRow label={tr('Product')} value={selectedProduct?.name || ''} />
               {Object.entries(intent.payer_details || {}).map(([k, v]) => {
-                const fieldDef = fields.find((f: any) => f.field_key === k);
-                return <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
+  const tr = useHarvestedT('customer');
+                const fieldDef = fields.find((f: any) => {tr('f.field_key === k);
+                return')} <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
               })}
               <div className="my-2 border-t border-border/40" />
-              <SummaryRow label="Amount" value={`${Number(intent.amount).toLocaleString()} XAF`} bold />
+              <SummaryRow label={tr('Amount')} value={`${Number(intent.amount).toLocaleString()} XAF`} bold />
               <SummaryRow label="Fee" value={`${Number(intent.fee_amount).toLocaleString()} XAF`} />
-              <SummaryRow label="Total" value={`${Number(intent.total_amount).toLocaleString()} XAF`} bold />
+              <SummaryRow label={tr('Total')} value={`${Number(intent.total_amount).toLocaleString()} XAF`} bold />
             </div>
 
             <Button onClick={() => setShowPin(true)} disabled={payIntent.isPending}
               className="h-12 rounded-2xl text-sm font-semibold gap-2">
-              {payIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> : 'Confirm & Pay'}
+              {payIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing...')}</> : 'Confirm & Pay'}
             </Button>
           </motion.div>
         )}
@@ -486,35 +490,36 @@ const CustomerBillsV2: React.FC = () => {
               <CheckCircle2 className="h-8 w-8 text-primary" strokeWidth={1.5} />
             </motion.div>
             <div className="text-center">
-              <h2 className="text-lg font-bold text-foreground">Payment Successful!</h2>
+              <h2 className="text-lg font-bold text-foreground">{tr('Payment Successful!')}</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">Your bill has been paid successfully</p>
             </div>
 
             <div className="w-full rounded-2xl border border-border/60 bg-card p-5 space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                <span className="text-xs text-muted-foreground">Receipt No.</span>
+                <span className="text-xs text-muted-foreground">{tr('Receipt No.')}</span>
                 <span className="font-mono text-xs font-bold text-foreground">{payment.receipt_number}</span>
               </div>
               <SummaryRow label="Trace ID" value={payment.trace_id} mono />
-              <SummaryRow label="Provider" value={selectedProvider?.name || ''} />
-              {selectedLocation && <SummaryRow label="Location" value={selectedLocation.name} />}
-              <SummaryRow label="Product" value={selectedProduct?.name || ''} />
+              <SummaryRow label={tr('Provider')} value={selectedProvider?.name || ''} />
+              {selectedLocation && <SummaryRow label={tr('Location')} value={selectedLocation.name} />}
+              <SummaryRow label={tr('Product')} value={selectedProduct?.name || ''} />
               {Object.entries(payment.payer_details || {}).map(([k, v]) => {
-                const fieldDef = fields.find((f: any) => f.field_key === k);
-                return <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
+  const tr = useHarvestedT('customer');
+                const fieldDef = fields.find((f: any) => {tr('f.field_key === k);
+                return')} <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
               })}
               <div className="my-1 border-t border-border/40" />
-              <SummaryRow label="Amount" value={`${Number(payment.amount).toLocaleString()} XAF`} />
+              <SummaryRow label={tr('Amount')} value={`${Number(payment.amount).toLocaleString()} XAF`} />
               <SummaryRow label="Fee" value={`${Number(payment.fee_amount).toLocaleString()} XAF`} />
               <SummaryRow label="Total Paid" value={`${Number(payment.total_amount).toLocaleString()} XAF`} bold />
-              <SummaryRow label="Date" value={new Date(payment.paid_at).toLocaleString()} />
-              <SummaryRow label="Status" value="Completed" status="success" />
+              <SummaryRow label={tr('Date')} value={new Date(payment.paid_at).toLocaleString()} />
+              <SummaryRow label={tr('Status')} value="Completed" status="success" />
             </div>
 
             <div className="flex w-full gap-2">
               {navigator.share && (
                 <Button variant="outline" className="flex-1 h-11 rounded-2xl gap-1.5 text-xs" onClick={handleShare}>
-                  <Share2 className="h-4 w-4" strokeWidth={1.5} /> Share
+                  <Share2 className="h-4 w-4" strokeWidth={1.5} /> {tr('Share')}
                 </Button>
               )}
               <Button variant="outline" className="flex-1 h-11 rounded-2xl gap-1.5 text-xs" onClick={reset}>

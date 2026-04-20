@@ -19,6 +19,7 @@ import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
 import PersonalSavingImg from '@/assets/Personal_Savings.png';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SavingsCategory = 'bank' | 'personal' | null;
 type ViewMode = 'home' | 'list' | 'create' | 'explore';
@@ -45,6 +46,7 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
 
 const CustomerPiggyBank: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
@@ -55,15 +57,15 @@ const CustomerPiggyBank: React.FC = () => {
   const cancelPlan = useCancelPiggyBankPlan();
   const deletePlan = useDeletePiggyBankPlan();
   const [showPin, setShowPin] = useState(false);
-  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
-  const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
-  const [cancelConfirm, setCancelConfirm] = useState<{ planId: string; planName: string } | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ planId: string; planName: string; isCancelled: boolean } | null>(null);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>{tr('(null);
+  const [pendingAccountId, setPendingAccountId] = useState')}<string | null>{tr('(null);
+  const [cancelConfirm, setCancelConfirm] = useState')}<{ planId: string; planName: string } | null>{tr('(null);
+  const [deleteConfirm, setDeleteConfirm] = useState')}<{ planId: string; planName: string; isCancelled: boolean } | null>{tr('(null);
 
   const [showWelcome, setShowWelcome] = useState(false);
-  const [view, setView] = useState<ViewMode>('home');
-  const [selectedCategory, setSelectedCategory] = useState<SavingsCategory>(null);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [view, setView] = useState')}<ViewMode>{tr('(\'home\');
+  const [selectedCategory, setSelectedCategory] = useState')}<SavingsCategory>{tr('(null);
+  const [selectedProduct, setSelectedProduct] = useState')}<any>(null);
 
   // Create form state
   const [planName, setPlanName] = useState('');
@@ -187,17 +189,17 @@ const CustomerPiggyBank: React.FC = () => {
               <p className="text-3xl font-bold mt-1">{formatCurrency(totalSaved(plans))}</p>
               <div className="flex items-center gap-4 mt-3">
                 <div>
-                  <p className="text-[10px] opacity-70">Plans</p>
+                  <p className="text-[10px] opacity-70">{tr('Plans')}</p>
                   <p className="text-sm font-bold">{plans.length}</p>
                 </div>
                 <div className="h-6 w-px bg-primary-foreground/20" />
                 <div>
-                  <p className="text-[10px] opacity-70">Target</p>
+                  <p className="text-[10px] opacity-70">{tr('Target')}</p>
                   <p className="text-sm font-bold">{formatCurrency(totalTarget(plans))}</p>
                 </div>
                 <div className="h-6 w-px bg-primary-foreground/20" />
                 <div>
-                  <p className="text-[10px] opacity-70">Auto-Fund</p>
+                  <p className="text-[10px] opacity-70">{tr('Auto-Fund')}</p>
                   <p className="text-sm font-bold">{plans.filter((p: any) => p.auto_fund_enabled).length} active</p>
                 </div>
               </div>
@@ -256,11 +258,11 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="rounded-3xl border border-border bg-card p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Saved</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Saved')}</p>
                   <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalSaved(displayPlans))}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Target</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Target')}</p>
                   <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalTarget(displayPlans))}</p>
                 </div>
               </div>
@@ -298,27 +300,27 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="rounded-2xl border border-border bg-card p-5 space-y-5">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Plan Name</label>
-                <Input value={planName} onChange={e => setPlanName(e.target.value)} placeholder="e.g. New Phone, Vacation" className="rounded-xl h-11" />
+                <Input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={tr('e.g. New Phone, Vacation')} className="rounded-xl h-11" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Target (XAF)</label>
-                  <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="Optional" className="rounded-xl h-11" />
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Target (XAF)')}</label>
+                  <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder={tr('Optional')} className="rounded-xl h-11" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Per Payment (XAF) *</label>
-                  <Input type="number" value={installmentAmount} onChange={e => setInstallmentAmount(e.target.value)} placeholder="Amount" className="rounded-xl h-11" />
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Per Payment (XAF) *')}</label>
+                  <Input type="number" value={installmentAmount} onChange={e => setInstallmentAmount(e.target.value)} placeholder={tr('Amount')} className="rounded-xl h-11" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Frequency</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Frequency')}</label>
                   <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
                     <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="daily">{tr('Daily')}</SelectItem>
+                      <SelectItem value="weekly">{tr('Weekly')}</SelectItem>
+                      <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -337,7 +339,7 @@ const CustomerPiggyBank: React.FC = () => {
                     <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">Auto-Fund</p>
+                    <p className="text-sm font-bold text-foreground">{tr('Auto-Fund')}</p>
                     <p className="text-[10px] text-muted-foreground">Automatically debit your wallet</p>
                   </div>
                 </div>
@@ -371,7 +373,7 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4 flex items-start gap-3">
               <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
               <p className="text-xs text-foreground/80">
-                Every on-time payment is reported to CrediQ and improves your credit score automatically.
+                {tr('Every on-time payment is reported to CrediQ and improves your credit score automatically.')}
               </p>
             </div>
 
@@ -381,7 +383,7 @@ const CustomerPiggyBank: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-destructive">Cancellation Warning</p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Stopping or deleting this plan after creation will result in a <span className="font-bold text-destructive">-5 point</span> impact to your CrediQ credit score. Only create a plan you intend to complete.
+                  Stopping or deleting this plan after creation will result in a <span className="font-bold text-destructive">-5 point</span> {tr('impact to your CrediQ credit score. Only create a plan you intend to complete.')}
                 </p>
               </div>
             </div>
@@ -404,7 +406,7 @@ const CustomerPiggyBank: React.FC = () => {
                 <AlertTriangle className="h-6 w-6 text-destructive" strokeWidth={1.5} />
               </div>
               <div>
-                <AlertDialogTitle className="text-base">Cancel Savings Plan?</AlertDialogTitle>
+                <AlertDialogTitle className="text-base">{tr('Cancel Savings Plan?')}</AlertDialogTitle>
               </div>
             </div>
             <AlertDialogDescription asChild>
@@ -418,12 +420,12 @@ const CustomerPiggyBank: React.FC = () => {
                     <p className="text-xs font-semibold text-destructive">Credit Score Impact: -5 points</p>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Cancelling a savings plan is reported to CrediQ and will reduce your credit score by 5 points. This action cannot be undone.
+                    {tr('Cancelling a savings plan is reported to CrediQ and will reduce your credit score by 5 points. This action cannot be undone.')}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-muted/50 p-3">
                   <p className="text-[11px] text-muted-foreground">
-                    All pending payments will be cancelled. Payments already made will remain on your record.
+                    {tr('All pending payments will be cancelled. Payments already made will remain on your record.')}
                   </p>
                 </div>
               </div>
@@ -456,12 +458,12 @@ const CustomerPiggyBank: React.FC = () => {
               <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
                 <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.5} />
               </div>
-              <AlertDialogTitle className="text-base">Delete Personal Savings?</AlertDialogTitle>
+              <AlertDialogTitle className="text-base">{tr('Delete Personal Savings?')}</AlertDialogTitle>
             </div>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Permanently remove <span className="font-semibold text-foreground">"{deleteConfirm?.planName}"</span> from your records.
+                  Permanently remove <span className="font-semibold text-foreground">"{deleteConfirm?.planName}"</span> {tr('from your records.')}
                 </p>
                 <div className="rounded-2xl bg-muted/50 p-3 space-y-1">
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -474,7 +476,7 @@ const CustomerPiggyBank: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-2">
-            <AlertDialogCancel className="rounded-xl">Keep</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{tr('Keep')}</AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deletePlan.isPending}
@@ -523,7 +525,7 @@ function CategoryCard({ image, title, subtitle, saved, bgClass, buttonLabel, onC
           <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
         <div className="relative z-10">
-          <p className="text-[10px] text-muted-foreground">Saved</p>
+          <p className="text-[10px] text-muted-foreground">{tr('Saved')}</p>
           <p className="text-lg font-bold text-foreground">{formatCurrency(saved)}</p>
         </div>
         <img src={image} alt={title} className="absolute bottom-2 right-2 h-20 w-20 object-contain opacity-80" />
@@ -538,9 +540,9 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const totalPaid = paidPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
   const target = plan.target_amount || 0;
-  const pct = target > 0 ? Math.min(100, Math.round((totalPaid / target) * 100)) : 0;
+  const pct = target > {tr('0 ? Math.min(100, Math.round((totalPaid / target) * 100)) : 0;
 
-  return (
+  return (')}
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -601,7 +603,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
           <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${isCancelled ? 'bg-destructive/10' : isBank ? 'bg-primary/10' : 'bg-accent/20'}`}>
             {isCancelled ? (
               <StopCircle className="h-5 w-5 text-destructive" strokeWidth={1.5} />
-            ) : plan.auto_fund_enabled ? (
+            {tr(') : plan.auto_fund_enabled ? (')}
               <Zap className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
             ) : (
               <Target className={`h-5 w-5 ${isBank ? 'text-primary' : 'text-accent-foreground'}`} strokeWidth={1.5} />
@@ -612,10 +614,10 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             <div className="flex items-center gap-1.5 mt-0.5">
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 capitalize">{plan.schedule_frequency}</Badge>
               {plan.auto_fund_enabled && !isCancelled && (
-                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Auto-Fund</Badge>
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{tr('Auto-Fund')}</Badge>
               )}
               {isCancelled && (
-                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Cancelled</Badge>
+                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">{tr('Cancelled')}</Badge>
               )}
             </div>
           </div>
@@ -657,15 +659,15 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Paid</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Paid')}</p>
           <p className="text-sm font-bold text-foreground">{paidPayments.length}</p>
         </div>
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Streak</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Streak')}</p>
           <p className="text-sm font-bold text-foreground">{streakCount}</p>
         </div>
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Missed</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Missed')}</p>
           <p className="text-sm font-bold text-destructive">{missedPayments.length}</p>
         </div>
       </div>
@@ -720,11 +722,12 @@ const getTypeLabel = (type: string) => {
 };
 
 const getTypeIcon = (type: string) => {
+  const tr = useHarvestedT('customer');
   switch (type) {
-    case 'fixed_deposit': return <Lock className="h-4 w-4" strokeWidth={1.5} />;
-    case 'goal_savings': return <Target className="h-4 w-4" strokeWidth={1.5} />;
-    case 'high_yield': return <TrendingUp className="h-4 w-4" strokeWidth={1.5} />;
-    default: return <CircleDollarSign className="h-4 w-4" strokeWidth={1.5} />;
+    case 'fixed_deposit': return <Lock className="h-4 w-4" strokeWidth={1.5} />{tr(';
+    case \'goal_savings\': return')} <Target className="h-4 w-4" strokeWidth={1.5} />{tr(';
+    case \'high_yield\': return')} <TrendingUp className="h-4 w-4" strokeWidth={1.5} />{tr(';
+    default: return')} <CircleDollarSign className="h-4 w-4" strokeWidth={1.5} />;
   }
 };
 
@@ -735,8 +738,8 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 }) {
   const { data: products = [], isLoading } = useSavingsProducts();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<SavingsTypeFilter>('all');
-  const [groupBy, setGroupBy] = useState<GroupBy>('institution');
+  const [typeFilter, setTypeFilter] = useState<SavingsTypeFilter>{tr('(\'all\');
+  const [groupBy, setGroupBy] = useState')}<GroupBy>('institution');
 
   const allProducts = products as any[];
 
@@ -794,7 +797,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
       <div className="rounded-3xl bg-primary/5 border border-primary/10 p-5">
         <p className="text-sm font-bold text-foreground">Explore Savings Products</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Compare savings accounts from top financial institutions and apply directly.
+          {tr('Compare savings accounts from top financial institutions and apply directly.')}
         </p>
         {bankPlansCount > 0 && (
           <Button variant="link" size="sm" className="px-0 mt-2 h-auto text-xs text-primary" onClick={onViewPlans}>
@@ -807,7 +810,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by product or institution..." className="rounded-2xl pl-9 h-11 text-xs" />
+        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={tr('Search by product or institution...')} className="rounded-2xl pl-9 h-11 text-xs" />
       </div>
 
       {/* Filter chips */}
@@ -863,6 +866,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
       ) : (
         <div className="space-y-6">
           {groups.map((group, idx) => {
+  const tr = useHarvestedT('customer');
             const palette = INSTITUTION_COLORS[group.colorIdx % INSTITUTION_COLORS.length];
             return (
               <motion.div
@@ -909,12 +913,12 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 
                       <div className="mt-3 space-y-1.5">
                         <div className="rounded-lg bg-muted/50 px-2 py-1.5">
-                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Min. Opening</p>
+                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{tr('Min. Opening')}</p>
                           <p className="text-[11px] font-semibold text-foreground">{formatCurrency(product.min_opening_balance)}</p>
                         </div>
                         {product.lock_in_period_months && (
                           <div className="rounded-lg bg-muted/50 px-2 py-1.5">
-                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Lock-in</p>
+                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{tr('Lock-in')}</p>
                             <p className="text-[11px] font-semibold text-foreground">{product.lock_in_period_months} months</p>
                           </div>
                         )}
@@ -950,7 +954,7 @@ function WelcomeDialog({ open, onClose }: { open: boolean; onClose: () => void }
             <Target className="h-7 w-7 text-primary" strokeWidth={1.5} />
           </div>
           <h2 className="text-lg font-bold text-foreground">Welcome to Piggy Bank</h2>
-          <p className="text-xs text-muted-foreground">Save money, build credit — automatically.</p>
+          <p className="text-xs text-muted-foreground">{tr('Save money, build credit — automatically.')}</p>
         </div>
 
         <div className="space-y-4">

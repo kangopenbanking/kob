@@ -11,12 +11,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 type RecipientType = 'phone' | 'account' | 'name' | 'rib' | 'iban';
 
 const CustomerTransfer: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -47,22 +49,22 @@ const CustomerTransfer: React.FC = () => {
     return out;
   }, [recentTx]);
 
-  const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
-  const [amount, setAmount] = useState('');
-  const [recipient, setRecipient] = useState('');
-  const [recipientType, setRecipientType] = useState<RecipientType>('phone');
+  const [step, setStep] = useState<'form' | 'confirm' | 'success'>{tr('(\'form\');
+  const [amount, setAmount] = useState(\'\');
+  const [recipient, setRecipient] = useState(\'\');
+  const [recipientType, setRecipientType] = useState')}<RecipientType>('phone');
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedAccountIdx, setSelectedAccountIdx] = useState(0);
   const [showPin, setShowPin] = useState(false);
-  const [transferResult, setTransferResult] = useState<any>(null);
-  const [nameSuggestions, setNameSuggestions] = useState<any[]>([]);
+  const [transferResult, setTransferResult] = useState<any>{tr('(null);
+  const [nameSuggestions, setNameSuggestions] = useState')}<any[]>{tr('([]);
   const [nameSearching, setNameSearching] = useState(false);
-  const [selectedRecipientName, setSelectedRecipientName] = useState('');
-  const [selectedRecipientHasAccount, setSelectedRecipientHasAccount] = useState<boolean | null>(null);
+  const [selectedRecipientName, setSelectedRecipientName] = useState(\'\');
+  const [selectedRecipientHasAccount, setSelectedRecipientHasAccount] = useState')}<boolean | null>{tr('(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const amountRef = useRef<HTMLInputElement>(null);
+  const nameDebounceRef = useRef')}<ReturnType<typeof setTimeout> | null>{tr('(null);
+  const amountRef = useRef')}<HTMLInputElement>(null);
 
   // Debounced name search
   const searchByName = useCallback(async (query: string) => {
@@ -312,10 +314,10 @@ const CustomerTransfer: React.FC = () => {
               <div className="w-full rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-700 dark:text-amber-400" strokeWidth={1.5} />
-                  <p className="text-sm font-bold text-amber-900 dark:text-amber-300">Funds Held — Pending Activation</p>
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-300">{tr('Funds Held — Pending Activation')}</p>
                 </div>
                 <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-                  The recipient hasn't fully activated their Kang account yet. We've debited your wallet and are holding the funds securely. They will be released automatically the moment <span className="font-semibold">{transferResult?.receiver || recipient}</span> verifies their phone and sets a PIN. Please notify them to complete activation.
+                  {tr('The recipient hasn\'t fully activated their Kang account yet. We\'ve debited your wallet and are holding the funds securely. They will be released automatically the moment')} <span className="font-semibold">{transferResult?.receiver || recipient}</span> {tr('verifies their phone and sets a PIN. Please notify them to complete activation.')}
                 </p>
               </div>
             ) : (
@@ -334,7 +336,7 @@ const CustomerTransfer: React.FC = () => {
                 <Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Send Another
               </Button>
               <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={() => navigate(-1)}>
-                Done
+                {tr('Done')}
               </Button>
             </div>
           </motion.div>
@@ -346,18 +348,18 @@ const CustomerTransfer: React.FC = () => {
             className="flex flex-col gap-5 px-5 pt-3 pb-8 flex-1">
             <div className="rounded-3xl border-2 border-foreground bg-card overflow-hidden">
               <div className="bg-[hsl(225,50%,22%)] p-6 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60 mb-1">Amount</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60 mb-1">{tr('Amount')}</p>
                 <p className="text-3xl font-bold text-[hsl(0,0%,100%)]">{currency} {amountNum.toLocaleString()}</p>
               </div>
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">Recipient</span>
+                  <span className="text-xs text-muted-foreground">{tr('Recipient')}</span>
                   <span className="text-sm font-bold text-foreground font-mono text-right max-w-[60%] break-all">
                     {selectedRecipientName || recipient}
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">Type</span>
+                  <span className="text-xs text-muted-foreground">{tr('Type')}</span>
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                     recipientType === 'rib' ? 'bg-[hsl(210,80%,93%)] text-[hsl(210,60%,45%)]'
                     : recipientType === 'iban' ? 'bg-[hsl(270,50%,92%)] text-[hsl(270,50%,45%)]'
@@ -367,20 +369,20 @@ const CustomerTransfer: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">From</span>
+                  <span className="text-xs text-muted-foreground">{tr('From')}</span>
                   <span className="text-sm font-bold text-foreground">
                     {selectedAccount?.nickname || selectedAccount?.account_holder_name || 'Primary Account'}
                   </span>
                 </div>
                 {note && (
                   <div className="flex items-center justify-between px-5 py-4">
-                    <span className="text-xs text-muted-foreground">Note</span>
+                    <span className="text-xs text-muted-foreground">{tr('Note')}</span>
                     <span className="text-sm text-foreground italic">{note}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Fee</span>
-                  <span className="text-sm font-bold text-[hsl(150,60%,40%)]">Free</span>
+                  <span className="text-sm font-bold text-[hsl(150,60%,40%)]">{tr('Free')}</span>
                 </div>
               </div>
             </div>
@@ -389,10 +391,10 @@ const CustomerTransfer: React.FC = () => {
               <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={sending} onClick={() => setShowPin(true)}>
                 {sending ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {tr('Sending...')}
                   </span>
                 ) : (
-                  <><Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm & Send</>
+                  <><Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Confirm & Send')}</>
                 )}
               </Button>
               <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={() => setStep('form')}>
@@ -449,7 +451,7 @@ const CustomerTransfer: React.FC = () => {
             {/* Recipient Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Recipient')}</p>
                 <button
                   type="button"
                   onClick={() => navigate('/app/send-money')}
@@ -458,7 +460,7 @@ const CustomerTransfer: React.FC = () => {
                   <Smartphone className="h-3 w-3" strokeWidth={2} />
                   <Landmark className="h-3 w-3" strokeWidth={2} />
                   <Mail className="h-3 w-3" strokeWidth={2} />
-                  <span>MoMo · Bank · PayPal</span>
+                  <span>{tr('MoMo · Bank · PayPal')}</span>
                   <ChevronRight className="h-3 w-3" strokeWidth={2} />
                 </button>
               </div>
@@ -467,7 +469,7 @@ const CustomerTransfer: React.FC = () => {
               {recentRecipients.length > 0 && (
                 <div>
                   <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1">
-                    <History className="h-3 w-3" strokeWidth={1.5} /> Recent
+                    <History className="h-3 w-3" strokeWidth={1.5} /> {tr('Recent')}
                   </p>
                   <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
                     {recentRecipients.map((r, i) => (
@@ -520,11 +522,11 @@ const CustomerTransfer: React.FC = () => {
               <div className="relative">
                 {recipientType === 'phone' ? (
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
-                ) : recipientType === 'name' ? (
+                {tr(') : recipientType === \'name\' ? (')}
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
-                ) : recipientType === 'rib' ? (
+                {tr(') : recipientType === \'rib\' ? (')}
                   <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
-                ) : recipientType === 'iban' ? (
+                {tr(') : recipientType === \'iban\' ? (')}
                   <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 ) : (
                   <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
@@ -574,7 +576,7 @@ const CustomerTransfer: React.FC = () => {
                 )}
 
                 {/* Name suggestions dropdown */}
-                {recipientType === 'name' && showSuggestions && nameSuggestions.length > 0 && !selectedRecipientName && (
+                {recipientType === 'name' && showSuggestions && nameSuggestions.length > {tr('0 && !selectedRecipientName && (')}
                   <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl border border-border bg-card shadow-lg overflow-hidden">
                     {nameSuggestions.map((s, i) => (
                       <button
@@ -599,9 +601,9 @@ const CustomerTransfer: React.FC = () => {
                           )}
                         </div>
                         {s.hasAccount ? (
-                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">Active</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">{tr('Active')}</span>
                         ) : (
-                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">New</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">{tr('New')}</span>
                         )}
                       </button>
                     ))}
@@ -609,7 +611,7 @@ const CustomerTransfer: React.FC = () => {
                 )}
 
                 {/* No results message */}
-                {recipientType === 'name' && showSuggestions && nameSuggestions.length === 0 && !nameSearching && recipient.length >= 2 && !selectedRecipientName && (
+                {recipientType === 'name' && showSuggestions && nameSuggestions.length === 0 && !nameSearching && recipient.length >{tr('= 2 && !selectedRecipientName && (')}
                   <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl border border-border bg-card shadow-lg p-4">
                     <p className="text-xs text-muted-foreground text-center">No users found matching "{recipient}"</p>
                   </div>
@@ -630,7 +632,7 @@ const CustomerTransfer: React.FC = () => {
                     {selectedRecipientName} doesn't have an active Kang wallet yet
                   </p>
                   <p className="text-[10px] leading-relaxed text-[hsl(35,60%,30%)]">
-                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
+                    {tr('We\'ll automatically create a wallet for them when you send.')} <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> {tr('(verify phone, set PIN, and complete KYC) so they can access and use the funds you send.')}
                   </p>
                 </div>
               )}
@@ -639,12 +641,14 @@ const CustomerTransfer: React.FC = () => {
             {/* Source Account */}
             {accounts.length > 0 && (
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">From</p>
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('From')}</p>
                 <div className="space-y-2">
                   {accounts.map((acc: any, i: number) => {
-                    const bal = balances.find((b: any) => b.account_id === acc.id);
+  const tr = useHarvestedT('customer');
+                    const bal = balances.find((b: any) => {
+  const tr = useHarvestedT('customer');tr('b.account_id === acc.id);
                     const isSelected = selectedAccountIdx === i;
-                    return (
+                    return (')}
                       <button key={acc.id} onClick={() => setSelectedAccountIdx(i)}
                         className={`flex items-center gap-3 rounded-2xl p-3.5 w-full text-left transition-all ${
                           isSelected ? 'bg-[hsl(225,50%,22%)] ring-2 ring-primary' : 'bg-card border border-border'
@@ -681,11 +685,11 @@ const CustomerTransfer: React.FC = () => {
 
             {/* Note */}
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Note (optional)</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Note (optional)')}</p>
               <Input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="What's this for?"
+                placeholder={tr('What\'s this for?')}
                 className="h-11 rounded-2xl text-sm"
                 maxLength={100}
               />
@@ -704,7 +708,7 @@ const CustomerTransfer: React.FC = () => {
               }
               onClick={handleContinue}
             >
-              <Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Continue
+              <Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Continue')}
             </Button>
           </motion.div>
         )}
