@@ -206,7 +206,7 @@ export default function MerchantStorefront() {
   }) : '';
 
   const qrPayloadUrl = merchantId
-    ? `https://kob.lovable.app/pay?d=${encodeURIComponent(btoa(qrPayload))}`
+    ? `https://kangopenbanking.com/pay?d=${encodeURIComponent(btoa(qrPayload))}`
     : '';
 
   const copyQr = () => {

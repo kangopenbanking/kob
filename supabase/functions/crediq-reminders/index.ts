@@ -14,7 +14,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const APP_URL = 'https://kob.lovable.app';
+const APP_URL = 'https://kangopenbanking.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });

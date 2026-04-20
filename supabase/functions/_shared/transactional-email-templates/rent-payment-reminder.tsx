@@ -71,7 +71,7 @@ const RentPaymentReminder = ({
                 : 'Recording your rent payment on time earns +5–10 CrediQ points. Late payments cost -10–25 pts, and missed payments cost -30 pts.'}
             </Text>
             <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-              <Button href={cta_url || 'https://kob.lovable.app/app/rent-reporting'} style={s.button}>
+              <Button href={cta_url || 'https://kangopenbanking.com/app/rent-reporting'} style={s.button}>
                 {is_overdue ? 'Record payment now' : 'Open Rent Reporting'}
               </Button>
             </Section>
@@ -104,6 +104,6 @@ export const template = {
     due_date: 'May 1, 2026',
     days_until_due: 3,
     is_overdue: false,
-    cta_url: 'https://kob.lovable.app/app/rent-reporting',
+    cta_url: 'https://kangopenbanking.com/app/rent-reporting',
   },
 } satisfies TemplateEntry

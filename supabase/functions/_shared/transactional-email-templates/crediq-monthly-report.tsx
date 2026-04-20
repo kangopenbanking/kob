@@ -26,7 +26,7 @@ const CrediQMonthlyReport = ({ name, score, band, premium, cta_url }: Props) => 
             <Text style={s.text}>Unlock your full bureau-grade report, AI tips and change alerts with CrediQ Premium for 1,500 XAF / month.</Text>
           )}
           <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-            <Button href={cta_url || 'https://kob.lovable.app/app/credit'} style={s.button}>
+            <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>
               {premium ? 'View full report' : 'Upgrade to Premium'}
             </Button>
           </Section>
@@ -44,5 +44,5 @@ export const template = {
   component: CrediQMonthlyReport,
   subject: (d: Record<string, any>) => `Your monthly CrediQ report — ${d.score ?? ''}`.trim(),
   displayName: 'CrediQ — Monthly report',
-  previewData: { name: 'Alex', score: 712, band: 'Good', premium: false, cta_url: 'https://kob.lovable.app/app/credit' },
+  previewData: { name: 'Alex', score: 712, band: 'Good', premium: false, cta_url: 'https://kangopenbanking.com/app/credit' },
 } satisfies TemplateEntry

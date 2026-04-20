@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
 });
 
 async function buildSigned(qr: any, merchantName: string) {
-  const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://kob.lovable.app';
+  const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://kangopenbanking.com';
   const url = `${origin}/pay/m/${qr.slug}`;
   const decoded: Record<string, any> = {
     type: 'kob_pos_pay', v: 2, slug: qr.slug, merchant_id: qr.merchant_id,
