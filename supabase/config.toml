@@ -276,6 +276,9 @@ verify_jwt = false
 [functions.facilitated-mobile-money-charge]
 verify_jwt = false
 
+[functions.payment-facilitation-router]
+verify_jwt = false
+
 [functions.firebase-phone-verify]
 verify_jwt = false
 
