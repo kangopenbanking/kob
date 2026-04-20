@@ -76,7 +76,8 @@ export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComple
     setLoading(true);
     try {
       const fullPhone = `${form.countryCode}${form.phone}`;
-      const emailForAuth = form.email || `${fullPhone.replace(/\+/g, '')}@temp.kob.cm`;
+      // Bootstrap email; will be normalized to {kang_id}@kang.id post-signup.
+      const emailForAuth = form.email || `${fullPhone.replace(/\+/g, '')}@kang.id`;
 
       // 1. Sign up
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -115,9 +116,9 @@ export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComple
         console.error('PIN set failed (non-blocking):', pinError);
       }
 
-      // 4. Normalize placeholder email to {user_id}@temp.kob.cm when no real
+      // 4. Normalize placeholder email to {kang_id}@kang.id when no real
       //    email was provided. This keeps every account's auth email unique
-      //    and tied to its stable user id rather than its phone number.
+      //    and tied to its permanent KANG ID rather than its phone number.
       if (!form.email) {
         const { error: normErr } = await supabase.functions.invoke('normalize-user-email');
         if (normErr) {

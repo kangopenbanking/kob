@@ -23446,16 +23446,27 @@ export type Database = {
         }
         Returns: string
       }
-      lookup_recipient: {
-        Args: { _limit?: number; _query: string }
-        Returns: {
-          full_name: string
-          kang_id: string
-          match_type: string
-          phone_masked: string
-          user_id: string
-        }[]
-      }
+      lookup_recipient:
+        | {
+            Args: { _query: string }
+            Returns: {
+              full_name: string
+              kang_id: string
+              match_type: string
+              phone_masked: string
+              user_id: string
+            }[]
+          }
+        | {
+            Args: { _limit?: number; _query: string }
+            Returns: {
+              full_name: string
+              kang_id: string
+              match_type: string
+              phone_masked: string
+              user_id: string
+            }[]
+          }
       make_user_admin: { Args: { _user_id: string }; Returns: undefined }
       move_to_dlq: {
         Args: {

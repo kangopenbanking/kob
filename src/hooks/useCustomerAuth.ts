@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerProfile {
   id: string;
-  /** Permanent human-friendly identifier, e.g. "KNG-7H3K9PXM2A". */
+  /** Permanent human-friendly identifier, e.g. "KANG-7H3K9PXM2A". */
   kangId: string | null;
   fullName: string | null;
   linkedAccountType: string | null;
