@@ -275,6 +275,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // --- RECENT SCANS (audit trail for the Business app) ---
+    if (action === 'recent_scans') {
+      const limit = Math.min(Number(body.limit || url.searchParams.get('limit') || 20), 100);
+      const { data, error } = await supabase.from('merchant_qr_scan_log')
+        .select('id, qr_id, user_id, scan_outcome, amount, order_id, failure_reason, ip_address, user_agent, created_at')
+        .eq('merchant_id', merchantId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return new Response(JSON.stringify({ scans: data || [] }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // --- STATS ---
     if (action === 'stats') {
       const { data: log } = await supabase.from('merchant_qr_scan_log')

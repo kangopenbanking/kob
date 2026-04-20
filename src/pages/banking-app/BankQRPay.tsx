@@ -110,7 +110,14 @@ const BankQRPay: React.FC = () => {
       setProcessing(true);
       try {
         const { data, error } = await supabase.functions.invoke('pos-qr-payment', {
-          body: { action: 'pay', merchant_id: merchantQR.merchant_id, amount: finalAmount, order_id: merchantQR.order_id },
+          body: {
+            action: 'pay',
+            merchant_id: merchantQR.merchant_id,
+            amount: finalAmount,
+            order_id: merchantQR.order_id,
+            // v2: forward signed payload so the server can verify HMAC + canonical amount
+            decoded: merchantQR.sig ? merchantQR : undefined,
+          },
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
