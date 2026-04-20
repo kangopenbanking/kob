@@ -46,7 +46,11 @@ export function MermaidDiagram({ chart }: { chart: string }) {
     const render = async () => {
       try {
         const { svg: rendered } = await mermaid.render(id, chart.trim());
-        setSvg(DOMPurify.sanitize(rendered, { USE_PROFILES: { svg: true, svgFilters: true } }));
+        setSvg(DOMPurify.sanitize(rendered, {
+          USE_PROFILES: { svg: true, svgFilters: true },
+          ADD_TAGS: ['foreignObject', 'div', 'span', 'br', 'p', 'style'],
+          ADD_ATTR: ['xmlns', 'requiredFeatures', 'class', 'style', 'x', 'y', 'width', 'height', 'transform', 'dominant-baseline', 'text-anchor', 'font-size', 'font-weight', 'font-family', 'fill', 'stroke', 'marker-end', 'refX', 'refY', 'orient', 'markerWidth', 'markerHeight', 'viewBox', 'cx', 'cy', 'r', 'rx', 'ry', 'dx', 'dy', 'd', 'points'],
+        }));
         setError(null);
       } catch (e) {
         setError("Failed to render diagram");
