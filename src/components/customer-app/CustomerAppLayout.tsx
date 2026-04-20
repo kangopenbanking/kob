@@ -24,6 +24,9 @@ const CustomerAppInner: React.FC = () => {
   const tenant = useCustomerTenant();
   useAppCacheClear();
 
+  // Per-app namespace scoping: Consumer loads only general+auto+customer bundles.
+  useEffect(() => { void loadAppNamespaces('customer'); }, []);
+
   useOneSignal(undefined);
   useRealtimeBalanceSync(user?.id);
   useConsumerWebhookEvents(user?.id);
