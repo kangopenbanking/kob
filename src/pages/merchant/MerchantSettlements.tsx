@@ -133,8 +133,8 @@ export default function MerchantSettlements() {
             {CYCLE_OPTIONS.find(o => o.value === cycle)?.description}
           </p>
           {cycle === "instant" && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-              <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-600 shrink-0" />
+            <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
               <span className="text-foreground">
                 Instant settlement runs every minute and may incur additional payout-rail fees. Daily is recommended for most merchants.
               </span>
