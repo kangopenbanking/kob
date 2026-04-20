@@ -19,17 +19,17 @@ const CustomerRequest: React.FC = () => {
   const [generated, setGenerated] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Derive the user's account ID for the QR code
-  const accountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
+  // Use the user's permanent KANG ID as the receiving identifier
+  const kangId = user?.kangId || '';
   const displayName = profile?.full_name || profile?.phone_number || 'User';
 
-  // Build payment request data
+  // Build payment request data using KANG ID
   const paymentData = useMemo(() => JSON.stringify({
     type: 'kob_pay',
-    account: accountId,
+    kang_id: kangId,
     ...(amount ? { amount: Number(amount) } : {}),
     name: displayName,
-  }), [accountId, amount, displayName]);
+  }), [kangId, amount, displayName]);
 
   // Build a shareable payment link
   const payLink = useMemo(() => {
