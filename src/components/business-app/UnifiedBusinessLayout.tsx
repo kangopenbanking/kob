@@ -1,11 +1,14 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { BusinessAppAuthGuard } from '@/components/auth/BusinessAppAuthGuard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
+import { useMerchantRealtime } from '@/hooks/useMerchantRealtime';
 import { BusinessMobileNav } from './BusinessMobileNav';
 import { BusinessDesktopSidebar } from './BusinessDesktopSidebar';
 import { BusinessTopBar } from './BusinessTopBar';
