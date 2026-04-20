@@ -62,6 +62,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Wallet', icon: Wallet, path: `${basePath}/wallet` },
       { label: 'Receive', icon: ScanLine, path: `${basePath}/receive` },
+      { label: 'My QR Code', icon: QrCode, path: `${basePath}/qr-code` },
       { label: 'POS Till', icon: Monitor, path: `${basePath}/till` },
       { label: 'Transactions', icon: History, path: `${basePath}/transactions` },
       { label: 'Payment Links', icon: Link2, path: `${basePath}/payment-links` },

@@ -156,6 +156,49 @@ const BusinessQRCode: React.FC = () => {
             </div>
           )}
 
+          <div className="rounded-2xl border border-border/40 bg-card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recent activity</p>
+              <button onClick={loadRecentScans} className="text-[10px] font-semibold text-muted-foreground hover:text-foreground">Refresh</button>
+            </div>
+            {recentScans.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">No scans yet. Print and share your code to start receiving payments.</p>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {recentScans.map((s) => {
+                  const Icon = s.scan_outcome === 'paid' ? CheckCircle2
+                    : s.scan_outcome === 'tampered' ? AlertTriangle
+                    : s.scan_outcome === 'failed' ? XCircle
+                    : s.scan_outcome === 'expired' ? Clock
+                    : ShieldCheck;
+                  const tone = s.scan_outcome === 'paid' ? 'text-emerald-600'
+                    : s.scan_outcome === 'tampered' ? 'text-amber-600'
+                    : s.scan_outcome === 'failed' ? 'text-rose-600'
+                    : s.scan_outcome === 'expired' ? 'text-muted-foreground'
+                    : 'text-foreground';
+                  return (
+                    <li key={s.id} className="flex items-center gap-3 py-2.5">
+                      <Icon className={`h-4 w-4 shrink-0 ${tone}`} strokeWidth={2} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground capitalize">
+                          {s.scan_outcome}{s.failure_reason ? ` · ${s.failure_reason}` : ''}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                      {s.amount && (
+                        <p className="text-xs font-bold text-foreground tabular-nums">
+                          {Number(s.amount).toLocaleString('fr-CM')} XAF
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
           <Button variant="ghost" className="text-xs text-muted-foreground gap-2" onClick={() => loadQR(true)} disabled={rotating}>
             {rotating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Rotate code (revoke and re-issue)
