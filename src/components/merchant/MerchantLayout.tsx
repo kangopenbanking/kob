@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { merchantNavigation } from "./merchant-navigation-config";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TranslationHarvester } from "@/components/i18n/TranslationHarvester";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantContext } from "@/hooks/useMerchantContext";
@@ -74,6 +75,7 @@ export function MerchantLayout() {
     <SessionGuard logoutPath="/auth" appName="Merchant Portal" appContext="merchant">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
+        <TranslationHarvester category="merchant" />
         <Sidebar className="border-r border-border/60">
           <div className="p-4 border-b border-border/60">
             <div className="flex items-center gap-3 px-1">
