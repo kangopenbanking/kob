@@ -141,14 +141,25 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // 2. Fallback to static translations
     const staticValue = translations[language]?.[key] || translations.en[key];
 
-    // 3. Auto-register if not in DB yet
+    // 3. Auto-register if not in DB yet (resilient: only mark on flush success)
     if (!registeredKeysRef.current.has(key) && staticValue) {
-      registeredKeysRef.current.add(key); // prevent duplicate queuing
       queueKeyForRegistration(key, translations.en[key] || staticValue);
     }
 
     return staticValue || key;
   }, [language, dbTranslations]);
+
+  // Realtime: listen for admin edits to translations and refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel('translation-live-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'translation_values' },
+        () => loadDbTranslations(language))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'translation_strings' },
+        () => loadDbTranslations(language))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [language, loadDbTranslations]);
 
   // Flush pending keys on unmount
   useEffect(() => {
