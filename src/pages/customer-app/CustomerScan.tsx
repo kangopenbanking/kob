@@ -32,6 +32,7 @@ const CustomerScan: React.FC = () => {
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
+  const [storeChoice, setStoreChoice] = useState<any>(null); // v2 kob_store payload — show Visit/Pay chooser
   const queryClient = useQueryClient();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
