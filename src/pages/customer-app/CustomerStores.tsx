@@ -110,9 +110,10 @@ const CustomerStores: React.FC = () => {
   };
 
   const featured = useMemo(() => stores.slice(0, 5), [stores]);
-  const rest = useMemo(() => stores.slice(5), [stores]);
+  const rest = useMemo(() => {
+  const tr = useHarvestedT('customer');tr('stores.slice(5), [stores]);
 
-  return (
+  return
     <div className="pb-28 bg-gradient-to-b from-muted/30 via-background to-background min-h-screen">
       {/* ─── Premium hero ─── */}
       <div className="px-5 pt-7 pb-5">

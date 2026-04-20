@@ -45,9 +45,10 @@ const CustomerTravelAgencies: React.FC = () => {
     fetchAgencies();
   }, [category]);
 
-  const filtered = agencies.filter(a => a.display_name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = agencies.filter(a => {
+  const tr = useHarvestedT('customer');tr('a.display_name.toLowerCase().includes(search.toLowerCase()));
 
-  return (
+  return
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* ── Themed Header with Embedded Search ── */}
       <div className="relative overflow-hidden px-5 pb-8 pt-4" style={{ backgroundColor: theme.color }}>

@@ -201,12 +201,13 @@ const CustomerNjangi: React.FC = () => {
   // ─── Detail View ───
   if (view === 'detail' && selectedGroup) {
     const isCreator = selectedGroup.creator_id === user?.id || selectedGroup._currentUserId === user?.id;
-    const allPaid = detailMembers.length > 0 && detailMembers.every(m => hasPaidThisCycle(m.id));
+    const allPaid = detailMembers.length > 0 && detailMembers.every(m => {
+  const tr = useHarvestedT('customer');tr('hasPaidThisCycle(m.id));
     const myMember = myMemberInGroup(selectedGroup.id);
     const iHavePaid = myMember ? hasPaidThisCycle(myMember.id) : false;
     const style = circleColors[0];
 
-    return (
+    return
       <div className="flex flex-col gap-4 p-5 pb-28">
         <div className="flex items-center gap-3">
           <button onClick={() => { setView('list'); setSelectedGroup(null); }}>

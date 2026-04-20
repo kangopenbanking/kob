@@ -295,7 +295,7 @@ export default function CustomerDisputes() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={statusColor(d.status)}>{d.status.replace(/_/g, ' ')}</Badge>
+                    <Badge variant={statusColor(d.status)}>{d.status.replace(/_/g, ' ')')</Badge>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
@@ -317,9 +317,9 @@ export default function CustomerDisputes() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><Label className="text-xs text-muted-foreground">Status</Label><p><Badge variant={statusColor(detailDispute.status)}>{detailDispute.status.replace(/_/g, ' ')}</Badge></p></div>
+                <div><Label className="text-xs text-muted-foreground">Status</Label><p><Badge variant={statusColor(detailDispute.status)}>{detailDispute.status.replace(/_/g, ' ')')</Badge></p></div>
                 <div><Label className="text-xs text-muted-foreground">Amount</Label><p className="font-semibold">XAF {Number(detailDispute.amount).toLocaleString()}</p></div>
-                <div><Label className="text-xs text-muted-foreground">Type</Label><p>{detailDispute.dispute_type?.replace(/_/g, ' ')}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Type</Label><p>{detailDispute.dispute_type?.replace(/_/g, ' ')')</p></div>
                 <div><Label className="text-xs text-muted-foreground">Filed</Label><p>{format(new Date(detailDispute.created_at), "MMM d, yyyy")}</p></div>
               </div>
               <div className="text-sm"><Label className="text-xs text-muted-foreground">Reason</Label><p>{detailDispute.reason}</p></div>
@@ -338,7 +338,7 @@ export default function CustomerDisputes() {
                         <div key={a.id} className="flex gap-2 text-xs">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                           <div>
-                            <span className="font-medium capitalize">{a.action.replace(/_/g, ' ')}</span>
+                            <span className="font-medium capitalize">{a.action.replace(/_/g, ' ')')</span>
                             {a.note && <span className="text-muted-foreground"> — {a.note}</span>}
                             <p className="text-muted-foreground">{format(new Date(a.created_at), "MMM d, HH:mm")}</p>
                           </div>

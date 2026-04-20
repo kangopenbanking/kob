@@ -677,7 +677,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             <Clock className="h-4 w-4 text-primary" strokeWidth={1.5} />
             <div>
               <p className="text-[10px] text-muted-foreground">Next payment</p>
-              <p className="text-xs font-bold text-foreground">{formatCurrency(nextPayment.amount)} · {new Date(nextPayment.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+              <p className="text-xs font-bold text-foreground">{formatCurrency(nextPayment.amount)} · {new Date(nextPayment.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}')</p>
             </div>
           </div>
           <Button

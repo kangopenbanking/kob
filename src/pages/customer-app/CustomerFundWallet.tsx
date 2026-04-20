@@ -243,9 +243,10 @@ const CustomerFundWallet: React.FC = () => {
     else navigate(-1);
   };
 
-  const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
+  const filteredBanks = banks.filter(b => {
+  const tr = useHarvestedT('customer');tr('b.name.toLowerCase().includes(bankSearch.toLowerCase()));
 
-  return (
+  return
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
         <button onClick={goBack}>
@@ -319,7 +320,7 @@ const CustomerFundWallet: React.FC = () => {
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className={cn('text-sm', selected ? `font-extrabold ${colors.activeText}` : 'font-medium text-foreground')}>
+                          <span className={cn('text-sm', selected ? `font-extrabold ${colors.activeText}` : 'font-medium text-foreground>
                             {acc.account_name || acc.provider_name}
                           </span>
                           <p className="text-[10px] text-muted-foreground">
@@ -435,7 +436,7 @@ const CustomerFundWallet: React.FC = () => {
                       {method === 'bank_transfer' && selectedBank ? ` → ${selectedBank.name}` : ''}
                     </p>
                   </div>
-                  <button onClick={() => setStep('source')} className="text-[10px] font-bold text-primary">Change</button>
+                  <button onClick={() => setStep('source')} className="text-[10px] font-bold text-primary">Change')</button>
                 </div>
               );
             })()}

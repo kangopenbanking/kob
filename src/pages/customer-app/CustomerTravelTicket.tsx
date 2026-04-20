@@ -102,7 +102,7 @@ const CustomerTravelTicket: React.FC = () => {
     doc.setTextColor(80, 80, 80);
     if (trip) {
       doc.text(format(new Date(trip.departure_at), 'EEEE, dd MMM yyyy'), 10, 50);
-      doc.text(`${format(new Date(trip.departure_at), 'HH:mm')} — ${format(new Date(trip.arrival_at), 'HH:mm')}`, 10, 56);
+      doc.text(`${format(new Date(trip.departure_at), 'HH:mm — ${format(new Date(trip.arrival_at), 'HH:mm`, 10, 56);
     }
 
     doc.setDrawColor(180, 180, 180);
@@ -231,10 +231,10 @@ const CustomerTravelTicket: React.FC = () => {
             {trip && (
               <div className="px-5 pb-3 flex gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
+                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600">
-                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
+                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm — {format(new Date(trip.arrival_at), 'HH:mm
                 </span>
               </div>
             )}

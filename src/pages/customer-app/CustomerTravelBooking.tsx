@@ -177,7 +177,7 @@ const CustomerTravelBooking: React.FC = () => {
     if (!user) { toast.error('Please log in first'); return; }
 
     setBooking(true);
-    const idempotencyKey = `travel_book_${tripId}_${user.id}_${selectedSeats.sort().join('-')}_${Date.now()}`;
+    const idempotencyKey = `travel_book_${tripId}_${user.id}_${selectedSeats.sort().join('-_${Date.now()}`;
 
     try {
       const { data, error } = await supabase.functions.invoke('travel-book-and-pay', {
@@ -280,7 +280,7 @@ const CustomerTravelBooking: React.FC = () => {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold" style={{ color: theme.fg }}>Book Your Seat</h1>
               <p className="text-[12px] flex items-center gap-1" style={{ color: theme.fg, opacity: 0.5 }}>
-                <MapPin className="h-3 w-3" />{route?.origin} → {route?.destination} · {format(new Date(trip.departure_at), 'dd MMM, HH:mm')}
+                <MapPin className="h-3 w-3" />{route?.origin} → {route?.destination} · {format(new Date(trip.departure_at), 'dd MMM, HH:mm
               </p>
             </div>
           </div>
@@ -326,7 +326,7 @@ const CustomerTravelBooking: React.FC = () => {
                       {Array.from({ length: planCols }, (_, c) => {
                         const cell = layout.find(l => l.row === r && l.col === c);
                         if (!cell || cell.type === 'aisle') return <div key={c} className="h-10 w-10" />;
-                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×</div>;
+                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×')</div>;
                         const isBooked = bookedSeats.includes(cell.seat_label);
                         const isSelected = selectedSeats.includes(cell.seat_label);
                         const seatStyle = getSeatColor(cell);
@@ -366,7 +366,7 @@ const CustomerTravelBooking: React.FC = () => {
               </div>
             )}
             {selectedSeats.length > 0 && (
-              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl shadow-lg" onClick={() => setStep('details')}
+              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl shadow-lg" onClick={() => setStep('details
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
                 <Users className="mr-2 h-4 w-4" /> Continue · {selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} · {totalPrice.toLocaleString()} {trip.currency}
               </Button>
@@ -448,7 +448,7 @@ const CustomerTravelBooking: React.FC = () => {
             })}
 
             <div className="flex gap-3 pt-1">
-              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
+              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back')</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
                 Review & Pay →
@@ -521,8 +521,8 @@ const CustomerTravelBooking: React.FC = () => {
                   <div className="text-center">
                     <p className="text-[10px] text-gray-400 uppercase">{route?.origin?.slice(0, 15)}</p>
                     <p className="text-2xl font-black tracking-tight text-[#0f1729]">{route?.origin?.slice(0, 3).toUpperCase()}</p>
-                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.departure_at), 'HH:mm')}</p>
-                    <p className="text-[10px] text-gray-400">{format(new Date(trip.departure_at), 'dd MMM, yyyy')}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.departure_at), 'HH:mm</p>
+                    <p className="text-[10px] text-gray-400">{format(new Date(trip.departure_at), 'dd MMM, yyyy</p>
                   </div>
                   <div className="flex-1 flex flex-col items-center px-3">
                     <div className="flex items-center w-full">
@@ -538,8 +538,8 @@ const CustomerTravelBooking: React.FC = () => {
                   <div className="text-center">
                     <p className="text-[10px] text-gray-400 uppercase">{route?.destination?.slice(0, 15)}</p>
                     <p className="text-2xl font-black tracking-tight text-[#0f1729]">{route?.destination?.slice(0, 3).toUpperCase()}</p>
-                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.arrival_at), 'HH:mm')}</p>
-                    <p className="text-[10px] text-gray-400">{format(new Date(trip.arrival_at), 'dd MMM, yyyy')}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.arrival_at), 'HH:mm</p>
+                    <p className="text-[10px] text-gray-400">{format(new Date(trip.arrival_at), 'dd MMM, yyyy</p>
                   </div>
                 </div>
               </div>
@@ -571,7 +571,7 @@ const CustomerTravelBooking: React.FC = () => {
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                   <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: theme.accentLight }}>
                     <p className="text-[9px] text-gray-500 uppercase font-semibold">Seats</p>
-                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')}</p>
+                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')')</p>
                   </div>
                   <div className="rounded-xl bg-blue-50 p-2.5 text-center">
                     <p className="text-[9px] text-gray-500 uppercase font-semibold">Passengers</p>
@@ -615,7 +615,7 @@ const CustomerTravelBooking: React.FC = () => {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
+              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back')</Button>
               {hasInsufficientFunds ? (
                 <Button onClick={handleAddMoney} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg bg-[#0f1729] text-white hover:bg-[#1a2744]">
                   <Plus className="mr-2 h-4 w-4" />

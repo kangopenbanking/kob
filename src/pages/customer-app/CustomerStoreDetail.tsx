@@ -95,7 +95,7 @@ const CustomerStoreDetail: React.FC = () => {
       <div className="px-4 pt-12 text-center">
         <Store className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
         <p className="text-sm text-muted-foreground">Store not found</p>
-        <Button variant="ghost" onClick={() => navigate('/app/stores')} className="mt-4">Back to Stores</Button>
+        <Button variant="ghost" onClick={() => navigate('/app/stores')} className="mt-4">Back to Stores')</Button>
       </div>
     );
   }
@@ -247,10 +247,11 @@ const CustomerStoreDetail: React.FC = () => {
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
-              const maxPrice = variants.length ? Math.max(...variants.map((v: any) => v.price)) : 0;
+              const maxPrice = variants.length ? Math.max(...variants.map((v: any) => {
+  const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (
+              return
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -308,10 +309,11 @@ const CustomerStoreDetail: React.FC = () => {
             {filteredProducts.map((product, i) => {
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
-              const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
+              const minPrice = variants.length ? Math.min(...variants.map((v: any) => {
+  const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (
+              return
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: -8 }}

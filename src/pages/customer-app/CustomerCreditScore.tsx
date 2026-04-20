@@ -267,7 +267,7 @@ const CustomerCreditScore: React.FC = () => {
         </div>
         {scoreData?.updated_at && (
           <p className="text-[10px] text-muted-foreground">
-            Last updated {format(new Date(scoreData.updated_at), 'MMM d, yyyy')}
+            Last updated {format(new Date(scoreData.updated_at), 'MMM d, yyyy
           </p>
         )}
         {/* Score range legend */}
@@ -412,7 +412,7 @@ const CustomerCreditScore: React.FC = () => {
                     <EIcon className={`h-3.5 w-3.5 ${color}`} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' ')}</p>
+                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' ')')</p>
                     <p className="text-[10px] text-muted-foreground">
                       {ev.event_time ? format(new Date(ev.event_time), 'MMM d, yyyy') : ''}
                     </p>

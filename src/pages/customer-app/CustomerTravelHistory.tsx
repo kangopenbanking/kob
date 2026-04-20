@@ -146,9 +146,10 @@ const CustomerTravelHistory: React.FC = () => {
           filtered.map((b, i) => {
             const trip = trips.find(t => t.id === b.trip_id);
             const route = trip ? routes.find(r => r.id === trip.route_id) : null;
-            const bTickets = tickets.filter(t => t.booking_id === b.id);
+            const bTickets = tickets.filter(t => {
+  const tr = useHarvestedT('customer');tr('t.booking_id === b.id);
             const status = statusStyles[b.booking_status] || statusStyles.confirmed;
-            return (
+            return
               <motion.div key={b.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
                 onClick={() => {
@@ -174,7 +175,7 @@ const CustomerTravelHistory: React.FC = () => {
                     {trip && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {format(new Date(trip.departure_at), 'dd MMM, HH:mm')}
+                        {format(new Date(trip.departure_at), 'dd MMM, HH:mm
                       </span>
                     )}
                     <span>{bTickets.length} ticket{bTickets.length !== 1 ? 's' : ''}</span>

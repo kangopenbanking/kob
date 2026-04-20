@@ -145,9 +145,10 @@ const CustomerRentReporting: React.FC = () => {
   };
 
   const activePlans = rentPlans.filter((p: any) => p.status === 'active');
-  const inactivePlans = rentPlans.filter((p: any) => p.status !== 'active');
+  const inactivePlans = rentPlans.filter((p: any) => {
+  const tr = useHarvestedT('customer');tr('p.status !== \'active\');
 
-  return (
+  return
     <div className="flex flex-col gap-4 p-5 pb-28">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -242,9 +243,10 @@ const CustomerRentReporting: React.FC = () => {
                   const pendingPayments = payments.filter((p: any) => p.status === 'pending');
                   const overduePayments = pendingPayments.filter((p: any) => p.due_date && new Date(p.due_date) < new Date());
                   const creditLinked = payments.some((p: any) => p.credit_event_id);
-                  const nextDue = pendingPayments.sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
+                  const nextDue = pendingPayments.sort((a: any, b: any) => {
+  const tr = useHarvestedT('customer');tr('new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
 
-                  return (
+                  return
                     <motion.div key={plan.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-3xl bg-card border border-border overflow-hidden">
                       {/* Plan Header */}
@@ -316,7 +318,7 @@ const CustomerRentReporting: React.FC = () => {
                                     {Number(payment.amount || 0).toLocaleString()} XAF
                                   </p>
                                   <p className={`text-[10px] ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                                    {payment.due_date ? `Due ${format(new Date(payment.due_date), 'MMM d, yyyy')}` : 'No due date'}
+                                    {payment.due_date ? `Due ${format(new Date(payment.due_date), 'MMM d, yyyy` : 'No due date'}
                                     {isOverdue && ' • OVERDUE'}
                                   </p>
                                 </div>
@@ -427,7 +429,7 @@ const CustomerRentReporting: React.FC = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-muted-foreground font-mono">{p.rent_reference}</span>
                             {p.paid_at && (
-                              <span className="text-[10px] text-muted-foreground">• {format(new Date(p.paid_at), 'MMM d, yyyy')}</span>
+                              <span className="text-[10px] text-muted-foreground">• {format(new Date(p.paid_at), 'MMM d, yyyy</span>
                             )}
                           </div>
                         </div>

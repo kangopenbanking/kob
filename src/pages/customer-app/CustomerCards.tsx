@@ -111,7 +111,7 @@ const CustomerCards: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Expires</p>
-                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}</p>
+                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{String(card.exp_month).padStart(2, '0')/{String(card.exp_year).slice(-2)}')</p>
                     </div>
                   </div>
                 </motion.div>

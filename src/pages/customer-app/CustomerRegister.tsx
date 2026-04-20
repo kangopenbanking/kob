@@ -246,7 +246,7 @@ const CustomerRegister: React.FC = () => {
       <div className="flex-1 px-5 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
-            key={step + (step === 5 ? `-${pinStage}` : '')}
+            key={step + (step === 5 ? `-${pinStage}` : '
             variants={slideVariants}
             initial="enter"
             animate="center"
@@ -452,7 +452,7 @@ const CustomerRegister: React.FC = () => {
                         mode="single"
                         selected={dob}
                         onSelect={setDob}
-                        disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
+                        disabled={(date) => date > new Date() || date < new Date('1920-01-01
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
