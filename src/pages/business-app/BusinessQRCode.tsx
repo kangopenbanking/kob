@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Loader2, Printer, Share2, Copy, RefreshCw, Download, ShieldCheck } from 'lucide-react';
+import { Loader2, Printer, Share2, Copy, RefreshCw, Download, ShieldCheck, CheckCircle2, AlertTriangle, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { formatDistanceToNow } from 'date-fns';
 
 const BusinessQRCode: React.FC = () => {
   const { merchantId } = useMerchantContext();
@@ -15,6 +16,7 @@ const BusinessQRCode: React.FC = () => {
   const [rotating, setRotating] = useState(false);
   const [qr, setQr] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
+  const [recentScans, setRecentScans] = useState<any[]>([]);
   const qrRef = useRef<HTMLDivElement>(null);
 
   const loadQR = async (rotate = false) => {
@@ -41,7 +43,15 @@ const BusinessQRCode: React.FC = () => {
     if (data?.stats) setStats(data.stats);
   };
 
-  useEffect(() => { loadQR(); loadStats(); }, [merchantId]);
+  const loadRecentScans = async () => {
+    if (!merchantId) return;
+    const { data } = await supabase.functions.invoke('merchant-qr', {
+      body: { action: 'recent_scans', merchant_id: merchantId, limit: 20 },
+    });
+    if (data?.scans) setRecentScans(data.scans);
+  };
+
+  useEffect(() => { loadQR(); loadStats(); loadRecentScans(); }, [merchantId]);
 
   const handlePrint = () => {
     if (!qr) return;
