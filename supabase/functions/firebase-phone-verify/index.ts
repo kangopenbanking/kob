@@ -143,10 +143,12 @@ serve(async (req) => {
       );
     }
 
-    // Verify OTP server-side using hashed_token (use 'email' type for hashed magic link tokens)
+    // Verify OTP server-side using hashed_token to mint a real session.
+    // Use 'magiclink' type — matches the generateLink type above and the
+    // working pattern in phone-auth-pin-login / staff-pin-login.
     const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
       token_hash: linkData.properties.hashed_token,
-      type: 'email',
+      type: 'magiclink',
     });
 
     if (sessionError || !sessionData.session) {

@@ -74,12 +74,12 @@ serve(async (req) => {
       );
     }
 
-    // Verify OTP for password reset
+    // Lookup OTP by phone + type only — codes are stored as SHA-256 hashes
+    // by phone-auth-send-otp, so we must hash the input before comparison.
     const { data: otpRecord, error: otpError } = await supabase
       .from('phone_otp_codes')
       .select('*')
       .eq('phone_number', phone_number)
-      .eq('otp_code', otp_code)
       .eq('otp_type', 'password_reset')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
@@ -102,6 +102,36 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ error: 'OTP code has expired' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Track and cap attempts to prevent brute-force on a known-valid OTP record
+    const newAttempts = (otpRecord.attempts || 0) + 1;
+    await supabase
+      .from('phone_otp_codes')
+      .update({ attempts: newAttempts })
+      .eq('id', otpRecord.id);
+
+    if (newAttempts > (otpRecord.max_attempts || 5)) {
+      await supabase
+        .from('phone_otp_codes')
+        .update({ status: 'failed' })
+        .eq('id', otpRecord.id);
+      return new Response(
+        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Hash submitted OTP and compare against stored hash
+    const encoder = new TextEncoder();
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otp_code));
+    const inputHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (otpRecord.otp_code !== inputHash) {
+      const remaining = (otpRecord.max_attempts || 5) - newAttempts;
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired OTP code', remaining_attempts: Math.max(0, remaining) }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
