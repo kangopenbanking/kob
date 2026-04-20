@@ -268,7 +268,7 @@ const CustomerBillsV2: React.FC = () => {
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate text-sm font-semibold text-foreground">{p.bill_providers?.name || 'Bill Payment'}</span>
-                          <span className="text-[11px] text-muted-foreground">{p.bill_products?.name} · {new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}')</span>
+                          <span className="text-[11px] text-muted-foreground">{p.bill_products?.name} · {new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                         </div>
                         <div className="flex flex-col items-end gap-0.5">
                           <span className="text-sm font-bold text-foreground">{Number(p.total_amount).toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">XAF</span></span>

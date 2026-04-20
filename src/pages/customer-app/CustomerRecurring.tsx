@@ -281,7 +281,7 @@ const CustomerRecurring: React.FC = () => {
                         <p className="text-xs font-bold text-foreground">{selectedRecipient.full_name}</p>
                         {selectedRecipient.phone_masked && <p className="text-[10px] text-muted-foreground">{selectedRecipient.phone_masked}</p>}
                       </div>
-                      <button onClick={() => { setSelectedRecipient(null); setRecipientQuery(''); }}><X className="h-4 w-4 text-muted-foreground" />')</button>
+                      <button onClick={() => { setSelectedRecipient(null); setRecipientQuery(''); }}><X className="h-4 w-4 text-muted-foreground" /></button>
                     </div>
                   ) : (
                     <>

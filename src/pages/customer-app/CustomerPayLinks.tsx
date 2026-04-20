@@ -105,10 +105,9 @@ const CustomerPayLinks: React.FC = () => {
   };
 
   const totalRevenue = links.reduce((s: number, l: any) => s + Number(l.total_collected || 0), 0);
-  const totalClicks = links.reduce((s: number, l: any) => {
-  const tr = useHarvestedT('customer');tr('s + (l.clicks || 0), 0);
+  const totalClicks = links.reduce((s: number, l: any) => s + (l.clicks || 0), 0);
 
-  return
+  return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -226,7 +225,7 @@ const CustomerPayLinks: React.FC = () => {
                 <Share2 className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
                 <span className="text-[10px] font-bold text-muted-foreground">Share</span>
               </button>
-              <button onClick={() => window.open(getUrl(link.slug), '_blank className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2">
+              <button onClick={() => window.open(getUrl(link.slug), '_blank')} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2">
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
               </button>
             </div>

@@ -73,7 +73,7 @@ const CustomerSplashInner: React.FC = () => {
   if (phase === 'splash') {
     return (
       <SplashScreen
-        onComplete={() => setPhase('walkthrough
+        onComplete={() => setPhase('walkthrough')}
         duration={2500}
         name={tenant.name}
         logoUrl={tenant.logoUrl}

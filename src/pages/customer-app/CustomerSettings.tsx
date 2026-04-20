@@ -315,7 +315,7 @@ const CustomerSettings: React.FC = () => {
 
             {/* Help & Logout & Delete */}
             <SettingCard>
-              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help /')}>
+              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help')} />
               <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
               <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label="Delete Account" description="Permanently delete your account and data" onClick={() => {
                 if (window.confirm('Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.')) {
@@ -507,7 +507,7 @@ const CustomerSettings: React.FC = () => {
         {/* Legal page viewer */}
         {activeSection === 'legal-view' && legalSlug && (
           <motion.div key="legal-view" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <BackButton onBack={() => setActiveSection('legal /')}>
+            <BackButton onBack={() => setActiveSection('legal')} />
             <AppLegalPageViewer slug={legalSlug} />
           </motion.div>
         )}

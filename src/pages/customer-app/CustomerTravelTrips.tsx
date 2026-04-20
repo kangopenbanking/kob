@@ -268,11 +268,10 @@ const CustomerTravelTrips: React.FC = () => {
               </div>
               <div ref={sliderRef} className="flex gap-3 overflow-x-auto scrollbar-none px-5 snap-x snap-mandatory">
                 {sortedRoutes.map((route, i) => {
-                  const tripCount = trips.filter(t => {
-  const tr = useHarvestedT('customer');tr('t.route_id === route.id).length;
+                  const tripCount = trips.filter(t => t.route_id === route.id).length;
                   const isActive = selectedRoute === route.id;
                   const isUserBooked = userBookedRouteIds.includes(route.id);
-                  return
+                  return (
                     <motion.button key={route.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedRoute(isActive ? null : route.id)}
@@ -391,10 +390,10 @@ const CustomerTravelTrips: React.FC = () => {
 
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                                <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM
+                                <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM')}
                               </span>
                               <span className="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-2.5 py-1.5 text-[11px] font-bold text-[#0f1729]">
-                                <Clock className="h-3 w-3 text-gray-400" />{format(new Date(trip.departure_at), 'HH:mm — {format(new Date(trip.arrival_at), 'HH:mm
+                                <Clock className="h-3 w-3 text-gray-400" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
                               </span>
                             </div>
 

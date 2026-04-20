@@ -105,10 +105,9 @@ export function CustomerMarketplace() {
     // CustomerStores reads its own state — keep this simple deep-link.
   };
 
-  const featured = useMemo(() => {
-  const tr = useHarvestedT('customer');tr('stores.slice(0, 6), [stores]);
+  const featured = useMemo(() => stores.slice(0, 6), [stores]);
 
-  return
+  return (
     <div className="min-h-screen bg-muted/30 pb-24">
       {/* ── HERO ─────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
@@ -161,7 +160,7 @@ export function CustomerMarketplace() {
                   Browse {stores.length}+ verified stores across Cameroon
                 </p>
                 <Button
-                  onClick={() => navigate('/app/stores
+                  onClick={() => navigate('/app/stores')}
                   size="sm"
                   className="mt-4 rounded-full bg-secondary-foreground text-secondary hover:bg-secondary-foreground/90 h-9 px-4 text-xs font-semibold"
                 >
@@ -199,16 +198,16 @@ export function CustomerMarketplace() {
         {/* ── QUICK ACTIONS ─────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-2.5">
           <QuickAction icon={Truck} label="Track order" tint="bg-[hsl(217,90%,95%)]" iconColor="text-primary"
-            onClick={() => navigate('/app/orders /')}>
+            onClick={() => navigate('/app/orders')} />
           <QuickAction icon={Heart} label="Wishlist" tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
-            onClick={() => navigate('/app/wishlist /')}>
+            onClick={() => navigate('/app/wishlist')} />
           <QuickAction icon={Receipt} label="My orders" tint="bg-[hsl(150,60%,93%)]" iconColor="text-secondary"
-            onClick={() => navigate('/app/orders /')}>
+            onClick={() => navigate('/app/orders')} />
         </div>
 
         {/* ── CATEGORIES ────────────────────────────────────── */}
         <section>
-          <SectionHeader title="Shop by category" actionLabel="See all" onAction={() => navigate('/app/stores /')}>
+          <SectionHeader title="Shop by category" actionLabel="See all" onAction={() => navigate('/app/stores')} />
           <div className="grid grid-cols-4 gap-2.5">
             {CATEGORY_TILES.map((tile, i) => {
               const Icon = tile.icon;
@@ -238,7 +237,7 @@ export function CustomerMarketplace() {
 
         {/* ── FEATURED STORES ───────────────────────────────── */}
         <section>
-          <SectionHeader title="Featured stores" actionLabel="See all" onAction={() => navigate('/app/stores /')}>
+          <SectionHeader title="Featured stores" actionLabel="See all" onAction={() => navigate('/app/stores')} />
           {storesLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -298,7 +297,7 @@ export function CustomerMarketplace() {
 
         {/* ── TRENDING PRODUCTS ─────────────────────────────── */}
         <section>
-          <SectionHeader title="Trending products" actionLabel="Browse" onAction={() => navigate('/app/stores /')}>
+          <SectionHeader title="Trending products" actionLabel="Browse" onAction={() => navigate('/app/stores')} />
           {trendingLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -309,10 +308,9 @@ export function CustomerMarketplace() {
             <div className="grid grid-cols-2 gap-3">
               {trending.slice(0, 6).map((product, i) => {
                 const variants = product.pos_product_variants || [];
-                const price = variants.length ? Math.min(...variants.map((v: any) => {
-  const tr = useHarvestedT('customer');tr('v.price || 0)) : 0;
+                const price = variants.length ? Math.min(...variants.map((v: any) => v.price || 0)) : 0;
                 const image = product.pos_product_images?.[0]?.url;
-                return
+                return (
                   <motion.button
                     key={product.id}
                     initial={{ opacity: 0, y: 10 }}

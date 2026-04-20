@@ -69,7 +69,7 @@ export function CustomerOrderTracking() {
           </div>
           <h2 className="text-lg font-bold mb-1">Sign in required</h2>
           <p className="text-sm text-muted-foreground mb-5">Track your orders in real-time</p>
-          <Button onClick={() => navigate('/app/auth')} className="w-full h-11 rounded-2xl font-semibold">Sign In')</Button>
+          <Button onClick={() => navigate('/app/auth')} className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
         </div>
       </div>
     );
@@ -164,7 +164,7 @@ export function CustomerOrderTracking() {
             </div>
             <p className="text-sm font-semibold text-foreground">No orders yet</p>
             <p className="text-xs text-muted-foreground mt-1">Your purchases will appear here</p>
-            <Button onClick={() => navigate('/app/stores')} className="mt-5 h-11 px-6 rounded-2xl font-semibold">Start shopping')</Button>
+            <Button onClick={() => navigate('/app/stores')} className="mt-5 h-11 px-6 rounded-2xl font-semibold">Start shopping</Button>
           </div>
         )}
       </div>

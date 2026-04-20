@@ -630,7 +630,7 @@ const CustomerTransfer: React.FC = () => {
                     {selectedRecipientName} doesn't have an active Kang wallet yet
                   </p>
                   <p className="text-[10px] leading-relaxed text-[hsl(35,60%,30%)]">
-                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation')</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
+                    We'll automatically create a wallet for them when you send. <span className="font-semibold">Please notify {selectedRecipientName.split(' ')[0]} to sign in to Kang and complete account activation</span> (verify phone, set PIN, and complete KYC) so they can access and use the funds you send.
                   </p>
                 </div>
               )}
@@ -642,10 +642,9 @@ const CustomerTransfer: React.FC = () => {
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">From</p>
                 <div className="space-y-2">
                   {accounts.map((acc: any, i: number) => {
-                    const bal = balances.find((b: any) => {
-  const tr = useHarvestedT('customer');tr('b.account_id === acc.id);
+                    const bal = balances.find((b: any) => b.account_id === acc.id);
                     const isSelected = selectedAccountIdx === i;
-                    return
+                    return (
                       <button key={acc.id} onClick={() => setSelectedAccountIdx(i)}
                         className={`flex items-center gap-3 rounded-2xl p-3.5 w-full text-left transition-all ${
                           isSelected ? 'bg-[hsl(225,50%,22%)] ring-2 ring-primary' : 'bg-card border border-border'

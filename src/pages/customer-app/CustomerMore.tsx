@@ -47,10 +47,9 @@ const CustomerMore: React.FC = () => {
 
   const go = (path: string) => navigate(`/app/${path}`);
   const isFeatureVisible = (featureKey?: string) => !featureKey || tenant.features[featureKey as keyof typeof tenant.features] !== false;
-  const enabledActions = allQuickActions.filter((a) => {
-  const tr = useHarvestedT('customer');tr('isFeatureVisible(a.featureKey));
+  const enabledActions = allQuickActions.filter((a) => isFeatureVisible(a.featureKey));
 
-  return
+  return (
     <div className="flex flex-col gap-6 p-5 pb-8">
       <h1 className="text-xl font-bold text-foreground">More</h1>
 

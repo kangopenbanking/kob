@@ -300,10 +300,9 @@ const CustomerSplitBills: React.FC = () => {
     setSearchQuery(''); setSearchResults([]);
   };
 
-  const unpaidOwedCount = owedBills.filter((b: any) => {
-  const tr = useHarvestedT('customer');tr('!b.myParticipation?.paid).length;
+  const unpaidOwedCount = owedBills.filter((b: any) => !b.myParticipation?.paid).length;
 
-  return
+  return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -519,11 +518,10 @@ const CustomerSplitBills: React.FC = () => {
               <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
             ) : bills.map((bill: any, i: number) => {
               const parts = bill.split_bill_participants || [];
-              const paidCount = parts.filter((p: any) => {
-  const tr = useHarvestedT('customer');tr('p.paid).length;
+              const paidCount = parts.filter((p: any) => p.paid).length;
               const isExpanded = expandedId === bill.id;
-              const isSettled = bill.status === \'settled\';
-              return
+              const isSettled = bill.status === 'settled';
+              return (
                 <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
                   <button onClick={() => setExpandedId(isExpanded ? null : bill.id)} className="flex items-center gap-3 p-4 w-full text-left">
@@ -535,7 +533,7 @@ const CustomerSplitBills: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}')</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-foreground">{Number(bill.total_amount).toLocaleString()}</p>
@@ -553,7 +551,7 @@ const CustomerSplitBills: React.FC = () => {
                           {parts.map((p: any) => (
                             <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2.5">
                               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${p.is_owner ? 'bg-[hsl(210,80%,93%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
-                                <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}')</span>
+                                <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-foreground truncate">{p.name}{p.is_owner ? ' (You)' : ''}</p>
@@ -606,11 +604,10 @@ const CustomerSplitBills: React.FC = () => {
               const myPart = bill.myParticipation;
               const isPaid = myPart?.paid;
               const shareAmount = Number(myPart?.share_amount || 0);
-              const ownerParticipant = (bill.split_bill_participants || []).find((p: any) => {
-  const tr = useHarvestedT('customer');tr('p.is_owner);
+              const ownerParticipant = (bill.split_bill_participants || []).find((p: any) => p.is_owner);
               const isExpanded = expandedId === bill.id;
 
-              return
+              return (
                 <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   className={`rounded-3xl bg-card border-2 overflow-hidden ${isPaid ? 'border-[hsl(150,40%,80%)]' : 'border-[hsl(340,60%,85%)]'}`}

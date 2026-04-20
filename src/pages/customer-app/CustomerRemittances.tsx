@@ -61,10 +61,9 @@ const CustomerRemittances: React.FC = () => {
 
   const totalReceived = remittances.filter((r: any) => ['credited', 'settled'].includes(r.status))
     .reduce((s: number, r: any) => s + (r.amount_out || 0), 0);
-  const pendingCount = remittances.filter((r: any) => {
-  const tr = useHarvestedT('customer');tr('[\'pending\', \'received\'].includes(r.status)).length;
+  const pendingCount = remittances.filter((r: any) => ['pending', 'received'].includes(r.status)).length;
 
-  return
+  return (
     <div className="flex flex-col gap-5 p-5 pb-8">
       {/* Header */}
       <div>
@@ -177,8 +176,8 @@ const CustomerRemittances: React.FC = () => {
                             {idx < detail.events.length - 1 && <div className="w-px flex-1 bg-border" />}
                           </div>
                           <div className="pb-3">
-                            <p className="text-sm font-medium capitalize">{(evt.event_type || '').replace(/_/g, ' ')')</p>
-                            <p className="text-xs text-muted-foreground">{format(new Date(evt.created_at), 'MMM d, yyyy HH:mm</p>
+                            <p className="text-sm font-medium capitalize">{(evt.event_type || '').replace(/_/g, ' ')}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(evt.created_at), 'MMM d, yyyy HH:mm')}</p>
                           </div>
                         </div>
                       ))}
