@@ -37,9 +37,9 @@ const seedResources = {
   fr: { general: { ...staticTranslations.fr } },
 };
 
-let initPromise: Promise<typeof i18n> | null = null;
+let initPromise: Promise<unknown> | null = null;
 
-export function initI18n(lang: 'en' | 'fr' = 'en') {
+export function initI18n(lang: 'en' | 'fr' = 'en'): Promise<unknown> {
   if (initPromise) return initPromise;
 
   initPromise = i18n
