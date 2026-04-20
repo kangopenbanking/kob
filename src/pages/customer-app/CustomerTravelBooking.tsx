@@ -15,13 +15,11 @@ import { getTheme } from '@/lib/travel-theme';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
 type Gender = 'male' | 'female';
 
 const CustomerTravelBooking: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -32,21 +30,21 @@ const CustomerTravelBooking: React.FC = () => {
   const [showPinDialog, setShowPinDialog] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [trip, setTrip] = useState<any>{tr('(null);
-  const [route, setRoute] = useState')}<any>{tr('(null);
-  const [layout, setLayout] = useState')}<LayoutCell[]>{tr('([]);
+  const [trip, setTrip] = useState<any>(null);
+  const [route, setRoute] = useState<any>(null);
+  const [layout, setLayout] = useState<LayoutCell[]>([]);
   const [planRows, setPlanRows] = useState(0);
   const [planCols, setPlanCols] = useState(0);
-  const [bookedSeats, setBookedSeats] = useState')}<string[]>{tr('([]);
-  const [bookedSeatGenders, setBookedSeatGenders] = useState')}<Record<string, Gender>>({});
-  const [selectedSeats, setSelectedSeats] = useState<string[]>{tr('([]);
-  const [passengers, setPassengers] = useState')}<Record<string, { name: string; phone: string; gender: Gender }>>({});
+  const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [bookedSeatGenders, setBookedSeatGenders] = useState<Record<string, Gender>>({});
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [passengers, setPassengers] = useState<Record<string, { name: string; phone: string; gender: Gender }>>({});
   const [booking, setBooking] = useState(false);
-  const [step, setStep] = useState<'seats' | 'details' | 'confirm'>{tr('(\'seats\');
-  const [promoCode, setPromoCode] = useState(\'\');
-  const [appliedDiscount, setAppliedDiscount] = useState')}<any>{tr('(null);
-  const [autoDiscounts, setAutoDiscounts] = useState')}<any[]>{tr('([]);
-  const [walletBalance, setWalletBalance] = useState')}<number>(0);
+  const [step, setStep] = useState<'seats' | 'details' | 'confirm'>('seats');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [autoDiscounts, setAutoDiscounts] = useState<any[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [balanceLoading, setBalanceLoading] = useState(true);
 
   // Fetch wallet balance
@@ -151,7 +149,7 @@ const CustomerTravelBooking: React.FC = () => {
     ? (bestDiscount.discount_type === 'percentage' ? Math.round(basePrice * bestDiscount.discount_value / 100) : bestDiscount.discount_value)
     : 0;
   const totalPrice = Math.max(0, basePrice - discountAmount);
-  const hasInsufficientFunds = totalPrice > {tr('0 && walletBalance')} < totalPrice;
+  const hasInsufficientFunds = totalPrice > 0 && walletBalance < totalPrice;
   const shortfall = hasInsufficientFunds ? totalPrice - walletBalance : 0;
 
   const applyPromoCode = async () => {
@@ -179,7 +177,7 @@ const CustomerTravelBooking: React.FC = () => {
     if (!user) { toast.error('Please log in first'); return; }
 
     setBooking(true);
-    const idempotencyKey = `travel_book_${tripId}_${user.id}_${selectedSeats.sort().join('-')}_${Date.now()}`;
+    const idempotencyKey = `travel_book_${tripId}_${user.id}_${selectedSeats.sort().join('-_${Date.now()}`;
 
     try {
       const { data, error } = await supabase.functions.invoke('travel-book-and-pay', {
@@ -246,8 +244,8 @@ const CustomerTravelBooking: React.FC = () => {
     });
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>{tr(';
-  if (!trip) return')} <div className="p-4 text-center text-gray-400">Trip not found</div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>;
+  if (!trip) return <div className="p-4 text-center text-gray-400">Trip not found</div>;
 
   const steps = [
     { key: 'seats', label: 'Seats' },
@@ -282,7 +280,7 @@ const CustomerTravelBooking: React.FC = () => {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold" style={{ color: theme.fg }}>Book Your Seat</h1>
               <p className="text-[12px] flex items-center gap-1" style={{ color: theme.fg, opacity: 0.5 }}>
-                <MapPin className="h-3 w-3" />{route?.origin} → {route?.destination} · {format(new Date(trip.departure_at), 'dd MMM, HH:mm')}
+                <MapPin className="h-3 w-3" />{route?.origin} → {route?.destination} · {format(new Date(trip.departure_at), 'dd MMM, HH:mm
               </p>
             </div>
           </div>
@@ -312,7 +310,7 @@ const CustomerTravelBooking: React.FC = () => {
               <div className="rounded-2xl bg-white p-4 shadow-sm overflow-x-auto">
                 <div className="flex justify-center mb-3">
                   <div className="rounded-full px-4 py-1 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                    <CatIcon className="h-3 w-3" /> {tr('Front')}
+                    <CatIcon className="h-3 w-3" /> Front
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5 min-w-fit">
@@ -326,10 +324,9 @@ const CustomerTravelBooking: React.FC = () => {
                     <div key={r} className="flex gap-1.5">
                       <div className="flex h-10 w-7 items-center justify-center text-[10px] font-bold text-gray-400">{r + 1}</div>
                       {Array.from({ length: planCols }, (_, c) => {
-  const tr = useHarvestedT('customer');
-                        const cell = layout.find(l => {tr('l.row === r && l.col === c);
-                        if (!cell || cell.type === \'aisle\') return')} <div key={c} className="h-10 w-10" />{tr(';
-                        if (cell.type === \'blocked\') return')} <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×</div>;
+                        const cell = layout.find(l => l.row === r && l.col === c);
+                        if (!cell || cell.type === 'aisle') return <div key={c} className="h-10 w-10" />;
+                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-[10px] text-gray-300">×</div>;
                         const isBooked = bookedSeats.includes(cell.seat_label);
                         const isSelected = selectedSeats.includes(cell.seat_label);
                         const seatStyle = getSeatColor(cell);
@@ -339,7 +336,7 @@ const CustomerTravelBooking: React.FC = () => {
                             style={{ backgroundColor: seatStyle.bg, color: seatStyle.color, borderColor: seatStyle.border, ...(isSelected ? { ringColor: theme.color + '50' } : {}) }}>
                             {isBooked ? (
                               <span className="text-[9px]">{bookedSeatGenders[cell.seat_label] === 'female' ? 'F' : 'M'}</span>
-                            {tr(') : isSelected ? (')}
+                            ) : isSelected ? (
                               <Check className="h-4 w-4" />
                             ) : cell.seat_label}
                           </button>
@@ -349,8 +346,8 @@ const CustomerTravelBooking: React.FC = () => {
                   ))}
                 </div>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-gray-500">
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#ecfdf5] border border-[#a7f3d0]" /> {tr('Available')}</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md" style={{ backgroundColor: theme.color }} /> {tr('Selected')}</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#ecfdf5] border border-[#a7f3d0]" /> Available</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md" style={{ backgroundColor: theme.color }} /> Selected</span>
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#dbeafe] border border-[#93c5fd]" /> M Male</span>
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#fce7f3] border border-[#f9a8d4]" /> F Female</span>
                 </div>
@@ -358,7 +355,7 @@ const CustomerTravelBooking: React.FC = () => {
             ) : (
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
                 <Armchair className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                <p className="text-sm text-gray-500">{tr('No seating plan assigned. Select number of seats:')}</p>
+                <p className="text-sm text-gray-500">No seating plan assigned. Select number of seats:</p>
                 <div className="mt-3 flex justify-center gap-2">
                   {[1, 2, 3, 4].map(n => (
                     <button key={n} onClick={() => setSelectedSeats(Array.from({ length: n }, (_, i) => `S${i + 1}`))}
@@ -369,7 +366,7 @@ const CustomerTravelBooking: React.FC = () => {
               </div>
             )}
             {selectedSeats.length > 0 && (
-              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl shadow-lg" onClick={() => setStep('details')}
+              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl shadow-lg" onClick={() => setStep('details
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
                 <Users className="mr-2 h-4 w-4" /> Continue · {selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} · {totalPrice.toLocaleString()} {trip.currency}
               </Button>
@@ -391,7 +388,6 @@ const CustomerTravelBooking: React.FC = () => {
             </div>
 
             {selectedSeats.map((seat, idx) => {
-  const tr = useHarvestedT('customer');
               const p = passengers[seat] || { name: '', phone: '', gender: 'male' as Gender };
               const isAutoFilled = idx === 0 && customerUser?.fullName && p.name === customerUser.fullName;
 
@@ -409,7 +405,7 @@ const CustomerTravelBooking: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {isAutoFilled && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white">
-                          <Check className="h-2.5 w-2.5" /> {tr('Auto-filled')}
+                          <Check className="h-2.5 w-2.5" /> Auto-filled
                         </span>
                       )}
                       <span className="inline-flex items-center rounded-lg px-2 py-1 text-[11px] font-extrabold" style={{ backgroundColor: theme.color, color: theme.fg }}>
@@ -427,22 +423,22 @@ const CustomerTravelBooking: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Phone Number</Label>
-                      <Input placeholder={tr('+237 6XX XXX XXX')} value={p.phone}
+                      <Input placeholder="+237 6XX XXX XXX" value={p.phone}
                         className="h-11 rounded-xl bg-gray-50 border-gray-200 font-medium text-sm"
                         onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{tr('Gender')} <span className="text-red-500">*</span></Label>
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Gender <span className="text-red-500">*</span></Label>
                       <RadioGroup value={p.gender || 'male'} onValueChange={(v) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], gender: v as Gender } }))} className="flex gap-3">
                         <label htmlFor={`male-${seat}`}
                           className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 cursor-pointer transition-all text-[12px] font-bold ${p.gender === 'male' ? 'border-blue-400 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 bg-white text-gray-500'}`}>
                           <RadioGroupItem value="male" id={`male-${seat}`} className="sr-only" />
-                          <UserCircle className="h-4 w-4 text-blue-500" /> {tr('Male')}
+                          <UserCircle className="h-4 w-4 text-blue-500" /> Male
                         </label>
                         <label htmlFor={`female-${seat}`}
                           className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 cursor-pointer transition-all text-[12px] font-bold ${p.gender === 'female' ? 'border-pink-400 bg-pink-50 text-pink-700 shadow-sm' : 'border-gray-200 bg-white text-gray-500'}`}>
                           <RadioGroupItem value="female" id={`female-${seat}`} className="sr-only" />
-                          <UserCircle className="h-4 w-4 text-pink-500" /> {tr('Female')}
+                          <UserCircle className="h-4 w-4 text-pink-500" /> Female
                         </label>
                       </RadioGroup>
                     </div>
@@ -452,10 +448,10 @@ const CustomerTravelBooking: React.FC = () => {
             })}
 
             <div className="flex gap-3 pt-1">
-              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">{tr('Back')}</Button>
-              <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
+              <Button variant="outline" onClick={() => setStep('seats className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
+              <Button onClick={() => setStep('confirm className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
-                {tr('Review & Pay →')}
+                Review & Pay →
               </Button>
             </div>
           </motion.div>
@@ -464,7 +460,7 @@ const CustomerTravelBooking: React.FC = () => {
         {/* Step 3: Payment & Confirm */}
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">{tr('Payment & Summary')}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">Payment & Summary</p>
 
             {/* Wallet Balance Card */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -525,8 +521,8 @@ const CustomerTravelBooking: React.FC = () => {
                   <div className="text-center">
                     <p className="text-[10px] text-gray-400 uppercase">{route?.origin?.slice(0, 15)}</p>
                     <p className="text-2xl font-black tracking-tight text-[#0f1729]">{route?.origin?.slice(0, 3).toUpperCase()}</p>
-                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.departure_at), 'HH:mm')}</p>
-                    <p className="text-[10px] text-gray-400">{format(new Date(trip.departure_at), 'dd MMM, yyyy')}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.departure_at), 'HH:mm</p>
+                    <p className="text-[10px] text-gray-400">{format(new Date(trip.departure_at), 'dd MMM, yyyy</p>
                   </div>
                   <div className="flex-1 flex flex-col items-center px-3">
                     <div className="flex items-center w-full">
@@ -542,8 +538,8 @@ const CustomerTravelBooking: React.FC = () => {
                   <div className="text-center">
                     <p className="text-[10px] text-gray-400 uppercase">{route?.destination?.slice(0, 15)}</p>
                     <p className="text-2xl font-black tracking-tight text-[#0f1729]">{route?.destination?.slice(0, 3).toUpperCase()}</p>
-                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.arrival_at), 'HH:mm')}</p>
-                    <p className="text-[10px] text-gray-400">{format(new Date(trip.arrival_at), 'dd MMM, yyyy')}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: theme.color }}>{format(new Date(trip.arrival_at), 'HH:mm</p>
+                    <p className="text-[10px] text-gray-400">{format(new Date(trip.arrival_at), 'dd MMM, yyyy</p>
                   </div>
                 </div>
               </div>
@@ -574,16 +570,16 @@ const CustomerTravelBooking: React.FC = () => {
 
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                   <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: theme.accentLight }}>
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Seats')}</p>
-                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Seats</p>
+                    <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', </p>
                   </div>
                   <div className="rounded-xl bg-blue-50 p-2.5 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Passengers')}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Passengers</p>
                     <p className="text-sm font-black text-blue-700">{selectedSeats.length}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-2.5 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Payment')}</p>
-                    <p className="text-sm font-black text-gray-700">{tr('Wallet')}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Payment</p>
+                    <p className="text-sm font-black text-gray-700">Wallet</p>
                   </div>
                 </div>
 
@@ -594,7 +590,7 @@ const CustomerTravelBooking: React.FC = () => {
                     <input placeholder="Enter code" className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase"
                       value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} />
                     <button onClick={applyPromoCode} className="rounded-lg px-3 py-2 text-xs font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                      {tr('Apply')}
+                      Apply
                     </button>
                   </div>
                   {bestDiscount && (
@@ -610,7 +606,7 @@ const CustomerTravelBooking: React.FC = () => {
               {/* Total footer */}
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: theme.color }}>
                 <div>
-                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>{tr('Total')}</span>
+                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
                   {discountAmount > 0 && <span className="text-[10px] line-through" style={{ color: theme.fg, opacity: 0.4 }}>{basePrice.toLocaleString()} {trip.currency}</span>}
                 </div>
                 <span className="text-xl font-black" style={{ color: theme.fg }}>{totalPrice.toLocaleString()} {trip.currency}</span>
@@ -619,7 +615,7 @@ const CustomerTravelBooking: React.FC = () => {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">{tr('Back')}</Button>
+              <Button variant="outline" onClick={() => setStep('details className="flex-1 h-11 rounded-xl">Back</Button>
               {hasInsufficientFunds ? (
                 <Button onClick={handleAddMoney} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg bg-[#0f1729] text-white hover:bg-[#1a2744]">
                   <Plus className="mr-2 h-4 w-4" />

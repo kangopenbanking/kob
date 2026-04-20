@@ -10,12 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(25,60%,35%)]'];
 
 const CustomerCards: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -71,7 +69,7 @@ const CustomerCards: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-xl font-bold text-foreground">{tr('Cards')}</h1>
+      <h1 className="text-xl font-bold text-foreground">Cards</h1>
 
       {cards.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16">
@@ -80,7 +78,7 @@ const CustomerCards: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-muted-foreground">No cards yet</p>
           <p className="text-xs text-muted-foreground text-center">Add a virtual card to start making payments</p>
-          <Button variant="outline" className="rounded-2xl" onClick={() => navigate('/virtual-cards')}>
+          <Button variant="outline" className="rounded-2xl" onClick={() => navigate('/virtual-cards>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </div>
@@ -112,8 +110,8 @@ const CustomerCards: React.FC = () => {
                       <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{card.card_name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">{tr('Expires')}</p>
-                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}</p>
+                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Expires</p>
+                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{String(card.exp_month).padStart(2, '0/{String(card.exp_year).slice(-2)}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -148,11 +146,11 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button onClick={() => navigate('/virtual-cards')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => navigate('/virtual-cards className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>
-              <span className="text-[10px] font-bold text-foreground">{tr('Settings')}</span>
+              <span className="text-[10px] font-bold text-foreground">Settings</span>
             </button>
           </div>
 
@@ -178,7 +176,7 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <Button variant="outline" className="w-full rounded-2xl" onClick={() => navigate('/virtual-cards')}>
+          <Button variant="outline" className="w-full rounded-2xl" onClick={() => navigate('/virtual-cards>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </>

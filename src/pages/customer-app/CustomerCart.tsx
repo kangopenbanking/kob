@@ -13,10 +13,8 @@ import { useAccountBalances, useCustomerAccounts } from '@/hooks/useCustomerData
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerCart: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -24,10 +22,10 @@ const CustomerCart: React.FC = () => {
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
 
-  const [cart, setCart] = useState<any>{tr('(null);
+  const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
-  const [orderComplete, setOrderComplete] = useState')}<any>(null);
+  const [orderComplete, setOrderComplete] = useState<any>(null);
   const [orderFailed, setOrderFailed] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [savingShipping, setSavingShipping] = useState(false);
@@ -159,7 +157,7 @@ const CustomerCart: React.FC = () => {
           {orderComplete.total?.toLocaleString()} {orderComplete.currency || 'XAF'} paid · Order #{orderComplete.order_number}
         </p>
         <div className="w-full max-w-xs mt-8 space-y-3">
-          <Button onClick={() => navigate('/app/orders')} className="w-full h-12 rounded-2xl font-semibold">
+          <Button onClick={() => navigate('/app/orders className="w-full h-12 rounded-2xl font-semibold">
             Track order
           </Button>
           <Button variant="outline" onClick={() => { setOrderComplete(null); navigate('/app/stores'); }} className="w-full h-12 rounded-2xl font-semibold">
@@ -181,13 +179,13 @@ const CustomerCart: React.FC = () => {
           <XCircle className="w-12 h-12 text-rose-500" strokeWidth={2} />
         </motion.div>
         <h2 className="text-2xl font-bold text-foreground tracking-tight">Payment failed</h2>
-        <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">{tr('This payment was declined. Please try again.')}</p>
+        <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">This payment was declined. Please try again.</p>
         <div className="w-full max-w-xs mt-8 space-y-3">
           <Button onClick={() => { setOrderFailed(false); handleCheckout(); }} className="w-full h-12 rounded-2xl font-semibold">
             Try again
           </Button>
           <Button variant="outline" onClick={() => { setOrderFailed(false); navigate('/app/stores'); }} className="w-full h-12 rounded-2xl font-semibold">
-            {tr('Exit')}
+            Exit
           </Button>
         </div>
       </div>
@@ -203,7 +201,7 @@ const CustomerCart: React.FC = () => {
             <ArrowLeft className="w-[18px] h-[18px] text-foreground" />
           </button>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{tr('Checkout')}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Checkout</p>
             <h1 className="text-[22px] leading-tight font-bold text-foreground tracking-tight">Your cart</h1>
           </div>
         </div>
@@ -218,14 +216,14 @@ const CustomerCart: React.FC = () => {
         <div className="flex items-center justify-center py-24">
           <Loader2 className="w-7 h-7 animate-spin text-primary" />
         </div>
-      {tr(') : items.length === 0 ? (')}
+      ) : items.length === 0 ? (
         <div className="text-center py-24 px-6">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
             <ShoppingBag className="w-7 h-7 text-muted-foreground/60" />
           </div>
           <p className="text-base font-semibold text-foreground">Your cart is empty</p>
           <p className="text-xs text-muted-foreground mt-1">Find something special in the marketplace</p>
-          <Button onClick={() => navigate('/app/stores')} className="mt-6 h-11 px-6 rounded-2xl font-semibold">
+          <Button onClick={() => navigate('/app/stores className="mt-6 h-11 px-6 rounded-2xl font-semibold">
             Browse stores
           </Button>
         </div>
@@ -233,7 +231,7 @@ const CustomerCart: React.FC = () => {
         <div className="px-5 mt-5 space-y-5">
           {/* ─── Items ─── */}
           <div>
-            <h2 className="text-[13px] font-bold text-foreground uppercase tracking-wider mb-3">{tr('Items')}</h2>
+            <h2 className="text-[13px] font-bold text-foreground uppercase tracking-wider mb-3">Items</h2>
             <div className="bg-card rounded-3xl ring-1 ring-border/40 divide-y divide-border/40 overflow-hidden">
               {items.map((item: any, idx: number) => {
                 const variant = item.pos_product_variants;
@@ -292,11 +290,11 @@ const CustomerCart: React.FC = () => {
             </h2>
             <div className="bg-card rounded-3xl ring-1 ring-border/40 p-4 space-y-2.5">
               <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Recipient name" className="h-11 rounded-xl bg-muted/40 border-0" />
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={tr('Phone (e.g. +237…)')} className="h-11 rounded-xl bg-muted/40 border-0" />
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (e.g. +237…)" className="h-11 rounded-xl bg-muted/40 border-0" />
               <Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street address" className="h-11 rounded-xl bg-muted/40 border-0" />
               <div className="grid grid-cols-2 gap-2.5">
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={tr('City')} className="h-11 rounded-xl bg-muted/40 border-0" />
-                <Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder={tr('Region')} className="h-11 rounded-xl bg-muted/40 border-0" />
+                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="h-11 rounded-xl bg-muted/40 border-0" />
+                <Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Region" className="h-11 rounded-xl bg-muted/40 border-0" />
               </div>
             </div>
           </div>
@@ -308,19 +306,19 @@ const CustomerCart: React.FC = () => {
             </h2>
             <div className="bg-card rounded-3xl ring-1 ring-border/40 p-5 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{tr('Subtotal')}</span>
+                <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-semibold text-foreground">{subtotal.toLocaleString()} XAF</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{tr('Delivery')}</span>
+                <span className="text-muted-foreground">Delivery</span>
                 <span className="font-semibold text-foreground">{shippingFee.toLocaleString()} XAF</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{tr('Taxes')}</span>
+                <span className="text-muted-foreground">Taxes</span>
                 <span className="font-semibold text-foreground">{taxes.toLocaleString()} XAF</span>
               </div>
               <div className="border-t border-border/50 pt-3 flex justify-between items-baseline">
-                <span className="text-[15px] font-bold text-foreground">{tr('Total')}</span>
+                <span className="text-[15px] font-bold text-foreground">Total</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-[20px] font-bold text-foreground tracking-tight">{total.toLocaleString()}</span>
                   <span className="text-[11px] text-muted-foreground font-medium">XAF</span>
@@ -338,7 +336,7 @@ const CustomerCart: React.FC = () => {
                 <p className="text-sm font-bold text-foreground">{walletBalance.toLocaleString()} XAF</p>
               </div>
               {walletBalance < total && (
-                <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">{tr('Low')}</span>
+                <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Low</span>
               )}
             </div>
           </div>
@@ -357,10 +355,10 @@ const CustomerCart: React.FC = () => {
             className="w-full h-13 py-3.5 rounded-2xl font-semibold shadow-2xl bg-foreground text-background hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
           >
             {checkingOut || savingShipping ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-2" />{tr('Processing…')}</>
-            {tr(') : !shippingComplete ? (')}
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing…</>
+            ) : !shippingComplete ? (
               <><Truck className="w-4 h-4 mr-2" />Add delivery address</>
-            {tr(') : walletBalance')} < total ? (
+            ) : walletBalance < total ? (
               <>Insufficient balance</>
             ) : (
               <><Wallet className="w-4 h-4 mr-2" />Pay {total.toLocaleString()} XAF</>

@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const billCategories = [
   { label: 'Utilities', icon: Zap, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
@@ -37,7 +36,6 @@ function calculateNextDate(startDate: string, frequency: string): string {
 }
 
 const CustomerRecurring: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -81,8 +79,8 @@ const CustomerRecurring: React.FC = () => {
   const [sourceAccountId, setSourceAccountId] = useState('');
   // P2P recipient
   const [recipientQuery, setRecipientQuery] = useState('');
-  const [recipientResults, setRecipientResults] = useState<any[]>{tr('([]);
-  const [selectedRecipient, setSelectedRecipient] = useState')}<{ id: string; full_name: string; phone_masked: string | null } | null>(null);
+  const [recipientResults, setRecipientResults] = useState<any[]>([]);
+  const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; full_name: string; phone_masked: string | null } | null>(null);
   const [searchingRecipient, setSearchingRecipient] = useState(false);
 
   const searchRecipient = async (q: string) => {
@@ -194,12 +192,11 @@ const CustomerRecurring: React.FC = () => {
   const getCategoryMeta = (cat: string) => billCategories.find(c => c.label === cat) || billCategories[3];
 
   const renderItemIcon = (p: any) => {
-  const tr = useHarvestedT('customer');
-    if (p.payment_type === 'salary') return <Briefcase className="h-5 w-5 text-[hsl(150,60%,40%)]" strokeWidth={1.5} />{tr(';
-    if (p.payment_type === \'p2p\') return')} <Users className="h-5 w-5 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />{tr(';
+    if (p.payment_type === 'salary') return <Briefcase className="h-5 w-5 text-[hsl(150,60%,40%)]" strokeWidth={1.5} />;
+    if (p.payment_type === 'p2p') return <Users className="h-5 w-5 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />;
     const cat = getCategoryMeta(p.category);
     const Icon = cat.icon;
-    return')} <Icon className={`h-5 w-5 ${cat.iconColor}`} strokeWidth={1.5} />;
+    return <Icon className={`h-5 w-5 ${cat.iconColor}`} strokeWidth={1.5} />;
   };
 
   const itemBgClass = (p: any) => {
@@ -216,17 +213,17 @@ const CustomerRecurring: React.FC = () => {
           <h1 className="text-xl font-bold text-foreground">Recurring Payments</h1>
         </div>
         <Button size="sm" className="rounded-2xl h-9 text-xs font-bold" onClick={() => setShowCreate(true)}>
-          <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> {tr('New')}
+          <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> New
         </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl bg-[hsl(210,80%,93%)] p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">{tr('Active')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">Active</p>
           <p className="text-lg font-bold text-[hsl(210,60%,45%)]">{activeCount}</p>
         </div>
         <div className="rounded-2xl bg-[hsl(150,40%,90%)] p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(150,60%,40%)]">{tr('Est. Monthly Out')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(150,60%,40%)]">Est. Monthly Out</p>
           <p className="text-lg font-bold text-[hsl(150,60%,40%)]">{totalMonthly.toLocaleString()}</p>
         </div>
       </div>
@@ -244,7 +241,7 @@ const CustomerRecurring: React.FC = () => {
 
               {/* Payment Type Selector */}
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Type')}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Type</p>
                 <div className="grid grid-cols-3 gap-2">
                   {paymentTypes.map(t => (
                     <button key={t.id} onClick={() => setPaymentType(t.id as any)}
@@ -260,7 +257,7 @@ const CustomerRecurring: React.FC = () => {
               {/* Bill: category */}
               {paymentType === 'bill' && (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Category')}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Category</p>
                   <div className="flex gap-2">
                     {billCategories.map(c => (
                       <button key={c.label} onClick={() => setNewCategory(c.label)}
@@ -276,7 +273,7 @@ const CustomerRecurring: React.FC = () => {
               {/* P2P: recipient search */}
               {paymentType === 'p2p' && (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Recipient (Kang user)')}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient (Kang user)</p>
                   {selectedRecipient ? (
                     <div className="flex items-center gap-3 rounded-2xl bg-muted p-3">
                       <Users className="h-4 w-4 text-foreground" strokeWidth={1.5} />
@@ -292,7 +289,7 @@ const CustomerRecurring: React.FC = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                         <Input value={recipientQuery} onChange={e => searchRecipient(e.target.value)} placeholder="Search by name" className="rounded-xl pl-10" />
                       </div>
-                      {searchingRecipient && <p className="text-[10px] text-muted-foreground">{tr('Searching...')}</p>}
+                      {searchingRecipient && <p className="text-[10px] text-muted-foreground">Searching...</p>}
                       {recipientResults.length > 0 && (
                         <div className="space-y-1 max-h-40 overflow-y-auto">
                           {recipientResults.map(r => (
@@ -333,11 +330,11 @@ const CustomerRecurring: React.FC = () => {
                 <Input value={newName} onChange={e => setNewName(e.target.value)}
                   placeholder={paymentType === 'salary' ? 'Salary source (e.g. Acme Corp)' : paymentType === 'p2p' ? 'Description (e.g. Rent share)' : 'Payment name (e.g. ENEO)'}
                   className="rounded-xl" />
-                <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder={tr('Amount (XAF)')} className="rounded-xl" />
+                <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="Amount (XAF)" className="rounded-xl" />
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Frequency')}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Frequency</p>
                 <div className="flex gap-2">
                   {['Daily', 'Weekly', 'Monthly', 'Quarterly'].map(f => (
                     <button key={f} onClick={() => setNewFreq(f)}
@@ -350,7 +347,7 @@ const CustomerRecurring: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground">{tr('Start Date *')}</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">Start Date *</label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     <Input type="date" value={newStartDate} onChange={e => setNewStartDate(e.target.value)} className="rounded-xl pl-10 text-xs" />
@@ -368,14 +365,14 @@ const CustomerRecurring: React.FC = () => {
               <button onClick={() => setNewNotify(!newNotify)}
                 className="flex items-center gap-3 rounded-2xl bg-muted p-3">
                 <Bell className={`h-4 w-4 ${newNotify ? 'text-primary' : 'text-muted-foreground'}`} strokeWidth={1.5} />
-                <span className="text-xs font-semibold text-foreground flex-1 text-left">{tr('Reminders')}</span>
+                <span className="text-xs font-semibold text-foreground flex-1 text-left">Reminders</span>
                 <div className={`h-5 w-9 rounded-full flex items-center px-0.5 transition-colors ${newNotify ? 'bg-primary justify-end' : 'bg-border justify-start'}`}>
                   <div className="h-4 w-4 rounded-full bg-background shadow-sm" />
                 </div>
               </button>
 
               <Button onClick={handleCreate} disabled={creating} className="rounded-2xl h-11 text-xs font-bold">
-                {creating ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> {tr('Creating...')}</span>
+                {creating ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Creating...</span>
                   : 'Create Recurring Payment'}
               </Button>
             </div>
@@ -387,10 +384,9 @@ const CustomerRecurring: React.FC = () => {
       <div className="space-y-2">
         {isLoading ? (
           <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
-        {tr(') : payments.length === 0 ? (')}
+        ) : payments.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted-foreground">No recurring payments yet</p>
         ) : payments.map((p: any) => {
-  const tr = useHarvestedT('customer');
           const isExpanded = expandedIdx === p.id;
           const typeLabel = p.payment_type === 'salary' ? 'Salary' : p.payment_type === 'p2p' ? 'Send to Kang' : 'Bill';
           const DirIcon = p.payment_type === 'salary' ? ArrowDownCircle : ArrowUpCircle;
@@ -429,17 +425,17 @@ const CustomerRecurring: React.FC = () => {
                   <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                     <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div><span className="text-muted-foreground">{tr('Type:')}</span> <span className="font-semibold text-foreground">{typeLabel}</span></div>
-                        <div><span className="text-muted-foreground">{tr('Category:')}</span> <span className="font-semibold text-foreground">{p.category}</span></div>
-                        <div><span className="text-muted-foreground">{tr('Payments:')}</span> <span className="font-semibold text-foreground">{p.payments_made}</span></div>
-                        <div><span className="text-muted-foreground">{tr('Started:')}</span> <span className="font-semibold text-foreground">{p.start_date}</span></div>
-                        <div><span className="text-muted-foreground">{tr('Ends:')}</span> <span className="font-semibold text-foreground">{p.end_date || 'Ongoing'}</span></div>
-                        <div><span className="text-muted-foreground">{tr('Notify:')}</span> <span className="font-semibold text-foreground">{p.notify ? 'Yes' : 'No'}</span></div>
+                        <div><span className="text-muted-foreground">Type:</span> <span className="font-semibold text-foreground">{typeLabel}</span></div>
+                        <div><span className="text-muted-foreground">Category:</span> <span className="font-semibold text-foreground">{p.category}</span></div>
+                        <div><span className="text-muted-foreground">Payments:</span> <span className="font-semibold text-foreground">{p.payments_made}</span></div>
+                        <div><span className="text-muted-foreground">Started:</span> <span className="font-semibold text-foreground">{p.start_date}</span></div>
+                        <div><span className="text-muted-foreground">Ends:</span> <span className="font-semibold text-foreground">{p.end_date || 'Ongoing'}</span></div>
+                        <div><span className="text-muted-foreground">Notify:</span> <span className="font-semibold text-foreground">{p.notify ? 'Yes' : 'No'}</span></div>
                         {p.last_run_at && <div className="col-span-2"><span className="text-muted-foreground">Last run:</span> <span className="font-semibold text-foreground">{new Date(p.last_run_at).toLocaleString()} ({p.last_run_status})</span></div>}
-                        {p.last_run_error && <div className="col-span-2"><span className="text-muted-foreground">{tr('Error:')}</span> <span className="font-semibold text-destructive">{p.last_run_error}</span></div>}
+                        {p.last_run_error && <div className="col-span-2"><span className="text-muted-foreground">Error:</span> <span className="font-semibold text-destructive">{p.last_run_error}</span></div>}
                       </div>
                       <Button size="sm" variant="outline" className="rounded-xl text-[11px] h-8 w-full" onClick={(e) => { e.stopPropagation(); handleToggle(p); }}>
-                        {p.is_active ? <><Pause className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> {tr('Pause')}</> : <><Play className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> {tr('Resume')}</>}
+                        {p.is_active ? <><Pause className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Pause</> : <><Play className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Resume</>}
                       </Button>
                     </div>
                   </motion.div>

@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface InvoiceItem {
   description: string;
@@ -41,15 +40,14 @@ const statusConfig: Record<string, { icon: any; color: string; bg: string; label
 type StatusFilter = 'all' | 'paid' | 'pending' | 'sent' | 'overdue';
 
 const CustomerInvoices: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState<Invoice[]>{tr('([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [statusFilter, setStatusFilter] = useState')}<StatusFilter>{tr('(\'all\');
-  const [expandedId, setExpandedId] = useState')}<string | null>{tr('(null);
-  const [sendingId, setSendingId] = useState')}<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const [newClient, setNewClient] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
@@ -97,7 +95,7 @@ const CustomerInvoices: React.FC = () => {
     if (!newClient.trim()) { toast.error('Enter client name'); return; }
     if (!newClientEmail.trim()) { toast.error('Enter client email'); return; }
     if (!newDueDate) { toast.error('Select a due date'); return; }
-    if (newItems.some(i => {tr('!i.description.trim() || i.unitPrice')} <= 0)) { toast.error('Complete all line items'); return; }
+    if (newItems.some(i => !i.description.trim() || i.unitPrice <= 0)) { toast.error('Complete all line items'); return; }
 
     setCreating(true);
     try {
@@ -199,14 +197,14 @@ const CustomerInvoices: React.FC = () => {
           <button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
           </button>
-          <h1 className="text-xl font-bold text-foreground">{tr('Invoices')}</h1>
+          <h1 className="text-xl font-bold text-foreground">Invoices</h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => loadInvoices()} className="p-2 rounded-xl bg-card border border-border">
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${loading ? 'animate-spin' : ''}`} strokeWidth={1.5} />
           </button>
           <Button size="sm" className="rounded-2xl h-9 text-xs font-bold" onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> {tr('New')}
+            <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> New
           </Button>
         </div>
       </div>
@@ -275,9 +273,9 @@ const CustomerInvoices: React.FC = () => {
                 {newItems.map((item, i) => (
                   <div key={i} className="flex gap-2 items-start">
                     <div className="flex-1 space-y-2">
-                      <Input value={item.description} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, description: e.target.value } : it))} placeholder={tr('Description')} className="rounded-xl text-xs" />
+                      <Input value={item.description} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, description: e.target.value } : it))} placeholder="Description" className="rounded-xl text-xs" />
                       <div className="flex gap-2">
-                        <Input type="number" value={item.quantity || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, quantity: Number(e.target.value) } : it))} placeholder={tr('Qty')} className="rounded-xl text-xs w-20" />
+                        <Input type="number" value={item.quantity || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, quantity: Number(e.target.value) } : it))} placeholder="Qty" className="rounded-xl text-xs w-20" />
                         <Input type="number" value={item.unitPrice || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, unitPrice: Number(e.target.value) } : it))} placeholder="Unit price" className="rounded-xl text-xs flex-1" />
                       </div>
                     </div>
@@ -294,8 +292,8 @@ const CustomerInvoices: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Notes (optional)')}</p>
-                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder={tr('Payment terms, notes...')}
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes (optional)</p>
+                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder="Payment terms, notes..."
                   className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-16 focus:ring-1 focus:ring-primary/30" />
               </div>
 
@@ -315,9 +313,9 @@ const CustomerInvoices: React.FC = () => {
 
               <Button onClick={handleCreate} disabled={creating} className="rounded-2xl h-11 text-xs font-bold">
                 {creating ? (
-                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Creating & Sending...')}</span>
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Creating & Sending...</span>
                 ) : (
-                  <span className="flex items-center gap-2"><Send className="h-3.5 w-3.5" /> {tr('Create & Send Invoice')}</span>
+                  <span className="flex items-center gap-2"><Send className="h-3.5 w-3.5" /> Create & Send Invoice</span>
                 )}
               </Button>
             </div>
@@ -329,7 +327,7 @@ const CustomerInvoices: React.FC = () => {
       {loading && (
         <div className="flex flex-col items-center gap-3 py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">{tr('Loading invoices...')}</p>
+          <p className="text-xs text-muted-foreground">Loading invoices...</p>
         </div>
       )}
 
@@ -350,7 +348,6 @@ const CustomerInvoices: React.FC = () => {
       {/* Invoice List */}
       <div className="space-y-3">
         {filtered.map((inv, i) => {
-  const tr = useHarvestedT('customer');
           const cfg = statusConfig[inv.status] || statusConfig.pending;
           const StatusIcon = cfg.icon;
           const isExpanded = expandedId === inv.id;
@@ -388,7 +385,7 @@ const CustomerInvoices: React.FC = () => {
                         <p className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[120px] sm:max-w-none">{inv.client_name}</p>
                         {isDue && (
                           <span className="text-[8px] font-bold text-white bg-gradient-to-r from-red-500 to-red-600 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse shrink-0">
-                            {tr('Overdue')}
+                            Overdue
                           </span>
                         )}
                       </div>
@@ -418,7 +415,7 @@ const CustomerInvoices: React.FC = () => {
                           {/* Meta Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 p-2.5 overflow-hidden">
-                              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">{tr('Recipient')}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">Recipient</p>
                               <p className="text-[11px] font-semibold text-foreground break-all">{inv.client_email}</p>
                             </div>
                             <div className={`rounded-xl p-2.5 border ${isDue ? 'bg-red-50/60 dark:bg-red-950/20 border-red-100 dark:border-red-900/40' : 'bg-muted/50 border-border'}`}>
@@ -427,13 +424,13 @@ const CustomerInvoices: React.FC = () => {
                             </div>
                             {inv.sent_at && (
                               <div className="rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 p-2.5">
-                                <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 mb-0.5">{tr('Sent')}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 mb-0.5">Sent</p>
                                 <p className="text-[11px] font-semibold text-foreground">{formatDate(inv.sent_at)}</p>
                               </div>
                             )}
                             {inv.paid_at && (
                               <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-2.5">
-                                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mb-0.5">{tr('Paid')}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mb-0.5">Paid</p>
                                 <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">{formatDate(inv.paid_at)}</p>
                               </div>
                             )}
@@ -453,7 +450,7 @@ const CustomerInvoices: React.FC = () => {
                                 </div>
                               ))}
                               <div className="flex justify-between items-center px-3 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-t border-primary/15">
-                                <p className="text-[11px] font-bold text-primary">{tr('Total')}</p>
+                                <p className="text-[11px] font-bold text-primary">Total</p>
                                 <p className="text-sm font-extrabold text-primary">{Number(inv.amount).toLocaleString()} {inv.currency}</p>
                               </div>
                             </div>

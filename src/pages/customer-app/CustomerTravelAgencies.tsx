@@ -4,7 +4,6 @@ import { ChevronLeft, MapPin, Loader2, ArrowRight, Star, Route, Shield, Search, 
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { getTheme } from '@/lib/travel-theme';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface Agency {
   id: string;
@@ -16,10 +15,9 @@ interface Agency {
 }
 
 const CustomerTravelAgencies: React.FC = () => {
-  const tr = useHarvestedT('customer');
-  const { category } = useParams<{ category: string }>{tr('();
+  const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
-  const [agencies, setAgencies] = useState')}<Agency[]>([]);
+  const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
@@ -50,20 +48,20 @@ const CustomerTravelAgencies: React.FC = () => {
   const filtered = agencies.filter(a => {
   const tr = useHarvestedT('customer');tr('a.display_name.toLowerCase().includes(search.toLowerCase()));
 
-  return (')}
+  return
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* ── Themed Header with Embedded Search ── */}
       <div className="relative overflow-hidden px-5 pb-8 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-7">
-            <button onClick={() => navigate('/app/travel')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
+            <button onClick={() => navigate('/app/travel className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
               <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex-1" />
             <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
               <Shield className="h-3.5 w-3.5" style={{ color: theme.fg }} />
-              <span className="text-[11px] font-semibold" style={{ color: theme.fg, opacity: 0.85 }}>{tr('Verified')}</span>
+              <span className="text-[11px] font-semibold" style={{ color: theme.fg, opacity: 0.85 }}>Verified</span>
             </div>
           </div>
 
@@ -110,7 +108,7 @@ const CustomerTravelAgencies: React.FC = () => {
       <div className="space-y-3 px-5 pb-28">
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[#0f1729]/20" /></div>
-        {tr(') : filtered.length === 0 ? (')}
+        ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col items-center gap-3 rounded-3xl bg-white py-16 text-center shadow-sm">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: theme.accentLight }}>
@@ -142,7 +140,7 @@ const CustomerTravelAgencies: React.FC = () => {
                     <MapPin className="h-3 w-3" /> {agency.route_count} route{agency.route_count !== 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: theme.color }}>
-                    <Star className="h-3 w-3" /> {tr('Verified')}
+                    <Star className="h-3 w-3" /> Verified
                   </span>
                 </div>
               </div>
@@ -155,9 +153,9 @@ const CustomerTravelAgencies: React.FC = () => {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.5 }}
           className="mt-5 flex items-center justify-center gap-3 text-[10px] font-medium text-[#0f1729]/25">
-          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> {tr('Licensed')}</span>
+          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Licensed</span>
           <span className="text-[6px]">●</span>
-          <span>{tr('E-Tickets')}</span>
+          <span>E-Tickets</span>
           <span className="text-[6px]">●</span>
           <span>Secure Pay</span>
         </motion.div>

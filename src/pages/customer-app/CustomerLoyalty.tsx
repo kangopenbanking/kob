@@ -7,10 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Gift, TrendingUp, Award, Star, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export function CustomerLoyalty() {
-  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const navigate = useNavigate();
 
@@ -27,7 +25,7 @@ export function CustomerLoyalty() {
       
       const totalEarned = data?.filter(t => t.points_change > 0)
         .reduce((sum, t) => sum + t.points_change, 0) || 0;
-      const totalRedeemed = Math.abs(data?.filter(t => {tr('t.points_change')} < 0)
+      const totalRedeemed = Math.abs(data?.filter(t => t.points_change < 0)
         .reduce((sum, t) => sum + t.points_change, 0) || 0);
       const currentBalance = totalEarned - totalRedeemed;
       
@@ -58,7 +56,7 @@ export function CustomerLoyalty() {
           <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
           <p className="text-muted-foreground mb-4">Please sign in to view your rewards</p>
-          <Button onClick={() => navigate('/app/auth')}>Sign In</Button>
+          <Button onClick={() => navigate('/app/auth>Sign In</Button>
         </Card>
       </div>
     );
@@ -76,10 +74,10 @@ export function CustomerLoyalty() {
     { name: 'Gold', min: 5000, color: 'text-[hsl(45,80%,45%)]', icon: Sparkles },
   ];
 
-  const currentTier = tiers.reduce((acc, tier) => (totalPoints >{tr('= tier.min ? tier : acc), tiers[0]);
+  const currentTier = tiers.reduce((acc, tier) => (totalPoints >= tier.min ? tier : acc), tiers[0]);
   const TierIcon = currentTier.icon;
 
-  return (')}
+  return (
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center gap-3">
@@ -135,7 +133,7 @@ export function CustomerLoyalty() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{redeemedPoints.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">{tr('Redeemed')}</p>
+                <p className="text-sm text-muted-foreground">Redeemed</p>
               </div>
             </div>
           </Card>
@@ -152,7 +150,7 @@ export function CustomerLoyalty() {
               <div className="flex-1">
                 <p className="font-medium">Cashback on Purchases</p>
                 <p className="text-sm text-muted-foreground">
-                  {tr('Earn 1% cashback on transfers of 10,000 XAF or more')}
+                  Earn 1% cashback on transfers of 10,000 XAF or more
                 </p>
               </div>
             </div>
@@ -190,7 +188,7 @@ export function CustomerLoyalty() {
                 <Card key={txn.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium capitalize">{txn.transaction_type.replace('_', ' ')}</p>
+                      <p className="font-medium capitalize">{txn.transaction_type.replace('_', ' </p>
                       <p className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(txn.created_at), { addSuffix: true })}
                       </p>
@@ -199,7 +197,7 @@ export function CustomerLoyalty() {
                       <p className={`font-bold ${txn.points_change > 0 ? 'text-[hsl(150,60%,35%)]' : 'text-destructive'}`}>
                         {txn.points_change > 0 ? '+' : ''}{txn.points_change}
                       </p>
-                      <p className="text-xs text-muted-foreground">{tr('points')}</p>
+                      <p className="text-xs text-muted-foreground">points</p>
                     </div>
                   </div>
                 </Card>
@@ -209,7 +207,7 @@ export function CustomerLoyalty() {
             <Card className="p-12 text-center">
               <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">No activity yet</p>
-              <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>
+              <Button className="mt-4" onClick={() => navigate('/app/marketplace>
                 Start Earning
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>

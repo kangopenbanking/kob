@@ -18,12 +18,10 @@ import { supabase } from '@/integrations/supabase/client';
 import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
 
 const CustomerSettings: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>(null);
   const [legalSlug, setLegalSlug] = useState('');
@@ -218,7 +216,7 @@ const CustomerSettings: React.FC = () => {
 
   const BackButton = ({ onBack }: { onBack: () => void }) => (
     <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-primary">
-      <ArrowLeft className="h-4 w-4" strokeWidth={2} /> {tr('Back')}
+      <ArrowLeft className="h-4 w-4" strokeWidth={2} /> Back
     </button>
   );
 
@@ -246,16 +244,16 @@ const CustomerSettings: React.FC = () => {
       </div>
       {right || (!destructive && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />)}
     </button>
-  {tr(');
+  );
 
-  return (')}
+  return (
     <div className="flex flex-col p-5 pb-28">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <button onClick={() => activeSection ? setActiveSection(null) : navigate(-1)}>
           <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">{tr('Settings')}</h1>
+        <h1 className="text-xl font-bold text-foreground">Settings</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -271,7 +269,7 @@ const CustomerSettings: React.FC = () => {
                 <p className="text-sm font-bold text-foreground truncate">{name || 'Set your name'}</p>
                 <p className="text-xs text-muted-foreground truncate">{email}</p>
               </div>
-              <button onClick={() => setActiveSection('personal')}>
+              <button onClick={() => setActiveSection('personal>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
               </button>
             </div>
@@ -317,7 +315,7 @@ const CustomerSettings: React.FC = () => {
 
             {/* Help & Logout & Delete */}
             <SettingCard>
-              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label={tr('Help & Support')} onClick={() => navigate('/app/help')} />
+              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help />
               <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
               <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label="Delete Account" description="Permanently delete your account and data" onClick={() => {
                 if (window.confirm('Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.')) {
@@ -327,7 +325,7 @@ const CustomerSettings: React.FC = () => {
             </SettingCard>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
-              {tr('Kang Open Banking · v2.1.0')}
+              Kang Open Banking · v2.1.0
             </p>
           </motion.div>
         )}
@@ -342,13 +340,13 @@ const CustomerSettings: React.FC = () => {
               <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="rounded-xl" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">{tr('Email')}</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">Email</Label>
               <Input value={email} disabled className="rounded-xl bg-muted opacity-60" />
               <p className="text-[11px] text-muted-foreground">Email cannot be changed here</p>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground">Phone Number</Label>
-              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder={tr('+237 6XX XXX XXX')} className="rounded-xl" />
+              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+237 6XX XXX XXX" className="rounded-xl" />
             </div>
             <Button onClick={handleSavePersonal} disabled={saving} className="mt-2 gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -361,7 +359,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'security' && (
           <motion.div key="security" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Security')} subtitle="Manage your account security" />
+            <SectionTitle title="Security" subtitle="Manage your account security" />
 
             <SettingCard>
               <SettingRow
@@ -397,7 +395,7 @@ const CustomerSettings: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">New Password</Label>
-                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={tr('Min. 8 characters')} className="rounded-xl" />
+                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" className="rounded-xl" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Confirm Password</Label>
@@ -428,7 +426,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'notifications' && (
           <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Notifications')} subtitle="Choose what alerts you receive" />
+            <SectionTitle title="Notifications" subtitle="Choose what alerts you receive" />
 
             <SettingCard>
               {[
@@ -459,15 +457,15 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'language' && (
           <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Language & Region')} subtitle="Set your preferred language and currency" />
+            <SectionTitle title="Language & Region" subtitle="Set your preferred language and currency" />
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">{tr('Language')}</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">Language</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">{tr('English')}</SelectItem>
-                  <SelectItem value="fr">{tr('Français')}</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -477,15 +475,15 @@ const CustomerSettings: React.FC = () => {
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="XAF">{tr('XAF (CFA Franc)')}</SelectItem>
-                  <SelectItem value="EUR">{tr('EUR (Euro)')}</SelectItem>
-                  <SelectItem value="USD">{tr('USD (US Dollar)')}</SelectItem>
-                  <SelectItem value="GBP">{tr('GBP (British Pound)')}</SelectItem>
-                  <SelectItem value="NGN">{tr('NGN (Nigerian Naira)')}</SelectItem>
-                  <SelectItem value="GHS">{tr('GHS (Ghanaian Cedi)')}</SelectItem>
-                  <SelectItem value="KES">{tr('KES (Kenyan Shilling)')}</SelectItem>
-                  <SelectItem value="ZAR">{tr('ZAR (South African Rand)')}</SelectItem>
-                  <SelectItem value="CAD">{tr('CAD (Canadian Dollar)')}</SelectItem>
+                  <SelectItem value="XAF">XAF (CFA Franc)</SelectItem>
+                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                  <SelectItem value="GBP">GBP (British Pound)</SelectItem>
+                  <SelectItem value="NGN">NGN (Nigerian Naira)</SelectItem>
+                  <SelectItem value="GHS">GHS (Ghanaian Cedi)</SelectItem>
+                  <SelectItem value="KES">KES (Kenyan Shilling)</SelectItem>
+                  <SelectItem value="ZAR">ZAR (South African Rand)</SelectItem>
+                  <SelectItem value="CAD">CAD (Canadian Dollar)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -501,7 +499,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'legal' && (
           <motion.div key="legal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-2">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Legal & Policies')} subtitle={tr('Terms, privacy, compliance documents')} />
+            <SectionTitle title="Legal & Policies" subtitle="Terms, privacy, compliance documents" />
             <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setActiveSection('legal-view'); }} />
           </motion.div>
         )}
@@ -509,7 +507,7 @@ const CustomerSettings: React.FC = () => {
         {/* Legal page viewer */}
         {activeSection === 'legal-view' && legalSlug && (
           <motion.div key="legal-view" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <BackButton onBack={() => setActiveSection('legal')} />
+            <BackButton onBack={() => setActiveSection('legal />
             <AppLegalPageViewer slug={legalSlug} />
           </motion.div>
         )}
@@ -518,12 +516,12 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'about' && (
           <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('About')} subtitle="App information" />
+            <SectionTitle title="About" subtitle="App information" />
 
             <SettingCard>
-              <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version" description="2.1.0" right={<span className="text-xs text-muted-foreground">{tr('Latest')}</span>} />
-              <SettingRow icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={tr('Platform')} description="Kang Open Banking" right={<span />} />
-              <SettingRow icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label={tr('Compliance')} description={tr('COBAC · PCI-DSS · ISO 27001')} right={<span />} />
+              <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version" description="2.1.0" right={<span className="text-xs text-muted-foreground">Latest</span>} />
+              <SettingRow icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label="Platform" description="Kang Open Banking" right={<span />} />
+              <SettingRow icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label="Compliance" description="COBAC · PCI-DSS · ISO 27001" right={<span />} />
             </SettingCard>
 
             <div className="rounded-2xl border border-border bg-card p-4">
@@ -533,7 +531,7 @@ const CustomerSettings: React.FC = () => {
             </div>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
-              {tr('© 2026 Kang Open Banking. All rights reserved.')}
+              © 2026 Kang Open Banking. All rights reserved.
             </p>
           </motion.div>
         )}

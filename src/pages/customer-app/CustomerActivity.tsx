@@ -5,7 +5,6 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerTransactions, useDeleteTransaction } from '@/hooks/useCustomerData';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { toast } from 'sonner';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +43,6 @@ function getTxCategory(tx: any): string {
 }
 
 const CustomerActivity: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
@@ -86,12 +84,12 @@ const CustomerActivity: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-xl font-bold text-foreground">{tr('Activity')}</h1>
+      <h1 className="text-xl font-bold text-foreground">Activity</h1>
 
       <div className="flex items-center gap-2 rounded-2xl bg-muted p-3">
         <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder={tr('Search transactions...')} className="bg-transparent text-sm outline-none flex-1 text-foreground placeholder:text-muted-foreground" />
+          placeholder="Search transactions..." className="bg-transparent text-sm outline-none flex-1 text-foreground placeholder:text-muted-foreground" />
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-none">
@@ -105,7 +103,7 @@ const CustomerActivity: React.FC = () => {
 
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-      {tr(') : Object.keys(grouped).length === 0 ? (')}
+      ) : Object.keys(grouped).length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <p className="text-sm font-semibold text-muted-foreground">No transactions found</p>
         </div>
@@ -159,7 +157,7 @@ const CustomerActivity: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{tr('Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"

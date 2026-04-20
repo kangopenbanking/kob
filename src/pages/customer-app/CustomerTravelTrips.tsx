@@ -6,32 +6,30 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { getTheme } from '@/lib/travel-theme';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface RouteType { id: string; origin: string; destination: string; distance_km: number | null; estimated_duration_minutes: number | null; }
 interface Trip { id: string; route_id: string; departure_at: string; arrival_at: string; price: number; currency: string; available_seats: number; status: string; vehicle_info: string | null; seating_plan_id: string | null; }
 interface ServiceInfo { display_name: string; service_type: string; theme_color: string | null; }
 
 const CustomerTravelTrips: React.FC = () => {
-  const tr = useHarvestedT('customer');
-  const { category, serviceId } = useParams<{ category: string; serviceId: string }>{tr('();
+  const { category, serviceId } = useParams<{ category: string; serviceId: string }>();
   const navigate = useNavigate();
   const theme = getTheme(category);
   const CatIcon = theme.icon;
 
-  const [service, setService] = useState')}<ServiceInfo | null>{tr('(null);
-  const [routes, setRoutes] = useState')}<RouteType[]>{tr('([]);
-  const [trips, setTrips] = useState')}<Trip[]>{tr('([]);
+  const [service, setService] = useState<ServiceInfo | null>(null);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRoute, setSelectedRoute] = useState')}<string | null>{tr('(null);
-  const [userBookedRouteIds, setUserBookedRouteIds] = useState')}<string[]>{tr('([]);
-  const [routeBookingCounts, setRouteBookingCounts] = useState')}<Record<string, number>>({});
-  const sliderRef = useRef<HTMLDivElement>{tr('(null);
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [userBookedRouteIds, setUserBookedRouteIds] = useState<string[]>([]);
+  const [routeBookingCounts, setRouteBookingCounts] = useState<Record<string, number>>({});
+  const sliderRef = useRef<HTMLDivElement>(null);
 
-  type SortOption = \'departure\' | \'price_low\' | \'price_high\' | \'seats\';
-  type TimeFilter = \'all\' | \'morning\' | \'afternoon\' | \'evening\';
-  const [sortBy, setSortBy] = useState')}<SortOption>{tr('(\'departure\');
-  const [timeFilter, setTimeFilter] = useState')}<TimeFilter>('all');
+  type SortOption = 'departure' | 'price_low' | 'price_high' | 'seats';
+  type TimeFilter = 'all' | 'morning' | 'afternoon' | 'evening';
+  const [sortBy, setSortBy] = useState<SortOption>('departure');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -93,9 +91,9 @@ const CustomerTravelTrips: React.FC = () => {
     if (timeFilter !== 'all') {
       result = result.filter(t => {
         const hour = new Date(t.departure_at).getHours();
-        if (timeFilter === 'morning') return hour >{tr('= 5 && hour')} < 12;
-        if (timeFilter === 'afternoon') return hour >{tr('= 12 && hour')} < 17;
-        if (timeFilter === 'evening') return hour >{tr('= 17 || hour')} < 5;
+        if (timeFilter === 'morning') return hour >= 5 && hour < 12;
+        if (timeFilter === 'afternoon') return hour >= 12 && hour < 17;
+        if (timeFilter === 'evening') return hour >= 17 || hour < 5;
         return true;
       });
     }
@@ -154,15 +152,15 @@ const CustomerTravelTrips: React.FC = () => {
           <div className="flex gap-2 mb-4">
             <div className="flex-1 rounded-xl p-2.5 text-center" style={{ backgroundColor: overlayBg }}>
               <p className="text-lg font-black" style={{ color: theme.fg }}>{routes.length}</p>
-              <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>{tr('Routes')}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>Routes</p>
             </div>
             <div className="flex-1 rounded-xl p-2.5 text-center" style={{ backgroundColor: overlayBg }}>
               <p className="text-lg font-black" style={{ color: theme.fg }}>{trips.length}</p>
-              <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>{tr('Trips')}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>Trips</p>
             </div>
             <div className="flex-1 rounded-xl p-2.5 text-center" style={{ backgroundColor: overlayBg }}>
               <CheckCircle className="h-5 w-5 mx-auto" style={{ color: theme.fg, opacity: 0.7 }} />
-              <p className="text-[9px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: theme.fg, opacity: 0.4 }}>{tr('Verified')}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: theme.fg, opacity: 0.4 }}>Verified</p>
             </div>
           </div>
 
@@ -260,22 +258,21 @@ const CustomerTravelTrips: React.FC = () => {
                   <RouteIcon className="h-3.5 w-3.5" /> Popular Routes
                 </p>
                 <div className="flex gap-1">
-                  <button onClick={() => scrollSlider('left')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
+                  <button onClick={() => scrollSlider('left className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
                     <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
                   </button>
-                  <button onClick={() => scrollSlider('right')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
+                  <button onClick={() => scrollSlider('right className="flex h-6 w-6 items-center justify-center rounded-full bg-white border shadow-sm active:scale-90 transition-transform">
                     <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                   </button>
                 </div>
               </div>
               <div ref={sliderRef} className="flex gap-3 overflow-x-auto scrollbar-none px-5 snap-x snap-mandatory">
                 {sortedRoutes.map((route, i) => {
-  const tr = useHarvestedT('customer');
                   const tripCount = trips.filter(t => {
   const tr = useHarvestedT('customer');tr('t.route_id === route.id).length;
                   const isActive = selectedRoute === route.id;
                   const isUserBooked = userBookedRouteIds.includes(route.id);
-                  return (')}
+                  return
                     <motion.button key={route.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedRoute(isActive ? null : route.id)}
@@ -284,7 +281,7 @@ const CustomerTravelTrips: React.FC = () => {
                       {isUserBooked && (
                         <div className="absolute top-2.5 right-2.5">
                           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider" style={{ backgroundColor: overlayBg, color: theme.fg }}>
-                            <Star className="h-2.5 w-2.5 mr-0.5" /> {tr('Recent')}
+                            <Star className="h-2.5 w-2.5 mr-0.5" /> Recent
                           </span>
                         </div>
                       )}
@@ -302,7 +299,7 @@ const CustomerTravelTrips: React.FC = () => {
                             <MapPin className="h-3 w-3" style={{ color: theme.fg, opacity: 0.9 }} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>{tr('From')}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>From</p>
                             <p className="text-[13px] font-extrabold truncate" style={{ color: theme.fg }}>{route.origin}</p>
                           </div>
                         </div>
@@ -322,7 +319,7 @@ const CustomerTravelTrips: React.FC = () => {
                             <MapPin className="h-3 w-3" style={{ color: theme.fg }} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>{tr('To')}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.4 }}>To</p>
                             <p className="text-[13px] font-extrabold truncate" style={{ color: theme.fg }}>{route.destination}</p>
                           </div>
                         </div>
@@ -364,9 +361,8 @@ const CustomerTravelTrips: React.FC = () => {
               ) : (
                 <div className="space-y-3">
                   {filteredTrips.map((trip, i) => {
-  const tr = useHarvestedT('customer');
-                    const route = routes.find(r => {tr('r.id === trip.route_id);
-                    const seatsLow = trip.available_seats')} <= 5;
+                    const route = routes.find(r => r.id === trip.route_id);
+                    const seatsLow = trip.available_seats <= 5;
                     const seatPercent = Math.max(0, Math.min(100, (trip.available_seats / 50) * 100));
 
                     return (
@@ -395,10 +391,10 @@ const CustomerTravelTrips: React.FC = () => {
 
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                                <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM')}
+                                <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM
                               </span>
                               <span className="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-2.5 py-1.5 text-[11px] font-bold text-[#0f1729]">
-                                <Clock className="h-3 w-3 text-gray-400" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
+                                <Clock className="h-3 w-3 text-gray-400" />{format(new Date(trip.departure_at), 'HH:mm — {format(new Date(trip.arrival_at), 'HH:mm
                               </span>
                             </div>
 
@@ -413,7 +409,7 @@ const CustomerTravelTrips: React.FC = () => {
                                 <span className={`text-[11px] font-bold ${seatsLow ? 'text-red-500' : 'text-[#0f1729]/50'}`}>
                                   {trip.available_seats} seats
                                 </span>
-                                {seatsLow && <Badge className="border-0 bg-red-50 text-red-500 text-[9px] h-4 px-1.5 font-bold">{tr('Low')}</Badge>}
+                                {seatsLow && <Badge className="border-0 bg-red-50 text-red-500 text-[9px] h-4 px-1.5 font-bold">Low</Badge>}
                               </div>
                               <div className="flex h-8 w-8 items-center justify-center rounded-full transition-colors" style={{ backgroundColor: theme.accentLight }}>
                                 <ArrowRight className="h-4 w-4" style={{ color: theme.color }} />

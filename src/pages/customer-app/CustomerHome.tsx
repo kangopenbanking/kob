@@ -18,7 +18,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary, useCustomerCreditScore } from '@/hooks/useCustomerData';
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -101,7 +100,6 @@ const CustomerHome: React.FC = () => {
   const { unreadCount } = useNotifications(undefined, false, true);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
-  const tr = useHarvestedT('customer');
 
   const isViewOnly = user?.isViewOnly ?? false;
 
@@ -215,10 +213,10 @@ const CustomerHome: React.FC = () => {
                 {tenant.logoUrl ? (
                   <img src={tenant.logoUrl} alt={tenant.name} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20" />
                 ) : (
-                  <img src={kangLogo} alt={tr('Kang')} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
+                  <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
                 )}
                 <div>
-                  <p className="text-[10px] font-medium text-primary-foreground/50">{tr('Welcome back')}</p>
+                  <p className="text-[10px] font-medium text-primary-foreground/50">Welcome back</p>
                   <h2 className="text-base font-bold text-primary-foreground">{user?.fullName || tenant.name}</h2>
                 </div>
               </div>
@@ -232,7 +230,7 @@ const CustomerHome: React.FC = () => {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => go('alerts')}
+                  onClick={() => go('alerts
                   className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm"
                 >
                   <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
@@ -251,10 +249,10 @@ const CustomerHome: React.FC = () => {
                   <Lock className="h-4 w-4 text-primary-foreground" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-primary-foreground">{tr('View-Only Mode')}</p>
-                  <p className="text-[11px] text-primary-foreground/60">{tr('Link an account to unlock transactions')}</p>
+                  <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
+                  <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
                 </div>
-                <button onClick={() => go('onboarding')} className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">{tr('Link')}</button>
+                <button onClick={() => go('onboarding className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
               </motion.div>
             )}
 
@@ -266,7 +264,7 @@ const CustomerHome: React.FC = () => {
                 transition={{ delay: 0.2 }}
                 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary-foreground/50 mb-1.5"
               >
-                {tr('Total Balance')}
+                Total Balance
               </motion.p>
               {acctLoading ? (
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
@@ -325,7 +323,7 @@ const CustomerHome: React.FC = () => {
                         : 'text-primary-foreground/60'
                     }`}
                   >
-                    {p === 'W' ? tr('Week') : p === 'M' ? tr('Month') : tr('Year')}
+                    {p === 'W' ? tr('Week') : p === 'M' ? tr('Month') : tr('Year
                   </motion.button>
                 ))}
               </div>
@@ -365,7 +363,7 @@ const CustomerHome: React.FC = () => {
       {/* ─── Money Movement ─── */}
       {visibleMoney.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Money Movement')}</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Money Movement</p>
           <motion.div className="grid grid-cols-2 gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleMoney.slice(0, 2).map((item) => {
               const solidBg = item.borderColor.replace('border-', 'bg-');
@@ -382,7 +380,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[hsl(0,0%,100%)]">{tr(item.label)}</p>
-                    <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{tr(item.description || '')}</p>
+                    <p className="mt-0.5 text-[11px] text-[hsl(0,0%,100%)]/70 leading-snug">{tr(item.description || '</p>
                   </div>
                 </motion.button>
               );
@@ -394,7 +392,7 @@ const CustomerHome: React.FC = () => {
       {/* ─── Payments & Bills ─── */}
       {visiblePayments.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Payments & Bills')}</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Payments & Bills</p>
           <div className="flex items-center justify-around">
             {visiblePayments.map((item) => (
               <motion.button
@@ -416,7 +414,7 @@ const CustomerHome: React.FC = () => {
       {/* ─── Savings & Goals ─── */}
       {visibleSavings.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Savings & Goals')}</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Savings & Goals</p>
           <motion.div className="flex flex-col gap-3" variants={staggerContainer} initial="initial" animate="animate">
             {visibleSavings[0] && (() => {
               const FirstIcon = visibleSavings[0].icon;
@@ -432,7 +430,7 @@ const CustomerHome: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-bold text-foreground">{tr(visibleSavings[0].label)}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(visibleSavings[0].description || '')}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(visibleSavings[0].description || '</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                 </motion.button>
@@ -451,7 +449,7 @@ const CustomerHome: React.FC = () => {
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
                   <p className="text-xs font-bold text-foreground">{tr(item.label)}</p>
-                  <p className="text-[10px] text-muted-foreground text-center">{tr(item.description || '')}</p>
+                  <p className="text-[10px] text-muted-foreground text-center">{tr(item.description || '</p>
                 </motion.button>
               ))}
             </div>
@@ -462,18 +460,18 @@ const CustomerHome: React.FC = () => {
       {/* ─── Financial Health ─── */}
       {visibleHealth.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.12 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Financial Health')}</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Financial Health</p>
           <div className="grid grid-cols-2 gap-3">
             {/* Credit Score Card with Doughnut */}
             {visibleHealth.find(i => i.featureKey === 'credit_score') && (() => {
               const item = visibleHealth.find(i => i.featureKey === 'credit_score')!;
               const scoreVal = creditData?.score ?? 0;
               const maxVal = 850;
-              const pct = maxVal > {tr('0 ? scoreVal / maxVal : 0;
+              const pct = maxVal > 0 ? scoreVal / maxVal : 0;
               const r = 40;
               const circ = 2 * Math.PI * r;
               const offset = circ * (1 - pct);
-              return (')}
+              return (
                 <button key={item.path} onClick={() => go(item.path)}
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(150,40%,90%)] p-4 text-left">
                   <div className="relative flex h-24 w-24 items-center justify-center">
@@ -494,20 +492,20 @@ const CustomerHome: React.FC = () => {
                     <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal || '—'}</span>
                   </div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,40%,35%)]">{tr(item.label)}</p>
-                  <span className="rounded-full bg-[hsl(150,40%,35%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr('Check Now')}</span>
+                  <span className="rounded-full bg-[hsl(150,40%,35%)] px-4 py-1.5 text-[11px] font-bold text-white">Check Now</span>
                 </button>
               );
             })()}
 
             {/* Rent Report Card with Image */}
             {visibleHealth.find(i => i.featureKey === 'rent_reporting') && (() => {
-              const item = visibleHealth.find(i => {tr('i.featureKey === \'rent_reporting\')!;
-              return (')}
+              const item = visibleHealth.find(i => i.featureKey === 'rent_reporting')!;
+              return (
                 <button key={item.path} onClick={() => go(item.path)}
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(210,80%,93%)] p-4 text-left">
                   <img src={rentKobImage} alt="Rent Report" className="h-24 w-24 object-contain" />
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(210,60%,45%)]">{tr(item.label)}</p>
-                  <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr(item.description || 'Open')}</span>
+                  <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr(item.description || 'Open</span>
                 </button>
               );
             })()}
@@ -524,11 +522,11 @@ const CustomerHome: React.FC = () => {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => go('travel')}
+              onClick={() => go('travel
               className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
-              <img src={bgImg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
               {/* Dark overlay */}
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
 
@@ -538,12 +536,12 @@ const CustomerHome: React.FC = () => {
                   <Globe className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
                 </div>
 
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">{tr('Transport & Tourism')}</p>
-                <h3 className="mt-2 text-xl font-extrabold leading-tight text-white">{tr('Travel & Tourism')}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
+                <h3 className="mt-2 text-xl font-extrabold leading-tight text-white">Travel & Tourism</h3>
 
                 <div className="mt-3 space-y-3 pr-16">
                   <p className="text-xs leading-relaxed text-white/60">
-                    {tr('Book buses, tours & more — all from your wallet.')}
+                    Book buses, tours & more — all from your wallet.
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {[
@@ -591,22 +589,22 @@ const CustomerHome: React.FC = () => {
       {/* ─── Recent Activities (Live) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Recent Activities')}</p>
-          <button onClick={() => go('activity')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
-            {tr('See All')} <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Activities</p>
+          <button onClick={() => go('activity className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+            See All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>
         {isViewOnly ? (
           <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-muted/30 p-10">
             <Lock className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
-            <p className="text-sm font-semibold text-muted-foreground">{tr('No transactions yet')}</p>
-            <p className="text-xs text-muted-foreground">{tr('Link an account to see activity')}</p>
+            <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
+            <p className="text-xs text-muted-foreground">Link an account to see activity</p>
           </div>
-        {tr(') : txnLoading ? (')}
+        ) : txnLoading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        {tr(') : recentTxns.length === 0 ? (')}
+        ) : recentTxns.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-muted/30 p-10">
-            <p className="text-sm font-semibold text-muted-foreground">{tr('No transactions yet')}</p>
+            <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
           </div>
         ) : (
           <motion.div className="space-y-2" variants={staggerContainer} initial="initial" animate="animate">

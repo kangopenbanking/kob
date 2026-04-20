@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const STATUS_FILTERS = [
   { label: "All", value: "all" },
@@ -29,7 +28,6 @@ const STATUS_FILTERS = [
 ];
 
 export default function CustomerDisputes() {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [fileOpen, setFileOpen] = useState(false);
@@ -162,11 +160,10 @@ export default function CustomerDisputes() {
   };
 
   const statusIcon = (s: string) => {
-  const tr = useHarvestedT('customer');
-    if (['won', 'resolved'].includes(s)) return <CheckCircle className="h-4 w-4 text-green-600" />{tr(';
-    if ([\'lost\', \'rejected\'].includes(s)) return')} <XCircle className="h-4 w-4 text-destructive" />{tr(';
-    if ([\'investigating\', \'under_review\'].includes(s)) return')} <Clock className="h-4 w-4 text-blue-600" />{tr(';
-    return')} <AlertTriangle className="h-4 w-4 text-amber-600" />;
+    if (['won', 'resolved'].includes(s)) return <CheckCircle className="h-4 w-4 text-green-600" />;
+    if (['lost', 'rejected'].includes(s)) return <XCircle className="h-4 w-4 text-destructive" />;
+    if (['investigating', 'under_review'].includes(s)) return <Clock className="h-4 w-4 text-blue-600" />;
+    return <AlertTriangle className="h-4 w-4 text-amber-600" />;
   };
 
   const statusColor = (s: string): "default" | "secondary" | "destructive" | "outline" => {
@@ -183,7 +180,7 @@ export default function CustomerDisputes() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
           <div>
             <h1 className="text-xl font-bold">My Disputes</h1>
-            <p className="text-sm text-muted-foreground">{tr('File & track disputes')}</p>
+            <p className="text-sm text-muted-foreground">File & track disputes</p>
           </div>
         </div>
         <Dialog open={fileOpen} onOpenChange={setFileOpen}>
@@ -197,7 +194,7 @@ export default function CustomerDisputes() {
                 {/* Transaction Selector */}
                 {recentTxns.length > 0 && (
                   <div>
-                    <Label>{tr('Select a Transaction (optional)')}</Label>
+                    <Label>Select a Transaction (optional)</Label>
                     <Select onValueChange={handleSelectTransaction}>
                       <SelectTrigger><SelectValue placeholder="Pick from recent transactions" /></SelectTrigger>
                       <SelectContent>
@@ -214,7 +211,7 @@ export default function CustomerDisputes() {
                 {/* Institution Selector */}
                 {institutions.length > 0 && (
                   <div>
-                    <Label>{tr('Institution (optional)')}</Label>
+                    <Label>Institution (optional)</Label>
                     <Select value={form.institution_id} onValueChange={v => setForm(p => ({ ...p, institution_id: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select institution" /></SelectTrigger>
                       <SelectContent>
@@ -232,17 +229,17 @@ export default function CustomerDisputes() {
                     <SelectContent>
                       <SelectItem value="unauthorized">Unauthorized Transaction</SelectItem>
                       <SelectItem value="duplicate">Duplicate Charge</SelectItem>
-                      <SelectItem value="not_received">{tr('Product/Service Not Received')}</SelectItem>
+                      <SelectItem value="not_received">Product/Service Not Received</SelectItem>
                       <SelectItem value="defective">Defective Product</SelectItem>
                       <SelectItem value="wrong_amount">Wrong Amount</SelectItem>
-                      <SelectItem value="other">{tr('Other')}</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>{tr('Amount (XAF)')}</Label><Input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} placeholder="0" /></div>
-                <div><Label>Transaction Reference</Label><Input value={form.transaction_ref} onChange={e => setForm(p => ({ ...p, transaction_ref: e.target.value }))} placeholder={tr('e.g. TXN-123456')} /></div>
-                <div><Label>{tr('Reason')}</Label><Input value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} placeholder="Brief reason for dispute" /></div>
-                <div><Label>{tr('Description')}</Label><Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder={tr('Provide details...')} rows={3} /></div>
+                <div><Label>Amount (XAF)</Label><Input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} placeholder="0" /></div>
+                <div><Label>Transaction Reference</Label><Input value={form.transaction_ref} onChange={e => setForm(p => ({ ...p, transaction_ref: e.target.value }))} placeholder="e.g. TXN-123456" /></div>
+                <div><Label>Reason</Label><Input value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} placeholder="Brief reason for dispute" /></div>
+                <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Provide details..." rows={3} /></div>
                 <Button className="w-full" onClick={handleFileDispute} disabled={submitting}>
                   {submitting ? "Submitting..." : "Submit Dispute"}
                 </Button>
@@ -276,7 +273,7 @@ export default function CustomerDisputes() {
 
       {isLoading ? (
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}</div>
-      {tr(') : !filteredDisputes.length ? (')}
+      ) : !filteredDisputes.length ? (
         <Card><CardContent className="py-12 text-center">
           <ShieldAlert className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <p className="font-medium">No disputes</p>
@@ -298,7 +295,7 @@ export default function CustomerDisputes() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={statusColor(d.status)}>{d.status.replace(/_/g, ' ')}</Badge>
+                    <Badge variant={statusColor(d.status)}>{d.status.replace(/_/g, ' </Badge>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
@@ -320,14 +317,14 @@ export default function CustomerDisputes() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><Label className="text-xs text-muted-foreground">{tr('Status')}</Label><p><Badge variant={statusColor(detailDispute.status)}>{detailDispute.status.replace(/_/g, ' ')}</Badge></p></div>
-                <div><Label className="text-xs text-muted-foreground">{tr('Amount')}</Label><p className="font-semibold">XAF {Number(detailDispute.amount).toLocaleString()}</p></div>
-                <div><Label className="text-xs text-muted-foreground">{tr('Type')}</Label><p>{detailDispute.dispute_type?.replace(/_/g, ' ')}</p></div>
-                <div><Label className="text-xs text-muted-foreground">{tr('Filed')}</Label><p>{format(new Date(detailDispute.created_at), "MMM d, yyyy")}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Status</Label><p><Badge variant={statusColor(detailDispute.status)}>{detailDispute.status.replace(/_/g, ' </Badge></p></div>
+                <div><Label className="text-xs text-muted-foreground">Amount</Label><p className="font-semibold">XAF {Number(detailDispute.amount).toLocaleString()}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Type</Label><p>{detailDispute.dispute_type?.replace(/_/g, ' </p></div>
+                <div><Label className="text-xs text-muted-foreground">Filed</Label><p>{format(new Date(detailDispute.created_at), "MMM d, yyyy")}</p></div>
               </div>
-              <div className="text-sm"><Label className="text-xs text-muted-foreground">{tr('Reason')}</Label><p>{detailDispute.reason}</p></div>
-              {detailDispute.description && <div className="text-sm"><Label className="text-xs text-muted-foreground">{tr('Description')}</Label><p>{detailDispute.description}</p></div>}
-              {detailDispute.resolution && <div className="text-sm"><Label className="text-xs text-muted-foreground">{tr('Resolution')}</Label><p className="text-green-700">{detailDispute.resolution}</p></div>}
+              <div className="text-sm"><Label className="text-xs text-muted-foreground">Reason</Label><p>{detailDispute.reason}</p></div>
+              {detailDispute.description && <div className="text-sm"><Label className="text-xs text-muted-foreground">Description</Label><p>{detailDispute.description}</p></div>}
+              {detailDispute.resolution && <div className="text-sm"><Label className="text-xs text-muted-foreground">Resolution</Label><p className="text-green-700">{detailDispute.resolution}</p></div>}
 
               {/* Timeline */}
               <div className="mt-2">
@@ -341,7 +338,7 @@ export default function CustomerDisputes() {
                         <div key={a.id} className="flex gap-2 text-xs">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                           <div>
-                            <span className="font-medium capitalize">{a.action.replace(/_/g, ' ')}</span>
+                            <span className="font-medium capitalize">{a.action.replace(/_/g, ' </span>
                             {a.note && <span className="text-muted-foreground"> — {a.note}</span>}
                             <p className="text-muted-foreground">{format(new Date(a.created_at), "MMM d, HH:mm")}</p>
                           </div>

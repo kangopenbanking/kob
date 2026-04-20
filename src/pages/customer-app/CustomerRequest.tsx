@@ -8,10 +8,8 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 import { API_CONFIG } from '@/config/api';
 import { QRCodeSVG } from 'qrcode.react';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRequest: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
@@ -171,7 +169,7 @@ const CustomerRequest: React.FC = () => {
                 className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)] p-4 active:scale-95 transition-transform"
               >
                 <Share2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
-                <span className="text-[10px] font-bold text-foreground">{tr('Share')}</span>
+                <span className="text-[10px] font-bold text-foreground">Share</span>
               </button>
 
               <button

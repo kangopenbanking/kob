@@ -16,7 +16,6 @@ import kangCardBg from '@/assets/kangcard_visa.png';
 import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -162,7 +161,6 @@ const CardDeleteBtnDark = ({ onClick }: { onClick: () => void }) => (
 
 /* ─── Bank Card (Visa/MC) ─── */
 const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
-  const tr = useHarvestedT('customer');
   const meta = acc.metadata as any;
   const network = meta?.card_network || acc.provider_name || 'Card';
   const expMonth = meta?.card_exp_month ? String(meta.card_exp_month).padStart(2, '0') : '••';
@@ -188,16 +186,16 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
           <div className="flex items-end justify-between">
             <div className="flex gap-4 sm:gap-6">
               <div>
-                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">{tr('Expires')}</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Expires</p>
                 <p className="text-xs sm:text-sm font-semibold text-white font-mono">{expMonth}/{expYear}</p>
               </div>
               <div>
-                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">{tr('Network')}</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Network</p>
                 <p className="text-xs sm:text-sm font-semibold text-white capitalize">{network}</p>
               </div>
             </div>
             {acc.is_primary && (
-              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white">{tr('Primary')}</span>
+              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white">Primary</span>
             )}
           </div>
         </div>
@@ -208,7 +206,6 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
 /* ─── Bank Account (RIB) Card ─── */
 const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
-  const tr = useHarvestedT('customer');
   const meta = acc.metadata as any;
   const bankCode = meta?.rib_bank_code || '';
   const branchCode = meta?.rib_branch_code || '';
@@ -241,11 +238,11 @@ const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) =
           {!isIban && bankCode && (
             <div className="flex gap-4">
               <div>
-                <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Bank')}</p>
+                <p className="text-[9px] font-medium text-white/40 uppercase">Bank</p>
                 <p className="text-xs font-semibold text-white font-mono">{bankCode}</p>
               </div>
               <div>
-                <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Branch')}</p>
+                <p className="text-[9px] font-medium text-white/40 uppercase">Branch</p>
                 <p className="text-xs font-semibold text-white font-mono">{branchCode}</p>
               </div>
             </div>
@@ -257,7 +254,7 @@ const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) =
             </div>
             <div className="flex items-center gap-2">
               {acc.is_primary && (
-                <span className="rounded-lg bg-white/15 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
+                <span className="rounded-lg bg-white/15 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
               )}
               <span className="rounded-lg bg-[hsl(210,80%,60%)]/20 px-2 py-0.5 text-[9px] font-bold text-[hsl(210,80%,75%)] uppercase">
                 {isIban ? 'IBAN' : 'RIB'}
@@ -306,7 +303,7 @@ const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
         <div className="flex items-end justify-between">
           <span className="rounded-lg bg-black/8 px-2.5 py-1 text-[10px] font-extrabold text-black/60 uppercase tracking-wider">MTN MoMo</span>
           {acc.is_primary && (
-            <span className="rounded-lg bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/60">{tr('Primary')}</span>
+            <span className="rounded-lg bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/60">Primary</span>
           )}
         </div>
       </div>
@@ -345,7 +342,7 @@ const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
         <div className="flex items-end justify-between">
           <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-extrabold text-white/80 uppercase tracking-wider">Orange Money</span>
           {acc.is_primary && (
-            <span className="rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
+            <span className="rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
           )}
         </div>
       </div>
@@ -355,7 +352,6 @@ const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
 /* ─── PayPal Card ─── */
 const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
-  const tr = useHarvestedT('customer');
   const email = (acc.metadata as any)?.email || '';
   const maskedEmail = email ? `${email.substring(0, 3)}•••@${email.split('@')[1] || ''}` : `•••• ${acc.last4}`;
 
@@ -373,7 +369,7 @@ const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
               <Wallet className="h-4.5 w-4.5 text-[hsl(210,80%,70%)]" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-[hsl(210,60%,70%)] uppercase tracking-wider">{tr('PayPal')}</p>
+              <p className="text-[10px] font-bold text-[hsl(210,60%,70%)] uppercase tracking-wider">PayPal</p>
               <p className="text-sm font-bold text-white">{acc.account_name || 'PayPal User'}</p>
             </div>
           </div>
@@ -382,13 +378,13 @@ const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
         <div className="space-y-2">
           <div>
-            <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Email')}</p>
+            <p className="text-[9px] font-medium text-white/40 uppercase">Email</p>
             <p className="text-sm font-semibold text-white/90">{maskedEmail}</p>
           </div>
           <div className="flex items-end justify-between">
-            <span className="rounded-lg bg-[hsl(210,80%,50%)]/20 px-2.5 py-1 text-[10px] font-extrabold text-[hsl(210,80%,75%)] uppercase tracking-wider">{tr('PayPal')}</span>
+            <span className="rounded-lg bg-[hsl(210,80%,50%)]/20 px-2.5 py-1 text-[10px] font-extrabold text-[hsl(210,80%,75%)] uppercase tracking-wider">PayPal</span>
             {acc.is_primary && (
-              <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
+              <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
             )}
           </div>
         </div>
@@ -399,33 +395,31 @@ const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
 /* ─── Unified Account Card Renderer ─── */
 const LinkedAccountCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
-  const tr = useHarvestedT('customer');
   const type = acc.account_type;
   const meta = acc.metadata as any;
 
-  if (type === 'bank_card') return <LinkedCardVisual acc={acc} onDelete={onDelete} />{tr(';
-  if (type === \'bank_account\' && meta?.identifier_type !== \'IBAN\') return')} <LinkedBankCard acc={acc} onDelete={onDelete} />{tr(';
-  if (type === \'bank_account\' && meta?.identifier_type === \'IBAN\') return')} <LinkedBankCard acc={acc} onDelete={onDelete} />{tr(';
-  if (type === \'momo_mtn\') return')} <LinkedMomoMtnCard acc={acc} onDelete={onDelete} />{tr(';
-  if (type === \'momo_orange\') return')} <LinkedOrangeCard acc={acc} onDelete={onDelete} />{tr(';
-  if (type === \'paypal\') return')} <LinkedPaypalCard acc={acc} onDelete={onDelete} />{tr(';
+  if (type === 'bank_card') return <LinkedCardVisual acc={acc} onDelete={onDelete} />;
+  if (type === 'bank_account' && meta?.identifier_type !== 'IBAN') return <LinkedBankCard acc={acc} onDelete={onDelete} />;
+  if (type === 'bank_account' && meta?.identifier_type === 'IBAN') return <LinkedBankCard acc={acc} onDelete={onDelete} />;
+  if (type === 'momo_mtn') return <LinkedMomoMtnCard acc={acc} onDelete={onDelete} />;
+  if (type === 'momo_orange') return <LinkedOrangeCard acc={acc} onDelete={onDelete} />;
+  if (type === 'paypal') return <LinkedPaypalCard acc={acc} onDelete={onDelete} />;
 
   // Fallback for unknown types
-  return')} <LinkedBankCard acc={acc} onDelete={onDelete} />;
+  return <LinkedBankCard acc={acc} onDelete={onDelete} />;
 };
 
 /* ─── Main Component ─── */
 const CustomerLinkedAccounts: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedType, setSelectedType] = useState<AccountTypeConfig | null>{tr('(null);
-  const [formData, setFormData] = useState')}<Record<string, string>>({});
+  const [selectedType, setSelectedType] = useState<AccountTypeConfig | null>(null);
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>{tr('(null);
-  const [validationMsg, setValidationMsg] = useState')}<{ text: string; isError: boolean } | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [validationMsg, setValidationMsg] = useState<{ text: string; isError: boolean } | null>(null);
 
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
@@ -719,7 +713,6 @@ const CustomerLinkedAccounts: React.FC = () => {
   };
 
   const renderField = (f: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }) => {
-  const tr = useHarvestedT('customer');
     // Bank selector
     if (f.key === 'bank_code' && selectedType?.key === 'bank_account') {
       return (
@@ -763,7 +756,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       return (
         <div key="expiry_row" className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">{tr('Month')}</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">Month</label>
             <Select value={formData.card_exp_month || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_month: v })}>
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="MM" />
@@ -777,7 +770,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">{tr('Year')}</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">Year</label>
             <Select value={formData.card_exp_year || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_year: v })}>
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="YY" />
@@ -815,7 +808,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </p>
           )}
           {selectedType?.key === 'bank_account' && (
-            <p className="text-[10px] text-muted-foreground">{tr('Format: Bank (5) - Branch (5) - Account (11) - Key (2)')}</p>
+            <p className="text-[10px] text-muted-foreground">Format: Bank (5) - Branch (5) - Account (11) - Key (2)</p>
           )}
         </div>
       );
@@ -924,7 +917,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           <div>
             <p className="text-xs font-bold text-foreground">Admin Approval Required</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              {tr('Since you previously removed an account, new additions require admin review before activation.')}
+              Since you previously removed an account, new additions require admin review before activation.
             </p>
           </div>
         </motion.div>
@@ -973,13 +966,13 @@ const CustomerLinkedAccounts: React.FC = () => {
       {/* Account List */}
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-      {tr(') : linkedAccounts.length === 0 ? (')}
+      ) : linkedAccounts.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
             <Building2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
           </div>
           <p className="text-sm font-semibold text-foreground">No linked accounts</p>
-          <p className="text-xs text-muted-foreground text-center max-w-xs">{tr('Link a bank account, mobile money, PayPal, or card to deposit and withdraw funds.')}</p>
+          <p className="text-xs text-muted-foreground text-center max-w-xs">Link a bank account, mobile money, PayPal, or card to deposit and withdraw funds.</p>
           <Button onClick={handleOpenAdd} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> Link Account</Button>
         </div>
       ) : (
@@ -1005,7 +998,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           {hasRemovals && (
             <div className="flex items-center gap-2 rounded-xl bg-[hsl(40,90%,92%)] p-3">
               <ShieldAlert className="h-4 w-4 text-[hsl(40,80%,40%)] shrink-0" />
-              <p className="text-[11px] text-[hsl(40,80%,30%)]">{tr('Admin approval required — your request will be reviewed.')}</p>
+              <p className="text-[11px] text-[hsl(40,80%,30%)]">Admin approval required — your request will be reviewed.</p>
             </div>
           )}
 
@@ -1038,18 +1031,18 @@ const CustomerLinkedAccounts: React.FC = () => {
                     <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/10" />
                     <div className="relative z-10 flex flex-col justify-between h-full p-4">
-                      <p className="text-[10px] text-white/70 uppercase tracking-wider font-medium">{tr('Preview')}</p>
+                      <p className="text-[10px] text-white/70 uppercase tracking-wider font-medium">Preview</p>
                       <div className="space-y-2">
                         <p className="font-mono text-base text-white tracking-[0.15em]">
                           {formData.account_number || '•••• •••• •••• ••••'}
                         </p>
                         <div className="flex justify-between items-end">
                           <div>
-                            <p className="text-[9px] text-white/60 uppercase">{tr('Cardholder')}</p>
+                            <p className="text-[9px] text-white/60 uppercase">Cardholder</p>
                             <p className="text-xs font-semibold text-white">{formData.account_name || '—'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[9px] text-white/60 uppercase">{tr('Expires')}</p>
+                            <p className="text-[9px] text-white/60 uppercase">Expires</p>
                             <p className="text-xs font-semibold text-white font-mono">
                               {formData.card_exp_month || '••'}/{formData.card_exp_year || '••'}
                             </p>
@@ -1075,14 +1068,14 @@ const CustomerLinkedAccounts: React.FC = () => {
       <AlertDialog open={!!deleteId && !showDeletePin} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{tr('Remove Account?')}</AlertDialogTitle>
+            <AlertDialogTitle>Remove Account?</AlertDialogTitle>
             <AlertDialogDescription>
-              {tr('This account will be unlinked from your wallet.')} <strong>{tr('Important:')}</strong> {tr('After removing an account, any future account additions will require admin approval.')}
+              This account will be unlinked from your wallet. <strong>Important:</strong> After removing an account, any future account additions will require admin approval.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{tr('Cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">{tr('Remove')}</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

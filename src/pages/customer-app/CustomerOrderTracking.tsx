@@ -7,7 +7,6 @@ import { Package, CheckCircle2, Clock, XCircle, Store, ArrowLeft, ChevronRight }
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
   pending_payment: { label: 'Pending', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
@@ -19,7 +18,6 @@ const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: any; color: str
 };
 
 export function CustomerOrderTracking() {
-  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const navigate = useNavigate();
 
@@ -71,7 +69,7 @@ export function CustomerOrderTracking() {
           </div>
           <h2 className="text-lg font-bold mb-1">Sign in required</h2>
           <p className="text-sm text-muted-foreground mb-5">Track your orders in real-time</p>
-          <Button onClick={() => navigate('/app/auth')} className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
+          <Button onClick={() => navigate('/app/auth className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
         </div>
       </div>
     );
@@ -92,7 +90,7 @@ export function CustomerOrderTracking() {
             <ArrowLeft className="h-[18px] w-[18px]" />
           </button>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{tr('Activity')}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Activity</p>
             <h1 className="text-[22px] font-bold tracking-tight leading-tight">Your orders</h1>
           </div>
         </div>
@@ -104,7 +102,6 @@ export function CustomerOrderTracking() {
         ) : orders && orders.length > 0 ? (
           <div className="space-y-3">
             {orders.map((order: any, i: number) => {
-  const tr = useHarvestedT('customer');
               const s = getStatusInfo(order.status);
               const StatusIcon = s.icon;
               const progress = getProgress(order.status);
@@ -140,14 +137,14 @@ export function CustomerOrderTracking() {
                         />
                       </div>
                       <div className="flex justify-between text-[9px] text-muted-foreground mt-1.5 font-medium uppercase tracking-wider">
-                        <span>{tr('Placed')}</span><span>{tr('Paid')}</span><span>{tr('Processing')}</span><span>{tr('Done')}</span>
+                        <span>Placed</span><span>Paid</span><span>Processing</span><span>Done</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between pt-3 border-t border-border/40">
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr('Total')}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</p>
                       <p className="text-base font-bold text-foreground">{order.total?.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium">XAF</span></p>
                     </div>
                     <div className="text-right">
@@ -167,7 +164,7 @@ export function CustomerOrderTracking() {
             </div>
             <p className="text-sm font-semibold text-foreground">No orders yet</p>
             <p className="text-xs text-muted-foreground mt-1">Your purchases will appear here</p>
-            <Button onClick={() => navigate('/app/stores')} className="mt-5 h-11 px-6 rounded-2xl font-semibold">Start shopping</Button>
+            <Button onClick={() => navigate('/app/stores className="mt-5 h-11 px-6 rounded-2xl font-semibold">Start shopping</Button>
           </div>
         )}
       </div>

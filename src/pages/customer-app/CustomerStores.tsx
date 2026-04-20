@@ -13,22 +13,20 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CATEGORIES = ['All', 'Fashion', 'Electronics', 'Food', 'Beauty', 'Health', 'Home', 'Services'];
 
 const CustomerStores: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const [stores, setStores] = useState<any[]>{tr('([]);
+  const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(\'\');
-  const [selectedCategory, setSelectedCategory] = useState')}<string>{tr('(\'All\');
-  const [favourites, setFavourites] = useState')}<Set<string>>{tr('(new Set());
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortBy, setSortBy] = useState')}<'rating' | 'name'>('rating');
+  const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
@@ -115,19 +113,19 @@ const CustomerStores: React.FC = () => {
   const rest = useMemo(() => {
   const tr = useHarvestedT('customer');tr('stores.slice(5), [stores]);
 
-  return (')}
+  return
     <div className="pb-28 bg-gradient-to-b from-muted/30 via-background to-background min-h-screen">
       {/* ─── Premium hero ─── */}
       <div className="px-5 pt-7 pb-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{tr('Discover')}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Discover</p>
             <h1 className="text-[28px] leading-tight font-bold text-foreground tracking-tight mt-0.5">
               Shop nearby
             </h1>
           </div>
           <button
-            onClick={() => navigate('/app/cart')}
+            onClick={() => navigate('/app/cart
             className="relative h-11 w-11 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
           >
             <ShoppingBag className="w-[18px] h-[18px] text-foreground" />
@@ -144,7 +142,7 @@ const CustomerStores: React.FC = () => {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground" />
             <Input
-              placeholder={tr('Search stores, brands, products…')}
+              placeholder="Search stores, brands, products…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-11 pr-4 h-12 rounded-2xl bg-card border-border/60 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -158,11 +156,11 @@ const CustomerStores: React.FC = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-80 bg-card">
               <SheetHeader>
-                <SheetTitle className="text-lg font-bold">{tr('Refine')}</SheetTitle>
+                <SheetTitle className="text-lg font-bold">Refine</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-7">
                 <div>
-                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">{tr('Category')}</p>
+                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">Category</p>
                   <div className="space-y-2.5">
                     {CATEGORIES.filter(c => c !== 'All').map(cat => (
                       <label key={cat} className="flex items-center gap-3 cursor-pointer">
@@ -202,7 +200,7 @@ const CustomerStores: React.FC = () => {
                   </div>
                 </div>
                 <Button onClick={() => setFilterOpen(false)} className="w-full h-12 rounded-2xl">
-                  {tr('Apply')}
+                  Apply
                 </Button>
               </div>
             </SheetContent>
@@ -242,7 +240,7 @@ const CustomerStores: React.FC = () => {
         <div className="flex items-center justify-center py-24">
           <Loader2 className="w-7 h-7 animate-spin text-primary" />
         </div>
-      {tr(') : stores.length === 0 ? (')}
+      ) : stores.length === 0 ? (
         <div className="text-center py-20 px-6">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
             <Store className="w-7 h-7 text-muted-foreground/60" />
@@ -258,7 +256,7 @@ const CustomerStores: React.FC = () => {
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="text-[15px] font-bold text-foreground flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  {tr('Featured')}
+                  Featured
                 </h2>
                 <button className="text-xs font-medium text-muted-foreground flex items-center">
                   See all <ChevronRight className="w-3.5 h-3.5" />

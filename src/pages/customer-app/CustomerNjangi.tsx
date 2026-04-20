@@ -19,7 +19,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const circleColors = [
   { bg: 'bg-[hsl(270,60%,92%)]', accent: 'text-[hsl(270,50%,45%)]', bar: 'bg-[hsl(270,50%,45%)]' },
@@ -31,7 +30,6 @@ const circleColors = [
 type ViewMode = 'list' | 'create' | 'join' | 'detail';
 
 const CustomerNjangi: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -43,10 +41,10 @@ const CustomerNjangi: React.FC = () => {
   const payoutMutation = useNjangiPayout();
   const leaveMutation = useLeaveNjangiGroup();
 
-  const [view, setView] = useState<ViewMode>{tr('(\'list\');
-  const [selectedGroup, setSelectedGroup] = useState')}<any>{tr('(null);
+  const [view, setView] = useState<ViewMode>('list');
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
-  const [pinAction, setPinAction] = useState')}<{ type: 'contribute' | 'payout'; groupId: string } | null>(null);
+  const [pinAction, setPinAction] = useState<{ type: 'contribute' | 'payout'; groupId: string } | null>(null);
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -193,7 +191,7 @@ const CustomerNjangi: React.FC = () => {
       <div className="flex flex-col gap-5 p-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">{tr('Njangi')}</h1>
+          <h1 className="text-xl font-bold text-foreground">Njangi</h1>
         </div>
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       </div>
@@ -209,7 +207,7 @@ const CustomerNjangi: React.FC = () => {
     const iHavePaid = myMember ? hasPaidThisCycle(myMember.id) : false;
     const style = circleColors[0];
 
-    return (')}
+    return
       <div className="flex flex-col gap-4 p-5 pb-28">
         <div className="flex items-center gap-3">
           <button onClick={() => { setView('list'); setSelectedGroup(null); }}>
@@ -272,23 +270,23 @@ const CustomerNjangi: React.FC = () => {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="rounded-2xl h-11 gap-2 border-destructive/40 text-destructive">
-                <LogOut className="h-4 w-4" strokeWidth={1.5} /> {tr('Leave')}
+                <LogOut className="h-4 w-4" strokeWidth={1.5} /> Leave
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{tr('Leave this circle?')}</AlertDialogTitle>
+                <AlertDialogTitle>Leave this circle?</AlertDialogTitle>
                 <AlertDialogDescription>
                   You can only leave if you have no pending contributions. {isCreator ? 'As the creator, the circle will be deleted if you are the only member.' : 'You will lose access to this group.'}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>{tr('Cancel')}</AlertDialogCancel>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => leaveMutation.mutate({ group_id: selectedGroup.id }, {
                     onSuccess: () => { setView('list'); setSelectedGroup(null); refetch(); },
                   })}>
-                  {tr('Confirm')}
+                  Confirm
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -297,16 +295,15 @@ const CustomerNjangi: React.FC = () => {
 
         {/* Group ID for sharing */}
         <div className="rounded-2xl bg-card border border-border p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{tr('Group ID (share to invite)')}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Group ID (share to invite)</p>
           <button onClick={() => { navigator.clipboard.writeText(selectedGroup.id); toast.success('Copied!'); }}
             className="text-xs font-mono text-primary break-all text-left">{selectedGroup.id}</button>
         </div>
 
         {/* Members List */}
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Members')}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Members</p>
         <div className="space-y-2">
           {detailMembers.map((m: any) => {
-  const tr = useHarvestedT('customer');
             const paid = hasPaidThisCycle(m.id);
             return (
               <div key={m.id} className="flex items-center justify-between rounded-2xl bg-card border border-border p-3">
@@ -317,7 +314,7 @@ const CustomerNjangi: React.FC = () => {
                   <div>
                     <p className="text-xs font-semibold text-foreground">
                       {m.profile?.full_name || m.profile?.email || 'Member'}
-                      {m.user_id === user?.id && <span className="text-muted-foreground"> {tr('(You)')}</span>}
+                      {m.user_id === user?.id && <span className="text-muted-foreground"> (You)</span>}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                       {m.has_received_payout ? 'Received payout ✓' : 'Awaiting payout'}
@@ -327,12 +324,12 @@ const CustomerNjangi: React.FC = () => {
                 {paid ? (
                   <div className="flex items-center gap-1 text-[hsl(150,60%,40%)]">
                     <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
-                    <span className="text-[10px] font-bold">{tr('Paid')}</span>
+                    <span className="text-[10px] font-bold">Paid</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-4 w-4" strokeWidth={1.5} />
-                    <span className="text-[10px] font-bold">{tr('Pending')}</span>
+                    <span className="text-[10px] font-bold">Pending</span>
                   </div>
                 )}
               </div>
@@ -382,22 +379,22 @@ const CustomerNjangi: React.FC = () => {
         <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5">
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Circle Name</Label>
-            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={tr('e.g. Family Savings')} className="rounded-xl" maxLength={60} />
+            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Family Savings" className="rounded-xl" maxLength={60} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">{tr('Contribution Amount (XAF)')}</Label>
-            <Input type="number" value={newContribution} onChange={e => setNewContribution(e.target.value)} placeholder={tr('e.g. 25000')} className="rounded-xl" min={100} />
+            <Label className="text-xs font-medium">Contribution Amount (XAF)</Label>
+            <Input type="number" value={newContribution} onChange={e => setNewContribution(e.target.value)} placeholder="e.g. 25000" className="rounded-xl" min={100} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{tr('Frequency')}</Label>
+              <Label className="text-xs font-medium">Frequency</Label>
               <Select value={newFrequency} onValueChange={setNewFrequency}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekly">{tr('Weekly')}</SelectItem>
-                  <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -406,8 +403,8 @@ const CustomerNjangi: React.FC = () => {
               <Select value={newPayoutMethod} onValueChange={setNewPayoutMethod}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="random">{tr('Random')}</SelectItem>
-                  <SelectItem value="manual">{tr('Manual')}</SelectItem>
+                  <SelectItem value="random">Random</SelectItem>
+                  <SelectItem value="manual">Manual</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -419,7 +416,7 @@ const CustomerNjangi: React.FC = () => {
               <Input type="number" value={newMembers} onChange={e => setNewMembers(e.target.value)} className="rounded-xl" min={2} max={50} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{tr('Late Interest (%)')}</Label>
+              <Label className="text-xs font-medium">Late Interest (%)</Label>
               <Input type="number" value={newLateRate} onChange={e => setNewLateRate(e.target.value)} className="rounded-xl" min={0} max={100} />
             </div>
           </div>
@@ -427,7 +424,7 @@ const CustomerNjangi: React.FC = () => {
           <div className="rounded-2xl bg-[hsl(45,70%,90%)] p-3 flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
             <p className="text-[11px] text-[hsl(45,60%,25%)]">
-              {tr('Your contributions and payment history will be reported to your credit score. On-time payments boost your score.')}
+              Your contributions and payment history will be reported to your credit score. On-time payments boost your score.
             </p>
           </div>
 
@@ -456,7 +453,7 @@ const CustomerNjangi: React.FC = () => {
             <UserPlus className="h-7 w-7 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
           </div>
           <p className="text-center text-sm text-muted-foreground">
-            {tr('Enter the Group ID shared by the circle creator to join.')}
+            Enter the Group ID shared by the circle creator to join.
           </p>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Group ID</Label>
@@ -476,7 +473,7 @@ const CustomerNjangi: React.FC = () => {
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground">{tr('Njangi')}</h1>
+        <h1 className="text-xl font-bold text-foreground">Njangi</h1>
       </div>
 
       {/* How It Works Flow */}
@@ -549,10 +546,10 @@ const CustomerNjangi: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <Button className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('create')}>
+        <Button className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('create>
           <Plus className="h-4 w-4" strokeWidth={1.5} /> Create Circle
         </Button>
-        <Button variant="outline" className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('join')}>
+        <Button variant="outline" className="flex-1 rounded-2xl h-12 gap-2" onClick={() => setView('join>
           <UserPlus className="h-4 w-4" strokeWidth={1.5} /> Join Circle
         </Button>
       </div>

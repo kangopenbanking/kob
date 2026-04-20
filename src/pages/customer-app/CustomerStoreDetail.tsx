@@ -12,21 +12,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerStoreDetail: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const { merchantId } = useParams<{ merchantId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const [store, setStore] = useState<any>{tr('(null);
-  const [products, setProducts] = useState')}<any[]>{tr('([]);
+  const [store, setStore] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
-  const [addingToCart, setAddingToCart] = useState')}<string | null>{tr('(null);
-  const [viewMode, setViewMode] = useState')}<'grid' | 'list'>{tr('(\'grid\');
-  const [searchQuery, setSearchQuery] = useState(\'\');
-  const [activeCategory, setActiveCategory] = useState')}<string>('All');
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
     if (merchantId) { fetchStoreAndProducts(); fetchCartCount(); }
@@ -97,7 +95,7 @@ const CustomerStoreDetail: React.FC = () => {
       <div className="px-4 pt-12 text-center">
         <Store className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
         <p className="text-sm text-muted-foreground">Store not found</p>
-        <Button variant="ghost" onClick={() => navigate('/app/stores')} className="mt-4">Back to Stores</Button>
+        <Button variant="ghost" onClick={() => navigate('/app/stores className="mt-4">Back to Stores</Button>
       </div>
     );
   }
@@ -114,7 +112,7 @@ const CustomerStoreDetail: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
 
         <button
-          onClick={() => navigate('/app/stores')}
+          onClick={() => navigate('/app/stores
           className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/95 backdrop-blur shadow-sm flex items-center justify-center"
         >
           <ArrowLeft className="w-[18px] h-[18px] text-foreground" />
@@ -170,7 +168,7 @@ const CustomerStoreDetail: React.FC = () => {
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Truck className="w-3.5 h-3.5 text-primary" />
-              <span>{tr('Delivery in 30–60 min')}</span>
+              <span>Delivery in 30–60 min</span>
             </div>
           </div>
         </div>
@@ -181,7 +179,7 @@ const CustomerStoreDetail: React.FC = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-muted-foreground" />
           <Input
-            placeholder={tr('Search products in this store…')}
+            placeholder="Search products in this store…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-11 h-11 rounded-2xl bg-card border-border/60 text-sm shadow-sm"
@@ -211,11 +209,11 @@ const CustomerStoreDetail: React.FC = () => {
       {/* ─── View toggle ─── */}
       <div className="px-5 mt-4 flex items-center justify-between">
         <h2 className="text-[15px] font-bold text-foreground">
-          {tr('Products')} <span className="text-muted-foreground font-medium">· {filteredProducts.length}</span>
+          Products <span className="text-muted-foreground font-medium">· {filteredProducts.length}</span>
         </h2>
         <div className="flex items-center gap-1 bg-card border border-border/60 rounded-xl p-1">
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => setViewMode('grid
             className={`h-7 w-7 rounded-lg flex items-center justify-center transition ${
               viewMode === 'grid' ? 'bg-foreground text-background' : 'text-muted-foreground'
             }`}
@@ -223,7 +221,7 @@ const CustomerStoreDetail: React.FC = () => {
             <Grid3X3 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode('list
             className={`h-7 w-7 rounded-lg flex items-center justify-center transition ${
               viewMode === 'list' ? 'bg-foreground text-background' : 'text-muted-foreground'
             }`}
@@ -243,10 +241,9 @@ const CustomerStoreDetail: React.FC = () => {
             <p className="text-sm font-semibold text-foreground">No products yet</p>
             <p className="text-xs text-muted-foreground mt-0.5">Check back soon</p>
           </div>
-        {tr(') : viewMode === \'grid\' ? (')}
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 gap-3.5">
             {filteredProducts.map((product, i) => {
-  const tr = useHarvestedT('customer');
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => v.price)) : 0;
@@ -254,7 +251,7 @@ const CustomerStoreDetail: React.FC = () => {
   const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (')}
+              return
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -310,14 +307,13 @@ const CustomerStoreDetail: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {filteredProducts.map((product, i) => {
-  const tr = useHarvestedT('customer');
               const variants = product.pos_product_variants || [];
               const image = product.pos_product_images?.[0]?.url;
               const minPrice = variants.length ? Math.min(...variants.map((v: any) => {
   const tr = useHarvestedT('customer');tr('v.price)) : 0;
               const defaultVariant = variants[0];
 
-              return (')}
+              return
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: -8 }}
@@ -372,7 +368,7 @@ const CustomerStoreDetail: React.FC = () => {
           className="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-50"
         >
           <Button
-            onClick={() => navigate('/app/cart')}
+            onClick={() => navigate('/app/cart
             className="w-full h-13 rounded-2xl font-semibold shadow-2xl gap-2 bg-foreground text-background hover:bg-foreground/90 py-3.5"
           >
             <ShoppingBag className="w-4 h-4" />

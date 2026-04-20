@@ -21,7 +21,6 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const TOTAL_STEPS = 8;
 
@@ -37,7 +36,6 @@ const reasonOptions = [
 const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
 const CustomerRegister: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refCodeFromUrl = searchParams.get('ref') || '';
@@ -52,28 +50,28 @@ const CustomerRegister: React.FC = () => {
   }, [refCodeFromUrl]);
 
   // Step 0 - Reasons
-  const [selectedReasons, setSelectedReasons] = useState<string[]>{tr('([]);
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
 
   // Step 2 - Photo ID
-  const [idPhoto, setIdPhoto] = useState')}<File | null>{tr('(null);
-  const idInputRef = useRef')}<HTMLInputElement>{tr('(null);
+  const [idPhoto, setIdPhoto] = useState<File | null>(null);
+  const idInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3 - Selfie
-  const [selfie, setSelfie] = useState')}<File | null>{tr('(null);
-  const selfieInputRef = useRef')}<HTMLInputElement>(null);
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const selfieInputRef = useRef<HTMLInputElement>(null);
 
   // Step 4 - User Details
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [dob, setDob] = useState<Date>{tr('();
-  const [gender, setGender] = useState(\'\');
+  const [dob, setDob] = useState<Date>();
+  const [gender, setGender] = useState('');
 
   // Step 5 - PIN
-  const [newPin, setNewPin] = useState(\'\');
-  const [confirmPin, setConfirmPin] = useState(\'\');
-  const [pinStage, setPinStage] = useState')}<'create' | 'confirm'>('create');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinStage, setPinStage] = useState<'create' | 'confirm'>('create');
 
   // Prefill phone from auth
   useEffect(() => {
@@ -248,7 +246,7 @@ const CustomerRegister: React.FC = () => {
       <div className="flex-1 px-5 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
-            key={step + (step === 5 ? `-${pinStage}` : '')}
+            key={step + (step === 5 ? `-${pinStage}` : '
             variants={slideVariants}
             initial="enter"
             animate="center"
@@ -258,8 +256,8 @@ const CustomerRegister: React.FC = () => {
             {/* Step 0: Reasons */}
             {step === 0 && (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-1">{tr('Why Kang?')}</h2>
-                <p className="text-sm text-muted-foreground mb-6">{tr('Select all the reasons you\'d like to use Kang')}</p>
+                <h2 className="text-xl font-bold text-foreground mb-1">Why Kang?</h2>
+                <p className="text-sm text-muted-foreground mb-6">Select all the reasons you'd like to use Kang</p>
                 <div className="space-y-3">
                   {reasonOptions.map(opt => {
                     const Icon = opt.icon;
@@ -294,9 +292,9 @@ const CustomerRegister: React.FC = () => {
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(210,80%,93%)]">
                   <ShieldCheck className="h-10 w-10 text-foreground" strokeWidth={1.5} />
                 </div>
-                <h2 className="text-xl font-bold text-foreground text-center">{tr('Let\'s verify your identity')}</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">Let's verify your identity</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  {tr('We want to confirm your identity before you can use Kang. This helps keep your account safe and secure.')}
+                  We want to confirm your identity before you can use Kang. This helps keep your account safe and secure.
                 </p>
               </div>
             )}
@@ -340,12 +338,12 @@ const CustomerRegister: React.FC = () => {
               <div className="flex flex-col items-center gap-6">
                 <h2 className="text-xl font-bold text-foreground text-center">Selfie to confirm your ID</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  {tr('Position your face within the circle. Make sure you\'re in a well-lit area.')}
+                  Position your face within the circle. Make sure you're in a well-lit area.
                 </p>
                 <div className="relative">
                   <div className="flex h-48 w-48 items-center justify-center rounded-full border-4 border-dashed border-primary/40 bg-muted overflow-hidden">
                     {selfie ? (
-                      <img src={URL.createObjectURL(selfie)} alt={tr('Selfie')} className="h-full w-full object-cover" />
+                      <img src={URL.createObjectURL(selfie)} alt="Selfie" className="h-full w-full object-cover" />
                     ) : (
                       <ScanFace className="h-16 w-16 text-muted-foreground" strokeWidth={1} />
                     )}
@@ -382,7 +380,7 @@ const CustomerRegister: React.FC = () => {
                 <p className="text-sm text-muted-foreground mb-2">Tell us a bit about yourself</p>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Full Name *')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Full Name *</label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                     <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="h-12 rounded-2xl pl-10 text-sm" />
@@ -390,7 +388,7 @@ const CustomerRegister: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Email (Optional)')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email (Optional)</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                     <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" className="h-12 rounded-2xl pl-10 text-sm" />
@@ -398,16 +396,16 @@ const CustomerRegister: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Contact Number *')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Contact Number *</label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                    <Input value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} placeholder={tr('+237 6XX XXX XXX')} className="h-12 rounded-2xl pl-10 text-sm" />
+                    <Input value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} placeholder="+237 6XX XXX XXX" className="h-12 rounded-2xl pl-10 text-sm" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Address')}</label>
+                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Address</label>
                     <Popover>
                       <PopoverTrigger>
                         <Info className="h-3.5 w-3.5 text-primary cursor-pointer" strokeWidth={1.5} />
@@ -415,7 +413,7 @@ const CustomerRegister: React.FC = () => {
                       <PopoverContent className="w-72 text-sm p-4">
                         <p className="font-semibold mb-1">PostiQ Digital Address</p>
                         <p className="text-muted-foreground text-xs mb-2">
-                          {tr('Create a verified digital address for your location using PostiQ, Cameroon\'s digital addressing system.')}
+                          Create a verified digital address for your location using PostiQ, Cameroon's digital addressing system.
                         </p>
                         <a
                           href="https://postiq.cam"
@@ -423,7 +421,7 @@ const CustomerRegister: React.FC = () => {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
                         >
-                          <ExternalLink className="h-3 w-3" /> {tr('Create address on postiq.cam')}
+                          <ExternalLink className="h-3 w-3" /> Create address on postiq.cam
                         </a>
                       </PopoverContent>
                     </Popover>
@@ -454,7 +452,7 @@ const CustomerRegister: React.FC = () => {
                         mode="single"
                         selected={dob}
                         onSelect={setDob}
-                        disabled={(date) => date > {tr('new Date() || date')} < new Date('1920-01-01')}
+                        disabled={(date) => date > new Date() || date < new Date('1920-01-01
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
@@ -463,7 +461,7 @@ const CustomerRegister: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Gender')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gender</label>
                   <div className="grid grid-cols-2 gap-2">
                     {genderOptions.map(g => (
                       <button
@@ -521,7 +519,7 @@ const CustomerRegister: React.FC = () => {
                 </motion.div>
                 <h2 className="text-xl font-bold text-foreground text-center">Set your fingerprint</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  {tr('Add fingerprint to make your account more secure. You can use it for quick login and transaction approvals.')}
+                  Add fingerprint to make your account more secure. You can use it for quick login and transaction approvals.
                 </p>
                 <p className="text-xs text-muted-foreground/60">Place your finger on the sensor</p>
               </div>
@@ -539,7 +537,7 @@ const CustomerRegister: React.FC = () => {
                 </motion.div>
                 <h2 className="text-xl font-bold text-foreground text-center">Set Face Recognition</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  {tr('Add face recognition to make your account more secure. You can unlock your account and approve transactions with just a look.')}
+                  Add face recognition to make your account more secure. You can unlock your account and approve transactions with just a look.
                 </p>
               </div>
             )}
@@ -556,7 +554,7 @@ const CustomerRegister: React.FC = () => {
               onClick={handleNext}
               className="flex-1 h-14 rounded-2xl text-sm font-semibold border-border"
             >
-              {tr('Skip')}
+              Skip
             </Button>
           )}
           <Button
@@ -579,7 +577,7 @@ const CustomerRegister: React.FC = () => {
             ) : step === 7 ? (
               'Enable Face ID'
             ) : (
-              <>{tr('Continue')} <ArrowRight className="h-4 w-4" strokeWidth={1.5} /></>
+              <>Continue <ArrowRight className="h-4 w-4" strokeWidth={1.5} /></>
             )}
           </Button>
         </div>

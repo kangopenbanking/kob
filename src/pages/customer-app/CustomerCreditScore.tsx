@@ -11,10 +11,8 @@ import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
 import { CrediQPremiumCard } from '@/components/credit/CrediQPremiumCard';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerCreditScore: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -269,7 +267,7 @@ const CustomerCreditScore: React.FC = () => {
         </div>
         {scoreData?.updated_at && (
           <p className="text-[10px] text-muted-foreground">
-            Last updated {format(new Date(scoreData.updated_at), 'MMM d, yyyy')}
+            Last updated {format(new Date(scoreData.updated_at), 'MMM d, yyyy
           </p>
         )}
         {/* Score range legend */}
@@ -312,7 +310,7 @@ const CustomerCreditScore: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-            <p className="text-sm font-bold text-foreground">{tr('What\'s Impacting Your Score')}</p>
+            <p className="text-sm font-bold text-foreground">What's Impacting Your Score</p>
           </div>
           <div className="space-y-2">
             {factors.filter(f => f.score > 0).sort((a, b) => a.score - b.score).map((f, i) => {
@@ -367,7 +365,7 @@ const CustomerCreditScore: React.FC = () => {
             <p className="text-sm font-bold text-foreground">Boost Your Score</p>
           </div>
           <p className="text-[11px] text-muted-foreground mb-3">
-            {tr('You\'re missing out on easy credit-building opportunities. Start any of these to improve your score.')}
+            You're missing out on easy credit-building opportunities. Start any of these to improve your score.
           </p>
           <div className="space-y-2">
             {proposals.map((p, i) => (
@@ -414,7 +412,7 @@ const CustomerCreditScore: React.FC = () => {
                     <EIcon className={`h-3.5 w-3.5 ${color}`} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' ')}</p>
+                    <p className="text-[11px] font-semibold text-foreground truncate">{ev.description || ev.event_type.replace(/_/g, ' </p>
                     <p className="text-[10px] text-muted-foreground">
                       {ev.event_time ? format(new Date(ev.event_time), 'MMM d, yyyy') : ''}
                     </p>
@@ -546,12 +544,12 @@ function PreApprovedOffersSection({ score }: { score: number }) {
                     {offer.existing_application?.reference ? ` · Ref ${offer.existing_application.reference}` : ''}
                   </p>
                 </div>
-              {tr(') : offer.requires_existing_account ? (')}
+              ) : offer.requires_existing_account ? (
                 <button
-                  onClick={() => navigate('/app/linked-accounts')}
+                  onClick={() => navigate('/app/linked-accounts
                   className="flex-1 rounded-xl bg-muted py-2 text-[11px] font-bold text-foreground text-center active:scale-[0.98] transition-transform"
                 >
-                  {tr('Open Account & Apply')}
+                  Open Account & Apply
                 </button>
               ) : (
                 <button

@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances, useCustomerTransactions } from '@/hooks/useCustomerData';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const bankColors: Record<string, string> = {
   'Afriland First Bank': 'hsl(210,80%,90%)',
@@ -21,7 +20,6 @@ const bankColors: Record<string, string> = {
 };
 
 const CustomerBank: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
 
@@ -98,7 +96,7 @@ const CustomerBank: React.FC = () => {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Balance</p>
           <p className="text-2xl font-bold text-foreground">{totalBalance.toLocaleString()} XAF</p>
           <p className="text-[11px] text-muted-foreground">{accounts.length} account{accounts.length > 1 ? 's' : ''} linked</p>
-          <button onClick={() => navigate('/app/linked-accounts')}
+          <button onClick={() => navigate('/app/linked-accounts
             className="mt-2 flex items-center gap-1 text-xs font-bold text-primary">
             <Link2 className="h-3.5 w-3.5" strokeWidth={1.5} /> Manage Linked Accounts
           </button>
@@ -108,7 +106,6 @@ const CustomerBank: React.FC = () => {
       {/* Account Cards */}
       <div className="flex flex-col gap-3">
         {accounts.map((acc: any) => {
-  const tr = useHarvestedT('customer');
           const balance = getBalance(acc.id);
           const currency = getCurrency(acc.id);
           const color = getBankColor(acc.account_holder_name);
@@ -140,11 +137,11 @@ const CustomerBank: React.FC = () => {
                     <div className="border-t border-foreground/10 bg-background/40 px-4 pb-4 pt-3">
                       <div className="grid grid-cols-2 gap-2 mb-3 text-[11px]">
                         <div className="rounded-xl bg-background/50 p-2">
-                          <p className="text-muted-foreground">{tr('Type')}</p>
+                          <p className="text-muted-foreground">Type</p>
                           <p className="font-semibold text-foreground capitalize">{acc.account_subtype}</p>
                         </div>
                         <div className="rounded-xl bg-background/50 p-2">
-                          <p className="text-muted-foreground">{tr('Status')}</p>
+                          <p className="text-muted-foreground">Status</p>
                           <p className="font-semibold text-foreground">{acc.is_active ? 'Active' : 'Inactive'}</p>
                         </div>
                       </div>

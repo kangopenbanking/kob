@@ -11,7 +11,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 /* ─── Account type definitions matching CustomerLinkedAccounts ─── */
 
@@ -114,13 +113,12 @@ const formatPhone = (v: string) => {
 type Step = 'select' | 'details' | 'confirming';
 
 const CustomerOnboarding: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<Step>{tr('(\'select\');
-  const [selected, setSelected] = useState')}<AccountType | null>{tr('(null);
+  const [step, setStep] = useState<Step>('select');
+  const [selected, setSelected] = useState<AccountType | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState')}<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Shared fields
   const [accountName, setAccountName] = useState('');
@@ -173,7 +171,6 @@ const CustomerOnboarding: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-  const tr = useHarvestedT('customer');
     setLoading(true);
     setError(null);
     setStep('confirming');
@@ -192,9 +189,9 @@ const CustomerOnboarding: React.FC = () => {
         const raw = accountNumber.replace(/[\s\-]/g, '');
         const last4 = raw.slice(-4);
         const option = accountOptions.find(o => o.id === selected)!;
-        const bankName = selected === 'bank_account' ? CM_BANKS.find(b => {tr('b.code === bankCode)?.name : undefined;
+        const bankName = selected === 'bank_account' ? CM_BANKS.find(b => b.code === bankCode)?.name : undefined;
 
-        const metadata: Record')}<string, any> = {};
+        const metadata: Record<string, any> = {};
         if (selected === 'bank_account') {
           metadata.rib_bank_code = bankCode;
           metadata.rib_branch_code = raw.substring(5, 10);
@@ -259,7 +256,6 @@ const CustomerOnboarding: React.FC = () => {
 
   /* ─── Render the detail fields per type ─── */
   const renderFields = () => {
-  const tr = useHarvestedT('customer');
     switch (selected) {
       case 'bank_account':
         return (
@@ -267,7 +263,7 @@ const CustomerOnboarding: React.FC = () => {
             <Field label="Account Holder Name">
               <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on account" className="h-14 rounded-2xl text-base" />
             </Field>
-            <Field label={tr('Bank')}>
+            <Field label="Bank">
               <Select value={bankCode} onValueChange={setBankCode}>
                 <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder="Select your bank" /></SelectTrigger>
                 <SelectContent>
@@ -275,13 +271,13 @@ const CustomerOnboarding: React.FC = () => {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label={tr('RIB Number (23 digits)')}>
+            <Field label="RIB Number (23 digits)">
               <Input value={accountNumber} onChange={e => setAccountNumber(formatRib(e.target.value))} placeholder="10005-00100-01234567890-23" className="h-14 rounded-2xl text-base font-mono" />
             </Field>
           </>
-        {tr(');
-      case \'bank_iban\':
-        return (')}
+        );
+      case 'bank_iban':
+        return (
           <>
             <Field label="Account Holder Name">
               <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on account" className="h-14 rounded-2xl text-base" />
@@ -290,21 +286,21 @@ const CustomerOnboarding: React.FC = () => {
               <Input value={accountNumber} onChange={e => setAccountNumber(formatIban(e.target.value))} placeholder="CM21 1000 5001 0001 2345 6789 023" className="h-14 rounded-2xl text-base font-mono" />
             </Field>
           </>
-        {tr(');
-      case \'momo_mtn\':
-      case \'momo_orange\':
-        return (')}
+        );
+      case 'momo_mtn':
+      case 'momo_orange':
+        return (
           <>
             <Field label="Account Name">
               <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Name on MoMo account" className="h-14 rounded-2xl text-base" />
             </Field>
             <Field label="Phone Number">
-              <Input value={accountNumber} onChange={e => setAccountNumber(formatPhone(e.target.value))} placeholder={tr('+237 6XX XXX XXX')} type="tel" className="h-14 rounded-2xl text-base" />
+              <Input value={accountNumber} onChange={e => setAccountNumber(formatPhone(e.target.value))} placeholder="+237 6XX XXX XXX" type="tel" className="h-14 rounded-2xl text-base" />
             </Field>
           </>
-        {tr(');
-      case \'bank_card\':
-        return (')}
+        );
+      case 'bank_card':
+        return (
           <>
             <Field label="Cardholder Name">
               <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Name on card" className="h-14 rounded-2xl text-base" />
@@ -329,9 +325,9 @@ const CustomerOnboarding: React.FC = () => {
               </Field>
             </div>
           </>
-        {tr(');
-      case \'paypal\':
-        return (')}
+        );
+      case 'paypal':
+        return (
           <>
             <Field label="PayPal Name">
               <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on PayPal" className="h-14 rounded-2xl text-base" />
@@ -361,7 +357,7 @@ const CustomerOnboarding: React.FC = () => {
           {step === 'select' && (
             <motion.div key="select" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }}>
               <h1 className="mb-1 text-xl font-bold text-foreground">Link Your Account</h1>
-              <p className="mb-6 text-sm text-muted-foreground">{tr('Choose how you\'d like to manage your money on Kang')}</p>
+              <p className="mb-6 text-sm text-muted-foreground">Choose how you'd like to manage your money on Kang</p>
 
               <div className="space-y-2.5">
                 {accountOptions.map((option) => {
@@ -408,7 +404,7 @@ const CustomerOnboarding: React.FC = () => {
                   <div>
                     <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">View-Only Mode</p>
                     <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">
-                      {tr('You can browse your dashboard but sending money, funding your wallet, and other financial features will be disabled until you link a payment account from')} <span className="font-semibold">{tr('Accounts')}</span>.
+                      You can browse your dashboard but sending money, funding your wallet, and other financial features will be disabled until you link a payment account from <span className="font-semibold">Accounts</span>.
                     </p>
                   </div>
                 </motion.div>
@@ -444,7 +440,7 @@ const CustomerOnboarding: React.FC = () => {
           {step === 'confirming' && (
             <motion.div key="confirming" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="flex flex-col items-center gap-4 pt-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-semibold text-foreground">{tr('Setting up your account…')}</p>
+              <p className="text-sm font-semibold text-foreground">Setting up your account…</p>
             </motion.div>
           )}
         </AnimatePresence>

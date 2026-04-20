@@ -8,7 +8,6 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import { getTheme } from '@/lib/travel-theme';
 import { QRCodeSVG } from 'qrcode.react';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const QRCodeDisplay: React.FC<{ value: string; themeColor?: string }> = ({ value, themeColor = '#1a1a1a' }) => (
   <div className="flex flex-col items-center gap-1">
@@ -27,17 +26,16 @@ const QRCodeDisplay: React.FC<{ value: string; themeColor?: string }> = ({ value
 );
 
 const CustomerTravelTicket: React.FC = () => {
-  const tr = useHarvestedT('customer');
-  const { bookingId } = useParams<{ bookingId: string }>{tr('();
+  const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState')}<any>{tr('(null);
-  const [tickets, setTickets] = useState')}<any[]>{tr('([]);
-  const [trip, setTrip] = useState')}<any>{tr('(null);
-  const [route, setRoute] = useState')}<any>{tr('(null);
-  const [service, setService] = useState')}<any>{tr('(null);
+  const [booking, setBooking] = useState<any>(null);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [trip, setTrip] = useState<any>(null);
+  const [route, setRoute] = useState<any>(null);
+  const [service, setService] = useState<any>(null);
   const [activeTicket, setActiveTicket] = useState(0);
-  const ticketRef = useRef')}<HTMLDivElement>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
 
   // Determine category from service_type
   const category = service?.service_type || 'bus';
@@ -104,7 +102,7 @@ const CustomerTravelTicket: React.FC = () => {
     doc.setTextColor(80, 80, 80);
     if (trip) {
       doc.text(format(new Date(trip.departure_at), 'EEEE, dd MMM yyyy'), 10, 50);
-      doc.text(`${format(new Date(trip.departure_at), 'HH:mm')} — ${format(new Date(trip.arrival_at), 'HH:mm')}`, 10, 56);
+      doc.text(`${format(new Date(trip.departure_at), 'HH:mm — ${format(new Date(trip.arrival_at), 'HH:mm`, 10, 56);
     }
 
     doc.setDrawColor(180, 180, 180);
@@ -147,25 +145,25 @@ const CustomerTravelTicket: React.FC = () => {
     doc.save(`ticket-${booking.booking_ref || 'download'}.pdf`);
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>{tr(';
-  if (!booking) return')} <div className="p-4 text-center text-gray-400">Booking not found</div>{tr(';
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>;
+  if (!booking) return <div className="p-4 text-center text-gray-400">Booking not found</div>;
 
   const currentTicket = tickets[activeTicket];
-  const overlayBg = theme.fg === \'#ffffff\' ? \'rgba(255,255,255,0.15)\' : \'rgba(0,0,0,0.08)\';
+  const overlayBg = theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
 
-  return (')}
+  return (
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* ── Header ── */}
       <div className="relative overflow-hidden px-5 pb-8 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-5">
-            <button onClick={() => navigate('/app/home')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: overlayBg }}>
+            <button onClick={() => navigate('/app/home className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: overlayBg }}>
               <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex items-center gap-2">
               <CatIcon className="h-5 w-5" style={{ color: theme.fg }} />
-              <h1 className="text-lg font-bold" style={{ color: theme.fg }}>{tr('E-Ticket')}</h1>
+              <h1 className="text-lg font-bold" style={{ color: theme.fg }}>E-Ticket</h1>
             </div>
             <div className="ml-auto rounded-full px-3 py-1" style={{ backgroundColor: overlayBg }}>
               <span className="text-[11px] font-mono font-bold" style={{ color: theme.fg }}>{booking.booking_ref}</span>
@@ -177,8 +175,8 @@ const CustomerTravelTicket: React.FC = () => {
               <CheckCircle className="h-6 w-6" style={{ color: theme.fg }} />
             </div>
             <div>
-              <p className="font-bold text-[15px]" style={{ color: theme.fg }}>{tr('Booking Confirmed!')}</p>
-              <p className="text-[12px]" style={{ color: theme.fg, opacity: 0.5 }}>{tr('Your ticket is ready. Present QR at boarding.')}</p>
+              <p className="font-bold text-[15px]" style={{ color: theme.fg }}>Booking Confirmed!</p>
+              <p className="text-[12px]" style={{ color: theme.fg, opacity: 0.5 }}>Your ticket is ready. Present QR at boarding.</p>
             </div>
           </motion.div>
         </div>
@@ -210,7 +208,7 @@ const CustomerTravelTicket: React.FC = () => {
               {route && (
                 <div className="flex items-center justify-between gap-1 min-w-0">
                   <div className="text-center flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">{tr('From')}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">From</p>
                     <p className="text-lg font-black text-[#0f1729] truncate">{route.origin}</p>
                   </div>
                   <div className="flex flex-col items-center shrink-0 px-2">
@@ -223,7 +221,7 @@ const CustomerTravelTicket: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-center flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">{tr('To')}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">To</p>
                     <p className="text-lg font-black text-[#0f1729] truncate">{route.destination}</p>
                   </div>
                 </div>
@@ -233,10 +231,10 @@ const CustomerTravelTicket: React.FC = () => {
             {trip && (
               <div className="px-5 pb-3 flex gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
-                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
+                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600">
-                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
+                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm — {format(new Date(trip.arrival_at), 'HH:mm
                 </span>
               </div>
             )}
@@ -252,17 +250,17 @@ const CustomerTravelTicket: React.FC = () => {
               <QRCodeDisplay value={currentTicket.qr_code} themeColor={theme.color === '#ffbe0b' ? '#92400e' : theme.color} />
               <div className="flex-1 space-y-3 pt-1">
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">{tr('Passenger')}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Passenger</p>
                   <p className="text-[15px] font-bold text-[#0f1729]">{currentTicket.passenger_name}</p>
                   {currentTicket.passenger_phone && <p className="text-[12px] text-gray-400 mt-0.5">{currentTicket.passenger_phone}</p>}
                 </div>
                 <div className="flex gap-3">
                   <div className="rounded-xl px-3 py-2 text-center" style={{ backgroundColor: theme.accentLight }}>
-                    <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.accentText }}>{tr('Seat')}</p>
+                    <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.accentText }}>Seat</p>
                     <p className="text-lg font-black" style={{ color: theme.accentText }}>{currentTicket.seat_label}</p>
                   </div>
                   <div className={`rounded-xl px-3 py-2 text-center ${currentTicket.ticket_status === 'valid' ? 'bg-emerald-50' : 'bg-gray-50'}`}>
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-800">{tr('Status')}</p>
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-800">Status</p>
                     <p className={`text-sm font-extrabold capitalize ${currentTicket.ticket_status === 'valid' ? 'text-emerald-700' : 'text-gray-500'}`}>{currentTicket.ticket_status}</p>
                   </div>
                 </div>
@@ -283,7 +281,7 @@ const CustomerTravelTicket: React.FC = () => {
                   <p className="text-xl font-black" style={{ color: theme.accentText }}>{booking.total_amount?.toLocaleString()} <span className="text-sm font-bold">{booking.currency}</span></p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-500">{tr('Ref')}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-500">Ref</p>
                   <p className="text-sm font-mono font-bold text-[#0f1729]">{booking.booking_ref}</p>
                 </div>
               </div>
@@ -302,7 +300,7 @@ const CustomerTravelTicket: React.FC = () => {
           <div>
             <p className="font-bold text-sm text-amber-900">Arrive Early</p>
             <p className="text-[12px] text-amber-700 leading-relaxed mt-0.5">
-              Please arrive at the station <strong>30 minutes to 1 hour</strong> {tr('before your scheduled departure.')}
+              Please arrive at the station <strong>30 minutes to 1 hour</strong> before your scheduled departure.
             </p>
           </div>
         </motion.div>
@@ -313,7 +311,7 @@ const CustomerTravelTicket: React.FC = () => {
           </Button>
         </div>
 
-        <Button variant="outline" className="w-full h-11 rounded-xl" onClick={() => navigate('/app/home')}>
+        <Button variant="outline" className="w-full h-11 rounded-xl" onClick={() => navigate('/app/home>
           Back to Home
         </Button>
       </div>

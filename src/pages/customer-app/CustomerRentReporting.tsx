@@ -15,17 +15,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRentReporting: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
   const [showSetup, setShowSetup] = useState(false);
-  const [payingId, setPayingId] = useState<string | null>{tr('(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
   const [showPin, setShowPin] = useState(false);
-  const [pendingPaymentId, setPendingPaymentId] = useState')}<string | null>(null);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const [rentAmount, setRentAmount] = useState('');
   const [landlordName, setLandlordName] = useState('');
@@ -150,7 +148,7 @@ const CustomerRentReporting: React.FC = () => {
   const inactivePlans = rentPlans.filter((p: any) => {
   const tr = useHarvestedT('customer');tr('p.status !== \'active\');
 
-  return (')}
+  return
     <div className="flex flex-col gap-4 p-5 pb-28">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -191,21 +189,21 @@ const CustomerRentReporting: React.FC = () => {
                 <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{totalReported}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Reported')}</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Reported</p>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-[hsl(45,70%,90%)]/60 to-[hsl(45,70%,95%)]/30 border border-[hsl(45,60%,80%)] p-3 text-center">
               <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-xl bg-[hsl(45,70%,90%)] mb-1.5">
                 <Clock className="h-4 w-4 text-[hsl(45,60%,35%)]" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{totalPending}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Pending')}</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Pending</p>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-[hsl(15,80%,92%)]/60 to-[hsl(15,80%,96%)]/30 border border-[hsl(15,70%,82%)] p-3 text-center">
               <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-xl bg-[hsl(15,80%,92%)] mb-1.5">
                 <Flame className="h-4 w-4 text-[hsl(15,70%,45%)]" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{streak}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Streak')}</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Streak</p>
             </div>
           </motion.div>
 
@@ -228,9 +226,9 @@ const CustomerRentReporting: React.FC = () => {
           <div className="flex items-start gap-2.5 rounded-2xl bg-accent/40 border border-accent/60 p-3">
             <Info className="h-4 w-4 text-accent-foreground mt-0.5 shrink-0" strokeWidth={1.5} />
             <p className="text-[11px] text-accent-foreground leading-relaxed">
-              <span className="font-semibold">Pro tip:</span> On-time payments earn <span className="font-bold text-[hsl(150,60%,35%)]">{tr('+5–10 pts')}</span>{tr('. 
-              Late payments cost')} <span className="font-bold text-destructive">{tr('-10–25 pts')}</span>{tr('. 
-              Missed payments are')} <span className="font-bold text-destructive">-30 pts</span>.
+              <span className="font-semibold">Pro tip:</span> On-time payments earn <span className="font-bold text-[hsl(150,60%,35%)]">+5–10 pts</span>. 
+              Late payments cost <span className="font-bold text-destructive">-10–25 pts</span>. 
+              Missed payments are <span className="font-bold text-destructive">-30 pts</span>.
             </p>
           </div>
 
@@ -240,16 +238,15 @@ const CustomerRentReporting: React.FC = () => {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Active Plans</p>
               <div className="space-y-3">
                 {activePlans.map((plan: any) => {
-  const tr = useHarvestedT('customer');
                   const payments = plan.piggybank_payments || [];
                   const paidCount = payments.filter((p: any) => p.status === 'paid' || p.status === 'late').length;
                   const pendingPayments = payments.filter((p: any) => p.status === 'pending');
-                  const overduePayments = pendingPayments.filter((p: any) => {tr('p.due_date && new Date(p.due_date)')} < new Date());
+                  const overduePayments = pendingPayments.filter((p: any) => p.due_date && new Date(p.due_date) < new Date());
                   const creditLinked = payments.some((p: any) => p.credit_event_id);
                   const nextDue = pendingPayments.sort((a: any, b: any) => {
   const tr = useHarvestedT('customer');tr('new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
 
-                  return (')}
+                  return
                     <motion.div key={plan.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-3xl bg-card border border-border overflow-hidden">
                       {/* Plan Header */}
@@ -265,7 +262,7 @@ const CustomerRentReporting: React.FC = () => {
                             </div>
                           </div>
                           <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                            {tr('Active')}
+                            Active
                           </span>
                         </div>
 
@@ -277,11 +274,11 @@ const CustomerRentReporting: React.FC = () => {
                           </div>
                           <div className="rounded-xl bg-muted/50 p-2">
                             <p className="text-sm font-bold text-foreground">{paidCount}</p>
-                            <p className="text-[9px] text-muted-foreground">{tr('Paid')}</p>
+                            <p className="text-[9px] text-muted-foreground">Paid</p>
                           </div>
                           <div className="rounded-xl bg-muted/50 p-2">
                             <p className="text-sm font-bold text-foreground">{pendingPayments.length}</p>
-                            <p className="text-[9px] text-muted-foreground">{tr('Upcoming')}</p>
+                            <p className="text-[9px] text-muted-foreground">Upcoming</p>
                           </div>
                         </div>
 
@@ -321,7 +318,7 @@ const CustomerRentReporting: React.FC = () => {
                                     {Number(payment.amount || 0).toLocaleString()} XAF
                                   </p>
                                   <p className={`text-[10px] ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                                    {payment.due_date ? `Due ${format(new Date(payment.due_date), 'MMM d, yyyy')}` : 'No due date'}
+                                    {payment.due_date ? `Due ${format(new Date(payment.due_date), 'MMM d, yyyy` : 'No due date'}
                                     {isOverdue && ' • OVERDUE'}
                                   </p>
                                 </div>
@@ -359,24 +356,24 @@ const CustomerRentReporting: React.FC = () => {
                     <Home className="h-4 w-4 text-primary" strokeWidth={1.5} />
                     <p className="text-sm font-bold text-foreground">Set Up Rent Reporting</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">{tr('You\'ll receive a unique KRENTS reference code')}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">You'll receive a unique KRENTS reference code</p>
                 </div>
                 <div className="p-4 space-y-3.5">
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-semibold">Landlord / Property Name</Label>
-                    <Input value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder={tr('e.g. My Apartment')} className="rounded-xl h-11" maxLength={80} />
+                    <Input value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder="e.g. My Apartment" className="rounded-xl h-11" maxLength={80} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold">{tr('Monthly Rent (XAF)')}</Label>
-                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} placeholder={tr('e.g. 75000')} className="rounded-xl h-11" min={1000} />
+                    <Label className="text-[11px] font-semibold">Monthly Rent (XAF)</Label>
+                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} placeholder="e.g. 75000" className="rounded-xl h-11" min={1000} />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-semibold">Payment Frequency</Label>
                     <Select value={frequency} onValueChange={setFrequency}>
                       <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
-                        <SelectItem value="quarterly">{tr('Quarterly')}</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -385,7 +382,7 @@ const CustomerRentReporting: React.FC = () => {
                       {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Create Rent Plan
                     </Button>
-                    <Button variant="outline" onClick={() => setShowSetup(false)} className="rounded-2xl h-11">{tr('Cancel')}</Button>
+                    <Button variant="outline" onClick={() => setShowSetup(false)} className="rounded-2xl h-11">Cancel</Button>
                   </div>
                 </div>
               </motion.div>
@@ -401,7 +398,7 @@ const CustomerRentReporting: React.FC = () => {
           {/* Payment History */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Payment History</p>
-            {rentPayments.length === 0 && planPayments.filter((p: any) => {tr('p.status !== \'pending\').length === 0 ? (')}
+            {rentPayments.length === 0 && planPayments.filter((p: any) => p.status !== 'pending').length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12 rounded-3xl border border-dashed border-border">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                   <Home className="h-7 w-7 text-muted-foreground" strokeWidth={1} />
@@ -432,7 +429,7 @@ const CustomerRentReporting: React.FC = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-muted-foreground font-mono">{p.rent_reference}</span>
                             {p.paid_at && (
-                              <span className="text-[10px] text-muted-foreground">• {format(new Date(p.paid_at), 'MMM d, yyyy')}</span>
+                              <span className="text-[10px] text-muted-foreground">• {format(new Date(p.paid_at), 'MMM d, yyyy</span>
                             )}
                           </div>
                         </div>
