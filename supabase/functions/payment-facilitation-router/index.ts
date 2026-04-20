@@ -32,34 +32,32 @@ const json = (data: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // FAPI interaction-id echo (G-6) — generate if absent, always returned
+  const fapiInteractionId = req.headers.get("x-fapi-interaction-id") ?? crypto.randomUUID();
+  const fapiHeaders = { "x-fapi-interaction-id": fapiInteractionId };
+
   const url = new URL(req.url);
-  // Strip the function-name prefix so internal callers and gateway calls both work
   const subpath = url.pathname.replace(/^\/?(payment-facilitation-router\/?)/, "/");
 
-  // Discovery
   if (subpath === "/" || subpath === "") {
-    return json({
+    return new Response(JSON.stringify({
       service: "Kang Open Banking — Payment Facilitation",
-      version: "1.0.0",
+      version: "1.0.1",
       contract: "REST",
       documentation: "https://kangopenbanking.com/developer/payment-facilitation",
       routes: ROUTES.map((r) => `${r.method} ${r.pattern.source.replace(/[\\^$?]/g, "")}`),
-    });
+    }), { status: 200, headers: { ...corsHeaders, ...fapiHeaders, "Content-Type": "application/json" } });
   }
 
   const match = ROUTES.find((r) => r.method === req.method && r.pattern.test(subpath));
   if (!match) {
-    return json(
-      {
-        error: "route_not_found",
-        message: `No Payment Facilitation route for ${req.method} ${subpath}`,
-        hint: "See discovery at GET /payment-facilitation-router",
-      },
-      404,
-    );
+    return new Response(JSON.stringify({
+      Code: "404",
+      Message: "Not Found",
+      Errors: [{ ErrorCode: "UK.OBIE.Resource.NotFound", Message: `No Payment Facilitation route for ${req.method} ${subpath}` }],
+    }), { status: 404, headers: { ...corsHeaders, ...fapiHeaders, "Content-Type": "application/json" } });
   }
 
-  // Forward to the leaf edge function
   const targetUrl = `${SUPABASE_URL}/functions/v1/${match.fn}`;
   const fwdHeaders = new Headers();
   for (const [k, v] of req.headers.entries()) {
@@ -67,6 +65,7 @@ Deno.serve(async (req) => {
     if (["host", "content-length", "connection"].includes(kl)) continue;
     fwdHeaders.set(k, v);
   }
+  fwdHeaders.set("x-fapi-interaction-id", fapiInteractionId);
 
   let body: BodyInit | undefined;
   if (req.method !== "GET" && req.method !== "HEAD") {
@@ -78,8 +77,13 @@ Deno.serve(async (req) => {
     const buf = await upstream.arrayBuffer();
     const respHeaders = new Headers(upstream.headers);
     for (const [k, v] of Object.entries(corsHeaders)) respHeaders.set(k, v);
+    respHeaders.set("x-fapi-interaction-id", fapiInteractionId);
     return new Response(buf, { status: upstream.status, headers: respHeaders });
   } catch (err) {
-    return json({ error: "upstream_error", message: String(err) }, 502);
+    return new Response(JSON.stringify({
+      Code: "502",
+      Message: "Bad Gateway",
+      Errors: [{ ErrorCode: "UK.OBIE.Upstream.Error", Message: String(err) }],
+    }), { status: 502, headers: { ...corsHeaders, ...fapiHeaders, "Content-Type": "application/json" } });
   }
 });
