@@ -175,6 +175,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return staticValue || key;
   }, [language, dbTranslations]);
 
+  // Sync <html lang> + <html dir> with current language for SEO,
+  // screen readers, and browser-native translation prompts.
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = language;
+      document.documentElement.dir = 'ltr'; // FR is LTR; placeholder for future RTL locales
+      const meta = document.querySelector('meta[http-equiv="content-language"]');
+      if (meta) meta.setAttribute('content', language);
+    }
+  }, [language]);
+
   // Realtime: listen for admin edits to translations and refresh
   useEffect(() => {
     const channel = supabase

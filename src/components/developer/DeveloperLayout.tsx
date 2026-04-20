@@ -6,6 +6,7 @@ import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileTex
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -271,6 +272,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
             </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <NotificationCenter />
               {isAuthenticated ? (
                 <>

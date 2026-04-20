@@ -22,6 +22,7 @@ import { NotificationCenter } from "@/components/NotificationCenter";
 import { adminNavigation } from "@/components/admin/admin-navigation-config";
 import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { Badge } from "@/components/ui/badge";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface AdminLayoutProps {
   children?: ReactNode;
@@ -86,6 +87,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <div className="flex items-center gap-2">
               <AdminCommandPalette />
+              <LanguageSwitcher />
               <NotificationCenter />
               <UserProfileMenu variant="admin" />
             </div>

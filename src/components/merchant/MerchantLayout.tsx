@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { merchantNavigation } from "./merchant-navigation-config";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantContext } from "@/hooks/useMerchantContext";
@@ -133,6 +134,7 @@ export function MerchantLayout() {
             <Separator orientation="vertical" className="h-5" />
             <div className="flex-1" />
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <NotificationCenter />
               <UserProfileMenu />
             </div>
