@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import ReactMarkdown from 'react-markdown';
+import { ManualMarkdown } from '@/components/manual/ManualMarkdown';
 import { useRegulatoryPdfExport } from '@/hooks/useRegulatoryPdfExport';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -517,11 +517,7 @@ const ProductManual: React.FC = () => {
 
                     {/* Lesson body */}
                     <article className="rounded-xl border border-border bg-card p-6 md:p-10">
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown components={mdComponents}>
-                          {currentSection.content}
-                        </ReactMarkdown>
-                      </div>
+                      <ManualMarkdown content={currentSection.content} />
                     </article>
 
                     {/* Footer nav */}
