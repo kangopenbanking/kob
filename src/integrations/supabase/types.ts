@@ -596,6 +596,7 @@ export type Database = {
           developer_company: string | null
           developer_email: string | null
           developer_use_case: string | null
+          developer_user_id: string | null
           expires_at: string | null
           grant_types: Json
           id: string
@@ -620,6 +621,7 @@ export type Database = {
           developer_company?: string | null
           developer_email?: string | null
           developer_use_case?: string | null
+          developer_user_id?: string | null
           expires_at?: string | null
           grant_types?: Json
           id?: string
@@ -644,6 +646,7 @@ export type Database = {
           developer_company?: string | null
           developer_email?: string | null
           developer_use_case?: string | null
+          developer_user_id?: string | null
           expires_at?: string | null
           grant_types?: Json
           id?: string
