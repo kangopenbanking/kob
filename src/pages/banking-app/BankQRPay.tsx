@@ -27,6 +27,7 @@ const BankQRPay: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualCode, setManualCode] = useState('');
+  const [storeChoice, setStoreChoice] = useState<any>(null);
 
   // Receive state
   const [receiveAmount, setReceiveAmount] = useState('');
