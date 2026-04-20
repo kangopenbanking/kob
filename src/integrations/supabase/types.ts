@@ -13321,6 +13321,127 @@ export type Database = {
           },
         ]
       }
+      merchant_qr_codes: {
+        Row: {
+          amount: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          last_paid_at: string | null
+          last_scanned_at: string | null
+          merchant_id: string
+          order_id: string | null
+          payment_count: number
+          qr_type: string
+          scan_count: number
+          signing_secret: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_paid_at?: string | null
+          last_scanned_at?: string | null
+          merchant_id: string
+          order_id?: string | null
+          payment_count?: number
+          qr_type?: string
+          scan_count?: number
+          signing_secret: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_paid_at?: string | null
+          last_scanned_at?: string | null
+          merchant_id?: string
+          order_id?: string | null
+          payment_count?: number
+          qr_type?: string
+          scan_count?: number
+          signing_secret?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_qr_codes_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_qr_scan_log: {
+        Row: {
+          amount: number | null
+          created_at: string
+          error_reason: string | null
+          id: string
+          ip_address: string | null
+          merchant_id: string
+          order_id: string | null
+          qr_id: string
+          scan_outcome: string
+          scanned_by_user: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          merchant_id: string
+          order_id?: string | null
+          qr_id: string
+          scan_outcome: string
+          scanned_by_user?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          merchant_id?: string
+          order_id?: string | null
+          qr_id?: string
+          scan_outcome?: string
+          scanned_by_user?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_qr_scan_log_qr_id_fkey"
+            columns: ["qr_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_staff_roles: {
         Row: {
           created_at: string | null
@@ -16910,6 +17031,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qr_payment_idempotency: {
+        Row: {
+          amount: number
+          created_at: string
+          idempotency_key: string
+          merchant_id: string
+          order_id: string | null
+          response_json: Json
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          idempotency_key: string
+          merchant_id: string
+          order_id?: string | null
+          response_json: Json
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          idempotency_key?: string
+          merchant_id?: string
+          order_id?: string | null
+          response_json?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       rate_limits: {
         Row: {
