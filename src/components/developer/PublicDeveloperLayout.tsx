@@ -465,14 +465,15 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Force dark mode on the developer portal
+  // Force dark mode on the developer portal; restore user's saved app theme on leave
   useEffect(() => {
-    const previousTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    const savedTheme = localStorage.getItem("theme"); // user's app-wide preference (light is default)
     document.documentElement.classList.add("dark");
-    localStorage.setItem("dev-portal-theme", "dark");
     return () => {
-      // Restore previous theme when leaving developer portal
-      if (previousTheme === "light") {
+      // Always restore the user's saved preference; default to light when unset
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
         document.documentElement.classList.remove("dark");
       }
     };
