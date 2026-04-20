@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck, Loader2, Printer } from 'lucide-react';
+import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck, Loader2, Printer, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,12 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 
@@ -23,6 +29,9 @@ const BusinessMore: React.FC = () => {
   const [showStoreQR, setShowStoreQR] = useState(false);
   const [signedQR, setSignedQR] = useState<any>(null);
   const [loadingQR, setLoadingQR] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const basePath = '/biz';
 
   const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
@@ -65,6 +74,38 @@ const BusinessMore: React.FC = () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
     navigate('/biz/auth');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Please type DELETE to confirm');
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.functions.invoke('account-delete-request', {
+        body: {
+          source: 'business_app',
+          merchant_id: merchantId,
+          user_email: user?.email,
+          reason: 'User-initiated deletion from Business app',
+        },
+      });
+      if (error) throw error;
+      toast.success('Deletion request submitted. Our team will be in touch within 48 hours.');
+      setShowDeleteDialog(false);
+      setDeleteConfirm('');
+    } catch (e: any) {
+      // Fallback: surface support contact if backend route is unavailable.
+      toast.message('Request received', {
+        description: 'Please email support@kangopenbanking.com to finalise account deletion.',
+      });
+      setShowDeleteDialog(false);
+      setDeleteConfirm('');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleShareStoreQR = async () => {
@@ -150,7 +191,13 @@ const BusinessMore: React.FC = () => {
     {
       title: 'Other Apps',
       items: [
-        { icon: Building2, label: 'Banking App', subtitle: 'Access your bank accounts', path: '/bank', color: 'bg-violet-500/10 text-violet-600' },
+        { icon: Building2, label: 'Banking App', subtitle: 'Browse banking institutions', path: '/apps', color: 'bg-violet-500/10 text-violet-600' },
+      ],
+    },
+    {
+      title: 'Danger Zone',
+      items: [
+        { icon: Trash2, label: 'Delete Account', subtitle: 'Permanently remove your business and data', action: () => setShowDeleteDialog(true), color: 'bg-rose-500/10 text-rose-600' },
       ],
     },
   ];
@@ -244,6 +291,54 @@ const BusinessMore: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Account Dialog */}
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(o) => { if (!deleting) { setShowDeleteDialog(o); if (!o) setDeleteConfirm(''); } }}
+      >
+        <AlertDialogContent className="max-w-md rounded-3xl">
+          <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 mb-2">
+              <AlertTriangle className="h-5 w-5 text-rose-600" strokeWidth={2} />
+            </div>
+            <AlertDialogTitle className="text-center text-lg">Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-[13px] leading-relaxed">
+              This permanently removes your business profile, products, orders, payouts and access
+              to all Kang apps. This action cannot be undone. Outstanding settlements must be
+              cleared before deletion is finalised.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="delete-confirm" className="text-[12px] font-semibold">
+              Type <span className="font-mono text-rose-600">DELETE</span> to confirm
+            </Label>
+            <Input
+              id="delete-confirm"
+              autoComplete="off"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="DELETE"
+              className="rounded-xl"
+              disabled={deleting}
+            />
+          </div>
+
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+            <AlertDialogCancel className="rounded-xl" disabled={deleting}>
+              Keep my account
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deleting || deleteConfirm.trim().toUpperCase() !== 'DELETE'}
+              className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-600"
+            >
+              {deleting ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</>) : 'Permanently delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
