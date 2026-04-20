@@ -1,21 +1,23 @@
 import { Shield, Lock, Key, FileCheck, Server, Eye } from "lucide-react";
-
-const practices = [
-  { icon: Shield, title: "OAuth 2.0 & FAPI", description: "Industry-standard authorization with Financial-grade API security profiles." },
-  { icon: Lock, title: "mTLS & Certificate Binding", description: "Mutual TLS and RFC 8705 certificate-bound access tokens in production." },
-  { icon: Key, title: "Token Encryption", description: "All access tokens are hashed at rest; refresh tokens rotate on every use." },
-  { icon: FileCheck, title: "COBAC Compliance", description: "Built to meet Central African Banking Commission regulatory requirements." },
-  { icon: Server, title: "PCI DSS Level 1", description: "Card data handled in a PCI-compliant vault — you never touch raw PANs." },
-  { icon: Eye, title: "Full Audit Trail", description: "Every API call logged with IP, user agent, geolocation, and device fingerprint." },
-];
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function SecuritySection() {
+  const { t } = useLanguage();
+  const practices = [
+    { icon: Shield,   title: t('developer.security.oauth.title' as any),   description: t('developer.security.oauth.desc' as any) },
+    { icon: Lock,     title: t('developer.security.mtls.title' as any),    description: t('developer.security.mtls.desc' as any) },
+    { icon: Key,      title: t('developer.security.tokens.title' as any),  description: t('developer.security.tokens.desc' as any) },
+    { icon: FileCheck,title: t('developer.security.cobac.title' as any),   description: t('developer.security.cobac.desc' as any) },
+    { icon: Server,   title: t('developer.security.pci.title' as any),     description: t('developer.security.pci.desc' as any) },
+    { icon: Eye,      title: t('developer.security.audit.title' as any),   description: t('developer.security.audit.desc' as any) },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold">Enterprise-Grade Security</h2>
+        <h2 className="text-3xl font-bold">{t('developer.security.heading' as any)}</h2>
         <p className="text-muted-foreground max-w-2xl">
-          Bank-level security is not optional — it's built into every layer of the API.
+          {t('developer.security.subheading' as any)}
         </p>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
