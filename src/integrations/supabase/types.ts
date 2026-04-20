@@ -9308,6 +9308,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          last_instant_settled_at: string | null
           ledger_balance: number
           merchant_id: string
           pending_balance: number
@@ -9318,6 +9319,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          last_instant_settled_at?: string | null
           ledger_balance?: number
           merchant_id: string
           pending_balance?: number
@@ -9328,6 +9330,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          last_instant_settled_at?: string | null
           ledger_balance?: number
           merchant_id?: string
           pending_balance?: number
@@ -9417,6 +9420,7 @@ export type Database = {
           monthly_volume_limit: number | null
           onboarding_status: string | null
           plan_tier: string
+          settlement_frequency: string
           single_charge_limit: number | null
           status: string
           updated_at: string
@@ -9451,6 +9455,7 @@ export type Database = {
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
           plan_tier?: string
+          settlement_frequency?: string
           single_charge_limit?: number | null
           status?: string
           updated_at?: string
@@ -9485,6 +9490,7 @@ export type Database = {
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
           plan_tier?: string
+          settlement_frequency?: string
           single_charge_limit?: number | null
           status?: string
           updated_at?: string
