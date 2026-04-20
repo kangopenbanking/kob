@@ -108,7 +108,7 @@ export function CustomerMarketplace() {
   const featured = useMemo(() => stores.slice(0, 6), [stores]);
 
   return (
-    <div className="min-h-screen bg-[hsl(45,55%,97%)] dark:bg-background pb-24">
+    <div className="min-h-screen bg-muted/30 pb-24">
       {/* ── HERO ─────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-secondary/15 via-secondary/5 to-transparent" />
