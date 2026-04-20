@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TransactionDetailSheet } from "@/components/ui/transaction-detail-sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Landmark, CheckCircle2, Clock, Receipt } from "lucide-react";
+import { Loader2, Search, Landmark, CheckCircle2, Clock, Receipt, Zap, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+
+const CYCLE_OPTIONS = [
+  { value: "instant", label: "Instant (every minute)", description: "Funds sweep from pending to available within 60 seconds. Best for high-velocity merchants." },
+  { value: "daily", label: "Daily (recommended)", description: "Funds settle once per day at 02:00 UTC." },
+  { value: "weekly", label: "Weekly", description: "Funds settle every Monday at 02:00 UTC." },
+  { value: "monthly", label: "Monthly", description: "Funds settle on the 1st of each month at 02:00 UTC." },
+];
 
 export default function MerchantSettlements() {
   const [settlements, setSettlements] = useState<any[]>([]);
@@ -20,20 +29,58 @@ export default function MerchantSettlements() {
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [cycle, setCycle] = useState<string>("daily");
+  const [savingCycle, setSavingCycle] = useState(false);
+  const [settlingNow, setSettlingNow] = useState(false);
 
   useEffect(() => { loadData(); }, [page, pageSize]);
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: m } = await supabase.from("gateway_merchants").select("id").eq("user_id", user.id).maybeSingle();
+    const { data: m } = await supabase.from("gateway_merchants").select("id, settlement_frequency").eq("user_id", user.id).maybeSingle();
     if (m) {
+      setMerchantId(m.id);
+      setCycle(m.settlement_frequency || "daily");
       const from = (page - 1) * pageSize;
       const { data, count } = await supabase.from("gateway_settlements").select("*", { count: "exact" }).eq("merchant_id", m.id).order("created_at", { ascending: false }).range(from, from + pageSize - 1);
       setSettlements(data || []);
       setTotalCount(count || 0);
     }
     setLoading(false);
+  };
+
+  const updateCycle = async (newCycle: string) => {
+    if (!merchantId || newCycle === cycle) return;
+    setSavingCycle(true);
+    const { error } = await supabase.from("gateway_merchants").update({ settlement_frequency: newCycle }).eq("id", merchantId);
+    setSavingCycle(false);
+    if (error) {
+      toast.error("Could not update cycle. Please try again.");
+      return;
+    }
+    setCycle(newCycle);
+    toast.success(`Settlement cycle updated to ${newCycle}.`);
+  };
+
+  const settleNow = async () => {
+    setSettlingNow(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("merchant-settle-now", { body: {} });
+      if (error) throw error;
+      const total = data?.settled?.length || 0;
+      if (total === 0) {
+        toast.message("No pending balance to settle right now.");
+      } else {
+        toast.success(`Settled ${total} wallet${total > 1 ? "s" : ""}.`);
+        loadData();
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Could not settle now. Please try again.");
+    } finally {
+      setSettlingNow(false);
+    }
   };
 
   const filtered = settlements.filter(s => {
