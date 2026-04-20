@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { motion } from 'framer-motion';
@@ -140,6 +141,7 @@ const BusinessAppInner: React.FC = () => {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text">
+      <TranslationHarvester category="business" />
       <OfflineIndicator />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-20">

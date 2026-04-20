@@ -12,6 +12,7 @@ import { useMerchantRealtime } from '@/hooks/useMerchantRealtime';
 import { BusinessMobileNav } from './BusinessMobileNav';
 import { BusinessDesktopSidebar } from './BusinessDesktopSidebar';
 import { BusinessTopBar } from './BusinessTopBar';
+import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -43,6 +44,7 @@ const UnifiedBusinessInner: React.FC = () => {
   if (isMobile) {
     return (
       <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+        <TranslationHarvester category="business" />
         <OfflineIndicator />
         <BusinessTopBar />
         <PullToRefresh onRefresh={handleRefresh}>
@@ -59,6 +61,7 @@ const UnifiedBusinessInner: React.FC = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <TranslationHarvester category="business" />
         <BusinessDesktopSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/40 bg-background/80 backdrop-blur-xl px-4">
