@@ -4,31 +4,34 @@ import {
   Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { invite as I, pickLocale } from './i18n.ts'
 
-interface InviteEmailProps { siteName: string; siteUrl: string; confirmationUrl: string }
+interface InviteEmailProps { siteName: string; siteUrl: string; confirmationUrl: string; locale?: 'en' | 'fr' }
 
-export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>You've been invited to join Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>You've been invited</Heading>
-        <Text style={text}>
-          You've been invited to join <Link href={siteUrl} style={link}><strong>Kang Open Banking</strong></Link>.
-          Click the button below to accept the invitation and create your account.
-        </Text>
-        <Button style={button} href={confirmationUrl}>Accept Invitation</Button>
-        <Section style={divider} />
-        <Text style={footer}>If you weren't expecting this invitation, you can safely ignore this email.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const InviteEmail = ({ siteUrl, confirmationUrl, locale }: InviteEmailProps) => {
+  const L = I[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>
+            {L.body} <Link href={siteUrl} style={link}><strong>Kang Open Banking</strong></Link>. {L.bodyTail}
+          </Text>
+          <Button style={button} href={confirmationUrl}>{L.cta}</Button>
+          <Section style={divider} />
+          <Text style={footer}>{L.ignore}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default InviteEmail
 

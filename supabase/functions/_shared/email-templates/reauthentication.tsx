@@ -4,29 +4,33 @@ import {
   Body, Container, Head, Heading, Html, Img, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { reauthentication as A, pickLocale } from './i18n.ts'
 
-interface ReauthenticationEmailProps { token: string }
+interface ReauthenticationEmailProps { token: string; locale?: 'en' | 'fr' }
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your verification code — Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>Verify your identity</Heading>
-        <Text style={text}>Use the code below to confirm your identity on Kang:</Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={text}>This code will expire shortly. Do not share it with anyone.</Text>
-        <Section style={divider} />
-        <Text style={footer}>If you didn't request this code, please secure your account immediately.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const ReauthenticationEmail = ({ token, locale }: ReauthenticationEmailProps) => {
+  const L = A[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>{L.body}</Text>
+          <Text style={codeStyle}>{token}</Text>
+          <Text style={text}>{L.expiry}</Text>
+          <Section style={divider} />
+          <Text style={footer}>{L.secure}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default ReauthenticationEmail
 

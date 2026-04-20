@@ -4,30 +4,34 @@ import {
   Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { magicLink as M, pickLocale } from './i18n.ts'
 
-interface MagicLinkEmailProps { siteName: string; confirmationUrl: string }
+interface MagicLinkEmailProps { siteName: string; confirmationUrl: string; locale?: 'en' | 'fr' }
 
-export const MagicLinkEmail = ({ siteName, confirmationUrl }: MagicLinkEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your secure login link — Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>Your secure login link</Heading>
-        <Text style={text}>Click the button below to securely sign in to your Kang account. This link will expire shortly.</Text>
-        <Button style={button} href={confirmationUrl}>Sign In</Button>
-        <Text style={text}>Or copy and paste this link into your browser:</Text>
-        <Text style={urlText}><Link href={confirmationUrl} style={link}>{confirmationUrl}</Link></Text>
-        <Section style={divider} />
-        <Text style={footer}>If you didn't request this link, you can safely ignore this email.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const MagicLinkEmail = ({ confirmationUrl, locale }: MagicLinkEmailProps) => {
+  const L = M[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>{L.body}</Text>
+          <Button style={button} href={confirmationUrl}>{L.cta}</Button>
+          <Text style={text}>{L.orPaste}</Text>
+          <Text style={urlText}><Link href={confirmationUrl} style={link}>{confirmationUrl}</Link></Text>
+          <Section style={divider} />
+          <Text style={footer}>{L.ignore}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default MagicLinkEmail
 

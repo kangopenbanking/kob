@@ -4,35 +4,42 @@ import {
   Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_LOGO_URL } from '../email-config.ts'
+import { signup as S, pickLocale } from './i18n.ts'
 
-interface SignupEmailProps { siteName: string; siteUrl: string; recipient: string; confirmationUrl: string }
+interface SignupEmailProps {
+  siteName: string; siteUrl: string; recipient: string; confirmationUrl: string;
+  locale?: 'en' | 'fr';
+}
 
-export const SignupEmail = ({ siteName, siteUrl, recipient, confirmationUrl }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email — Kang Open Banking</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
-        </Section>
-        <Heading style={h1}>Confirm your email</Heading>
-        <Text style={text}>
-          Thank you for signing up for <Link href={siteUrl} style={link}><strong>Kang Open Banking</strong></Link>!
-        </Text>
-        <Text style={text}>
-          Please confirm your email address (<Link href={`mailto:${recipient}`} style={link}>{recipient}</Link>) by clicking the button below:
-        </Text>
-        <Button style={button} href={confirmationUrl}>Verify Email</Button>
-        <Text style={text}>Or copy and paste this link into your browser:</Text>
-        <Text style={urlText}><Link href={confirmationUrl} style={link}>{confirmationUrl}</Link></Text>
-        <Section style={divider} />
-        <Text style={footer}>If you didn't create an account, you can safely ignore this email.</Text>
-        <Text style={footerBrand}>Kang Open Banking — Kang Standard for Innovation</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+export const SignupEmail = ({ siteName, siteUrl, recipient, confirmationUrl, locale }: SignupEmailProps) => {
+  const L = S[pickLocale(locale)]
+  return (
+    <Html lang={pickLocale(locale)} dir="ltr">
+      <Head />
+      <Preview>{L.preview}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Img src={EMAIL_LOGO_URL} alt="Kang Open Banking" height="40" style={{ margin: '0 auto' }} />
+          </Section>
+          <Heading style={h1}>{L.h1}</Heading>
+          <Text style={text}>
+            {L.intro(siteName)} <Link href={siteUrl} style={link}><strong>Kang Open Banking</strong></Link>
+          </Text>
+          <Text style={text}>
+            {L.confirmAddress} (<Link href={`mailto:${recipient}`} style={link}>{recipient}</Link>) {L.byClicking}
+          </Text>
+          <Button style={button} href={confirmationUrl}>{L.cta}</Button>
+          <Text style={text}>{L.orPaste}</Text>
+          <Text style={urlText}><Link href={confirmationUrl} style={link}>{confirmationUrl}</Link></Text>
+          <Section style={divider} />
+          <Text style={footer}>{L.ignore}</Text>
+          <Text style={footerBrand}>{L.brand}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default SignupEmail
 
