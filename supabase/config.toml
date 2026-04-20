@@ -1058,3 +1058,6 @@ verify_jwt = false
 
 [functions.handle-email-suppression]
 verify_jwt = false
+
+[functions.rent-payment-reminders]
+verify_jwt = false
