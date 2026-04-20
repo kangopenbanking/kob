@@ -113,10 +113,33 @@ export async function reloadAll(lang: string) {
 }
 
 /** Switch language and ensure all namespaces are loaded. */
-export async function switchLanguage(lang: 'en' | 'fr') {
+export async function switchLanguage(lang: 'en' | 'fr', namespaces: readonly string[] = NAMESPACES) {
   await initI18n(lang);
   await i18n.changeLanguage(lang);
-  await i18n.loadNamespaces(NAMESPACES);
+  await i18n.loadNamespaces(namespaces as string[]);
+}
+
+/** Load a specific app's namespace subset on demand (per-app scoping). */
+export async function loadAppNamespaces(app: keyof typeof APP_NAMESPACES) {
+  if (!i18n.isInitialized) return;
+  await i18n.loadNamespaces(APP_NAMESPACES[app] as string[]);
+}
+
+/**
+ * Plural helper. Uses i18next's built-in CLDR plural rules.
+ * Usage in DB: register two keys `key_one` and `key_other` (i18next convention).
+ *   t('cart.items', { count: 1 })  → "1 item"
+ *   t('cart.items', { count: 5 })  → "5 items"
+ */
+export function tPlural(key: string, count: number, opts: Record<string, unknown> = {}): string {
+  if (!i18n.isInitialized) return String(count);
+  return i18n.t(key, { count, ...opts, defaultValue: '' }) as string;
+}
+
+/** Interpolation helper: t('hi', { name: 'Ada' }) → "Hi, Ada" */
+export function tInterp(key: string, vars: Record<string, unknown>): string {
+  if (!i18n.isInitialized) return key;
+  return i18n.t(key, { ...vars, defaultValue: '' }) as string;
 }
 
 export { i18n };
