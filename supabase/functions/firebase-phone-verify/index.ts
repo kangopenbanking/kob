@@ -143,10 +143,10 @@ serve(async (req) => {
       );
     }
 
-    // Verify OTP server-side using hashed_token (same pattern as staff-pin-login)
+    // Verify OTP server-side using hashed_token (use 'email' type for hashed magic link tokens)
     const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
       token_hash: linkData.properties.hashed_token,
-      type: 'magiclink',
+      type: 'email',
     });
 
     if (sessionError || !sessionData.session) {
