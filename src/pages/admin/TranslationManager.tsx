@@ -653,7 +653,26 @@ export default function TranslationManager() {
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Per-app scan coverage report */}
+      {scanReport && (
+        <div className="rounded-xl border bg-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <ScanSearch className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Last Scan Coverage</span>
+            <span className="text-xs text-muted-foreground">
+              {scanReport.filesScanned} files scanned · {scanReport.uniqueStrings} unique strings found
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+            {Object.entries(scanReport.byApp).map(([app, count]) => (
+              <div key={app} className="rounded-lg border bg-background px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{app}</div>
+                <div className="text-lg font-bold">{count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
