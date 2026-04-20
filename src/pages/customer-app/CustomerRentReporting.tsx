@@ -81,22 +81,25 @@ const CustomerRentReporting: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const refCode = 'KRENTS' + Math.floor(1000 + Math.random() * 9000);
-      const { error } = await (supabase as any).from('piggybank_plans').insert({
-        user_id: user!.id,
-        institution_id: null,
-        plan_name: landlordName.trim(),
-        plan_type: 'rent',
-        target_amount: amount * 12,
-        installment_amount: amount,
-        schedule_frequency: frequency,
-        status: 'active',
-        rent_reference: refCode,
-        payment_method: 'manual',
-        start_date: new Date().toISOString().split('T')[0],
+      // Use the piggybank edge function so the payment schedule is generated and the
+      // KRENTS reference is uniqueness-checked server-side.
+      const { data, error } = await supabase.functions.invoke('piggybank', {
+        body: {
+          action: 'create',
+          plan_name: landlordName.trim(),
+          plan_type: 'rent',
+          target_amount: amount * 12,
+          installment_amount: amount,
+          schedule_frequency: frequency,
+          start_date: new Date().toISOString().split('T')[0],
+          payment_method: 'manual',
+        },
       });
       if (error) throw error;
-      toast.success(`Rent plan created! Reference: ${refCode}`);
+      if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
+
+      const refCode = (data as any)?.rent_reference;
+      toast.success(refCode ? `Rent plan created! Reference: ${refCode}` : 'Rent plan created');
       setShowSetup(false);
       setRentAmount('');
       setLandlordName('');

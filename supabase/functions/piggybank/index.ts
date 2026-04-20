@@ -179,6 +179,22 @@ async function handlePay(req: Request, body: any) {
   let scoreResult = null;
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
 
+  // ── In-app notification (rent only, to keep noise low) ──
+  if (isRent) {
+    const delta = scoreResult?.delta ?? 0;
+    const sign = delta > 0 ? '+' : '';
+    await supabase.from('app_notifications').insert({
+      user_id: user.id,
+      type: isLate ? 'warning' : 'success',
+      title: isLate ? 'Rent payment recorded (late)' : 'Rent payment recorded',
+      message: isLate
+        ? `Your rent payment for "${plan.plan_name}" was logged ${daysLate} day(s) late. Score impact: ${sign}${delta} pts.`
+        : `Your on-time rent payment for "${plan.plan_name}" was logged. Score impact: ${sign}${delta} pts.`,
+      icon: 'home',
+      metadata: { payment_id, plan_id: plan.id, rent_reference: plan.rent_reference, score_delta: delta, new_score: scoreResult?.score ?? null },
+    });
+  }
+
   return new Response(JSON.stringify({ success: true, payment_status: isLate ? 'late' : 'paid', credit_event_type: eventType, score_delta: scoreResult?.delta || 0, new_score: scoreResult?.score || null, wallet_debited: !!(fund_from_wallet || plan.auto_fund_enabled) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
@@ -336,6 +352,18 @@ async function handleOverdueDetect(req: Request) {
     const { data: creditEvent } = await supabase.from('credit_events').insert({ user_id: payment.user_id, event_type: eventType, value_numeric: payment.amount, description: `Missed ${isRent ? 'rent' : 'piggy bank'} payment - ${payment.piggybank_plans?.plan_name || 'Unknown'}`, event_time: new Date().toISOString() }).select('id').single();
     if (creditEvent) await supabase.from('piggybank_payments').update({ credit_event_id: creditEvent.id }).eq('id', payment.id);
     try { await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: payment.user_id } }); } catch (e) { console.error('Score recompute failed:', e); }
+
+    // In-app notification for missed rent (high-impact event)
+    if (isRent) {
+      await supabase.from('app_notifications').insert({
+        user_id: payment.user_id,
+        type: 'warning',
+        title: 'Missed rent payment',
+        message: `Your rent payment for "${payment.piggybank_plans?.plan_name || 'your plan'}" was not recorded by the due date. Credit impact: -30 pts. Record it now to limit further damage.`,
+        icon: 'home',
+        metadata: { payment_id: payment.id, plan_id: payment.plan_id, score_impact: -30 },
+      });
+    }
     processed++;
   }
 
