@@ -58,7 +58,7 @@ const CustomerRequest: React.FC = () => {
   };
 
   const handleShare = async () => {
-    const shareText = `Pay me ${Number(amount).toLocaleString()} XAF via KOB\nAccount: ${accountId}\n\n${payLink}`;
+    const shareText = `Pay me ${Number(amount).toLocaleString()} XAF via KOB\nKANG ID: ${kangId}\n\n${payLink}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -116,11 +116,11 @@ const CustomerRequest: React.FC = () => {
             </div>
 
             {/* Account Info */}
-            {accountId && (
+            {kangId && (
               <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Receiving Account</p>
-                  <p className="font-mono text-sm font-bold text-foreground mt-0.5">{accountId}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Your KANG ID</p>
+                  <p className="font-mono text-sm font-bold text-foreground mt-0.5">{kangId}</p>
                 </div>
               </div>
             )}
@@ -147,7 +147,7 @@ const CustomerRequest: React.FC = () => {
                 <p className="text-xs font-semibold text-[hsl(150,40%,35%)]">Payment Request Created</p>
               </div>
               <p className="text-2xl font-bold text-foreground">{Number(amount).toLocaleString()} XAF</p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">{accountId}</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">{kangId}</p>
             </div>
 
             {/* Share Options */}
