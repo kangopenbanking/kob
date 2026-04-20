@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
+  let explicitLocale: string | undefined
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -62,6 +63,8 @@ Deno.serve(async (req) => {
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
+    // Optional caller-provided locale override ('en' | 'fr').
+    if (typeof body.locale === 'string') explicitLocale = body.locale
   } catch {
     return new Response(
       JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -275,19 +278,52 @@ Deno.serve(async (req) => {
     )
   }
 
+  // 3.5 Resolve recipient locale ('en' | 'fr').
+  // Priority: explicit body.locale → user_preferences.language → default 'en'.
+  let recipientLocale: 'en' | 'fr' = 'en'
+  if (explicitLocale === 'fr' || explicitLocale === 'en') {
+    recipientLocale = explicitLocale
+  } else {
+    try {
+      // Look up auth user by email, then user_preferences.language.
+      const { data: authUser } = await supabase
+        .from('auth_user_emails_view' as any) // Best-effort; falls through silently if view absent.
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle()
+      const authUserId = (authUser as any)?.id
+      if (authUserId) {
+        const { data: pref } = await supabase
+          .from('user_preferences')
+          .select('language')
+          .eq('user_id', authUserId)
+          .maybeSingle()
+        if (pref?.language === 'fr' || pref?.language === 'en') {
+          recipientLocale = pref.language
+        }
+      }
+    } catch (e) {
+      console.warn('Locale lookup failed; defaulting to en', e)
+    }
+  }
+
+  // Inject locale into templateData so templates can render bilingually.
+  // Templates that read `data.locale` will switch; legacy templates ignore it.
+  const localizedData = { ...templateData, locale: recipientLocale }
+
   // 4. Render React Email template to HTML and plain text
   const html = await renderAsync(
-    React.createElement(template.component, templateData)
+    React.createElement(template.component, localizedData)
   )
   const plainText = await renderAsync(
-    React.createElement(template.component, templateData),
+    React.createElement(template.component, localizedData),
     { plainText: true }
   )
 
   // Resolve subject — supports static string or dynamic function
   const resolvedSubject =
     typeof template.subject === 'function'
-      ? template.subject(templateData)
+      ? template.subject(localizedData)
       : template.subject
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
