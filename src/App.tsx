@@ -239,6 +239,10 @@ const TokenLifecycleGuide = lazy(() => import("./pages/developer/TokenLifecycleG
 const WebhookRetryGuide = lazy(() => import("./pages/developer/WebhookRetryGuide"));
 const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide"));
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
+const FirstApiKeyGuide = lazy(() => import("./pages/developer/FirstApiKeyGuide"));
+const FirstChargeGuide = lazy(() => import("./pages/developer/FirstChargeGuide"));
+const GoingLiveSimpleGuide = lazy(() => import("./pages/developer/GoingLiveSimpleGuide"));
+const ChoosingPaymentMethodGuide = lazy(() => import("./pages/developer/ChoosingPaymentMethodGuide"));
 const Playground = lazy(() => import("./pages/developer/Playground"));
 const Changelog = lazy(() => import("./pages/developer/Changelog"));
 const DeveloperForum = lazy(() => import("./pages/developer/DeveloperForum"));
@@ -928,6 +932,10 @@ function App() {
               <Route path="getting-started/authentication" element={<GettingStarted />} />
               <Route path="getting-started/first-call" element={<GettingStarted />} />
               <Route path="quick-start" element={<QuickStart />} />
+              <Route path="guides/first-api-key" element={<FirstApiKeyGuide />} />
+              <Route path="guides/first-charge" element={<FirstChargeGuide />} />
+              <Route path="guides/going-live-simple" element={<GoingLiveSimpleGuide />} />
+              <Route path="guides/choosing-payment-method" element={<ChoosingPaymentMethodGuide />} />
               <Route path="changelog" element={<Changelog />} />
               <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />
