@@ -67,8 +67,18 @@ async function flushPendingKeys(onSuccess?: (keys: string[]) => void) {
   }
 }
 
+// Read stored language synchronously to avoid initial-paint flash (FOUT) for FR users.
+function readInitialLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  try {
+    const stored = window.localStorage.getItem('language');
+    if (stored === 'en' || stored === 'fr') return stored;
+  } catch { /* localStorage unavailable */ }
+  return 'en';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>(readInitialLanguage);
   const [dbTranslations, setDbTranslations] = useState<Record<string, string>>({});
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
   const registeredKeysRef = useRef<Set<string>>(new Set());

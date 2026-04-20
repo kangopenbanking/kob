@@ -23,6 +23,7 @@ import { adminNavigation } from "@/components/admin/admin-navigation-config";
 import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TranslationHarvester } from "@/components/i18n/TranslationHarvester";
 
 interface AdminLayoutProps {
   children?: ReactNode;
@@ -40,6 +41,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <SessionGuard logoutPath="/auth" appName="KOB Admin" appContext="admin">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <TranslationHarvester category="admin" />
         <Sidebar className="border-r" collapsible="icon">
           {/* KOB Admin Branding Header */}
           <div className="p-4 border-b bg-primary/5">

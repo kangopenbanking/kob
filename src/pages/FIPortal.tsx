@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TranslationHarvester } from "@/components/i18n/TranslationHarvester";
 
 export default function FIPortal() {
   const navigate = useNavigate();
@@ -175,6 +176,7 @@ export default function FIPortal() {
 
   return (
     <div className="space-y-8">
+      <TranslationHarvester category="fi-portal" />
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">

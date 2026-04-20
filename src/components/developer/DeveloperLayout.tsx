@@ -7,6 +7,7 @@ import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TranslationHarvester } from "@/components/i18n/TranslationHarvester";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -219,6 +220,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <TranslationHarvester category="developer" />
         <Sidebar className="border-r">
           <div className="p-4 border-b">
             <Button 
