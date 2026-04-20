@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, QrCode, Camera, Share2, CheckCircle2, RefreshCw, Keyboard, X } from 'lucide-react';
+import { ArrowLeft, QrCode, Camera, Share2, CheckCircle2, RefreshCw, Keyboard, X, Store, CreditCard } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
