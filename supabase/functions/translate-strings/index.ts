@@ -1,4 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  getClientIdentifier,
+  softCheckRateLimit,
+  tooManyRequestsResponse,
+} from "../_shared/soft-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +16,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    // Soft IP-based limit: protects against LLM cost-abuse. Fails open.
+    const ipId = getClientIdentifier(req, "ip");
+    const rl = await softCheckRateLimit(ipId, "translate-strings", 60, 10);
+    if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 60);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
