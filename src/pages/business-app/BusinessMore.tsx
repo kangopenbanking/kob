@@ -291,6 +291,54 @@ const BusinessMore: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Account Dialog */}
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(o) => { if (!deleting) { setShowDeleteDialog(o); if (!o) setDeleteConfirm(''); } }}
+      >
+        <AlertDialogContent className="max-w-md rounded-3xl">
+          <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 mb-2">
+              <AlertTriangle className="h-5 w-5 text-rose-600" strokeWidth={2} />
+            </div>
+            <AlertDialogTitle className="text-center text-lg">Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-[13px] leading-relaxed">
+              This permanently removes your business profile, products, orders, payouts and access
+              to all Kang apps. This action cannot be undone. Outstanding settlements must be
+              cleared before deletion is finalised.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="delete-confirm" className="text-[12px] font-semibold">
+              Type <span className="font-mono text-rose-600">DELETE</span> to confirm
+            </Label>
+            <Input
+              id="delete-confirm"
+              autoComplete="off"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="DELETE"
+              className="rounded-xl"
+              disabled={deleting}
+            />
+          </div>
+
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+            <AlertDialogCancel className="rounded-xl" disabled={deleting}>
+              Keep my account
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deleting || deleteConfirm.trim().toUpperCase() !== 'DELETE'}
+              className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-600"
+            >
+              {deleting ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</>) : 'Permanently delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
