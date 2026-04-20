@@ -177,16 +177,16 @@ const MerchantTravelStaffRoles: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Staff & Role Access</h1>
-          <p className="text-muted-foreground">Manage staff members and their access to travel services</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Staff & Role Access</h1>
+          <p className="text-sm text-muted-foreground">Manage staff members and their access to travel services</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={copyLoginLink}>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={copyLoginLink}>
             <Link2 className="mr-2 h-4 w-4" /> Copy Login Link
           </Button>
-          <Button onClick={openAdd}><UserPlus className="mr-2 h-4 w-4" /> Add Staff</Button>
+          <Button size="sm" onClick={openAdd}><UserPlus className="mr-2 h-4 w-4" /> Add Staff</Button>
         </div>
       </div>
 
@@ -195,9 +195,9 @@ const MerchantTravelStaffRoles: React.FC = () => {
         <CardContent className="py-4">
           <div className="flex items-start gap-3">
             <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-            <div className="text-sm space-y-1">
+            <div className="text-sm space-y-1 min-w-0">
               <p className="font-medium">Staff Login Portal</p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground break-words">
                 Staff members log in at <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">/staff-login</code> using their
                 email + password <strong>or</strong> phone + 6-digit PIN. Share the login link with your team using the button above.
               </p>
@@ -206,10 +206,10 @@ const MerchantTravelStaffRoles: React.FC = () => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{staff.length}</p><p className="text-xs text-muted-foreground">Total Staff</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-primary">{activeCount}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{Object.keys(rolePresets).length}</p><p className="text-xs text-muted-foreground">Role Presets</p></CardContent></Card>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{staff.length}</p><p className="text-xs text-muted-foreground">Total Staff</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold text-primary">{activeCount}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
+        <Card className="col-span-2 sm:col-span-1"><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{Object.keys(rolePresets).length}</p><p className="text-xs text-muted-foreground">Role Presets</p></CardContent></Card>
       </div>
 
       <Card>
@@ -224,53 +224,55 @@ const MerchantTravelStaffRoles: React.FC = () => {
               <p>No staff members yet. Add your first team member to delegate access.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staff.map(s => {
-                  const perms = typeof s.permissions === 'object' ? s.permissions : {};
-                  const activePerms = Object.entries(perms).filter(([, v]) => v).map(([k]) => k);
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.staff_name}</TableCell>
-                      <TableCell>
-                        <div className="space-y-0.5">
-                          <p className="text-sm text-muted-foreground">{s.staff_email || '—'}</p>
-                          {s.phone_number && <p className="text-xs text-muted-foreground">{s.phone_number}</p>}
-                        </div>
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className="capitalize">{s.role.replace('_', ' ')}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {activePerms.slice(0, 3).map(p => (
-                            <Badge key={p} variant="secondary" className="text-xs capitalize">{p}</Badge>
-                          ))}
-                          {activePerms.length > 3 && <Badge variant="secondary" className="text-xs">+{activePerms.length - 3}</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Switch checked={s.is_active} onCheckedChange={() => toggleActive(s)} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
-                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(s.id)}><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto -mx-6 px-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="hidden sm:table-cell">Permissions</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map(s => {
+                    const perms = typeof s.permissions === 'object' ? s.permissions : {};
+                    const activePerms = Object.entries(perms).filter(([, v]) => v).map(([k]) => k);
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium whitespace-nowrap">{s.staff_name}</TableCell>
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            <p className="text-sm text-muted-foreground truncate max-w-[160px]">{s.staff_email || '—'}</p>
+                            {s.phone_number && <p className="text-xs text-muted-foreground">{s.phone_number}</p>}
+                          </div>
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="capitalize whitespace-nowrap">{s.role.replace('_', ' ')}</Badge></TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="flex flex-wrap gap-1">
+                            {activePerms.slice(0, 3).map(p => (
+                              <Badge key={p} variant="secondary" className="text-xs capitalize">{p}</Badge>
+                            ))}
+                            {activePerms.length > 3 && <Badge variant="secondary" className="text-xs">+{activePerms.length - 3}</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Switch checked={s.is_active} onCheckedChange={() => toggleActive(s)} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

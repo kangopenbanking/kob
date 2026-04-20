@@ -137,26 +137,21 @@ const MerchantTravelDiscounts: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/merchant/travel-services')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Discounts & Promos</h1>
-            <p className="text-muted-foreground">Create and manage discount codes for your travel services</p>
-          </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Discounts & Promos</h1>
+          <p className="text-sm text-muted-foreground">Create and manage discount codes for your travel services</p>
         </div>
-        <Button onClick={openCreate} disabled={services.length === 0}>
+        <Button size="sm" onClick={openCreate} disabled={services.length === 0}>
           <Plus className="mr-2 h-4 w-4" /> New Discount
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{discounts.length}</p><p className="text-xs text-muted-foreground">Total Discounts</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{discounts.filter(d => d.is_active).length}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{discounts.reduce((s, d) => s + d.current_uses, 0)}</p><p className="text-xs text-muted-foreground">Total Uses</p></CardContent></Card>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{discounts.length}</p><p className="text-xs text-muted-foreground">Total Discounts</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{discounts.filter(d => d.is_active).length}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
+        <Card className="col-span-2 sm:col-span-1"><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{discounts.reduce((s, d) => s + d.current_uses, 0)}</p><p className="text-xs text-muted-foreground">Total Uses</p></CardContent></Card>
       </div>
 
       {/* Discount List */}
@@ -174,18 +169,18 @@ const MerchantTravelDiscounts: React.FC = () => {
             const usageFull = d.max_uses !== null && d.current_uses >= d.max_uses;
             return (
               <Card key={d.id} className={!d.is_active || isExpired || usageFull ? 'opacity-60' : ''}>
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+                <CardContent className="flex flex-wrap items-center gap-3 py-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 shrink-0">
                     {d.discount_type === 'percentage' ? <Percent className="h-5 w-5 text-primary" /> : <DollarSign className="h-5 w-5 text-primary" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{d.discount_name}</p>
+                  <div className="flex-1 min-w-0 basis-[55%]">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold truncate">{d.discount_name}</p>
                       <Badge variant={d.is_active && !isExpired && !usageFull ? 'default' : 'secondary'}>
                         {isExpired ? 'Expired' : usageFull ? 'Limit Reached' : d.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground break-words">
                       {d.discount_type === 'percentage' ? `${d.discount_value}% off` : `${d.discount_value} XAF off`}
                       {d.min_seats > 1 && ` · Min ${d.min_seats} seats`}
                       {d.max_uses && ` · ${d.current_uses}/${d.max_uses} used`}
@@ -197,9 +192,11 @@ const MerchantTravelDiscounts: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  <Switch checked={d.is_active} onCheckedChange={() => toggleActive(d)} />
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(d)}><Edit className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteDiscount(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex items-center gap-1 ml-auto shrink-0">
+                    <Switch checked={d.is_active} onCheckedChange={() => toggleActive(d)} />
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(d)}><Edit className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteDiscount(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </CardContent>
               </Card>
             );

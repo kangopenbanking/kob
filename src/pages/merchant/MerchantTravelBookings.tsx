@@ -77,29 +77,32 @@ const MerchantTravelBookings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">View all customer bookings for your travel services</p></div>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate('/merchant/travel-counter-booking')}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Bookings</h1>
+          <p className="text-sm text-muted-foreground">View all customer bookings for your travel services</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => navigate('/biz/travel/counter-booking')}>
             <ShoppingCart className="mr-2 h-4 w-4" /> Counter Booking
           </Button>
-          <Button variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
+          <Button size="sm" variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{bookings.length}</p><p className="text-xs text-muted-foreground">Total Bookings</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{totalRevenue.toLocaleString()} XAF</p><p className="text-xs text-muted-foreground">Revenue</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{totalPassengers}</p><p className="text-xs text-muted-foreground">Passengers</p></CardContent></Card>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{bookings.length}</p><p className="text-xs text-muted-foreground">Total Bookings</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold truncate">{totalRevenue.toLocaleString()} XAF</p><p className="text-xs text-muted-foreground">Revenue</p></CardContent></Card>
+        <Card className="col-span-2 sm:col-span-1"><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{totalPassengers}</p><p className="text-xs text-muted-foreground">Passengers</p></CardContent></Card>
       </div>
 
-      <div className="flex gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search booking ref..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-32 sm:w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -118,20 +121,22 @@ const MerchantTravelBookings: React.FC = () => {
             const bTickets = tickets.filter(t => t.booking_id === b.id);
             return (
               <Card key={b.id}>
-                <CardContent className="flex items-center gap-4 py-4">
+                <CardContent className="flex flex-wrap items-center gap-3 py-4">
                   <Ticket className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold font-mono">{b.booking_ref}</p>
-                    <p className="text-sm text-muted-foreground truncate">
+                  <div className="flex-1 min-w-0 basis-[55%]">
+                    <p className="font-semibold font-mono truncate">{b.booking_ref}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {route ? `${route.origin} → ${route.destination}` : ''} · {b.total_amount?.toLocaleString()} {b.currency} · {bTickets.length} ticket{bTickets.length !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(b.created_at), 'PPp')}</p>
+                    <p className="text-[11px] text-muted-foreground">{format(new Date(b.created_at), 'PPp')}</p>
                   </div>
-                  <Badge variant={b.booking_status === 'confirmed' ? 'default' : 'destructive'}>{b.booking_status}</Badge>
-                  <Button size="sm" variant="ghost" onClick={() => setSelectedBooking(b)}><Eye className="h-4 w-4" /></Button>
-                  {b.booking_status === 'confirmed' && (
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => cancelBooking(b.id)}><XCircle className="h-4 w-4" /></Button>
-                  )}
+                  <div className="flex items-center gap-1 ml-auto shrink-0">
+                    <Badge variant={b.booking_status === 'confirmed' ? 'default' : 'destructive'}>{b.booking_status}</Badge>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedBooking(b)}><Eye className="h-4 w-4" /></Button>
+                    {b.booking_status === 'confirmed' && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => cancelBooking(b.id)}><XCircle className="h-4 w-4" /></Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );

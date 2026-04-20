@@ -604,6 +604,7 @@ const BusinessStorefront = lazy(() => import("./pages/business-app/BusinessStore
 const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInventory"));
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
 const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
+const BusinessTravelLayout = lazy(() => import("./components/business-app/BusinessTravelLayout"));
 const BusinessSupport = lazy(() => import("./pages/business-app/BusinessSupport"));
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
@@ -1370,16 +1371,19 @@ function App() {
               <Route path="notification-history" element={<NotificationHistory />} />
               {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
-              <Route path="travel/services" element={<BusinessTravelServices />} />
-              <Route path="travel/routes" element={<MerchantTravelRoutes />} />
-              <Route path="travel/seating" element={<MerchantTravelSeating />} />
-              <Route path="travel/timetable" element={<MerchantTravelTimetable />} />
-              <Route path="travel/bookings" element={<MerchantTravelBookings />} />
-              <Route path="travel/counter-booking" element={<MerchantTravelCounterBooking />} />
-              <Route path="travel/scanner" element={<MerchantTravelScanner />} />
-              <Route path="travel/discounts" element={<MerchantTravelDiscounts />} />
-              <Route path="travel/staff-roles" element={<MerchantTravelStaffRoles />} />
-              <Route path="travel/notifications" element={<MerchantTravelNotifications />} />
+              <Route path="travel" element={<BusinessTravelLayout />}>
+                <Route path="services" element={<BusinessTravelServices />} />
+                <Route path="routes" element={<MerchantTravelRoutes />} />
+                <Route path="seating" element={<MerchantTravelSeating />} />
+                <Route path="timetable" element={<MerchantTravelTimetable />} />
+                <Route path="bookings" element={<MerchantTravelBookings />} />
+                <Route path="counter-booking" element={<MerchantTravelCounterBooking />} />
+                <Route path="scanner" element={<MerchantTravelScanner />} />
+                <Route path="discounts" element={<MerchantTravelDiscounts />} />
+                <Route path="staff-roles" element={<MerchantTravelStaffRoles />} />
+                <Route path="notifications" element={<MerchantTravelNotifications />} />
+                <Route path="guide" element={<MerchantTravelGuide />} />
+              </Route>
               {/* Settings & Configuration */}
               <Route path="settings" element={<BusinessSettings />} />
               <Route path="compliance" element={<BusinessCompliance />} />
