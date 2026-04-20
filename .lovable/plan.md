@@ -1,30 +1,54 @@
 
-The user wants a strategic recommendation on (a) the best architectural option going forward, and (b) any remaining gaps after Phases 14–16 audits. This is a research/advisory task — but they're asking for a recommendation, so a concise plan is appropriate.
+# Cleanup Discovery Audit — Read-Only Report
 
-Let me synthesize from what I already know:
+I'll run the audit (Phases 1–4 from the previously approved plan) and produce **a single report file** at `docs/audit/2026-04-20-zero-downtime-cleanup-audit.md`. **Zero code or schema changes.** You then approve specific items before any removal.
 
-**Completed audits (Phases 14–16):**
-- Consumer PWA: F20–F25 fixed (RLS, OTP, storage paths)
-- Business /biz: F26 fixed (wallet query), F27/F28/F29 reported (payout validation, atomic ledger, race conditions), F30 fixed (password policy)
-- Banking /bank: F31/F32/F33 fixed (IDOR, KYC scoping, transfer status), F34/F35/F36 reported (server validation, auth guard, logging)
+## What gets scanned
 
-**Open findings still pending:**
-- F24 (Realtime RLS) — deferred (reserved schema)
-- F27 (payout amount validation)
-- F28 (POS wallet bypassing atomic primitives)
-- F29 (non-atomic merchant wallet credits)
-- F34 (server-side amount/currency validation in banking router)
-- F35 (loose BankingAppAuthGuard)
-- F36 (unauthenticated logging defaults)
+**Backend**
+- 327 edge functions → cross-referenced against `supabase.functions.invoke`, direct `/functions/v1/*` fetches, router maps, `config.toml`, and 90-day traffic from `function_edge_logs`.
+- 402 DB tables / columns → grep across `src/`, `supabase/functions/`, RPCs, RLS policy bodies.
+- 940 RLS policies → flag any referencing dropped columns or stale roles via `supabase--linter`.
+- 12 cron jobs → orphan check against target functions.
 
-**Unaudited surfaces:**
-- Phase 17: Developer Portal (/developer) — public-mandate routes, sandbox console, API explorer
-- Phase 18: Admin Portal (/admin) — privilege escalation surface
-- Phase 19: Edge function fleet sweep (~305 functions) — IDOR/auth patterns
-- Phase 20: Webhook ingress (Flutterwave/Stripe HMAC verification)
-- Phase 21: Cross-app session/token rotation E2E
+**Frontend**
+- 296 components + 573 pages → dead-import scan (excludes `App.tsx` routes, `lazy()` imports, `src/components/ui/*`).
+- ~80 npm dependencies → import-presence check.
+- `public/` + `src/assets/` → unreferenced static files (favicon set, manifest icons, `kfs-logo.png`, `kob-logo.png` protected).
+- `src/types/` → unreferenced interfaces.
 
-**Recommendation logic:**
-Given F27/F28/F29 are financial-integrity issues (money loss risk) and F34 is in the banking rail, those rank highest by blast radius. Phase 19 (edge function fleet sweep) is the highest-leverage next audit because the same IDOR pattern fixed in banking-api-router likely exists in other router functions (gateway-*, pisp-*, etc.).
+**PWA & bundle**
+- Eagerly-imported route components >50 KB → `React.lazy` candidates.
+- `vite.config.ts` Workbox config verification (no changes).
 
-I'll present a tiered recommendation: fix open financial mediums first, then Phase 19 fleet sweep, then remaining portal audits.
+## Hard protections (auto-classified "Keep")
+
+- All `/developer/*`, `/openapi.{json,yaml}`, SDK packages, `*-router` functions, `payment-facilitation-router` + 4 leaf functions.
+- Auto-generated files: `src/integrations/supabase/{client,types}.ts`, `.env`, `supabase/config.toml` project block.
+- Anything referenced via template literals, DB-stored function names, `TEMPLATES`/`ROUTES` registries, i18n keys, webhook event names → **Review Required**, never **Safe to Delete**.
+- All Standing Orders honored (THE LOCK, THE RATCHET, THE SURGEON RULE).
+
+## Deliverable
+
+Single markdown file:
+
+```
+docs/audit/2026-04-20-zero-downtime-cleanup-audit.md
+```
+
+Sections:
+1. Executive summary (counts per bucket)
+2. Backend — edge functions / tables / RLS / cron
+3. Frontend — dead components / unused deps / unreferenced assets / stale types
+4. PWA & bundle — lazy candidates, Workbox verification
+5. Dynamic-reference watchlist (do-not-delete)
+6. Sunset timeline proposal (T+0 deprecation headers → T+30d soft-archive → T+90d delete)
+7. Per-batch approval checklist
+
+## What I will NOT do in this pass
+
+- No file deletions, no schema migrations, no edge-function removals.
+- No changes to OpenAPI spec, `info.version`, or any operationId.
+- No bundle/lazy-load refactor — only candidates listed.
+
+After you read the report, you pick batches (≤10 items each) and I execute Phase 5 staged removals one batch at a time.
