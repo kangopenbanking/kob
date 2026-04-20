@@ -46,8 +46,13 @@ Deno.serve(async (req) => {
       status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-  if (merchant.status !== 'approved') {
-    return new Response(JSON.stringify({ error: 'merchant_not_approved' }), {
+  // Allow active/approved merchants. Block draft/suspended/banned.
+  const allowedStatuses = ['active', 'approved'];
+  if (!allowedStatuses.includes(merchant.status)) {
+    return new Response(JSON.stringify({
+      error: 'merchant_not_active',
+      message: `Merchant status is "${merchant.status}". Only active merchants can settle.`
+    }), {
       status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
