@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +71,21 @@ export default function InstitutionKYCManagement() {
       return data || [];
     },
   });
+
+  // Live realtime sync — refresh on any KYC insert/update so admins see new submissions instantly
+  useEffect(() => {
+    const channel = supabase
+      .channel('institution-kyc-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'kyc_verifications' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['fi-kyc-submissions'] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {

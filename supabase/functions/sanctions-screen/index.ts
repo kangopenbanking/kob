@@ -29,29 +29,31 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { full_name, date_of_birth, nationality, document_number } = await req.json();
+    const { full_name, date_of_birth, nationality, document_number, entity_type } = await req.json();
 
-    // Screen against sanctions lists
-    // In production, integrate with:
-    // 1. OFAC SDN List (US): https://sanctionslistservice.ofac.treas.gov/
-    // 2. EU Consolidated List: https://webgate.ec.europa.eu/fsd/fsf
-    // 3. UN Security Council List: https://www.un.org/securitycouncil/sanctions/
-    // 4. Commercial APIs: ComplyAdvantage, Refinitiv World-Check
-    
+    if (!full_name || typeof full_name !== 'string' || full_name.trim().length < 2) {
+      return new Response(
+        JSON.stringify({ error: 'full_name is required (min 2 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const screeningResult = await screenAgainstLists(full_name, date_of_birth, nationality);
-    
-    // Insert screening record
+
+    // Insert screening record (schema-aligned)
     const { data: screening, error: screeningError } = await supabase
       .from('sanctions_screening')
       .insert({
         user_id: user.id,
-        screening_type: 'automated',
+        entity_type: entity_type || 'individual',
+        entity_name: full_name,
+        entity_data: { date_of_birth: date_of_birth || null, nationality: nationality || null, document_number: document_number || null },
         screening_status: screeningResult.status,
-        screening_date: new Date().toISOString(),
-        lists_checked: ['OFAC', 'EU', 'UN'],
+        screening_provider: 'internal_demo',
+        screened_lists: ['OFAC', 'EU', 'UN'],
         match_score: screeningResult.score,
-        matched_entities: screeningResult.matches,
-        requires_manual_review: screeningResult.score > 70
+        matches: screeningResult.matches,
+        next_screening_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .select()
       .single();
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
         success: true,
         screening_id: screening.id,
         status: screeningResult.status,
-        requires_review: screening.requires_manual_review,
+        requires_review: screeningResult.score > 70,
         match_score: screeningResult.score
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
