@@ -107,6 +107,7 @@ export default function TranslationManager() {
   const [bulkTranslating, setBulkTranslating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [scanning, setScanning] = useState(false);
+  const [scanReport, setScanReport] = useState<ScanReport | null>(null);
 
   // Form state
   const [formKey, setFormKey] = useState("");
