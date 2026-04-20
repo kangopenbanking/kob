@@ -13,6 +13,7 @@ import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 import { HealthBanner } from '@/components/HealthBanner';
 import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
+import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
