@@ -29,6 +29,9 @@ const BusinessMore: React.FC = () => {
   const [showStoreQR, setShowStoreQR] = useState(false);
   const [signedQR, setSignedQR] = useState<any>(null);
   const [loadingQR, setLoadingQR] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const basePath = '/biz';
 
   const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
