@@ -6,6 +6,7 @@ import homeIcon from '@/assets/nav-icons/home.png';
 import activitiesIcon from '@/assets/nav-icons/activities.png';
 import cardIcon from '@/assets/nav-icons/card.png';
 import moreIcon from '@/assets/nav-icons/more.png';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface NavItem {
   label: string;
@@ -21,13 +22,14 @@ interface CustomerBottomNavProps {
 export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const tr = useHarvestedT('customer');
 
   const items: NavItem[] = [
-    { label: 'Home', iconSrc: homeIcon, path: `${basePath}/home` },
-    { label: 'Activity', iconSrc: activitiesIcon, path: `${basePath}/activity` },
-    { label: 'Scan', isCenter: true, path: `${basePath}/scan` },
-    { label: 'Accounts', iconSrc: cardIcon, path: `${basePath}/linked-accounts` },
-    { label: 'More', iconSrc: moreIcon, path: `${basePath}/more` },
+    { label: tr('Home'), iconSrc: homeIcon, path: `${basePath}/home` },
+    { label: tr('Activity'), iconSrc: activitiesIcon, path: `${basePath}/activity` },
+    { label: tr('Scan'), isCenter: true, path: `${basePath}/scan` },
+    { label: tr('Accounts'), iconSrc: cardIcon, path: `${basePath}/linked-accounts` },
+    { label: tr('More'), iconSrc: moreIcon, path: `${basePath}/more` },
   ];
 
   const isActive = (path: string) =>
