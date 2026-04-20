@@ -14,6 +14,8 @@ import { merchantNavigation } from "./merchant-navigation-config";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useMerchantContext } from "@/hooks/useMerchantContext";
+import { useMerchantRealtime } from "@/hooks/useMerchantRealtime";
 
 const STAFF_ALLOWED_SECTION = "Travel Services";
 
@@ -53,6 +55,10 @@ export function MerchantLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isStaff } = useIsStaffUser();
+  const { merchantId } = useMerchantContext();
+
+  // Layout-level realtime sync — every /merchant page reacts live to changes.
+  useMerchantRealtime(merchantId);
 
   const isActivePath = (path: string) => {
     if (path === "/merchant") return location.pathname === path;

@@ -1,11 +1,14 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { BusinessAppAuthGuard } from '@/components/auth/BusinessAppAuthGuard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
+import { useMerchantRealtime } from '@/hooks/useMerchantRealtime';
 import { BusinessMobileNav } from './BusinessMobileNav';
 import { BusinessDesktopSidebar } from './BusinessDesktopSidebar';
 import { BusinessTopBar } from './BusinessTopBar';
@@ -18,6 +21,11 @@ import {
 const UnifiedBusinessInner: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { merchantId } = useMerchantContext();
+
+  // Layout-level realtime: every page in /biz reacts live to orders, payments,
+  // wallet, payouts, catalog, inventory, storefront, coupons, staff & disputes.
+  useMerchantRealtime(merchantId);
 
   // Persistently swap manifest to business-specific PWA config
   useEffect(() => {
@@ -72,9 +80,11 @@ const UnifiedBusinessInner: React.FC = () => {
 export const UnifiedBusinessLayout: React.FC = () => {
   return (
     <SessionGuard logoutPath="/biz/auth" appName="Kang Business" appContext="biz">
-      <TenantProvider>
-        <UnifiedBusinessInner />
-      </TenantProvider>
+      <BusinessAppAuthGuard>
+        <TenantProvider>
+          <UnifiedBusinessInner />
+        </TenantProvider>
+      </BusinessAppAuthGuard>
     </SessionGuard>
   );
 };
