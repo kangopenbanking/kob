@@ -25,19 +25,23 @@ function queueKeyForRegistration(key: string, defaultValue: string) {
   flushTimeout = setTimeout(flushPendingKeys, 3000);
 }
 
-async function flushPendingKeys() {
+async function flushPendingKeys(onSuccess?: (keys: string[]) => void) {
   if (pendingKeys.length === 0) return;
   const batch = [...pendingKeys];
   pendingKeys = [];
 
   try {
-    await supabase.functions.invoke('register-translation-strings', {
+    const { error } = await supabase.functions.invoke('register-translation-strings', {
       body: { strings: batch },
     });
+    if (error) throw error;
+    onSuccess?.(batch.map(b => b.key));
   } catch (e) {
     console.warn('Failed to register translation keys:', e);
-    // Re-queue failed keys
+    // Re-queue failed keys for retry on next tick
     pendingKeys.push(...batch);
+    if (flushTimeout) clearTimeout(flushTimeout);
+    flushTimeout = setTimeout(() => flushPendingKeys(onSuccess), 30000);
   }
 }
 
