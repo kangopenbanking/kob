@@ -35,11 +35,11 @@ const CustomerRequest: React.FC = () => {
   const payLink = useMemo(() => {
     const base = API_CONFIG.SITE_URL;
     const params = new URLSearchParams({
-      to: accountId,
+      to: kangId,
       ...(amount ? { amt: amount } : {}),
     });
     return `${base}/app/transfer?${params.toString()}`;
-  }, [accountId, amount]);
+  }, [kangId, amount]);
 
   const handleGenerate = () => {
     if (!amount) return;
