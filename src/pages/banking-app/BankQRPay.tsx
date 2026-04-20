@@ -339,6 +339,55 @@ const BankQRPay: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={!!storeChoice} onOpenChange={(o) => { if (!o) { setStoreChoice(null); resetProcessed(); } }}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-base">{storeChoice?.merchant_name || 'Store'}</DialogTitle>
+          </DialogHeader>
+          <p className="text-center text-xs text-muted-foreground -mt-2 mb-2">What would you like to do?</p>
+          <div className="grid grid-cols-1 gap-2.5">
+            <button
+              onClick={() => {
+                const id = storeChoice.merchant_id;
+                setStoreChoice(null);
+                navigate(`/app/stores/${id}`);
+              }}
+              className="flex items-center gap-3 rounded-2xl border border-border/40 bg-card p-4 text-left transition hover:bg-muted/40 active:scale-[0.99]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+                <Store className="h-5 w-5 text-emerald-600" strokeWidth={1.7} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">Visit Store</p>
+                <p className="text-[11px] text-muted-foreground">Browse products and place an order</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                const pay = storeChoice.pay?.decoded;
+                setStoreChoice(null);
+                if (pay && pay.merchant_id) {
+                  setScanResult({ account: pay.merchant_id, amount: pay.amount });
+                  setPayAmount(pay.amount ? String(pay.amount) : '');
+                  setMerchantQR({ ...pay, merchant_name: storeChoice.merchant_name });
+                } else {
+                  toast.error('Pay is not enabled for this store');
+                }
+              }}
+              className="flex items-center gap-3 rounded-2xl border border-border/40 bg-card p-4 text-left transition hover:bg-muted/40 active:scale-[0.99]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <CreditCard className="h-5 w-5 text-primary" strokeWidth={1.7} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">Pay this Business</p>
+                <p className="text-[11px] text-muted-foreground">Enter any amount and confirm payment</p>
+              </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
