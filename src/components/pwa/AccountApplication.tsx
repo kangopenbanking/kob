@@ -115,6 +115,16 @@ export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComple
         console.error('PIN set failed (non-blocking):', pinError);
       }
 
+      // 4. Normalize placeholder email to {user_id}@temp.kob.cm when no real
+      //    email was provided. This keeps every account's auth email unique
+      //    and tied to its stable user id rather than its phone number.
+      if (!form.email) {
+        const { error: normErr } = await supabase.functions.invoke('normalize-user-email');
+        if (normErr) {
+          console.error('Email normalization failed (non-blocking):', normErr);
+        }
+      }
+
       sounds.success();
       toast.success('Account created successfully!');
       onComplete();
