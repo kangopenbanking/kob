@@ -34,7 +34,7 @@ function genSlug(businessName: string): string {
 }
 
 function publicAppUrl(slug: string): string {
-  const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://kob.lovable.app';
+  const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://kangopenbanking.com';
   return `${origin}/pay/m/${slug}`;
 }
 

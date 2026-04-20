@@ -32,7 +32,7 @@ const CrediQScoreChange = ({ name, score, delta, direction, cta_url }: Props) =>
                 : 'A drop usually has a clear cause. Open CrediQ to see what changed and how to recover.'}
             </Text>
             <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-              <Button href={cta_url || 'https://kob.lovable.app/app/credit'} style={s.button}>See what changed</Button>
+              <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>See what changed</Button>
             </Section>
           </Section>
           <Section style={s.footer}>
@@ -49,5 +49,5 @@ export const template = {
   component: CrediQScoreChange,
   subject: (d: Record<string, any>) => `Your CrediQ score ${d.direction || 'changed'} by ${Math.abs(d.delta ?? 0)} points`,
   displayName: 'CrediQ — Score change alert',
-  previewData: { name: 'Alex', score: 728, delta: 16, direction: 'increased', cta_url: 'https://kob.lovable.app/app/credit' },
+  previewData: { name: 'Alex', score: 728, delta: 16, direction: 'increased', cta_url: 'https://kangopenbanking.com/app/credit' },
 } satisfies TemplateEntry

@@ -24,7 +24,7 @@ const CrediQTipRecommendation = ({ name, tip, impact, cta_url }: Props) => (
           </Section>
           <Text style={s.text}>Open CrediQ to mark this done or see your full action plan.</Text>
           <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-            <Button href={cta_url || 'https://kob.lovable.app/app/credit'} style={s.button}>View my tips</Button>
+            <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>View my tips</Button>
           </Section>
         </Section>
         <Section style={s.footer}>
@@ -40,5 +40,5 @@ export const template = {
   component: CrediQTipRecommendation,
   subject: (d: Record<string, any>) => `Your top CrediQ tip${d.impact ? ` (+${d.impact} pts)` : ''}`,
   displayName: 'CrediQ — Tip recommendation',
-  previewData: { name: 'Alex', tip: 'Pay down your highest-utilization card by 20%.', impact: 18, cta_url: 'https://kob.lovable.app/app/credit' },
+  previewData: { name: 'Alex', tip: 'Pay down your highest-utilization card by 20%.', impact: 18, cta_url: 'https://kangopenbanking.com/app/credit' },
 } satisfies TemplateEntry

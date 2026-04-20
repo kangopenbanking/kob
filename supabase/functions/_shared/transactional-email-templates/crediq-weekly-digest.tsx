@@ -22,7 +22,7 @@ const CrediQWeeklyDigest = ({ name, score, band, cta_url }: Props) => (
           </Section>
           <Text style={s.text}>Open CrediQ to see what changed and how to keep climbing.</Text>
           <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-            <Button href={cta_url || 'https://kob.lovable.app/app/credit'} style={s.button}>View my score</Button>
+            <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>View my score</Button>
           </Section>
         </Section>
         <Section style={s.footer}>
@@ -38,5 +38,5 @@ export const template = {
   component: CrediQWeeklyDigest,
   subject: (d: Record<string, any>) => `Your weekly CrediQ digest — score ${d.score ?? ''}`.trim(),
   displayName: 'CrediQ — Weekly digest',
-  previewData: { name: 'Alex', score: 712, band: 'Good', cta_url: 'https://kob.lovable.app/app/credit' },
+  previewData: { name: 'Alex', score: 712, band: 'Good', cta_url: 'https://kangopenbanking.com/app/credit' },
 } satisfies TemplateEntry

@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         presets: data ?? [],
         meta: {
           api_version: '4.16.0',
-          documentation: 'https://kob.lovable.app/developer/connectors/cemac-bank-catalog',
+          documentation: 'https://kangopenbanking.com/developer/connectors/cemac-bank-catalog',
         },
       }),
       {

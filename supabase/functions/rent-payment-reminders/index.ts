@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const APP_URL = 'https://kob.lovable.app';
+const APP_URL = 'https://kangopenbanking.com';
 const REMINDER_OFFSETS = [3, 1, 0, -1, -3, -7]; // days_until_due (negative = overdue)
 
 Deno.serve(async (req) => {

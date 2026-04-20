@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       }
 
       // Update authorization_url with actual intent_id
-      const finalAuthUrl = `${req.headers.get('origin') || 'https://kob.lovable.app'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
+      const finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
       await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
 
       return new Response(JSON.stringify({
