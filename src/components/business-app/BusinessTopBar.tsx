@@ -12,9 +12,13 @@ interface BusinessTopBarProps {
 
 export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isOwner, isStaff } = useMerchantContext();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const rootPaths = ['/biz/home', '/biz/orders', '/biz/products', '/biz/more'];
+  const showBack = !isDesktop && !rootPaths.includes(location.pathname);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
