@@ -44,6 +44,11 @@ const CustomerScan: React.FC = () => {
   /* ─── Scan handler — ref-based to avoid stale closures ─── */
   const handleScanDetected = useCallback((data: any) => {
     if (data.type === 'kob_store' && data.merchant_id) {
+      // v2: store QR carries an optional signed pay payload — let the user choose.
+      if (data.v === 2 && data.pay_enabled && data.pay?.decoded) {
+        setStoreChoice(data);
+        return;
+      }
       toast.success('Opening store...');
       navigate(`/app/stores/${data.merchant_id}`);
       return;
