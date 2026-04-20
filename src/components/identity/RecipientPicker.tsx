@@ -49,7 +49,6 @@ export function RecipientPicker({
     debounceRef.current = window.setTimeout(async () => {
       const { data, error } = await (supabase as any).rpc("lookup_recipient", {
         _query: q,
-        _limit: 10,
       });
       if (!error && Array.isArray(data)) {
         const filtered = excludeUserId
