@@ -3,12 +3,12 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 /**
  * Normalizes the authenticated user's email to the canonical
- * `{user_id}@temp.kob.cm` placeholder, but ONLY when the current email is
+ * `{kang_id}@temp.kob.cm` placeholder, but ONLY when the current email is
  * itself a temp placeholder (i.e. ends with `@temp.kob.cm`). Real customer
  * email addresses are never modified.
  *
- * This is invoked from client signup flows that cannot know the user id
- * before calling supabase.auth.signUp.
+ * The KANG ID is auto-assigned by a DB trigger when the profile row is
+ * inserted, so it is always present by the time this function is invoked.
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,9 +48,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const canonical = `${user.id}@temp.kob.cm`;
+    // Look up the user's permanent KANG ID
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('kang_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const kangId = (profile as any)?.kang_id as string | undefined;
+    if (!kangId) {
+      return new Response(JSON.stringify({ error: 'No KANG ID found for user' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const canonical = `${kangId.toLowerCase()}@temp.kob.cm`;
     if (currentEmail === canonical) {
-      return new Response(JSON.stringify({ normalized: false, reason: 'already_canonical' }), {
+      return new Response(JSON.stringify({ normalized: false, reason: 'already_canonical', kang_id: kangId }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -71,7 +86,7 @@ Deno.serve(async (req) => {
 
     await supabase.from('profiles').update({ email: canonical }).eq('id', user.id);
 
-    return new Response(JSON.stringify({ normalized: true, email: canonical }), {
+    return new Response(JSON.stringify({ normalized: true, email: canonical, kang_id: kangId }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

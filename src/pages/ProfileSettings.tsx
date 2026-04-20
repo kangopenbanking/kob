@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Phone, Lock, Mail, MapPin, AlertTriangle } from 'lucide-react';
+import { KangIdBadge } from '@/components/identity/KangIdBadge';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { formatErrorForToast, parseEdgeFunctionError } from '@/lib/error-handler';
@@ -228,10 +229,15 @@ export default function ProfileSettings() {
 
   return (
     <div className="container max-w-4xl mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Profile Settings</h1>
-        <p className="text-muted-foreground">Manage your account security settings</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your account, identity and security</p>
+        </div>
       </div>
+
+      {/* KANG ID — permanent identifier used across send, receive and transfers */}
+      <KangIdBadge kangId={profile?.kang_id} variant="card" />
 
       {/* Phone Number Section */}
       <Card>

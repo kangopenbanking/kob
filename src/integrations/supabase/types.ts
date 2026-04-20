@@ -16796,6 +16796,7 @@ export type Database = {
           gender: string | null
           id: string
           institution_id: string | null
+          kang_id: string | null
           linked_account_name: string | null
           linked_account_number: string | null
           linked_account_type: string | null
@@ -16828,6 +16829,7 @@ export type Database = {
           gender?: string | null
           id: string
           institution_id?: string | null
+          kang_id?: string | null
           linked_account_name?: string | null
           linked_account_number?: string | null
           linked_account_type?: string | null
@@ -16860,6 +16862,7 @@ export type Database = {
           gender?: string | null
           id?: string
           institution_id?: string | null
+          kang_id?: string | null
           linked_account_name?: string | null
           linked_account_number?: string | null
           linked_account_type?: string | null
@@ -23264,6 +23267,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_kang_id: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       get_admin_portal_sections: {
         Args: { _user_id: string }
@@ -23441,6 +23445,16 @@ export type Database = {
           _subscription_id: string
         }
         Returns: string
+      }
+      lookup_recipient: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          full_name: string
+          kang_id: string
+          match_type: string
+          phone_masked: string
+          user_id: string
+        }[]
       }
       make_user_admin: { Args: { _user_id: string }; Returns: undefined }
       move_to_dlq: {
