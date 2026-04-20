@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 export default function BusinessInventory() {
   const [search, setSearch] = useState('');
@@ -62,6 +63,15 @@ export default function BusinessInventory() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Inventory"
+        summary="Track stock levels across products, spot low-stock items, and adjust quantities with a clear audit trail."
+        steps={[
+          { title: 'Search for an item', description: 'Use the search bar to find a product or variant in your active location.' },
+          { title: 'Watch low-stock alerts', description: 'Items below threshold are highlighted so you can reorder before selling out.' },
+          { title: 'Adjust quantities', description: 'Open an item to add or remove stock with a reason — every change is logged.' },
+        ]}
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <div className="flex items-center justify-between">

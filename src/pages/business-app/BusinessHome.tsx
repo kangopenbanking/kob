@@ -16,6 +16,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 const BusinessHome: React.FC = () => {
   const { merchantId } = useMerchantContext();
@@ -169,6 +170,16 @@ const BusinessHome: React.FC = () => {
 
   return (
     <div className="space-y-6 px-5 md:px-0 pt-4 pb-8">
+      <PageGuide
+        title="Business Dashboard"
+        summary="Your live overview of revenue, orders, and quick actions across your store."
+        steps={[
+          { title: 'Review today’s performance', description: 'Check available balance, today’s revenue, and order count at a glance.' },
+          { title: 'Act on pending items', description: 'Open recent orders, notifications, or settlement updates that need attention.' },
+          { title: 'Use quick actions', description: 'Receive a payment, open the till, or scan a QR straight from the home screen.' },
+        ]}
+        learnMoreHref="/developer/quickstart"
+      />
       {/* ─── Greeting + Notification bell ─── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}

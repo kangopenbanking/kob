@@ -12,6 +12,7 @@ import { sounds } from '@/lib/sounds';
 import { getCanonicalUrl } from '@/config/api';
 import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 type Tab = 'qr' | 'links';
 
@@ -105,6 +106,16 @@ const BusinessReceive: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Receive Payment"
+        summary="Generate a QR code or shareable payment link so customers can pay you in seconds."
+        steps={[
+          { title: 'Choose QR or Link', description: 'Use a QR code for in-person checkout, or a payment link for invoices and chats.' },
+          { title: 'Set amount and description', description: 'Enter the total and a short note so customers see exactly what they’re paying for.' },
+          { title: 'Share and get notified', description: 'Send the link or display the QR; you’ll receive a real-time alert when paid.' },
+        ]}
+        learnMoreHref="/developer/gateway/payment-links"
+      />
       {/* Header */}
       <header className="pt-4 md:pt-0 mb-5">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Receive Payment</h1>

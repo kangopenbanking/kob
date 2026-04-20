@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 interface CustomerSummary {
   name: string;
@@ -110,6 +111,15 @@ const BusinessCustomers: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-5 md:px-0 pb-24">
+      <PageGuide
+        title="Customers"
+        summary="Browse the people who buy from you, see their lifetime spend, and export the list for marketing."
+        steps={[
+          { title: 'Search by name or contact', description: 'Use the search bar to locate a specific customer by name, email, or phone.' },
+          { title: 'Open a profile', description: 'Tap any row to see total orders, total spend, and the most recent purchase date.' },
+          { title: 'Export for outreach', description: 'Tap Export to download the list as CSV for newsletters or loyalty campaigns.' },
+        ]}
+      />
       <header className="mb-4 flex items-center justify-between pt-4 md:pt-0">
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Customers</h1>

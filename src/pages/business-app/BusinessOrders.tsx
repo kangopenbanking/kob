@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PageGuide } from '@/components/business-app/PageGuide';
 
 type OrderStatus = 'all' | 'paid' | 'pending_payment' | 'draft' | 'cancelled' | 'refunded';
 
@@ -130,6 +131,16 @@ const BusinessOrders: React.FC = () => {
 
   return (
     <div className="space-y-4 px-5 md:px-0 pt-4 pb-6">
+      <PageGuide
+        title="Orders"
+        summary="View, filter, and update the status of every order placed with your business."
+        steps={[
+          { title: 'Filter by status', description: 'Use the tabs to focus on Paid, Pending, Draft, Cancelled, or Refunded orders.' },
+          { title: 'Open an order', description: 'Tap any row to see customer details, items, totals, and the payment trail.' },
+          { title: 'Advance the lifecycle', description: 'Move orders from Pending → Paid → Processing → Shipped → Completed as work progresses.' },
+        ]}
+        learnMoreHref="/developer/gateway/quickstart"
+      />
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div>

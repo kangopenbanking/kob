@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Webhook, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { PageGuide } from "@/components/business-app/PageGuide";
 
 export default function BusinessWebhookLogs() {
   const navigate = useNavigate();
@@ -29,6 +30,16 @@ export default function BusinessWebhookLogs() {
 
   return (
     <div className="min-h-screen bg-background p-4 pb-24 space-y-4">
+      <PageGuide
+        title="Webhook Logs"
+        summary="See every webhook delivery to your endpoints, with status codes, timestamps, and retries."
+        steps={[
+          { title: 'Find a delivery', description: 'Browse the most recent attempts; failed deliveries appear at the top.' },
+          { title: 'Inspect the payload', description: 'Open a row to view the request body, response, and HTTP status.' },
+          { title: 'Fix and replay', description: 'Update your endpoint, then trigger a retry to confirm successful delivery.' },
+        ]}
+        learnMoreHref="/developer/webhooks"
+      />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1">
