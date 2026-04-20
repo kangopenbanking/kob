@@ -93,9 +93,12 @@ const MerchantTravelTimetable: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Timetable</h1><p className="text-muted-foreground">Weekly recurring schedule for your routes</p></div>
-        <Button onClick={() => { setFormRouteId(routes[0]?.id || ''); setFormDay('1'); setFormDeparture('08:00'); setFormArrival('12:00'); setFormPrice('5000'); setDialogOpen(true); }} disabled={routes.length === 0}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Timetable</h1>
+          <p className="text-sm text-muted-foreground">Weekly recurring schedule for your routes</p>
+        </div>
+        <Button size="sm" onClick={() => { setFormRouteId(routes[0]?.id || ''); setFormDay('1'); setFormDeparture('08:00'); setFormArrival('12:00'); setFormPrice('5000'); setDialogOpen(true); }} disabled={routes.length === 0}>
           <Plus className="mr-2 h-4 w-4" /> Add Schedule
         </Button>
       </div>
@@ -113,16 +116,18 @@ const MerchantTravelTimetable: React.FC = () => {
                 {dayEntries.map((entry) => {
                   const route = routes.find(r => r.id === entry.route_id);
                   return (
-                    <div key={entry.id} className="flex items-center gap-3 rounded-lg border p-3">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">{route ? `${route.origin} → ${route.destination}` : 'Unknown'}</p>
-                        <p className="text-xs text-muted-foreground">{entry.departure_time} → {entry.arrival_time} · {entry.price?.toLocaleString()} XAF</p>
+                    <div key={entry.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
+                      <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0 basis-[55%]">
+                        <p className="text-sm font-semibold truncate">{route ? `${route.origin} → ${route.destination}` : 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{entry.departure_time} → {entry.arrival_time} · {entry.price?.toLocaleString()} XAF</p>
                       </div>
-                      <Switch checked={entry.is_active} onCheckedChange={() => toggleActive(entry)} />
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteEntry(entry.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2 ml-auto shrink-0">
+                        <Switch checked={entry.is_active} onCheckedChange={() => toggleActive(entry)} />
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteEntry(entry.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
