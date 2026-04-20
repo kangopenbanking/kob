@@ -164,14 +164,14 @@ const MerchantTravelNotifications: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Passenger Notifications</h1>
-          <p className="text-muted-foreground">Send push notices and alerts to your passengers</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Passenger Notifications</h1>
+          <p className="text-sm text-muted-foreground">Send push notices and alerts to your passengers</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Bell className="mr-2 h-4 w-4" /> Send Notification</Button>
+            <Button size="sm"><Bell className="mr-2 h-4 w-4" /> Send Notification</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle>Send Push Notification</DialogTitle></DialogHeader>
@@ -226,10 +226,10 @@ const MerchantTravelNotifications: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{notifications.length}</p><p className="text-xs text-muted-foreground">Total Sent</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{notifications.reduce((s, n) => s + (n.recipients_count || 0), 0)}</p><p className="text-xs text-muted-foreground">Total Recipients</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{trips.length}</p><p className="text-xs text-muted-foreground">Active Trips</p></CardContent></Card>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{notifications.length}</p><p className="text-xs text-muted-foreground">Total Sent</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{notifications.reduce((s, n) => s + (n.recipients_count || 0), 0)}</p><p className="text-xs text-muted-foreground">Total Recipients</p></CardContent></Card>
+        <Card className="col-span-2 sm:col-span-1"><CardContent className="pt-6"><p className="text-xl md:text-2xl font-bold">{trips.length}</p><p className="text-xs text-muted-foreground">Active Trips</p></CardContent></Card>
       </div>
 
       {/* Notification History */}
@@ -251,12 +251,12 @@ const MerchantTravelNotifications: React.FC = () => {
                   <div key={n.id} className="flex items-start gap-3 rounded-lg border p-4">
                     <TypeIcon className={`h-5 w-5 mt-0.5 shrink-0 ${typeInfo.color}`} />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{n.title}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold truncate">{n.title}</p>
                         <Badge variant="outline" className="text-xs">{typeInfo.label}</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mt-1 break-words">{n.message}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {n.recipients_count} recipients</span>
                         {route && <span>{route.origin} → {route.destination}</span>}
                         <span>{format(new Date(n.created_at), 'PPp')}</span>
