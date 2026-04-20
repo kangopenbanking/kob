@@ -115,9 +115,9 @@ Deno.serve(async (req) => {
         user_agent: req.headers.get('user-agent'),
       });
       await supabase.from('merchant_qr_codes')
-        .update({ scan_count: (qr as any).scan_count != null ? undefined : undefined, last_scanned_at: new Date().toISOString() })
+        .update({ last_scanned_at: new Date().toISOString() })
         .eq('id', qr.id);
-      // increment via RPC-safe path
+      // Atomic counter increment via RPC
       await supabase.rpc('increment_qr_scan', { _qr_id: qr.id }).catch(() => {});
 
       const built = await buildSignedPayload(qr, merchant.business_name);
@@ -279,12 +279,18 @@ Deno.serve(async (req) => {
     if (action === 'recent_scans') {
       const limit = Math.min(Number(body.limit || url.searchParams.get('limit') || 20), 100);
       const { data, error } = await supabase.from('merchant_qr_scan_log')
-        .select('id, qr_id, user_id, scan_outcome, amount, order_id, failure_reason, ip_address, user_agent, created_at')
+        .select('id, qr_id, scanned_by_user, scan_outcome, amount, order_id, error_reason, ip_address, user_agent, created_at')
         .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return new Response(JSON.stringify({ scans: data || [] }), {
+      // Normalize legacy field names for the client
+      const scans = (data || []).map((s: any) => ({
+        ...s,
+        user_id: s.scanned_by_user,
+        failure_reason: s.error_reason,
+      }));
+      return new Response(JSON.stringify({ scans }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
