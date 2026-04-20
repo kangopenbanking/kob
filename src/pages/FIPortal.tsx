@@ -33,6 +33,7 @@ import {
   ArrowRightLeft,
 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function FIPortal() {
   const navigate = useNavigate();
@@ -187,10 +188,13 @@ export default function FIPortal() {
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="border-border text-muted-foreground">
-          <CheckCircle2 className="h-3 w-3 mr-1.5" />
-          {institution?.status === 'approved' ? 'Active' : institution?.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <Badge variant="outline" className="border-border text-muted-foreground">
+            <CheckCircle2 className="h-3 w-3 mr-1.5" />
+            {institution?.status === 'approved' ? 'Active' : institution?.status}
+          </Badge>
+        </div>
       </div>
 
       {/* Developer Sandbox Credentials */}

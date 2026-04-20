@@ -271,6 +271,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
             </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <NotificationCenter />
               {isAuthenticated ? (
                 <>

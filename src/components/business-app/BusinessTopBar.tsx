@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface BusinessTopBarProps {
   isDesktop?: boolean;
@@ -37,6 +38,7 @@ export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => 
           <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground" onClick={() => setSearchOpen(s => !s)}>
             <Search className="h-4.5 w-4.5" strokeWidth={1.6} />
           </Button>
+          <LanguageSwitcher />
           <NotificationCenter />
         </div>
       </div>
@@ -84,6 +86,7 @@ export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => 
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground" onClick={() => setSearchOpen(true)}>
               <Search className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
             </Button>
+            <LanguageSwitcher />
             <NotificationCenter />
           </div>
         </>

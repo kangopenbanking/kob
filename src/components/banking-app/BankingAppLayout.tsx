@@ -14,6 +14,7 @@ import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 import { HealthBanner } from '@/components/HealthBanner';
 import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -35,6 +36,9 @@ const BankingAppInner: React.FC = () => {
       <HealthBanner />
       <OfflineIndicator />
       <TranslationHarvester category="banking" />
+      <div className="absolute right-3 top-3 z-40">
+        <LanguageSwitcher />
+      </div>
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-16">
           <Outlet />
