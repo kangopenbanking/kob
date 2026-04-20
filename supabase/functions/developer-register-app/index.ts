@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
         client_id,
         client_secret_hash,
         client_name: app_name,
+        developer_user_id: user.id,
         developer_email: profile?.email || user.email,
         developer_company: developer_company || null,
         developer_use_case: developer_use_case,
