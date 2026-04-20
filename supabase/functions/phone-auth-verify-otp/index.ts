@@ -196,19 +196,31 @@ Deno.serve(async (req) => {
         authData = signupData;
         targetUserId = signupData.user.id;
 
-        // Normalize placeholder email to {user_id}@temp.kob.cm so it is unique
-        // and stable for the lifetime of the account. Skip if a real email was
-        // provided by the user at signup.
+        // Normalize placeholder email to {kang_id}@temp.kob.cm so it is unique,
+        // human-friendly and tied to the user's permanent KANG ID. The KANG ID
+        // is auto-assigned by a DB trigger when handle_new_user inserts the
+        // profile row, so it is always available here.
         if (!email && targetUserId) {
-          const canonicalEmail = `${targetUserId}@temp.kob.cm`;
-          const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(
-            targetUserId,
-            { email: canonicalEmail, email_confirm: true }
-          );
-          if (emailUpdateError) {
-            console.warn('Failed to normalize placeholder email (non-blocking):', emailUpdateError);
+          const { data: kangRow } = await supabase
+            .from('profiles')
+            .select('kang_id')
+            .eq('id', targetUserId)
+            .maybeSingle();
+
+          const kangId = (kangRow as any)?.kang_id as string | undefined;
+          if (kangId) {
+            const canonicalEmail = `${kangId.toLowerCase()}@temp.kob.cm`;
+            const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(
+              targetUserId,
+              { email: canonicalEmail, email_confirm: true }
+            );
+            if (emailUpdateError) {
+              console.warn('Failed to normalize placeholder email (non-blocking):', emailUpdateError);
+            } else {
+              await supabase.from('profiles').update({ email: canonicalEmail }).eq('id', targetUserId);
+            }
           } else {
-            await supabase.from('profiles').update({ email: canonicalEmail }).eq('id', targetUserId);
+            console.warn('No kang_id found for new user; placeholder email left as phone-derived');
           }
         }
 
