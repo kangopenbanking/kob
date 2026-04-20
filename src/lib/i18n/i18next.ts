@@ -25,10 +25,21 @@ import { translations as staticTranslations } from './translations';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const BUNDLE_URL = `${SUPABASE_URL}/functions/v1/i18n-bundle`;
 
-// Namespaces correspond to translation_strings.category values used by the
-// harvester (TranslationHarvester `category` prop). `auto` is the catch-all
-// for runtime-discovered strings; `general` for the legacy static keys.
-const NAMESPACES = ['general', 'auto', 'customer', 'business', 'banking'];
+// All known namespaces (translation_strings.category values).
+// `auto` = harvester catch-all, `general` = legacy static keys.
+export const ALL_NAMESPACES = ['general', 'auto', 'customer', 'business', 'banking'] as const;
+export type Namespace = typeof ALL_NAMESPACES[number];
+
+// Per-app namespace scoping — keeps bundles small.
+export const APP_NAMESPACES: Record<string, Namespace[]> = {
+  customer: ['general', 'auto', 'customer'],
+  business: ['general', 'auto', 'business'],
+  banking:  ['general', 'auto', 'banking'],
+  all:      [...ALL_NAMESPACES],
+};
+
+// Default load set: everything (safe for shared layouts / admin).
+const NAMESPACES = [...ALL_NAMESPACES];
 
 // Seed `general` namespace from the static translations file so legacy
 // TranslationKey lookups work instantly on first paint (zero FOUT for known keys).
