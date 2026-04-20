@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
@@ -12,9 +12,13 @@ interface BusinessTopBarProps {
 
 export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isOwner, isStaff } = useMerchantContext();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const rootPaths = ['/biz/home', '/biz/orders', '/biz/products', '/biz/more'];
+  const showBack = !isDesktop && !rootPaths.includes(location.pathname);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +64,22 @@ export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => 
         </form>
       ) : (
         <>
-          <p className="text-base font-bold text-foreground tracking-tight">
-            Kang Business
-          </p>
+          <div className="flex items-center gap-2 min-w-0">
+            {showBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Go back"
+                className="h-9 w-9 rounded-xl text-foreground -ml-2 shrink-0"
+                onClick={() => navigate(-1)}
+              >
+                <ArrowLeft className="h-[1.15rem] w-[1.15rem]" strokeWidth={2} />
+              </Button>
+            )}
+            <p className="text-base font-bold text-foreground tracking-tight truncate">
+              Kang Business
+            </p>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground" onClick={() => setSearchOpen(true)}>
               <Search className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
