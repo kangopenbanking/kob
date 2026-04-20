@@ -182,18 +182,7 @@ const BusinessHome: React.FC = () => {
             {merchant?.business_name || 'Dashboard'}
           </h1>
         </div>
-        <button
-          onClick={() => navigate(`${basePath}/notifications`)}
-          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card transition-all hover:border-border active:scale-95"
-          aria-label="Notifications"
-        >
-          <Bell className="h-[18px] w-[18px] text-foreground" strokeWidth={1.6} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
+        {/* Notification bell removed — already shown in the top bar */}
       </motion.div>
 
       {/* ─── Balance hero (Apple-style dark card) ─── */}
