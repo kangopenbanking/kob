@@ -14,6 +14,8 @@ import { HealthBanner } from '@/components/HealthBanner';
 import { useConsumerWebhookEvents } from '@/hooks/useConsumerWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { loadAppNamespaces } from '@/lib/i18n/i18next';
+import { useEffect } from 'react';
 
 const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
