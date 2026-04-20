@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,14 +21,45 @@ const BusinessMore: React.FC = () => {
   const { merchantId } = useMerchantContext();
   const { merchant } = useBusinessData(merchantId);
   const [showStoreQR, setShowStoreQR] = useState(false);
+  const [signedQR, setSignedQR] = useState<any>(null);
+  const [loadingQR, setLoadingQR] = useState(false);
   const basePath = '/biz';
 
+  const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
+
+  // Build a unified Store QR payload: customers can either visit the store OR pay any amount.
+  // We embed the signed pay payload (slug + sig) alongside merchant_id so the Customer app
+  // can offer the user a choice on scan.
   const storeQRData = JSON.stringify({
     type: 'kob_store',
+    v: 2,
     merchant_id: merchantId,
     merchant_name: merchant?.business_name || 'Store',
+    store_url: storeUrl,
+    pay_enabled: !!signedQR,
+    ...(signedQR ? {
+      pay: {
+        slug: signedQR.slug,
+        url: signedQR.url,
+        decoded: signedQR.decoded, // signed payload (HMAC verified server-side)
+      },
+    } : {}),
   });
-  const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
+
+  // Lazy-load the signed QR the first time the dialog opens.
+  useEffect(() => {
+    if (!showStoreQR || signedQR || !merchantId) return;
+    setLoadingQR(true);
+    supabase.functions.invoke('merchant-qr', {
+      body: { action: 'issue', merchant_id: merchantId, qr_type: 'static' },
+    }).then(({ data, error }) => {
+      if (error || data?.error) {
+        toast.error('Could not load secure pay code');
+      } else {
+        setSignedQR(data);
+      }
+    }).finally(() => setLoadingQR(false));
+  }, [showStoreQR, merchantId, signedQR]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -37,12 +68,39 @@ const BusinessMore: React.FC = () => {
   };
 
   const handleShareStoreQR = async () => {
+    const text = `Visit ${merchant?.business_name || 'our store'} on Kang or pay any amount: ${storeUrl}`;
     if (navigator.share) {
-      try { await navigator.share({ title: merchant?.business_name || 'Store', text: 'Visit our store on Kang', url: storeUrl }); } catch {}
+      try { await navigator.share({ title: merchant?.business_name || 'Store', text, url: storeUrl }); } catch {}
     } else {
       await navigator.clipboard.writeText(storeUrl);
       toast.success('Store link copied!');
     }
+  };
+
+  const handlePrintStoreQR = () => {
+    const win = window.open('', '_blank', 'width=800,height=900');
+    if (!win) return;
+    const svg = document.getElementById('store-qr-svg')?.outerHTML || '';
+    const payUrl = signedQR?.url || storeUrl;
+    win.document.write(`<!DOCTYPE html><html><head><title>${merchant?.business_name || 'Store'}</title>
+      <style>body{font-family:system-ui;text-align:center;padding:40px;}
+        h1{margin:0 0 8px;font-size:28px;font-weight:800;}
+        .qr{display:inline-block;padding:20px;border:2px solid #111;border-radius:24px;background:#fff;}
+        .url{margin-top:16px;font-family:monospace;font-size:13px;color:#444;}
+        .help{margin-top:20px;font-size:14px;color:#666;max-width:480px;margin-left:auto;margin-right:auto;}
+        .row{display:flex;gap:24px;justify-content:center;margin-top:16px;}
+        .row div{font-size:12px;color:#666;}
+        .row strong{display:block;font-size:13px;color:#111;margin-bottom:4px;}
+      </style></head><body>
+      <h1>${merchant?.business_name || 'Visit & Pay'}</h1>
+      <p style="font-size:16px;color:#666;margin:0 0 24px;">Scan with the Kang App to visit our store or pay any amount</p>
+      <div class="qr">${svg}</div>
+      <div class="url">${payUrl}</div>
+      <div class="row"><div><strong>Visit Store</strong>Browse products & order</div><div><strong>Pay Any Amount</strong>Quick checkout with PIN</div></div>
+      <div class="help">Open Kang → Tap Scan → Point camera at this code → Choose Visit or Pay</div>
+      <script>window.onload=()=>setTimeout(()=>window.print(),300);</script>
+      </body></html>`);
+    win.document.close();
   };
 
   const sections: MenuSection[] = [
@@ -85,7 +143,7 @@ const BusinessMore: React.FC = () => {
     {
       title: 'Preferences',
       items: [
-        { icon: QrCode, label: 'Store QR Code', subtitle: 'Share with customers', action: () => setShowStoreQR(true), color: 'bg-stone-500/10 text-stone-600' },
+        { icon: QrCode, label: 'Store QR Code', subtitle: 'Visit store or accept any amount', action: () => setShowStoreQR(true), color: 'bg-stone-500/10 text-stone-600' },
         { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: `${basePath}/notifications`, color: 'bg-blue-500/10 text-blue-600' },
       ],
     },
@@ -149,22 +207,37 @@ const BusinessMore: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="text-center text-lg">Store QR Code</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="rounded-3xl bg-white p-6 shadow-inner">
-              <QRCodeSVG value={storeQRData} size={180} />
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="rounded-3xl bg-white p-5 shadow-inner border border-border/30">
+              {loadingQR ? (
+                <div className="flex h-[200px] w-[200px] items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <QRCodeSVG id="store-qr-svg" value={storeQRData} size={200} level="M" />
+              )}
             </div>
             <div className="text-center">
               <p className="text-sm font-bold text-foreground">{merchant?.business_name}</p>
-              <p className="text-xs text-muted-foreground mt-1">Customers scan this to visit your store</p>
+              <p className="text-[11px] text-muted-foreground mt-1">One scan — visit your store or pay any amount</p>
             </div>
-            <div className="grid w-full grid-cols-2 gap-3">
-              <Button variant="outline" className="rounded-full gap-2 h-10" onClick={async () => {
+
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-muted/40 px-3 py-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2} />
+              <span className="text-[10px] font-bold text-emerald-700">Signed & verified payment</span>
+            </div>
+
+            <div className="grid w-full grid-cols-3 gap-2">
+              <Button variant="outline" className="rounded-xl h-10 text-[11px] font-semibold gap-1.5" onClick={async () => {
                 await navigator.clipboard.writeText(storeUrl);
                 toast.success('Link copied!');
               }}>
                 <Copy className="h-3.5 w-3.5" strokeWidth={2} /> Copy
               </Button>
-              <Button className="rounded-full gap-2 h-10 bg-foreground text-background hover:bg-foreground/90" onClick={handleShareStoreQR}>
+              <Button variant="outline" className="rounded-xl h-10 text-[11px] font-semibold gap-1.5" onClick={handlePrintStoreQR} disabled={loadingQR}>
+                <Printer className="h-3.5 w-3.5" strokeWidth={2} /> Print
+              </Button>
+              <Button className="rounded-xl h-10 text-[11px] font-semibold gap-1.5" onClick={handleShareStoreQR}>
                 <Share2 className="h-3.5 w-3.5" strokeWidth={2} /> Share
               </Button>
             </div>
