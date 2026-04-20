@@ -5,7 +5,7 @@ import {
   Users, BarChart3, Store, Settings, Shield, Truck, Tag, Star,
   LogOut, Crown, MessageCircle, Receipt, Banknote, Repeat, Link2,
   Key, Webhook, AlertCircle, Bell, Layers, Palette, MapPin, FileCheck,
-  Briefcase, ListChecks, FileBarChart, ShieldCheck, History, Globe,
+  Briefcase, ListChecks, FileBarChart, ShieldCheck, History, Globe, QrCode,
 } from 'lucide-react';
 import {
   Sidebar,
