@@ -2,6 +2,11 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  getClientIdentifier,
+  softCheckRateLimit,
+  tooManyRequestsResponse,
+} from "../_shared/soft-rate-limit.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -9,6 +14,12 @@ serve(async (req) => {
   }
 
   try {
+    // Soft IP-based limit on phone verify: protects against SMS-pumping fraud.
+    // Fails open so legitimate auth never breaks if the limiter is unavailable.
+    const ipId = getClientIdentifier(req, "ip");
+    const rl = await softCheckRateLimit(ipId, "firebase-phone-verify", 20, 60);
+    if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 300);
+
     const { firebase_id_token } = await req.json();
 
     if (!firebase_id_token) {

@@ -2,6 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  getClientIdentifier,
+  softCheckRateLimit,
+  tooManyRequestsResponse,
+} from "../_shared/soft-rate-limit.ts";
 
 const MAX_BATCH = 200;
 const MAX_KEY_LEN = 200;
@@ -13,6 +18,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    // Soft IP-based limit: protects against harvester abuse. Fails open.
+    const ipId = getClientIdentifier(req, "ip");
+    const rl = await softCheckRateLimit(ipId, "register-translation-strings", 30, 10);
+    if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 60);
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
