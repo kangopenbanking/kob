@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck, Loader2, Printer } from 'lucide-react';
+import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2, ShieldCheck, Loader2, Printer, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,12 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
 
