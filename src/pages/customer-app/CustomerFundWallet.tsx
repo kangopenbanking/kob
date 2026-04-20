@@ -436,7 +436,7 @@ const CustomerFundWallet: React.FC = () => {
                       {method === 'bank_transfer' && selectedBank ? ` → ${selectedBank.name}` : ''}
                     </p>
                   </div>
-                  <button onClick={() => setStep('source className="text-[10px] font-bold text-primary">Change</button>
+                  <button onClick={() => setStep('source') className="text-[10px] font-bold text-primary">Change</button>
                 </div>
               );
             })()}

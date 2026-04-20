@@ -146,7 +146,7 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button onClick={() => navigate('/virtual-cards className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => navigate('/virtual-cards') className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>

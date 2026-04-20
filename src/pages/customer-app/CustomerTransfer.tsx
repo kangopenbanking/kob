@@ -452,7 +452,7 @@ const CustomerTransfer: React.FC = () => {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
                 <button
                   type="button"
-                  onClick={() => navigate('/app/send-money
+                  onClick={() => navigate('/app/send-money')
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary"
                 >
                   <Smartphone className="h-3 w-3" strokeWidth={2} />
@@ -568,7 +568,7 @@ const CustomerTransfer: React.FC = () => {
 
                 {/* Clear button for non-name types */}
                 {recipient && recipientType !== 'name' && (
-                  <button onClick={() => setRecipient(' className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  <button onClick={() => setRecipient('') className="absolute right-3.5 top-1/2 -translate-y-1/2">
                     <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </button>
                 )}

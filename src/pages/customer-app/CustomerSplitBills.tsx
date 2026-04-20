@@ -328,13 +328,13 @@ const CustomerSplitBills: React.FC = () => {
       {/* Tab Switcher */}
       <div className="flex gap-2 rounded-2xl bg-muted p-1">
         <button
-          onClick={() => setActiveTab('my_bills
+          onClick={() => setActiveTab('my_bills')
           className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all ${activeTab === 'my_bills' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
         >
           My Bills
         </button>
         <button
-          onClick={() => setActiveTab('bills_owed
+          onClick={() => setActiveTab('bills_owed')
           className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all relative ${activeTab === 'bills_owed' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground'}`}
         >
           Bills I Owe

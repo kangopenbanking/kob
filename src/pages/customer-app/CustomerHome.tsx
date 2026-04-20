@@ -230,7 +230,7 @@ const CustomerHome: React.FC = () => {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => go('alerts
+                  onClick={() => go('alerts')
                   className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm"
                 >
                   <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
@@ -252,7 +252,7 @@ const CustomerHome: React.FC = () => {
                   <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
                   <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
                 </div>
-                <button onClick={() => go('onboarding className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
+                <button onClick={() => go('onboarding') className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
               </motion.div>
             )}
 
@@ -522,7 +522,7 @@ const CustomerHome: React.FC = () => {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => go('travel
+              onClick={() => go('travel')
               className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
@@ -590,7 +590,7 @@ const CustomerHome: React.FC = () => {
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Activities</p>
-          <button onClick={() => go('activity className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+          <button onClick={() => go('activity') className="flex items-center gap-0.5 text-xs font-semibold text-primary">
             See All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>

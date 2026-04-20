@@ -74,7 +74,7 @@ export function CustomerWishlist() {
           </div>
           <h2 className="text-lg font-bold tracking-tight mb-1">Sign in required</h2>
           <p className="text-sm text-muted-foreground mb-5">Save your favorite shops and products</p>
-          <Button onClick={() => navigate('/app/auth className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
+          <Button onClick={() => navigate('/app/auth') className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
         </div>
       </div>
     );
@@ -140,7 +140,7 @@ export function CustomerWishlist() {
                 ))}
               </div>
             ) : (
-              <EmptyCard icon={Package} label="No products saved yet" cta="Browse marketplace" onClick={() => navigate('/app/stores />
+              <EmptyCard icon={Package} label="No products saved yet" cta="Browse marketplace" onClick={() => navigate('/app/stores />')
             )}
           </TabsContent>
 
@@ -174,7 +174,7 @@ export function CustomerWishlist() {
                 </motion.div>
               ))
             ) : (
-              <EmptyCard icon={Store} label="No favorite stores yet" cta="Discover stores" onClick={() => navigate('/app/stores />
+              <EmptyCard icon={Store} label="No favorite stores yet" cta="Discover stores" onClick={() => navigate('/app/stores />')
             )}
           </TabsContent>
         </Tabs>

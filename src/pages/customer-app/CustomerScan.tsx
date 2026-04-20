@@ -261,7 +261,7 @@ const CustomerScan: React.FC = () => {
                     <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-5 text-center">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total to Pay</p>
                       <p className="text-3xl font-black tabular-nums text-foreground">
-                        {Number(merchantQR.amount).toLocaleString('fr-CM <span className="text-lg font-bold text-muted-foreground">XAF</span>
+                        {Number(merchantQR.amount).toLocaleString('fr-CM ')<span') className="text-lg font-bold text-muted-foreground">XAF</span>
                       </p>
                       {merchantQR.order_id && (
                         <p className="mt-1.5 text-[11px] text-muted-foreground">

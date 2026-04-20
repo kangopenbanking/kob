@@ -122,14 +122,14 @@ export function CustomerMarketplace() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate('/app/wishlist
+                onClick={() => navigate('/app/wishlist')
                 className="p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
                 aria-label="Wishlist"
               >
                 <Heart className="w-4 h-4 text-foreground" />
               </button>
               <button
-                onClick={() => navigate('/app/cart
+                onClick={() => navigate('/app/cart')
                 className="relative p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
                 aria-label="Cart"
               >

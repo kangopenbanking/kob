@@ -77,7 +77,7 @@ const CustomerSupport: React.FC = () => {
             defaultOpen
             steps={supportFlowSteps}
           />
-          <Button onClick={() => setStep('departments className="rounded-xl">
+          <Button onClick={() => setStep('departments') className="rounded-xl">
             Start New Conversation
           </Button>
           <ConversationList
