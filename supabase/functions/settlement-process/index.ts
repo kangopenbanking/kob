@@ -14,13 +14,21 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Authenticate admin user
-    const authHeader = req.headers.get('Authorization')!;
+    // Authenticate admin user (null-guarded — UK OB compliant)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ Code: '401', Message: 'Unauthorized', Errors: [{ ErrorCode: 'UK.OBIE.Unauthorized', Message: 'Missing or malformed Authorization header' }] }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(
+        JSON.stringify({ Code: '401', Message: 'Unauthorized', Errors: [{ ErrorCode: 'UK.OBIE.Unauthorized', Message: 'Invalid or expired token' }] }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Check if user is admin
