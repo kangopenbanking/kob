@@ -124,10 +124,10 @@ const MerchantTravelRoutes: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Routes & Trips</h1>
-          <p className="text-muted-foreground">Manage your travel corridors and schedule trips</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold">Routes & Trips</h1>
+          <p className="text-sm text-muted-foreground">Manage your travel corridors and schedule trips</p>
         </div>
       </div>
 
@@ -148,16 +148,18 @@ const MerchantTravelRoutes: React.FC = () => {
                 const svc = services.find(s => s.id === route.service_id);
                 return (
                   <Card key={route.id}>
-                    <CardContent className="flex items-center gap-4 py-4">
+                    <CardContent className="flex flex-wrap items-center gap-3 py-4">
                       <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
-                      <div className="flex-1">
-                        <p className="font-semibold">{route.origin} → {route.destination}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1 basis-[60%]">
+                        <p className="font-semibold truncate">{route.origin} → {route.destination}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {svc?.display_name} · {route.distance_km ? `${route.distance_km} km` : ''} {route.estimated_duration_minutes ? `· ${route.estimated_duration_minutes} min` : ''}
                         </p>
                       </div>
-                      <Badge variant={route.is_active ? 'default' : 'secondary'}>{route.is_active ? 'Active' : 'Inactive'}</Badge>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteRoute(route.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex items-center gap-2 ml-auto shrink-0">
+                        <Badge variant={route.is_active ? 'default' : 'secondary'}>{route.is_active ? 'Active' : 'Inactive'}</Badge>
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteRoute(route.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </CardContent>
                   </Card>
                 );
@@ -181,16 +183,16 @@ const MerchantTravelRoutes: React.FC = () => {
                 const plan = plans.find(p => p.id === trip.seating_plan_id);
                 return (
                   <Card key={trip.id}>
-                    <CardContent className="flex items-center gap-4 py-4">
+                    <CardContent className="flex flex-wrap items-center gap-3 py-4">
                       <Calendar className="h-5 w-5 text-muted-foreground shrink-0" />
-                      <div className="flex-1">
-                        <p className="font-semibold">{route ? `${route.origin} → ${route.destination}` : 'Unknown route'}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1 basis-[60%]">
+                        <p className="font-semibold truncate">{route ? `${route.origin} → ${route.destination}` : 'Unknown route'}</p>
+                        <p className="text-xs text-muted-foreground break-words">
                           {format(new Date(trip.departure_at), 'PPp')} · {trip.price.toLocaleString()} {trip.currency} · {trip.available_seats} seats left
                           {plan ? ` · ${plan.plan_name}` : ''}
                         </p>
                       </div>
-                      <Badge variant={trip.status === 'scheduled' ? 'default' : 'secondary'}>{trip.status}</Badge>
+                      <Badge variant={trip.status === 'scheduled' ? 'default' : 'secondary'} className="ml-auto shrink-0">{trip.status}</Badge>
                     </CardContent>
                   </Card>
                 );
