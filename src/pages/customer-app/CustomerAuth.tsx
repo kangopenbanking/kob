@@ -421,14 +421,14 @@ const CustomerAuth: React.FC = () => {
                 {/* Tab Switcher */}
                 <div className="flex rounded-xl bg-muted p-1">
                   <button
-                    onClick={() => setTab('phone
+                    onClick={() => setTab('phone')}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${tab === 'phone' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     <Phone className="h-4 w-4" strokeWidth={1.5} />
                     Phone
                   </button>
                   <button
-                    onClick={() => setTab('email
+                    onClick={() => setTab('email')}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${tab === 'email' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     <Mail className="h-4 w-4" strokeWidth={1.5} />
@@ -721,7 +721,7 @@ const CustomerAuth: React.FC = () => {
                     <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20" size="lg">
                       {forgotLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setMode('input className="w-full gap-1.5 text-xs text-muted-foreground">
+                    <Button variant="ghost" size="sm" onClick={() => setMode('input')} className="w-full gap-1.5 text-xs text-muted-foreground">
                       <ArrowLeft className="h-3 w-3" /> Back to Sign In
                     </Button>
                   </div>

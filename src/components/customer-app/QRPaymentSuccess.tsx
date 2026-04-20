@@ -42,7 +42,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
       <div className="text-center">
         <p className="text-sm font-medium text-muted-foreground">Payment Successful</p>
         <p className="mt-2 text-3xl font-black tabular-nums text-foreground">
-          {Number(amount).toLocaleString('fr-CM <span className="text-lg font-bold text-muted-foreground">{currency}</span>
+          {Number(amount).toLocaleString('fr-CM')} <span className="text-lg font-bold text-muted-foreground">{currency}</span>
         </p>
       </div>
 
@@ -80,7 +80,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
           <div className="flex justify-between">
             <span className="text-muted-foreground">Date</span>
             <span className="font-medium text-foreground">
-              {format(new Date(timestamp), 'dd MMM yyyy, HH:mm
+              {format(new Date(timestamp), 'dd MMM yyyy, HH:mm')}
             </span>
           </div>
         </div>
