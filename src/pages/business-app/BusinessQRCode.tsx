@@ -53,6 +53,24 @@ const BusinessQRCode: React.FC = () => {
 
   useEffect(() => { loadQR(); loadStats(); loadRecentScans(); }, [merchantId]);
 
+  // Realtime: refresh stats + activity feed when a new payment or scan lands.
+  useEffect(() => {
+    if (!merchantId) return;
+    const channel = supabase.channel(`biz-qr-${merchantId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'merchant_qr_scan_log',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, () => { loadStats(); loadRecentScans(); })
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'pos_order_payments',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, () => { loadStats(); loadRecentScans(); })
+      .subscribe();
+    // Light polling fallback in case realtime is interrupted.
+    const t = setInterval(() => { loadStats(); loadRecentScans(); }, 30000);
+    return () => { supabase.removeChannel(channel); clearInterval(t); };
+  }, [merchantId]);
+
   const handlePrint = () => {
     if (!qr) return;
     const win = window.open('', '_blank', 'width=800,height=900');

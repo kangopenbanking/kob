@@ -132,6 +132,18 @@ Deno.serve(async (req) => {
         canonicalAmount = qr.amount != null ? Number(qr.amount) : null;
       }
 
+      // Fallback: no signed payload but we have a merchant_id — link to active static QR
+      // so counters and the activity feed still reflect this payment.
+      if (!qrId && trustedMerchantId) {
+        const { data: staticQR } = await supabase.from('merchant_qr_codes')
+          .select('id, amount').eq('merchant_id', trustedMerchantId)
+          .eq('qr_type', 'static').eq('is_active', true).maybeSingle();
+        if (staticQR) {
+          qrId = staticQR.id;
+          if (staticQR.amount != null && canonicalAmount == null) canonicalAmount = Number(staticQR.amount);
+        }
+      }
+
       if (!trustedMerchantId) return new Response(JSON.stringify({ error: 'merchant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
       // For dynamic QR with fixed amount, enforce server-side amount
@@ -314,11 +326,13 @@ async function buildSigned(qr: any, merchantName: string) {
 }
 
 async function logScan(supabase: any, qrId: string | null, merchantId: string, userId: string | null, outcome: string, amount: number | null, orderId: string | null, reason: string | null) {
-  if (!qrId) return;
   try {
-    await supabase.from('merchant_qr_scan_log').insert({
+    const { error } = await supabase.from('merchant_qr_scan_log').insert({
       qr_id: qrId, merchant_id: merchantId, scanned_by_user: userId,
       scan_outcome: outcome, amount, order_id: orderId, error_reason: reason,
     });
-  } catch {}
+    if (error) console.error('logScan failed:', error.message);
+  } catch (e) {
+    console.error('logScan exception:', e);
+  }
 }
