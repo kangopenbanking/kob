@@ -116,16 +116,56 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = useCallback(async (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
+    try { localStorage.setItem('language', lang); } catch { /* ignore */ }
+    // Reload bundles for the new language so all DB-backed strings refresh.
     await switchLanguage(lang);
+    await reloadAll(lang);
     setTick(x => x + 1);
+    // Persist to user profile (if logged in).
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase
         .from('user_preferences')
         .upsert({ user_id: user.id, language: lang }, { onConflict: 'user_id' });
     }
+    // Notify other tabs / open apps (consumer / business / banking) to refresh.
+    try {
+      const bc = new BroadcastChannel('kob-language');
+      bc.postMessage({ type: 'language-changed', lang });
+      bc.close();
+    } catch { /* BroadcastChannel unsupported */ }
+    // Soft, seamless background refresh so in-memory English literals re-render in the new locale.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('kob:language-changed', { detail: { lang } }));
+      // Defer slightly so any pending UI state (toast, dialog close) settles first.
+      setTimeout(() => {
+        try { window.location.reload(); } catch { /* ignore */ }
+      }, 350);
+    }
   }, []);
+
+  // Cross-tab / cross-app sync: when another tab changes the language, reload here too.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'language' && (e.newValue === 'en' || e.newValue === 'fr') && e.newValue !== language) {
+        window.location.reload();
+      }
+    };
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel('kob-language');
+      bc.onmessage = (msg) => {
+        if (msg.data?.type === 'language-changed' && msg.data.lang !== language) {
+          window.location.reload();
+        }
+      };
+    } catch { /* ignore */ }
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+    };
+  }, [language]);
 
   const t = useCallback((key: TranslationKey): string => {
     // 1. i18next (DB-backed bundles, all namespaces)
