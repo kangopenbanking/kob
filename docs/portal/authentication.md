@@ -27,7 +27,7 @@ Content-Type: application/json
 ### Response
 ```json
 {
-  "client_id": "kob_live_xxxxxxxx",
+  "client_id": "sk_live_xxxxxxxx",
   "client_secret": "kob_secret_xxxxxxxx",
   "client_id_issued_at": 1739750400,
   "client_secret_expires_at": 0

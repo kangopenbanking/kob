@@ -28,7 +28,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr/register 
 **Response:**
 ```json
 {
-  "client_id": "kob_live_xxxxxxxx",
+  "client_id": "sk_live_xxxxxxxx",
   "client_secret": "kob_secret_xxxxxxxx",
   "grant_types": ["client_credentials", "authorization_code"],
   "scope": "openid accounts payments"
@@ -139,7 +139,7 @@ async function createPayment(token, paymentData) {
 
 // Usage
 (async () => {
-  const token = await getToken("kob_live_xxx", "kob_secret_xxx");
+  const token = await getToken("sk_live_xxx", "kob_secret_xxx");
   const accounts = await listAccounts(token, "consent_abc123");
   console.log("Accounts:", accounts);
 })();
@@ -196,7 +196,7 @@ def create_payment(token: str, payment_data: dict) -> dict:
 
 # Usage
 if __name__ == "__main__":
-    token = get_token("kob_live_xxx", "kob_secret_xxx")
+    token = get_token("sk_live_xxx", "kob_secret_xxx")
     accounts = list_accounts(token, "consent_abc123")
     print("Accounts:", accounts)
 ```
@@ -260,7 +260,7 @@ function createPayment(string $token, array $paymentData): array {
 }
 
 // Usage
-$token = getToken("kob_live_xxx", "kob_secret_xxx");
+$token = getToken("sk_live_xxx", "kob_secret_xxx");
 $accounts = listAccounts($token, "consent_abc123");
 print_r($accounts);
 ```
