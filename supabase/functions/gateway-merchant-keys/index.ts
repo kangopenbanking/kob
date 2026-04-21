@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
 
       return new Response(JSON.stringify({
         ...apiKey,
+        merchant_id,
         secret_key: secretKey,
         warning: 'Store this key securely. It will not be shown again.',
       }), {
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
       }).select().single();
       if (error) throw error;
 
-      return new Response(JSON.stringify({ ...newKey, secret_key: secretKey, revoked_key_id: key_id, warning: 'Store this key securely.' }), {
+      return new Response(JSON.stringify({ ...newKey, merchant_id, secret_key: secretKey, revoked_key_id: key_id, warning: 'Store this key securely.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
