@@ -54,10 +54,8 @@ import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CodeImageFlipCard } from "@/components/CodeImageFlipCard";
 import { AccountsPreview, PaymentsPreview, CreditScorePreview, SavingsPreview } from "@/components/AnimatedPreviews";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const Index = () => {
-  const { t } = useLanguage();
   return (
     <div className="min-h-screen">
       <SEO
@@ -88,19 +86,19 @@ const Index = () => {
               <div className="space-y-8 animate-fade-in">
                 <Badge variant="outline" className="px-6 py-2 text-sm font-medium border-white/30 bg-white/90 text-blue-900">
                   <Globe className="h-4 w-4 inline mr-2" />
-                  {t('home.hero.badge' as any)}
+                  Cameroon's #1 Open Banking Platform
                 </Badge>
                 <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight text-white drop-shadow-lg">
-                  {t('home.hero.title' as any)}
+                  One API for Banking, Payments &amp; Credit
                 </h1>
                 <p className="text-xl md:text-2xl text-white/95 drop-shadow-md font-medium leading-relaxed max-w-3xl mx-auto">
-                  {t('home.hero.subtitle' as any)}
+                  Connect to every bank, mobile money provider, and fintech in Cameroon — through a single, XAF-native Open Banking API.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <SmartGetStartedButton size="lg" className="text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-shadow" />
                   <Link to="/documentation">
                     <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2 bg-white/95 hover:bg-white text-blue-900 border-white/30">
-                      {t('home.hero.cta.docs' as any)}
+                      Read the Docs
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -108,15 +106,15 @@ const Index = () => {
                 <div className="flex flex-wrap gap-8 pt-8 justify-center">
                   <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                     <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-semibold text-blue-900">{t('home.hero.trust.uptime' as any)}</span>
+                    <span className="text-sm font-semibold text-blue-900">99.9% Uptime SLA</span>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                     <Shield className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-900">{t('home.hero.trust.cobac' as any)}</span>
+                    <span className="text-sm font-semibold text-blue-900">COBAC Compliant</span>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                     <Lock className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-900">{t('home.hero.trust.pci' as any)}</span>
+                    <span className="text-sm font-semibold text-blue-900">PCI-DSS Certified</span>
                   </div>
                 </div>
               </div>
@@ -147,12 +145,12 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <Badge variant="outline" className="mb-4">{t('home.portals.kicker' as any)}</Badge>
+              <Badge variant="outline" className="mb-4">Portals &amp; Apps</Badge>
               <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                {t('home.portals.heading' as any)}
+                Built for Every Role in the Ecosystem
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('home.portals.subheading' as any)}
+                Purpose-built portals for banks, merchants, and developers — plus white-labeled apps ready to deploy.
               </p>
             </div>
 
