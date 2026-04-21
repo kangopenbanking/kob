@@ -123,11 +123,10 @@ export async function resolveAuth(
         .update({ last_used_at: new Date().toISOString() })
         .eq("id", sbxKey.id)
         .then(() => {}, () => {});
-      // sandbox accounts may carry a textual merchant_id; we don't bind to gateway_merchants here.
       return {
         auth: {
           user_id: sbxKey.developer_sandbox_accounts.user_id,
-          merchant_id: xMerchantId || undefined,
+          merchant_id: sbxKey.developer_sandbox_accounts.merchant_id || xMerchantId || undefined,
           environment,
           key_id: sbxKey.id,
           key_table: "sandbox_api_keys",
@@ -162,7 +161,7 @@ export async function resolveAuth(
     return {
       auth: {
         user_id: sbxKey.developer_sandbox_accounts.user_id,
-        merchant_id: xMerchantId || undefined,
+        merchant_id: sbxKey.developer_sandbox_accounts.merchant_id || xMerchantId || undefined,
         environment: "sandbox",
         key_id: sbxKey.id,
         key_table: "sandbox_api_keys",

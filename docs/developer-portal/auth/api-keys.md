@@ -11,7 +11,7 @@ Merchant API keys authenticate requests to the Payment Gateway. Each key is envi
 | Sandbox | `sk_test_` | `pk_test_` | Test without real money |
 | Production | `sk_live_` | `pk_live_` | Process real transactions |
 
-Each key set also includes a `merchant_id` (e.g. `acct_test_…`) and a `webhook_secret` (`whsec_test_…`) for signature verification.
+Each key set also includes a `merchant_id` (the bound merchant record ID returned with the key, typically a UUID for merchant accounts) and a `webhook_secret` (`whsec_test_…`) for signature verification.
 
 ## Creating Keys
 

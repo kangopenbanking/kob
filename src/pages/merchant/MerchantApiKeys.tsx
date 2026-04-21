@@ -44,7 +44,7 @@ export default function MerchantApiKeys() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ label: "", environment: "sandbox" });
-  const [createdKey, setCreatedKey] = useState<{ public_key: string; secret_key: string } | null>(null);
+  const [createdKey, setCreatedKey] = useState<{ public_key: string; secret_key: string; merchant_id: string } | null>(null);
 
   // Revoke confirmation
   const [revokeTarget, setRevokeTarget] = useState<{ id: string; label: string } | null>(null);
@@ -53,7 +53,7 @@ export default function MerchantApiKeys() {
   // Rotate confirmation
   const [rotateTarget, setRotateTarget] = useState<{ id: string; label: string; environment: string } | null>(null);
   const [rotating, setRotating] = useState(false);
-  const [rotatedKey, setRotatedKey] = useState<{ public_key: string; secret_key: string } | null>(null);
+  const [rotatedKey, setRotatedKey] = useState<{ public_key: string; secret_key: string; merchant_id: string } | null>(null);
 
   useEffect(() => { loadMerchant(); }, []);
 
@@ -88,7 +88,7 @@ export default function MerchantApiKeys() {
         environment: form.environment,
         label: form.label || `${form.environment} key`,
       });
-      setCreatedKey({ public_key: result.public_key, secret_key: result.secret_key });
+      setCreatedKey({ public_key: result.public_key, secret_key: result.secret_key, merchant_id: result.merchant_id || merchantId });
       await loadKeys(merchantId);
       toast.success("API key generated successfully");
     } catch (err: any) {
@@ -134,7 +134,7 @@ export default function MerchantApiKeys() {
         environment: rotateTarget.environment,
         label: `${rotateTarget.label} (rotated)`,
       });
-      setRotatedKey({ public_key: result.public_key, secret_key: result.secret_key });
+      setRotatedKey({ public_key: result.public_key, secret_key: result.secret_key, merchant_id: result.merchant_id || merchantId });
       await loadKeys(merchantId);
       toast.success("API key rotated successfully");
     } catch (err: any) {
@@ -174,6 +174,15 @@ export default function MerchantApiKeys() {
             {createdKey ? (
               <div className="space-y-4">
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Merchant ID</Label>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm font-mono break-all select-all bg-background p-2 rounded border">{createdKey.merchant_id}</code>
+                      <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(createdKey.merchant_id); toast.success("Merchant ID copied"); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Public Key</Label>
                     <div className="flex items-center gap-2">
@@ -334,7 +343,16 @@ export default function MerchantApiKeys() {
           </DialogHeader>
           {rotatedKey ? (
             <div className="space-y-4">
-              <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Merchant ID</Label>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm font-mono break-all select-all bg-background p-2 rounded border">{rotatedKey.merchant_id}</code>
+                      <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(rotatedKey.merchant_id); toast.success("Merchant ID copied"); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">New Public Key</Label>
                   <div className="flex items-center gap-2">

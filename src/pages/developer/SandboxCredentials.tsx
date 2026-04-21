@@ -57,7 +57,7 @@ export default function SandboxCredentials() {
               <a href="/developer/sandbox" className="text-primary underline">/developer/sandbox</a>{" "}
               to provision a personalized credential set — your own <code className="font-mono text-xs">sk_test_…</code>,{" "}
               <code className="font-mono text-xs">pk_test_…</code>,{" "}
-              <code className="font-mono text-xs">merch_sbx_…</code>, and{" "}
+              <code className="font-mono text-xs">merchant UUID</code>, and{" "}
               <code className="font-mono text-xs">whsec_test_…</code>. The shared values below are for quick anonymous testing only.
             </p>
           </div>
