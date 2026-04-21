@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export interface FlowStep {
   icon: React.ElementType;
@@ -21,6 +22,7 @@ export const HowItWorksFlow: React.FC<HowItWorksFlowProps> = ({
   title = 'How it works',
   defaultOpen = false,
 }) => {
+  const tr = useHarvestedT('customer');
   const [open, setOpen] = useState(defaultOpen);
 
   return (
@@ -29,7 +31,7 @@ export const HowItWorksFlow: React.FC<HowItWorksFlowProps> = ({
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between p-4"
       >
-        <span className="text-sm font-bold text-foreground">{title}</span>
+        <span className="text-sm font-bold text-foreground">{tr(title)}</span>
         {open ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         ) : (
@@ -88,9 +90,9 @@ export const HowItWorksFlow: React.FC<HowItWorksFlowProps> = ({
 
                       {/* Content */}
                       <div className={`pt-1.5 ${isLast ? 'pb-0' : 'pb-5'}`}>
-                        <p className="text-xs font-bold text-foreground">{step.title}</p>
+                        <p className="text-xs font-bold text-foreground">{tr(step.title)}</p>
                         <p className="text-[11px] leading-relaxed text-muted-foreground mt-0.5">
-                          {step.description}
+                          {tr(step.description)}
                         </p>
                       </div>
                     </motion.div>
