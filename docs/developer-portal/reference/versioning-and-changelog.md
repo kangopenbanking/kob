@@ -32,9 +32,21 @@ The full changelog is available at:
 - **Markdown**: [`/CHANGELOG.md`](https://github.com/kangopenbanking/kob/blob/main/CHANGELOG.md)
 - **Machine-readable**: [`/changelog.json`](https://kangopenbanking.com/changelog.json)
 
-### Current Version: 4.10.0
+### Current Version: 4.15.0
 
-See [CHANGELOG.md](/CHANGELOG.md) for full release notes.
+Recent releases:
+
+| Version | Date | Summary |
+|---------|------|---------|
+| 4.15.0 | 2026-04-17 | CEMAC Universal Bank Integration — Wave 4: architecture overview & docs |
+| 4.14.0 | 2026-04-17 | Wave 3: ledger audit fields + six-stage bank onboarding wizard |
+| 4.13.0 | 2026-04-17 | Wave 2: scheduled bank polling engine + rule-based reconciliation |
+| 4.12.0 | 2026-04-17 | Wave 1: unified BankConnector interface (REST/SQL/File/SOAP) |
+| 4.11.0 | 2026-04-17 | BYO Phase 2: server-side polling + SOAP Bank adapter |
+| 4.10.0 | 2026-04-17 | BYO Mobile Money Connectors (MTN MoMo, Orange Money) |
+| 4.9.7  | 2026-04-14 | Direct Backend Infrastructure standardization |
+
+See [CHANGELOG.md](/CHANGELOG.md) for full release notes and [`/changelog.json`](https://kangopenbanking.com/changelog.json) for the machine-readable feed.
 
 ## Backward Compatibility Promise
 
