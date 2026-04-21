@@ -360,6 +360,8 @@ export default function Sandbox() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {keyName !== null && !newKeySet && (
               <div className="border rounded-lg p-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="keyName">Key Name</Label>
