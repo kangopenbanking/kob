@@ -457,6 +457,7 @@ const CustomerCreditScore: React.FC = () => {
 
 // Inline Pre-Approved Offers for Customer App
 function PreApprovedOffersSection({ score }: { score: number }) {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
