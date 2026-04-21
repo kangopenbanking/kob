@@ -61,7 +61,7 @@ const DeveloperRegistration = () => {
           setCredentials({
             client_id: data.client_id,
             api_key: data.client_secret,
-            merchant_id: `acct_test_${crypto.randomUUID().slice(0, 16)}`,
+            merchant_id: `merch_sbx_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`,
             webhook_secret: `whsec_test_${crypto.randomUUID().replace(/-/g, '')}`,
           });
           setStep("credentials");
@@ -80,7 +80,7 @@ const DeveloperRegistration = () => {
       setCredentials({
         client_id: `kob_client_${rand(24)}`,
         api_key: `sk_test_${rand(32)}`,
-        merchant_id: `acct_test_${rand(16)}`,
+        merchant_id: `merch_sbx_${rand(16)}`,
         webhook_secret: `whsec_test_${rand(32)}`,
       });
       setStep("credentials");
@@ -95,7 +95,7 @@ const DeveloperRegistration = () => {
       setCredentials({
         client_id: `kob_client_${rand(24)}`,
         api_key: `sk_test_${rand(32)}`,
-        merchant_id: `acct_test_${rand(16)}`,
+        merchant_id: `merch_sbx_${rand(16)}`,
         webhook_secret: `whsec_test_${rand(32)}`,
       });
       setStep("credentials");
