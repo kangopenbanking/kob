@@ -282,6 +282,8 @@ const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const SecurityCompliancePage = lazy(() => import("./pages/developer/SecurityCompliancePage"));
+const SecurityLivePage = lazy(() => import("./pages/developer/Security"));
+const SecurityWhitepaperPage = lazy(() => import("./pages/developer/SecurityWhitepaper"));
 const PostmanGuide = lazy(() => import("./pages/developer/PostmanGuide"));
 const SandboxConsole = lazy(() => import("./pages/developer/SandboxConsole"));
 const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentials"));
@@ -1068,7 +1070,8 @@ function App() {
               <Route path="access-policy" element={<AccessPolicy />} />
               <Route path="register" element={<DeveloperRegistration />} />
               <Route path="support" element={<DeveloperSupport />} />
-              <Route path="security" element={<SecurityCompliancePage />} />
+              <Route path="security" element={<SecurityLivePage />} />
+              <Route path="security/whitepaper" element={<SecurityWhitepaperPage />} />
               <Route path="compliance" element={<SecurityCompliancePage />} />
               <Route path="gateway/tokenisation" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/reconciliation" element={<GatewaySettlementsGuide />} />
