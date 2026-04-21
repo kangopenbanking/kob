@@ -182,6 +182,9 @@ const CustomerSettings: React.FC = () => {
       if (error) throw error;
       toast.success('Language & region saved');
       setActiveSection(null);
+      // Trigger global language switch: persists, broadcasts to other tabs/apps,
+      // and seamlessly refreshes so all in-memory strings re-render in the new locale.
+      await setAppLanguage(language as 'en' | 'fr');
     } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
