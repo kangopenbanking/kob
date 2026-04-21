@@ -1,79 +1,127 @@
 
 
-## Audit: KOB API Sandbox Authentication — Critical Gap
+## KOB API Card + Bank Transfer Integration Audit
 
-### Root Cause (Verified)
+### Current State (Verified)
 
-The sandbox returns **401 Unauthorized** for `sk_test_*` / `pk_test_*` / `merch_*` credentials because **no edge function on the gateway actually validates these keys.** They are issued and stored, but never accepted as authentication anywhere in the request path.
+The integrator is correct. Tracing `gateway-create-charge` and the unified `/v1/gateway/charges` endpoint confirms:
 
-**The auth contract is broken end-to-end:**
-
-| Layer | What it does | Gap |
+| Channel | Status | Gap |
 |---|---|---|
-| Key issuance (`sandbox-create-api-key`, `sandbox/issue`) | Generates `sk_test_<hex>`, hashes to `sandbox_api_keys.key_hash` | ✅ works |
-| Documentation & SDKs (40+ pages) | Tells integrators to send `Authorization: Bearer sk_test_...` | ✅ documented |
-| `gateway` router (`/gateway/charges`, etc.) | Forwards the `Authorization` header verbatim to leaf function | ✅ forwards |
-| `gateway-create-charge` (and every other leaf) | Calls `supabase.auth.getUser(authHeader)` — expects a **Supabase user JWT**, not a `sk_test_` key | ❌ **REJECTS the documented credential** |
-| `gateway-merchant-keys` | Issues `sk_live_/sk_test_` and stores `secret_key_hash` | ❌ **No function ever reads this table to authenticate a request** |
-| Sandbox key validator (`sandbox/validate-api-key`) | Only accepts `sbx_*` legacy prefix, not `sk_test_*` | ❌ partial |
-| `X-Merchant-ID` header | Not read by any function (search: 0 matches) | ❌ does not exist |
+| `mobile_money` | ✅ Works E2E (Flutterwave/MTN/Orange) | `verify-status` returns optimistic "successful" without re-checking provider |
+| `card` | ⚠️ Charge row created, Stripe PaymentIntent created | Response omits `client_secret` and `redirect_url` — integrator has nothing to confirm with |
+| `bank_transfer` | ⚠️ Charge row created | Response omits account number / reference / instructions |
+| `paypal` | ⚠️ Order created | `approval_url` not surfaced on `/charges` (only on funding-intent flow) |
 
-**Why integrators see 401 under "any auth scheme":** `supabase.auth.getUser('sk_test_xxx')` returns `null` because it's not a JWT. The leaf returns 401. The same happens for `Bearer kob_test_*`, `X-API-Key`, etc. — none are recognized.
+**Root cause**: `gateway-create-charge` returns the DB row only. Provider-specific `next_action` data (Stripe `client_secret`, Flutterwave `redirect_url`, bank account details, PayPal `approval_url`) is computed but never attached to the response. `provider_raw` stays `null` because it's populated only by the webhook callback.
 
-This violates **Standing Order P5 (Working Code Rule)** and **P3 (Free Sandbox Rule)** — every code example in the docs is broken.
+This violates **Standing Order P5 (Working Code Rule)**: every documented `card` / `bank_transfer` / `paypal` example fails for integrators because there is no field to act on.
+
+### Recommended Path: **Option B — Integrate Stripe.js + surface `next_action` for all channels**
+
+Hiding `card` (Option A) breaks the public API contract and contradicts the docs. Waiting on KOB support (Option C) is a no-op — *we are KOB*. The correct fix is to make `/charges` return a Stripe-style `next_action` block, then ship a thin Stripe.js helper for card confirmation.
 
 ---
 
 ### Fix Plan
 
-**1. Build a shared API-key authenticator** (`supabase/functions/_shared/auth-api-key.ts`)
+**1. Standardize the `next_action` response envelope on `/v1/gateway/charges`**
 
-Single source of truth used by all gateway leaves. Resolution order:
-1. If `Authorization: Bearer <token>` and token starts with `sk_test_` / `sk_live_` → SHA-256 hash, lookup in `gateway_merchant_keys` (live/test) **and** `sandbox_api_keys` → return resolved `{ user_id, merchant_id, environment, key_id }`.
-2. Else if token starts with `sbx_` → lookup in `sandbox_api_keys.api_key` (legacy) → return same shape.
-3. Else if token is a JWT → fall back to `supabase.auth.getUser()` (preserves dashboard/PAT flow — non-breaking).
-4. Else → standardized 401 RFC 7807 envelope.
+Update `supabase/functions/gateway-create-charge/index.ts` to return a `next_action` object alongside the charge row, shaped per channel:
 
-Also accept `X-API-Key` header as alias (matches docs that show `X-API-Key + X-Merchant-ID`).
+```jsonc
+// card
+"next_action": {
+  "type": "stripe_confirm_card",
+  "client_secret": "pi_xxx_secret_xxx",
+  "publishable_key": "pk_test_xxx",     // safe to expose
+  "publishable_key_env": "test"
+}
 
-**2. Wire the authenticator into the gateway leaves** (additive, Standing Order #4)
+// bank_transfer
+"next_action": {
+  "type": "bank_transfer_instructions",
+  "bank_name": "...", "account_number": "...",
+  "account_name": "...", "reference": "...",
+  "expires_at": "..."
+}
 
-Replace the inline `supabase.auth.getUser()` block in:
-- `gateway-create-charge`
-- `gateway-create-payout`, `gateway-create-refund`, `gateway-create-payment-link`, `gateway-create-funding-intent`, `gateway-create-subscription`
-- `gateway-query`, `gateway-charges-router`, `gateway-merchant-statement`, `gateway-get-merchant-balance`
-- `gateway-fee-estimate`, `gateway-fund-account`, `gateway-confirm-funding`
-- `gateway-webhook-endpoints`, `gateway-escrow-wallets`, `gateway-bulk-operations`, `gateway-reconciliation`
+// mobile_money
+"next_action": {
+  "type": "mobile_money_push",
+  "message": "Approve the USSD prompt on 237677...",
+  "poll_url": "/v1/gateway/charges/{id}/verify"
+}
 
-When called with `sk_test_`, the resolver returns the merchant's `user_id` so existing `eq('user_id', user.id)` ownership checks keep working unchanged.
+// paypal
+"next_action": { "type": "paypal_redirect", "approval_url": "..." }
 
-**3. Auto-resolve `merchant_id` from key**
+// already-paid / no further action
+"next_action": null
+```
 
-If body omits `merchant_id` and the key is bound to a single merchant (live keys always are), inject it server-side. This makes the `X-Merchant-ID` header optional and matches Stripe-style ergonomics.
+This matches Stripe's PaymentIntent contract and the existing internal `FundingResult.tsx` shape — so the public API and the internal funding flow finally agree.
 
-**4. Last-used tracking + rate limits**
+**2. Wire Stripe card flow end-to-end inside `gateway-create-charge`**
 
-On every successful key auth, async-update `last_used_at` and `last_used_ip`. Enforce per-key `rate_limit_per_minute` from `sandbox_api_keys` (already stored, currently unused).
+For `channel: "card"`:
+- Create Stripe PaymentIntent (already done in `gateway-preauth-charge` — extract to `_shared/stripe-helpers.ts` and reuse).
+- Persist `provider_ref = pi_xxx` and `client_secret` in `gateway_charges.metadata.stripe`.
+- Return `client_secret` + the merchant's Stripe **publishable** key (read from `gateway_merchants.stripe_publishable_key`, fall back to platform `STRIPE_PUBLISHABLE_KEY` secret) inside `next_action`.
 
-**5. Sandbox key audit fix**
+**3. Wire bank-transfer instructions for `channel: "bank_transfer"`**
 
-Update `sandbox/validate-api-key` to accept both `sk_test_` and legacy `sbx_` formats so the contract test (`api-contract-test`) keeps passing.
+Reuse the logic already present in the funding-intent path (`bank_transfer_instructions` branch in `FundingResult.tsx`):
+- For KOB-partner banks → generate virtual account via `kob-bank-transfer-issue` helper, return account_number + reference.
+- For non-partner banks → return Flutterwave-issued account from `/v3/charges?type=bank_transfer` response.
 
-**6. Documentation reconciliation**
+**4. Fix the mobile-money verify-status bug**
 
-- `docs/developer-portal/auth/authentication-overview.md`: clarify that `Authorization: Bearer sk_test_...` IS the canonical scheme; `X-API-Key` is an accepted alias; `X-Merchant-ID` is **optional** (resolved from key).
-- Add a 5-line "Why was my key rejected?" troubleshooting block.
+`gateway-verify-charge` currently returns the local DB status without re-polling the provider. Update it to:
+1. If charge is terminal (`successful`/`failed`/`refunded`) → return as-is.
+2. Else → call provider's `getStatus()` (MTN MoMo `/requesttopay/{ref}`, Orange Money status, Flutterwave verify) via the existing `payment-connectors` adapters.
+3. Update DB row + emit `charge.successful` / `charge.failed` webhook event.
+4. Return refreshed status.
 
-**7. Changelog** (`src/pages/developer/Changelog.tsx`) — bump **v4.16.1 → v4.16.2** per Standing Order #6:
-> **Fixed**: Sandbox & live API keys (`sk_test_*`, `sk_live_*`) are now accepted as bearer tokens across all `/v1/gateway/*` endpoints. Previously, only Supabase JWTs were accepted, causing 401 errors for documented integration flows. Resolves [P5 Working Code Rule] violation.
+This eliminates the "fake success" without provider confirmation.
+
+**5. Publish a Stripe.js helper for integrators**
+
+Add a documented snippet (no new dependency for KOB itself — integrators install `@stripe/stripe-js` in their app):
+
+```js
+// docs/developer-portal/payments/card-confirmation.md (NEW)
+import { loadStripe } from '@stripe/stripe-js';
+
+const charge = await fetch('/v1/gateway/charges', { /* sk_test_, channel: 'card' */ }).then(r=>r.json());
+const stripe = await loadStripe(charge.next_action.publishable_key);
+const { error, paymentIntent } = await stripe.confirmCardPayment(
+  charge.next_action.client_secret,
+  { payment_method: { card: cardElement } }
+);
+// then POST /v1/gateway/charges/{id}/verify to finalize on KOB side
+```
+
+Add the same snippet in Node, Python, PHP, Java, Go (Standing Order P9).
+
+**6. Update OpenAPI + docs (Standing Order P10)**
+
+- `public/openapi.json` + `public/openapi.yaml` — add `next_action` discriminated union to `Charge` response schema.
+- `docs/developer-portal/payments/unified-payments.md` — replace example response with one showing `next_action`.
+- `docs/developer-portal/payments/payment-methods.md` — add "How to complete the payment" subsection per channel.
+- New: `docs/developer-portal/payments/card-confirmation.md` (Stripe.js flow, 6 languages).
+- New: `docs/developer-portal/payments/bank-transfer-instructions.md`.
+
+**7. Changelog (Standing Order #6 + P7)** — bump **v4.16.2 → v4.16.3**:
+> **Added**: `next_action` field on `POST /v1/gateway/charges` response, exposing `client_secret` (card), bank account details (bank_transfer), USSD message (mobile_money), and `approval_url` (paypal). **Fixed**: `POST /v1/gateway/charges/{id}/verify` now re-polls the upstream provider instead of returning cached status. Resolves P5 Working Code Rule violation for card and bank_transfer channels.
 
 **8. E2E verification**
 
-Run live curl probes through `supabase--curl_edge_functions`:
-- `POST /gateway/charges` with `Authorization: Bearer sk_test_<real>` → expect 200/400 (not 401)
-- `POST /gateway/charges` with `Authorization: Bearer sk_test_invalid` → expect 401 RFC 7807
-- `POST /gateway/charges` with `X-API-Key: sk_test_<real>` (no merchant_id in body) → expect 200/400
-- `POST /gateway/charges` with valid Supabase JWT → expect 200 (regression check)
+Live curl probes via `supabase--curl_edge_functions`:
+- `POST /gateway/charges` with `channel: "card"` → expect `next_action.client_secret` + `publishable_key` present.
+- `POST /gateway/charges` with `channel: "bank_transfer"` → expect `next_action.account_number`, `reference`.
+- `POST /gateway/charges` with `channel: "mobile_money"` → expect `next_action.poll_url`.
+- `POST /gateway/charges/{id}/verify` for a pending MoMo charge → expect upstream `getStatus()` call in logs (no fake success).
 - Re-run `api-contract-test` suite — must stay green.
 
 ---
@@ -82,24 +130,29 @@ Run live curl probes through `supabase--curl_edge_functions`:
 
 | File | Action |
 |---|---|
-| `supabase/functions/_shared/auth-api-key.ts` | **NEW** — shared resolver |
-| `supabase/functions/gateway-create-charge/index.ts` | Swap auth block (additive guard) |
-| 15 other gateway leaves listed above | Same swap |
-| `supabase/functions/sandbox/index.ts` | `validate-api-key` accepts `sk_test_` |
-| `docs/developer-portal/auth/authentication-overview.md` | Clarify scheme + troubleshooting |
-| `docs/developer-portal/auth/api-keys.md` | Add "How keys are validated" section |
-| `src/pages/developer/Changelog.tsx` | v4.16.2 entry |
+| `supabase/functions/_shared/stripe-helpers.ts` | **NEW** — extracted PaymentIntent creation |
+| `supabase/functions/_shared/charge-next-action.ts` | **NEW** — builds `next_action` per channel |
+| `supabase/functions/gateway-create-charge/index.ts` | Attach `next_action`, wire card + bank_transfer |
+| `supabase/functions/gateway-verify-charge/index.ts` | Re-poll provider, no fake success |
+| `public/openapi.json`, `public/openapi.yaml` | Add `next_action` schema |
+| `docs/developer-portal/payments/unified-payments.md` | Updated response example |
+| `docs/developer-portal/payments/payment-methods.md` | Per-channel completion steps |
+| `docs/developer-portal/payments/card-confirmation.md` | **NEW** (6 languages) |
+| `docs/developer-portal/payments/bank-transfer-instructions.md` | **NEW** |
+| `src/pages/developer/Changelog.tsx` | v4.16.3 entry |
 
-**No table changes. No removals. No breaking changes.** All existing JWT-based callers (merchant dashboard, admin portal) continue to work unchanged because the resolver falls back to `auth.getUser()` for non-`sk_*` tokens.
+**No table changes. No removals. No breaking changes.** The `next_action` field is additive — existing integrators ignoring it keep working; new integrators get a complete contract.
 
 ### Standing Order Compliance
 
 | Order | Verdict |
 |---|---|
 | #1 Lock — no renames | ✅ |
-| #2 Ratchet — only adds accepted credentials | ✅ |
-| #3 Audit Trail — cites RFC 7807, P5 | ✅ |
-| #4 Surgeon — additive auth resolver | ✅ |
-| #6 Version Gate — patch bump 4.16.1 → 4.16.2 | ✅ |
-| P5 Working Code Rule — restored | ✅ |
+| #2 Ratchet — only adds `next_action` | ✅ |
+| #3 Audit Trail — cites P5 Working Code Rule | ✅ |
+| #4 Surgeon — additive response field | ✅ |
+| #6 Version Gate — patch bump 4.16.2 → 4.16.3 | ✅ |
+| P5 Working Code Rule — restored for card/bank_transfer | ✅ |
+| P9 Multi-Language — 6 languages in new docs | ✅ |
+| P10 Living Docs — OpenAPI + 4 doc pages updated | ✅ |
 
