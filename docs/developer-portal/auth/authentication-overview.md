@@ -8,15 +8,17 @@ Use your merchant API key as a Bearer token:
 
 ```bash
 curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
-  -H "Authorization: Bearer kob_test_xxxxxxxxxxxx" \
+  -H "Authorization: Bearer sk_test_xxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
   -d '{"amount": 5000, "currency": "XAF", ...}'
 ```
 
+`X-API-Key: sk_test_…` is accepted as an alias for `Authorization: Bearer …`.
+
 ### Key Format
-- **Sandbox:** `kob_test_*` — test freely, no real money
-- **Production:** `kob_live_*` — real transactions
+- **Sandbox:** `sk_test_*` (secret) / `pk_test_*` (publishable) — test freely, no real money
+- **Production:** `sk_live_*` (secret) / `pk_live_*` (publishable) — real transactions
 
 ### Key Management
 - Generate keys in Merchant Portal → API Keys
@@ -88,7 +90,7 @@ If you receive a `401 Unauthorized` (RFC 7807 `application/problem+json` respons
 
 | Environment | Base URL | Keys |
 |---|---|---|
-| Sandbox | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `kob_test_*` |
-| Production | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `kob_live_*` |
+| Sandbox | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `sk_test_*` |
+| Production | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/` | `sk_live_*` |
 
 Sandbox and production share the same URL — your API key determines the environment.
