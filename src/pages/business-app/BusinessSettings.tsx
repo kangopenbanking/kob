@@ -192,9 +192,34 @@ export default function BusinessSettings() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Quick Links - 1 col on desktop */}
+          {/* Language & Region */}
+          <div className="rounded-2xl border border-border/40 bg-card p-5">
+            <h2 className="text-[15px] font-bold text-foreground mb-1 flex items-center gap-2">
+              <Languages className="h-4 w-4 text-primary" strokeWidth={1.8} />
+              Language & Region
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              Switch the entire Business app between English and French. Your choice is saved and applied across all your devices.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant={language === 'en' ? 'default' : 'outline'}
+                className="h-11 rounded-xl"
+                onClick={() => setLanguage('en')}
+              >
+                English
+              </Button>
+              <Button
+                variant={language === 'fr' ? 'default' : 'outline'}
+                className="h-11 rounded-xl"
+                onClick={() => setLanguage('fr')}
+              >
+                Français
+              </Button>
+            </div>
+          </div>
+        </div>
         <div className="space-y-2">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Quick Access</h2>
           <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
