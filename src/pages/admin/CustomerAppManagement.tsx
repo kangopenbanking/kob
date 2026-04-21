@@ -329,6 +329,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 // ─── Media Section Manager ───
 function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { mediaSections: MediaSection[]; onChange: (s: MediaSection[]) => void; onAutoAddToOrder?: () => void }) {
+  const tr = useHarvestedT('admin');
   const [uploading, setUploading] = useState(false);
 
   const addMedia = (type: 'image' | 'video') => {
@@ -413,6 +414,7 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
 
 // ─── Walkthrough Manager ───
 function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }: {
+  const tr = useHarvestedT('admin');
   institutionId: string;
   walkthroughConfig: WalkthroughConfig;
   onConfigChange: (c: WalkthroughConfig) => void;
@@ -593,6 +595,7 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
 
 // ─── Feature Config Panel ───
 function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
   const queryClient = useQueryClient();
   const [config, setConfig] = useState<CustomerAppConfig>(appConfig);
 
@@ -977,6 +980,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
 // ─── Hero Section Panel ───
 function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
   const queryClient = useQueryClient();
   const [bgColor, setBgColor] = useState(appConfig.hero_bg_color || '');
   const [bgImage, setBgImage] = useState(appConfig.hero_bg_image || '');
@@ -1246,6 +1250,7 @@ const TYPOGRAPHY_SECTIONS = [
 
 // ─── Typography Panel ───
 function TypographyPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
   const queryClient = useQueryClient();
   const [typoConfig, setTypoConfig] = useState<TypographyConfig>(appConfig.typography_config || defaultConfig.typography_config);
 
@@ -1359,6 +1364,7 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
 
 // ─── Travel Card Panel ───
 function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
   const queryClient = useQueryClient();
   const [config, setConfig] = useState(appConfig.travel_card_config || defaultConfig.travel_card_config);
   const [uploading, setUploading] = useState(false);
