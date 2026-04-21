@@ -51,14 +51,18 @@ Deno.serve(async (req) => {
 
       if (error) throw error;
 
-      // Also insert into legacy table for backward compat
-      await supabase.from('gateway_merchant_api_keys').insert({
-        merchant_id,
-        environment: env,
-        api_key_prefix: publicKey.slice(0, 16),
-        api_key_hash: hashHex,
-        label: label || 'Unnamed Key',
-      }).catch(() => {});
+      // Also insert into legacy table for backward compat (best-effort)
+      try {
+        await supabase.from('gateway_merchant_api_keys').insert({
+          merchant_id,
+          environment: env,
+          api_key_prefix: publicKey.slice(0, 16),
+          api_key_hash: hashHex,
+          label: label || 'Unnamed Key',
+        });
+      } catch (legacyErr) {
+        console.warn('Legacy gateway_merchant_api_keys insert skipped:', legacyErr);
+      }
 
       // Update count
       const { count } = await supabase
