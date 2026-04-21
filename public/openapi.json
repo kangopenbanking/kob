@@ -3867,6 +3867,25 @@
     }
   },
   "paths": {
+    "/healthz": {
+      "get": {
+        "tags": ["Monitoring"],
+        "summary": "Security posture self-verification",
+        "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 — S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.",
+        "operationId": "securityHealthz",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Live security posture snapshot",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "tags": [
