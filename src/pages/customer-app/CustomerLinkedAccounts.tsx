@@ -163,6 +163,7 @@ const CardDeleteBtnDark = ({ onClick }: { onClick: () => void }) => (
 
 /* ─── Bank Card (Visa/MC) ─── */
 const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const tr = useHarvestedT('customer');
   const meta = acc.metadata as any;
   const network = meta?.card_network || acc.provider_name || 'Card';
   const expMonth = meta?.card_exp_month ? String(meta.card_exp_month).padStart(2, '0') : '••';
@@ -208,6 +209,7 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
 /* ─── Bank Account (RIB) Card ─── */
 const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const tr = useHarvestedT('customer');
   const meta = acc.metadata as any;
   const bankCode = meta?.rib_bank_code || '';
   const branchCode = meta?.rib_branch_code || '';
@@ -271,7 +273,9 @@ const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) =
 };
 
 /* ─── MTN MoMo Card ─── */
-const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => (
+const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const tr = useHarvestedT('customer');
+  return (
   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
     className="relative overflow-hidden rounded-3xl border-2 border-[hsl(48,90%,60%)]"
     style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(48,95%,50%), hsl(45,90%,42%))' }}>
@@ -310,11 +314,13 @@ const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
         </div>
       </div>
     </div>
-  </motion.div>
-);
+  );
+};
 
 /* ─── Orange Money Card ─── */
-const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => (
+const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const tr = useHarvestedT('customer');
+  return (
   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
     className="relative overflow-hidden rounded-3xl border-2 border-[hsl(25,85%,55%)]"
     style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(25,90%,55%), hsl(20,85%,45%))' }}>
@@ -350,10 +356,12 @@ const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
       </div>
     </div>
   </motion.div>
-);
+  );
+};
 
 /* ─── PayPal Card ─── */
 const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const tr = useHarvestedT('customer');
   const email = (acc.metadata as any)?.email || '';
   const maskedEmail = email ? `${email.substring(0, 3)}•••@${email.split('@')[1] || ''}` : `•••• ${acc.last4}`;
 
@@ -413,6 +421,7 @@ const LinkedAccountCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
 
 /* ─── Main Component ─── */
 const CustomerLinkedAccounts: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();

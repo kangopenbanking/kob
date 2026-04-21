@@ -19,6 +19,7 @@ const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: any; color: str
 };
 
 export function CustomerOrderTracking() {
+  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const navigate = useNavigate();
 
@@ -78,7 +79,6 @@ export function CustomerOrderTracking() {
 
   const getStatusInfo = (status: string) => ORDER_STATUS_CONFIG[status] || { label: status, icon: Clock, color: 'text-foreground', bg: 'bg-muted' };
   const getProgress = (status: string) => {
-  const tr = useHarvestedT('customer');
     const steps = ['pending_payment', 'paid', 'processing', 'completed'];
     const idx = steps.indexOf(status);
     return idx === -1 ? 0 : ((idx + 1) / steps.length) * 100;

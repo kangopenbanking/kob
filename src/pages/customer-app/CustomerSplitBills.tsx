@@ -39,12 +39,12 @@ const colors = [
 ];
 
 const makeParticipant = (name: string, phone: string, color: string, paid: boolean, userId: string | null = null): Participant => {
-  const tr = useHarvestedT('customer');
   const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   return { name, phone, initials, color, customAmount: 0, customPercent: 0, paid, userId };
 };
 
 const CustomerSplitBills: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();

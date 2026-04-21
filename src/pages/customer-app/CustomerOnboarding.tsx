@@ -87,7 +87,6 @@ const CARD_NETWORKS = [
 
 /* ─── Formatting helpers ─── */
 const formatRib = (v: string) => {
-  const tr = useHarvestedT('customer');
   const d = v.replace(/\D/g, '').substring(0, 23);
   if (d.length <= 5) return d;
   if (d.length <= 10) return `${d.substring(0, 5)}-${d.substring(5)}`;
@@ -115,6 +114,7 @@ const formatPhone = (v: string) => {
 type Step = 'select' | 'details' | 'confirming';
 
 const CustomerOnboarding: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('select');

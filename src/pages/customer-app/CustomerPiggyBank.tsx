@@ -513,6 +513,7 @@ function Header({ onBack, title = 'Piggy Bank' }: { onBack: () => void; title?: 
 function CategoryCard({ image, title, subtitle, saved, bgClass, buttonLabel, onClick }: {
   image: string; title: string; subtitle: string; saved: number; bgClass: string; accentColor: string; buttonLabel: string; onClick: () => void;
 }) {
+  const tr = useHarvestedT('customer');
   return (
     <motion.div
       whileTap={{ scale: 0.97 }}
@@ -574,6 +575,7 @@ function MiniPlanRow({ plan, index }: { plan: any; index: number }) {
 }
 
 function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete }: { plan: any; index: number; onPay: (id: string, accountId?: string) => void; isBank: boolean; userAccounts: any[]; onCancel: (planId: string, planName: string) => void; onDelete?: (planId: string, planName: string, isCancelled: boolean) => void }) {
+  const tr = useHarvestedT('customer');
   const payments = plan.piggybank_payments || [];
   const paidPayments = payments.filter((p: any) => p.status === 'paid');
   const missedPayments = payments.filter((p: any) => p.status === 'missed' || p.status === 'late');
@@ -735,6 +737,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
   onViewPlans: () => void;
   bankPlansCount: number;
 }) {
+  const tr = useHarvestedT('customer');
   const { data: products = [], isLoading } = useSavingsProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<SavingsTypeFilter>('all');
@@ -938,6 +941,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 }
 
 function WelcomeDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const tr = useHarvestedT('customer');
   const steps = [
     { icon: <Calendar className="h-7 w-7 text-primary" strokeWidth={1.5} />, title: 'Set Your Goal', desc: 'Choose a savings target. Pick your schedule — daily, weekly, or monthly.' },
     { icon: <Zap className="h-7 w-7 text-primary" strokeWidth={1.5} />, title: 'Auto-Fund from Wallet', desc: 'Enable auto-funding and your wallet is debited automatically on each due date.' },

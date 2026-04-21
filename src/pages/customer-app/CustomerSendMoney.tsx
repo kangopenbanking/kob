@@ -222,6 +222,7 @@ function MobileCurrencyPicker({ items, selectedIdx, onSelect, label }: {
   onSelect: (i: number) => void;
   label?: string;
 }) {
+  const tr = useHarvestedT('customer');
   const safe = selectedIdx >= 0 && selectedIdx < items.length ? selectedIdx : 0;
   const selected = items[safe];
   if (!selected) return <div className="h-14 flex items-center px-3 text-xs text-muted-foreground">{tr('Loading…')}</div>;

@@ -48,6 +48,7 @@ const CATEGORY_TILES: CategoryTile[] = [
 ];
 
 export function CustomerMarketplace() {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [search, setSearch] = useState('');
@@ -98,7 +99,6 @@ export function CustomerMarketplace() {
   });
 
   const handleSearch = () => {
-  const tr = useHarvestedT('customer');
     navigate(`/app/stores${search ? `?q=${encodeURIComponent(search)}` : ''}`);
   };
 

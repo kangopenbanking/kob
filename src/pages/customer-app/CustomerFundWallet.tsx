@@ -58,6 +58,7 @@ interface BankOption {
 }
 
 const CustomerFundWallet: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
