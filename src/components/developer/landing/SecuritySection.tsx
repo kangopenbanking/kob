@@ -1,23 +1,21 @@
 import { Shield, Lock, Key, FileCheck, Server, Eye } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function SecuritySection() {
-  const { t } = useLanguage();
   const practices = [
-    { icon: Shield,   title: t('developer.security.oauth.title' as any),   description: t('developer.security.oauth.desc' as any) },
-    { icon: Lock,     title: t('developer.security.mtls.title' as any),    description: t('developer.security.mtls.desc' as any) },
-    { icon: Key,      title: t('developer.security.tokens.title' as any),  description: t('developer.security.tokens.desc' as any) },
-    { icon: FileCheck,title: t('developer.security.cobac.title' as any),   description: t('developer.security.cobac.desc' as any) },
-    { icon: Server,   title: t('developer.security.pci.title' as any),     description: t('developer.security.pci.desc' as any) },
-    { icon: Eye,      title: t('developer.security.audit.title' as any),   description: t('developer.security.audit.desc' as any) },
+    { icon: Shield,    title: "OAuth 2.0 + OpenID Connect",  description: "Industry-standard authorization with PKCE and FAPI 1.0 Advanced profile support." },
+    { icon: Lock,      title: "Mutual TLS (mTLS)",           description: "Certificate-bound access tokens for sender-constrained API access." },
+    { icon: Key,       title: "Rotating Refresh Tokens",     description: "Short-lived access tokens with refresh-token rotation and reuse detection." },
+    { icon: FileCheck, title: "COBAC / CEMAC Compliant",     description: "Aligned with regional banking regulations and KYC/AML requirements." },
+    { icon: Server,    title: "PCI-DSS Infrastructure",      description: "Card data is tokenized and never touches your servers — fully PCI-compliant flows." },
+    { icon: Eye,       title: "Full Audit Trail",            description: "Every API call is logged with device, IP, and consent metadata for forensic review." },
   ];
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold">{t('developer.security.heading' as any)}</h2>
+        <h2 className="text-3xl font-bold">Security &amp; Compliance</h2>
         <p className="text-muted-foreground max-w-2xl">
-          {t('developer.security.subheading' as any)}
+          Bank-grade security built into every layer of the platform — so you can ship with confidence.
         </p>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
