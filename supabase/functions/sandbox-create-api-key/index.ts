@@ -1,15 +1,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import * as crypto from 'https://deno.land/std@0.177.0/node/crypto.ts';
 import { corsHeaders } from "../_shared/cors.ts";
 
-function generateApiKey(): string {
-  const prefix = 'sbx_';
-  const randomBytes = crypto.randomBytes(32);
-  return prefix + randomBytes.toString('hex');
+function randHex(len: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(len)))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-function hashApiKey(apiKey: string): string {
-  return crypto.createHash('sha256').update(apiKey).digest('hex') as string;
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 Deno.serve(async (req) => {
@@ -41,9 +41,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { key_name } = await req.json();
+    const { key_name } = await req.json().catch(() => ({}));
 
-    // Get user's sandbox account
     const { data: account, error: accountError } = await supabase
       .from('developer_sandbox_accounts')
       .select('*')
@@ -58,7 +57,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check existing API key count
     const { count } = await supabase
       .from('sandbox_api_keys')
       .select('*', { count: 'exact', head: true })
@@ -72,17 +70,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate new API key
-    const apiKey = generateApiKey();
-    const keyHash = hashApiKey(apiKey);
+    // Full credential set
+    const secretKey = 'sk_test_' + randHex(32);
+    const publishableKey = 'pk_test_' + randHex(24);
+    const webhookSecret = 'whsec_test_' + randHex(32);
+    const sbxLegacyKey = 'sbx_' + randHex(32);
 
-    // Set rate limits based on tier
+    const [keyHash, webhookHash] = await Promise.all([sha256(secretKey), sha256(webhookSecret)]);
+
     const rateLimits = {
       free: { per_minute: 60, per_day: 1000 },
       basic: { per_minute: 300, per_day: 10000 },
       pro: { per_minute: 1000, per_day: 100000 },
-    };
-
+    } as const;
     const limits = rateLimits[account.tier as keyof typeof rateLimits] || rateLimits.free;
 
     const { data: newKey, error: insertError } = await supabase
@@ -90,8 +90,11 @@ Deno.serve(async (req) => {
       .insert([{
         sandbox_account_id: account.id,
         key_name: key_name || 'Default Key',
-        api_key: apiKey,
+        api_key: sbxLegacyKey,
         key_hash: keyHash,
+        publishable_key: publishableKey,
+        webhook_secret_hash: webhookHash,
+        webhook_secret_preview: webhookSecret.slice(0, 16) + '…',
         rate_limit_per_minute: limits.per_minute,
         rate_limit_per_day: limits.per_day,
       }])
@@ -100,18 +103,20 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    console.log('Created sandbox API key:', newKey.id);
+    console.log('Created sandbox API key set:', newKey.id);
 
-    // Return the API key only once
-    return new Response(JSON.stringify({ 
-      api_key: apiKey,
+    return new Response(JSON.stringify({
       key_id: newKey.id,
       key_name: newKey.key_name,
-      rate_limits: {
-        per_minute: limits.per_minute,
-        per_day: limits.per_day,
-      },
-      message: 'Save this API key securely - it will not be shown again'
+      secret_key: secretKey,
+      publishable_key: publishableKey,
+      merchant_id: account.merchant_id,
+      webhook_secret: webhookSecret,
+      environment: 'sandbox',
+      rate_limits: limits,
+      message: 'Save these credentials now. The secret key and webhook secret will not be shown again. The publishable key and merchant ID can be retrieved later.',
+      // Backward-compatible alias
+      api_key: secretKey,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 201,
@@ -119,12 +124,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error creating sandbox API key:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to create API key. Please try again.'
-      }),
-      { 
+      JSON.stringify({ error: 'Failed to create API key. Please try again.' }),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 500,
       }
     );
   }
