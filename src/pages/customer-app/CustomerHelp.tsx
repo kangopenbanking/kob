@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  ArrowLeft, MessageCircle, Mail, Phone, Send, FileText,
+  ArrowLeft, MessageCircle, Mail, Send, FileText,
   Users, ExternalLink, Headphones, Search, ChevronRight,
   Shield, CreditCard, Smartphone, HelpCircle
 } from 'lucide-react';
