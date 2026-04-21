@@ -54,10 +54,8 @@ import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CodeImageFlipCard } from "@/components/CodeImageFlipCard";
 import { AccountsPreview, PaymentsPreview, CreditScorePreview, SavingsPreview } from "@/components/AnimatedPreviews";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const Index = () => {
-  const { t } = useLanguage();
   return (
     <div className="min-h-screen">
       <SEO
