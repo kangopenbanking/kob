@@ -78,7 +78,7 @@ const CustomerMore: React.FC = () => {
                   </div>
                 )}
               </div>
-              <span className="text-xs font-semibold text-foreground">{action.label}</span>
+              <span className="text-xs font-semibold text-foreground">{tr(action.label)}</span>
             </button>
           ))}
         </div>
@@ -90,7 +90,7 @@ const CustomerMore: React.FC = () => {
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Recent Bill Payments')}</p>
             <button onClick={() => go('bills')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
-              View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+              {tr('View All')} <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
           </div>
           {billsLoading ? (
@@ -123,7 +123,7 @@ const CustomerMore: React.FC = () => {
               <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${item.color}`}>
                 <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
               </div>
-              <span className="flex-1 text-sm font-semibold text-foreground">{item.label}</span>
+              <span className="flex-1 text-sm font-semibold text-foreground">{tr(item.label)}</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
             </button>
           ))}
