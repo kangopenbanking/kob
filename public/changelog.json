@@ -1,9 +1,36 @@
 {
-  "apiVersion": "4.15.0",
+  "apiVersion": "4.16.4",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-17",
+  "lastUpdated": "2026-04-21",
   "entries": [
+    {
+      "version": "4.16.4",
+      "date": "2026-04-21",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Security Posture Self-Verification Layer -- live /healthz endpoint, hardened /oidc-config caching, public Security & Compliance live page, and downloadable whitepaper",
+      "highlights": [
+        "New public edge function /healthz returns a reviewer-friendly JSON snapshot with live probes for OAuth, OIDC, JWKS, DCR, PAR, plus declared posture for mTLS, JAR, PKCE, and webhooks (FAPI 1.0 Advanced)",
+        "/oidc-config hardened with ETag, conditional GET (304), Cache-Control: public, max-age=3600, stale-while-revalidate=86400, plus op_policy_uri, op_tos_uri, key_rotation_policy_uri, and x-version metadata",
+        "New public page /developer/security with live verification panel, standards matrix, security FAQ, and honest disclosure of known limitations -- verifiable without authentication (ORDER P1)",
+        "New public page /developer/security/whitepaper plus downloadable PDF at /whitepapers/security-compliance.pdf",
+        "OpenAPI specification bumped to 4.16.4 (info.version only -- additive only per STANDING ORDER 1, STANDING ORDER 4)",
+        "Existing /developer/compliance route preserved and continues to render the original SecurityCompliancePage (zero removals per STANDING ORDER 1)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 3 (FAPI 1.0 Advanced; RFC 7591; RFC 9126; RFC 9101; RFC 7636; RFC 8705)",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P1",
+        "ORDER P4",
+        "ORDER P5",
+        "ORDER P7",
+        "ORDER P10"
+      ]
+    },
     {
       "version": "4.15.0",
       "date": "2026-04-17",

@@ -1,5 +1,12 @@
 import { corsHeaders } from "../_shared/cors.ts";
 
+const VERSION = "4.16.4";
+
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -9,6 +16,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const apiBase = `${supabaseUrl}/functions/v1`;
     const issuer = `${supabaseUrl}/auth/v1`;
+    const publicBase = 'https://kangopenbanking.com';
 
     const config = {
       issuer,
@@ -44,15 +52,41 @@ Deno.serve(async (req) => {
         'name', 'email', 'phone_number', 'updated_at'
       ],
 
-      service_documentation: 'https://kangopenbanking.com/documentation',
+      service_documentation: `${publicBase}/developer`,
+      op_policy_uri: `${publicBase}/developer/security`,
+      op_tos_uri: `${publicBase}/legal/terms`,
+      key_rotation_policy_uri: `${publicBase}/developer/security#jwks-rotation`,
       ui_locales_supported: ['en', 'fr'],
+
+      // Non-standard, reviewer-friendly metadata
+      'x-version': VERSION,
+      'x-fapi_profile': 'FAPI 1.0 Advanced',
+      'x-health_endpoint': `${apiBase}/healthz`,
     };
 
-    return new Response(JSON.stringify(config, null, 2), {
+    const body = JSON.stringify(config, null, 2);
+    const etag = `"${(await sha256Hex(body)).slice(0, 16)}"`;
+
+    // Conditional GET: short-circuit with 304 when client cache is fresh.
+    const ifNoneMatch = req.headers.get('if-none-match');
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          ...corsHeaders,
+          ETag: etag,
+          'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        },
+      });
+    }
+
+    return new Response(body, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600'
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        ETag: etag,
+        'X-Content-Type-Options': 'nosniff',
       }
     });
   } catch (error) {
