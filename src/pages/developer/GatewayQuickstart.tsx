@@ -65,7 +65,7 @@ const GatewayQuickstart = () => (
 
 # Response
 {
-  "id": "acct_test_abc123",
+  "id": "6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9",
   "business_name": "Acme Cameroun SARL",
   "status": "active",
   "environment": "sandbox",
@@ -88,7 +88,7 @@ const GatewayQuickstart = () => (
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: charge-order-001" \\
   -d '{
-    "merchant_id": "acct_test_abc123",
+    "merchant_id": "6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9",
     "amount": 5000,
     "currency": "XAF",
     "channel": "mobile_money",
@@ -108,7 +108,7 @@ const kob = new KangOpenBanking({
 });
 
 const charge = await kob.charges.create({
-  merchant_id: 'acct_test_abc123',
+  merchant_id: '6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9',
   amount: 5000,
   currency: 'XAF',
   channel: 'mobile_money',
@@ -126,7 +126,7 @@ console.log(charge.data.status); // "processing"`
 kob = KangOpenBanking(api_key="YOUR_TOKEN", environment="sandbox")
 
 charge = kob.charges.create(
-    merchant_id="acct_test_abc123",
+    merchant_id="6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9",
     amount=5000,
     currency="XAF",
     channel="mobile_money",
@@ -140,7 +140,7 @@ print(charge["data"]["status"]) # "processing"`
               language: "go",
               label: "Go",
               code: `body, _ := json.Marshal(map[string]interface{}{
-    "merchant_id":    "acct_test_abc123",
+    "merchant_id":    "6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9",
     "amount":         5000,
     "currency":       "XAF",
     "channel":        "mobile_money",
@@ -159,7 +159,7 @@ resp, _ := http.DefaultClient.Do(req)`
               language: "java",
               label: "Java",
               code: `String body = """
-    {"merchant_id":"acct_test_abc123","amount":5000,
+    {"merchant_id":"6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9","amount":5000,
      "currency":"XAF","channel":"mobile_money",
      "customer_phone":"+237677123456",
      "tx_ref":"order_001"}""";
@@ -209,7 +209,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webho
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "merchant_id": "acct_test_abc123",
+    "merchant_id": "6f3d0f4c-9f4f-4d71-8f2e-3b45f7f2a1c9",
     "url": "https://yourapp.com/webhooks/kob",
     "events": ["charge.successful", "charge.failed", "payout.completed"],
     "active": true
