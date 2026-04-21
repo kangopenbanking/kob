@@ -15,8 +15,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRentReporting: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
@@ -156,8 +158,8 @@ const CustomerRentReporting: React.FC = () => {
             <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Rent Reporting</h1>
-            <p className="text-[10px] text-muted-foreground">Build credit with every payment</p>
+            <h1 className="text-lg font-bold text-foreground">{tr('Rent Reporting')}</h1>
+            <p className="text-[10px] text-muted-foreground">{tr('Build credit with every payment')}</p>
           </div>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
@@ -167,7 +169,7 @@ const CustomerRentReporting: React.FC = () => {
 
       {/* How It Works */}
       <HowItWorksFlow
-        title="How Rent Reporting Works"
+        title={tr('How Rent Reporting Works')}
         steps={[
           { icon: Plus, title: 'Create Plan', description: 'Enter landlord, amount & frequency. Get a unique KRENTS code.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
           { icon: Banknote, title: 'Record Payments', description: 'Each time you pay rent, record it here to log a timestamped credit event.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
@@ -188,21 +190,21 @@ const CustomerRentReporting: React.FC = () => {
                 <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{totalReported}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Reported</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Reported')}</p>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-[hsl(45,70%,90%)]/60 to-[hsl(45,70%,95%)]/30 border border-[hsl(45,60%,80%)] p-3 text-center">
               <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-xl bg-[hsl(45,70%,90%)] mb-1.5">
                 <Clock className="h-4 w-4 text-[hsl(45,60%,35%)]" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{totalPending}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Pending</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Pending')}</p>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-[hsl(15,80%,92%)]/60 to-[hsl(15,80%,96%)]/30 border border-[hsl(15,70%,82%)] p-3 text-center">
               <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-xl bg-[hsl(15,80%,92%)] mb-1.5">
                 <Flame className="h-4 w-4 text-[hsl(15,70%,45%)]" strokeWidth={1.5} />
               </div>
               <p className="text-lg font-bold text-foreground">{streak}</p>
-              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Streak</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{tr('Streak')}</p>
             </div>
           </motion.div>
 
@@ -214,8 +216,8 @@ const CustomerRentReporting: React.FC = () => {
                 <TrendingUp className="h-5 w-5 text-primary" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold text-foreground">CrediQ Score</p>
-                <p className="text-[10px] text-muted-foreground">Your current credit score from all activities</p>
+                <p className="text-xs font-bold text-foreground">{tr('CrediQ Score')}</p>
+                <p className="text-[10px] text-muted-foreground">{tr('Your current credit score from all activities')}</p>
               </div>
               <p className="text-xl font-bold text-primary">{scoreImpact}</p>
             </motion.div>
@@ -225,16 +227,16 @@ const CustomerRentReporting: React.FC = () => {
           <div className="flex items-start gap-2.5 rounded-2xl bg-accent/40 border border-accent/60 p-3">
             <Info className="h-4 w-4 text-accent-foreground mt-0.5 shrink-0" strokeWidth={1.5} />
             <p className="text-[11px] text-accent-foreground leading-relaxed">
-              <span className="font-semibold">Pro tip:</span> On-time payments earn <span className="font-bold text-[hsl(150,60%,35%)]">+5–10 pts</span>. 
-              Late payments cost <span className="font-bold text-destructive">-10–25 pts</span>. 
-              Missed payments are <span className="font-bold text-destructive">-30 pts</span>.
+              <span className="font-semibold">{tr('Pro tip:')}</span> {tr('On-time payments earn')} <span className="font-bold text-[hsl(150,60%,35%)]">{tr('+5–10 pts')}</span>. 
+              Late payments cost <span className="font-bold text-destructive">{tr('-10–25 pts')}</span>. 
+              Missed payments are <span className="font-bold text-destructive">{tr('-30 pts')}</span>.
             </p>
           </div>
 
           {/* Active Rent Plans */}
           {activePlans.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Active Plans</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{tr('Active Plans')}</p>
               <div className="space-y-3">
                 {activePlans.map((plan: any) => {
                   const payments = plan.piggybank_payments || [];
@@ -272,18 +274,18 @@ const CustomerRentReporting: React.FC = () => {
                           </div>
                           <div className="rounded-xl bg-muted/50 p-2">
                             <p className="text-sm font-bold text-foreground">{paidCount}</p>
-                            <p className="text-[9px] text-muted-foreground">Paid</p>
+                            <p className="text-[9px] text-muted-foreground">{tr('Paid')}</p>
                           </div>
                           <div className="rounded-xl bg-muted/50 p-2">
                             <p className="text-sm font-bold text-foreground">{pendingPayments.length}</p>
-                            <p className="text-[9px] text-muted-foreground">Upcoming</p>
+                            <p className="text-[9px] text-muted-foreground">{tr('Upcoming')}</p>
                           </div>
                         </div>
 
                         {creditLinked && (
                           <div className="mt-2.5 flex items-center gap-1.5 rounded-xl bg-[hsl(150,40%,90%)]/50 px-2.5 py-1.5">
                             <Shield className="h-3 w-3 text-[hsl(150,40%,35%)]" />
-                            <span className="text-[10px] font-medium text-[hsl(150,40%,35%)]">Credit events recorded</span>
+                            <span className="text-[10px] font-medium text-[hsl(150,40%,35%)]">{tr('Credit events recorded')}</span>
                           </div>
                         )}
 
@@ -298,7 +300,7 @@ const CustomerRentReporting: React.FC = () => {
                       {/* Pending Payments - Record Action */}
                       {pendingPayments.length > 0 && (
                         <div className="border-t border-border px-4 py-3 space-y-2">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Record a Payment</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Record a Payment')}</p>
                           {pendingPayments.slice(0, 3).map((payment: any) => {
                             const isOverdue = payment.due_date && new Date(payment.due_date) < new Date();
                             const isPaying = payingId === payment.id;
@@ -352,26 +354,26 @@ const CustomerRentReporting: React.FC = () => {
                 <div className="bg-gradient-to-r from-primary/10 to-transparent p-4 pb-3 border-b border-border">
                   <div className="flex items-center gap-2">
                     <Home className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                    <p className="text-sm font-bold text-foreground">Set Up Rent Reporting</p>
+                    <p className="text-sm font-bold text-foreground">{tr('Set Up Rent Reporting')}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">You'll receive a unique KRENTS reference code</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{tr('You\'ll receive a unique KRENTS reference code')}</p>
                 </div>
                 <div className="p-4 space-y-3.5">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold">Landlord / Property Name</Label>
-                    <Input value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder="e.g. My Apartment" className="rounded-xl h-11" maxLength={80} />
+                    <Label className="text-[11px] font-semibold">{tr('Landlord / Property Name')}</Label>
+                    <Input value={landlordName} onChange={e => setLandlordName(e.target.value)} placeholder={tr('e.g. My Apartment')} className="rounded-xl h-11" maxLength={80} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold">Monthly Rent (XAF)</Label>
-                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} placeholder="e.g. 75000" className="rounded-xl h-11" min={1000} />
+                    <Label className="text-[11px] font-semibold">{tr('Monthly Rent (XAF)')}</Label>
+                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} placeholder={tr('e.g. 75000')} className="rounded-xl h-11" min={1000} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold">Payment Frequency</Label>
+                    <Label className="text-[11px] font-semibold">{tr('Payment Frequency')}</Label>
                     <Select value={frequency} onValueChange={setFrequency}>
                       <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
+                        <SelectItem value="quarterly">{tr('Quarterly')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -380,7 +382,7 @@ const CustomerRentReporting: React.FC = () => {
                       {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Create Rent Plan
                     </Button>
-                    <Button variant="outline" onClick={() => setShowSetup(false)} className="rounded-2xl h-11">Cancel</Button>
+                    <Button variant="outline" onClick={() => setShowSetup(false)} className="rounded-2xl h-11">{tr('Cancel')}</Button>
                   </div>
                 </div>
               </motion.div>
@@ -395,14 +397,14 @@ const CustomerRentReporting: React.FC = () => {
 
           {/* Payment History */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Payment History</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{tr('Payment History')}</p>
             {rentPayments.length === 0 && planPayments.filter((p: any) => p.status !== 'pending').length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12 rounded-3xl border border-dashed border-border">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                   <Home className="h-7 w-7 text-muted-foreground" strokeWidth={1} />
                 </div>
-                <p className="text-sm font-semibold text-muted-foreground">No rent payments yet</p>
-                <p className="text-xs text-muted-foreground text-center max-w-[200px]">Create a plan and record your first payment to start building credit</p>
+                <p className="text-sm font-semibold text-muted-foreground">{tr('No rent payments yet')}</p>
+                <p className="text-xs text-muted-foreground text-center max-w-[200px]">{tr('Create a plan and record your first payment to start building credit')}</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -463,7 +465,7 @@ const CustomerRentReporting: React.FC = () => {
           {/* Inactive Plans */}
           {inactivePlans.length > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Inactive Plans</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{tr('Inactive Plans')}</p>
               {inactivePlans.map((plan: any) => (
                 <div key={plan.id} className="flex items-center gap-3 rounded-2xl bg-muted/30 border border-border p-3 opacity-60">
                   <Home className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />

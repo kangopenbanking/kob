@@ -7,8 +7,10 @@ import { Heart, Store, Package, Trash2, ArrowLeft, ChevronRight } from 'lucide-r
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export function CustomerWishlist() {
+  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -72,9 +74,9 @@ export function CustomerWishlist() {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 flex items-center justify-center mb-4">
             <Heart className="h-6 w-6 text-rose-500" />
           </div>
-          <h2 className="text-lg font-bold tracking-tight mb-1">Sign in required</h2>
-          <p className="text-sm text-muted-foreground mb-5">Save your favorite shops and products</p>
-          <Button onClick={() => navigate('/app/auth')} className="w-full h-11 rounded-2xl font-semibold">Sign In</Button>
+          <h2 className="text-lg font-bold tracking-tight mb-1">{tr('Sign in required')}</h2>
+          <p className="text-sm text-muted-foreground mb-5">{tr('Save your favorite shops and products')}</p>
+          <Button onClick={() => navigate('/app/auth')} className="w-full h-11 rounded-2xl font-semibold">{tr('Sign In')}</Button>
         </div>
       </div>
     );
@@ -88,8 +90,8 @@ export function CustomerWishlist() {
             <ArrowLeft className="h-[18px] w-[18px]" />
           </button>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Saved</p>
-            <h1 className="text-[22px] font-bold tracking-tight leading-tight">Wishlist</h1>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{tr('Saved')}</p>
+            <h1 className="text-[22px] font-bold tracking-tight leading-tight">{tr('Wishlist')}</h1>
           </div>
         </div>
 
@@ -140,7 +142,7 @@ export function CustomerWishlist() {
                 ))}
               </div>
             ) : (
-              <EmptyCard icon={Package} label="No products saved yet" cta="Browse marketplace" onClick={() => navigate('/app/stores')} />
+              <EmptyCard icon={Package} label={tr('No products saved yet')} cta="Browse marketplace" onClick={() => navigate('/app/stores')} />
             )}
           </TabsContent>
 
@@ -157,7 +159,7 @@ export function CustomerWishlist() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{fav.merchant?.business_name || 'Store'}</p>
-                    <p className="text-[11px] text-muted-foreground">Saved</p>
+                    <p className="text-[11px] text-muted-foreground">{tr('Saved')}</p>
                   </div>
                   <button
                     onClick={() => navigate(`/app/stores/${fav.merchant?.id}`)}
@@ -174,7 +176,7 @@ export function CustomerWishlist() {
                 </motion.div>
               ))
             ) : (
-              <EmptyCard icon={Store} label="No favorite stores yet" cta="Discover stores" onClick={() => navigate('/app/stores')} />
+              <EmptyCard icon={Store} label={tr('No favorite stores yet')} cta="Discover stores" onClick={() => navigate('/app/stores')} />
             )}
           </TabsContent>
         </Tabs>

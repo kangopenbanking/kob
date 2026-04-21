@@ -11,6 +11,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 /* ─── Account type definitions matching CustomerLinkedAccounts ─── */
 
@@ -86,6 +87,7 @@ const CARD_NETWORKS = [
 
 /* ─── Formatting helpers ─── */
 const formatRib = (v: string) => {
+  const tr = useHarvestedT('customer');
   const d = v.replace(/\D/g, '').substring(0, 23);
   if (d.length <= 5) return d;
   if (d.length <= 10) return `${d.substring(0, 5)}-${d.substring(5)}`;
@@ -260,18 +262,18 @@ const CustomerOnboarding: React.FC = () => {
       case 'bank_account':
         return (
           <>
-            <Field label="Account Holder Name">
-              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on account" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('Account Holder Name')}>
+              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder={tr('Full name on account')} className="h-14 rounded-2xl text-base" />
             </Field>
-            <Field label="Bank">
+            <Field label={tr('Bank')}>
               <Select value={bankCode} onValueChange={setBankCode}>
-                <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder="Select your bank" /></SelectTrigger>
+                <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder={tr('Select your bank')} /></SelectTrigger>
                 <SelectContent>
                   {CM_BANKS.map(b => <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="RIB Number (23 digits)">
+            <Field label={tr('RIB Number (23 digits)')}>
               <Input value={accountNumber} onChange={e => setAccountNumber(formatRib(e.target.value))} placeholder="10005-00100-01234567890-23" className="h-14 rounded-2xl text-base font-mono" />
             </Field>
           </>
@@ -279,11 +281,11 @@ const CustomerOnboarding: React.FC = () => {
       case 'bank_iban':
         return (
           <>
-            <Field label="Account Holder Name">
-              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on account" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('Account Holder Name')}>
+              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder={tr('Full name on account')} className="h-14 rounded-2xl text-base" />
             </Field>
             <Field label="IBAN">
-              <Input value={accountNumber} onChange={e => setAccountNumber(formatIban(e.target.value))} placeholder="CM21 1000 5001 0001 2345 6789 023" className="h-14 rounded-2xl text-base font-mono" />
+              <Input value={accountNumber} onChange={e => setAccountNumber(formatIban(e.target.value))} placeholder={tr('CM21 1000 5001 0001 2345 6789 023')} className="h-14 rounded-2xl text-base font-mono" />
             </Field>
           </>
         );
@@ -291,36 +293,36 @@ const CustomerOnboarding: React.FC = () => {
       case 'momo_orange':
         return (
           <>
-            <Field label="Account Name">
-              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Name on MoMo account" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('Account Name')}>
+              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder={tr('Name on MoMo account')} className="h-14 rounded-2xl text-base" />
             </Field>
-            <Field label="Phone Number">
-              <Input value={accountNumber} onChange={e => setAccountNumber(formatPhone(e.target.value))} placeholder="+237 6XX XXX XXX" type="tel" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('Phone Number')}>
+              <Input value={accountNumber} onChange={e => setAccountNumber(formatPhone(e.target.value))} placeholder={tr('+237 6XX XXX XXX')} type="tel" className="h-14 rounded-2xl text-base" />
             </Field>
           </>
         );
       case 'bank_card':
         return (
           <>
-            <Field label="Cardholder Name">
-              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Name on card" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('Cardholder Name')}>
+              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder={tr('Name on card')} className="h-14 rounded-2xl text-base" />
             </Field>
-            <Field label="Card Number">
+            <Field label={tr('Card Number')}>
               <Input value={accountNumber} onChange={e => setAccountNumber(formatCard(e.target.value))} placeholder="4242 4242 4242 4242" className="h-14 rounded-2xl text-base font-mono" />
             </Field>
-            <Field label="Card Network">
+            <Field label={tr('Card Network')}>
               <Select value={cardNetwork} onValueChange={setCardNetwork}>
-                <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder="Select network" /></SelectTrigger>
+                <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder={tr('Select network')} /></SelectTrigger>
                 <SelectContent>
                   {CARD_NETWORKS.map(n => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
             <div className="flex gap-3">
-              <Field label="Exp Month" className="flex-1">
+              <Field label={tr('Exp Month')} className="flex-1">
                 <Input value={cardExpMonth} onChange={e => setCardExpMonth(e.target.value.replace(/\D/g, '').substring(0, 2))} placeholder="MM" className="h-14 rounded-2xl text-base text-center" maxLength={2} />
               </Field>
-              <Field label="Exp Year" className="flex-1">
+              <Field label={tr('Exp Year')} className="flex-1">
                 <Input value={cardExpYear} onChange={e => setCardExpYear(e.target.value.replace(/\D/g, '').substring(0, 2))} placeholder="YY" className="h-14 rounded-2xl text-base text-center" maxLength={2} />
               </Field>
             </div>
@@ -329,10 +331,10 @@ const CustomerOnboarding: React.FC = () => {
       case 'paypal':
         return (
           <>
-            <Field label="PayPal Name">
-              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Full name on PayPal" className="h-14 rounded-2xl text-base" />
+            <Field label={tr('PayPal Name')}>
+              <Input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder={tr('Full name on PayPal')} className="h-14 rounded-2xl text-base" />
             </Field>
-            <Field label="PayPal Email">
+            <Field label={tr('PayPal Email')}>
               <Input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="your@email.com" type="email" className="h-14 rounded-2xl text-base" />
             </Field>
           </>
@@ -356,8 +358,8 @@ const CustomerOnboarding: React.FC = () => {
           {/* ─── Step 1: Select Account Type ─── */}
           {step === 'select' && (
             <motion.div key="select" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }}>
-              <h1 className="mb-1 text-xl font-bold text-foreground">Link Your Account</h1>
-              <p className="mb-6 text-sm text-muted-foreground">Choose how you'd like to manage your money on Kang</p>
+              <h1 className="mb-1 text-xl font-bold text-foreground">{tr('Link Your Account')}</h1>
+              <p className="mb-6 text-sm text-muted-foreground">{tr('Choose how you\'d like to manage your money on Kang')}</p>
 
               <div className="space-y-2.5">
                 {accountOptions.map((option) => {
@@ -402,9 +404,9 @@ const CustomerOnboarding: React.FC = () => {
                 >
                   <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
-                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">View-Only Mode</p>
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">{tr('View-Only Mode')}</p>
                     <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">
-                      You can browse your dashboard but sending money, funding your wallet, and other financial features will be disabled until you link a payment account from <span className="font-semibold">Accounts</span>.
+                      You can browse your dashboard but sending money, funding your wallet, and other financial features will be disabled until you link a payment account from <span className="font-semibold">{tr('Accounts')}</span>.
                     </p>
                   </div>
                 </motion.div>
@@ -421,7 +423,7 @@ const CustomerOnboarding: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-foreground">{selectedOption.label}</p>
-                  <p className="text-xs text-muted-foreground">Enter your account details</p>
+                  <p className="text-xs text-muted-foreground">{tr('Enter your account details')}</p>
                 </div>
               </div>
 
@@ -440,7 +442,7 @@ const CustomerOnboarding: React.FC = () => {
           {step === 'confirming' && (
             <motion.div key="confirming" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="flex flex-col items-center gap-4 pt-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-semibold text-foreground">Setting up your account…</p>
+              <p className="text-sm font-semibold text-foreground">{tr('Setting up your account…')}</p>
             </motion.div>
           )}
         </AnimatePresence>

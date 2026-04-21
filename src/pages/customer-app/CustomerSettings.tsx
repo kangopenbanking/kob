@@ -18,10 +18,12 @@ import { supabase } from '@/integrations/supabase/client';
 import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
 
 const CustomerSettings: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>(null);
   const [legalSlug, setLegalSlug] = useState('');
@@ -253,7 +255,7 @@ const CustomerSettings: React.FC = () => {
         <button onClick={() => activeSection ? setActiveSection(null) : navigate(-1)}>
           <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Settings')}</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -307,7 +309,7 @@ const CustomerSettings: React.FC = () => {
             <SettingCard>
               <SettingRow
                 icon={<Moon className="h-5 w-5" strokeWidth={1.5} />}
-                label="Dark Mode"
+                label={tr('Dark Mode')}
                 description={darkMode ? 'On' : 'Off'}
                 right={<Switch checked={darkMode} onCheckedChange={toggleDarkMode} />}
               />
@@ -315,9 +317,9 @@ const CustomerSettings: React.FC = () => {
 
             {/* Help & Logout & Delete */}
             <SettingCard>
-              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help')} />
-              <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
-              <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label="Delete Account" description="Permanently delete your account and data" onClick={() => {
+              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label={tr('Help & Support')} onClick={() => navigate('/app/help')} />
+              <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label={tr('Log Out')} onClick={handleLogout} destructive />
+              <SettingRow icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />} label={tr('Delete Account')} description={tr('Permanently delete your account and data')} onClick={() => {
                 if (window.confirm('Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.')) {
                   toast.info('Please contact support@kangconsultancy.com to process your account deletion request.');
                 }
@@ -334,19 +336,19 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'personal' && (
           <motion.div key="personal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="Personal Information" subtitle="Update your profile details" />
+            <SectionTitle title={tr('Personal Information')} subtitle="Update your profile details" />
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">Full Name</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="rounded-xl" />
+              <Label className="text-xs font-semibold text-muted-foreground">{tr('Full Name')}</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder={tr('Your full name')} className="rounded-xl" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">Email</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">{tr('Email')}</Label>
               <Input value={email} disabled className="rounded-xl bg-muted opacity-60" />
-              <p className="text-[11px] text-muted-foreground">Email cannot be changed here</p>
+              <p className="text-[11px] text-muted-foreground">{tr('Email cannot be changed here')}</p>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">Phone Number</Label>
-              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+237 6XX XXX XXX" className="rounded-xl" />
+              <Label className="text-xs font-semibold text-muted-foreground">{tr('Phone Number')}</Label>
+              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder={tr('+237 6XX XXX XXX')} className="rounded-xl" />
             </div>
             <Button onClick={handleSavePersonal} disabled={saving} className="mt-2 gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -359,13 +361,13 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'security' && (
           <motion.div key="security" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="Security" subtitle="Manage your account security" />
+            <SectionTitle title={tr('Security')} subtitle="Manage your account security" />
 
             <SettingCard>
               <SettingRow
                 icon={<Fingerprint className="h-5 w-5" strokeWidth={1.5} />}
-                label="Biometric Login"
-                description="Use fingerprint or Face ID"
+                label={tr('Biometric Login')}
+                description={tr('Use fingerprint or Face ID')}
                 right={<Switch checked={biometric} onCheckedChange={async (v) => {
                   setBiometric(v);
                   const { data: { user: u } } = await supabase.auth.getUser();
@@ -375,8 +377,8 @@ const CustomerSettings: React.FC = () => {
               />
               <SettingRow
                 icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
-                label="Two-Factor Auth"
-                description="Extra layer of security"
+                label={tr('Two-Factor Auth')}
+                description={tr('Extra layer of security')}
                 right={<Switch checked={twoFA} onCheckedChange={async (v) => {
                   setTwoFA(v);
                   const { data: { user: u } } = await supabase.auth.getUser();
@@ -387,18 +389,18 @@ const CustomerSettings: React.FC = () => {
             </SettingCard>
 
             <div className="rounded-2xl border border-border bg-card p-4">
-              <h3 className="mb-3 text-sm font-bold text-foreground">Change Password</h3>
+              <h3 className="mb-3 text-sm font-bold text-foreground">{tr('Change Password')}</h3>
               <div className="flex flex-col gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Current Password</Label>
-                  <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="rounded-xl" />
+                  <Label className="text-xs">{tr('Current Password')}</Label>
+                  <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder={tr('Enter current password')} className="rounded-xl" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">New Password</Label>
-                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" className="rounded-xl" />
+                  <Label className="text-xs">{tr('New Password')}</Label>
+                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={tr('Min. 8 characters')} className="rounded-xl" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Confirm Password</Label>
+                  <Label className="text-xs">{tr('Confirm Password')}</Label>
                   <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="rounded-xl" />
                 </div>
                 <Button onClick={handleChangePassword} disabled={saving || !currentPassword || !newPassword} size="sm" variant="outline" className="gap-2 rounded-xl">
@@ -411,8 +413,8 @@ const CustomerSettings: React.FC = () => {
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Transaction PIN</h3>
-                  <p className="text-[11px] text-muted-foreground">6-digit PIN for payments</p>
+                  <h3 className="text-sm font-bold text-foreground">{tr('Transaction PIN')}</h3>
+                  <p className="text-[11px] text-muted-foreground">{tr('6-digit PIN for payments')}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setShowPinDialog(true)} className="gap-1.5 rounded-xl">
                   <KeyRound className="h-4 w-4" /> Set PIN
@@ -426,7 +428,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'notifications' && (
           <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="Notifications" subtitle="Choose what alerts you receive" />
+            <SectionTitle title={tr('Notifications')} subtitle="Choose what alerts you receive" />
 
             <SettingCard>
               {[
@@ -457,33 +459,33 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'language' && (
           <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="Language & Region" subtitle="Set your preferred language and currency" />
+            <SectionTitle title={tr('Language & Region')} subtitle="Set your preferred language and currency" />
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">Language</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">{tr('Language')}</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="en">{tr('English')}</SelectItem>
+                  <SelectItem value="fr">{tr('Français')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground">Default Currency</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">{tr('Default Currency')}</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="XAF">XAF (CFA Franc)</SelectItem>
-                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
-                  <SelectItem value="GBP">GBP (British Pound)</SelectItem>
-                  <SelectItem value="NGN">NGN (Nigerian Naira)</SelectItem>
-                  <SelectItem value="GHS">GHS (Ghanaian Cedi)</SelectItem>
-                  <SelectItem value="KES">KES (Kenyan Shilling)</SelectItem>
-                  <SelectItem value="ZAR">ZAR (South African Rand)</SelectItem>
-                  <SelectItem value="CAD">CAD (Canadian Dollar)</SelectItem>
+                  <SelectItem value="XAF">{tr('XAF (CFA Franc)')}</SelectItem>
+                  <SelectItem value="EUR">{tr('EUR (Euro)')}</SelectItem>
+                  <SelectItem value="USD">{tr('USD (US Dollar)')}</SelectItem>
+                  <SelectItem value="GBP">{tr('GBP (British Pound)')}</SelectItem>
+                  <SelectItem value="NGN">{tr('NGN (Nigerian Naira)')}</SelectItem>
+                  <SelectItem value="GHS">{tr('GHS (Ghanaian Cedi)')}</SelectItem>
+                  <SelectItem value="KES">{tr('KES (Kenyan Shilling)')}</SelectItem>
+                  <SelectItem value="ZAR">{tr('ZAR (South African Rand)')}</SelectItem>
+                  <SelectItem value="CAD">{tr('CAD (Canadian Dollar)')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -499,7 +501,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'legal' && (
           <motion.div key="legal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-2">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="Legal & Policies" subtitle="Terms, privacy, compliance documents" />
+            <SectionTitle title={tr('Legal & Policies')} subtitle="Terms, privacy, compliance documents" />
             <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setActiveSection('legal-view'); }} />
           </motion.div>
         )}
@@ -516,12 +518,12 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'about' && (
           <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title="About" subtitle="App information" />
+            <SectionTitle title={tr('About')} subtitle="App information" />
 
             <SettingCard>
-              <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version" description="2.1.0" right={<span className="text-xs text-muted-foreground">Latest</span>} />
-              <SettingRow icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label="Platform" description="Kang Open Banking" right={<span />} />
-              <SettingRow icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label="Compliance" description="COBAC · PCI-DSS · ISO 27001" right={<span />} />
+              <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label={tr('App Version')} description="2.1.0" right={<span className="text-xs text-muted-foreground">{tr('Latest')}</span>} />
+              <SettingRow icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={tr('Platform')} description={tr('Kang Open Banking')} right={<span />} />
+              <SettingRow icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label={tr('Compliance')} description={tr('COBAC · PCI-DSS · ISO 27001')} right={<span />} />
             </SettingCard>
 
             <div className="rounded-2xl border border-border bg-card p-4">
@@ -541,13 +543,13 @@ const CustomerSettings: React.FC = () => {
       <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-center">Set Transaction PIN</DialogTitle>
+            <DialogTitle className="text-center">{tr('Set Transaction PIN')}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
-            <p className="text-sm text-muted-foreground text-center">Enter a 6-digit PIN for securing transactions</p>
+            <p className="text-sm text-muted-foreground text-center">{tr('Enter a 6-digit PIN for securing transactions')}</p>
             <div className="space-y-3">
               <div>
-                <Label className="text-xs text-muted-foreground">New PIN</Label>
+                <Label className="text-xs text-muted-foreground">{tr('New PIN')}</Label>
                 <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
                   <InputOTPGroup>
                     {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
@@ -555,7 +557,7 @@ const CustomerSettings: React.FC = () => {
                 </InputOTP>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Confirm PIN</Label>
+                <Label className="text-xs text-muted-foreground">{tr('Confirm PIN')}</Label>
                 <InputOTP maxLength={6} value={confirmPin} onChange={setConfirmPin}>
                   <InputOTPGroup>
                     {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}

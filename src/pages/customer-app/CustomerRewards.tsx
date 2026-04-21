@@ -8,8 +8,10 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { API_CONFIG } from '@/config/api';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRewards: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [tab, setTab] = useState<'cashback' | 'coupons' | 'referrals'>('cashback');
@@ -146,10 +148,10 @@ const CustomerRewards: React.FC = () => {
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} aria-label="Back">
+        <button onClick={() => navigate(-1)} aria-label={tr('Back')}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Rewards</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Rewards')}</h1>
       </div>
 
       {/* Summary Card */}
@@ -160,7 +162,7 @@ const CustomerRewards: React.FC = () => {
             <Gift className="h-7 w-7 text-[hsl(45,60%,35%)]" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Earned</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Total Earned')}</p>
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
             ) : (
@@ -170,11 +172,11 @@ const CustomerRewards: React.FC = () => {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-background/50 p-2.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Cashback</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{tr('Cashback')}</p>
             <p className="text-sm font-bold text-foreground">{totalCashback.toLocaleString()}</p>
           </div>
           <div className="rounded-2xl bg-background/50 p-2.5 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Referrals</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{tr('Referrals')}</p>
             <p className="text-sm font-bold text-foreground">{totalReferralBonus.toLocaleString()}</p>
           </div>
         </div>
@@ -202,7 +204,7 @@ const CustomerRewards: React.FC = () => {
             <div className="flex items-center gap-3 mb-3">
               <Banknote className="h-5 w-5 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
               <div>
-                <p className="text-xs font-bold text-foreground">Transfer Activity</p>
+                <p className="text-xs font-bold text-foreground">{tr('Transfer Activity')}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {(transferStats?.totalTransferred || 0).toLocaleString()} XAF across {transferStats?.count || 0} transfers
                 </p>
@@ -220,12 +222,12 @@ const CustomerRewards: React.FC = () => {
             </p>
           </div>
 
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cashback History</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Cashback History')}</p>
           {cashbackRewards.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-10">
               <Star className="h-10 w-10 text-muted-foreground" strokeWidth={1} />
-              <p className="text-sm text-muted-foreground">No cashback earned yet</p>
-              <p className="text-xs text-muted-foreground text-center">Make qualifying transfers to start earning</p>
+              <p className="text-sm text-muted-foreground">{tr('No cashback earned yet')}</p>
+              <p className="text-xs text-muted-foreground text-center">{tr('Make qualifying transfers to start earning')}</p>
             </div>
           ) : (
             cashbackRewards.map((r: any, i: number) => (
@@ -248,8 +250,8 @@ const CustomerRewards: React.FC = () => {
           {coupons.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-10">
               <Tag className="h-10 w-10 text-muted-foreground" strokeWidth={1} />
-              <p className="text-sm text-muted-foreground">No coupons available</p>
-              <p className="text-xs text-muted-foreground text-center">Check back later for special offers from merchants</p>
+              <p className="text-sm text-muted-foreground">{tr('No coupons available')}</p>
+              <p className="text-xs text-muted-foreground text-center">{tr('Check back later for special offers from merchants')}</p>
             </div>
           ) : (
             coupons.map((c: any, i: number) => (
@@ -293,7 +295,7 @@ const CustomerRewards: React.FC = () => {
                 <UserPlus className="h-6 w-6 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
               </div>
               <div>
-                <p className="text-sm font-bold text-foreground">Invite & Earn</p>
+                <p className="text-sm font-bold text-foreground">{tr('Invite & Earn')}</p>
                 <p className="text-[11px] text-muted-foreground">
                   You and your friend each earn {referralBonus.toLocaleString()} XAF after their first transfer
                 </p>
@@ -301,7 +303,7 @@ const CustomerRewards: React.FC = () => {
             </div>
 
             <div className="rounded-2xl bg-background/50 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Your Referral Code</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">{tr('Your Referral Code')}</p>
               <p className="font-mono text-base font-bold text-foreground tracking-widest">{referralCode || '——————'}</p>
               {referralLink && (
                 <p className="text-[10px] text-muted-foreground mt-1 break-all">{referralLink}</p>
@@ -322,22 +324,22 @@ const CustomerRewards: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Invited</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Invited')}</p>
               <p className="text-lg font-bold text-foreground">{referrals.length}</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Completed</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Completed')}</p>
               <p className="text-lg font-bold text-foreground">{referrals.filter((r: any) => r.status === 'completed').length}</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-3 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Earned</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Earned')}</p>
               <p className="text-lg font-bold text-foreground">{totalReferralBonus.toLocaleString()}</p>
             </div>
           </div>
 
           {referrals.length > 0 && (
             <>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Referral History</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Referral History')}</p>
               {referrals.map((ref: any, i: number) => (
                 <motion.div key={ref.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
@@ -356,7 +358,7 @@ const CustomerRewards: React.FC = () => {
             </>
           )}
 
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">How It Works</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('How It Works')}</p>
           {[
             { step: '1', text: 'Share your unique referral code with friends' },
             { step: '2', text: 'They sign up using your link and complete registration' },

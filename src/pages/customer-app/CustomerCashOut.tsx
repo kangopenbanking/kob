@@ -12,6 +12,7 @@ import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { KANG_PLATFORM_ID } from '@/constants/platform';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 
 
@@ -26,6 +27,7 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
 const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 const CustomerCashOut: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -283,7 +285,7 @@ const CustomerCashOut: React.FC = () => {
         <button onClick={goBack}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Cash Out</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Cash Out')}</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -294,7 +296,7 @@ const CustomerCashOut: React.FC = () => {
               <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
+              <p className="text-lg font-bold text-foreground">{tr('Withdrawal Initiated!')}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}
               </p>
@@ -308,7 +310,7 @@ const CustomerCashOut: React.FC = () => {
                   <Clock className="h-5 w-5 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">Estimated Processing</p>
+                  <p className="text-xs font-bold text-foreground">{tr('Estimated Processing')}</p>
                   <p className="text-sm font-extrabold text-primary">
                     {getProcessingTime(selectedAccount?.account_type)}
                   </p>
@@ -323,11 +325,11 @@ const CustomerCashOut: React.FC = () => {
             <div className="w-full space-y-2">
               <div className="flex items-center gap-2 rounded-xl bg-[hsl(150,30%,94%)] px-3 py-2.5">
                 <Mail className="h-4 w-4 text-[hsl(150,40%,35%)] shrink-0" strokeWidth={1.5} />
-                <p className="text-[11px] text-[hsl(150,30%,25%)]">A confirmation email has been sent to your inbox.</p>
+                <p className="text-[11px] text-[hsl(150,30%,25%)]">{tr('A confirmation email has been sent to your inbox.')}</p>
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-[hsl(210,30%,94%)] px-3 py-2.5">
                 <Bell className="h-4 w-4 text-[hsl(210,50%,45%)] shrink-0" strokeWidth={1.5} />
-                <p className="text-[11px] text-[hsl(210,30%,25%)]">You'll be notified when the transfer is complete.</p>
+                <p className="text-[11px] text-[hsl(210,30%,25%)]">{tr('You\'ll be notified when the transfer is complete.')}</p>
               </div>
             </div>
           </motion.div>
@@ -337,18 +339,18 @@ const CustomerCashOut: React.FC = () => {
               <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
                 <Banknote className="h-5 w-5 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
                 <div>
-                  <p className="text-xs font-bold text-foreground">Withdrawal Fee</p>
+                  <p className="text-xs font-bold text-foreground">{tr('Withdrawal Fee')}</p>
                   <p className="text-[11px] text-muted-foreground">{feeDesc}</p>
                 </div>
               </div>
             )}
 
             <div className="rounded-2xl bg-card border border-border p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Wallet Balance</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Wallet Balance')}</p>
               <p className="text-xl font-bold text-foreground mt-1">XAF {walletBalance.toLocaleString()}</p>
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Withdraw To</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Withdraw To')}</p>
 
             {acctLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -429,7 +431,7 @@ const CustomerCashOut: React.FC = () => {
             })()}
 
             <div className="flex flex-col items-center gap-2 rounded-3xl bg-[hsl(25,60%,35%)] p-8">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Withdrawal Amount</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">{tr('Withdrawal Amount')}</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-[hsl(0,0%,100%)]/60">XAF</span>
                 <input type="text" inputMode="numeric" value={amount}
@@ -461,7 +463,7 @@ const CustomerCashOut: React.FC = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="rounded-2xl bg-card border border-border p-4 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Amount</span>
+                  <span className="text-muted-foreground">{tr('Amount')}</span>
                   <span className="font-semibold text-foreground">XAF {numAmount.toLocaleString()}</span>
                 </div>
                 {fee > 0 && (
@@ -471,7 +473,7 @@ const CustomerCashOut: React.FC = () => {
                   </div>
                 )}
                 <div className="border-t border-border pt-2 flex justify-between text-sm">
-                  <span className="font-bold text-foreground">You receive</span>
+                  <span className="font-bold text-foreground">{tr('You receive')}</span>
                   <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
                 </div>
               </motion.div>
@@ -483,11 +485,11 @@ const CustomerCashOut: React.FC = () => {
           </motion.div>
         ) : (
           <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            <p className="text-center text-sm font-semibold text-muted-foreground">Confirm Withdrawal</p>
+            <p className="text-center text-sm font-semibold text-muted-foreground">{tr('Confirm Withdrawal')}</p>
 
             <div className="rounded-3xl bg-card border-2 border-border p-5 space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Withdrawal Amount</span>
+                <span className="text-muted-foreground">{tr('Withdrawal Amount')}</span>
                 <span className="font-bold text-foreground">XAF {numAmount.toLocaleString()}</span>
               </div>
               {fee > 0 && (
@@ -497,7 +499,7 @@ const CustomerCashOut: React.FC = () => {
                 </div>
               )}
               <div className="border-t border-border pt-3 flex justify-between text-sm">
-                <span className="text-muted-foreground">To</span>
+                <span className="text-muted-foreground">{tr('To')}</span>
                 <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -505,7 +507,7 @@ const CustomerCashOut: React.FC = () => {
                 <span>{selectedAccount?.last4 ? `•••• ${selectedAccount.last4}` : ''}</span>
               </div>
               <div className="border-t border-border pt-3 flex justify-between text-base">
-                <span className="font-bold text-foreground">You receive</span>
+                <span className="font-bold text-foreground">{tr('You receive')}</span>
                 <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
               </div>
             </div>
@@ -514,7 +516,7 @@ const CustomerCashOut: React.FC = () => {
               <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Network className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                  <p className="text-xs font-bold text-foreground">Payout Rail</p>
+                  <p className="text-xs font-bold text-foreground">{tr('Payout Rail')}</p>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Choose how this transfer reaches your bank. Open Banking uses the Kang Open Banking API for direct, lower-cost settlement when your bank is a registered KOB institution.
@@ -545,9 +547,9 @@ const CustomerCashOut: React.FC = () => {
 
             <Button onClick={() => setShowPin(true)} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing...')}</span>
               ) : (
-                <><Banknote className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm Cash Out</>
+                <><Banknote className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Confirm Cash Out')}</>
               )}
             </Button>
           </motion.div>

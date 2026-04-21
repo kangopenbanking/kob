@@ -16,6 +16,7 @@ import kangCardBg from '@/assets/kangcard_visa.png';
 import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -92,6 +93,7 @@ const accountTypes: AccountTypeConfig[] = [
 ];
 
 const getIconForType = (type: string) => {
+  const tr = useHarvestedT('customer');
   const found = accountTypes.find(t => t.key === type);
   return found || accountTypes[0];
 };
@@ -176,7 +178,7 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
           <CardDeleteBtn onClick={onDelete} />
         </div>
         <div>
-          <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
+          <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">{tr('Linked Card')}</p>
           <p className="text-xs sm:text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
         </div>
         <div className="space-y-2 sm:space-y-3">
@@ -186,16 +188,16 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
           <div className="flex items-end justify-between">
             <div className="flex gap-4 sm:gap-6">
               <div>
-                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Expires</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">{tr('Expires')}</p>
                 <p className="text-xs sm:text-sm font-semibold text-white font-mono">{expMonth}/{expYear}</p>
               </div>
               <div>
-                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Network</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">{tr('Network')}</p>
                 <p className="text-xs sm:text-sm font-semibold text-white capitalize">{network}</p>
               </div>
             </div>
             {acc.is_primary && (
-              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white">Primary</span>
+              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white">{tr('Primary')}</span>
             )}
           </div>
         </div>
@@ -238,11 +240,11 @@ const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) =
           {!isIban && bankCode && (
             <div className="flex gap-4">
               <div>
-                <p className="text-[9px] font-medium text-white/40 uppercase">Bank</p>
+                <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Bank')}</p>
                 <p className="text-xs font-semibold text-white font-mono">{bankCode}</p>
               </div>
               <div>
-                <p className="text-[9px] font-medium text-white/40 uppercase">Branch</p>
+                <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Branch')}</p>
                 <p className="text-xs font-semibold text-white font-mono">{branchCode}</p>
               </div>
             </div>
@@ -254,7 +256,7 @@ const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) =
             </div>
             <div className="flex items-center gap-2">
               {acc.is_primary && (
-                <span className="rounded-lg bg-white/15 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+                <span className="rounded-lg bg-white/15 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
               )}
               <span className="rounded-lg bg-[hsl(210,80%,60%)]/20 px-2 py-0.5 text-[9px] font-bold text-[hsl(210,80%,75%)] uppercase">
                 {isIban ? 'IBAN' : 'RIB'}
@@ -285,7 +287,7 @@ const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
             <Smartphone className="h-4.5 w-4.5 text-black/70" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">MTN Mobile Money</p>
+            <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">{tr('MTN Mobile Money')}</p>
             <p className="text-sm font-bold text-black/80">{acc.account_name || 'MoMo User'}</p>
           </div>
         </div>
@@ -297,13 +299,13 @@ const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
 
       <div className="space-y-2">
         <div>
-          <p className="text-[9px] font-medium text-black/35 uppercase">Phone Number</p>
+          <p className="text-[9px] font-medium text-black/35 uppercase">{tr('Phone Number')}</p>
           <p className="font-mono text-lg text-black/80 tracking-[0.1em]">•••• •••• {acc.last4 || '••••'}</p>
         </div>
         <div className="flex items-end justify-between">
-          <span className="rounded-lg bg-black/8 px-2.5 py-1 text-[10px] font-extrabold text-black/60 uppercase tracking-wider">MTN MoMo</span>
+          <span className="rounded-lg bg-black/8 px-2.5 py-1 text-[10px] font-extrabold text-black/60 uppercase tracking-wider">{tr('MTN MoMo')}</span>
           {acc.is_primary && (
-            <span className="rounded-lg bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/60">Primary</span>
+            <span className="rounded-lg bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/60">{tr('Primary')}</span>
           )}
         </div>
       </div>
@@ -327,7 +329,7 @@ const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
             <Smartphone className="h-4.5 w-4.5 text-white/80" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Orange Money</p>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">{tr('Orange Money')}</p>
             <p className="text-sm font-bold text-white">{acc.account_name || 'Orange User'}</p>
           </div>
         </div>
@@ -336,13 +338,13 @@ const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
       <div className="space-y-2">
         <div>
-          <p className="text-[9px] font-medium text-white/40 uppercase">Phone Number</p>
+          <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Phone Number')}</p>
           <p className="font-mono text-lg text-white tracking-[0.1em]">•••• •••• {acc.last4 || '••••'}</p>
         </div>
         <div className="flex items-end justify-between">
-          <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-extrabold text-white/80 uppercase tracking-wider">Orange Money</span>
+          <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-extrabold text-white/80 uppercase tracking-wider">{tr('Orange Money')}</span>
           {acc.is_primary && (
-            <span className="rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+            <span className="rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
           )}
         </div>
       </div>
@@ -369,7 +371,7 @@ const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
               <Wallet className="h-4.5 w-4.5 text-[hsl(210,80%,70%)]" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-[hsl(210,60%,70%)] uppercase tracking-wider">PayPal</p>
+              <p className="text-[10px] font-bold text-[hsl(210,60%,70%)] uppercase tracking-wider">{tr('PayPal')}</p>
               <p className="text-sm font-bold text-white">{acc.account_name || 'PayPal User'}</p>
             </div>
           </div>
@@ -378,13 +380,13 @@ const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void })
 
         <div className="space-y-2">
           <div>
-            <p className="text-[9px] font-medium text-white/40 uppercase">Email</p>
+            <p className="text-[9px] font-medium text-white/40 uppercase">{tr('Email')}</p>
             <p className="text-sm font-semibold text-white/90">{maskedEmail}</p>
           </div>
           <div className="flex items-end justify-between">
-            <span className="rounded-lg bg-[hsl(210,80%,50%)]/20 px-2.5 py-1 text-[10px] font-extrabold text-[hsl(210,80%,75%)] uppercase tracking-wider">PayPal</span>
+            <span className="rounded-lg bg-[hsl(210,80%,50%)]/20 px-2.5 py-1 text-[10px] font-extrabold text-[hsl(210,80%,75%)] uppercase tracking-wider">{tr('PayPal')}</span>
             {acc.is_primary && (
-              <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+              <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white">{tr('Primary')}</span>
             )}
           </div>
         </div>
@@ -720,7 +722,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
           <Select value={formData.bank_code || ''} onValueChange={(v) => setFormData({ ...formData, bank_code: v })}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder="Select your bank" />
+              <SelectValue placeholder={tr('Select your bank')} />
             </SelectTrigger>
             <SelectContent>
               {CM_BANKS.map(b => (
@@ -739,7 +741,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
           <Select value={formData.card_network || ''} onValueChange={(v) => setFormData({ ...formData, card_network: v })}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder="Select network" />
+              <SelectValue placeholder={tr('Select network')} />
             </SelectTrigger>
             <SelectContent>
               {CARD_NETWORKS.map(n => (
@@ -756,7 +758,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       return (
         <div key="expiry_row" className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Month</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">{tr('Month')}</label>
             <Select value={formData.card_exp_month || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_month: v })}>
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="MM" />
@@ -770,7 +772,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Year</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">{tr('Year')}</label>
             <Select value={formData.card_exp_year || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_year: v })}>
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="YY" />
@@ -808,7 +810,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </p>
           )}
           {selectedType?.key === 'bank_account' && (
-            <p className="text-[10px] text-muted-foreground">Format: Bank (5) - Branch (5) - Account (11) - Key (2)</p>
+            <p className="text-[10px] text-muted-foreground">{tr('Format: Bank (5) - Branch (5) - Account (11) - Key (2)')}</p>
           )}
         </div>
       );
@@ -882,7 +884,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           <button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Linked Accounts</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Linked Accounts')}</h1>
         </div>
         <button
           onClick={handleOpenAdd}
@@ -915,7 +917,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           className="flex items-start gap-3 rounded-2xl bg-[hsl(40,90%,92%)] p-4">
           <ShieldAlert className="h-5 w-5 text-[hsl(40,80%,40%)] mt-0.5 shrink-0" strokeWidth={1.5} />
           <div>
-            <p className="text-xs font-bold text-foreground">Admin Approval Required</p>
+            <p className="text-xs font-bold text-foreground">{tr('Admin Approval Required')}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               Since you previously removed an account, new additions require admin review before activation.
             </p>
@@ -926,7 +928,7 @@ const CustomerLinkedAccounts: React.FC = () => {
       {/* Pending requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pending Requests</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Pending Requests')}</p>
           {pendingRequests.map((req: any) => {
             const data = req.requested_account_data;
             const config = getIconForType(data?.account_type || 'bank_account');
@@ -971,9 +973,9 @@ const CustomerLinkedAccounts: React.FC = () => {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
             <Building2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-sm font-semibold text-foreground">No linked accounts</p>
-          <p className="text-xs text-muted-foreground text-center max-w-xs">Link a bank account, mobile money, PayPal, or card to deposit and withdraw funds.</p>
-          <Button onClick={handleOpenAdd} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> Link Account</Button>
+          <p className="text-sm font-semibold text-foreground">{tr('No linked accounts')}</p>
+          <p className="text-xs text-muted-foreground text-center max-w-xs">{tr('Link a bank account, mobile money, PayPal, or card to deposit and withdraw funds.')}</p>
+          <Button onClick={handleOpenAdd} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> {tr('Link Account')}</Button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -998,7 +1000,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           {hasRemovals && (
             <div className="flex items-center gap-2 rounded-xl bg-[hsl(40,90%,92%)] p-3">
               <ShieldAlert className="h-4 w-4 text-[hsl(40,80%,40%)] shrink-0" />
-              <p className="text-[11px] text-[hsl(40,80%,30%)]">Admin approval required — your request will be reviewed.</p>
+              <p className="text-[11px] text-[hsl(40,80%,30%)]">{tr('Admin approval required — your request will be reviewed.')}</p>
             </div>
           )}
 
@@ -1031,18 +1033,18 @@ const CustomerLinkedAccounts: React.FC = () => {
                     <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/10" />
                     <div className="relative z-10 flex flex-col justify-between h-full p-4">
-                      <p className="text-[10px] text-white/70 uppercase tracking-wider font-medium">Preview</p>
+                      <p className="text-[10px] text-white/70 uppercase tracking-wider font-medium">{tr('Preview')}</p>
                       <div className="space-y-2">
                         <p className="font-mono text-base text-white tracking-[0.15em]">
                           {formData.account_number || '•••• •••• •••• ••••'}
                         </p>
                         <div className="flex justify-between items-end">
                           <div>
-                            <p className="text-[9px] text-white/60 uppercase">Cardholder</p>
+                            <p className="text-[9px] text-white/60 uppercase">{tr('Cardholder')}</p>
                             <p className="text-xs font-semibold text-white">{formData.account_name || '—'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[9px] text-white/60 uppercase">Expires</p>
+                            <p className="text-[9px] text-white/60 uppercase">{tr('Expires')}</p>
                             <p className="text-xs font-semibold text-white font-mono">
                               {formData.card_exp_month || '••'}/{formData.card_exp_year || '••'}
                             </p>
@@ -1068,14 +1070,14 @@ const CustomerLinkedAccounts: React.FC = () => {
       <AlertDialog open={!!deleteId && !showDeletePin} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Account?</AlertDialogTitle>
+            <AlertDialogTitle>{tr('Remove Account?')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This account will be unlinked from your wallet. <strong>Important:</strong> After removing an account, any future account additions will require admin approval.
+              This account will be unlinked from your wallet. <strong>{tr('Important:')}</strong> After removing an account, any future account additions will require admin approval.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">Remove</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl">{tr('Cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setShowDeletePin(true)} className="rounded-xl bg-destructive text-destructive-foreground">{tr('Remove')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

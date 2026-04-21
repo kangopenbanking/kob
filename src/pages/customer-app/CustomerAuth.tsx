@@ -20,12 +20,14 @@ import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
 const CustomerAuth: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { data: supportedCountries = [] } = useSupportedCountries('consumer');
   const navigate = useNavigate();
 
@@ -366,7 +368,7 @@ const CustomerAuth: React.FC = () => {
           className="relative z-10 flex flex-col items-center text-center"
         >
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
-            <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-xl object-contain" />
+            <img src={kangLogo} alt={tr('Kang')} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">{headerTitle()}</h1>
           <p className="mt-1 text-sm text-primary-foreground/70">{headerSubtitle()}</p>
@@ -390,8 +392,8 @@ const CustomerAuth: React.FC = () => {
                     <Shield className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Secure & Simple</p>
-                    <p className="text-[11px] text-muted-foreground">PIN-protected access to your finances</p>
+                    <p className="text-xs font-semibold text-foreground">{tr('Secure & Simple')}</p>
+                    <p className="text-[11px] text-muted-foreground">{tr('PIN-protected access to your finances')}</p>
                   </div>
                 </div>
 
@@ -440,7 +442,7 @@ const CustomerAuth: React.FC = () => {
                   {tab === 'phone' && (
                     <motion.div key="phone-tab" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="flex flex-col gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Phone Number</Label>
+                        <Label className="text-sm font-medium">{tr('Phone Number')}</Label>
                         <div className="flex gap-2">
                           <Select value={countryCode} onValueChange={setCountryCode}>
                             <SelectTrigger className="w-[110px] rounded-xl border-border/60">
@@ -456,7 +458,7 @@ const CustomerAuth: React.FC = () => {
                             <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                             <Input
                               type="tel"
-                              placeholder="6 XX XX XX XX"
+                              placeholder={tr('6 XX XX XX XX')}
                               value={phoneNumber}
                               onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                               className="rounded-xl border-border/60 pl-10"
@@ -485,16 +487,16 @@ const CustomerAuth: React.FC = () => {
                       <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
                         {intent === 'signup' && (
                           <div className="space-y-2">
-                            <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
+                            <Label htmlFor="fullName" className="text-sm font-medium">{tr('Full Name')}</Label>
                             <div className="relative">
                               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                              <Input id="fullName" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} className="rounded-xl border-border/60 pl-10" required />
+                              <Input id="fullName" placeholder={tr('John Doe')} value={fullName} onChange={e => setFullName(e.target.value)} className="rounded-xl border-border/60 pl-10" required />
                             </div>
                           </div>
                         )}
 
                         <div className="space-y-2">
-                          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                          <Label htmlFor="email" className="text-sm font-medium">{tr('Email')}</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                             <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl border-border/60 pl-10" required />
@@ -502,10 +504,10 @@ const CustomerAuth: React.FC = () => {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                          <Label htmlFor="password" className="text-sm font-medium">{tr('Password')}</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                            <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="Min 8 characters" value={password} onChange={e => setPassword(e.target.value)} className="rounded-xl border-border/60 pl-10 pr-10" required minLength={8} />
+                            <Input id="password" type={showPassword ? 'text' : 'password'} placeholder={tr('Min 8 characters')} value={password} onChange={e => setPassword(e.target.value)} className="rounded-xl border-border/60 pl-10 pr-10" required minLength={8} />
                             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                               {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.5} /> : <Eye className="h-4 w-4" strokeWidth={1.5} />}
                             </button>
@@ -543,7 +545,7 @@ const CustomerAuth: React.FC = () => {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Enter your 6-digit security PIN</p>
+                  <p className="text-sm font-medium text-foreground">{tr('Enter your 6-digit security PIN')}</p>
                   {pinError && (
                     <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-2 text-sm font-medium text-destructive">
                       {pinError}
@@ -609,7 +611,7 @@ const CustomerAuth: React.FC = () => {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Enter the 6-digit code</p>
+                  <p className="text-sm font-medium text-foreground">{tr('Enter the 6-digit code')}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Sent to {countryCode} {phoneNumber}</p>
                 </div>
 
@@ -649,7 +651,7 @@ const CustomerAuth: React.FC = () => {
                   <Mail className="h-10 w-10 text-primary" strokeWidth={1.2} />
                 </div>
                 <div className="text-center space-y-2">
-                  <p className="text-sm font-semibold text-foreground">Verification email sent to</p>
+                  <p className="text-sm font-semibold text-foreground">{tr('Verification email sent to')}</p>
                   <p className="text-sm font-bold text-primary">{email}</p>
                   <p className="text-xs text-muted-foreground max-w-[260px]">
                     Please check your inbox and click the verification link to activate your account. Check your spam folder if you don't see it.
@@ -694,7 +696,7 @@ const CustomerAuth: React.FC = () => {
 
                 {forgotSent ? (
                   <div className="text-center space-y-3 w-full">
-                    <p className="text-sm font-semibold text-foreground">Reset link sent!</p>
+                    <p className="text-sm font-semibold text-foreground">{tr('Reset link sent!')}</p>
                     <p className="text-sm font-bold text-primary">{forgotEmail}</p>
                     <p className="text-xs text-muted-foreground max-w-[260px] mx-auto">
                       Check your email and click the link to reset your password. Check spam if you don't see it.
@@ -706,7 +708,7 @@ const CustomerAuth: React.FC = () => {
                 ) : (
                   <div className="w-full space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Email Address</Label>
+                      <Label className="text-sm font-medium">{tr('Email Address')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                         <Input
@@ -737,13 +739,13 @@ const CustomerAuth: React.FC = () => {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">First, verify your OTP above</p>
-                  <p className="text-xs text-muted-foreground mt-1">Then enter your new 6-digit PIN below</p>
+                  <p className="text-sm font-medium text-foreground">{tr('First, verify your OTP above')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{tr('Then enter your new 6-digit PIN below')}</p>
                 </div>
 
                 <div className="w-full space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">New PIN</Label>
+                    <Label className="text-sm font-medium">{tr('New PIN')}</Label>
                     <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
                       <InputOTPGroup className="gap-2 justify-center">
                         {[0, 1, 2, 3, 4, 5].map(i => (
@@ -754,7 +756,7 @@ const CustomerAuth: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Confirm New PIN</Label>
+                    <Label className="text-sm font-medium">{tr('Confirm New PIN')}</Label>
                     <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
                       <InputOTPGroup className="gap-2 justify-center">
                         {[0, 1, 2, 3, 4, 5].map(i => (
@@ -790,7 +792,7 @@ const CustomerAuth: React.FC = () => {
             {mode === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-12">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-sm font-semibold text-foreground">Verifying...</p>
+                <p className="text-sm font-semibold text-foreground">{tr('Verifying...')}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -800,9 +802,9 @@ const CustomerAuth: React.FC = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-8 flex flex-col items-center gap-3 pb-8">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
             <Shield className="h-3.5 w-3.5" strokeWidth={1.5} />
-            <span>256-bit SSL encrypted</span>
+            <span>{tr('256-bit SSL encrypted')}</span>
             <span className="mx-1">·</span>
-            <span>COBAC Licensed</span>
+            <span>{tr('COBAC Licensed')}</span>
           </div>
           <p className="text-[11px] text-muted-foreground/40">© {new Date().getFullYear()} Kang. All rights reserved.</p>
         </motion.div>

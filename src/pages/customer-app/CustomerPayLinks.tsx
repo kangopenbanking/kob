@@ -10,8 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerPayLinks: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -112,7 +114,7 @@ const CustomerPayLinks: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Pay Links</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Pay Links')}</h1>
         </div>
         <Button size="sm" className="rounded-2xl h-9 text-xs font-bold" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> New Link
@@ -121,15 +123,15 @@ const CustomerPayLinks: React.FC = () => {
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl bg-[hsl(210,80%,93%)] p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">Links</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">{tr('Links')}</p>
           <p className="text-sm font-bold text-[hsl(210,60%,45%)] mt-0.5">{links.length}</p>
         </div>
         <div className="rounded-2xl bg-[hsl(150,40%,90%)] p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(150,60%,40%)]">Clicks</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(150,60%,40%)]">{tr('Clicks')}</p>
           <p className="text-sm font-bold text-[hsl(150,60%,40%)] mt-0.5">{totalClicks}</p>
         </div>
         <div className="rounded-2xl bg-[hsl(45,70%,90%)] p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(45,60%,35%)]">Revenue</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(45,60%,35%)]">{tr('Revenue')}</p>
           <p className="text-sm font-bold text-[hsl(45,60%,35%)] mt-0.5">{totalRevenue > 0 ? `${(totalRevenue / 1000).toFixed(0)}K` : '0'}</p>
         </div>
       </div>
@@ -141,24 +143,24 @@ const CustomerPayLinks: React.FC = () => {
             className="overflow-hidden rounded-3xl border-2 border-foreground bg-card">
             <div className="flex flex-col gap-4 p-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">Create Pay Link</p>
+                <p className="text-sm font-bold text-foreground">{tr('Create Pay Link')}</p>
                 <button onClick={() => { setShowCreate(false); resetForm(); }}><X className="h-5 w-5 text-muted-foreground" /></button>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Link Details</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Link Details')}</p>
                 <div className="relative">
                   <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Link name (e.g. Product Payment)" className="rounded-xl pl-10" />
+                  <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={tr('Link name (e.g. Product Payment)')} className="rounded-xl pl-10" />
                 </div>
                 <div className="relative">
                   <StickyNote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input value={newDescription} onChange={e => setNewDescription(e.target.value)} placeholder="Description" className="rounded-xl pl-10" />
+                  <Input value={newDescription} onChange={e => setNewDescription(e.target.value)} placeholder={tr('Description')} className="rounded-xl pl-10" />
                 </div>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Amount</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Amount')}</p>
                 <button onClick={() => setIsOpenAmount(!isOpenAmount)}
                   className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-bold transition-all ${isOpenAmount ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'}`}>
                   <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${isOpenAmount ? 'border-background' : 'border-muted-foreground'}`}>
@@ -169,13 +171,13 @@ const CustomerPayLinks: React.FC = () => {
                 {!isOpenAmount && (
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="Amount (XAF)" className="rounded-xl pl-10" />
+                    <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder={tr('Amount (XAF)')} className="rounded-xl pl-10" />
                   </div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Expiry (optional)</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Expiry (optional)')}</p>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   <Input type="date" value={newExpiry} onChange={e => setNewExpiry(e.target.value)} className="rounded-xl pl-10" />
@@ -183,8 +185,8 @@ const CustomerPayLinks: React.FC = () => {
               </div>
 
               <Button onClick={handleCreate} disabled={creating} className="rounded-2xl h-11 text-xs font-bold">
-                {creating ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Creating...</span>
-                  : <><Link2 className="mr-2 h-4 w-4" strokeWidth={1.5} /> Create Pay Link</>}
+                {creating ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> {tr('Creating...')}</span>
+                  : <><Link2 className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Create Pay Link')}</>}
               </Button>
             </div>
           </motion.div>
@@ -196,7 +198,7 @@ const CustomerPayLinks: React.FC = () => {
         {isLoading ? (
           <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
         ) : links.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted-foreground">No pay links yet. Create your first one!</p>
+          <p className="py-8 text-center text-xs text-muted-foreground">{tr('No pay links yet. Create your first one!')}</p>
         ) : links.map((link: any, i: number) => (
           <motion.div key={link.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border p-4">
@@ -219,11 +221,11 @@ const CustomerPayLinks: React.FC = () => {
             <div className="flex gap-2">
               <button onClick={() => handleCopy(link.slug)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
                 <Copy className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
-                <span className="text-[10px] font-bold text-muted-foreground">Copy</span>
+                <span className="text-[10px] font-bold text-muted-foreground">{tr('Copy')}</span>
               </button>
               <button onClick={() => handleShare(link)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
                 <Share2 className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
-                <span className="text-[10px] font-bold text-muted-foreground">Share</span>
+                <span className="text-[10px] font-bold text-muted-foreground">{tr('Share')}</span>
               </button>
               <button onClick={() => window.open(getUrl(link.slug), '_blank')} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2">
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />

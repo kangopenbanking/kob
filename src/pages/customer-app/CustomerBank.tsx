@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances, useCustomerTransactions } from '@/hooks/useCustomerData';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const bankColors: Record<string, string> = {
   'Afriland First Bank': 'hsl(210,80%,90%)',
@@ -20,6 +21,7 @@ const bankColors: Record<string, string> = {
 };
 
 const CustomerBank: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
 
@@ -69,7 +71,7 @@ const CustomerBank: React.FC = () => {
       <div className="flex flex-col gap-5 p-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Linked Accounts</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Linked Accounts')}</h1>
         </div>
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       </div>
@@ -81,7 +83,7 @@ const CustomerBank: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Linked Accounts</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Linked Accounts')}</h1>
         </div>
         <button onClick={handleRefresh} disabled={refreshing}
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -93,7 +95,7 @@ const CustomerBank: React.FC = () => {
       {accounts.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-3xl bg-[hsl(210,80%,93%)] p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Balance</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Total Balance')}</p>
           <p className="text-2xl font-bold text-foreground">{totalBalance.toLocaleString()} XAF</p>
           <p className="text-[11px] text-muted-foreground">{accounts.length} account{accounts.length > 1 ? 's' : ''} linked</p>
           <button onClick={() => navigate('/app/linked-accounts')}
@@ -137,17 +139,17 @@ const CustomerBank: React.FC = () => {
                     <div className="border-t border-foreground/10 bg-background/40 px-4 pb-4 pt-3">
                       <div className="grid grid-cols-2 gap-2 mb-3 text-[11px]">
                         <div className="rounded-xl bg-background/50 p-2">
-                          <p className="text-muted-foreground">Type</p>
+                          <p className="text-muted-foreground">{tr('Type')}</p>
                           <p className="font-semibold text-foreground capitalize">{acc.account_subtype}</p>
                         </div>
                         <div className="rounded-xl bg-background/50 p-2">
-                          <p className="text-muted-foreground">Status</p>
+                          <p className="text-muted-foreground">{tr('Status')}</p>
                           <p className="font-semibold text-foreground">{acc.is_active ? 'Active' : 'Inactive'}</p>
                         </div>
                       </div>
-                      <p className="mb-2 text-xs font-medium text-muted-foreground">Recent Transactions</p>
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">{tr('Recent Transactions')}</p>
                       {txns.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No transactions yet</p>
+                        <p className="text-xs text-muted-foreground">{tr('No transactions yet')}</p>
                       ) : txns.map((tx: any) => (
                         <div key={tx.id} className="flex items-center justify-between py-2">
                           <div className="flex flex-col">
@@ -174,8 +176,8 @@ const CustomerBank: React.FC = () => {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
               <Building2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
             </div>
-            <p className="text-sm font-semibold text-muted-foreground">No linked accounts</p>
-            <p className="text-xs text-muted-foreground text-center">Your bank accounts linked to this institution will appear here</p>
+            <p className="text-sm font-semibold text-muted-foreground">{tr('No linked accounts')}</p>
+            <p className="text-xs text-muted-foreground text-center">{tr('Your bank accounts linked to this institution will appear here')}</p>
           </div>
         )}
       </div>

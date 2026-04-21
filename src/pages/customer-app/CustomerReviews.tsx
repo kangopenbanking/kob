@@ -10,6 +10,7 @@ import { Star, ThumbsUp, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface ReviewFormProps {
   orderId: string;
@@ -18,6 +19,7 @@ interface ReviewFormProps {
 }
 
 function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
+  const tr = useHarvestedT('customer');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const { user } = useCustomerAuth();
@@ -51,7 +53,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
   return (
     <Card className="p-4 space-y-4">
       <div>
-        <h3 className="font-semibold mb-2">Rate your experience</h3>
+        <h3 className="font-semibold mb-2">{tr('Rate your experience')}</h3>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button key={star} onClick={() => setRating(star)} className="focus:outline-none">
@@ -66,7 +68,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
       </div>
 
       <Textarea
-        placeholder="Share your experience (optional)"
+        placeholder={tr('Share your experience (optional)')}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         rows={4}
@@ -164,8 +166,8 @@ export function CustomerReviews() {
       <div className="min-h-screen bg-background p-4 pb-20">
         <Card className="p-12 text-center max-w-md mx-auto mt-20">
           <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
-          <p className="text-muted-foreground">Please sign in to write reviews</p>
+          <h2 className="text-xl font-semibold mb-2">{tr('Sign In Required')}</h2>
+          <p className="text-muted-foreground">{tr('Please sign in to write reviews')}</p>
         </Card>
       </div>
     );
@@ -177,14 +179,14 @@ export function CustomerReviews() {
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="rounded-xl bg-card p-2"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold">Reviews & Ratings</h1>
-            <p className="text-muted-foreground">Share your shopping experiences</p>
+            <h1 className="text-2xl font-bold">{tr('Reviews & Ratings')}</h1>
+            <p className="text-muted-foreground">{tr('Share your shopping experiences')}</p>
           </div>
         </div>
 
         {pendingReviews && pendingReviews.length > 0 && (
           <div className="space-y-4">
-            <h2 className="font-semibold">Waiting for your review</h2>
+            <h2 className="font-semibold">{tr('Waiting for your review')}</h2>
             {pendingReviews.map((order: any) => (
               <div key={order.id}>
                 {showReviewForm === order.id ? (
@@ -205,7 +207,7 @@ export function CustomerReviews() {
                           <p className="text-sm text-muted-foreground">Order #{order.order_number}</p>
                         </div>
                       </div>
-                      <Button onClick={() => setShowReviewForm(order.id)}>Write Review</Button>
+                      <Button onClick={() => setShowReviewForm(order.id)}>{tr('Write Review')}</Button>
                     </div>
                   </Card>
                 )}
@@ -255,7 +257,7 @@ export function CustomerReviews() {
           ) : (
             <Card className="p-12 text-center">
               <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No reviews yet</p>
+              <p className="text-muted-foreground">{tr('No reviews yet')}</p>
             </Card>
           )}
         </div>

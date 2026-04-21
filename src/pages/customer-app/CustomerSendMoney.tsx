@@ -24,6 +24,7 @@ import {
   ArrowLeft, Zap, Phone, Sparkles, CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 /* CM_BANKS removed — local_bank_transfer now uses KOB v1 institutions from DB */
 
 /* ═══ Types & Constants ══════════════════════════════════════ */
@@ -223,7 +224,7 @@ function MobileCurrencyPicker({ items, selectedIdx, onSelect, label }: {
 }) {
   const safe = selectedIdx >= 0 && selectedIdx < items.length ? selectedIdx : 0;
   const selected = items[safe];
-  if (!selected) return <div className="h-14 flex items-center px-3 text-xs text-muted-foreground">Loading…</div>;
+  if (!selected) return <div className="h-14 flex items-center px-3 text-xs text-muted-foreground">{tr('Loading…')}</div>;
 
   return (
     <Select value={String(safe)} onValueChange={(v) => onSelect(Number(v))}>
@@ -410,6 +411,7 @@ const stagger = {
    ═══════════════════════════════════════════════════════════════ */
 
 export default function CustomerSendMoney() {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const currencies = useRates();
   const { data: supportedCountries } = useSupportedCountries("consumer");
@@ -834,8 +836,8 @@ export default function CustomerSendMoney() {
                 <ChevronLeft className="h-5 w-5" />
               </motion.button>
               <div className="flex-1">
-                <h1 className="text-base font-bold text-white">Send Money</h1>
-                <p className="text-[10px] text-white/60">International transfers</p>
+                <h1 className="text-base font-bold text-white">{tr('Send Money')}</h1>
+                <p className="text-[10px] text-white/60">{tr('International transfers')}</p>
               </div>
               <motion.button whileTap={{ scale: 0.9 }}
                 onClick={() => setTab(tab === "send" ? "history" : "send")}
@@ -862,13 +864,13 @@ export default function CustomerSendMoney() {
                 {loadingCorridors && (
                   <div className="flex items-center gap-2 bg-muted/30 rounded-2xl p-3 mb-3">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">Loading corridors…</span>
+                    <span className="text-xs text-muted-foreground">{tr('Loading corridors…')}</span>
                   </div>
                 )}
                 {errorCorridors && (
                   <div className="flex items-center gap-2 bg-destructive/10 rounded-2xl p-3 mb-3">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <span className="text-xs text-destructive">Failed to load corridors.</span>
+                    <span className="text-xs text-destructive">{tr('Failed to load corridors.')}</span>
                   </div>
                 )}
 
@@ -877,7 +879,7 @@ export default function CustomerSendMoney() {
                   <CardContent className="p-0">
                     {/* You Send */}
                     <div className="p-4 pb-3">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">You Send</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">{tr('You Send')}</label>
                       <div className="flex items-center rounded-2xl border-2 border-border/50 focus-within:border-primary transition-colors overflow-hidden bg-background">
                         <Input
                           type="number" inputMode="numeric" placeholder="0"
@@ -919,7 +921,7 @@ export default function CustomerSendMoney() {
 
                     {/* They Receive */}
                     <div className="p-4 pt-3">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">They Receive</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">{tr('They Receive')}</label>
                       <div className="flex items-center rounded-2xl border-2 border-border/30 overflow-hidden bg-muted/5">
                         <div className="flex-1 pl-4 py-3.5">
                           <motion.span key={converted} initial={{ opacity: 0.5, y: 2 }} animate={{ opacity: 1, y: 0 }}
@@ -932,7 +934,7 @@ export default function CustomerSendMoney() {
                       </div>
                       <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
                         <Banknote className="h-3 w-3" />
-                        <span>Fee: <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
+                        <span>{tr('Fee:')} <strong className="text-foreground">{fee.toFixed(0)} {srcRate.code}</strong> ({(feePct * 100).toFixed(1)}%{feeEstimate.fixedFee > 0 ? ` + ${feeEstimate.fixedFee} fixed` : ""})</span>
                       </div>
                     </div>
                   </CardContent>
@@ -971,7 +973,7 @@ export default function CustomerSendMoney() {
                 {destCountries.length > 0 && methods.length === 0 && !loadingCorridors && (
                   <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>No receiving method available for this route combination.</span>
+                    <span>{tr('No receiving method available for this route combination.')}</span>
                   </div>
                 )}
 
@@ -1023,17 +1025,17 @@ export default function CustomerSendMoney() {
                       </Label>
                       <div className="relative">
                         <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
-                          className="h-11 rounded-xl border-border/40 pr-12" placeholder="Full name" />
+                          className="h-11 rounded-xl border-border/40 pr-12" placeholder={tr('Full name')} />
                         {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
                         {!searching && recipientName.length >= 2 && suggestions.length === 0 && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-md">New</span>
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-md">{tr('New')}</span>
                         )}
                       </div>
                       <AnimatePresence>
                         {showSugg && suggestions.length > 0 && (
                           <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                             className="absolute left-0 right-0 top-full mt-1 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 overflow-hidden p-1.5">
-                            <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1.5">Matching contacts</p>
+                            <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1.5">{tr('Matching contacts')}</p>
                             {suggestions.map((s) => (
                               <button key={s.id} onClick={() => pickSuggestion(s)}
                                 className="flex items-center justify-between w-full px-3 py-2 rounded-xl text-sm text-left hover:bg-muted/60">
@@ -1075,7 +1077,7 @@ export default function CustomerSendMoney() {
                               </SelectContent>
                             </Select>
                             <Input value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)}
-                              placeholder="6XX XXX XXX" className="flex-1 h-11 rounded-xl border-border/40" />
+                              placeholder={tr('6XX XXX XXX')} className="flex-1 h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
                       )}
@@ -1083,12 +1085,12 @@ export default function CustomerSendMoney() {
                       {method === "bank_transfer" && (
                         <motion.div key="bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">SWIFT/BIC Code *</Label>
-                            <Input placeholder="e.g. ECOCCMCX" value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('SWIFT/BIC Code *')}</Label>
+                            <Input placeholder={tr('e.g. ECOCCMCX')} value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Account / IBAN *</Label>
-                            <Input placeholder="Account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Account / IBAN *')}</Label>
+                            <Input placeholder={tr('Account number')} value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
                       )}
@@ -1100,12 +1102,12 @@ export default function CustomerSendMoney() {
                               <Building2 className="h-3 w-3" /> Credit Union / Financial Institution *
                             </Label>
                             <Select value={bankCode} onValueChange={setBankCode}>
-                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select institution" /></SelectTrigger>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder={tr('Select institution')} /></SelectTrigger>
                               <SelectContent className="max-h-60">
                                 {kobInstitutions && kobInstitutions.length > 0 ? (
                                   <>
                                     {kobInstitutions.filter(i => i.institution_type === "credit_union").length > 0 && (
-                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credit Unions</div>
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Credit Unions')}</div>
                                     )}
                                     {kobInstitutions.filter(i => i.institution_type === "credit_union").map((inst) => (
                                       <SelectItem key={inst.id} value={inst.id} className="text-xs">
@@ -1116,30 +1118,30 @@ export default function CustomerSendMoney() {
                                       </SelectItem>
                                     ))}
                                     {kobInstitutions.filter(i => i.institution_type === "bank").length > 0 && (
-                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Banks</div>
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Banks')}</div>
                                     )}
                                     {kobInstitutions.filter(i => i.institution_type === "bank").map((inst) => (
                                       <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
                                     ))}
                                     {kobInstitutions.filter(i => i.institution_type === "fintech").length > 0 && (
-                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fintech</div>
+                                      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr('Fintech')}</div>
                                     )}
                                     {kobInstitutions.filter(i => i.institution_type === "fintech").map((inst) => (
                                       <SelectItem key={inst.id} value={inst.id} className="text-xs">{inst.institution_name}</SelectItem>
                                     ))}
                                   </>
                                 ) : (
-                                  <div className="py-3 text-center text-xs text-muted-foreground">No KOB institutions available</div>
+                                  <div className="py-3 text-center text-xs text-muted-foreground">{tr('No KOB institutions available')}</div>
                                 )}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">RIB / Account Number *</Label>
-                            <Input placeholder="23-digit RIB (e.g. 10005 00001 12345678901 23)" value={accountNumber}
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('RIB / Account Number *')}</Label>
+                            <Input placeholder={tr('23-digit RIB (e.g. 10005 00001 12345678901 23)')} value={accountNumber}
                               onChange={(e) => setAccountNumber(e.target.value)}
                               className="h-11 rounded-xl border-border/40 font-mono tracking-wide" maxLength={27} />
-                            <p className="text-[9px] text-muted-foreground">Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)</p>
+                            <p className="text-[9px] text-muted-foreground">{tr('Format: Bank Code (5) + Branch (5) + Account (11) + Key (2)')}</p>
                           </div>
                         </motion.div>
                       )}
@@ -1147,9 +1149,9 @@ export default function CustomerSendMoney() {
                       {method === "bill_payment" && (
                         <motion.div key="bill" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bill Type *</Label>
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Bill Type *')}</Label>
                             <Select value={billPurpose} onValueChange={setBillPurpose}>
-                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder="Select type" /></SelectTrigger>
+                              <SelectTrigger className="rounded-xl h-11 border-border/40"><SelectValue placeholder={tr('Select type')} /></SelectTrigger>
                               <SelectContent>
                                 {BILL_PURPOSES.map((bp) => (
                                   <SelectItem key={bp.value} value={bp.value}>{bp.label}</SelectItem>
@@ -1158,15 +1160,15 @@ export default function CustomerSendMoney() {
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold text-muted-foreground">Bill Reference *</Label>
-                            <Input placeholder="Reference number" value={billRef} onChange={(e) => setBillRef(e.target.value)} className="h-11 rounded-xl border-border/40" />
+                            <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Bill Reference *')}</Label>
+                            <Input placeholder={tr('Reference number')} value={billRef} onChange={(e) => setBillRef(e.target.value)} className="h-11 rounded-xl border-border/40" />
                           </div>
                         </motion.div>
                       )}
 
                       {(method === "paypal_email" || method === "paypal") && (
                         <motion.div key="paypal" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-1.5 overflow-hidden">
-                          <Label className="text-[11px] font-semibold text-muted-foreground">PayPal Email *</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">{tr('PayPal Email *')}</Label>
                           <Input placeholder="paypal@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} className="h-11 rounded-xl border-border/40" />
                         </motion.div>
                       )}
@@ -1174,8 +1176,8 @@ export default function CustomerSendMoney() {
 
                     {/* Note */}
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Note (optional)</Label>
-                      <Textarea placeholder="Message to recipient..." value={narration}
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{tr('Note (optional)')}</Label>
+                      <Textarea placeholder={tr('Message to recipient...')} value={narration}
                         onChange={(e) => setNarration(e.target.value)} rows={2} className="rounded-xl border-border/40 resize-none" />
                     </div>
                   </CardContent>
@@ -1188,7 +1190,7 @@ export default function CustomerSendMoney() {
                     onClick={() => quoteMut.mutate()}
                   >
                     {quoteMut.isPending ? (
-                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Getting Quote...</>
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {tr('Getting Quote...')}</>
                     ) : (
                       <>Get Quote & Review <ArrowRight className="h-4 w-4 ml-2" /></>
                     )}
@@ -1215,7 +1217,7 @@ export default function CustomerSendMoney() {
                       </motion.div>
                       <span className="text-2xl">{destFlag}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Recipient gets</p>
+                    <p className="text-[10px] text-muted-foreground mb-1">{tr('Recipient gets')}</p>
                     <motion.p initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       className="text-3xl font-extrabold text-primary">
                       {(quote.amount_out || quote.receive_amount || converted).toLocaleString()}
@@ -1258,7 +1260,7 @@ export default function CustomerSendMoney() {
                 </Card>
 
                 <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => goTo("recipient", -1)}>Edit</Button>
+                  <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => goTo("recipient", -1)}>{tr('Edit')}</Button>
                   <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
                     <Button className="w-full rounded-2xl h-12 font-bold" disabled={!canSubmitRoute} onClick={confirmAndSend}>
                       <Send className="h-4 w-4 mr-2" /> Confirm & Send
@@ -1376,7 +1378,7 @@ export default function CustomerSendMoney() {
         {tab === "history" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-bold text-foreground">Transfer History</h2>
+              <h2 className="text-lg font-bold text-foreground">{tr('Transfer History')}</h2>
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => refetchTransfers()} className="text-primary">
                 <RefreshCw className="h-4 w-4" />
               </motion.button>
@@ -1385,8 +1387,8 @@ export default function CustomerSendMoney() {
             {!transfers || transfers.length === 0 ? (
               <div className="text-center py-16">
                 <Send className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground">No transfers yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Start by sending your first transfer</p>
+                <p className="text-sm font-medium text-foreground">{tr('No transfers yet')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{tr('Start by sending your first transfer')}</p>
                 <Button className="mt-4 rounded-2xl" onClick={() => { setTab("send"); reset(); }}>
                   <Send className="h-4 w-4 mr-2" /> Send Money
                 </Button>
@@ -1435,7 +1437,7 @@ export default function CustomerSendMoney() {
       <Dialog open={!!trackDialog} onOpenChange={() => setTrackDialog(null)}>
         <DialogContent className="max-w-md max-h-[80vh] rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Transfer Tracking</DialogTitle>
+            <DialogTitle className="text-base font-bold">{tr('Transfer Tracking')}</DialogTitle>
           </DialogHeader>
           {trackDialog && (
             <ScrollArea className="max-h-[60vh]">
@@ -1457,7 +1459,7 @@ export default function CustomerSendMoney() {
                 </div>
                 {trackDialog.events?.length > 0 && (
                   <div>
-                    <p className="text-xs font-bold text-foreground mb-3">Timeline</p>
+                    <p className="text-xs font-bold text-foreground mb-3">{tr('Timeline')}</p>
                     {trackDialog.events.map((ev: any, idx: number) => {
                       const isLast = idx === trackDialog.events.length - 1;
                       return (

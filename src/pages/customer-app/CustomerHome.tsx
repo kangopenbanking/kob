@@ -215,7 +215,7 @@ const CustomerHome: React.FC = () => {
                 {tenant.logoUrl ? (
                   <img src={tenant.logoUrl} alt={tenant.name} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20" />
                 ) : (
-                  <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
+                  <img src={kangLogo} alt={tr('Kang')} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
                 )}
                 <div>
                   <p className="text-[10px] font-medium text-primary-foreground/50">{tr('Welcome back')}</p>
@@ -505,7 +505,7 @@ const CustomerHome: React.FC = () => {
               return (
                 <button key={item.path} onClick={() => go(item.path)}
                   className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(210,80%,93%)] p-4 text-left">
-                  <img src={rentKobImage} alt="Rent Report" className="h-24 w-24 object-contain" />
+                  <img src={rentKobImage} alt={tr('Rent Report')} className="h-24 w-24 object-contain" />
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(210,60%,45%)]">{tr(item.label)}</p>
                   <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{tr(item.description || 'Open')}</span>
                 </button>
@@ -528,7 +528,7 @@ const CustomerHome: React.FC = () => {
               className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               {/* Cover image */}
-              <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={bgImg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
               {/* Dark overlay */}
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
 

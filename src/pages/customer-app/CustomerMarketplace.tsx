@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { toast } from 'sonner';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 /**
  * CustomerMarketplace — modern marketplace landing.
@@ -97,6 +98,7 @@ export function CustomerMarketplace() {
   });
 
   const handleSearch = () => {
+  const tr = useHarvestedT('customer');
     navigate(`/app/stores${search ? `?q=${encodeURIComponent(search)}` : ''}`);
   };
 
@@ -116,21 +118,21 @@ export function CustomerMarketplace() {
           {/* top bar */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Marketplace</p>
-              <h1 className="text-xl font-bold text-foreground">Shop local, shop better</h1>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{tr('Marketplace')}</p>
+              <h1 className="text-xl font-bold text-foreground">{tr('Shop local, shop better')}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate('/app/wishlist')}
                 className="p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
-                aria-label="Wishlist"
+                aria-label={tr('Wishlist')}
               >
                 <Heart className="w-4 h-4 text-foreground" />
               </button>
               <button
                 onClick={() => navigate('/app/cart')}
                 className="relative p-2.5 rounded-full bg-card border border-border/60 shadow-sm"
-                aria-label="Cart"
+                aria-label={tr('Cart')}
               >
                 <ShoppingBag className="w-4 h-4 text-foreground" />
                 {cartCount > 0 && (
@@ -180,7 +182,7 @@ export function CustomerMarketplace() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search stores, products…"
+              placeholder={tr('Search stores, products…')}
               className="pl-11 pr-24 h-12 rounded-2xl bg-card border-border/50 shadow-sm text-sm"
             />
             <Button
@@ -197,17 +199,17 @@ export function CustomerMarketplace() {
       <div className="px-4 space-y-7">
         {/* ── QUICK ACTIONS ─────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-2.5">
-          <QuickAction icon={Truck} label="Track order" tint="bg-[hsl(217,90%,95%)]" iconColor="text-primary"
+          <QuickAction icon={Truck} label={tr('Track order')} tint="bg-[hsl(217,90%,95%)]" iconColor="text-primary"
             onClick={() => navigate('/app/orders')} />
-          <QuickAction icon={Heart} label="Wishlist" tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
+          <QuickAction icon={Heart} label={tr('Wishlist')} tint="bg-[hsl(0,80%,95%)]" iconColor="text-destructive"
             onClick={() => navigate('/app/wishlist')} />
-          <QuickAction icon={Receipt} label="My orders" tint="bg-[hsl(150,60%,93%)]" iconColor="text-secondary"
+          <QuickAction icon={Receipt} label={tr('My orders')} tint="bg-[hsl(150,60%,93%)]" iconColor="text-secondary"
             onClick={() => navigate('/app/orders')} />
         </div>
 
         {/* ── CATEGORIES ────────────────────────────────────── */}
         <section>
-          <SectionHeader title="Shop by category" actionLabel="See all" onAction={() => navigate('/app/stores')} />
+          <SectionHeader title={tr('Shop by category')} actionLabel="See all" onAction={() => navigate('/app/stores')} />
           <div className="grid grid-cols-4 gap-2.5">
             {CATEGORY_TILES.map((tile, i) => {
               const Icon = tile.icon;
@@ -237,7 +239,7 @@ export function CustomerMarketplace() {
 
         {/* ── FEATURED STORES ───────────────────────────────── */}
         <section>
-          <SectionHeader title="Featured stores" actionLabel="See all" onAction={() => navigate('/app/stores')} />
+          <SectionHeader title={tr('Featured stores')} actionLabel="See all" onAction={() => navigate('/app/stores')} />
           {storesLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -297,7 +299,7 @@ export function CustomerMarketplace() {
 
         {/* ── TRENDING PRODUCTS ─────────────────────────────── */}
         <section>
-          <SectionHeader title="Trending products" actionLabel="Browse" onAction={() => navigate('/app/stores')} />
+          <SectionHeader title={tr('Trending products')} actionLabel="Browse" onAction={() => navigate('/app/stores')} />
           {trendingLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -348,7 +350,7 @@ export function CustomerMarketplace() {
               <Truck className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Standard delivery — 1,500 XAF</p>
+              <p className="text-sm font-semibold text-foreground">{tr('Standard delivery — 1,500 XAF')}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Add a delivery address at checkout. Track your order from the Orders page.
               </p>

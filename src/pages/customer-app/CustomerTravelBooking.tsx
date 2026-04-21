@@ -15,11 +15,13 @@ import { getTheme } from '@/lib/travel-theme';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
 type Gender = 'male' | 'female';
 
 const CustomerTravelBooking: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -245,7 +247,7 @@ const CustomerTravelBooking: React.FC = () => {
   };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>;
-  if (!trip) return <div className="p-4 text-center text-gray-400">Trip not found</div>;
+  if (!trip) return <div className="p-4 text-center text-gray-400">{tr('Trip not found')}</div>;
 
   const steps = [
     { key: 'seats', label: 'Seats' },
@@ -278,7 +280,7 @@ const CustomerTravelBooking: React.FC = () => {
               <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold" style={{ color: theme.fg }}>Book Your Seat</h1>
+              <h1 className="text-lg font-bold" style={{ color: theme.fg }}>{tr('Book Your Seat')}</h1>
               <p className="text-[12px] flex items-center gap-1" style={{ color: theme.fg, opacity: 0.5 }}>
                 <MapPin className="h-3 w-3" />{route?.origin} → {route?.destination} · {format(new Date(trip.departure_at), 'dd MMM, HH:mm')}
               </p>
@@ -305,7 +307,7 @@ const CustomerTravelBooking: React.FC = () => {
         {/* Step 1: Seat Selection */}
         {step === 'seats' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">Select Your Seats</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">{tr('Select Your Seats')}</p>
             {layout.length > 0 ? (
               <div className="rounded-2xl bg-white p-4 shadow-sm overflow-x-auto">
                 <div className="flex justify-center mb-3">
@@ -346,16 +348,16 @@ const CustomerTravelBooking: React.FC = () => {
                   ))}
                 </div>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-gray-500">
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#ecfdf5] border border-[#a7f3d0]" /> Available</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md" style={{ backgroundColor: theme.color }} /> Selected</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#dbeafe] border border-[#93c5fd]" /> M Male</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#fce7f3] border border-[#f9a8d4]" /> F Female</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#ecfdf5] border border-[#a7f3d0]" /> {tr('Available')}</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md" style={{ backgroundColor: theme.color }} /> {tr('Selected')}</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#dbeafe] border border-[#93c5fd]" /> {tr('M Male')}</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[#fce7f3] border border-[#f9a8d4]" /> {tr('F Female')}</span>
                 </div>
               </div>
             ) : (
               <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
                 <Armchair className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                <p className="text-sm text-gray-500">No seating plan assigned. Select number of seats:</p>
+                <p className="text-sm text-gray-500">{tr('No seating plan assigned. Select number of seats:')}</p>
                 <div className="mt-3 flex justify-center gap-2">
                   {[1, 2, 3, 4].map(n => (
                     <button key={n} onClick={() => setSelectedSeats(Array.from({ length: n }, (_, i) => `S${i + 1}`))}
@@ -382,8 +384,8 @@ const CustomerTravelBooking: React.FC = () => {
                 <Users className="h-4 w-4" style={{ color: theme.fg }} />
               </div>
               <div>
-                <h2 className="text-[15px] font-bold text-[#0f1729]">Passenger Details</h2>
-                <p className="text-[11px] text-[#0f1729]/40">Fill in details for each traveller</p>
+                <h2 className="text-[15px] font-bold text-[#0f1729]">{tr('Passenger Details')}</h2>
+                <p className="text-[11px] text-[#0f1729]/40">{tr('Fill in details for each traveller')}</p>
               </div>
             </div>
 
@@ -416,19 +418,19 @@ const CustomerTravelBooking: React.FC = () => {
 
                   <div className="bg-white px-4 py-4 space-y-3.5">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Full Name <span className="text-red-500">*</span></Label>
-                      <Input placeholder="Enter passenger name" value={p.name}
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{tr('Full Name')} <span className="text-red-500">*</span></Label>
+                      <Input placeholder={tr('Enter passenger name')} value={p.name}
                         className="h-11 rounded-xl bg-gray-50 border-gray-200 font-medium text-sm"
                         onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], name: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Phone Number</Label>
-                      <Input placeholder="+237 6XX XXX XXX" value={p.phone}
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{tr('Phone Number')}</Label>
+                      <Input placeholder={tr('+237 6XX XXX XXX')} value={p.phone}
                         className="h-11 rounded-xl bg-gray-50 border-gray-200 font-medium text-sm"
                         onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Gender <span className="text-red-500">*</span></Label>
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{tr('Gender')} <span className="text-red-500">*</span></Label>
                       <RadioGroup value={p.gender || 'male'} onValueChange={(v) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], gender: v as Gender } }))} className="flex gap-3">
                         <label htmlFor={`male-${seat}`}
                           className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 cursor-pointer transition-all text-[12px] font-bold ${p.gender === 'male' ? 'border-blue-400 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 bg-white text-gray-500'}`}>
@@ -448,7 +450,7 @@ const CustomerTravelBooking: React.FC = () => {
             })}
 
             <div className="flex gap-3 pt-1">
-              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
+              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">{tr('Back')}</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
                 Review & Pay →
@@ -460,7 +462,7 @@ const CustomerTravelBooking: React.FC = () => {
         {/* Step 3: Payment & Confirm */}
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">Payment & Summary</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">{tr('Payment & Summary')}</p>
 
             {/* Wallet Balance Card */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -469,7 +471,7 @@ const CustomerTravelBooking: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4 text-white/60" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">Wallet Balance</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">{tr('Wallet Balance')}</span>
                   </div>
                   {balanceLoading || walletLoading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-white/40" />
@@ -482,7 +484,7 @@ const CustomerTravelBooking: React.FC = () => {
                   <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-500/20 px-3 py-2">
                     <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-bold text-red-300">Insufficient funds</p>
+                      <p className="text-[11px] font-bold text-red-300">{tr('Insufficient funds')}</p>
                       <p className="text-[10px] text-red-300/70">You need {shortfall.toLocaleString()} {trip.currency} more</p>
                     </div>
                     <button
@@ -507,8 +509,8 @@ const CustomerTravelBooking: React.FC = () => {
             <div className="rounded-2xl shadow-md overflow-hidden bg-white">
               <div className="px-5 py-4" style={{ backgroundColor: theme.color }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.7 }}>Kang Travel</span>
-                  <span className="text-[10px] font-mono" style={{ color: theme.fg, opacity: 0.7 }}>Ticket ID</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.fg, opacity: 0.7 }}>{tr('Kang Travel')}</span>
+                  <span className="text-[10px] font-mono" style={{ color: theme.fg, opacity: 0.7 }}>{tr('Ticket ID')}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px]" style={{ color: theme.fg, opacity: 0.6 }}>{category?.toUpperCase() || 'BUS'}</span>
@@ -570,24 +572,24 @@ const CustomerTravelBooking: React.FC = () => {
 
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                   <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: theme.accentLight }}>
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Seats</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Seats')}</p>
                     <p className="text-sm font-black" style={{ color: theme.accentText }}>{selectedSeats.join(', ')}</p>
                   </div>
                   <div className="rounded-xl bg-blue-50 p-2.5 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Passengers</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Passengers')}</p>
                     <p className="text-sm font-black text-blue-700">{selectedSeats.length}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-2.5 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Payment</p>
-                    <p className="text-sm font-black text-gray-700">Wallet</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">{tr('Payment')}</p>
+                    <p className="text-sm font-black text-gray-700">{tr('Wallet')}</p>
                   </div>
                 </div>
 
                 {/* Promo Code */}
                 <div className="pt-3 border-t border-gray-100">
-                  <p className="text-[10px] text-gray-400 uppercase font-semibold mb-2">Promo Code</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-semibold mb-2">{tr('Promo Code')}</p>
                   <div className="flex gap-2">
-                    <input placeholder="Enter code" className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase"
+                    <input placeholder={tr('Enter code')} className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase"
                       value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} />
                     <button onClick={applyPromoCode} className="rounded-lg px-3 py-2 text-xs font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
                       Apply
@@ -606,7 +608,7 @@ const CustomerTravelBooking: React.FC = () => {
               {/* Total footer */}
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: theme.color }}>
                 <div>
-                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
+                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>{tr('Total')}</span>
                   {discountAmount > 0 && <span className="text-[10px] line-through" style={{ color: theme.fg, opacity: 0.4 }}>{basePrice.toLocaleString()} {trip.currency}</span>}
                 </div>
                 <span className="text-xl font-black" style={{ color: theme.fg }}>{totalPrice.toLocaleString()} {trip.currency}</span>
@@ -615,7 +617,7 @@ const CustomerTravelBooking: React.FC = () => {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
+              <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">{tr('Back')}</Button>
               {hasInsufficientFunds ? (
                 <Button onClick={handleAddMoney} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg bg-[#0f1729] text-white hover:bg-[#1a2744]">
                   <Plus className="mr-2 h-4 w-4" />

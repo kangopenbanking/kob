@@ -10,6 +10,7 @@ import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvi
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useRecentBillPayments } from '@/hooks/useCustomerData';
 import { format } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const allQuickActions = [
   { key: 'transfer', label: 'Transfer', icon: Send, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
@@ -38,6 +39,7 @@ const utilityItems = [
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
 const CustomerMore: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
@@ -51,11 +53,11 @@ const CustomerMore: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 p-5 pb-8">
-      <h1 className="text-xl font-bold text-foreground">More</h1>
+      <h1 className="text-xl font-bold text-foreground">{tr('More')}</h1>
 
       {/* Quick Actions */}
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Actions</p>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Quick Actions')}</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {enabledActions.slice(0, 6).map((action) => (
             <button key={action.key} onClick={() => go(action.key === 'qr_scan' ? 'scan' : action.key === 'cash_out' ? 'cash-out' : action.key === 'bank' ? 'bank' : action.key)} className="flex flex-col items-center gap-2">
@@ -77,7 +79,7 @@ const CustomerMore: React.FC = () => {
       {!isViewOnly && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Bill Payments</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Recent Bill Payments')}</p>
             <button onClick={() => go('bills')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
               View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
@@ -85,7 +87,7 @@ const CustomerMore: React.FC = () => {
           {billsLoading ? (
             <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : recentBills.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">No recent bill payments</p>
+            <p className="py-4 text-center text-xs text-muted-foreground">{tr('No recent bill payments')}</p>
           ) : (
             <div className="space-y-2">
               {recentBills.slice(0, 4).map((bill: any) => (
@@ -104,7 +106,7 @@ const CustomerMore: React.FC = () => {
 
       {/* Account */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Account')}</p>
         <div className="space-y-2">
           {utilityItems.map((item) => (
             <button key={item.path} onClick={() => go(item.path)}

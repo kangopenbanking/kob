@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownLeft, Globe, ChevronRight, Clock, CheckCircle2, XCircle, Banknote, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
   created: { label: 'Created', color: 'bg-muted text-muted-foreground', icon: Clock },
@@ -24,6 +25,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 const FILTERS = ['all', 'pending', 'received', 'credited', 'settled', 'failed'] as const;
 
 const CustomerRemittances: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const [filter, setFilter] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -67,8 +69,8 @@ const CustomerRemittances: React.FC = () => {
     <div className="flex flex-col gap-5 p-5 pb-8">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-foreground">Remittances Received</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Track money sent to you from abroad</p>
+        <h1 className="text-xl font-bold text-foreground">{tr('Remittances Received')}</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">{tr('Track money sent to you from abroad')}</p>
       </div>
 
       {/* Summary Cards */}
@@ -76,13 +78,13 @@ const CustomerRemittances: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl bg-gradient-to-br from-green-500/10 to-green-600/5 p-4">
           <Banknote className="h-5 w-5 text-green-600 mb-1" />
-          <p className="text-[11px] text-muted-foreground font-medium">Total Received</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{tr('Total Received')}</p>
           <p className="text-lg font-bold text-foreground">{totalReceived.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">XAF</span></p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-4">
           <Clock className="h-5 w-5 text-amber-600 mb-1" />
-          <p className="text-[11px] text-muted-foreground font-medium">Pending</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{tr('Pending')}</p>
           <p className="text-lg font-bold text-foreground">{pendingCount}</p>
         </motion.div>
       </div>
@@ -105,7 +107,7 @@ const CustomerRemittances: React.FC = () => {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Globe className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">No inbound remittances found</p>
+          <p className="text-sm text-muted-foreground">{tr('No inbound remittances found')}</p>
         </div>
       ) : (
         <AnimatePresence mode="popLayout">
@@ -167,7 +169,7 @@ const CustomerRemittances: React.FC = () => {
 
                 {detail.events.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Timeline</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">{tr('Timeline')}</p>
                     <div className="space-y-3">
                       {detail.events.map((evt: any, idx: number) => (
                         <div key={evt.id} className="flex gap-3">

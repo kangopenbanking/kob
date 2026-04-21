@@ -17,10 +17,12 @@ import { FundingHistory } from "@/components/funding/FundingHistory";
 import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
 const CustomerFundAccount = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("mobile_money");
@@ -94,7 +96,7 @@ const CustomerFundAccount = () => {
             </div>
             Fund Account
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Add funds to your account securely</p>
+          <p className="text-muted-foreground mt-1 text-sm">{tr('Add funds to your account securely')}</p>
         </div>
       </div>
 
@@ -102,16 +104,16 @@ const CustomerFundAccount = () => {
         <Card className="overflow-hidden border-border/60 shadow-sm">
           <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Add Funds</CardTitle>
-            <CardDescription>Choose your account, amount, and payment method</CardDescription>
+            <CardTitle className="text-lg">{tr('Add Funds')}</CardTitle>
+            <CardDescription>{tr('Choose your account, amount, and payment method')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Account Selection */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">Destination Account</Label>
+              <Label className="text-sm font-semibold">{tr('Destination Account')}</Label>
               <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                 <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Select account to fund" />
+                  <SelectValue placeholder={tr('Select account to fund')} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts?.map((a: any) => (
@@ -128,14 +130,14 @@ const CustomerFundAccount = () => {
 
             {/* Payment Method */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">Payment Method</Label>
+              <Label className="text-sm font-semibold">{tr('Payment Method')}</Label>
               <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setSelectedBankSource(""); setBankAccountNumber(""); }} />
             </div>
 
             {/* Conditional Fields */}
             {method === "mobile_money" && (
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Phone Number</Label>
+                <Label className="text-sm font-semibold">{tr('Phone Number')}</Label>
                 <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11" />
               </div>
             )}
@@ -149,7 +151,7 @@ const CustomerFundAccount = () => {
             )}
             {(method === "card" || method === "paypal") && (
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Email</Label>
+                <Label className="text-sm font-semibold">{tr('Email')}</Label>
                 <Input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11" />
               </div>
             )}
