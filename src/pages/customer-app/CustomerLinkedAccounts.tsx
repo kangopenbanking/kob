@@ -314,6 +314,7 @@ const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
         </div>
       </div>
     </div>
+  </motion.div>
   );
 };
 
