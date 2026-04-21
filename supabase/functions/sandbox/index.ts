@@ -210,7 +210,10 @@ async function handleTriggerWebhook(body: any, supabase: any) {
 
 async function handleValidateApiKey(req: Request, body: any, supabase: any, supabaseUrl: string, serviceKey: string) {
   const apiKey = req.headers.get('x-api-key');
-  if (!apiKey?.startsWith('sbx_')) return errResp(401, 'Invalid API key format');
+  // Accept both modern (sk_test_*, sk_live_*) and legacy (sbx_*) formats
+  if (!apiKey || !(apiKey.startsWith('sbx_') || apiKey.startsWith('sk_test_') || apiKey.startsWith('sk_live_'))) {
+    return errResp(401, 'Invalid API key format');
+  }
 
   const keyHashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(apiKey));
   const keyHash = Array.from(new Uint8Array(keyHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
