@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
