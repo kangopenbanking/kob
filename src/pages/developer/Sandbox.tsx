@@ -392,30 +392,9 @@ export default function Sandbox() {
 
             <div className="space-y-2">
               {apiKeys.filter(k => k.is_active).map((key) => (
-                <div key={key.id} className="border rounded-lg p-4 space-y-2">
+                <div key={key.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium">{key.key_name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <code className="font-mono">
-                          {showKeys[key.id] ? key.api_key : '•'.repeat(40)}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setShowKeys(prev => ({ ...prev, [key.id]: !prev[key.id] }))}
-                        >
-                          {showKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(key.api_key)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <p className="font-medium">{key.key_name}</p>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -424,7 +403,36 @@ export default function Sandbox() {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
+
+                  {key.publishable_key && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Publishable Key</p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <code className="font-mono flex-1 break-all bg-muted px-2 py-1 rounded">{key.publishable_key}</code>
+                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(key.publishable_key)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Secret Key (hash only — original shown once at creation)</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <code className="font-mono flex-1 break-all bg-muted px-2 py-1 rounded">
+                        {showKeys[key.id] ? key.api_key : '•'.repeat(40)}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowKeys(prev => ({ ...prev, [key.id]: !prev[key.id] }))}
+                      >
+                        {showKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 text-xs text-muted-foreground pt-2 border-t border-border">
                     <span>{key.rate_limit_per_minute} req/min</span>
                     <span>{key.rate_limit_per_day} req/day</span>
                     {key.last_used_at && (
