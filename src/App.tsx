@@ -29,6 +29,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { LivePageTranslator } from "@/lib/i18n/LivePageTranslator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -687,6 +688,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <LivePageTranslator />
         <BrowserRouter>
           <ScrollToTop />
           <PWARouteGuard>
