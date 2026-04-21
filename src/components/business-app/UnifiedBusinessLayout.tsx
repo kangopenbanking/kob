@@ -13,6 +13,7 @@ import { BusinessMobileNav } from './BusinessMobileNav';
 import { BusinessDesktopSidebar } from './BusinessDesktopSidebar';
 import { BusinessTopBar } from './BusinessTopBar';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
+import { loadAppNamespaces } from '@/lib/i18n/i18next';
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -27,6 +28,9 @@ const UnifiedBusinessInner: React.FC = () => {
   // Layout-level realtime: every page in /biz reacts live to orders, payments,
   // wallet, payouts, catalog, inventory, storefront, coupons, staff & disputes.
   useMerchantRealtime(merchantId);
+
+  // Per-app namespace scoping: Business loads only general+auto+business bundles.
+  useEffect(() => { void loadAppNamespaces('business'); }, []);
 
   // Persistently swap manifest to business-specific PWA config
   useEffect(() => {
