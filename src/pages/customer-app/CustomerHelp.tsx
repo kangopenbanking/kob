@@ -38,35 +38,29 @@ const CustomerHelp: React.FC = () => {
   const contactOptions = [
     {
       icon: <MessageCircle className="h-5 w-5" strokeWidth={1.8} />,
-      label: 'Live Chat',
-      desc: 'Chat with an agent',
+      label: tr('Live Chat'),
+      desc: tr('Chat with an agent'),
       gradient: 'from-[hsl(160,60%,45%)] to-[hsl(160,60%,55%)]',
       iconBg: 'bg-[hsl(160,60%,40%)]',
       action: () => navigate('/app/support'),
     },
     {
       icon: <Mail className="h-5 w-5" strokeWidth={1.8} />,
-      label: 'Email Us',
+      label: tr('Email Us'),
       desc: 'support@kangopenbanking.com',
       gradient: 'from-[hsl(217,91%,50%)] to-[hsl(217,91%,60%)]',
       iconBg: 'bg-[hsl(217,91%,45%)]',
       action: () => { window.location.href = 'mailto:support@kangopenbanking.com'; },
     },
-    {
-      icon: <Phone className="h-5 w-5" strokeWidth={1.8} />,
-      label: 'Call Us',
-      desc: '+237 233 432 100',
-      gradient: 'from-[hsl(25,80%,50%)] to-[hsl(25,80%,60%)]',
-      iconBg: 'bg-[hsl(25,80%,45%)]',
-      action: () => { window.location.href = 'tel:+237233432100'; },
-    },
   ];
 
+  const faqCategories = faqCategoriesRaw.map(c => ({ ...c, label: tr(c.label) }));
+
   const quickLinks = [
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Help Centre', path: '/help-centre' },
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'FAQ', path: '/faq' },
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms & Privacy', path: '/legal' },
-    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Contact Support', path: '/contact' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('Help Centre'), path: '/help-centre' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('FAQ'), path: '/faq' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('Terms & Privacy'), path: '/legal' },
+    { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: tr('Contact Support'), path: '/contact' },
   ];
 
   const stagger = {
