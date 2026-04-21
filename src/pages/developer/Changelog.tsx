@@ -23,7 +23,7 @@ export default function Changelog() {
       date: "2026-04-21",
       type: "patch",
       changes: [
-        { type: "fix", description: "Sandbox API key generation now returns the full credential set — secret_key (sk_test_…), publishable_key (pk_test_…), merchant_id (merch_sbx_…), and webhook_secret (whsec_test_…) — closing the integration gap where developer accounts only exposed a single opaque token (STANDING ORDER 4 — additive only)" },
+        { type: "fix", description: "Sandbox API key generation now returns the full credential set — secret_key (sk_test_…), publishable_key (pk_test_…), merchant_id (bound sandbox merchant record ID), and webhook_secret (whsec_test_…) — closing the integration gap where developer accounts only exposed a single opaque token (STANDING ORDER 4 — additive only)" },
         { type: "feature", description: "developer_sandbox_accounts now provisions a unique merchant_id per account via DB trigger; backfilled for all existing accounts" },
         { type: "feature", description: "sandbox_api_keys table extended with publishable_key, webhook_secret_hash, and webhook_secret_preview columns" },
         { type: "improvement", description: "POST /v1/sandbox/api-keys response schema extended with secret_key, publishable_key, merchant_id, webhook_secret, environment fields; legacy api_key field retained as alias for backward compatibility" },
