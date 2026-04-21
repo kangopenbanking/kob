@@ -36,6 +36,15 @@ const utilityItems = [
   { label: 'Help', icon: HelpCircle, path: 'help', color: 'bg-muted', iconColor: 'text-foreground' },
 ];
 
+// Pre-register strings for the harvester (must be literal calls so the scanner picks them up).
+const _harvest = (t: (s: string) => string) => [
+  t('Transfer'), t('Request'), t('Scan'), t('Bills'), t('Cash Out'), t('Add'),
+  t('Send Abroad'), t('Remittances'), t('Marketplace'), t('Loyalty'), t('Wishlist'),
+  t('Reviews'), t('My Orders'), t('Disputes'), t('Support Chat'), t('Settings'),
+  t('Alerts'), t('Help'), t('View All'), t('Done'),
+];
+void _harvest;
+
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
 const CustomerMore: React.FC = () => {
