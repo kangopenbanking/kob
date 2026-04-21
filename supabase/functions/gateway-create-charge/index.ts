@@ -29,6 +29,9 @@ serve(async (req) => {
       save_token, customer_id, fee_bearer, capture_mode,
     } = body;
 
+    // Auto-resolve merchant_id from API key if omitted (Stripe-style ergonomics)
+    if (!merchant_id && auth.merchant_id) merchant_id = auth.merchant_id;
+
     // Validate channel
     const validChannels = ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'];
     if (channel && !validChannels.includes(channel)) {
