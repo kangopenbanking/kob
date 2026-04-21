@@ -9,6 +9,7 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
+import { DeveloperAIAssistant } from "@/components/developer/DeveloperAIAssistant";
 import {
   ArrowLeft,
   Code,
@@ -612,6 +613,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
             <TableOfContents />
           </div>
         </div>
+        <DeveloperAIAssistant />
       </div>
     </SidebarProvider>
   );
