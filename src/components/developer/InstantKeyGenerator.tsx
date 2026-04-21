@@ -32,7 +32,7 @@ export function InstantKeyGenerator() {
       setKeys({
         api_key: `sk_test_${generateRandomHex(32)}`,
         publishable_key: `pk_test_${generateRandomHex(24)}`,
-        merchant_id: `merch_sbx_${generateRandomHex(16)}`,
+        merchant_id: crypto.randomUUID(),
         webhook_secret: `whsec_test_${generateRandomHex(32)}`,
         generated_at: new Date().toISOString(),
       });
