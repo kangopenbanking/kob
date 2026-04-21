@@ -14,7 +14,7 @@ export function HeroSection() {
           {t('developer.hero.badge' as any)}
         </div>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-          {t('developer.hero.title.lead' as any)} <span className="text-primary">{t('developer.hero.title.country' as any)}</span>
+          Build the future of finance in <span className="text-primary">Cameroon</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
           {t('developer.hero.subtitle' as any)}
