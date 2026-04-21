@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.16.3",
+      date: "2026-04-21",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "POST /v1/gateway/charges now returns a Stripe-style next_action block telling integrators exactly how to complete the payment per channel: stripe_confirm_card (client_secret + publishable_key), bank_transfer_instructions (account_number + reference + expires_at), mobile_money_push (poll_url + interval), paypal_redirect (approval_url), and ussd (ussd_code). Additive — STANDING ORDER 4." },
+        { type: "fix", description: "POST /v1/gateway/charges/{id}/verify now re-polls the upstream provider (Flutterwave / Stripe / PayPal) instead of returning the cached database status, eliminating the optimistic 'successful' bug for mobile_money. Terminal states are still returned without an upstream call. Resolves [P5 Working Code Rule] violation for card and bank_transfer channels." },
+        { type: "feature", description: "New shared helper _shared/charge-next-action.ts builds the next_action envelope deterministically from provider responses." },
+        { type: "feature", description: "New documentation pages: /developer/payments/card-confirmation (Stripe.js confirmation flow in 6 languages — STANDING ORDER P9) and /developer/payments/bank-transfer-instructions." },
+        { type: "improvement", description: "Verify-charge now emits charge.{status} webhook events on every status transition with source: 'verify_poll' so reconciliation systems stay in sync." },
+      ]
+    },
+    {
       version: "API Spec 4.16.2",
       date: "2026-04-21",
       type: "patch",

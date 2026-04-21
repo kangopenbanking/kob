@@ -6,6 +6,7 @@ import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 import { resolveAuth } from "../_shared/auth-api-key.ts";
+import { buildNextAction } from "../_shared/charge-next-action.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -265,7 +266,17 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Build channel-specific next_action so integrators know what to do next
+    // (Stripe client_secret, bank account details, MoMo poll URL, PayPal approval URL).
+    // Additive — STANDING ORDER 4. Restores P5 Working Code Rule for card / bank_transfer / paypal.
+    const next_action = buildNextAction({
+      channel,
+      charge: { id: charge.id, status: charge.status, provider: charge.provider, provider_ref: charge.provider_ref },
+      providerResult,
+      customer_phone,
+    });
+
+    return new Response(JSON.stringify({ ...charge, next_action }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     const errorId = crypto.randomUUID().slice(0, 8);
     console.error(`[${errorId}] create-charge error:`, err);

@@ -73,6 +73,16 @@ KOB supports multiple payment methods through a unified charge API. The `channel
 **Providers**: Stripe
 **Flow**: Requires client-side payment sheet integration.
 
+## Completing the payment
+
+Every `POST /v1/gateway/charges` response now includes a `next_action` block telling you exactly how to finish the payment per channel:
+
+- **Card** → confirm `client_secret` with Stripe.js. See [Card Confirmation](./card-confirmation.md).
+- **Bank transfer** → display `account_number` + `reference` to the customer. See [Bank Transfer Instructions](./bank-transfer-instructions.md).
+- **Mobile money** → poll `next_action.poll_url` (`/v1/gateway/charges/{id}/verify`) every 3 seconds until status is terminal.
+- **PayPal** → redirect the customer to `next_action.approval_url`.
+- **USSD** → display `next_action.ussd_code` to the customer; poll for status.
+
 ## Test Credentials
 
 See [Sandbox Overview](../sandbox/sandbox-overview.md) for test card numbers, MoMo phone numbers, and bank accounts.
