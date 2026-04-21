@@ -82,15 +82,12 @@ export default function DeveloperForum() {
   const createThread = useMutation({
     mutationFn: async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        throw new Error("Please sign in to create a thread.");
-      }
       const { error } = await supabase.from("forum_threads").insert({
         title: newThread.title,
         body: newThread.body,
         category: newThread.category,
         author_name: newThread.author_name || "Anonymous Developer",
-        user_id: session.session.user.id,
+        user_id: session.session?.user.id ?? null,
       });
       if (error) throw error;
     },
@@ -106,14 +103,11 @@ export default function DeveloperForum() {
   const createReply = useMutation({
     mutationFn: async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        throw new Error("Please sign in to reply.");
-      }
       const { error } = await supabase.from("forum_replies").insert({
         thread_id: selectedThread!,
         body: newReply.body,
         author_name: newReply.author_name || "Anonymous Developer",
-        user_id: session.session.user.id,
+        user_id: session.session?.user.id ?? null,
       });
       if (error) throw error;
     },
