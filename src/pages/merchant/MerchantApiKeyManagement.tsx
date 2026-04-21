@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Key, Plus, Copy, RefreshCw, Shield, Clock, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { Key, Plus, Copy, RefreshCw, Shield, Clock, AlertTriangle, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -20,6 +20,7 @@ export default function MerchantApiKeyManagement() {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyEnv, setNewKeyEnv] = useState("sandbox");
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [createdCredentials, setCreatedCredentials] = useState<any | null>(null);
 
   const { data: merchant } = useQuery({
     queryKey: ["merchant-for-api-keys"],
@@ -62,13 +63,15 @@ export default function MerchantApiKeyManagement() {
       queryClient.invalidateQueries({ queryKey: ["merchant-api-keys"] });
       setShowCreateDialog(false);
       setNewKeyName("");
-      toast.success("API key created successfully");
-      if (data?.public_key) {
-        navigator.clipboard.writeText(data.public_key);
-        toast.info("Public key copied to clipboard");
-      }
+      // Show the full credentials dialog (secret key shown only once)
+      setCreatedCredentials({
+        ...data,
+        merchant_id: merchant?.id,
+        environment: newKeyEnv,
+      });
+      toast.success("API key created — copy your secret key now");
     },
-    onError: () => toast.error("Failed to create API key"),
+    onError: (err: any) => toast.error(err?.message || "Failed to create API key"),
   });
 
   const revokeKeyMutation = useMutation({
@@ -304,6 +307,79 @@ export default function MerchantApiKeyManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Credentials Display Dialog (shown once after creation) */}
+      <Dialog open={!!createdCredentials} onOpenChange={(open) => !open && setCreatedCredentials(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              API Credentials Generated
+            </DialogTitle>
+            <DialogDescription>
+              Save these credentials securely. The <strong>secret key</strong> will not be shown again.
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdCredentials && (
+            <div className="space-y-4 pt-2">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground">
+                  Copy the secret key now and store it in a secure vault. For security, we never display it again.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Merchant ID</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs bg-muted px-3 py-2 rounded font-mono break-all">
+                    {createdCredentials.merchant_id}
+                  </code>
+                  <Button variant="outline" size="icon" className="h-9 w-9 shrink-0"
+                    onClick={() => copyToClipboard(createdCredentials.merchant_id)}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Public Key (publishable, safe for client)</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs bg-muted px-3 py-2 rounded font-mono break-all">
+                    {createdCredentials.public_key}
+                  </code>
+                  <Button variant="outline" size="icon" className="h-9 w-9 shrink-0"
+                    onClick={() => copyToClipboard(createdCredentials.public_key)}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Secret Key (server-side only — shown once)</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs bg-foreground/5 border border-primary/30 px-3 py-2 rounded font-mono break-all">
+                    {createdCredentials.secret_key}
+                  </code>
+                  <Button variant="default" size="icon" className="h-9 w-9 shrink-0"
+                    onClick={() => copyToClipboard(createdCredentials.secret_key)}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                Environment: <Badge variant="secondary" className="text-xs">{createdCredentials.environment}</Badge>
+              </div>
+
+              <Button className="w-full" onClick={() => setCreatedCredentials(null)}>
+                I've Saved My Credentials
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
