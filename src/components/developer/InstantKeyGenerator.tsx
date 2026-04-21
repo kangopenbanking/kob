@@ -30,9 +30,9 @@ export function InstantKeyGenerator() {
     // Simulate brief generation delay for UX
     setTimeout(() => {
       setKeys({
-        api_key: `kob_test_${generateRandomHex(32)}`,
-        publishable_key: `kob_pub_test_${generateRandomHex(24)}`,
-        merchant_id: `mch_test_${generateRandomHex(16)}`,
+        api_key: `sk_test_${generateRandomHex(32)}`,
+        publishable_key: `pk_test_${generateRandomHex(24)}`,
+        merchant_id: `acct_test_${generateRandomHex(16)}`,
         webhook_secret: `whsec_test_${generateRandomHex(32)}`,
         generated_at: new Date().toISOString(),
       });
