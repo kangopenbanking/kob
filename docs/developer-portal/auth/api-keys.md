@@ -6,10 +6,12 @@ Merchant API keys authenticate requests to the Payment Gateway. Each key is envi
 
 ## Key Types
 
-| Type | Prefix | Purpose |
-|---|---|---|
-| Sandbox | `kob_test_` | Test without real money |
-| Production | `kob_live_` | Process real transactions |
+| Type | Secret Prefix | Publishable Prefix | Purpose |
+|---|---|---|---|
+| Sandbox | `sk_test_` | `pk_test_` | Test without real money |
+| Production | `sk_live_` | `pk_live_` | Process real transactions |
+
+Each key set also includes a `merchant_id` (e.g. `acct_test_…`) and a `webhook_secret` (`whsec_test_…`) for signature verification.
 
 ## Creating Keys
 
