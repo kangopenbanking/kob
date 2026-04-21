@@ -19,7 +19,52 @@ export default function Changelog() {
       ]
     },
     {
-      version: "API Spec 4.11.0",
+      version: "API Spec 4.15.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "CEMAC Universal Bank Integration — Wave 4: new public developer page /developer/connectors/cemac-bank-integration documenting the full BankConnector architecture, adapter decision matrix, delivery waves, and operating runbook (ORDER P6)" },
+        { type: "improvement", description: "OpenAPI specification bumped to 4.15.0 (info.version only — zero changes to operationIds, schemas, parameters, security schemes, or response codes per STANDING ORDER 1)" },
+        { type: "improvement", description: "Cross-links added between Bank Adapter Framework, Bank Onboarding Flow, and the new overview page; all Wave 4 content publicly accessible without authentication (ORDER P1, ORDER P4)" },
+      ]
+    },
+    {
+      version: "API Spec 4.14.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "CEMAC Universal Bank Integration — Wave 3: additive ledger columns on transactions (source_connector, sync_status, reconciliation_status, connector_audit_trail) — all nullable with defaults; existing reads unaffected (STANDING ORDER 1)" },
+        { type: "feature", description: "New table bank_onboarding_records tracks the six-stage certification flow per bank with admin-only RLS" },
+        { type: "feature", description: "New admin route /admin/bank-onboarding provides a stepper wizard: Assessment → Adapter → Credentials → Sandbox Test → Certification → Go Live" },
+        { type: "feature", description: "New public developer guide /developer/connectors/bank-onboarding-flow documents the certification path, checklist, and ledger audit fields" },
+      ]
+    },
+    {
+      version: "API Spec 4.13.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "CEMAC Universal Bank Integration — Wave 2: scheduled bank polling engine with rule-based reconciliation and every-5-minute cron sweep across all enabled bank connectors" },
+        { type: "feature", description: "New edge function bank-data-poller (cron */5 min) processes bank_sync_jobs, pulls accounts/balances/transactions via configured adapters, applies exponential backoff on failure (60s base, 1h cap)" },
+        { type: "feature", description: "New edge function bank-reconcile-engine performs admin-triggered reconciliation against any enabled bank connector and persists outcomes to reconciliation_reports" },
+        { type: "feature", description: "New tables bank_sync_jobs and reconciliation_reports with admin-only RLS" },
+        { type: "improvement", description: "Safety: reconciliation engine flags discrepancies for review only — never auto-credits or moves funds (financial integrity preserved)" },
+      ]
+    },
+    {
+      version: "API Spec 4.12.0",
+      date: "2026-04-17",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "CEMAC Universal Bank Integration — Wave 1: unified BankConnector interface with REST, SQL, File, and SOAP adapters; new bank-data-router with priority-based failover and full attempt audit trail" },
+        { type: "feature", description: "New shared module supabase/functions/_shared/bank-connectors with a single contract: getAccountDetails, getBalance, getTransactions, initiateTransfer, reconcile, healthCheck" },
+        { type: "feature", description: "Four pluggable adapters: REST (modern APIs), SQL (read-only via parameterized gateway), File (CSV/pain.001/MT940 from Storage), SOAP (legacy cores)" },
+        { type: "feature", description: "New edge function bank-data-router resolves enabled adapters by priority and fails over automatically; admin-only via JWT + role check" },
+        { type: "feature", description: "New tables bank_connector_configs and bank_connector_attempts with admin RLS; new developer guide /developer/connectors/bank-adapter-framework with cURL, Node, Python examples" },
+        { type: "improvement", description: "Zero changes to existing /v1/* endpoints, AISP, PISP, mobile-money-charge — additive only (STANDING ORDER 1)" },
+      ]
+    },
+    {
       date: "2026-04-17",
       type: "minor",
       changes: [
