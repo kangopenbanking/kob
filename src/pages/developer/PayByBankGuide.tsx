@@ -7,7 +7,7 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export default function PayByBankGuide() {
-  const tr = useHarvestedT('customer');
+  const tr = useHarvestedT('general');
   return (
     <div className="space-y-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

@@ -11,7 +11,7 @@ import { CreditCard, Copy, RefreshCw, Code2 } from "lucide-react";
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export default function MerchantPayByBank() {
-  const tr = useHarvestedT('customer');
+  const tr = useHarvestedT('merchant');
   const [intents, setIntents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<string | null>(null);

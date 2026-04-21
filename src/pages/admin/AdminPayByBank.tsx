@@ -42,7 +42,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminPayByBank() {
-  const tr = useHarvestedT('customer');
+  const tr = useHarvestedT('admin');
   const [intents, setIntents] = useState<Intent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

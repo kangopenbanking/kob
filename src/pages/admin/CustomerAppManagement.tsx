@@ -1490,7 +1490,7 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
 
 // ─── Main Component ───
 export default function CustomerAppManagement() {
-  const tr = useHarvestedT('customer');
+  const tr = useHarvestedT('admin');
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
