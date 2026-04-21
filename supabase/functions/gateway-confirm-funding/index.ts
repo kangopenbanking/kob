@@ -4,6 +4,7 @@ import { mapStripeStatus, mapFlutterwaveStatus } from "../_shared/gateway-adapte
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 /**
  * gateway-confirm-funding
@@ -14,17 +15,12 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !claims?.user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const __authResult = await resolveAuth(req, supabase);
+    if (__authResult.response) return __authResult.response;
+    const claims = { user: { id: __authResult.auth!.user_id, email: __authResult.auth!.email } } as any;
 
     const { funding_intent_id } = await req.json();
     if (!funding_intent_id) {
