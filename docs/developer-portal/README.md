@@ -29,7 +29,7 @@ KOB provides three integrated layers:
 ┌─────────────────────────────────────────────────┐
 │                   Your App                       │
 ├─────────────────────────────────────────────────┤
-│              KOB API (v4.0.1)                   │
+│              KOB API (v4.15.0)                  │
 │  ┌──────────┐ ┌──────────┐ ┌──────────────────┐│
 │  │ Gateway  │ │  Open    │ │    Banking       ││
 │  │ Charges  │ │ Banking  │ │ Infrastructure   ││
