@@ -10,13 +10,13 @@ import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWo
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
   useSupportDepartments,
   useSupportConversations,
   useSupportMessages,
   useCreateConversation,
   useSendMessage,
 } from '@/hooks/useSupportChat';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Step = 'list' | 'departments' | 'subject' | 'chat';
 
