@@ -1,18 +1,35 @@
 /openapi.json
   cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
 
 /openapi.yaml
   cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
 
 /openapi-sandbox.json
   cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
 
 /openapi-sandbox.yaml
   cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
 
 /apis.json
   cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
 
 /changelog.json
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *

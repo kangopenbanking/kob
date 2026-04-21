@@ -1,29 +1,9 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.9.5
+  version: 4.16.4
   summary: Unified Open Banking API for Cameroon
-  description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards,
-    Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central
-    African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API.
-    | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/,
-    added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated
-    webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type
-    enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final
-    compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account
-    schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing
-    fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata
-    to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal
-    webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint
-    restored for public PKCE clients [{},{"mtls":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails
-    extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation
-    and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented.
-    N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27):
-    100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete
-    schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource
-    GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses
-    — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint
-    added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.
+  description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{"mtls":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.
 
 
     ## Token Lifetimes
@@ -64,8 +44,7 @@ info:
     ## HTTP Caching
 
 
-    GET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits.
-    Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.
+    GET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.
 
 
 
@@ -199,7 +178,7 @@ info:
     - tx_ref: err_blocked_card
       scenario: Triggers card_blocked error
 servers:
-- url: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1
+- url: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
   description: Sandbox
 - url: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
   description: Production
@@ -263,8 +242,7 @@ tags:
 - name: Developer
   description: Developer app registration
 - name: Payment Gateway
-  description: Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment
-    links, subscriptions, split payments, tokenization, reconciliation
+  description: Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation
 - name: Payment Facilitation
   description: White-label payment processing — facilitated charges, settlement calculation and processing
 - name: Merchant Onboarding
@@ -280,8 +258,7 @@ tags:
 - name: Pay by Bank
   description: Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)
 - name: Provider Webhooks (Inbound)
-  description: Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider}
-    convention.
+  description: Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention.
 - name: Overdraft
   description: Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle
 - name: Approval Workflows
@@ -291,8 +268,7 @@ tags:
 - name: Operational Controls
   description: Internal operational controls — teller transactions, withdrawal policies, and staff authorisations
 - name: Standards - ISO 20022
-  description: ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return,
-    FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.
+  description: ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.
 components:
   securitySchemes:
     bearerAuth:
@@ -326,8 +302,7 @@ components:
       required:
       - software_statement
       - redirect_uris
-      description: Dynamic Client Registration request per RFC 7591, with FAPI 1.0 Advanced extensions. The software_statement is a signed JWT (SSA) issued by the KOB Directory containing the TPP's identity
-        claims.
+      description: Dynamic Client Registration request per RFC 7591, with FAPI 1.0 Advanced extensions. The software_statement is a signed JWT (SSA) issued by the KOB Directory containing the TPP's identity claims.
       properties:
         software_statement:
           type: string
@@ -839,8 +814,7 @@ components:
       - currency
       - type
       - timestamp
-      x-naming-convention: 'This schema uses dual naming: snake_case (native) and PascalCase (OBIE-compatible). Both represent the same field. SDK consumers should use snake_case. OBIE-conformant consumers
-        may use PascalCase aliases. A future version will support content negotiation via Accept: application/json;profile=obie.'
+      x-naming-convention: 'This schema uses dual naming: snake_case (native) and PascalCase (OBIE-compatible). Both represent the same field. SDK consumers should use snake_case. OBIE-conformant consumers may use PascalCase aliases. A future version will support content negotiation via Accept: application/json;profile=obie.'
     Payment:
       type: object
       properties:
@@ -1481,9 +1455,7 @@ components:
           description: The specific event type. Use 'wildcard.*' to subscribe to all events.
         data:
           type: object
-          description: 'Event-specific payload. Key schemas by event: charge.* -> GatewayCharge, refund.* -> GatewayRefund, payout.* -> GatewayPayout, payment.* -> Payment, dispute.* -> GatewayDispute,
-            settlement.* -> GatewaySettlement, consent.* -> Consent, loan.* -> LoanApplication, mobile_money.* -> MobileMoneyCharge, interbank.* -> InterbankPayment, pay_by_bank.* -> PayByBankIntent, subscription.*
-            -> GatewaySubscription'
+          description: 'Event-specific payload. Key schemas by event: charge.* -> GatewayCharge, refund.* -> GatewayRefund, payout.* -> GatewayPayout, payment.* -> Payment, dispute.* -> GatewayDispute, settlement.* -> GatewaySettlement, consent.* -> Consent, loan.* -> LoanApplication, mobile_money.* -> MobileMoneyCharge, interbank.* -> InterbankPayment, pay_by_bank.* -> PayByBankIntent, subscription.* -> GatewaySubscription'
           additionalProperties: true
     Webhook:
       type: object
@@ -3070,8 +3042,7 @@ components:
         format: date-time
         example: Sat, 22 Mar 2026 10:00:00 GMT
     IdempotencyKey:
-      description: A unique UUID (v4) identifying this request for safe retries. Keys are retained for **24 hours** after the first request. Reusing a key with identical parameters returns the cached response.
-        Reusing a key with different parameters returns 409 Conflict. Required on all money-moving POST endpoints.
+      description: A unique UUID (v4) identifying this request for safe retries. Keys are retained for **24 hours** after the first request. Reusing a key with identical parameters returns the cached response. Reusing a key with different parameters returns 409 Conflict. Required on all money-moving POST endpoints.
       required: true
       schema:
         type: string
@@ -3410,8 +3381,7 @@ paths:
         schema:
           type: string
         required: true
-        description: PKCE code challenge. The Base64URL-encoded SHA-256 hash of the code_verifier (S256 method). REQUIRED by FAPI 1.0 Advanced Section 5.2.2 for all authorization requests. The corresponding
-          code_verifier must be provided at the token endpoint.
+        description: PKCE code challenge. The Base64URL-encoded SHA-256 hash of the code_verifier (S256 method). REQUIRED by FAPI 1.0 Advanced Section 5.2.2 for all authorization requests. The corresponding code_verifier must be provided at the token endpoint.
       - name: code_challenge_method
         in: query
         schema:
@@ -3423,8 +3393,7 @@ paths:
       - name: nonce
         in: query
         required: true
-        description: Cryptographically random nonce value associating the client session with the ID Token and preventing replay attacks. REQUIRED by FAPI 1.0 Advanced Section 5.2.2-14 for all authorization
-          requests. Must be unique per request with at least 128 bits of entropy (minimum 22 Base64url characters). The server MUST include the nonce claim in the issued ID Token.
+        description: Cryptographically random nonce value associating the client session with the ID Token and preventing replay attacks. REQUIRED by FAPI 1.0 Advanced Section 5.2.2-14 for all authorization requests. Must be unique per request with at least 128 bits of entropy (minimum 22 Base64url characters). The server MUST include the nonce claim in the issued ID Token.
         schema:
           type: string
       - name: request_uri
@@ -3746,9 +3715,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
-      description: 'OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context.
-        (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual
-        TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced.'
+      description: 'OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced.'
   /v1/oauth/introspect:
     post:
       tags:
@@ -15408,8 +15375,7 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
-        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
   /v1/standards/swift/mt940/parse:
@@ -15565,8 +15531,7 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
-        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/camt053/parse
   /v1/standards/swift/mt103/generate:
@@ -15711,8 +15676,7 @@ paths:
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
       deprecated: true
-      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent
-        ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
+      description: '⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). '
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
   /v1/standards/validate/iban:
@@ -29308,8 +29272,7 @@ paths:
       tags:
       - Banking Operations
       summary: Institution-facilitated bank transfer
-      description: Initiate a bank payout facilitated by a financial institution through the Flutterwave rail. Includes KOB fee calculation and settlement tracking. The institution_id determines fee structure
-        and settlement bucket.
+      description: Initiate a bank payout facilitated by a financial institution through the Flutterwave rail. Includes KOB fee calculation and settlement tracking. The institution_id determines fee structure and settlement bucket.
       operationId: bankingFacilitatedTransfer
       security:
       - bearerAuth: []
@@ -29533,8 +29496,7 @@ paths:
       tags:
       - Payment Facilitation
       summary: Facilitated mobile money collection
-      description: Initiate a mobile money charge using KOB's pre-verified Flutterwave account. The institution must have use_kob_flutterwave enabled. KOB fee is automatically calculated and the transaction
-        is tagged for settlement.
+      description: Initiate a mobile money charge using KOB's pre-verified Flutterwave account. The institution must have use_kob_flutterwave enabled. KOB fee is automatically calculated and the transaction is tagged for settlement.
       operationId: facilitatedMobileMoneyCharge
       security:
       - bearerAuth: []
@@ -29724,8 +29686,7 @@ paths:
       tags:
       - Payment Facilitation
       summary: Calculate settlement balance
-      description: Calculate the settlement balance for the authenticated institution over a given period. Returns total inflows, outflows, KOB fees, and net settlement amount with a breakdown by payment
-        method.
+      description: Calculate the settlement balance for the authenticated institution over a given period. Returns total inflows, outflows, KOB fees, and net settlement amount with a breakdown by payment method.
       operationId: settlementCalculate
       security:
       - bearerAuth: []
@@ -29893,8 +29854,7 @@ paths:
       tags:
       - Payment Facilitation
       summary: Process settlement payout
-      description: Process a settlement payout for a facilitated institution. Admin-only. Debits the net settlement amount and transfers to the institution's configured bank or mobile money account via
-        Flutterwave.
+      description: Process a settlement payout for a facilitated institution. Admin-only. Debits the net settlement amount and transfers to the institution's configured bank or mobile money account via Flutterwave.
       operationId: settlementProcess
       security:
       - bearerAuth: []
@@ -47961,8 +47921,7 @@ paths:
       tags:
       - Webhooks
       summary: Register webhook endpoint (v2)
-      description: Register a new webhook endpoint with event filtering and unique signing secret. All delivered webhook payloads follow the WebhookEventPayload schema (see components/schemas/WebhookEventPayload).
-        The data field contains the event-specific resource object referenced in the event type mapping.
+      description: Register a new webhook endpoint with event filtering and unique signing secret. All delivered webhook payloads follow the WebhookEventPayload schema (see components/schemas/WebhookEventPayload). The data field contains the event-specific resource object referenced in the event type mapping.
       operationId: webhookV2Create
       security:
       - bearerAuth: []
@@ -53784,8 +53743,7 @@ paths:
       tags:
       - Provider Webhooks (Inbound)
       summary: Stripe inbound webhook
-      description: Receives Stripe webhook events. Verifies `stripe-signature` header using HMAC-SHA256. Deduplicates by event ID via `webhook_inbox` table. Maps Stripe events to internal charge/refund/dispute/payout
-        status updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
+      description: Receives Stripe webhook events. Verifies `stripe-signature` header using HMAC-SHA256. Deduplicates by event ID via `webhook_inbox` table. Maps Stripe events to internal charge/refund/dispute/payout status updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
       operationId: receiveStripeWebhook
       security: []
       parameters:
@@ -53881,8 +53839,7 @@ paths:
       tags:
       - Provider Webhooks (Inbound)
       summary: Flutterwave inbound webhook
-      description: Receives Flutterwave webhook events. Verifies `verif-hash` header against configured secret. Deduplicates by event ID. Maps Flutterwave events to internal charge/payout/refund status
-        updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
+      description: Receives Flutterwave webhook events. Verifies `verif-hash` header against configured secret. Deduplicates by event ID. Maps Flutterwave events to internal charge/payout/refund status updates. Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types.
       operationId: receiveFlutterwaveWebhook
       security: []
       parameters:
@@ -54000,10 +53957,7 @@ paths:
 
         - `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order
 
-        - `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event
-        types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers:
-        PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing
-        any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post
+        - `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post
 
 
         **PayPal Webhook Request Headers (present on every delivery):**
@@ -54627,8 +54581,7 @@ paths:
     post:
       operationId: parseISO20022Camt052
       summary: Parse ISO 20022 camt.052 Bank-to-Customer Account Report
-      description: Parse and validate an inbound ISO 20022 camt.052.001.08 (Bank-to-Customer Account Report) XML message. This intraday report is sent BY the bank TO the platform to report account balances
-        and transactions during the business day. Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.
+      description: Parse and validate an inbound ISO 20022 camt.052.001.08 (Bank-to-Customer Account Report) XML message. This intraday report is sent BY the bank TO the platform to report account balances and transactions during the business day. Generate an ISO 20022 camt.052.001.10 intraday account report for real-time balance and transaction reporting.
       tags:
       - Standards - ISO 20022
       security:
@@ -54743,8 +54696,7 @@ paths:
     post:
       operationId: parseISO20022Camt054
       summary: Parse ISO 20022 camt.054 Bank-to-Customer Debit Credit Notification
-      description: Parse and validate an inbound ISO 20022 camt.054.001.08 (Bank-to-Customer Debit/Credit Notification) XML message. This notification is sent BY the bank TO the platform to report a specific
-        debit or credit to a customer account in real time. Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.
+      description: Parse and validate an inbound ISO 20022 camt.054.001.08 (Bank-to-Customer Debit/Credit Notification) XML message. This notification is sent BY the bank TO the platform to report a specific debit or credit to a customer account in real time. Generate an ISO 20022 camt.054.001.10 debit/credit notification for real-time transaction alerting.
       tags:
       - Standards - ISO 20022
       security:
@@ -54855,3 +54807,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /healthz:
+    get:
+      tags:
+      - Monitoring
+      summary: Security posture self-verification
+      description: 'Reviewer-friendly snapshot of the API''s live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 — S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.'
+      operationId: securityHealthz
+      security: []
+      responses:
+        '200':
+          description: Live security posture snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+externalDocs:
+  description: Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console
+  url: https://kangopenbanking.com/developer/sandbox
