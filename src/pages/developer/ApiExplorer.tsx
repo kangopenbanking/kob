@@ -4,7 +4,8 @@ import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal } from 'lucide-react';
+import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal, Sparkles, ChevronDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -119,13 +120,40 @@ const ApiExplorer = () => {
         <meta property="og:description" content="Interactive Swagger UI documentation for the KOB payment gateway and open banking platform." />
         <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer" />
       </Helmet>
-    <div className="container mx-auto px-4 py-8" data-testid="api-explorer-container">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">API Explorer</h1>
-        <p className="text-lg text-muted-foreground mb-6">
-          Interactive documentation powered by Swagger UI. Test endpoints directly from your browser.
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20" data-testid="api-explorer-container">
+    <div className="container mx-auto px-4 py-10 max-w-7xl">
+      {/* Hero Header */}
+      <div className="mb-10 rounded-2xl border bg-card/50 backdrop-blur-sm p-8 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-3 max-w-3xl">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="gap-1.5 border-primary/30 bg-primary/5 text-primary">
+                <Sparkles className="h-3 w-3" />
+                Interactive
+              </Badge>
+              <Badge variant="outline" className="font-mono text-xs">v4.16.4</Badge>
+              {!isChecking && spec && (
+                <Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Spec loaded
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">API Explorer</h1>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Interactive documentation powered by Swagger UI. Authenticate, browse 326+ endpoints, and execute live requests directly from your browser.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden md:flex flex-col items-end text-right">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Base URL</span>
+              <code className="text-xs font-mono text-foreground/80">api.kangopenbanking.com</code>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <div className="mb-8">
         {fetchError && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -136,52 +164,62 @@ const ApiExplorer = () => {
         {/* OAuth Authentication Guide */}
         <Collapsible open={authGuideOpen} onOpenChange={setAuthGuideOpen} className="mb-6">
           <CollapsibleTrigger asChild>
-            <Card className="cursor-pointer hover:border-primary/50 transition-colors">
-              <CardHeader className="py-4">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  How to Authenticate — Get your Access Token, Client ID & Secret
-                  <span className="ml-auto text-xs text-muted-foreground">{authGuideOpen ? 'Collapse' : 'Expand'}</span>
+            <Card className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group">
+              <CardHeader className="py-5">
+                <CardTitle className="flex items-center gap-3 text-base">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <ShieldCheck className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-semibold">How to Authenticate</div>
+                    <div className="text-xs font-normal text-muted-foreground mt-0.5">Get your Access Token, Client ID & Secret in 3 steps</div>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${authGuideOpen ? 'rotate-180' : ''}`} />
                 </CardTitle>
               </CardHeader>
             </Card>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <Card className="border-t-0 rounded-t-none -mt-1">
-              <CardContent className="pt-4 space-y-6">
+              <CardContent className="pt-6 space-y-8">
                 {/* Step 1 */}
                 <div className="space-y-2">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">1</span>
                     Register a TPP Application (Get Client ID & Secret)
                   </h4>
-                  <p className="text-sm text-muted-foreground ml-8">
+                  <p className="text-sm text-muted-foreground ml-9">
                     Navigate to the <strong>Developer Portal → Sandbox & Testing</strong> section and register a new Third Party Provider (TPP) application.
                     Upon registration, you will receive:
                   </p>
-                  <ul className="list-disc list-inside ml-8 text-sm text-muted-foreground space-y-1">
-                    <li><strong>Client ID</strong> — A unique identifier for your application (e.g., <code className="bg-muted px-1 rounded">kob_client_xxxxxxxx</code>)</li>
+                  <ul className="list-disc list-inside ml-9 text-sm text-muted-foreground space-y-1">
+                    <li><strong>Client ID</strong> — A unique identifier for your application (e.g., <code className="bg-muted px-1.5 py-0.5 rounded text-xs">kob_client_xxxxxxxx</code>)</li>
                     <li><strong>Client Secret</strong> — A private key used for server-to-server authentication. Keep this secure and never expose it in frontend code.</li>
                   </ul>
-                  <p className="text-sm text-muted-foreground ml-8">
-                    Alternatively, use the DCR (Dynamic Client Registration) endpoint: <code className="bg-muted px-1 rounded">POST /v1/dcr/register</code>
+                  <p className="text-sm text-muted-foreground ml-9">
+                    Alternatively, use the DCR (Dynamic Client Registration) endpoint: <code className="bg-muted px-1.5 py-0.5 rounded text-xs">POST /v1/dcr/register</code>
                   </p>
                 </div>
 
                 {/* Step 2 */}
                 <div className="space-y-2">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">2</span>
                     Obtain an Access Token
                   </h4>
-                  <p className="text-sm text-muted-foreground ml-8">
+                  <p className="text-sm text-muted-foreground ml-9">
                     Exchange your credentials for a Bearer token using one of these grant types:
                   </p>
-                  <div className="ml-8 rounded-lg border border-white/10 bg-[#0d1117] overflow-hidden">
-                    <div className="px-4 py-2 border-b border-white/10 bg-gray-900">
+                  <div className="ml-9 rounded-xl border border-white/10 bg-[#0d1117] overflow-hidden shadow-lg">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-[#161b22]">
                       <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Client Credentials (Server-to-Server)</span>
+                      <div className="flex gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+                      </div>
                     </div>
-                    <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-100">{`POST /functions/v1/oauth-token
+                    <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-100 leading-relaxed">{`POST /functions/v1/oauth-token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=client_credentials
@@ -189,11 +227,12 @@ grant_type=client_credentials
 &client_secret=YOUR_CLIENT_SECRET
 &scope=accounts+payments`}</pre>
                   </div>
-                  <div className="ml-8 rounded-lg border border-white/10 bg-[#0d1117] overflow-hidden mt-3">
-                    <div className="px-4 py-2 border-b border-white/10 bg-gray-900">
+                  <div className="ml-9 rounded-xl border border-white/10 bg-[#0d1117] overflow-hidden mt-3 shadow-lg">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-[#161b22]">
                       <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Successful Response</span>
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px]">200 OK</Badge>
                     </div>
-                    <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-100">{`{
+                    <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-100 leading-relaxed">{`{
   "access_token": "eyJhbGciOiJSUzI1NiIs...",
   "token_type": "Bearer",
   "expires_in": 3600,
@@ -205,41 +244,36 @@ grant_type=client_credentials
                 {/* Step 3 */}
                 <div className="space-y-2">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">3</span>
                     Authorize in Swagger UI
                   </h4>
-                  <p className="text-sm text-muted-foreground ml-8">
+                  <p className="text-sm text-muted-foreground ml-9">
                     Click the <strong>Authorize</strong> button at the top of Swagger UI and enter your credentials:
                   </p>
-                  <ul className="list-disc list-inside ml-8 text-sm text-muted-foreground space-y-1">
-                    <li><strong>bearerAuth:</strong> Paste the <code className="bg-muted px-1 rounded">access_token</code> value from the response above</li>
-                    <li><strong>oauth2:</strong> Enter your <code className="bg-muted px-1 rounded">client_id</code> and <code className="bg-muted px-1 rounded">client_secret</code>, select scopes, and click Authorize to start the OAuth flow</li>
+                  <ul className="list-disc list-inside ml-9 text-sm text-muted-foreground space-y-1">
+                    <li><strong>bearerAuth:</strong> Paste the <code className="bg-muted px-1.5 py-0.5 rounded text-xs">access_token</code> value from the response above</li>
+                    <li><strong>oauth2:</strong> Enter your <code className="bg-muted px-1.5 py-0.5 rounded text-xs">client_id</code> and <code className="bg-muted px-1.5 py-0.5 rounded text-xs">client_secret</code>, select scopes, and click Authorize to start the OAuth flow</li>
                   </ul>
                 </div>
 
                 {/* Key URLs */}
-                <div className="space-y-2">
+                <div className="space-y-3 pt-2 border-t">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <Key className="h-4 w-4" />
+                    <Key className="h-4 w-4 text-primary" />
                     Key OAuth Endpoints
                   </h4>
-                  <div className="ml-8 grid gap-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <code className="bg-[#0d1117] text-green-400 px-2 py-1 rounded text-xs border border-white/10">Authorization</code>
-                      <code className="text-muted-foreground">/functions/v1/oauth-authorize</code>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="bg-[#0d1117] text-green-400 px-2 py-1 rounded text-xs border border-white/10">Token</code>
-                      <code className="text-muted-foreground">/functions/v1/oauth-token</code>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="bg-[#0d1117] text-green-400 px-2 py-1 rounded text-xs border border-white/10">DCR Register</code>
-                      <code className="text-muted-foreground">/functions/v1/dcr-register</code>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="bg-[#0d1117] text-green-400 px-2 py-1 rounded text-xs border border-white/10">OIDC Discovery</code>
-                      <code className="text-muted-foreground">/functions/v1/oidc-config</code>
-                    </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      { label: 'Authorization', path: '/functions/v1/oauth-authorize' },
+                      { label: 'Token', path: '/functions/v1/oauth-token' },
+                      { label: 'DCR Register', path: '/functions/v1/dcr-register' },
+                      { label: 'OIDC Discovery', path: '/functions/v1/oidc-config' },
+                    ].map((ep) => (
+                      <div key={ep.label} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors">
+                        <code className="bg-[#0d1117] text-emerald-400 px-2 py-1 rounded text-[11px] font-mono border border-white/10 shrink-0">{ep.label}</code>
+                        <code className="text-xs text-muted-foreground font-mono truncate">{ep.path}</code>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -247,11 +281,12 @@ grant_type=client_credentials
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
           <Button
             onClick={() => handleDownload('json')}
             variant="outline"
             disabled={loading || isChecking || !spec}
+            className="shadow-sm hover:shadow-md transition-all"
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI JSON
@@ -260,11 +295,12 @@ grant_type=client_credentials
             onClick={() => handleDownload('yaml')}
             variant="outline"
             disabled={loading || isChecking || !spec}
+            className="shadow-sm hover:shadow-md transition-all"
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI YAML
           </Button>
-          <Button variant="outline" asChild disabled={isChecking}>
+          <Button variant="outline" asChild disabled={isChecking} className="shadow-sm hover:shadow-md transition-all">
             <a
               href={`https://editor.swagger.io/?url=${encodeURIComponent(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-api-spec`)}`}
               target="_blank"
@@ -277,10 +313,13 @@ grant_type=client_credentials
         </div>
       </div>
 
-      <Card className="overflow-hidden swagger-container">
+      <Card className="overflow-hidden swagger-container border shadow-lg rounded-xl">
         {isChecking ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Loading API specification...
+          <div className="p-16 text-center space-y-4">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+            <p className="text-muted-foreground">Loading API specification…</p>
           </div>
         ) : spec ? (
           <SwaggerUI
@@ -292,7 +331,10 @@ grant_type=client_credentials
             tryItOutEnabled={true}
           />
         ) : (
-          <div className="p-8 text-center space-y-4">
+          <div className="p-12 text-center space-y-4">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
             <p className="text-muted-foreground">Failed to load API specification.</p>
             <Button variant="outline" onClick={() => setRetryCount(c => c + 1)}>
               <Terminal className="mr-2 h-4 w-4" /> Retry Loading Spec
