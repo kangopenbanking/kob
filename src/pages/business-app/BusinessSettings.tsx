@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
   Building2, Mail, Phone, Globe, CreditCard, Key, Webhook, Bell,
-  ChevronRight, Shield, Save, Loader2,
+  ChevronRight, Shield, Save, Loader2, Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PaymentConnectorsPanel } from '@/components/connectors/PaymentConnectorsPanel';
 import { PageGuide } from '@/components/business-app/PageGuide';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const settingsLinks = [
   { icon: CreditCard, label: 'Settlement Accounts', subtitle: 'Bank, MoMo, Kang Wallet (max 2)', path: '/biz/settlement-accounts', color: 'text-emerald-600 bg-emerald-500/10' },
@@ -32,6 +33,7 @@ export default function BusinessSettings() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { merchantId } = useMerchantContext();
+  const { language, setLanguage } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     business_name: '', business_email: '', business_phone: '',
