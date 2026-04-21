@@ -7481,6 +7481,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          merchant_id: string | null
           status: string
           tier: string
           updated_at: string
@@ -7492,6 +7493,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          merchant_id?: string | null
           status?: string
           tier?: string
           updated_at?: string
@@ -7503,6 +7505,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          merchant_id?: string | null
           status?: string
           tier?: string
           updated_at?: string
@@ -18735,9 +18738,12 @@ export type Database = {
           key_hash: string
           key_name: string
           last_used_at: string | null
+          publishable_key: string | null
           rate_limit_per_day: number
           rate_limit_per_minute: number
           sandbox_account_id: string
+          webhook_secret_hash: string | null
+          webhook_secret_preview: string | null
         }
         Insert: {
           api_key: string
@@ -18748,9 +18754,12 @@ export type Database = {
           key_hash: string
           key_name: string
           last_used_at?: string | null
+          publishable_key?: string | null
           rate_limit_per_day?: number
           rate_limit_per_minute?: number
           sandbox_account_id: string
+          webhook_secret_hash?: string | null
+          webhook_secret_preview?: string | null
         }
         Update: {
           api_key?: string
@@ -18761,9 +18770,12 @@ export type Database = {
           key_hash?: string
           key_name?: string
           last_used_at?: string | null
+          publishable_key?: string | null
           rate_limit_per_day?: number
           rate_limit_per_minute?: number
           sandbox_account_id?: string
+          webhook_secret_hash?: string | null
+          webhook_secret_preview?: string | null
         }
         Relationships: [
           {
