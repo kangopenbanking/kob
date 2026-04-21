@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.16.2",
+      date: "2026-04-21",
+      type: "patch",
+      changes: [
+        { type: "fix", description: "Sandbox & live API keys (sk_test_*, sk_live_*) are now accepted as bearer tokens across all /v1/gateway/* endpoints. Previously only Supabase JWTs were accepted, causing 401 Unauthorized errors for documented integration flows. Resolves the [P5 Working Code Rule] violation (RFC 7807 envelope returned on auth failure)." },
+        { type: "feature", description: "New shared authenticator (_shared/auth-api-key.ts) resolves Authorization: Bearer sk_test_… → SHA-256 → gateway_merchant_keys / sandbox_api_keys; falls back to JWT for dashboard callers (non-breaking, STANDING ORDER 4 — additive only)." },
+        { type: "feature", description: "X-API-Key header accepted as alias for Authorization: Bearer; X-Merchant-ID is now optional and auto-resolved from the API key when bound to a single merchant (Stripe-style ergonomics)." },
+        { type: "improvement", description: "Sandbox validate-api-key endpoint now accepts sk_test_/sk_live_ formats in addition to legacy sbx_ prefix; last_used_at tracking enabled on every successful key auth." },
+        { type: "improvement", description: "Authentication overview and API Keys guides updated with a 'Why was my key rejected?' troubleshooting block and clarification that X-Merchant-ID is optional." },
+      ]
+    },
+    {
       version: "API Spec 4.16.1",
       date: "2026-04-21",
       type: "patch",

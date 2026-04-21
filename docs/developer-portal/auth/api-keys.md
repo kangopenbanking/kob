@@ -50,3 +50,17 @@ Immediately invalidate a compromised key:
 ## Rate Limits
 
 API keys are rate-limited per endpoint. See [Rate Limits](../reference/rate-limits.md) for details.
+
+## How keys are validated
+
+Every gateway request runs through a single shared resolver (`_shared/auth-api-key.ts`):
+
+1. **Extract token** from `Authorization: Bearer …` (preferred) or `X-API-Key` (alias).
+2. **Identify scheme by prefix:**
+   - `sk_test_*` / `sk_live_*` → SHA-256 hash → looked up in `gateway_merchant_keys` (preferred) then `sandbox_api_keys`.
+   - `sbx_*` → legacy sandbox table lookup.
+   - 3-segment JWT → falls back to `auth.getUser()` (dashboard / PAT flow).
+3. **Bind to merchant** — when the key resolves to exactly one merchant, `merchant_id` is injected into the request automatically. `X-Merchant-ID` is only required when a key has access to multiple merchants.
+4. **Last-used tracking** — `last_used_at` is updated asynchronously on every successful authentication (best-effort, never blocks the request).
+
+On any failure the gateway returns a standardized `application/problem+json` envelope (RFC 7807) with `status: 401` and a `detail` describing the rejection reason.

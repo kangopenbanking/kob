@@ -67,10 +67,22 @@ For institutions requiring certificate-bound tokens:
 | Header | Required | Description |
 |---|---|---|
 | `Authorization` | Always | `Bearer <token>` or `Bearer <api_key>` |
+| `X-API-Key` | Alternative to `Authorization` | Accepted alias when `Authorization` is omitted |
+| `X-Merchant-ID` | **Optional** | Auto-resolved from the API key when bound to a single merchant; required only when a key has access to multiple merchants |
 | `Content-Type` | POST/PUT | `application/json` |
 | `Idempotency-Key` | Money-moving POST | UUID for safe retries |
 | `x-consent-id` | AISP/PISP | Consent identifier |
 | `x-fapi-interaction-id` | FAPI endpoints | Correlation ID (returned in response) |
+
+## Why was my key rejected?
+
+If you receive a `401 Unauthorized` (RFC 7807 `application/problem+json` response):
+
+1. **Format** — secret keys must start with `sk_test_` (sandbox) or `sk_live_` (production). Publishable keys (`pk_*`) are **never** accepted as bearer tokens — they are for client-side SDK init only.
+2. **Active** — confirm the key has not been revoked in Merchant Portal → API Keys.
+3. **Environment match** — `sk_test_*` keys only authenticate against sandbox merchants; `sk_live_*` keys against live merchants.
+4. **Merchant binding** — if you pass `X-Merchant-ID`, it must match the merchant the key was issued for; otherwise omit the header and let the gateway resolve it.
+5. **Whitespace** — strip any trailing newlines or quotes when copying the key from the dashboard.
 
 ## Environments
 
