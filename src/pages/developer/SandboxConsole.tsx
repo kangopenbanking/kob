@@ -23,12 +23,18 @@ interface SandboxAccount {
   status: string;
   tier: string;
   created_at: string;
+  merchant_id?: string;
 }
 
 interface ApiKeyResult {
-  api_key: string;
+  api_key?: string; // legacy alias for secret_key
   key_id: string;
   key_name: string;
+  secret_key: string;
+  publishable_key: string;
+  merchant_id: string;
+  webhook_secret: string;
+  environment: string;
   rate_limits: { per_minute: number; per_day: number };
 }
 
@@ -376,6 +382,17 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/
                         <p className="text-muted-foreground">Account ID</p>
                         <code className="text-xs font-mono text-foreground">{account.id.slice(0, 12)}...</code>
                       </div>
+                      {account.merchant_id && (
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground">Merchant ID (use on every charge / payout)</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded flex-1 break-all">{account.merchant_id}</code>
+                            <Button variant="ghost" size="sm" onClick={() => copyToClipboard(account.merchant_id!, "Merchant ID")}>
+                              {copied === "Merchant ID" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-4">
                       Proceed to the API Keys tab to generate your sandbox credentials.
