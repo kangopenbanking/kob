@@ -93,7 +93,6 @@ const accountTypes: AccountTypeConfig[] = [
 ];
 
 const getIconForType = (type: string) => {
-  const tr = useHarvestedT('customer');
   const found = accountTypes.find(t => t.key === type);
   return found || accountTypes[0];
 };
