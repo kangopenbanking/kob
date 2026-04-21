@@ -384,7 +384,6 @@ grant_type=client_credentials
     </div>
     </>
   );
-  );
 };
 
 export default ApiExplorer;
