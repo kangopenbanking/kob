@@ -13,46 +13,98 @@ import { PageGuide } from '@/components/business-app/PageGuide';
 export default function BusinessAnalytics() {
   const { merchantId } = useMerchantContext();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
 
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ['analytics-orders', merchantId, timeframe],
+  const daysAgo = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
+
+  // POS orders (in-store / catalog sales)
+  const { data: posOrders, isLoading: posLoading } = useQuery({
+    queryKey: ['analytics-pos-orders', merchantId, timeframe],
     queryFn: async () => {
       if (!merchantId) return [];
-      const daysAgo = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysAgo);
       const { data, error } = await supabase
         .from('pos_orders')
-        .select('*, pos_order_items(*)')
+        .select('id, total, status, created_at, pos_order_items(product_name, product_variant_id, quantity, price)')
         .eq('merchant_id', merchantId)
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!merchantId,
+    staleTime: 30_000,
   });
 
-  const totalRevenue = orders?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
-  const totalOrders = orders?.length || 0;
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-  const completedOrders = orders?.filter(o => o.status === 'completed') || [];
-  const conversionRate = totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
+  // Gateway charges (online payments) — same source as Business Home dashboard
+  const { data: charges, isLoading: chargesLoading } = useQuery({
+    queryKey: ['analytics-charges', merchantId, timeframe],
+    queryFn: async () => {
+      if (!merchantId) return [];
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysAgo);
+      const { data, error } = await supabase
+        .from('gateway_charges')
+        .select('id, amount, status, created_at')
+        .eq('merchant_id', merchantId)
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!merchantId,
+    staleTime: 30_000,
+  });
 
+  const isLoading = posLoading || chargesLoading;
+
+  // Realtime sync — invalidate on any new order or charge for this merchant
+  useEffect(() => {
+    if (!merchantId) return;
+    const channel = supabase
+      .channel(`analytics-${merchantId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pos_orders', filter: `merchant_id=eq.${merchantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ['analytics-pos-orders', merchantId] });
+        queryClient.invalidateQueries({ queryKey: ['merchant-charges', merchantId] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gateway_charges', filter: `merchant_id=eq.${merchantId}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ['analytics-charges', merchantId] });
+        queryClient.invalidateQueries({ queryKey: ['merchant-charges', merchantId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [merchantId, queryClient]);
+
+  // Successful charges only count as revenue (matches home dashboard)
+  const successfulCharges = (charges || []).filter((c: any) => c.status === 'successful' || c.status === 'succeeded');
+  const completedPos = (posOrders || []).filter((o: any) => o.status === 'completed' || o.status === 'paid');
+
+  const posRevenue = completedPos.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+  const chargeRevenue = successfulCharges.reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
+  const totalRevenue = posRevenue + chargeRevenue;
+  const totalOrders = (posOrders?.length || 0) + (charges?.length || 0);
+  const successfulOrders = completedPos.length + successfulCharges.length;
+  const avgOrderValue = successfulOrders > 0 ? totalRevenue / successfulOrders : 0;
+  const conversionRate = totalOrders > 0 ? (successfulOrders / totalOrders) * 100 : 0;
+
+  // Combined daily series (POS + charges)
   const dailyData: Record<string, { date: string; revenue: number; orders: number }> = {};
-  orders?.forEach(order => {
-    const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const addDaily = (createdAt: string, amount: number) => {
+    const date = new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     if (!dailyData[date]) dailyData[date] = { date, revenue: 0, orders: 0 };
-    dailyData[date].revenue += order.total || 0;
+    dailyData[date].revenue += amount;
     dailyData[date].orders += 1;
-  });
+  };
+  completedPos.forEach((o: any) => addDaily(o.created_at, Number(o.total || 0)));
+  successfulCharges.forEach((c: any) => addDaily(c.created_at, Number(c.amount || 0)));
   const chartData = Object.values(dailyData);
 
   const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
-  orders?.forEach(order => {
+  posOrders?.forEach((order: any) => {
     order.pos_order_items?.forEach((item: any) => {
-      const key = item.product_variant_id || 'unknown';
+      const key = item.product_variant_id || item.product_name || 'unknown';
       if (!productSales[key]) productSales[key] = { name: item.product_name || 'Unknown', quantity: 0, revenue: 0 };
       productSales[key].quantity += item.quantity;
       productSales[key].revenue += item.price * item.quantity;
