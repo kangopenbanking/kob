@@ -24,7 +24,12 @@ export default function Sandbox() {
   const [account, setAccount] = useState<any>(null);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [selectedKeyForDashboard, setSelectedKeyForDashboard] = useState<string>("");
-  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [newKeySet, setNewKeySet] = useState<{
+    secret_key: string;
+    publishable_key: string;
+    merchant_id: string;
+    webhook_secret: string;
+  } | null>(null);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
   // Form state
@@ -124,7 +129,12 @@ export default function Sandbox() {
 
       if (error) throw error;
 
-      setNewApiKey(data.api_key);
+      setNewKeySet({
+        secret_key: data.secret_key || data.api_key,
+        publishable_key: data.publishable_key,
+        merchant_id: data.merchant_id,
+        webhook_secret: data.webhook_secret,
+      });
       setKeyName("");
       toast.success('API key created successfully!');
       fetchSandboxData();
@@ -283,6 +293,20 @@ export default function Sandbox() {
                 <Label className="text-muted-foreground">Created</Label>
                 <p>{new Date(account.created_at).toLocaleDateString()}</p>
               </div>
+              {account.merchant_id && (
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">Merchant ID</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="flex-1 font-mono text-sm bg-muted px-3 py-2 rounded break-all">{account.merchant_id}</code>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(account.merchant_id)}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Use this on every charge, payout, and refund request.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -308,33 +332,34 @@ export default function Sandbox() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {newApiKey && (
+            {newKeySet && (
               <Alert>
                 <Key className="h-4 w-4" />
-                <AlertDescription className="space-y-2">
-                  <p className="font-medium">Your new API key (save this now!):</p>
-                  <div className="flex items-center gap-2 font-mono text-sm bg-muted p-2 rounded">
-                    <code className="flex-1">{newApiKey}</code>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(newApiKey)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setNewApiKey(null)}
-                  >
-                    I've saved it
+                <AlertDescription className="space-y-3">
+                  <p className="font-medium">Your new sandbox credentials — save the secret key and webhook secret now (they will not be shown again):</p>
+                  {[
+                    { label: "Secret Key", value: newKeySet.secret_key, hint: "Server-side API authentication." },
+                    { label: "Publishable Key", value: newKeySet.publishable_key, hint: "Safe for client-side / SDK init." },
+                    { label: "Merchant ID", value: newKeySet.merchant_id, hint: "Required on charges, payouts, refunds." },
+                    { label: "Webhook Secret", value: newKeySet.webhook_secret, hint: "Verify HMAC-SHA256 webhook signatures." },
+                  ].map(({ label, value, hint }) => (
+                    <div key={label} className="space-y-1">
+                      <p className="text-xs font-medium text-foreground">{label}</p>
+                      <div className="flex items-center gap-2 font-mono text-sm bg-muted p-2 rounded">
+                        <code className="flex-1 break-all">{value}</code>
+                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(value)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{hint}</p>
+                    </div>
+                  ))}
+                  <Button size="sm" variant="outline" onClick={() => setNewKeySet(null)}>
+                    I've saved these
                   </Button>
                 </AlertDescription>
               </Alert>
             )}
-
-            {keyName !== null && !newApiKey && (
               <div className="border rounded-lg p-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="keyName">Key Name</Label>
