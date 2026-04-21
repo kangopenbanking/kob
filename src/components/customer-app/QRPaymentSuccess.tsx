@@ -90,7 +90,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
 
       <div className="flex w-full max-w-sm flex-col gap-3 pt-2">
         <Button className="w-full rounded-2xl h-12 text-sm font-bold" onClick={onDone}>
-          Done
+          {tr('Done')}
         </Button>
       </div>
     </motion.div>
