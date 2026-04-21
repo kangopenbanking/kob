@@ -51,6 +51,16 @@ export default function SandboxCredentials() {
           <p className="text-muted-foreground mb-4">
             These keys are shared across all sandbox users. They provide full API access in the test environment.
           </p>
+          <div className="mb-4 p-4 border border-primary/30 bg-muted/30 rounded-md">
+            <p className="text-sm text-foreground">
+              <strong>Need your own credentials?</strong> Sign in and visit{" "}
+              <a href="/developer/sandbox" className="text-primary underline">/developer/sandbox</a>{" "}
+              to provision a personalized credential set — your own <code className="font-mono text-xs">sk_test_…</code>,{" "}
+              <code className="font-mono text-xs">pk_test_…</code>,{" "}
+              <code className="font-mono text-xs">merch_sbx_…</code>, and{" "}
+              <code className="font-mono text-xs">whsec_test_…</code>. The shared values below are for quick anonymous testing only.
+            </p>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border border-border rounded-lg">
               <thead className="bg-muted/50">

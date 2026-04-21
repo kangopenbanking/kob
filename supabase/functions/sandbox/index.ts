@@ -48,6 +48,14 @@ async function handleCreateAccount(body: any, user: any, supabase: any) {
   return new Response(JSON.stringify({ account }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
+function randHex(len: number) {
+  return Array.from(crypto.getRandomValues(new Uint8Array(len))).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function sha256(text: string) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function handleCreateApiKey(body: any, user: any, supabase: any) {
   const { data: account } = await supabase.from('developer_sandbox_accounts').select('*').eq('user_id', user.id).eq('status', 'active').single();
   if (!account) return errResp(404, 'No active sandbox account found');
@@ -55,17 +63,44 @@ async function handleCreateApiKey(body: any, user: any, supabase: any) {
   const { count } = await supabase.from('sandbox_api_keys').select('*', { count: 'exact', head: true }).eq('sandbox_account_id', account.id).eq('is_active', true);
   if (count && count >= 5) return errResp(400, 'Maximum API keys reached (5)');
 
-  const apiKey = 'sbx_' + Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
-  const keyHashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(apiKey));
-  const keyHash = Array.from(new Uint8Array(keyHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  // Generate a complete credential set: secret key, publishable key, and webhook secret.
+  // Merchant ID is account-scoped and already provisioned by DB trigger.
+  const secretKey = 'sk_test_' + randHex(32);
+  const publishableKey = 'pk_test_' + randHex(24);
+  const webhookSecret = 'whsec_test_' + randHex(32);
+  const sbxLegacyKey = 'sbx_' + randHex(32); // backward-compat for older integrations
+
+  const [keyHash, webhookHash] = await Promise.all([sha256(secretKey), sha256(webhookSecret)]);
 
   const limits = { free: { per_minute: 60, per_day: 1000 }, basic: { per_minute: 300, per_day: 10000 }, pro: { per_minute: 1000, per_day: 100000 } };
   const tier = (limits as any)[account.tier] || limits.free;
 
-  const { data: newKey, error } = await supabase.from('sandbox_api_keys').insert([{ sandbox_account_id: account.id, key_name: body.key_name || 'Default Key', api_key: apiKey, key_hash: keyHash, rate_limit_per_minute: tier.per_minute, rate_limit_per_day: tier.per_day }]).select().single();
+  const { data: newKey, error } = await supabase.from('sandbox_api_keys').insert([{
+    sandbox_account_id: account.id,
+    key_name: body.key_name || 'Default Key',
+    api_key: sbxLegacyKey,             // legacy column retains a value for back-compat
+    key_hash: keyHash,                  // hash of the NEW secret_key
+    publishable_key: publishableKey,
+    webhook_secret_hash: webhookHash,
+    webhook_secret_preview: webhookSecret.slice(0, 16) + '…',
+    rate_limit_per_minute: tier.per_minute,
+    rate_limit_per_day: tier.per_day,
+  }]).select().single();
   if (error) throw error;
 
-  return new Response(JSON.stringify({ api_key: apiKey, key_id: newKey.id, key_name: newKey.key_name, rate_limits: tier, message: 'Save this API key securely' }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({
+    key_id: newKey.id,
+    key_name: newKey.key_name,
+    secret_key: secretKey,
+    publishable_key: publishableKey,
+    merchant_id: account.merchant_id,
+    webhook_secret: webhookSecret,
+    environment: 'sandbox',
+    rate_limits: tier,
+    message: 'Save these credentials now. The secret key and webhook secret will not be shown again. The publishable key and merchant ID can be retrieved later.',
+    // Legacy fields retained so existing integrators do not break.
+    api_key: secretKey,
+  }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleGenerateData(body: any, user: any, supabase: any) {

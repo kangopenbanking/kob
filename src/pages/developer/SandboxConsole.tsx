@@ -23,12 +23,18 @@ interface SandboxAccount {
   status: string;
   tier: string;
   created_at: string;
+  merchant_id?: string;
 }
 
 interface ApiKeyResult {
-  api_key: string;
+  api_key?: string; // legacy alias for secret_key
   key_id: string;
   key_name: string;
+  secret_key: string;
+  publishable_key: string;
+  merchant_id: string;
+  webhook_secret: string;
+  environment: string;
   rate_limits: { per_minute: number; per_day: number };
 }
 
@@ -376,6 +382,17 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/
                         <p className="text-muted-foreground">Account ID</p>
                         <code className="text-xs font-mono text-foreground">{account.id.slice(0, 12)}...</code>
                       </div>
+                      {account.merchant_id && (
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground">Merchant ID (use on every charge / payout)</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded flex-1 break-all">{account.merchant_id}</code>
+                            <Button variant="ghost" size="sm" onClick={() => copyToClipboard(account.merchant_id!, "Merchant ID")}>
+                              {copied === "Merchant ID" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-4">
                       Proceed to the API Keys tab to generate your sandbox credentials.
@@ -429,21 +446,32 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/
               </CardHeader>
               <CardContent className="space-y-4">
                 {apiKey && (
-                  <div className="p-4 bg-muted/30 border border-primary/30 rounded-lg space-y-3">
+                  <div className="p-4 bg-muted/30 border border-primary/30 rounded-lg space-y-4">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium text-foreground">Save this key -- it will not be shown again</span>
+                      <span className="text-sm font-medium text-foreground">
+                        Save the secret key and webhook secret now — they will not be shown again
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-muted px-3 py-2 rounded text-sm font-mono text-foreground break-all">
-                        {apiKey.api_key}
-                      </code>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(apiKey.api_key, "API Key")}>
-                        {copied === "API Key" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Rate limits: {apiKey.rate_limits.per_minute}/min, {apiKey.rate_limits.per_day}/day
+                    {[
+                      { label: "Secret Key", value: apiKey.secret_key, hint: "Server-side API authentication. Keep private." },
+                      { label: "Publishable Key", value: apiKey.publishable_key, hint: "Safe to embed in client-side code or SDK init." },
+                      { label: "Merchant ID", value: apiKey.merchant_id, hint: "Required on every charge, payout, and refund call." },
+                      { label: "Webhook Secret", value: apiKey.webhook_secret, hint: "Verify HMAC-SHA256 signatures on incoming webhook events." },
+                    ].map(({ label, value, hint }) => (
+                      <div key={label} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{label}</Label>
+                          <Button variant="ghost" size="sm" onClick={() => copyToClipboard(value, label)}>
+                            {copied === label ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <code className="block bg-muted px-3 py-2 rounded text-sm font-mono text-foreground break-all">{value}</code>
+                        <p className="text-xs text-muted-foreground">{hint}</p>
+                      </div>
+                    ))}
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                      Rate limits: {apiKey.rate_limits.per_minute}/min · {apiKey.rate_limits.per_day}/day · Environment: {apiKey.environment}
                     </div>
                   </div>
                 )}
