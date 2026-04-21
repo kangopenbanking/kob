@@ -25,6 +25,7 @@ type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'langu
 
 const CustomerSettings: React.FC = () => {
   const tr = useHarvestedT('customer');
+  const { setLanguage: setAppLanguage } = useLanguage();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>(null);
   const [legalSlug, setLegalSlug] = useState('');
