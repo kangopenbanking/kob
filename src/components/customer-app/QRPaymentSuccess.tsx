@@ -3,6 +3,7 @@ import { CheckCircle2, Store, Receipt, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface QRPaymentSuccessProps {
   merchantName: string;
@@ -23,6 +24,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
   timestamp,
   onDone,
 }) => {
+  const tr = useHarvestedT('customer');
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -40,7 +42,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
       </motion.div>
 
       <div className="text-center">
-        <p className="text-sm font-medium text-muted-foreground">Payment Successful</p>
+        <p className="text-sm font-medium text-muted-foreground">{tr('Payment Successful')}</p>
         <p className="mt-2 text-3xl font-black tabular-nums text-foreground">
           {Number(amount).toLocaleString('fr-CM')} <span className="text-lg font-bold text-muted-foreground">{currency}</span>
         </p>
@@ -54,7 +56,7 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">{merchantName}</p>
-            <p className="text-xs text-muted-foreground">Merchant</p>
+            <p className="text-xs text-muted-foreground">{tr('Merchant')}</p>
           </div>
         </div>
 
@@ -63,22 +65,22 @@ export const QRPaymentSuccess: React.FC<QRPaymentSuccessProps> = ({
         <div className="space-y-2.5 text-sm">
           {orderNumber && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Order</span>
+              <span className="text-muted-foreground">{tr('Order')}</span>
               <span className="font-mono font-bold text-foreground">#{orderNumber}</span>
             </div>
           )}
           {orderId && !orderNumber && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Reference</span>
+              <span className="text-muted-foreground">{tr('Reference')}</span>
               <span className="font-mono font-bold text-foreground">{orderId.slice(0, 8).toUpperCase()}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Method</span>
-            <span className="font-bold text-foreground">Wallet</span>
+            <span className="text-muted-foreground">{tr('Method')}</span>
+            <span className="font-bold text-foreground">{tr('Wallet')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Date</span>
+            <span className="text-muted-foreground">{tr('Date')}</span>
             <span className="font-medium text-foreground">
               {format(new Date(timestamp), 'dd MMM yyyy, HH:mm')}
             </span>

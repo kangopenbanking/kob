@@ -15,10 +15,12 @@ import { useQRScanner } from '@/hooks/useQRScanner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Tab = 'scan' | 'receive';
 
 const CustomerScan: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
@@ -198,7 +200,7 @@ const CustomerScan: React.FC = () => {
         <button onClick={() => navigate(-1)}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-lg font-bold text-foreground">QR Pay</h1>
+        <h1 className="text-lg font-bold text-foreground">{tr('QR Pay')}</h1>
         <div className="w-6" />
       </div>
 
@@ -249,7 +251,7 @@ const CustomerScan: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <p className="text-lg font-bold text-foreground">QR Code Scanned</p>
+                      <p className="text-lg font-bold text-foreground">{tr('QR Code Scanned')}</p>
                       <p className="mt-1 font-mono text-sm text-muted-foreground">{scanResult.account}</p>
                     </>
                   )}
@@ -259,7 +261,7 @@ const CustomerScan: React.FC = () => {
                 <div className="w-full">
                   {merchantQR && merchantQR.amount > 0 ? (
                     <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-5 text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total to Pay</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{tr('Total to Pay')}</p>
                       <p className="text-3xl font-black tabular-nums text-foreground">
                         {Number(merchantQR.amount).toLocaleString('fr-CM')} <span className="text-lg font-bold text-muted-foreground">XAF</span>
                       </p>
@@ -276,7 +278,7 @@ const CustomerScan: React.FC = () => {
                       </label>
                       <Input
                         type="number"
-                        placeholder="Enter amount in XAF"
+                        placeholder={tr('Enter amount in XAF')}
                         value={payAmount}
                         onChange={(e) => setPayAmount(e.target.value)}
                         className="h-12 rounded-2xl text-center text-lg font-bold"
@@ -309,14 +311,14 @@ const CustomerScan: React.FC = () => {
               /* ─── Manual Entry ─── */
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col gap-5 p-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-foreground">Enter Payment Code</p>
+                  <p className="text-sm font-bold text-foreground">{tr('Enter Payment Code')}</p>
                   <button onClick={() => setShowManualEntry(false)}>
                     <X className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                   </button>
                 </div>
                 <div className="flex flex-col gap-4">
                   <Input
-                    placeholder="e.g. KOB-XXXX-XXXX-XXXX"
+                    placeholder={tr('e.g. KOB-XXXX-XXXX-XXXX')}
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                     className="h-14 rounded-2xl text-center text-lg font-mono font-bold tracking-wider"
@@ -390,7 +392,7 @@ const CustomerScan: React.FC = () => {
                   {!qrCameraActive && !qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
-                      <p className="text-xs text-muted-foreground">Starting camera…</p>
+                      <p className="text-xs text-muted-foreground">{tr('Starting camera…')}</p>
                     </div>
                   )}
 
@@ -437,7 +439,7 @@ const CustomerScan: React.FC = () => {
 
             <div className="text-center">
               <p className="font-mono text-sm font-bold text-foreground">{userAccountId}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Share this QR code to receive payments</p>
+              <p className="mt-1 text-xs text-muted-foreground">{tr('Share this QR code to receive payments')}</p>
             </div>
 
             {/* Amount Input */}
@@ -447,7 +449,7 @@ const CustomerScan: React.FC = () => {
               </label>
               <Input
                 type="number"
-                placeholder="Enter amount in XAF"
+                placeholder={tr('Enter amount in XAF')}
                 value={receiveAmount}
                 onChange={(e) => setReceiveAmount(e.target.value)}
                 className="h-12 rounded-2xl text-center text-lg font-bold"
@@ -476,7 +478,7 @@ const CustomerScan: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="text-center text-base">{storeChoice?.merchant_name || 'Store'}</DialogTitle>
           </DialogHeader>
-          <p className="text-center text-xs text-muted-foreground -mt-2 mb-2">What would you like to do?</p>
+          <p className="text-center text-xs text-muted-foreground -mt-2 mb-2">{tr('What would you like to do?')}</p>
           <div className="grid grid-cols-1 gap-2.5">
             <button
               onClick={() => {
@@ -490,8 +492,8 @@ const CustomerScan: React.FC = () => {
                 <Store className="h-5 w-5 text-emerald-600" strokeWidth={1.7} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">Visit Store</p>
-                <p className="text-[11px] text-muted-foreground">Browse products and place an order</p>
+                <p className="text-sm font-bold text-foreground">{tr('Visit Store')}</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Browse products and place an order')}</p>
               </div>
             </button>
             <button
@@ -513,8 +515,8 @@ const CustomerScan: React.FC = () => {
                 <CreditCard className="h-5 w-5 text-primary" strokeWidth={1.7} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">Pay this Business</p>
-                <p className="text-[11px] text-muted-foreground">Enter any amount and confirm with PIN</p>
+                <p className="text-sm font-bold text-foreground">{tr('Pay this Business')}</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Enter any amount and confirm with PIN')}</p>
               </div>
             </button>
           </div>

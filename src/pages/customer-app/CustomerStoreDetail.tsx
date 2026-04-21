@@ -12,8 +12,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerStoreDetail: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { merchantId } = useParams<{ merchantId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
@@ -94,8 +96,8 @@ const CustomerStoreDetail: React.FC = () => {
     return (
       <div className="px-4 pt-12 text-center">
         <Store className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
-        <p className="text-sm text-muted-foreground">Store not found</p>
-        <Button variant="ghost" onClick={() => navigate('/app/stores')} className="mt-4">Back to Stores</Button>
+        <p className="text-sm text-muted-foreground">{tr('Store not found')}</p>
+        <Button variant="ghost" onClick={() => navigate('/app/stores')} className="mt-4">{tr('Back to Stores')}</Button>
       </div>
     );
   }
@@ -163,12 +165,12 @@ const CustomerStoreDetail: React.FC = () => {
           <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/40">
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Clock className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="font-medium text-foreground">Open now</span>
+              <span className="font-medium text-foreground">{tr('Open now')}</span>
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Truck className="w-3.5 h-3.5 text-primary" />
-              <span>Delivery in 30–60 min</span>
+              <span>{tr('Delivery in 30–60 min')}</span>
             </div>
           </div>
         </div>
@@ -179,7 +181,7 @@ const CustomerStoreDetail: React.FC = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-muted-foreground" />
           <Input
-            placeholder="Search products in this store…"
+            placeholder={tr('Search products in this store…')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-11 h-11 rounded-2xl bg-card border-border/60 text-sm shadow-sm"
@@ -238,8 +240,8 @@ const CustomerStoreDetail: React.FC = () => {
             <div className="w-14 h-14 mx-auto rounded-2xl bg-muted/60 flex items-center justify-center mb-3">
               <ShoppingBag className="w-6 h-6 text-muted-foreground/60" />
             </div>
-            <p className="text-sm font-semibold text-foreground">No products yet</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Check back soon</p>
+            <p className="text-sm font-semibold text-foreground">{tr('No products yet')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{tr('Check back soon')}</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 gap-3.5">

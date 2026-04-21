@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CreditCard, Search, RefreshCw, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Intent = {
   id: string;
@@ -41,6 +42,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminPayByBank() {
+  const tr = useHarvestedT('customer');
   const [intents, setIntents] = useState<Intent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -76,7 +78,7 @@ export default function AdminPayByBank() {
 
   return (
     <div>
-      <AdminPageHeader title="Pay by Bank" description="Monitor and manage redirect-based SCA payment intents" icon={CreditCard} />
+      <AdminPageHeader title={tr('Pay by Bank')} description={tr('Monitor and manage redirect-based SCA payment intents')} icon={CreditCard} />
 
       <div className="p-6 space-y-6">
         {/* Stats */}
@@ -105,18 +107,18 @@ export default function AdminPayByBank() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by merchant or intent ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={tr('Search by merchant or intent ID...')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="awaiting_auth">Awaiting Auth</SelectItem>
-              <SelectItem value="authorized">Authorized</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="all">{tr('All Statuses')}</SelectItem>
+              <SelectItem value="awaiting_auth">{tr('Awaiting Auth')}</SelectItem>
+              <SelectItem value="authorized">{tr('Authorized')}</SelectItem>
+              <SelectItem value="completed">{tr('Completed')}</SelectItem>
+              <SelectItem value="failed">{tr('Failed')}</SelectItem>
+              <SelectItem value="expired">{tr('Expired')}</SelectItem>
+              <SelectItem value="rejected">{tr('Rejected')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={fetchIntents}><RefreshCw className="h-4 w-4" /></Button>
@@ -124,12 +126,12 @@ export default function AdminPayByBank() {
 
         {/* Intent List */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Payment Intents</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{tr('Payment Intents')}</CardTitle></CardHeader>
           <CardContent>
             {loading ? (
               <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
             ) : filtered.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No payment intents found</p>
+              <p className="text-center py-8 text-muted-foreground">{tr('No payment intents found')}</p>
             ) : (
               <div className="space-y-2">
                 {filtered.map((intent, i) => (
@@ -158,21 +160,21 @@ export default function AdminPayByBank() {
       {/* Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Intent Details</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tr('Intent Details')}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div><p className="text-muted-foreground">Intent ID</p><p className="font-mono text-xs break-all">{selected.id}</p></div>
-                <div><p className="text-muted-foreground">Status</p><Badge className={statusColors[selected.status]}>{selected.status}</Badge></div>
-                <div><p className="text-muted-foreground">Merchant</p><p className="font-medium">{selected.merchant_name || "—"}</p></div>
-                <div><p className="text-muted-foreground">Amount</p><p className="font-bold">{selected.currency} {Number(selected.amount).toLocaleString()}</p></div>
-                <div><p className="text-muted-foreground">Consent ID</p><p className="font-mono text-xs">{selected.consent_id}</p></div>
-                <div><p className="text-muted-foreground">Customer</p><p className="font-mono text-xs">{selected.customer_user_id || "Not yet"}</p></div>
-                <div><p className="text-muted-foreground">Created</p><p>{new Date(selected.created_at).toLocaleString()}</p></div>
-                <div><p className="text-muted-foreground">Expires</p><p>{new Date(selected.expires_at).toLocaleString()}</p></div>
+                <div><p className="text-muted-foreground">{tr('Intent ID')}</p><p className="font-mono text-xs break-all">{selected.id}</p></div>
+                <div><p className="text-muted-foreground">{tr('Status')}</p><Badge className={statusColors[selected.status]}>{selected.status}</Badge></div>
+                <div><p className="text-muted-foreground">{tr('Merchant')}</p><p className="font-medium">{selected.merchant_name || "—"}</p></div>
+                <div><p className="text-muted-foreground">{tr('Amount')}</p><p className="font-bold">{selected.currency} {Number(selected.amount).toLocaleString()}</p></div>
+                <div><p className="text-muted-foreground">{tr('Consent ID')}</p><p className="font-mono text-xs">{selected.consent_id}</p></div>
+                <div><p className="text-muted-foreground">{tr('Customer')}</p><p className="font-mono text-xs">{selected.customer_user_id || "Not yet"}</p></div>
+                <div><p className="text-muted-foreground">{tr('Created')}</p><p>{new Date(selected.created_at).toLocaleString()}</p></div>
+                <div><p className="text-muted-foreground">{tr('Expires')}</p><p>{new Date(selected.expires_at).toLocaleString()}</p></div>
               </div>
-              {selected.description && <div><p className="text-muted-foreground">Description</p><p>{selected.description}</p></div>}
-              <div><p className="text-muted-foreground">Redirect URI</p><p className="font-mono text-xs break-all">{selected.redirect_uri}</p></div>
+              {selected.description && <div><p className="text-muted-foreground">{tr('Description')}</p><p>{selected.description}</p></div>}
+              <div><p className="text-muted-foreground">{tr('Redirect URI')}</p><p className="font-mono text-xs break-all">{selected.redirect_uri}</p></div>
             </div>
           )}
         </DialogContent>

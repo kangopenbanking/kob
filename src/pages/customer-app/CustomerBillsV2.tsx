@@ -17,6 +17,7 @@ import {
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 // ─── Icon mapping ───
 const iconMap: Record<string, React.ElementType> = {
@@ -60,6 +61,7 @@ const slideIn = { initial: { opacity: 0, x: 24 }, animate: { opacity: 1, x: 0 },
 const fadeIn = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -12 } };
 
 const CustomerBillsV2: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [step, setStep] = useState<Step>('home');
@@ -199,7 +201,7 @@ const CustomerBillsV2: React.FC = () => {
             <CreditCard className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/60">Available Balance</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/60">{tr('Available Balance')}</span>
             <span className="text-base font-bold text-primary-foreground">{walletBalance.toLocaleString()} <span className="text-xs font-normal text-primary-foreground/70">XAF</span></span>
           </div>
         </motion.div>
@@ -212,7 +214,7 @@ const CustomerBillsV2: React.FC = () => {
           <motion.div key="home" {...fadeIn} className="flex flex-col gap-5">
             <motion.div variants={fadeUp} initial="initial" animate="animate" className="relative">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-              <Input placeholder="Search categories…" value={search} onChange={e => setSearch(e.target.value)}
+              <Input placeholder={tr('Search categories…')} value={search} onChange={e => setSearch(e.target.value)}
                 className="h-11 rounded-2xl border-border/50 bg-muted/40 pl-10 text-sm shadow-sm" />
             </motion.div>
 
@@ -244,7 +246,7 @@ const CustomerBillsV2: React.FC = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                <h2 className="text-sm font-bold text-foreground">Recent Payments</h2>
+                <h2 className="text-sm font-bold text-foreground">{tr('Recent Payments')}</h2>
               </div>
               {recentLoading ? <SkeletonList count={3} /> : recentPayments.length === 0 ? (
                 <motion.div variants={fadeUp} initial="initial" animate="animate"
@@ -252,7 +254,7 @@ const CustomerBillsV2: React.FC = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                     <Receipt className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                   </div>
-                  <p className="text-xs text-muted-foreground">No recent bill payments</p>
+                  <p className="text-xs text-muted-foreground">{tr('No recent bill payments')}</p>
                 </motion.div>
               ) : (
                 <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-col gap-2.5">
@@ -382,7 +384,7 @@ const CustomerBillsV2: React.FC = () => {
                         {Number(prod.fixed_amount).toLocaleString()} XAF
                       </span>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground">Variable</span>
+                      <span className="text-[11px] text-muted-foreground">{tr('Variable')}</span>
                     )}
                     <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </div>
@@ -424,21 +426,21 @@ const CustomerBillsV2: React.FC = () => {
 
               {/* Amount */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Amount (XAF)</label>
+                <label className="text-xs font-medium text-muted-foreground">{tr('Amount (XAF)')}</label>
                 {selectedProduct.amount_type === 'fixed' ? (
                   <div className="flex h-12 items-center justify-center rounded-xl bg-muted/50 text-lg font-bold text-foreground">
                     {Number(selectedProduct.fixed_amount).toLocaleString()} XAF
                   </div>
                 ) : (
                   <Input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                    placeholder="Enter amount" className="rounded-xl border-border h-12 text-lg font-bold text-center" />
+                    placeholder={tr('Enter amount')} className="rounded-xl border-border h-12 text-lg font-bold text-center" />
                 )}
               </div>
             </div>
 
             <Button onClick={handleSubmitForm} disabled={createIntent.isPending}
               className="h-12 rounded-2xl text-sm font-semibold gap-2">
-              {createIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating...</> : <>Review Payment <ChevronRight className="h-4 w-4" /></>}
+              {createIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> {tr('Creating...')}</> : <>Review Payment <ChevronRight className="h-4 w-4" /></>}
             </Button>
           </motion.div>
         )}
@@ -456,23 +458,23 @@ const CustomerBillsV2: React.FC = () => {
             </div>
 
             <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-3">
-              <h3 className="text-sm font-bold text-foreground mb-3">Payment Summary</h3>
-              <SummaryRow label="Provider" value={selectedProvider?.name || ''} />
-              {selectedLocation && <SummaryRow label="Location" value={selectedLocation.name} />}
-              <SummaryRow label="Product" value={selectedProduct?.name || ''} />
+              <h3 className="text-sm font-bold text-foreground mb-3">{tr('Payment Summary')}</h3>
+              <SummaryRow label={tr('Provider')} value={selectedProvider?.name || ''} />
+              {selectedLocation && <SummaryRow label={tr('Location')} value={selectedLocation.name} />}
+              <SummaryRow label={tr('Product')} value={selectedProduct?.name || ''} />
               {Object.entries(intent.payer_details || {}).map(([k, v]) => {
                 const fieldDef = fields.find((f: any) => f.field_key === k);
                 return <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
               })}
               <div className="my-2 border-t border-border/40" />
-              <SummaryRow label="Amount" value={`${Number(intent.amount).toLocaleString()} XAF`} bold />
+              <SummaryRow label={tr('Amount')} value={`${Number(intent.amount).toLocaleString()} XAF`} bold />
               <SummaryRow label="Fee" value={`${Number(intent.fee_amount).toLocaleString()} XAF`} />
-              <SummaryRow label="Total" value={`${Number(intent.total_amount).toLocaleString()} XAF`} bold />
+              <SummaryRow label={tr('Total')} value={`${Number(intent.total_amount).toLocaleString()} XAF`} bold />
             </div>
 
             <Button onClick={() => setShowPin(true)} disabled={payIntent.isPending}
               className="h-12 rounded-2xl text-sm font-semibold gap-2">
-              {payIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> : 'Confirm & Pay'}
+              {payIntent.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing...')}</> : 'Confirm & Pay'}
             </Button>
           </motion.div>
         )}
@@ -486,29 +488,29 @@ const CustomerBillsV2: React.FC = () => {
               <CheckCircle2 className="h-8 w-8 text-primary" strokeWidth={1.5} />
             </motion.div>
             <div className="text-center">
-              <h2 className="text-lg font-bold text-foreground">Payment Successful!</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">Your bill has been paid successfully</p>
+              <h2 className="text-lg font-bold text-foreground">{tr('Payment Successful!')}</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">{tr('Your bill has been paid successfully')}</p>
             </div>
 
             <div className="w-full rounded-2xl border border-border/60 bg-card p-5 space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                <span className="text-xs text-muted-foreground">Receipt No.</span>
+                <span className="text-xs text-muted-foreground">{tr('Receipt No.')}</span>
                 <span className="font-mono text-xs font-bold text-foreground">{payment.receipt_number}</span>
               </div>
-              <SummaryRow label="Trace ID" value={payment.trace_id} mono />
-              <SummaryRow label="Provider" value={selectedProvider?.name || ''} />
-              {selectedLocation && <SummaryRow label="Location" value={selectedLocation.name} />}
-              <SummaryRow label="Product" value={selectedProduct?.name || ''} />
+              <SummaryRow label={tr('Trace ID')} value={payment.trace_id} mono />
+              <SummaryRow label={tr('Provider')} value={selectedProvider?.name || ''} />
+              {selectedLocation && <SummaryRow label={tr('Location')} value={selectedLocation.name} />}
+              <SummaryRow label={tr('Product')} value={selectedProduct?.name || ''} />
               {Object.entries(payment.payer_details || {}).map(([k, v]) => {
                 const fieldDef = fields.find((f: any) => f.field_key === k);
                 return <SummaryRow key={k} label={fieldDef?.label || k} value={String(v)} />;
               })}
               <div className="my-1 border-t border-border/40" />
-              <SummaryRow label="Amount" value={`${Number(payment.amount).toLocaleString()} XAF`} />
+              <SummaryRow label={tr('Amount')} value={`${Number(payment.amount).toLocaleString()} XAF`} />
               <SummaryRow label="Fee" value={`${Number(payment.fee_amount).toLocaleString()} XAF`} />
-              <SummaryRow label="Total Paid" value={`${Number(payment.total_amount).toLocaleString()} XAF`} bold />
-              <SummaryRow label="Date" value={new Date(payment.paid_at).toLocaleString()} />
-              <SummaryRow label="Status" value="Completed" status="success" />
+              <SummaryRow label={tr('Total Paid')} value={`${Number(payment.total_amount).toLocaleString()} XAF`} bold />
+              <SummaryRow label={tr('Date')} value={new Date(payment.paid_at).toLocaleString()} />
+              <SummaryRow label={tr('Status')} value="Completed" status="success" />
             </div>
 
             <div className="flex w-full gap-2">

@@ -19,6 +19,7 @@ import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import BankSavingImg from '@/assets/Bank_Saving.png';
 import PersonalSavingImg from '@/assets/Personal_Savings.png';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SavingsCategory = 'bank' | 'personal' | null;
 type ViewMode = 'home' | 'list' | 'create' | 'explore';
@@ -45,6 +46,7 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
 
 const CustomerPiggyBank: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
@@ -183,21 +185,21 @@ const CustomerPiggyBank: React.FC = () => {
           <motion.div key="home" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-5">
             {/* Summary Banner */}
             <div className="rounded-3xl bg-primary p-5 text-primary-foreground">
-              <p className="text-xs font-medium opacity-80">Total Savings</p>
+              <p className="text-xs font-medium opacity-80">{tr('Total Savings')}</p>
               <p className="text-3xl font-bold mt-1">{formatCurrency(totalSaved(plans))}</p>
               <div className="flex items-center gap-4 mt-3">
                 <div>
-                  <p className="text-[10px] opacity-70">Plans</p>
+                  <p className="text-[10px] opacity-70">{tr('Plans')}</p>
                   <p className="text-sm font-bold">{plans.length}</p>
                 </div>
                 <div className="h-6 w-px bg-primary-foreground/20" />
                 <div>
-                  <p className="text-[10px] opacity-70">Target</p>
+                  <p className="text-[10px] opacity-70">{tr('Target')}</p>
                   <p className="text-sm font-bold">{formatCurrency(totalTarget(plans))}</p>
                 </div>
                 <div className="h-6 w-px bg-primary-foreground/20" />
                 <div>
-                  <p className="text-[10px] opacity-70">Auto-Fund</p>
+                  <p className="text-[10px] opacity-70">{tr('Auto-Fund')}</p>
                   <p className="text-sm font-bold">{plans.filter((p: any) => p.auto_fund_enabled).length} active</p>
                 </div>
               </div>
@@ -207,7 +209,7 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <CategoryCard
                 image={BankSavingImg}
-                title="Bank Savings"
+                title={tr('Bank Savings')}
                 subtitle={`${bankPlans.length} plan${bankPlans.length !== 1 ? 's' : ''}`}
                 saved={totalSaved(bankPlans)}
                 accentColor="hsl(var(--primary))"
@@ -217,7 +219,7 @@ const CustomerPiggyBank: React.FC = () => {
               />
               <CategoryCard
                 image={PersonalSavingImg}
-                title="Personal Savings"
+                title={tr('Personal Savings')}
                 subtitle={`${personalPlans.length} plan${personalPlans.length !== 1 ? 's' : ''}`}
                 saved={totalSaved(personalPlans)}
                 accentColor="hsl(var(--accent))"
@@ -230,7 +232,7 @@ const CustomerPiggyBank: React.FC = () => {
             {/* Recent Plans Preview */}
             {plans.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recent Plans</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{tr('Recent Plans')}</p>
                 <div className="space-y-2">
                   {plans.slice(0, 3).map((plan: any, i: number) => (
                     <MiniPlanRow key={plan.id} plan={plan} index={i} />
@@ -256,11 +258,11 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="rounded-3xl border border-border bg-card p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Saved</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Saved')}</p>
                   <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalSaved(displayPlans))}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Target</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Target')}</p>
                   <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalTarget(displayPlans))}</p>
                 </div>
               </div>
@@ -274,7 +276,7 @@ const CustomerPiggyBank: React.FC = () => {
                 <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
                   <Target className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-semibold text-muted-foreground">No savings plans yet</p>
+                <p className="text-sm font-semibold text-muted-foreground">{tr('No savings plans yet')}</p>
                 <p className="text-xs text-muted-foreground text-center max-w-[220px]">
                   Start saving and build your credit score at the same time
                 </p>
@@ -297,33 +299,33 @@ const CustomerPiggyBank: React.FC = () => {
           <motion.div key="create" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-4">
             <div className="rounded-2xl border border-border bg-card p-5 space-y-5">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Plan Name</label>
-                <Input value={planName} onChange={e => setPlanName(e.target.value)} placeholder="e.g. New Phone, Vacation" className="rounded-xl h-11" />
+                <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Plan Name')}</label>
+                <Input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={tr('e.g. New Phone, Vacation')} className="rounded-xl h-11" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Target (XAF)</label>
-                  <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="Optional" className="rounded-xl h-11" />
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Target (XAF)')}</label>
+                  <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder={tr('Optional')} className="rounded-xl h-11" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Per Payment (XAF) *</label>
-                  <Input type="number" value={installmentAmount} onChange={e => setInstallmentAmount(e.target.value)} placeholder="Amount" className="rounded-xl h-11" />
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Per Payment (XAF) *')}</label>
+                  <Input type="number" value={installmentAmount} onChange={e => setInstallmentAmount(e.target.value)} placeholder={tr('Amount')} className="rounded-xl h-11" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Frequency</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Frequency')}</label>
                   <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
                     <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="daily">{tr('Daily')}</SelectItem>
+                      <SelectItem value="weekly">{tr('Weekly')}</SelectItem>
+                      <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Start Date</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Start Date')}</label>
                   <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-xl h-11" />
                 </div>
               </div>
@@ -337,8 +339,8 @@ const CustomerPiggyBank: React.FC = () => {
                     <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">Auto-Fund</p>
-                    <p className="text-[10px] text-muted-foreground">Automatically debit your wallet</p>
+                    <p className="text-sm font-bold text-foreground">{tr('Auto-Fund')}</p>
+                    <p className="text-[10px] text-muted-foreground">{tr('Automatically debit your wallet')}</p>
                   </div>
                 </div>
                 <Switch checked={autoFundEnabled} onCheckedChange={setAutoFundEnabled} />
@@ -346,10 +348,10 @@ const CustomerPiggyBank: React.FC = () => {
 
               {autoFundEnabled && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
-                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Select Wallet</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{tr('Select Wallet')}</label>
                   <Select value={autoFundAccountId} onValueChange={setAutoFundAccountId}>
                     <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Choose a wallet" />
+                      <SelectValue placeholder={tr('Choose a wallet')} />
                     </SelectTrigger>
                     <SelectContent>
                       {userAccounts.map((a: any) => (
@@ -379,9 +381,9 @@ const CustomerPiggyBank: React.FC = () => {
             <div className="rounded-2xl bg-destructive/5 border border-destructive/15 p-4 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" strokeWidth={1.5} />
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-destructive">Cancellation Warning</p>
+                <p className="text-xs font-semibold text-destructive">{tr('Cancellation Warning')}</p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Stopping or deleting this plan after creation will result in a <span className="font-bold text-destructive">-5 point</span> impact to your CrediQ credit score. Only create a plan you intend to complete.
+                  Stopping or deleting this plan after creation will result in a <span className="font-bold text-destructive">{tr('-5 point')}</span> impact to your CrediQ credit score. Only create a plan you intend to complete.
                 </p>
               </div>
             </div>
@@ -404,7 +406,7 @@ const CustomerPiggyBank: React.FC = () => {
                 <AlertTriangle className="h-6 w-6 text-destructive" strokeWidth={1.5} />
               </div>
               <div>
-                <AlertDialogTitle className="text-base">Cancel Savings Plan?</AlertDialogTitle>
+                <AlertDialogTitle className="text-base">{tr('Cancel Savings Plan?')}</AlertDialogTitle>
               </div>
             </div>
             <AlertDialogDescription asChild>
@@ -415,7 +417,7 @@ const CustomerPiggyBank: React.FC = () => {
                 <div className="rounded-2xl bg-destructive/5 border border-destructive/15 p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-destructive shrink-0" strokeWidth={1.5} />
-                    <p className="text-xs font-semibold text-destructive">Credit Score Impact: -5 points</p>
+                    <p className="text-xs font-semibold text-destructive">{tr('Credit Score Impact: -5 points')}</p>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     Cancelling a savings plan is reported to CrediQ and will reduce your credit score by 5 points. This action cannot be undone.
@@ -430,7 +432,7 @@ const CustomerPiggyBank: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-2">
-            <AlertDialogCancel className="rounded-xl">Keep Plan</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{tr('Keep Plan')}</AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={cancelPlan.isPending}
@@ -456,7 +458,7 @@ const CustomerPiggyBank: React.FC = () => {
               <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
                 <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.5} />
               </div>
-              <AlertDialogTitle className="text-base">Delete Personal Savings?</AlertDialogTitle>
+              <AlertDialogTitle className="text-base">{tr('Delete Personal Savings?')}</AlertDialogTitle>
             </div>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
@@ -474,7 +476,7 @@ const CustomerPiggyBank: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-2">
-            <AlertDialogCancel className="rounded-xl">Keep</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{tr('Keep')}</AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deletePlan.isPending}
@@ -523,7 +525,7 @@ function CategoryCard({ image, title, subtitle, saved, bgClass, buttonLabel, onC
           <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
         <div className="relative z-10">
-          <p className="text-[10px] text-muted-foreground">Saved</p>
+          <p className="text-[10px] text-muted-foreground">{tr('Saved')}</p>
           <p className="text-lg font-bold text-foreground">{formatCurrency(saved)}</p>
         </div>
         <img src={image} alt={title} className="absolute bottom-2 right-2 h-20 w-20 object-contain opacity-80" />
@@ -612,10 +614,10 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             <div className="flex items-center gap-1.5 mt-0.5">
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 capitalize">{plan.schedule_frequency}</Badge>
               {plan.auto_fund_enabled && !isCancelled && (
-                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Auto-Fund</Badge>
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{tr('Auto-Fund')}</Badge>
               )}
               {isCancelled && (
-                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Cancelled</Badge>
+                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">{tr('Cancelled')}</Badge>
               )}
             </div>
           </div>
@@ -625,7 +627,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             <button
               onClick={() => onCancel(plan.id, plan.plan_name)}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Cancel plan"
+              title={tr('Cancel plan')}
             >
               <StopCircle className="h-4 w-4" strokeWidth={1.5} />
             </button>
@@ -634,7 +636,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
             <button
               onClick={() => onDelete(plan.id, plan.plan_name, isCancelled)}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Delete plan"
+              title={tr('Delete plan')}
             >
               <Trash2 className="h-4 w-4" strokeWidth={1.5} />
             </button>
@@ -657,15 +659,15 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Paid</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Paid')}</p>
           <p className="text-sm font-bold text-foreground">{paidPayments.length}</p>
         </div>
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Streak</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Streak')}</p>
           <p className="text-sm font-bold text-foreground">{streakCount}</p>
         </div>
         <div className="rounded-xl bg-muted/50 p-2.5 text-center">
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Missed</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{tr('Missed')}</p>
           <p className="text-sm font-bold text-destructive">{missedPayments.length}</p>
         </div>
       </div>
@@ -676,7 +678,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" strokeWidth={1.5} />
             <div>
-              <p className="text-[10px] text-muted-foreground">Next payment</p>
+              <p className="text-[10px] text-muted-foreground">{tr('Next payment')}</p>
               <p className="text-xs font-bold text-foreground">{formatCurrency(nextPayment.amount)} · {new Date(nextPayment.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
             </div>
           </div>
@@ -693,7 +695,7 @@ function PlanCard({ plan, index, onPay, isBank, userAccounts, onCancel, onDelete
       {!isCancelled && !nextPayment && payments.length > 0 && (
         <div className="flex items-center gap-2 rounded-2xl bg-primary/5 border border-primary/10 p-3">
           <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          <p className="text-xs font-semibold text-foreground">All payments completed</p>
+          <p className="text-xs font-semibold text-foreground">{tr('All payments completed')}</p>
         </div>
       )}
     </motion.div>
@@ -792,7 +794,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
     <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-4">
       {/* Intro banner */}
       <div className="rounded-3xl bg-primary/5 border border-primary/10 p-5">
-        <p className="text-sm font-bold text-foreground">Explore Savings Products</p>
+        <p className="text-sm font-bold text-foreground">{tr('Explore Savings Products')}</p>
         <p className="text-xs text-muted-foreground mt-1">
           Compare savings accounts from top financial institutions and apply directly.
         </p>
@@ -807,7 +809,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by product or institution..." className="rounded-2xl pl-9 h-11 text-xs" />
+        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={tr('Search by product or institution...')} className="rounded-2xl pl-9 h-11 text-xs" />
       </div>
 
       {/* Filter chips */}
@@ -855,7 +857,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12">
           <Search className="h-10 w-10 text-muted-foreground/40" strokeWidth={1.5} />
-          <p className="text-sm font-semibold text-muted-foreground">No products match your filters</p>
+          <p className="text-sm font-semibold text-muted-foreground">{tr('No products match your filters')}</p>
           <Button variant="secondary" size="sm" className="rounded-2xl text-xs" onClick={() => { setSearchQuery(''); setTypeFilter('all'); }}>
             Clear Filters
           </Button>
@@ -904,17 +906,17 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 
                       <div className="mt-3">
                         <p className="text-2xl font-bold text-primary">{product.base_interest_rate}%</p>
-                        <p className="text-[9px] text-muted-foreground">per annum</p>
+                        <p className="text-[9px] text-muted-foreground">{tr('per annum')}</p>
                       </div>
 
                       <div className="mt-3 space-y-1.5">
                         <div className="rounded-lg bg-muted/50 px-2 py-1.5">
-                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Min. Opening</p>
+                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{tr('Min. Opening')}</p>
                           <p className="text-[11px] font-semibold text-foreground">{formatCurrency(product.min_opening_balance)}</p>
                         </div>
                         {product.lock_in_period_months && (
                           <div className="rounded-lg bg-muted/50 px-2 py-1.5">
-                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Lock-in</p>
+                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{tr('Lock-in')}</p>
                             <p className="text-[11px] font-semibold text-foreground">{product.lock_in_period_months} months</p>
                           </div>
                         )}
@@ -949,8 +951,8 @@ function WelcomeDialog({ open, onClose }: { open: boolean; onClose: () => void }
           <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Target className="h-7 w-7 text-primary" strokeWidth={1.5} />
           </div>
-          <h2 className="text-lg font-bold text-foreground">Welcome to Piggy Bank</h2>
-          <p className="text-xs text-muted-foreground">Save money, build credit — automatically.</p>
+          <h2 className="text-lg font-bold text-foreground">{tr('Welcome to Piggy Bank')}</h2>
+          <p className="text-xs text-muted-foreground">{tr('Save money, build credit — automatically.')}</p>
         </div>
 
         <div className="space-y-4">
@@ -965,7 +967,7 @@ function WelcomeDialog({ open, onClose }: { open: boolean; onClose: () => void }
           ))}
         </div>
 
-        <Button onClick={onClose} className="w-full rounded-2xl h-11 mt-4">Get Started</Button>
+        <Button onClick={onClose} className="w-full rounded-2xl h-11 mt-4">{tr('Get Started')}</Button>
       </DialogContent>
     </Dialog>
   );

@@ -11,8 +11,10 @@ import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
 import { CrediQPremiumCard } from '@/components/credit/CrediQPremiumCard';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerCreditScore: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -206,7 +208,7 @@ const CustomerCreditScore: React.FC = () => {
       <div className="flex flex-col gap-5 p-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Credit Score</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Credit Score')}</h1>
         </div>
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       </div>
@@ -218,12 +220,12 @@ const CustomerCreditScore: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground flex-1">Credit Score</h1>
+        <h1 className="text-xl font-bold text-foreground flex-1">{tr('Credit Score')}</h1>
         <button
           onClick={() => recomputeMutation.mutate()}
           disabled={recomputeMutation.isPending}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border active:scale-95 transition disabled:opacity-50"
-          aria-label="Refresh score"
+          aria-label={tr('Refresh score')}
         >
           {recomputeMutation.isPending
             ? <Loader2 className="h-4 w-4 animate-spin text-foreground" />
@@ -310,7 +312,7 @@ const CustomerCreditScore: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-            <p className="text-sm font-bold text-foreground">What's Impacting Your Score</p>
+            <p className="text-sm font-bold text-foreground">{tr('What\'s Impacting Your Score')}</p>
           </div>
           <div className="space-y-2">
             {factors.filter(f => f.score > 0).sort((a, b) => a.score - b.score).map((f, i) => {
@@ -362,7 +364,7 @@ const CustomerCreditScore: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="h-4 w-4 text-[hsl(45,60%,40%)]" strokeWidth={1.5} />
-            <p className="text-sm font-bold text-foreground">Boost Your Score</p>
+            <p className="text-sm font-bold text-foreground">{tr('Boost Your Score')}</p>
           </div>
           <p className="text-[11px] text-muted-foreground mb-3">
             You're missing out on easy credit-building opportunities. Start any of these to improve your score.
@@ -399,7 +401,7 @@ const CustomerCreditScore: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-            <p className="text-sm font-bold text-foreground">Recent Activity</p>
+            <p className="text-sm font-bold text-foreground">{tr('Recent Activity')}</p>
           </div>
           <div className="space-y-1.5">
             {events.map((ev: any, i: number) => {
@@ -433,7 +435,7 @@ const CustomerCreditScore: React.FC = () => {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-          <p className="text-sm font-bold text-foreground">Quick Tips</p>
+          <p className="text-sm font-bold text-foreground">{tr('Quick Tips')}</p>
         </div>
         <div className="space-y-2">
           {[
@@ -497,7 +499,7 @@ function PreApprovedOffersSection({ score }: { score: number }) {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
       <div className="flex items-center gap-2 mb-3">
         <Banknote className="h-4 w-4 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
-        <p className="text-sm font-bold text-foreground">Pre-Approved Loans</p>
+        <p className="text-sm font-bold text-foreground">{tr('Pre-Approved Loans')}</p>
         <span className="ml-auto text-[10px] font-semibold text-muted-foreground">{offers.length} offer{offers.length !== 1 ? 's' : ''}</span>
       </div>
       <div className="space-y-2">

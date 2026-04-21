@@ -8,8 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CreditCard, Copy, RefreshCw, Code2 } from "lucide-react";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export default function MerchantPayByBank() {
+  const tr = useHarvestedT('customer');
   const [intents, setIntents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<string | null>(null);
@@ -74,18 +76,18 @@ $intent = $kob->payByBank->createIntent([
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Pay by Bank</h1>
-          <p className="text-sm text-muted-foreground mt-1">Accept direct bank payments with redirect-based SCA</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> {tr('Pay by Bank')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{tr('Accept direct bank payments with redirect-based SCA')}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadMerchantAndIntents}><RefreshCw className="h-4 w-4 mr-2" /> Refresh</Button>
+        <Button variant="outline" size="sm" onClick={loadMerchantAndIntents}><RefreshCw className="h-4 w-4 mr-2" /> {tr('Refresh')}</Button>
       </div>
 
       {/* Integration Guide */}
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> Quick Integration</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> {tr('Quick Integration')}</CardTitle></CardHeader>
         <CardContent>
           <Tabs defaultValue="nodejs">
-            <TabsList><TabsTrigger value="nodejs">Node.js</TabsTrigger><TabsTrigger value="php">PHP</TabsTrigger></TabsList>
+            <TabsList><TabsTrigger value="nodejs">{tr('Node.js')}</TabsTrigger><TabsTrigger value="php">PHP</TabsTrigger></TabsList>
             <TabsContent value="nodejs">
               <div className="relative">
                 <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto">{nodeSnippet}</pre>
@@ -104,12 +106,12 @@ $intent = $kob->payByBank->createIntent([
 
       {/* Intent List */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Payment Intents</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{tr('Payment Intents')}</CardTitle></CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div>
           ) : intents.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">No payment intents yet. Use the API to create your first one.</p>
+            <p className="text-center py-8 text-muted-foreground">{tr('No payment intents yet. Use the API to create your first one.')}</p>
           ) : (
             <div className="space-y-2">
               {intents.map((intent: any, i: number) => (

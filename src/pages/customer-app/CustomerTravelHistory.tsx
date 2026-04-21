@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { toast } from 'sonner';
 import {
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -18,6 +19,7 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
 };
 
 const CustomerTravelHistory: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [loading, setLoading] = useState(true);
@@ -106,14 +108,14 @@ const CustomerTravelHistory: React.FC = () => {
             <ChevronLeft className="h-5 w-5 text-background" />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-white">Booking History</h1>
+            <h1 className="text-lg font-bold text-white">{tr('Booking History')}</h1>
             <p className="text-xs text-white/50">{bookings.length} total booking{bookings.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
           <input
-            placeholder="Search by reference or route..."
+            placeholder={tr('Search by reference or route...')}
             className="w-full rounded-xl bg-white/10 border-none text-white placeholder:text-white/30 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20"
             value={search} onChange={e => setSearch(e.target.value)}
           />
@@ -139,8 +141,8 @@ const CustomerTravelHistory: React.FC = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <Ticket className="h-12 w-12 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 font-medium">No bookings found</p>
-            <p className="text-xs text-gray-300 mt-1">Your travel bookings will appear here</p>
+            <p className="text-gray-400 font-medium">{tr('No bookings found')}</p>
+            <p className="text-xs text-gray-300 mt-1">{tr('Your travel bookings will appear here')}</p>
           </div>
         ) : (
           filtered.map((b, i) => {
@@ -213,26 +215,26 @@ const CustomerTravelHistory: React.FC = () => {
       <AlertDialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogTitle>{tr('Cancel this booking?')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               {cancelTarget ? (
                 <div>
                   <p>
                     Reference <strong>{cancelTarget.booking_ref}</strong> · {cancelTarget._route?.origin} → {cancelTarget._route?.destination}
                   </p>
-                  <p className="mt-2">Refund policy:</p>
+                  <p className="mt-2">{tr('Refund policy:')}</p>
                   <ul className="mt-1 ml-4 list-disc text-xs">
-                    <li>More than 24h before departure: <strong>100% refund</strong></li>
-                    <li>Between 12h and 24h: <strong>50% refund</strong></li>
-                    <li>Less than 12h: <strong>no refund</strong></li>
+                    <li>{tr('More than 24h before departure:')} <strong>{tr('100% refund')}</strong></li>
+                    <li>{tr('Between 12h and 24h:')} <strong>{tr('50% refund')}</strong></li>
+                    <li>{tr('Less than 12h:')} <strong>{tr('no refund')}</strong></li>
                   </ul>
-                  <p className="mt-2 text-xs">A 200 XAF cancellation fee is deducted from the refund.</p>
+                  <p className="mt-2 text-xs">{tr('A 200 XAF cancellation fee is deducted from the refund.')}</p>
                 </div>
               ) : <span />}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={cancelling}>Keep Booking</AlertDialogCancel>
+            <AlertDialogCancel disabled={cancelling}>{tr('Keep Booking')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancel} disabled={cancelling} className="bg-red-600 hover:bg-red-700">
               {cancelling ? 'Cancelling...' : 'Cancel & Refund'}
             </AlertDialogAction>

@@ -4,8 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Shield, ArrowRight, Code2, Webhook, TestTube, CheckCircle } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 export default function PayByBankGuide() {
+  const tr = useHarvestedT('customer');
   return (
     <div className="space-y-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -14,25 +16,25 @@ export default function PayByBankGuide() {
             <Shield className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Pay by Bank</h1>
-            <p className="text-sm text-muted-foreground">Redirect-based SCA for direct bank payments</p>
+            <h1 className="text-2xl font-bold">{tr('Pay by Bank')}</h1>
+            <p className="text-sm text-muted-foreground">{tr('Redirect-based SCA for direct bank payments')}</p>
           </div>
         </div>
-        <Badge variant="secondary" className="mt-2">v10.1.0</Badge>
+        <Badge variant="secondary" className="mt-2">{tr('v10.1.0')}</Badge>
       </motion.div>
 
       {/* Overview */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><ArrowRight className="h-4 w-4" /> How It Works</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ArrowRight className="h-4 w-4" /> {tr('How It Works')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Pay by Bank enables merchants to accept direct bank payments with Strong Customer Authentication (SCA). The flow uses a redirect-based model similar to 3D Secure.</p>
+          <p className="text-sm text-muted-foreground">{tr('Pay by Bank enables merchants to accept direct bank payments with Strong Customer Authentication (SCA). The flow uses a redirect-based model similar to 3D Secure.')}</p>
           <div className="bg-muted rounded-lg p-4 font-mono text-xs space-y-1">
-            <p>1. Merchant → POST /pay-by-bank (create_intent) → Gets authorization_url</p>
-            <p>2. Merchant redirects customer to authorization_url</p>
-            <p>3. Customer authenticates on KOB (web or app)</p>
-            <p>4. Customer approves payment (amount, merchant, bank account shown)</p>
-            <p>5. KOB processes payment (wallet or bank connector)</p>
-            <p>6. Customer redirected back to merchant with status + webhooks fired</p>
+            <p>{tr('1. Merchant → POST /pay-by-bank (create_intent) → Gets authorization_url')}</p>
+            <p>{tr('2. Merchant redirects customer to authorization_url')}</p>
+            <p>{tr('3. Customer authenticates on KOB (web or app)')}</p>
+            <p>{tr('4. Customer approves payment (amount, merchant, bank account shown)')}</p>
+            <p>{tr('5. KOB processes payment (wallet or bank connector)')}</p>
+            <p>{tr('6. Customer redirected back to merchant with status + webhooks fired')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
             {[
@@ -53,10 +55,10 @@ export default function PayByBankGuide() {
 
       {/* Code Examples */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Code2 className="h-4 w-4" /> Integration Examples</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Code2 className="h-4 w-4" /> {tr('Integration Examples')}</CardTitle></CardHeader>
         <CardContent>
           <Tabs defaultValue="nodejs">
-            <TabsList><TabsTrigger value="nodejs">Node.js</TabsTrigger><TabsTrigger value="python">Python</TabsTrigger><TabsTrigger value="php">PHP</TabsTrigger><TabsTrigger value="curl">cURL</TabsTrigger></TabsList>
+            <TabsList><TabsTrigger value="nodejs">{tr('Node.js')}</TabsTrigger><TabsTrigger value="python">{tr('Python')}</TabsTrigger><TabsTrigger value="php">PHP</TabsTrigger><TabsTrigger value="curl">{tr('cURL')}</TabsTrigger></TabsList>
             <TabsContent value="nodejs">
               <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto">{`import { KangOpenBanking } from '@kangopenbanking/sdk';
 
@@ -155,7 +157,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \
 
       {/* Webhook Events */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Webhook className="h-4 w-4" /> Webhook Events</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Webhook className="h-4 w-4" /> {tr('Webhook Events')}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[
@@ -174,7 +176,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \
             ))}
           </div>
           <div className="mt-4 p-3 bg-muted rounded-lg">
-            <p className="text-xs font-medium mb-2">Webhook Payload Example:</p>
+            <p className="text-xs font-medium mb-2">{tr('Webhook Payload Example:')}</p>
             <pre className="text-xs overflow-x-auto">{`{
   "event": "pay_by_bank.completed",
   "data": {
@@ -193,18 +195,18 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \
 
       {/* Status Lifecycle */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><TestTube className="h-4 w-4" /> Intent Status Lifecycle</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><TestTube className="h-4 w-4" /> {tr('Intent Status Lifecycle')}</CardTitle></CardHeader>
         <CardContent>
           <div className="bg-muted rounded-lg p-4 font-mono text-xs">
-            <p>awaiting_auth → authorized → submitted → processing → completed</p>
-            <p className="text-muted-foreground mt-2">                                                    ↘ failed</p>
-            <p className="text-muted-foreground">awaiting_auth → rejected</p>
-            <p className="text-muted-foreground">awaiting_auth → expired (after 15 min)</p>
+            <p>{tr('awaiting_auth → authorized → submitted → processing → completed')}</p>
+            <p className="text-muted-foreground mt-2">                                                    {tr('↘ failed')}</p>
+            <p className="text-muted-foreground">{tr('awaiting_auth → rejected')}</p>
+            <p className="text-muted-foreground">{tr('awaiting_auth → expired (after 15 min)')}</p>
           
       <AutoDocNavigation />
 </div>
           <p className="text-xs text-muted-foreground mt-3">
-            <strong>Important:</strong> Always verify the final status server-to-server via <code>get_intent</code> or webhooks. 
+            <strong>{tr('Important:')}</strong> {tr('Always verify the final status server-to-server via')} <code>get_intent</code> or webhooks. 
             Never trust the redirect URL status parameter alone.
           </p>
         </CardContent>

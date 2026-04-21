@@ -11,6 +11,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
 type TabView = 'my_bills' | 'bills_owed';
@@ -38,6 +39,7 @@ const colors = [
 ];
 
 const makeParticipant = (name: string, phone: string, color: string, paid: boolean, userId: string | null = null): Participant => {
+  const tr = useHarvestedT('customer');
   const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   return { name, phone, initials, color, customAmount: 0, customPercent: 0, paid, userId };
 };
@@ -307,7 +309,7 @@ const CustomerSplitBills: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Split Bills</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Split Bills')}</h1>
         </div>
         <Button size="sm" className="rounded-2xl h-9 text-xs font-bold" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> New Split
@@ -315,7 +317,7 @@ const CustomerSplitBills: React.FC = () => {
       </div>
 
       <HowItWorksFlow
-        title="How Split Bills Works"
+        title={tr('How Split Bills Works')}
         steps={[
           { icon: Receipt, title: 'Add a Bill', description: 'Enter the bill title, total amount, and choose how to split — equal, custom amounts, or percentages.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
           { icon: UserPlus, title: 'Add Participants', description: 'Search and add registered users. Their share is calculated automatically.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
@@ -352,21 +354,21 @@ const CustomerSplitBills: React.FC = () => {
             className="overflow-hidden rounded-3xl border-2 border-foreground bg-card">
             <div className="flex flex-col gap-4 p-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">New Split Bill</p>
+                <p className="text-sm font-bold text-foreground">{tr('New Split Bill')}</p>
                 <button onClick={() => { setShowCreate(false); resetForm(); }}><X className="h-5 w-5 text-muted-foreground" /></button>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bill Details</p>
-                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bill title (e.g. Friday Dinner)" className="rounded-xl" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Bill Details')}</p>
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={tr('Bill title (e.g. Friday Dinner)')} className="rounded-xl" />
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input type="text" inputMode="numeric" value={total} onChange={e => setTotal(e.target.value.replace(/\D/g, ''))} placeholder="Total amount (XAF)" className="rounded-xl pl-10" />
+                  <Input type="text" inputMode="numeric" value={total} onChange={e => setTotal(e.target.value.replace(/\D/g, ''))} placeholder={tr('Total amount (XAF)')} className="rounded-xl pl-10" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Split Method</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Split Method')}</p>
                 <div className="flex gap-2">
                   {([
                     { mode: 'equal' as SplitMode, label: 'Equal', icon: Users },
@@ -400,10 +402,10 @@ const CustomerSplitBills: React.FC = () => {
                       <p className="text-xs font-bold text-foreground truncate">{p.name}</p>
                       {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
                       {i === 0 && splitMode !== 'equal' && (
-                        <p className="text-[9px] text-primary font-semibold">Auto-calculated</p>
+                        <p className="text-[9px] text-primary font-semibold">{tr('Auto-calculated')}</p>
                       )}
                       {p.userId && i > 0 && (
-                        <p className="text-[9px] text-[hsl(150,60%,40%)] font-semibold">Registered user</p>
+                        <p className="text-[9px] text-[hsl(150,60%,40%)] font-semibold">{tr('Registered user')}</p>
                       )}
                     </div>
                     {splitMode === 'custom' && i > 0 && (
@@ -450,7 +452,7 @@ const CustomerSplitBills: React.FC = () => {
                       <Input
                         value={searchQuery}
                         onChange={e => onSearchInput(e.target.value)}
-                        placeholder="Search by name or phone number"
+                        placeholder={tr('Search by name or phone number')}
                         className="rounded-xl text-xs pl-9"
                         autoFocus
                       />
@@ -491,17 +493,17 @@ const CustomerSplitBills: React.FC = () => {
                 ) : (
                   <button onClick={() => setShowAddPerson(true)} className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border p-3">
                     <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    <span className="text-[11px] font-bold text-muted-foreground">Search & Add Person</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">{tr('Search & Add Person')}</span>
                   </button>
                 )}
               </div>
 
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)"
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tr('Notes (optional)')}
                 className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-14" />
 
               <Button onClick={handleCreate} disabled={sending} className="rounded-2xl h-11 text-xs font-bold">
-                {sending ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sending...</span>
-                  : <><Users className="mr-2 h-4 w-4" strokeWidth={1.5} /> Send Split Request</>}
+                {sending ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Sending...')}</span>
+                  : <><Users className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Send Split Request')}</>}
               </Button>
             </div>
           </motion.div>
@@ -515,7 +517,7 @@ const CustomerSplitBills: React.FC = () => {
             {isLoading ? (
               <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
             ) : bills.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
+              <p className="py-8 text-center text-xs text-muted-foreground">{tr('No split bills yet. Create your first one!')}</p>
             ) : bills.map((bill: any, i: number) => {
               const parts = bill.split_bill_participants || [];
               const paidCount = parts.filter((p: any) => p.paid).length;
@@ -565,11 +567,11 @@ const CustomerSplitBills: React.FC = () => {
                                   {!p.is_owner && (
                                     <>
                                       <button onClick={() => handleRemind(p.id, bill.id)} disabled={actionLoading === `remind-${p.id}`}
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(45,70%,90%)] hover:bg-[hsl(45,70%,85%)] transition-colors" title="Send reminder">
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(45,70%,90%)] hover:bg-[hsl(45,70%,85%)] transition-colors" title={tr('Send reminder')}>
                                         {actionLoading === `remind-${p.id}` ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(45,60%,35%)]" /> : <Bell className="h-3 w-3 text-[hsl(45,60%,35%)]" strokeWidth={2} />}
                                       </button>
                                       <button onClick={() => handleSettle(p.id)} disabled={actionLoading === p.id}
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(150,40%,90%)] hover:bg-[hsl(150,40%,85%)] transition-colors" title="Mark as paid">
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(150,40%,90%)] hover:bg-[hsl(150,40%,85%)] transition-colors" title={tr('Mark as paid')}>
                                         {actionLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin text-[hsl(150,60%,40%)]" /> : <CheckCircle2 className="h-3 w-3 text-[hsl(150,60%,40%)]" strokeWidth={2} />}
                                       </button>
                                     </>
@@ -597,8 +599,8 @@ const CustomerSplitBills: React.FC = () => {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(150,40%,90%)]">
                   <CheckCircle2 className="h-7 w-7 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-bold text-foreground">You're all clear!</p>
-                <p className="text-xs text-muted-foreground text-center">No pending split bills to pay</p>
+                <p className="text-sm font-bold text-foreground">{tr('You\'re all clear!')}</p>
+                <p className="text-xs text-muted-foreground text-center">{tr('No pending split bills to pay')}</p>
               </div>
             ) : owedBills.map((bill: any, i: number) => {
               const myPart = bill.myParticipation;
@@ -642,9 +644,9 @@ const CustomerSplitBills: React.FC = () => {
 
                           {/* Bill breakdown */}
                           <div className="space-y-1.5">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bill Breakdown</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Bill Breakdown')}</p>
                             <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
-                              <span className="text-xs text-muted-foreground">Total bill</span>
+                              <span className="text-xs text-muted-foreground">{tr('Total bill')}</span>
                               <span className="text-xs font-bold text-foreground">{Number(bill.total_amount).toLocaleString()} XAF</span>
                             </div>
                             <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
@@ -652,7 +654,7 @@ const CustomerSplitBills: React.FC = () => {
                               <span className="text-xs font-bold text-foreground">{shareAmount.toLocaleString()} XAF</span>
                             </div>
                             <div className="flex items-center justify-between rounded-xl bg-muted/50 p-2.5">
-                              <span className="text-xs text-muted-foreground">Participants</span>
+                              <span className="text-xs text-muted-foreground">{tr('Participants')}</span>
                               <span className="text-xs font-bold text-foreground">{(bill.split_bill_participants || []).length} people</span>
                             </div>
                           </div>
@@ -661,7 +663,7 @@ const CustomerSplitBills: React.FC = () => {
                             <div className="flex items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)] p-3">
                               <CheckCircle2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
                               <div>
-                                <p className="text-xs font-bold text-[hsl(150,40%,25%)]">Payment Complete</p>
+                                <p className="text-xs font-bold text-[hsl(150,40%,25%)]">{tr('Payment Complete')}</p>
                                 <p className="text-[10px] text-[hsl(150,30%,40%)]">
                                   Paid on {myPart.paid_at ? new Date(myPart.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                                 </p>
@@ -674,7 +676,7 @@ const CustomerSplitBills: React.FC = () => {
                               className="w-full rounded-2xl h-12 text-sm font-bold bg-primary hover:bg-primary/90"
                             >
                               {actionLoading === `pay-${myPart.id}` ? (
-                                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing Payment...</span>
+                                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Processing Payment...')}</span>
                               ) : (
                                 <span className="flex items-center gap-2">
                                   <Wallet className="h-4 w-4" strokeWidth={1.5} />
@@ -699,7 +701,7 @@ const CustomerSplitBills: React.FC = () => {
         open={!!pinPaymentId}
         onOpenChange={(open) => { if (!open) setPinPaymentId(null); }}
         onConfirmed={executePayment}
-        title="Confirm Split Bill Payment"
+        title={tr('Confirm Split Bill Payment')}
         description={`Pay ${pinPaymentAmount.toLocaleString()} XAF for "${pinPaymentTitle}" from your wallet`}
       />
     </div>

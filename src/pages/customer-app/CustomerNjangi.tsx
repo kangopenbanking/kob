@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const circleColors = [
   { bg: 'bg-[hsl(270,60%,92%)]', accent: 'text-[hsl(270,50%,45%)]', bar: 'bg-[hsl(270,50%,45%)]' },
@@ -30,6 +31,7 @@ const circleColors = [
 type ViewMode = 'list' | 'create' | 'join' | 'detail';
 
 const CustomerNjangi: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -191,7 +193,7 @@ const CustomerNjangi: React.FC = () => {
       <div className="flex flex-col gap-5 p-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-          <h1 className="text-xl font-bold text-foreground">Njangi</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Njangi')}</h1>
         </div>
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       </div>
@@ -274,13 +276,13 @@ const CustomerNjangi: React.FC = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Leave this circle?</AlertDialogTitle>
+                <AlertDialogTitle>{tr('Leave this circle?')}</AlertDialogTitle>
                 <AlertDialogDescription>
                   You can only leave if you have no pending contributions. {isCreator ? 'As the creator, the circle will be deleted if you are the only member.' : 'You will lose access to this group.'}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tr('Cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => leaveMutation.mutate({ group_id: selectedGroup.id }, {
                     onSuccess: () => { setView('list'); setSelectedGroup(null); refetch(); },
@@ -294,13 +296,13 @@ const CustomerNjangi: React.FC = () => {
 
         {/* Group ID for sharing */}
         <div className="rounded-2xl bg-card border border-border p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Group ID (share to invite)</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{tr('Group ID (share to invite)')}</p>
           <button onClick={() => { navigator.clipboard.writeText(selectedGroup.id); toast.success('Copied!'); }}
             className="text-xs font-mono text-primary break-all text-left">{selectedGroup.id}</button>
         </div>
 
         {/* Members List */}
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Members</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Members')}</p>
         <div className="space-y-2">
           {detailMembers.map((m: any) => {
             const paid = hasPaidThisCycle(m.id);
@@ -313,7 +315,7 @@ const CustomerNjangi: React.FC = () => {
                   <div>
                     <p className="text-xs font-semibold text-foreground">
                       {m.profile?.full_name || m.profile?.email || 'Member'}
-                      {m.user_id === user?.id && <span className="text-muted-foreground"> (You)</span>}
+                      {m.user_id === user?.id && <span className="text-muted-foreground"> {tr('(You)')}</span>}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                       {m.has_received_payout ? 'Received payout ✓' : 'Awaiting payout'}
@@ -323,12 +325,12 @@ const CustomerNjangi: React.FC = () => {
                 {paid ? (
                   <div className="flex items-center gap-1 text-[hsl(150,60%,40%)]">
                     <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
-                    <span className="text-[10px] font-bold">Paid</span>
+                    <span className="text-[10px] font-bold">{tr('Paid')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-4 w-4" strokeWidth={1.5} />
-                    <span className="text-[10px] font-bold">Pending</span>
+                    <span className="text-[10px] font-bold">{tr('Pending')}</span>
                   </div>
                 )}
               </div>
@@ -372,38 +374,38 @@ const CustomerNjangi: React.FC = () => {
           <button onClick={() => { setView('list'); resetCreateForm(); }}>
             <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Create Circle</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Create Circle')}</h1>
         </div>
 
         <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Circle Name</Label>
-            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Family Savings" className="rounded-xl" maxLength={60} />
+            <Label className="text-xs font-medium">{tr('Circle Name')}</Label>
+            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={tr('e.g. Family Savings')} className="rounded-xl" maxLength={60} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Contribution Amount (XAF)</Label>
-            <Input type="number" value={newContribution} onChange={e => setNewContribution(e.target.value)} placeholder="e.g. 25000" className="rounded-xl" min={100} />
+            <Label className="text-xs font-medium">{tr('Contribution Amount (XAF)')}</Label>
+            <Input type="number" value={newContribution} onChange={e => setNewContribution(e.target.value)} placeholder={tr('e.g. 25000')} className="rounded-xl" min={100} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Frequency</Label>
+              <Label className="text-xs font-medium">{tr('Frequency')}</Label>
               <Select value={newFrequency} onValueChange={setNewFrequency}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="weekly">{tr('Weekly')}</SelectItem>
+                  <SelectItem value="monthly">{tr('Monthly')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Payout Method</Label>
+              <Label className="text-xs font-medium">{tr('Payout Method')}</Label>
               <Select value={newPayoutMethod} onValueChange={setNewPayoutMethod}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="random">Random</SelectItem>
-                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="random">{tr('Random')}</SelectItem>
+                  <SelectItem value="manual">{tr('Manual')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -411,11 +413,11 @@ const CustomerNjangi: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Max Members</Label>
+              <Label className="text-xs font-medium">{tr('Max Members')}</Label>
               <Input type="number" value={newMembers} onChange={e => setNewMembers(e.target.value)} className="rounded-xl" min={2} max={50} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Late Interest (%)</Label>
+              <Label className="text-xs font-medium">{tr('Late Interest (%)')}</Label>
               <Input type="number" value={newLateRate} onChange={e => setNewLateRate(e.target.value)} className="rounded-xl" min={0} max={100} />
             </div>
           </div>
@@ -444,7 +446,7 @@ const CustomerNjangi: React.FC = () => {
           <button onClick={() => { setView('list'); setJoinGroupId(''); }}>
             <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Join Circle</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Join Circle')}</h1>
         </div>
 
         <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5">
@@ -455,8 +457,8 @@ const CustomerNjangi: React.FC = () => {
             Enter the Group ID shared by the circle creator to join.
           </p>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Group ID</Label>
-            <Input value={joinGroupId} onChange={e => setJoinGroupId(e.target.value)} placeholder="Paste group ID" className="rounded-xl font-mono text-xs" />
+            <Label className="text-xs font-medium">{tr('Group ID')}</Label>
+            <Input value={joinGroupId} onChange={e => setJoinGroupId(e.target.value)} placeholder={tr('Paste group ID')} className="rounded-xl font-mono text-xs" />
           </div>
           <Button onClick={handleJoin} disabled={joinMutation.isPending} className="rounded-2xl h-12 font-semibold">
             {joinMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
@@ -472,12 +474,12 @@ const CustomerNjangi: React.FC = () => {
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground">Njangi</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Njangi')}</h1>
       </div>
 
       {/* How It Works Flow */}
       <HowItWorksFlow
-        title="How Njangi Works"
+        title={tr('How Njangi Works')}
         steps={[
           { icon: Plus, title: 'Create or Join a Circle', description: 'Start your own savings circle or join one using a Group ID shared by the creator.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
           { icon: Users, title: 'Invite Members', description: 'Share your Group ID with friends and family. Set contribution amounts and frequency.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
@@ -494,7 +496,7 @@ const CustomerNjangi: React.FC = () => {
           <CircleDollarSign className="h-7 w-7 text-[hsl(270,50%,45%)]" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Active Circles</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Active Circles')}</p>
           <p className="text-2xl font-bold text-foreground">{circles.length}</p>
         </div>
       </motion.div>
@@ -503,8 +505,8 @@ const CustomerNjangi: React.FC = () => {
       {circles.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12">
           <CircleDollarSign className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
-          <p className="text-sm font-semibold text-muted-foreground">No active circles</p>
-          <p className="text-xs text-muted-foreground text-center">Create or join a Njangi circle to start saving together</p>
+          <p className="text-sm font-semibold text-muted-foreground">{tr('No active circles')}</p>
+          <p className="text-xs text-muted-foreground text-center">{tr('Create or join a Njangi circle to start saving together')}</p>
         </div>
       ) : (
         circles.map((c: any, i: number) => {

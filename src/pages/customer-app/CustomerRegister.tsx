@@ -21,6 +21,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const TOTAL_STEPS = 8;
 
@@ -36,6 +37,7 @@ const reasonOptions = [
 const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
 const CustomerRegister: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refCodeFromUrl = searchParams.get('ref') || '';
@@ -256,8 +258,8 @@ const CustomerRegister: React.FC = () => {
             {/* Step 0: Reasons */}
             {step === 0 && (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-1">Why Kang?</h2>
-                <p className="text-sm text-muted-foreground mb-6">Select all the reasons you'd like to use Kang</p>
+                <h2 className="text-xl font-bold text-foreground mb-1">{tr('Why Kang?')}</h2>
+                <p className="text-sm text-muted-foreground mb-6">{tr('Select all the reasons you\'d like to use Kang')}</p>
                 <div className="space-y-3">
                   {reasonOptions.map(opt => {
                     const Icon = opt.icon;
@@ -292,7 +294,7 @@ const CustomerRegister: React.FC = () => {
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(210,80%,93%)]">
                   <ShieldCheck className="h-10 w-10 text-foreground" strokeWidth={1.5} />
                 </div>
-                <h2 className="text-xl font-bold text-foreground text-center">Let's verify your identity</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">{tr('Let\'s verify your identity')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
                   We want to confirm your identity before you can use Kang. This helps keep your account safe and secure.
                 </p>
@@ -305,7 +307,7 @@ const CustomerRegister: React.FC = () => {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(50,80%,90%)]">
                   <CreditCard className="h-8 w-8 text-foreground" strokeWidth={1.5} />
                 </div>
-                <h2 className="text-xl font-bold text-foreground text-center">Photo ID</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">{tr('Photo ID')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
                   Point the camera at your ID card or passport to take a clear photo
                 </p>
@@ -318,7 +320,7 @@ const CustomerRegister: React.FC = () => {
                   ) : (
                     <>
                       <Camera className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
-                      <span className="text-sm font-medium text-muted-foreground">Tap to take photo or upload</span>
+                      <span className="text-sm font-medium text-muted-foreground">{tr('Tap to take photo or upload')}</span>
                     </>
                   )}
                 </button>
@@ -336,14 +338,14 @@ const CustomerRegister: React.FC = () => {
             {/* Step 3: Selfie */}
             {step === 3 && (
               <div className="flex flex-col items-center gap-6">
-                <h2 className="text-xl font-bold text-foreground text-center">Selfie to confirm your ID</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">{tr('Selfie to confirm your ID')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
                   Position your face within the circle. Make sure you're in a well-lit area.
                 </p>
                 <div className="relative">
                   <div className="flex h-48 w-48 items-center justify-center rounded-full border-4 border-dashed border-primary/40 bg-muted overflow-hidden">
                     {selfie ? (
-                      <img src={URL.createObjectURL(selfie)} alt="Selfie" className="h-full w-full object-cover" />
+                      <img src={URL.createObjectURL(selfie)} alt={tr('Selfie')} className="h-full w-full object-cover" />
                     ) : (
                       <ScanFace className="h-16 w-16 text-muted-foreground" strokeWidth={1} />
                     )}
@@ -376,19 +378,19 @@ const CustomerRegister: React.FC = () => {
             {/* Step 4: User Details */}
             {step === 4 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-foreground mb-1">Your details</h2>
-                <p className="text-sm text-muted-foreground mb-2">Tell us a bit about yourself</p>
+                <h2 className="text-xl font-bold text-foreground mb-1">{tr('Your details')}</h2>
+                <p className="text-sm text-muted-foreground mb-2">{tr('Tell us a bit about yourself')}</p>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Full Name *</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Full Name *')}</label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="h-12 rounded-2xl pl-10 text-sm" />
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={tr('John Doe')} className="h-12 rounded-2xl pl-10 text-sm" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email (Optional)</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Email (Optional)')}</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                     <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" className="h-12 rounded-2xl pl-10 text-sm" />
@@ -396,22 +398,22 @@ const CustomerRegister: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Contact Number *</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Contact Number *')}</label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                    <Input value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} placeholder="+237 6XX XXX XXX" className="h-12 rounded-2xl pl-10 text-sm" />
+                    <Input value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} placeholder={tr('+237 6XX XXX XXX')} className="h-12 rounded-2xl pl-10 text-sm" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Address</label>
+                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Address')}</label>
                     <Popover>
                       <PopoverTrigger>
                         <Info className="h-3.5 w-3.5 text-primary cursor-pointer" strokeWidth={1.5} />
                       </PopoverTrigger>
                       <PopoverContent className="w-72 text-sm p-4">
-                        <p className="font-semibold mb-1">PostiQ Digital Address</p>
+                        <p className="font-semibold mb-1">{tr('PostiQ Digital Address')}</p>
                         <p className="text-muted-foreground text-xs mb-2">
                           Create a verified digital address for your location using PostiQ, Cameroon's digital addressing system.
                         </p>
@@ -428,12 +430,12 @@ const CustomerRegister: React.FC = () => {
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                    <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="PostiQ code or address" className="h-12 rounded-2xl pl-10 text-sm" />
+                    <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={tr('PostiQ code or address')} className="h-12 rounded-2xl pl-10 text-sm" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Date of Birth</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Date of Birth')}</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -452,7 +454,7 @@ const CustomerRegister: React.FC = () => {
                         mode="single"
                         selected={dob}
                         onSelect={setDob}
-                        disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
+                        disabled={(date) => date > {tr('new Date() || date')} < new Date('1920-01-01')}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
@@ -461,7 +463,7 @@ const CustomerRegister: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gender</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tr('Gender')}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {genderOptions.map(g => (
                       <button
@@ -517,11 +519,11 @@ const CustomerRegister: React.FC = () => {
                 >
                   <Fingerprint className="h-12 w-12 text-foreground" strokeWidth={1.5} />
                 </motion.div>
-                <h2 className="text-xl font-bold text-foreground text-center">Set your fingerprint</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">{tr('Set your fingerprint')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
                   Add fingerprint to make your account more secure. You can use it for quick login and transaction approvals.
                 </p>
-                <p className="text-xs text-muted-foreground/60">Place your finger on the sensor</p>
+                <p className="text-xs text-muted-foreground/60">{tr('Place your finger on the sensor')}</p>
               </div>
             )}
 
@@ -535,7 +537,7 @@ const CustomerRegister: React.FC = () => {
                 >
                   <ScanFace className="h-12 w-12 text-foreground" strokeWidth={1.5} />
                 </motion.div>
-                <h2 className="text-xl font-bold text-foreground text-center">Set Face Recognition</h2>
+                <h2 className="text-xl font-bold text-foreground text-center">{tr('Set Face Recognition')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
                   Add face recognition to make your account more secure. You can unlock your account and approve transactions with just a look.
                 </p>

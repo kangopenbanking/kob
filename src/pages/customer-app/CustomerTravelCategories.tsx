@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bus, Compass, Plane, Train, ChevronLeft, ArrowRight, MapPin, Star, Shield, Lock, Ticket, Clock, CheckCircle2, History } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const categories = [
   {
@@ -70,6 +71,7 @@ const quickStats = [
 ];
 
 const CustomerTravelCategories: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
 
   return (
@@ -87,14 +89,14 @@ const CustomerTravelCategories: React.FC = () => {
             <div className="flex-1" />
             <button onClick={() => navigate('/app/travel/history')} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 active:bg-white/20 transition-colors">
               <History className="h-3.5 w-3.5 text-white/80" />
-              <span className="text-[11px] font-semibold text-white/80">My Bookings</span>
+              <span className="text-[11px] font-semibold text-white/80">{tr('My Bookings')}</span>
             </button>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#ffbe0b] mb-1.5">Explore</p>
-            <h1 className="text-[26px] font-extrabold text-white tracking-tight leading-tight">Transport &<br />Tourism</h1>
-            <p className="mt-2 text-[13px] text-white/45 leading-relaxed">Book trusted travel services across Cameroon</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#ffbe0b] mb-1.5">{tr('Explore')}</p>
+            <h1 className="text-[26px] font-extrabold text-white tracking-tight leading-tight">{tr('Transport &')}<br />{tr('Tourism')}</h1>
+            <p className="mt-2 text-[13px] text-white/45 leading-relaxed">{tr('Book trusted travel services across Cameroon')}</p>
           </motion.div>
         </div>
       </div>
@@ -124,7 +126,7 @@ const CustomerTravelCategories: React.FC = () => {
 
       {/* ── Section Label ── */}
       <div className="px-5 mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f1729]/35">Choose category</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f1729]/35">{tr('Choose category')}</p>
       </div>
 
       {/* ── Category Cards ── */}
@@ -157,7 +159,7 @@ const CustomerTravelCategories: React.FC = () => {
                   </div>
                 ) : (
                   <div className="rounded-full px-3 py-1.5" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
-                    <span className="text-[10px] font-bold text-white/90 uppercase tracking-wide">Soon</span>
+                    <span className="text-[10px] font-bold text-white/90 uppercase tracking-wide">{tr('Soon')}</span>
                   </div>
                 )}
               </div>
@@ -191,11 +193,11 @@ const CustomerTravelCategories: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.6 }}
           className="mt-5 flex items-center justify-center gap-3 text-[10px] font-medium text-[#0f1729]/30"
         >
-          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Licensed</span>
+          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> {tr('Licensed')}</span>
           <span className="text-[6px]">●</span>
-          <span>E-Tickets</span>
+          <span>{tr('E-Tickets')}</span>
           <span className="text-[6px]">●</span>
-          <span>Secure Pay</span>
+          <span>{tr('Secure Pay')}</span>
         </motion.div>
       </div>
     </div>

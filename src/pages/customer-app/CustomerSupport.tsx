@@ -10,6 +10,7 @@ import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWo
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
   useSupportDepartments,
   useSupportConversations,
   useSupportMessages,
@@ -27,6 +28,7 @@ const supportFlowSteps: FlowStep[] = [
 ];
 
 const CustomerSupport: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const userId = user?.id;
@@ -96,9 +98,9 @@ const CustomerSupport: React.FC = () => {
 
       {step === 'subject' && (
         <div className="flex flex-col gap-4 p-4">
-          <p className="text-sm font-medium">What can we help you with?</p>
-          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Briefly describe your issue..." className="rounded-xl" />
-          <Button onClick={handleStartChat} className="rounded-xl">Start Chat</Button>
+          <p className="text-sm font-medium">{tr('What can we help you with?')}</p>
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={tr('Briefly describe your issue...')} className="rounded-xl" />
+          <Button onClick={handleStartChat} className="rounded-xl">{tr('Start Chat')}</Button>
         </div>
       )}
 

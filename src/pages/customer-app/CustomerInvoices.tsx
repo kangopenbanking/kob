@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface InvoiceItem {
   description: string;
@@ -40,6 +41,7 @@ const statusConfig: Record<string, { icon: any; color: string; bg: string; label
 type StatusFilter = 'all' | 'paid' | 'pending' | 'sent' | 'overdue';
 
 const CustomerInvoices: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,7 +199,7 @@ const CustomerInvoices: React.FC = () => {
           <button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Invoices</h1>
+          <h1 className="text-xl font-bold text-foreground">{tr('Invoices')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => loadInvoices()} className="p-2 rounded-xl bg-card border border-border">
@@ -245,7 +247,7 @@ const CustomerInvoices: React.FC = () => {
                   <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
                     <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
                   </div>
-                  <p className="text-sm font-bold text-foreground">New Invoice</p>
+                  <p className="text-sm font-bold text-foreground">{tr('New Invoice')}</p>
                 </div>
                 <button onClick={() => { setShowCreate(false); resetForm(); }}>
                   <X className="h-5 w-5 text-muted-foreground" />
@@ -253,14 +255,14 @@ const CustomerInvoices: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Client Details</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Client Details')}</p>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input value={newClient} onChange={e => setNewClient(e.target.value)} placeholder="Client name" className="rounded-xl pl-10" />
+                  <Input value={newClient} onChange={e => setNewClient(e.target.value)} placeholder={tr('Client name')} className="rounded-xl pl-10" />
                 </div>
                 <div className="relative">
                   <Send className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input type="email" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} placeholder="Client email" className="rounded-xl pl-10" />
+                  <Input type="email" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} placeholder={tr('Client email')} className="rounded-xl pl-10" />
                 </div>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
@@ -269,14 +271,14 @@ const CustomerInvoices: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Line Items</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Line Items')}</p>
                 {newItems.map((item, i) => (
                   <div key={i} className="flex gap-2 items-start">
                     <div className="flex-1 space-y-2">
-                      <Input value={item.description} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, description: e.target.value } : it))} placeholder="Description" className="rounded-xl text-xs" />
+                      <Input value={item.description} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, description: e.target.value } : it))} placeholder={tr('Description')} className="rounded-xl text-xs" />
                       <div className="flex gap-2">
-                        <Input type="number" value={item.quantity || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, quantity: Number(e.target.value) } : it))} placeholder="Qty" className="rounded-xl text-xs w-20" />
-                        <Input type="number" value={item.unitPrice || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, unitPrice: Number(e.target.value) } : it))} placeholder="Unit price" className="rounded-xl text-xs flex-1" />
+                        <Input type="number" value={item.quantity || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, quantity: Number(e.target.value) } : it))} placeholder={tr('Qty')} className="rounded-xl text-xs w-20" />
+                        <Input type="number" value={item.unitPrice || ''} onChange={e => setNewItems(newItems.map((it, idx) => idx === i ? { ...it, unitPrice: Number(e.target.value) } : it))} placeholder={tr('Unit price')} className="rounded-xl text-xs flex-1" />
                       </div>
                     </div>
                     {newItems.length > 1 && (
@@ -292,8 +294,8 @@ const CustomerInvoices: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes (optional)</p>
-                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder="Payment terms, notes..."
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Notes (optional)')}</p>
+                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder={tr('Payment terms, notes...')}
                   className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-16 focus:ring-1 focus:ring-primary/30" />
               </div>
 
@@ -301,7 +303,7 @@ const CustomerInvoices: React.FC = () => {
               <div className="rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/15 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Amount</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tr('Total Amount')}</p>
                     <p className="text-[9px] text-muted-foreground mt-0.5">{newItems.filter(i => i.description).length} item(s)</p>
                   </div>
                   <div className="text-right">
@@ -313,9 +315,9 @@ const CustomerInvoices: React.FC = () => {
 
               <Button onClick={handleCreate} disabled={creating} className="rounded-2xl h-11 text-xs font-bold">
                 {creating ? (
-                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Creating & Sending...</span>
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Creating & Sending...')}</span>
                 ) : (
-                  <span className="flex items-center gap-2"><Send className="h-3.5 w-3.5" /> Create & Send Invoice</span>
+                  <span className="flex items-center gap-2"><Send className="h-3.5 w-3.5" /> {tr('Create & Send Invoice')}</span>
                 )}
               </Button>
             </div>
@@ -327,7 +329,7 @@ const CustomerInvoices: React.FC = () => {
       {loading && (
         <div className="flex flex-col items-center gap-3 py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">Loading invoices...</p>
+          <p className="text-xs text-muted-foreground">{tr('Loading invoices...')}</p>
         </div>
       )}
 
@@ -337,8 +339,8 @@ const CustomerInvoices: React.FC = () => {
           <div className="mx-auto h-16 w-16 rounded-3xl bg-muted flex items-center justify-center mb-4">
             <FileText className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-sm font-bold text-foreground mb-1">No invoices yet</p>
-          <p className="text-xs text-muted-foreground mb-4">Create your first invoice to get started</p>
+          <p className="text-sm font-bold text-foreground mb-1">{tr('No invoices yet')}</p>
+          <p className="text-xs text-muted-foreground mb-4">{tr('Create your first invoice to get started')}</p>
           <Button size="sm" className="rounded-2xl" onClick={() => setShowCreate(true)}>
             <Plus className="mr-1 h-3.5 w-3.5" /> Create Invoice
           </Button>
@@ -415,22 +417,22 @@ const CustomerInvoices: React.FC = () => {
                           {/* Meta Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 p-2.5 overflow-hidden">
-                              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">Recipient</p>
+                              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">{tr('Recipient')}</p>
                               <p className="text-[11px] font-semibold text-foreground break-all">{inv.client_email}</p>
                             </div>
                             <div className={`rounded-xl p-2.5 border ${isDue ? 'bg-red-50/60 dark:bg-red-950/20 border-red-100 dark:border-red-900/40' : 'bg-muted/50 border-border'}`}>
-                              <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isDue ? 'text-red-500' : 'text-muted-foreground'}`}>Due Date</p>
+                              <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isDue ? 'text-red-500' : 'text-muted-foreground'}`}>{tr('Due Date')}</p>
                               <p className={`text-[11px] font-semibold ${isDue ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>{formatDate(inv.due_date)}</p>
                             </div>
                             {inv.sent_at && (
                               <div className="rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 p-2.5">
-                                <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 mb-0.5">Sent</p>
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 mb-0.5">{tr('Sent')}</p>
                                 <p className="text-[11px] font-semibold text-foreground">{formatDate(inv.sent_at)}</p>
                               </div>
                             )}
                             {inv.paid_at && (
                               <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-2.5">
-                                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mb-0.5">Paid</p>
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mb-0.5">{tr('Paid')}</p>
                                 <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">{formatDate(inv.paid_at)}</p>
                               </div>
                             )}
@@ -438,7 +440,7 @@ const CustomerInvoices: React.FC = () => {
 
                           {/* Line Items */}
                           <div>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Line Items</p>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{tr('Line Items')}</p>
                             <div className="rounded-xl border border-border overflow-hidden">
                               {inv.items.map((item, idx) => (
                                 <div key={idx} className={`flex justify-between items-center px-3 py-2.5 text-[11px] ${idx % 2 === 0 ? 'bg-muted/20' : 'bg-card'} ${idx < inv.items.length - 1 ? 'border-b border-border/50' : ''}`}>
@@ -450,7 +452,7 @@ const CustomerInvoices: React.FC = () => {
                                 </div>
                               ))}
                               <div className="flex justify-between items-center px-3 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-t border-primary/15">
-                                <p className="text-[11px] font-bold text-primary">Total</p>
+                                <p className="text-[11px] font-bold text-primary">{tr('Total')}</p>
                                 <p className="text-sm font-extrabold text-primary">{Number(inv.amount).toLocaleString()} {inv.currency}</p>
                               </div>
                             </div>

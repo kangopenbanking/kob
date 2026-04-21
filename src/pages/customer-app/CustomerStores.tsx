@@ -13,10 +13,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CATEGORIES = ['All', 'Fashion', 'Electronics', 'Food', 'Beauty', 'Health', 'Home', 'Services'];
 
 const CustomerStores: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [stores, setStores] = useState<any[]>([]);
@@ -118,7 +120,7 @@ const CustomerStores: React.FC = () => {
       <div className="px-5 pt-7 pb-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Discover</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{tr('Discover')}</p>
             <h1 className="text-[28px] leading-tight font-bold text-foreground tracking-tight mt-0.5">
               Shop nearby
             </h1>
@@ -141,7 +143,7 @@ const CustomerStores: React.FC = () => {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground" />
             <Input
-              placeholder="Search stores, brands, products…"
+              placeholder={tr('Search stores, brands, products…')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-11 pr-4 h-12 rounded-2xl bg-card border-border/60 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -155,11 +157,11 @@ const CustomerStores: React.FC = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-80 bg-card">
               <SheetHeader>
-                <SheetTitle className="text-lg font-bold">Refine</SheetTitle>
+                <SheetTitle className="text-lg font-bold">{tr('Refine')}</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-7">
                 <div>
-                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">Category</p>
+                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">{tr('Category')}</p>
                   <div className="space-y-2.5">
                     {CATEGORIES.filter(c => c !== 'All').map(cat => (
                       <label key={cat} className="flex items-center gap-3 cursor-pointer">
@@ -173,7 +175,7 @@ const CustomerStores: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">Minimum Rating</p>
+                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">{tr('Minimum Rating')}</p>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map(star => (
                       <button key={star} onClick={() => setMinRating(star === minRating ? 0 : star)}>
@@ -183,7 +185,7 @@ const CustomerStores: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">Sort by</p>
+                  <p className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">{tr('Sort by')}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {(['rating', 'name'] as const).map(opt => (
                       <button
@@ -244,8 +246,8 @@ const CustomerStores: React.FC = () => {
           <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
             <Store className="w-7 h-7 text-muted-foreground/60" />
           </div>
-          <p className="text-sm font-semibold text-foreground">No stores found</p>
-          <p className="text-xs text-muted-foreground mt-1">Try a different search or filter</p>
+          <p className="text-sm font-semibold text-foreground">{tr('No stores found')}</p>
+          <p className="text-xs text-muted-foreground mt-1">{tr('Try a different search or filter')}</p>
         </div>
       ) : (
         <>

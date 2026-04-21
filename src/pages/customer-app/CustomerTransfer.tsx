@@ -11,12 +11,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 type RecipientType = 'phone' | 'account' | 'name' | 'rib' | 'iban';
 
 const CustomerTransfer: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
@@ -312,7 +314,7 @@ const CustomerTransfer: React.FC = () => {
               <div className="w-full rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-700 dark:text-amber-400" strokeWidth={1.5} />
-                  <p className="text-sm font-bold text-amber-900 dark:text-amber-300">Funds Held — Pending Activation</p>
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-300">{tr('Funds Held — Pending Activation')}</p>
                 </div>
                 <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
                   The recipient hasn't fully activated their Kang account yet. We've debited your wallet and are holding the funds securely. They will be released automatically the moment <span className="font-semibold">{transferResult?.receiver || recipient}</span> verifies their phone and sets a PIN. Please notify them to complete activation.
@@ -346,18 +348,18 @@ const CustomerTransfer: React.FC = () => {
             className="flex flex-col gap-5 px-5 pt-3 pb-8 flex-1">
             <div className="rounded-3xl border-2 border-foreground bg-card overflow-hidden">
               <div className="bg-[hsl(225,50%,22%)] p-6 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60 mb-1">Amount</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60 mb-1">{tr('Amount')}</p>
                 <p className="text-3xl font-bold text-[hsl(0,0%,100%)]">{currency} {amountNum.toLocaleString()}</p>
               </div>
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">Recipient</span>
+                  <span className="text-xs text-muted-foreground">{tr('Recipient')}</span>
                   <span className="text-sm font-bold text-foreground font-mono text-right max-w-[60%] break-all">
                     {selectedRecipientName || recipient}
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">Type</span>
+                  <span className="text-xs text-muted-foreground">{tr('Type')}</span>
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                     recipientType === 'rib' ? 'bg-[hsl(210,80%,93%)] text-[hsl(210,60%,45%)]'
                     : recipientType === 'iban' ? 'bg-[hsl(270,50%,92%)] text-[hsl(270,50%,45%)]'
@@ -367,20 +369,20 @@ const CustomerTransfer: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-xs text-muted-foreground">From</span>
+                  <span className="text-xs text-muted-foreground">{tr('From')}</span>
                   <span className="text-sm font-bold text-foreground">
                     {selectedAccount?.nickname || selectedAccount?.account_holder_name || 'Primary Account'}
                   </span>
                 </div>
                 {note && (
                   <div className="flex items-center justify-between px-5 py-4">
-                    <span className="text-xs text-muted-foreground">Note</span>
+                    <span className="text-xs text-muted-foreground">{tr('Note')}</span>
                     <span className="text-sm text-foreground italic">{note}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between px-5 py-4">
                   <span className="text-xs text-muted-foreground">Fee</span>
-                  <span className="text-sm font-bold text-[hsl(150,60%,40%)]">Free</span>
+                  <span className="text-sm font-bold text-[hsl(150,60%,40%)]">{tr('Free')}</span>
                 </div>
               </div>
             </div>
@@ -392,7 +394,7 @@ const CustomerTransfer: React.FC = () => {
                     <Loader2 className="h-4 w-4 animate-spin" /> Sending...
                   </span>
                 ) : (
-                  <><Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm & Send</>
+                  <><Send className="mr-2 h-4 w-4" strokeWidth={1.5} /> {tr('Confirm & Send')}</>
                 )}
               </Button>
               <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={() => setStep('form')}>
@@ -410,7 +412,7 @@ const CustomerTransfer: React.FC = () => {
             {/* Amount Section */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(225,50%,22%)] p-8">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Enter Amount</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">{tr('Enter Amount')}</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-[hsl(0,0%,100%)]/60">{currency}</span>
                 <input
@@ -449,7 +451,7 @@ const CustomerTransfer: React.FC = () => {
             {/* Recipient Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Recipient')}</p>
                 <button
                   type="button"
                   onClick={() => navigate('/app/send-money')}
@@ -458,7 +460,7 @@ const CustomerTransfer: React.FC = () => {
                   <Smartphone className="h-3 w-3" strokeWidth={2} />
                   <Landmark className="h-3 w-3" strokeWidth={2} />
                   <Mail className="h-3 w-3" strokeWidth={2} />
-                  <span>MoMo · Bank · PayPal</span>
+                  <span>{tr('MoMo · Bank · PayPal')}</span>
                   <ChevronRight className="h-3 w-3" strokeWidth={2} />
                 </button>
               </div>
@@ -599,9 +601,9 @@ const CustomerTransfer: React.FC = () => {
                           )}
                         </div>
                         {s.hasAccount ? (
-                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">Active</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(150,40%,90%)] text-[hsl(150,60%,30%)] shrink-0">{tr('Active')}</span>
                         ) : (
-                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">New</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[hsl(40,80%,90%)] text-[hsl(35,70%,35%)] shrink-0">{tr('New')}</span>
                         )}
                       </button>
                     ))}
@@ -639,7 +641,7 @@ const CustomerTransfer: React.FC = () => {
             {/* Source Account */}
             {accounts.length > 0 && (
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">From</p>
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('From')}</p>
                 <div className="space-y-2">
                   {accounts.map((acc: any, i: number) => {
                     const bal = balances.find((b: any) => b.account_id === acc.id);
@@ -674,18 +676,18 @@ const CustomerTransfer: React.FC = () => {
 
             {accounts.length === 0 && !acctLoading && (
               <div className="rounded-2xl bg-muted/50 p-4 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">No accounts linked</p>
-                <p className="text-xs text-muted-foreground mt-1">Link an account to send money</p>
+                <p className="text-sm font-semibold text-muted-foreground">{tr('No accounts linked')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{tr('Link an account to send money')}</p>
               </div>
             )}
 
             {/* Note */}
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Note (optional)</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{tr('Note (optional)')}</p>
               <Input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="What's this for?"
+                placeholder={tr('What\'s this for?')}
                 className="h-11 rounded-2xl text-sm"
                 maxLength={100}
               />

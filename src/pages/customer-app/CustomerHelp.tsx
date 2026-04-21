@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const faqCategories = [
   {
@@ -51,6 +52,7 @@ const faqs = [
 ];
 
 const CustomerHelp: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
 
   const contactOptions = [
@@ -158,7 +160,7 @@ const CustomerHelp: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5 text-primary-foreground" strokeWidth={2} />
           </motion.button>
-          <h1 className="text-xl font-bold text-primary-foreground">Help & Support</h1>
+          <h1 className="text-xl font-bold text-primary-foreground">{tr('Help & Support')}</h1>
         </div>
         <p className="relative text-sm text-primary-foreground/80 mb-4">
           How can we help you today?
@@ -170,7 +172,7 @@ const CustomerHelp: React.FC = () => {
           <Input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search for help..."
+            placeholder={tr('Search for help...')}
             className="h-11 rounded-2xl border-0 bg-background pl-10 text-sm shadow-md placeholder:text-muted-foreground/60"
           />
         </div>
@@ -211,7 +213,7 @@ const CustomerHelp: React.FC = () => {
                     className="flex flex-col items-center gap-2 py-8 text-center"
                   >
                     <HelpCircle className="h-8 w-8 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">No results found</p>
+                    <p className="text-sm text-muted-foreground">{tr('No results found')}</p>
                   </motion.div>
                 ) : (
                   filteredFaqs.map((faq, i) => (
@@ -283,13 +285,13 @@ const CustomerHelp: React.FC = () => {
               <Input
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
-                placeholder="Subject"
+                placeholder={tr('Subject')}
                 className="h-11 rounded-xl border-border bg-background"
               />
               <Textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Describe the issue..."
+                placeholder={tr('Describe the issue...')}
                 className="min-h-[100px] rounded-xl border-border bg-background"
               />
               <Button

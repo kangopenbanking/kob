@@ -28,6 +28,7 @@ import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } fr
 import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 // ─── Types ───
 interface RewardsConfig {
@@ -359,8 +360,8 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Media Banners</CardTitle>
-        <CardDescription>Add image slides or embedded videos to the home screen</CardDescription>
+        <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> {tr('Media Banners')}</CardTitle>
+        <CardDescription>{tr('Add image slides or embedded videos to the home screen')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {mediaSections.map((item, idx) => (
@@ -372,9 +373,9 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
               </div>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeItem(item.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
             </div>
-            <Input placeholder="Title (optional)" value={item.title || ''} onChange={(e) => updateItem(item.id, { title: e.target.value })} className="h-8 text-xs" />
+            <Input placeholder={tr('Title (optional)')} value={item.title || ''} onChange={(e) => updateItem(item.id, { title: e.target.value })} className="h-8 text-xs" />
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Dimension:</span>
+              <span className="text-xs text-muted-foreground">{tr('Dimension:')}</span>
               <div className="flex gap-1">
                 <Button type="button" variant={(!item.aspect || item.aspect === 'landscape') ? 'default' : 'outline'} size="sm" className="h-7 text-xs gap-1 px-2" onClick={() => updateItem(item.id, { aspect: 'landscape' })}>
                   <span className="inline-block w-4 h-2.5 border rounded-sm border-current" /> Landscape
@@ -386,7 +387,7 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
             </div>
             {item.type === 'image' ? (
               <div className="space-y-2">
-                <Input placeholder="Image URL" value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
+                <Input placeholder={tr('Image URL')} value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
                 <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
                   <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
@@ -395,15 +396,15 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
               </div>
             ) : (
               <div className="space-y-2">
-                <Input placeholder="Video URL (YouTube, Facebook, X, etc.)" value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
+                <Input placeholder={tr('Video URL (YouTube, Facebook, X, etc.)')} value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
                 {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider}</Badge>}
               </div>
             )}
           </div>
         ))}
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => addMedia('image')} className="gap-1"><Image className="h-3.5 w-3.5" /> Add Image</Button>
-          <Button variant="outline" size="sm" onClick={() => addMedia('video')} className="gap-1"><Video className="h-3.5 w-3.5" /> Add Video</Button>
+          <Button variant="outline" size="sm" onClick={() => addMedia('image')} className="gap-1"><Image className="h-3.5 w-3.5" /> {tr('Add Image')}</Button>
+          <Button variant="outline" size="sm" onClick={() => addMedia('video')} className="gap-1"><Video className="h-3.5 w-3.5" /> {tr('Add Video')}</Button>
         </div>
       </CardContent>
     </Card>
@@ -463,25 +464,25 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Walkthrough Theme</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> {tr('Walkthrough Theme')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="text-xs">Background Color</Label>
+              <Label className="text-xs">{tr('Background Color')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <input type="color" value={walkthroughConfig.bg_color || '#ffffff'} onChange={(e) => onConfigChange({ ...walkthroughConfig, bg_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
                 <span className="text-xs text-muted-foreground">{walkthroughConfig.bg_color || 'Default'}</span>
               </div>
             </div>
             <div>
-              <Label className="text-xs">Text Color</Label>
+              <Label className="text-xs">{tr('Text Color')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <input type="color" value={walkthroughConfig.text_color || '#000000'} onChange={(e) => onConfigChange({ ...walkthroughConfig, text_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
               </div>
             </div>
             <div>
-              <Label className="text-xs">Accent Color</Label>
+              <Label className="text-xs">{tr('Accent Color')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <input type="color" value={walkthroughConfig.accent_color || '#3b82f6'} onChange={(e) => onConfigChange({ ...walkthroughConfig, accent_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
               </div>
@@ -489,12 +490,12 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
           </div>
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <Label className="text-xs">Logo Override URL</Label>
+              <Label className="text-xs">{tr('Logo Override URL')}</Label>
               <Input value={walkthroughConfig.logo_url || ''} onChange={(e) => onConfigChange({ ...walkthroughConfig, logo_url: e.target.value || null })} placeholder="https://..." className="h-8 text-xs mt-1" />
             </div>
             <div className="flex items-center gap-2 pt-4">
               <Switch checked={walkthroughConfig.skip_enabled !== false} onCheckedChange={(v) => onConfigChange({ ...walkthroughConfig, skip_enabled: v })} />
-              <Label className="text-xs">Allow Skip</Label>
+              <Label className="text-xs">{tr('Allow Skip')}</Label>
             </div>
           </div>
         </CardContent>
@@ -502,13 +503,13 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> Walkthrough Slides</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> {tr('Walkthrough Slides')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
           ) : slides.length === 0 && !editSlide ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No custom slides</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{tr('No custom slides')}</p>
           ) : (
             slides.map((slide: any) => (
               <div key={slide.id} className="flex items-center gap-3 rounded-lg border p-3">
@@ -517,7 +518,7 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
                   <p className="text-sm font-medium truncate">{slide.title}</p>
                   <p className="text-xs text-muted-foreground truncate">{slide.description}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setEditSlide(slide)}>Edit</Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(slide)}>{tr('Edit')}</Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteSlideMutation.mutate(slide.id)}>
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
@@ -527,29 +528,29 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
           {editSlide ? (
             <div className="rounded-lg border-2 border-primary/20 p-4 space-y-3">
               <p className="text-sm font-bold">{editSlide.isNew ? 'New Slide' : 'Edit Slide'}</p>
-              <Input placeholder="Title" value={editSlide.title || ''} onChange={(e) => setEditSlide({ ...editSlide, title: e.target.value })} />
-              <Textarea placeholder="Description" value={editSlide.description || ''} onChange={(e) => setEditSlide({ ...editSlide, description: e.target.value })} rows={2} />
+              <Input placeholder={tr('Title')} value={editSlide.title || ''} onChange={(e) => setEditSlide({ ...editSlide, title: e.target.value })} />
+              <Textarea placeholder={tr('Description')} value={editSlide.description || ''} onChange={(e) => setEditSlide({ ...editSlide, description: e.target.value })} rows={2} />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Media Type</Label>
+                  <Label className="text-xs">{tr('Media Type')}</Label>
                   <Select value={editSlide.media_type || 'icon'} onValueChange={(v) => setEditSlide({ ...editSlide, media_type: v })}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="icon">Icon</SelectItem>
-                      <SelectItem value="image">Image</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="icon">{tr('Icon')}</SelectItem>
+                      <SelectItem value="image">{tr('Image')}</SelectItem>
+                      <SelectItem value="video">{tr('Video')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 {editSlide.media_type === 'icon' && (
                   <div>
-                    <Label className="text-xs">Icon Name (Lucide)</Label>
+                    <Label className="text-xs">{tr('Icon Name (Lucide)')}</Label>
                     <Input value={editSlide.icon_name || 'Shield'} onChange={(e) => setEditSlide({ ...editSlide, icon_name: e.target.value })} className="h-8 text-xs" />
                   </div>
                 )}
                 {(editSlide.media_type === 'image' || editSlide.media_type === 'video') && (
                   <div>
-                    <Label className="text-xs">Media URL</Label>
+                    <Label className="text-xs">{tr('Media URL')}</Label>
                     <Input value={editSlide.media_url || ''} onChange={(e) => setEditSlide({ ...editSlide, media_url: e.target.value })} className="h-8 text-xs" />
                   </div>
                 )}
@@ -576,7 +577,7 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
                 <Button size="sm" onClick={() => saveSlideMutation.mutate(editSlide)} disabled={saveSlideMutation.isPending}>
                   {saveSlideMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}Save
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditSlide(null)}>Cancel</Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(null)}>{tr('Cancel')}</Button>
               </div>
             </div>
           ) : (
@@ -637,7 +638,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   // ─── Phone Preview Mockup ───
   const renderPreview = () => (
     <div className="sticky top-4">
-      <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Monitor className="h-3.5 w-3.5" /> Live Preview</p>
+      <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Monitor className="h-3.5 w-3.5" /> {tr('Live Preview')}</p>
       <div className="mx-auto w-[180px] rounded-[20px] border-[3px] border-foreground/20 bg-background p-2 shadow-lg">
         {/* Status bar */}
         <div className="flex justify-between px-1 mb-1">
@@ -650,14 +651,14 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         </div>
         {/* Bottom Nav */}
         <div className="flex items-end justify-around border-t pt-1 mt-1 relative">
-          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-primary" /><span className="text-[4px]">Home</span></div>
-          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">Activity</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-primary" /><span className="text-[4px]">{tr('Home')}</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">{tr('Activity')}</span></div>
           <div className="flex flex-col items-center -mt-2">
             <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow"><ScanLine className="h-2.5 w-2.5 text-primary-foreground" /></div>
-            <span className="text-[4px] font-bold text-primary">Scan</span>
+            <span className="text-[4px] font-bold text-primary">{tr('Scan')}</span>
           </div>
-          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">Cards</span></div>
-          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">More</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">{tr('Cards')}</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">{tr('More')}</span></div>
         </div>
       </div>
     </div>
@@ -666,7 +667,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   const renderPreviewSection = (key: CustomerSectionKey) => {
     switch (key) {
       case 'balance_card':
-        return <div key={key} className="rounded-lg bg-[hsl(225,50%,22%)] p-2"><p className="text-[6px] text-white/60">Total Balance</p><p className="text-[9px] font-bold text-white">XAF 485,000</p><p className="text-[5px] text-emerald-400">+12,500 today</p></div>;
+        return <div key={key} className="rounded-lg bg-[hsl(225,50%,22%)] p-2"><p className="text-[6px] text-white/60">{tr('Total Balance')}</p><p className="text-[9px] font-bold text-white">{tr('XAF 485,000')}</p><p className="text-[5px] text-emerald-400">{tr('+12,500 today')}</p></div>;
       case 'quick_actions':
         return (
           <div key={key} className="flex justify-between px-1">
@@ -680,7 +681,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         );
       case 'media_banner': {
         const media = config.media_sections || [];
-        if (media.length === 0) return <div key={key} className="h-8 rounded-md border border-dashed border-primary/30 flex items-center justify-center"><p className="text-[5px] text-muted-foreground">Media Banner</p></div>;
+        if (media.length === 0) return <div key={key} className="h-8 rounded-md border border-dashed border-primary/30 flex items-center justify-center"><p className="text-[5px] text-muted-foreground">{tr('Media Banner')}</p></div>;
         const first = media[0];
         return (
           <div key={key} className="h-8 rounded-md overflow-hidden">
@@ -691,7 +692,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
       case 'upcoming_bills':
         return (
           <div key={key}>
-            <p className="text-[6px] font-bold mb-0.5">Upcoming Bills</p>
+            <p className="text-[6px] font-bold mb-0.5">{tr('Upcoming Bills')}</p>
             {[1, 2].map(i => (
               <div key={i} className="flex items-center justify-between py-0.5">
                 <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-orange-100" /><p className="text-[5px]">Bill #{i}</p></div>
@@ -703,7 +704,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
       case 'spending_stats':
         return (
           <div key={key}>
-            <p className="text-[6px] font-bold mb-0.5">Spending Stats</p>
+            <p className="text-[6px] font-bold mb-0.5">{tr('Spending Stats')}</p>
             <div className="flex gap-1">
               {[60, 40, 80, 30].map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
@@ -717,10 +718,10 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
       case 'recent_activities':
         return (
           <div key={key}>
-            <p className="text-[6px] font-bold mb-0.5">Recent Activities</p>
+            <p className="text-[6px] font-bold mb-0.5">{tr('Recent Activities')}</p>
             {[1, 2].map(i => (
               <div key={i} className="flex items-center justify-between py-0.5">
-                <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted" /><div><p className="text-[5px]">Payment</p></div></div>
+                <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted" /><div><p className="text-[5px]">{tr('Payment')}</p></div></div>
                 <span className="text-[5px] font-bold">-5,000</span>
               </div>
             ))}
@@ -735,7 +736,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
       <div className="xl:col-span-2 space-y-6">
         {/* Features */}
         <Card>
-          <CardHeader><CardTitle className="text-base">App Features</CardTitle><CardDescription>Toggle which features are available in the customer app</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-base">{tr('App Features')}</CardTitle><CardDescription>{tr('Toggle which features are available in the customer app')}</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(featureLabels).map(([key, label]) => (
               <div key={key} className="flex items-center justify-between">
@@ -748,7 +749,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
         {/* Cash Out Methods */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Cash Out Methods</CardTitle><CardDescription>Activate or deactivate cash out options for customers</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-base">{tr('Cash Out Methods')}</CardTitle><CardDescription>{tr('Activate or deactivate cash out options for customers')}</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             {([
               { key: 'bank_transfer', label: 'Bank Transfer', desc: 'Withdraw to bank account' },
@@ -774,86 +775,86 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
         {/* Cash Out Limits */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Cash Out Limits</CardTitle><CardDescription>Set withdrawal limits (0 = no limit). All limits are enforced on the frontend.</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-base">{tr('Cash Out Limits')}</CardTitle><CardDescription>{tr('Set withdrawal limits (0 = no limit). All limits are enforced on the frontend.')}</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs">Min Amount (XAF)</Label>
+                <Label className="text-xs">{tr('Min Amount (XAF)')}</Label>
                 <Input type="number" value={config.cashout_limits?.min_amount || 0}
                   onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, min_amount: Number(e.target.value) || 0 } }))} />
-                <p className="text-[10px] text-muted-foreground mt-1">0 = no minimum</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{tr('0 = no minimum')}</p>
               </div>
               <div>
-                <Label className="text-xs">Max Amount (XAF)</Label>
+                <Label className="text-xs">{tr('Max Amount (XAF)')}</Label>
                 <Input type="number" value={config.cashout_limits?.max_amount || 0}
                   onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, max_amount: Number(e.target.value) || 0 } }))} />
-                <p className="text-[10px] text-muted-foreground mt-1">0 = no maximum</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{tr('0 = no maximum')}</p>
               </div>
               <div>
-                <Label className="text-xs">Daily Limit (XAF)</Label>
+                <Label className="text-xs">{tr('Daily Limit (XAF)')}</Label>
                 <Input type="number" value={config.cashout_limits?.daily_limit || 0}
                   onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, daily_limit: Number(e.target.value) || 0 } }))} />
-                <p className="text-[10px] text-muted-foreground mt-1">0 = unlimited</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{tr('0 = unlimited')}</p>
               </div>
             </div>
             <div>
-              <Label className="text-xs">Quick Amounts (comma-separated)</Label>
+              <Label className="text-xs">{tr('Quick Amounts (comma-separated)')}</Label>
               <Input value={(config.cashout_limits?.quick_amounts || [5000, 10000, 25000, 50000, 100000]).join(', ')}
                 onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, quick_amounts: e.target.value.split(',').map(v => Number(v.trim())).filter(v => v > 0) } }))} />
-              <p className="text-[10px] text-muted-foreground mt-1">Shortcut amounts shown to users</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{tr('Shortcut amounts shown to users')}</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Rewards Configuration */}
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Gift className="h-4 w-4" /> Rewards Configuration</CardTitle><CardDescription>Manage cashback thresholds, referral bonuses, and coupons</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Gift className="h-4 w-4" /> {tr('Rewards Configuration')}</CardTitle><CardDescription>{tr('Manage cashback thresholds, referral bonuses, and coupons')}</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div><Label className="text-sm font-medium">Cashback Enabled</Label><p className="text-xs text-muted-foreground">Earn cashback on qualifying transfers</p></div>
+              <div><Label className="text-sm font-medium">{tr('Cashback Enabled')}</Label><p className="text-xs text-muted-foreground">{tr('Earn cashback on qualifying transfers')}</p></div>
               <Switch checked={config.rewards_config?.cashback_enabled ?? true}
                 onCheckedChange={() => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_enabled: !(prev.rewards_config?.cashback_enabled ?? true) } }))} />
             </div>
             {(config.rewards_config?.cashback_enabled ?? true) && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Min Transfer Amount (XAF)</Label>
+                  <Label className="text-xs">{tr('Min Transfer Amount (XAF)')}</Label>
                   <Input type="number" value={config.rewards_config?.cashback_min_transfer || 10000}
                     onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_min_transfer: parseInt(e.target.value) || 10000 } }))} className="mt-1" />
                 </div>
                 <div>
-                  <Label className="text-xs">Cashback Rate (%)</Label>
+                  <Label className="text-xs">{tr('Cashback Rate (%)')}</Label>
                   <Input type="number" value={config.rewards_config?.cashback_rate || 1} min={0} max={100} step={0.1}
                     onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_rate: parseFloat(e.target.value) || 1 } }))} className="mt-1" />
                 </div>
               </div>
             )}
             <div className="border-t pt-3 flex items-center justify-between">
-              <div><Label className="text-sm font-medium">Referral Program</Label><p className="text-xs text-muted-foreground">Earn bonus for referring friends</p></div>
+              <div><Label className="text-sm font-medium">{tr('Referral Program')}</Label><p className="text-xs text-muted-foreground">{tr('Earn bonus for referring friends')}</p></div>
               <Switch checked={config.rewards_config?.referral_enabled ?? true}
                 onCheckedChange={() => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, referral_enabled: !(prev.rewards_config?.referral_enabled ?? true) } }))} />
             </div>
             {(config.rewards_config?.referral_enabled ?? true) && (
               <div>
-                <Label className="text-xs">Referral Bonus (XAF)</Label>
+                <Label className="text-xs">{tr('Referral Bonus (XAF)')}</Label>
                 <Input type="number" value={config.rewards_config?.referral_bonus || 500}
                   onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, referral_bonus: parseInt(e.target.value) || 500 } }))} className="mt-1" />
               </div>
             )}
             <div className="border-t pt-3">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">Coupons</Label>
+                <Label className="text-sm font-medium">{tr('Coupons')}</Label>
                 <Button variant="outline" size="sm" className="gap-1 h-7" onClick={() => setConfig(prev => ({
                   ...prev, rewards_config: {
                     ...prev.rewards_config,
                     coupons: [...(prev.rewards_config?.coupons || []), { name: '', description: '', code: '', active: true }]
                   }
-                }))}><Plus className="h-3 w-3" /> Add Coupon</Button>
+                }))}><Plus className="h-3 w-3" /> {tr('Add Coupon')}</Button>
               </div>
               {(config.rewards_config?.coupons || []).map((coupon: any, idx: number) => (
                 <div key={idx} className="rounded-lg border p-3 mb-2 space-y-2">
                   <div className="flex items-center justify-between">
-                    <Input placeholder="Coupon name" value={coupon.name} className="h-8 text-xs flex-1 mr-2"
+                    <Input placeholder={tr('Coupon name')} value={coupon.name} className="h-8 text-xs flex-1 mr-2"
                       onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], name: e.target.value }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
                     <Switch checked={coupon.active} onCheckedChange={() => {
                       const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], active: !c[idx].active };
@@ -864,9 +865,9 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
                       setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } }));
                     }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                   </div>
-                  <Input placeholder="Description" value={coupon.description} className="h-8 text-xs"
+                  <Input placeholder={tr('Description')} value={coupon.description} className="h-8 text-xs"
                     onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], description: e.target.value }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
-                  <Input placeholder="Code (e.g. WELCOME10)" value={coupon.code} className="h-8 text-xs font-mono"
+                  <Input placeholder={tr('Code (e.g. WELCOME10)')} value={coupon.code} className="h-8 text-xs font-mono"
                     onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], code: e.target.value.toUpperCase() }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
                 </div>
               ))}
@@ -876,7 +877,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
         {/* Layout Style */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Layout Style</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{tr('Layout Style')}</CardTitle></CardHeader>
           <CardContent>
             <RadioGroup value={config.layout_style || 'modern'} onValueChange={(v) => setConfig(prev => ({ ...prev, layout_style: v as LayoutStyle }))} className="grid grid-cols-5 gap-2">
               {([
@@ -899,7 +900,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         {/* Section Order */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Home Section Order</CardTitle>
+            <CardTitle className="text-base">{tr('Home Section Order')}</CardTitle>
             {!hasMediaBanner && (
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setConfig(prev => ({ ...prev, section_order: [...(prev.section_order || defaultSectionOrder), 'media_banner'] }))}>
                 <Plus className="h-3.5 w-3.5" /> Add Media Banner
@@ -932,15 +933,15 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         {/* Support Contact */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2"><Phone className="h-4 w-4" /> Support Contact</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Phone className="h-4 w-4" /> {tr('Support Contact')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <Label className="text-xs">Support Phone Number</Label>
+              <Label className="text-xs">{tr('Support Phone Number')}</Label>
               <Input placeholder="+237 233 000 000" value={config.support_phone || ''} onChange={(e) => setConfig(prev => ({ ...prev, support_phone: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label className="text-xs">Support Email</Label>
+              <Label className="text-xs">{tr('Support Email')}</Label>
               <Input placeholder="support@yourbank.com" value={config.support_email || ''} onChange={(e) => setConfig(prev => ({ ...prev, support_email: e.target.value }))} className="mt-1" />
             </div>
           </CardContent>
@@ -1089,13 +1090,13 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5" /> Hero Section Appearance</CardTitle>
-        <CardDescription>Customize the hero background on the Customer App home screen</CardDescription>
+        <CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5" /> {tr('Hero Section Appearance')}</CardTitle>
+        <CardDescription>{tr('Customize the hero background on the Customer App home screen')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Preview */}
         <div>
-          <Label className="text-sm font-medium mb-2 block">Preview</Label>
+          <Label className="text-sm font-medium mb-2 block">{tr('Preview')}</Label>
           <div
             className="rounded-2xl h-40 flex items-end p-4 relative overflow-hidden"
             style={{
@@ -1115,18 +1116,18 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
               </>
             )}
             <div className="relative text-white z-10">
-              <p className="text-xs opacity-80">Getting funds</p>
-              <p className="text-2xl font-bold">1,250,000 XAF</p>
+              <p className="text-xs opacity-80">{tr('Getting funds')}</p>
+              <p className="text-2xl font-bold">{tr('1,250,000 XAF')}</p>
             </div>
           </div>
         </div>
 
         {/* Background Color */}
         <div className="space-y-2">
-          <Label>Background Color</Label>
-          <p className="text-xs text-muted-foreground">CSS color value (e.g. #1a3a5c, hsl(217 91% 35%), linear-gradient(...)). Used when no image/video is set.</p>
+          <Label>{tr('Background Color')}</Label>
+          <p className="text-xs text-muted-foreground">{tr('CSS color value (e.g. #1a3a5c, hsl(217 91% 35%), linear-gradient(...)). Used when no image/video is set.')}</p>
           <div className="flex gap-2">
-            <Input value={bgColor} onChange={e => setBgColor(e.target.value)} placeholder="e.g. #1a3a5c or hsl(217, 91%, 35%)" />
+            <Input value={bgColor} onChange={e => setBgColor(e.target.value)} placeholder={tr('e.g. #1a3a5c or hsl(217, 91%, 35%)')} />
             {bgColor && (
               <div className="h-10 w-10 rounded-lg border shrink-0" style={{ background: bgColor }} />
             )}
@@ -1135,14 +1136,14 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
 
         {/* Background Image / Video */}
         <div className="space-y-2">
-          <Label>Background Image or Video</Label>
+          <Label>{tr('Background Image or Video')}</Label>
           <p className="text-xs text-muted-foreground">Upload an image (JPG, PNG, WebP) or video (MP4, WebM, max {MAX_VIDEO_SIZE_MB}MB). Overrides the color when set.</p>
           {bgImage && (
             <div className="relative w-full max-w-sm rounded-lg border overflow-hidden bg-muted">
               {isVideo ? (
                 <video src={bgImage} autoPlay loop muted playsInline className="w-full h-32 object-cover" crossOrigin="anonymous" />
               ) : (
-                <img src={bgImage} alt="Hero background" className="w-full h-32 object-cover" />
+                <img src={bgImage} alt={tr('Hero background')} className="w-full h-32 object-cover" />
               )}
               <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => { setBgImage(''); setMediaType(''); }}>
                 <Trash2 className="h-3 w-3 mr-1" /> Remove
@@ -1150,7 +1151,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
             </div>
           )}
           <div className="flex items-center gap-2">
-            <Input value={bgImage} onChange={e => setBgImage(e.target.value)} placeholder="Image/Video URL or upload below" />
+            <Input value={bgImage} onChange={e => setBgImage(e.target.value)} placeholder={tr('Image/Video URL or upload below')} />
             <label className="cursor-pointer">
               <input type="file" accept="image/*,video/mp4,video/webm,video/ogg" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleMediaUpload(f); }} />
               <Button variant="outline" size="icon" asChild disabled={uploading}>
@@ -1160,24 +1161,24 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
           </div>
           {bgImage && (
             <div className="flex items-center gap-2 pt-1">
-              <Label className="text-xs">Media type:</Label>
+              <Label className="text-xs">{tr('Media type:')}</Label>
               <select
                 value={mediaType || (isVideo ? 'video' : 'image')}
                 onChange={e => setMediaType(e.target.value as 'image' | 'video')}
                 className="text-xs border rounded px-2 py-1 bg-background"
               >
-                <option value="image">Image</option>
-                <option value="video">Video</option>
+                <option value="image">{tr('Image')}</option>
+                <option value="video">{tr('Video')}</option>
               </select>
-              <p className="text-xs text-muted-foreground">Set this if using a URL that doesn't end in .mp4/.webm</p>
+              <p className="text-xs text-muted-foreground">{tr('Set this if using a URL that doesn\'t end in .mp4/.webm')}</p>
             </div>
           )}
         </div>
 
         {/* Hero Action Icon Background Colors */}
         <div className="space-y-3">
-          <Label>Action Button Icon Backgrounds</Label>
-          <p className="text-xs text-muted-foreground">Set the background color of hero action circles (Accounts, Cash Out, Request, Pay Links).</p>
+          <Label>{tr('Action Button Icon Backgrounds')}</Label>
+          <p className="text-xs text-muted-foreground">{tr('Set the background color of hero action circles (Accounts, Cash Out, Request, Pay Links).')}</p>
           <div className="grid grid-cols-2 gap-3">
             {([
               { key: 'accounts', label: 'Accounts' },
@@ -1208,8 +1209,8 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
 
         {/* Hero Action Button Opacity */}
         <div className="space-y-3">
-          <Label>Action Button Opacity</Label>
-          <p className="text-xs text-muted-foreground">Control the background opacity of hero action circles (0% transparent – 100% solid).</p>
+          <Label>{tr('Action Button Opacity')}</Label>
+          <p className="text-xs text-muted-foreground">{tr('Control the background opacity of hero action circles (0% transparent – 100% solid).')}</p>
           <div className="flex items-center gap-3">
             <input
               type="range"
@@ -1282,16 +1283,16 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> Typography & Colors</CardTitle>
-        <CardDescription>Control font sizes and text colors across the Consumer & Banking apps</CardDescription>
+        <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> {tr('Typography & Colors')}</CardTitle>
+        <CardDescription>{tr('Control font sizes and text colors across the Consumer & Banking apps')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Global Settings */}
         <div className="space-y-4 rounded-xl border p-4">
-          <h4 className="text-sm font-bold">Global Defaults</h4>
+          <h4 className="text-sm font-bold">{tr('Global Defaults')}</h4>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label className="text-xs">Font Size Multiplier</Label>
+              <Label className="text-xs">{tr('Font Size Multiplier')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <Input
                   type="number" step="0.1" min="0.5" max="3"
@@ -1303,14 +1304,14 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
               </div>
             </div>
             <div>
-              <Label className="text-xs">Heading Color</Label>
+              <Label className="text-xs">{tr('Heading Color')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <input type="color" value={typoConfig.global_heading_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_heading_color: e.target.value }))} className="h-8 w-8 rounded border cursor-pointer" />
                 <Input value={typoConfig.global_heading_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_heading_color: e.target.value }))} className="h-8 text-xs" />
               </div>
             </div>
             <div>
-              <Label className="text-xs">Body Text Color</Label>
+              <Label className="text-xs">{tr('Body Text Color')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <input type="color" value={typoConfig.global_body_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_body_color: e.target.value }))} className="h-8 w-8 rounded border cursor-pointer" />
                 <Input value={typoConfig.global_body_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_body_color: e.target.value }))} className="h-8 text-xs" />
@@ -1321,8 +1322,8 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
 
         {/* Per-Section Overrides */}
         <div className="space-y-3">
-          <h4 className="text-sm font-bold">Per-Section Overrides</h4>
-          <p className="text-xs text-muted-foreground">Override global settings for specific sections. Leave blank to use global defaults.</p>
+          <h4 className="text-sm font-bold">{tr('Per-Section Overrides')}</h4>
+          <p className="text-xs text-muted-foreground">{tr('Override global settings for specific sections. Leave blank to use global defaults.')}</p>
           <div className="space-y-2">
             {TYPOGRAPHY_SECTIONS.map(({ key, label }) => {
               const sec = typoConfig.sections[key] || { font_size_multiplier: 0, heading_color: '', body_color: '' };
@@ -1330,16 +1331,16 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
                 <div key={key} className="grid grid-cols-4 gap-3 items-center rounded-lg border p-3">
                   <span className="text-xs font-semibold">{label}</span>
                   <div className="flex items-center gap-1">
-                    <Input type="number" step="0.1" min="0" max="3" placeholder="Global" value={sec.font_size_multiplier || ''} onChange={e => updateSection(key, 'font_size_multiplier', parseFloat(e.target.value) || 0)} className="h-7 text-xs" />
+                    <Input type="number" step="0.1" min="0" max="3" placeholder={tr('Global')} value={sec.font_size_multiplier || ''} onChange={e => updateSection(key, 'font_size_multiplier', parseFloat(e.target.value) || 0)} className="h-7 text-xs" />
                     <span className="text-[10px] text-muted-foreground">x</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <input type="color" value={sec.heading_color || typoConfig.global_heading_color} onChange={e => updateSection(key, 'heading_color', e.target.value)} className="h-6 w-6 rounded border cursor-pointer shrink-0" />
-                    <Input value={sec.heading_color || ''} onChange={e => updateSection(key, 'heading_color', e.target.value)} placeholder="Global" className="h-7 text-xs" />
+                    <Input value={sec.heading_color || ''} onChange={e => updateSection(key, 'heading_color', e.target.value)} placeholder={tr('Global')} className="h-7 text-xs" />
                   </div>
                   <div className="flex items-center gap-1">
                     <input type="color" value={sec.body_color || typoConfig.global_body_color} onChange={e => updateSection(key, 'body_color', e.target.value)} className="h-6 w-6 rounded border cursor-pointer shrink-0" />
-                    <Input value={sec.body_color || ''} onChange={e => updateSection(key, 'body_color', e.target.value)} placeholder="Global" className="h-7 text-xs" />
+                    <Input value={sec.body_color || ''} onChange={e => updateSection(key, 'body_color', e.target.value)} placeholder={tr('Global')} className="h-7 text-xs" />
                   </div>
                 </div>
               );
@@ -1405,16 +1406,16 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Travel & Tourism Card</CardTitle>
-        <CardDescription>Customize the travel card appearance on the customer home page</CardDescription>
+        <CardTitle className="text-base">{tr('Travel & Tourism Card')}</CardTitle>
+        <CardDescription>{tr('Customize the travel card appearance on the customer home page')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Background Image */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Background Image</Label>
+          <Label className="text-sm font-medium">{tr('Background Image')}</Label>
           {config.bg_image && (
             <div className="relative w-full h-32 rounded-xl overflow-hidden border border-border">
-              <img src={config.bg_image} alt="Travel card bg" className="w-full h-full object-cover" />
+              <img src={config.bg_image} alt={tr('Travel card bg')} className="w-full h-full object-cover" />
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
               <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setConfig(prev => ({ ...prev, bg_image: '' }))}>
                 <Trash2 className="h-3 w-3" />
@@ -1443,20 +1444,20 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
             className="w-full"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>0% (transparent)</span>
-            <span>100% (opaque)</span>
+            <span>{tr('0% (transparent)')}</span>
+            <span>{tr('100% (opaque)')}</span>
           </div>
         </div>
 
         {/* Button Text */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Button Text</Label>
-          <Input value={config.button_text} onChange={(e) => setConfig(prev => ({ ...prev, button_text: e.target.value }))} placeholder="Book Now" />
+          <Label className="text-sm font-medium">{tr('Button Text')}</Label>
+          <Input value={config.button_text} onChange={(e) => setConfig(prev => ({ ...prev, button_text: e.target.value }))} placeholder={tr('Book Now')} />
         </div>
 
         {/* Button Background Color */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Button Background Color</Label>
+          <Label className="text-sm font-medium">{tr('Button Background Color')}</Label>
           <div className="flex items-center gap-3">
             <input type="color" value={config.button_bg_color} onChange={(e) => setConfig(prev => ({ ...prev, button_bg_color: e.target.value }))} className="h-9 w-12 rounded border border-border cursor-pointer" />
             <Input value={config.button_bg_color} onChange={(e) => setConfig(prev => ({ ...prev, button_bg_color: e.target.value }))} className="flex-1 font-mono text-sm" />
@@ -1465,7 +1466,7 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
 
         {/* Button Size */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Button Size</Label>
+          <Label className="text-sm font-medium">{tr('Button Size')}</Label>
           <RadioGroup value={config.button_size} onValueChange={(v) => setConfig(prev => ({ ...prev, button_size: v as 'sm' | 'md' | 'lg' }))}>
             <div className="flex gap-4">
               {(['sm', 'md', 'lg'] as const).map(s => (
@@ -1489,6 +1490,7 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
 
 // ─── Main Component ───
 export default function CustomerAppManagement() {
+  const tr = useHarvestedT('customer');
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -1551,16 +1553,16 @@ export default function CustomerAppManagement() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader icon={Users} title="Customer App Management" description="Monitor customer accounts, features, and app activity" />
+      <AdminPageHeader icon={Users} title={tr('Customer App Management')} description={tr('Monitor customer accounts, features, and app activity')} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Institution List */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Institutions</CardTitle>
+            <CardTitle className="text-base">{tr('Institutions')}</CardTitle>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-9" />
+              <Input placeholder={tr('Search...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-9" />
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -1568,7 +1570,7 @@ export default function CustomerAppManagement() {
               {loadingInstitutions ? (
                 <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
               ) : filteredInstitutions.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center p-6">No institutions found</p>
+                <p className="text-sm text-muted-foreground text-center p-6">{tr('No institutions found')}</p>
               ) : (
                 filteredInstitutions.map((inst: any) => (
                   <button key={inst.id} onClick={() => setSelectedInstitution(inst.id)}
@@ -1598,8 +1600,8 @@ export default function CustomerAppManagement() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
-                <h3 className="text-lg font-medium">Select an Institution</h3>
-                <p className="text-sm text-muted-foreground mt-1">Choose an institution from the left to manage its customer app</p>
+                <h3 className="text-lg font-medium">{tr('Select an Institution')}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{tr('Choose an institution from the left to manage its customer app')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -1616,7 +1618,7 @@ export default function CustomerAppManagement() {
                   )}
                   <div className="flex-1">
                     <h2 className="text-lg font-bold">{selectedInst?.institution_name}</h2>
-                    <p className="text-xs font-medium text-primary">Customer Mobile App Configuration</p>
+                    <p className="text-xs font-medium text-primary">{tr('Customer Mobile App Configuration')}</p>
                     <p className="text-sm text-muted-foreground capitalize">{selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}</p>
                   </div>
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`${API_CONFIG.SITE_URL}/app/${selectedInstitution}/home`, '_blank')}>
@@ -1628,32 +1630,32 @@ export default function CustomerAppManagement() {
 
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={Users} label="Active Customers" value={linkedAccounts.filter((a: any) => a.account_type !== 'none').length} color="bg-blue-500" />
-                <StatCard icon={Phone} label="MoMo Orange Users" value={linkedAccounts.filter((a: any) => a.account_type === 'momo_orange').length} color="bg-orange-500" />
-                <StatCard icon={Phone} label="MoMo MTN Users" value={linkedAccounts.filter((a: any) => a.account_type === 'momo_mtn').length} color="bg-amber-500" />
-                <StatCard icon={Landmark} label="Bank-Linked Users" value={linkedAccounts.filter((a: any) => a.account_type === 'bank').length} color="bg-emerald-500" />
-                <StatCard icon={Lock} label="View-Only Users" value={linkedAccounts.filter((a: any) => a.account_type === 'none').length} color="bg-slate-500" />
-                <StatCard icon={Home} label="Piggy Plans" value={piggyPlans.length} color="bg-emerald-600" />
-                <StatCard icon={Users} label="Njangi Groups" value={njangiGroups.length} color="bg-violet-600" />
-                <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-pink-500" />
+                <StatCard icon={Users} label={tr('Active Customers')} value={linkedAccounts.filter((a: any) => a.account_type !== 'none').length} color="bg-blue-500" />
+                <StatCard icon={Phone} label={tr('MoMo Orange Users')} value={linkedAccounts.filter((a: any) => a.account_type === 'momo_orange').length} color="bg-orange-500" />
+                <StatCard icon={Phone} label={tr('MoMo MTN Users')} value={linkedAccounts.filter((a: any) => a.account_type === 'momo_mtn').length} color="bg-amber-500" />
+                <StatCard icon={Landmark} label={tr('Bank-Linked Users')} value={linkedAccounts.filter((a: any) => a.account_type === 'bank').length} color="bg-emerald-500" />
+                <StatCard icon={Lock} label={tr('View-Only Users')} value={linkedAccounts.filter((a: any) => a.account_type === 'none').length} color="bg-slate-500" />
+                <StatCard icon={Home} label={tr('Piggy Plans')} value={piggyPlans.length} color="bg-emerald-600" />
+                <StatCard icon={Users} label={tr('Njangi Groups')} value={njangiGroups.length} color="bg-violet-600" />
+                <StatCard icon={BarChart3} label={tr('Avg Credit Score')} value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-pink-500" />
               </div>
 
               {/* Tabs */}
               <Tabs defaultValue="linked">
                 <TabsList className="w-full justify-start flex-wrap h-auto">
-                  <TabsTrigger value="linked" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Linked Accounts</TabsTrigger>
-                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Customer Accounts</TabsTrigger>
-                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Customer Transactions</TabsTrigger>
-                  <TabsTrigger value="piggybank" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Piggy Bank</TabsTrigger>
-                  <TabsTrigger value="njangi" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Njangi</TabsTrigger>
-                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Customer Cards</TabsTrigger>
-                  <TabsTrigger value="credit" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
-                  <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
-                  <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
-                  <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Hero Section</TabsTrigger>
-                  <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Typography</TabsTrigger>
-                  <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> Travel Card</TabsTrigger>
-                  <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> Storefronts</TabsTrigger>
+                  <TabsTrigger value="linked" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> {tr('Linked Accounts')}</TabsTrigger>
+                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {tr('Customer Accounts')}</TabsTrigger>
+                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> {tr('Customer Transactions')}</TabsTrigger>
+                  <TabsTrigger value="piggybank" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> {tr('Piggy Bank')}</TabsTrigger>
+                  <TabsTrigger value="njangi" className="gap-1.5"><Users className="h-3.5 w-3.5" /> {tr('Njangi')}</TabsTrigger>
+                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {tr('Customer Cards')}</TabsTrigger>
+                  <TabsTrigger value="credit" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> {tr('Credit Scores')}</TabsTrigger>
+                  <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> {tr('Features')}</TabsTrigger>
+                  <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> {tr('Walkthrough')}</TabsTrigger>
+                  <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> {tr('Hero Section')}</TabsTrigger>
+                  <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> {tr('Typography')}</TabsTrigger>
+                  <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> {tr('Travel Card')}</TabsTrigger>
+                  <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {tr('Storefronts')}</TabsTrigger>
                 </TabsList>
 
                 {/* Linked Accounts Tab */}
@@ -1665,14 +1667,14 @@ export default function CustomerAppManagement() {
                       ) : linkedAccounts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-center px-4">
                           <UserCheck className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                          <p className="text-sm font-medium">No customers have linked accounts yet</p>
-                          <p className="text-xs text-muted-foreground mt-1 max-w-sm">Share your customer app link to get started:</p>
+                          <p className="text-sm font-medium">{tr('No customers have linked accounts yet')}</p>
+                          <p className="text-xs text-muted-foreground mt-1 max-w-sm">{tr('Share your customer app link to get started:')}</p>
                           <code className="mt-2 rounded bg-muted px-3 py-1.5 text-xs font-mono text-primary select-all">{API_CONFIG.SITE_URL}/app/{selectedInstitution}/home</code>
                         </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Customer</TableHead><TableHead>Phone</TableHead><TableHead>Account Type</TableHead><TableHead>Account Number</TableHead><TableHead>Status</TableHead><TableHead>Linked</TableHead>
+                            <TableHead>{tr('Customer')}</TableHead><TableHead>{tr('Phone')}</TableHead><TableHead>{tr('Account Type')}</TableHead><TableHead>{tr('Account Number')}</TableHead><TableHead>{tr('Status')}</TableHead><TableHead>{tr('Linked')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {linkedAccounts.map((la: any) => (
@@ -1705,13 +1707,13 @@ export default function CustomerAppManagement() {
                       ) : accounts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-center px-4">
                           <CreditCard className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                          <p className="text-sm font-medium">No customer accounts found</p>
-                          <p className="text-xs text-muted-foreground mt-1">Customer accounts will appear here once users link their accounts via the customer app.</p>
+                          <p className="text-sm font-medium">{tr('No customer accounts found')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{tr('Customer accounts will appear here once users link their accounts via the customer app.')}</p>
                         </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Account Holder</TableHead><TableHead>Account ID</TableHead><TableHead>Type</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Balance</TableHead><TableHead>Status</TableHead>
+                            <TableHead>{tr('Account Holder')}</TableHead><TableHead>{tr('Account ID')}</TableHead><TableHead>{tr('Type')}</TableHead><TableHead>{tr('Currency')}</TableHead><TableHead className="text-right">{tr('Balance')}</TableHead><TableHead>{tr('Status')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {accounts.map((acc: any) => (
@@ -1740,13 +1742,13 @@ export default function CustomerAppManagement() {
                       ) : transactions.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-center px-4">
                           <ArrowRightLeft className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                          <p className="text-sm font-medium">No customer transactions found</p>
-                          <p className="text-xs text-muted-foreground mt-1">Transactions from customer app users will appear here.</p>
+                          <p className="text-sm font-medium">{tr('No customer transactions found')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{tr('Transactions from customer app users will appear here.')}</p>
                         </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Date</TableHead><TableHead>Reference</TableHead><TableHead>Description</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead>
+                            <TableHead>{tr('Date')}</TableHead><TableHead>{tr('Reference')}</TableHead><TableHead>{tr('Description')}</TableHead><TableHead>{tr('Type')}</TableHead><TableHead className="text-right">{tr('Amount')}</TableHead><TableHead>{tr('Status')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {transactions.map((txn: any) => (
@@ -1775,11 +1777,11 @@ export default function CustomerAppManagement() {
                       {loadingPiggy ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : piggyPlans.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No piggy bank plans found</p>
+                        <p className="text-sm text-muted-foreground text-center p-8">{tr('No piggy bank plans found')}</p>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Plan Name</TableHead><TableHead className="text-right">Target</TableHead><TableHead className="text-right">Saved</TableHead><TableHead>Frequency</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                            <TableHead>{tr('Plan Name')}</TableHead><TableHead className="text-right">{tr('Target')}</TableHead><TableHead className="text-right">{tr('Saved')}</TableHead><TableHead>{tr('Frequency')}</TableHead><TableHead>{tr('Status')}</TableHead><TableHead>{tr('Created')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {piggyPlans.map((plan: any) => (
@@ -1806,11 +1808,11 @@ export default function CustomerAppManagement() {
                       {loadingNjangi ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : njangiGroups.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No Njangi groups found</p>
+                        <p className="text-sm text-muted-foreground text-center p-8">{tr('No Njangi groups found')}</p>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Group Name</TableHead><TableHead>Members</TableHead><TableHead className="text-right">Contribution</TableHead><TableHead>Frequency</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                            <TableHead>{tr('Group Name')}</TableHead><TableHead>{tr('Members')}</TableHead><TableHead className="text-right">{tr('Contribution')}</TableHead><TableHead>{tr('Frequency')}</TableHead><TableHead>{tr('Status')}</TableHead><TableHead>{tr('Created')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {njangiGroups.map((group: any) => (
@@ -1837,11 +1839,11 @@ export default function CustomerAppManagement() {
                       {loadingCards ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : virtualCards.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No virtual cards found</p>
+                        <p className="text-sm text-muted-foreground text-center p-8">{tr('No virtual cards found')}</p>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>Card Number</TableHead><TableHead>Type</TableHead><TableHead>Provider</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                            <TableHead>{tr('Card Number')}</TableHead><TableHead>{tr('Type')}</TableHead><TableHead>{tr('Provider')}</TableHead><TableHead>{tr('Status')}</TableHead><TableHead>{tr('Created')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {virtualCards.map((card: any) => (
@@ -1867,11 +1869,11 @@ export default function CustomerAppManagement() {
                       {loadingCredit ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : creditScores.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No credit scores found</p>
+                        <p className="text-sm text-muted-foreground text-center p-8">{tr('No credit scores found')}</p>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
-                            <TableHead>User ID</TableHead><TableHead>Score</TableHead><TableHead>Category</TableHead><TableHead>Change</TableHead><TableHead>Calculated</TableHead>
+                            <TableHead>{tr('User ID')}</TableHead><TableHead>{tr('Score')}</TableHead><TableHead>{tr('Category')}</TableHead><TableHead>{tr('Change')}</TableHead><TableHead>{tr('Calculated')}</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {creditScores.map((cs: any) => (
@@ -1879,7 +1881,7 @@ export default function CustomerAppManagement() {
                                 <TableCell className="font-mono text-xs">{cs.user_id?.slice(0, 8)}...</TableCell>
                                 <TableCell className="font-bold text-lg">{cs.score}</TableCell>
                                 <TableCell><Badge variant={cs.score >= 700 ? "default" : cs.score >= 500 ? "secondary" : "destructive"} className="text-xs capitalize">{cs.category || (cs.score >= 700 ? 'Good' : cs.score >= 500 ? 'Fair' : 'Poor')}</Badge></TableCell>
-                                <TableCell className={cs.score_change > 0 ? 'text-emerald-600' : cs.score_change < 0 ? 'text-red-500' : ''}>
+                                <TableCell className={cs.score_change > {tr('0 ? \'text-emerald-600\' : cs.score_change')} < 0 ? 'text-red-500' : ''}>
                                   {cs.score_change > 0 ? '+' : ''}{cs.score_change || 0}
                                 </TableCell>
                                 <TableCell className="text-sm">{cs.calculated_at ? format(new Date(cs.calculated_at), "MMM d, yyyy") : "—"}</TableCell>

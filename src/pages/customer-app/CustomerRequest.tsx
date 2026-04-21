@@ -8,8 +8,10 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 import { API_CONFIG } from '@/config/api';
 import { QRCodeSVG } from 'qrcode.react';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 const CustomerRequest: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
@@ -93,7 +95,7 @@ const CustomerRequest: React.FC = () => {
         <button onClick={() => generated ? handleReset() : navigate(-1)}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Request Money</h1>
+        <h1 className="text-xl font-bold text-foreground">{tr('Request Money')}</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -101,7 +103,7 @@ const CustomerRequest: React.FC = () => {
           <motion.div key="input" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-5">
             {/* Amount Input */}
             <div className="flex flex-col items-center gap-2 rounded-3xl bg-[hsl(150,35%,30%)] p-8">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Request Amount</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">{tr('Request Amount')}</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-[hsl(0,0%,100%)]/60">XAF</span>
                 <input
@@ -119,7 +121,7 @@ const CustomerRequest: React.FC = () => {
             {kangId && (
               <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Your KANG ID</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Your KANG ID')}</p>
                   <p className="font-mono text-sm font-bold text-foreground mt-0.5">{kangId}</p>
                 </div>
               </div>
@@ -144,7 +146,7 @@ const CustomerRequest: React.FC = () => {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <CheckCircle2 className="h-4 w-4 text-[hsl(150,40%,35%)]" strokeWidth={2} />
-                <p className="text-xs font-semibold text-[hsl(150,40%,35%)]">Payment Request Created</p>
+                <p className="text-xs font-semibold text-[hsl(150,40%,35%)]">{tr('Payment Request Created')}</p>
               </div>
               <p className="text-2xl font-bold text-foreground">{Number(amount).toLocaleString()} XAF</p>
               <p className="mt-1 font-mono text-xs text-muted-foreground">{kangId}</p>
@@ -169,7 +171,7 @@ const CustomerRequest: React.FC = () => {
                 className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(150,40%,90%)] p-4 active:scale-95 transition-transform"
               >
                 <Share2 className="h-5 w-5 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
-                <span className="text-[10px] font-bold text-foreground">Share</span>
+                <span className="text-[10px] font-bold text-foreground">{tr('Share')}</span>
               </button>
 
               <button
@@ -177,13 +179,13 @@ const CustomerRequest: React.FC = () => {
                 className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(45,70%,90%)] p-4 active:scale-95 transition-transform"
               >
                 <ExternalLink className="h-5 w-5 text-[hsl(45,60%,35%)]" strokeWidth={1.5} />
-                <span className="text-[10px] font-bold text-foreground">Pay Link</span>
+                <span className="text-[10px] font-bold text-foreground">{tr('Pay Link')}</span>
               </button>
             </div>
 
             {/* Pay link preview */}
             <div className="w-full rounded-2xl border border-border bg-muted/30 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Payment Link</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{tr('Payment Link')}</p>
               <p className="font-mono text-[11px] text-foreground/70 break-all leading-relaxed">{payLink}</p>
             </div>
 

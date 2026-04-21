@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 type Intent = {
   id: string;
@@ -26,6 +27,7 @@ type Intent = {
 type Step = "loading" | "login" | "approve" | "processing" | "success" | "rejected" | "error" | "expired";
 
 export default function PayByBankAuthorize() {
+  const tr = useHarvestedT('customer');
   const [searchParams] = useSearchParams();
   const intentId = searchParams.get("intent_id");
   const stateParam = searchParams.get("state");
@@ -144,10 +146,10 @@ export default function PayByBankAuthorize() {
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <Shield className="h-4 w-4" />
-            <span className="text-sm font-medium">Secure Payment Authorization</span>
+            <span className="text-sm font-medium">{tr('Secure Payment Authorization')}</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Kang Open Banking</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pay by Bank</p>
+          <h1 className="text-2xl font-bold text-foreground">{tr('Kang Open Banking')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{tr('Pay by Bank')}</p>
         </div>
 
         <Card className="border-border/50 shadow-xl">
@@ -157,7 +159,7 @@ export default function PayByBankAuthorize() {
               {step === "loading" && (
                 <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center py-12 gap-4">
                   <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  <p className="text-muted-foreground">Loading payment details...</p>
+                  <p className="text-muted-foreground">{tr('Loading payment details...')}</p>
                 </motion.div>
               )}
 
@@ -165,7 +167,7 @@ export default function PayByBankAuthorize() {
               {step === "login" && intent && (
                 <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Sign in to authorize payment to</p>
+                    <p className="text-sm text-muted-foreground">{tr('Sign in to authorize payment to')}</p>
                     <p className="text-lg font-semibold text-foreground mt-1">{intent.merchant_name || "Merchant"}</p>
                     <p className="text-2xl font-bold text-primary mt-2">
                       {intent.currency} {Number(intent.amount).toLocaleString()}
@@ -173,11 +175,11 @@ export default function PayByBankAuthorize() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{tr('Email')}</Label>
                       <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" />
                     </div>
                     <div>
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password">{tr('Password')}</Label>
                       <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleLogin()} />
                     </div>
                     <Button onClick={handleLogin} className="w-full" size="lg" disabled={loginLoading || !email || !password}>
@@ -205,18 +207,18 @@ export default function PayByBankAuthorize() {
 
                   <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Amount</span>
+                      <span className="text-sm text-muted-foreground">{tr('Amount')}</span>
                       <span className="text-lg font-bold text-foreground">{intent.currency} {Number(intent.amount).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Payment Method</span>
+                      <span className="text-sm text-muted-foreground">{tr('Payment Method')}</span>
                       <span className="text-sm font-medium text-foreground flex items-center gap-1">
                         <CreditCard className="h-3.5 w-3.5" /> Bank Account
                       </span>
                     </div>
                     {timeLeft > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Expires in</span>
+                        <span className="text-sm text-muted-foreground">{tr('Expires in')}</span>
                         <span className="text-sm font-medium text-orange-600">{minutes}:{String(seconds).padStart(2, '0')}</span>
                       </div>
                     )}
@@ -242,7 +244,7 @@ export default function PayByBankAuthorize() {
               {step === "processing" && (
                 <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center py-12 gap-4">
                   <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  <p className="text-muted-foreground">Processing your authorization...</p>
+                  <p className="text-muted-foreground">{tr('Processing your authorization...')}</p>
                 </motion.div>
               )}
 
@@ -252,8 +254,8 @@ export default function PayByBankAuthorize() {
                   <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground">Payment Authorized</h2>
-                  <p className="text-sm text-muted-foreground">Redirecting you back to the merchant...</p>
+                  <h2 className="text-xl font-bold text-foreground">{tr('Payment Authorized')}</h2>
+                  <p className="text-sm text-muted-foreground">{tr('Redirecting you back to the merchant...')}</p>
                   {redirectUrl && (
                     <Button variant="outline" size="sm" onClick={() => window.location.href = redirectUrl}>
                       Return to Merchant
@@ -268,8 +270,8 @@ export default function PayByBankAuthorize() {
                   <div className="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                     <XCircle className="h-8 w-8 text-red-600" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground">Payment Rejected</h2>
-                  <p className="text-sm text-muted-foreground">Redirecting you back...</p>
+                  <h2 className="text-xl font-bold text-foreground">{tr('Payment Rejected')}</h2>
+                  <p className="text-sm text-muted-foreground">{tr('Redirecting you back...')}</p>
                 </motion.div>
               )}
 
@@ -277,8 +279,8 @@ export default function PayByBankAuthorize() {
               {step === "error" && (
                 <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-8 gap-4 text-center">
                   <AlertTriangle className="h-12 w-12 text-destructive" />
-                  <h2 className="text-xl font-bold text-foreground">Something went wrong</h2>
-                  <p className="text-sm text-muted-foreground">This payment link may be invalid or has already been used.</p>
+                  <h2 className="text-xl font-bold text-foreground">{tr('Something went wrong')}</h2>
+                  <p className="text-sm text-muted-foreground">{tr('This payment link may be invalid or has already been used.')}</p>
                 </motion.div>
               )}
 
@@ -286,8 +288,8 @@ export default function PayByBankAuthorize() {
               {step === "expired" && (
                 <motion.div key="expired" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-8 gap-4 text-center">
                   <AlertTriangle className="h-12 w-12 text-orange-500" />
-                  <h2 className="text-xl font-bold text-foreground">Payment Expired</h2>
-                  <p className="text-sm text-muted-foreground">This payment authorization has expired. Please start a new payment from the merchant.</p>
+                  <h2 className="text-xl font-bold text-foreground">{tr('Payment Expired')}</h2>
+                  <p className="text-sm text-muted-foreground">{tr('This payment authorization has expired. Please start a new payment from the merchant.')}</p>
                 </motion.div>
               )}
             </AnimatePresence>

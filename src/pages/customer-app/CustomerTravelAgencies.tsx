@@ -4,6 +4,7 @@ import { ChevronLeft, MapPin, Loader2, ArrowRight, Star, Route, Shield, Search, 
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { getTheme } from '@/lib/travel-theme';
+import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 interface Agency {
   id: string;
@@ -15,6 +16,7 @@ interface Agency {
 }
 
 const CustomerTravelAgencies: React.FC = () => {
+  const tr = useHarvestedT('customer');
   const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
   const [agencies, setAgencies] = useState<Agency[]>([]);
@@ -60,7 +62,7 @@ const CustomerTravelAgencies: React.FC = () => {
             <div className="flex-1" />
             <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
               <Shield className="h-3.5 w-3.5" style={{ color: theme.fg }} />
-              <span className="text-[11px] font-semibold" style={{ color: theme.fg, opacity: 0.85 }}>Verified</span>
+              <span className="text-[11px] font-semibold" style={{ color: theme.fg, opacity: 0.85 }}>{tr('Verified')}</span>
             </div>
           </div>
 
@@ -71,7 +73,7 @@ const CustomerTravelAgencies: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.fg }}>{theme.label}</h1>
-                <p className="text-[12px] font-medium" style={{ color: theme.fg, opacity: 0.6 }}>Choose an agency to browse trips</p>
+                <p className="text-[12px] font-medium" style={{ color: theme.fg, opacity: 0.6 }}>{tr('Choose an agency to browse trips')}</p>
               </div>
             </div>
           </motion.div>
@@ -95,12 +97,12 @@ const CustomerTravelAgencies: React.FC = () => {
         </div>
         <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-          <span className="text-[11px] font-bold text-[#0f1729]">All Licensed</span>
+          <span className="text-[11px] font-bold text-[#0f1729]">{tr('All Licensed')}</span>
         </div>
       </motion.div>
 
       <div className="px-5 mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f1729]/30">Available agencies</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f1729]/30">{tr('Available agencies')}</p>
       </div>
 
       {/* ── Agency Cards ── */}
@@ -113,7 +115,7 @@ const CustomerTravelAgencies: React.FC = () => {
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: theme.accentLight }}>
               <CatIcon className="h-8 w-8" style={{ color: theme.color }} strokeWidth={1.5} />
             </div>
-            <p className="font-bold text-[#0f1729]">No agencies found</p>
+            <p className="font-bold text-[#0f1729]">{tr('No agencies found')}</p>
             <p className="text-[13px] text-[#0f1729]/40 max-w-[240px]">
               {search ? 'Try a different search term.' : `Check back soon for registered ${theme.label.toLowerCase()} providers.`}
             </p>
@@ -152,11 +154,11 @@ const CustomerTravelAgencies: React.FC = () => {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.5 }}
           className="mt-5 flex items-center justify-center gap-3 text-[10px] font-medium text-[#0f1729]/25">
-          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Licensed</span>
+          <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> {tr('Licensed')}</span>
           <span className="text-[6px]">●</span>
-          <span>E-Tickets</span>
+          <span>{tr('E-Tickets')}</span>
           <span className="text-[6px]">●</span>
-          <span>Secure Pay</span>
+          <span>{tr('Secure Pay')}</span>
         </motion.div>
       </div>
     </div>
