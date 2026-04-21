@@ -5,6 +5,7 @@ import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail } from '../_shared/send-managed-email.ts';
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -15,15 +16,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Auth
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const authResult = await resolveAuth(req, supabase);
+    if (authResult.response) return authResult.response;
+    const auth = authResult.auth!;
+    const user = { id: auth.user_id, email: auth.email };
 
     const body = await req.json();
-    const {
+    let {
       merchant_id, amount, currency = 'XAF', channel, customer_email, customer_phone, customer_name,
       tx_ref, metadata, payment_link_id, subaccounts, settlement_currency,
       save_token, customer_id, fee_bearer, capture_mode,
