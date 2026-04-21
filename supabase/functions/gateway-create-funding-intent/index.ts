@@ -5,6 +5,7 @@ import { sumUsageForPeriod, validateAmountRange } from "../_shared/limits-enforc
 import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 // Scope-aware fee calculation — now async with DB lookup
 async function calculateScopedFee(amount: number, method: string, scope: string, supabaseClient: any, opts?: { merchantId?: string; institutionId?: string }) {
@@ -78,12 +79,10 @@ serve(async (req) => {
       userId = account.user_id;
 
     } else {
-      // JWT-based auth for end_user, merchant, institution
-      const { data: claims, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !claims?.user) {
-        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-      userId = claims.user.id;
+      // Accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+      const __authResult = await resolveAuth(req, supabase);
+      if (__authResult.response) return __authResult.response;
+      userId = __authResult.auth!.user_id;
 
       if (fundingScope === 'merchant') {
         if (!merchantId) return new Response(JSON.stringify({ error: 'missing_merchant_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

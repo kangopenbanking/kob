@@ -1,17 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const __authResult = await resolveAuth(req, supabase);
+    if (__authResult.response) return __authResult.response;
+    const __auth = __authResult.auth!;
+    const user = { id: __auth.user_id, email: __auth.email } as any;
 
     const url = new URL(req.url);
     const merchantId = url.searchParams.get('merchant_id');

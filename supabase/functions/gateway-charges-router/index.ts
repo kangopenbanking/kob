@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee, mapFlutterwaveStatus, mapStripeStatus, toStripeAmount } from "../_shared/gateway-adapters.ts";
 import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 const jsonResp = (data: unknown, status = 200, extra: Record<string, string> = {}) =>
@@ -56,11 +57,11 @@ Deno.serve(async (req) => {
     }
 
     // All other actions require auth
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return errorResp('unauthorized', 401);
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) return errorResp('unauthorized', 401);
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const __authResult = await resolveAuth(req, supabase);
+    if (__authResult.response) return __authResult.response;
+    const __auth = __authResult.auth!;
+    const user = { id: __auth.user_id, email: __auth.email } as any;
 
     // ─── CREATE CHARGE ───
     if (action === 'create') {

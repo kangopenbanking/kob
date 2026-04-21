@@ -6,13 +6,13 @@ import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail } from '../_shared/send-managed-email.ts';
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const authHeader = req.headers.get('Authorization');
     const internalSecret = req.headers.get('x-internal-secret');
     const onBehalfOf = req.headers.get('x-on-behalf-of');
     const expectedInternal = Deno.env.get('INTERNAL_FUNCTION_SECRET');
@@ -22,9 +22,9 @@ serve(async (req) => {
       const { data: profile } = await supabase.from('profiles').select('id,email').eq('id', onBehalfOf).maybeSingle();
       if (profile) user = { id: profile.id, email: profile.email || undefined };
     } else {
-      if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      const { data: { user: u } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (u) user = { id: u.id, email: u.email };
+      const __authResult = await resolveAuth(req, supabase);
+      if (__authResult.response) return __authResult.response;
+      user = { id: __authResult.auth!.user_id, email: __authResult.auth!.email };
     }
     if (!user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 

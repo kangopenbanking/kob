@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 function problem(status: number, title: string, detail: string, extra: Record<string, unknown> = {}) {
   return new Response(JSON.stringify({ type: 'about:blank', title, status, detail, ...extra }), {
@@ -14,11 +15,11 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return problem(401, 'Unauthorized', 'Missing Authorization header');
-
-    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (!user) return problem(401, 'Unauthorized', 'Invalid or expired token');
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const __authResult = await resolveAuth(req, supabase);
+    if (__authResult.response) return __authResult.response;
+    const __auth = __authResult.auth!;
+    const user = { id: __auth.user_id, email: __auth.email } as any;
 
     const url = new URL(req.url);
     const method = req.method;
