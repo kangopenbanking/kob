@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { resolveAuth } from "../_shared/auth-api-key.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -17,11 +18,11 @@ serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return rfc7807('unauthorized', 'Unauthorized', 401, 'Missing Authorization header');
-
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authErr || !user) return rfc7807('unauthorized', 'Unauthorized', 401, 'Invalid or expired token');
+    // Auth — accepts sk_test_/sk_live_ API keys, sbx_ legacy, or Supabase JWT
+    const __authResult = await resolveAuth(req, supabase);
+    if (__authResult.response) return __authResult.response;
+    const __auth = __authResult.auth!;
+    const user = { id: __auth.user_id, email: __auth.email } as any;
 
     // Admin only
     const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
