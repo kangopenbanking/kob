@@ -1,0 +1,110 @@
+{
+  "generated_at": "2026-04-21T13:11:53.961Z",
+  "scanned_files": 12,
+  "summary": {
+    "fully_hardcoded": 10,
+    "used_valid": 4,
+    "placeholder_broken": 0,
+    "file_not_found": 0
+  },
+  "rows": [
+    {
+      "file": "src/pages/Index.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/HeroSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/SecuritySection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/ArchitectureSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/CodeSnippetSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/IntegrationOverview.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/OpenBankingSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/SDKSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/UseCasesSection.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/developer/landing/AdvancedFeaturesGate.tsx",
+      "line": "",
+      "key": "(none)",
+      "status": "fully_hardcoded",
+      "suggested": "no action"
+    },
+    {
+      "file": "src/components/Navigation.tsx",
+      "line": 366,
+      "key": "signIn",
+      "status": "used_valid",
+      "suggested": "(valid — resolved by LanguageContext)"
+    },
+    {
+      "file": "src/components/Navigation.tsx",
+      "line": 369,
+      "key": "getStarted",
+      "status": "used_valid",
+      "suggested": "(valid — resolved by LanguageContext)"
+    },
+    {
+      "file": "src/components/DynamicNavigation.tsx",
+      "line": 183,
+      "key": "signIn",
+      "status": "used_valid",
+      "suggested": "(valid — resolved by LanguageContext)"
+    },
+    {
+      "file": "src/components/DynamicNavigation.tsx",
+      "line": 184,
+      "key": "getStarted",
+      "status": "used_valid",
+      "suggested": "(valid — resolved by LanguageContext)"
+    }
+  ]
+}

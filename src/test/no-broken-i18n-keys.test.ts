@@ -17,6 +17,7 @@ const BROKEN_PATTERN = /\bt\(\s*["'][^"']+["']\s+as\s+any\s*\)/;
 const ALLOWED_FILES = new Set<string>([
   "src/test/i18n-fr-smoke.test.tsx",
   "src/test/no-broken-i18n-keys.test.ts",
+  "src/test/i18n-developer-pages-render.test.tsx",
 ]);
 
 function walk(dir: string, files: string[] = []): string[] {

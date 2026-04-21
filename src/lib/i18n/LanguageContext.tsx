@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import { translations, Language, TranslationKey } from './translations';
 import { supabase } from '@/integrations/supabase/client';
 import { initI18n, switchLanguage, reloadAll, lookup, i18n } from './i18next';
+import { reportMissingKey } from './missingKeyReporter';
 
 interface LanguageContextType {
   language: Language;
@@ -181,7 +182,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       queueKeyForRegistration(key, translations.en[key] || staticValue);
     }
 
-    return staticValue || (key as string);
+    // 4. Fallback returned the raw key — telemetry: report missing
+    if (!staticValue) {
+      reportMissingKey(key as string, language);
+      return key as string;
+    }
+
+    return staticValue;
   }, [language]);
 
   // Sync <html lang> + <html dir>

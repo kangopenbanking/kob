@@ -10498,6 +10498,42 @@ export type Database = {
         }
         Relationships: []
       }
+      i18n_missing_keys: {
+        Row: {
+          component: string | null
+          first_seen_at: string
+          id: string
+          language: string
+          last_seen_at: string
+          occurrence_count: number
+          resolved: boolean
+          route: string | null
+          string_key: string
+        }
+        Insert: {
+          component?: string | null
+          first_seen_at?: string
+          id?: string
+          language: string
+          last_seen_at?: string
+          occurrence_count?: number
+          resolved?: boolean
+          route?: string | null
+          string_key: string
+        }
+        Update: {
+          component?: string | null
+          first_seen_at?: string
+          id?: string
+          language?: string
+          last_seen_at?: string
+          occurrence_count?: number
+          resolved?: boolean
+          route?: string | null
+          string_key?: string
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           client_id: string
@@ -23519,6 +23555,15 @@ export type Database = {
           _transaction_id?: string
           _transaction_ref: string
           _transaction_type: string
+        }
+        Returns: undefined
+      }
+      report_missing_i18n_key: {
+        Args: {
+          p_component?: string
+          p_key: string
+          p_language: string
+          p_route?: string
         }
         Returns: undefined
       }
