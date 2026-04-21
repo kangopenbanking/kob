@@ -20,8 +20,30 @@ const ApiExplorer = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [authGuideOpen, setAuthGuideOpen] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
   const [retryCount, setRetryCount] = useState(0);
+  const [authStatus, setAuthStatus] = useState<'checking' | 'ready' | 'missing'>('checking');
+
+  // Real-time OAuth/token readiness detection (visual only — no logic change)
+  useEffect(() => {
+    const detect = () => {
+      try {
+        const keys = ['kob_access_token', 'access_token', 'swagger_authorized', 'authorized'];
+        const hasToken = keys.some((k) => {
+          const v = localStorage.getItem(k) || sessionStorage.getItem(k);
+          return v && v.length > 8;
+        });
+        const swaggerAuth = document.querySelector('.swagger-ui .auth-wrapper .authorize.unlocked');
+        setAuthStatus(hasToken || swaggerAuth ? 'ready' : 'missing');
+      } catch {
+        setAuthStatus('missing');
+      }
+    };
+    detect();
+    const interval = setInterval(detect, 2000);
+    const onStorage = () => detect();
+    window.addEventListener('storage', onStorage);
+    return () => { clearInterval(interval); window.removeEventListener('storage', onStorage); };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
