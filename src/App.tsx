@@ -290,6 +290,7 @@ const SandboxCredentials = lazy(() => import("./pages/developer/SandboxCredentia
 const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards"));
 const SandboxMobileMoney = lazy(() => import("./pages/developer/SandboxMobileMoney"));
 const SandboxSimulateWebhooks = lazy(() => import("./pages/developer/SandboxSimulateWebhooks"));
+const SandboxApiPage = lazy(() => import("./pages/developer/SandboxApiPage"));
 const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReferencePagination"));
 const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
 const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
@@ -1031,6 +1032,8 @@ function App() {
               <Route path="sandbox/mobile-money" element={<SandboxMobileMoney />} />
               <Route path="sandbox/console" element={<SandboxConsole />} />
               <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT */}
+              <Route path="sandbox/api" element={<SandboxApiPage />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />

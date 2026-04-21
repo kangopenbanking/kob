@@ -38,6 +38,7 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "Test Cards", path: "/developer/sandbox/test-cards" },
   { title: "Test Mobile Money", path: "/developer/sandbox/mobile-money" },
   { title: "Simulate Webhooks", path: "/developer/sandbox/simulate-webhooks" },
+  { title: "Sandbox API Reference", path: "/developer/sandbox/api" },
 
   // ── 4. API Reference ──
   { title: "API Reference", path: "/developer/api-reference" },
