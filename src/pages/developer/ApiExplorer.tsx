@@ -4,7 +4,8 @@ import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal, Sparkles, ChevronDown } from 'lucide-react';
+import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal, Sparkles, ChevronDown, Lock, Unlock, CheckCircle2, Code2, Server } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,8 +20,30 @@ const ApiExplorer = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [authGuideOpen, setAuthGuideOpen] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
   const [retryCount, setRetryCount] = useState(0);
+  const [authStatus, setAuthStatus] = useState<'checking' | 'ready' | 'missing'>('checking');
+
+  // Real-time OAuth/token readiness detection (visual only — no logic change)
+  useEffect(() => {
+    const detect = () => {
+      try {
+        const keys = ['kob_access_token', 'access_token', 'swagger_authorized', 'authorized'];
+        const hasToken = keys.some((k) => {
+          const v = localStorage.getItem(k) || sessionStorage.getItem(k);
+          return v && v.length > 8;
+        });
+        const swaggerAuth = document.querySelector('.swagger-ui .auth-wrapper .authorize.unlocked');
+        setAuthStatus(hasToken || swaggerAuth ? 'ready' : 'missing');
+      } catch {
+        setAuthStatus('missing');
+      }
+    };
+    detect();
+    const interval = setInterval(detect, 2000);
+    const onStorage = () => detect();
+    window.addEventListener('storage', onStorage);
+    return () => { clearInterval(interval); window.removeEventListener('storage', onStorage); };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,10 +169,59 @@ const ApiExplorer = () => {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">Base URL</span>
-              <code className="text-xs font-mono text-foreground/80">api.kangopenbanking.com</code>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Backend Base URL</span>
+              <code className="text-xs font-mono text-foreground/80 max-w-[280px] truncate" title={API_CONFIG.BASE_URL}>{API_CONFIG.BASE_URL}</code>
             </div>
           </div>
+        </div>
+
+        {/* Real-time OAuth / Credentials Status Banner */}
+        <div
+          className={`mt-6 flex items-center gap-3 rounded-xl border p-4 transition-colors ${
+            authStatus === 'ready'
+              ? 'border-emerald-500/30 bg-emerald-500/5'
+              : authStatus === 'missing'
+              ? 'border-amber-500/30 bg-amber-500/5'
+              : 'border-border bg-muted/30'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+              authStatus === 'ready'
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : authStatus === 'missing'
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {authStatus === 'ready' ? <Unlock className="h-5 w-5" /> : authStatus === 'missing' ? <Lock className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-sm">
+                {authStatus === 'ready' ? 'Authenticated — ready to send live requests' : authStatus === 'missing' ? 'Not authenticated — read-only mode' : 'Checking credentials…'}
+              </p>
+              {authStatus === 'ready' && (
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Token detected
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {authStatus === 'ready'
+                ? 'Your bearer token is active in this session. Try-it-out requests will use your credentials.'
+                : authStatus === 'missing'
+                ? 'Click the Authorize button in Swagger UI below, or follow the 3-step guide to obtain an Access Token.'
+                : 'Verifying your session token and OAuth state.'}
+            </p>
+          </div>
+          {authStatus === 'missing' && (
+            <Button size="sm" variant="outline" onClick={() => setAuthGuideOpen(true)} className="shrink-0 hidden sm:inline-flex">
+              <Key className="mr-2 h-3.5 w-3.5" /> Get Token
+            </Button>
+          )}
         </div>
       </div>
 
@@ -313,13 +385,121 @@ grant_type=client_credentials
         </div>
       </div>
 
+      {/* Expected Response Examples Panel — visual quick reference */}
+      <Card className="mb-6 border shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="py-4 border-b bg-muted/30">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Code2 className="h-4 w-4 text-primary" />
+            Expected Responses
+            <Badge variant="outline" className="ml-2 text-[10px] font-normal">Quick preview</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x">
+            {[
+              {
+                code: '200',
+                label: 'OK — Success',
+                tone: 'emerald',
+                body: `{
+  "status": "success",
+  "data": {
+    "id": "txn_01HXYZ...",
+    "amount": "5000",
+    "currency": "XAF"
+  }
+}`,
+              },
+              {
+                code: '201',
+                label: 'Created',
+                tone: 'sky',
+                body: `{
+  "status": "created",
+  "resource_id": "pay_01HXYZ...",
+  "created_at": "2026-04-21T10:00:00Z"
+}`,
+              },
+              {
+                code: '401',
+                label: 'Unauthorized',
+                tone: 'amber',
+                body: `{
+  "type": "https://kangopenbanking.com/errors/unauthorized",
+  "title": "Invalid or expired token",
+  "status": 401
+}`,
+              },
+            ].map((ex) => (
+              <div key={ex.code} className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={
+                      ex.tone === 'emerald'
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono'
+                        : ex.tone === 'sky'
+                        ? 'border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono'
+                    }
+                  >
+                    {ex.code}
+                  </Badge>
+                  <span className="text-xs font-medium text-muted-foreground">{ex.label}</span>
+                </div>
+                <pre className="rounded-lg border bg-muted/40 p-3 text-[11px] font-mono leading-relaxed overflow-x-auto text-foreground/90">{ex.body}</pre>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="overflow-hidden swagger-container border shadow-lg rounded-xl">
-        {isChecking ? (
-          <div className="p-16 text-center space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        {/* Branded Swagger toolbar header */}
+        <div className="flex items-center justify-between gap-3 border-b bg-card px-5 py-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Server className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm tracking-tight">Kang Open Banking</span>
+                <Badge variant="outline" className="text-[10px] font-mono">REST · v1</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">Interactive reference · powered by Swagger UI</p>
             </div>
-            <p className="text-muted-foreground">Loading API specification…</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            {spec && (
+              <Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </Badge>
+            )}
+            <Badge variant="outline" className="text-[10px] font-mono max-w-[260px] truncate" title={API_CONFIG.BASE_URL}>
+              {API_CONFIG.BASE_URL.replace(/^https?:\/\//, '')}
+            </Badge>
+          </div>
+        </div>
+
+        {isChecking ? (
+          <div className="p-10 space-y-6">
+            <div className="flex items-center justify-center flex-col gap-3 py-6">
+              <div className="relative inline-flex h-14 w-14 items-center justify-center">
+                <span className="absolute inset-0 rounded-full border-2 border-primary/20" />
+                <div className="h-14 w-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-medium text-sm">Loading API specification</p>
+                <p className="text-xs text-muted-foreground">Fetching 326+ endpoints from the backend…</p>
+              </div>
+            </div>
+            <div className="space-y-3 max-w-2xl mx-auto">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <Skeleton className="h-10 w-11/12 rounded-lg" />
+              <Skeleton className="h-10 w-10/12 rounded-lg" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
           </div>
         ) : spec ? (
           <SwaggerUI
@@ -332,11 +512,16 @@ grant_type=client_credentials
           />
         ) : (
           <div className="p-12 text-center space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="h-6 w-6 text-destructive" />
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-7 w-7 text-destructive" />
             </div>
-            <p className="text-muted-foreground">Failed to load API specification.</p>
-            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)}>
+            <div className="space-y-1">
+              <p className="font-semibold">Unable to load API specification</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                We couldn't reach the spec endpoint. Check your network or retry — the backend may be warming up.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)} className="shadow-sm hover:shadow-md transition-all">
               <Terminal className="mr-2 h-4 w-4" /> Retry Loading Spec
             </Button>
             <p className="text-xs text-muted-foreground">
