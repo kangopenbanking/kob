@@ -39,6 +39,9 @@ const OpenApiDownloads = () => {
               <Button variant="outline" size="sm" asChild>
                 <Link to="/developer/api-explorer-static"><ExternalLink className="h-4 w-4 mr-1" /> Static Reference</Link>
               </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/developer/sandbox/api"><ExternalLink className="h-4 w-4 mr-1" /> Sandbox API Reference</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
