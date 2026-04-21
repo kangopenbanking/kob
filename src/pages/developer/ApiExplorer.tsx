@@ -385,13 +385,121 @@ grant_type=client_credentials
         </div>
       </div>
 
+      {/* Expected Response Examples Panel — visual quick reference */}
+      <Card className="mb-6 border shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="py-4 border-b bg-muted/30">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Code2 className="h-4 w-4 text-primary" />
+            Expected Responses
+            <Badge variant="outline" className="ml-2 text-[10px] font-normal">Quick preview</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x">
+            {[
+              {
+                code: '200',
+                label: 'OK — Success',
+                tone: 'emerald',
+                body: `{
+  "status": "success",
+  "data": {
+    "id": "txn_01HXYZ...",
+    "amount": "5000",
+    "currency": "XAF"
+  }
+}`,
+              },
+              {
+                code: '201',
+                label: 'Created',
+                tone: 'sky',
+                body: `{
+  "status": "created",
+  "resource_id": "pay_01HXYZ...",
+  "created_at": "2026-04-21T10:00:00Z"
+}`,
+              },
+              {
+                code: '401',
+                label: 'Unauthorized',
+                tone: 'amber',
+                body: `{
+  "type": "https://kangopenbanking.com/errors/unauthorized",
+  "title": "Invalid or expired token",
+  "status": 401
+}`,
+              },
+            ].map((ex) => (
+              <div key={ex.code} className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={
+                      ex.tone === 'emerald'
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono'
+                        : ex.tone === 'sky'
+                        ? 'border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono'
+                    }
+                  >
+                    {ex.code}
+                  </Badge>
+                  <span className="text-xs font-medium text-muted-foreground">{ex.label}</span>
+                </div>
+                <pre className="rounded-lg border bg-muted/40 p-3 text-[11px] font-mono leading-relaxed overflow-x-auto text-foreground/90">{ex.body}</pre>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="overflow-hidden swagger-container border shadow-lg rounded-xl">
-        {isChecking ? (
-          <div className="p-16 text-center space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        {/* Branded Swagger toolbar header */}
+        <div className="flex items-center justify-between gap-3 border-b bg-card px-5 py-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Server className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm tracking-tight">Kang Open Banking</span>
+                <Badge variant="outline" className="text-[10px] font-mono">REST · v1</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">Interactive reference · powered by Swagger UI</p>
             </div>
-            <p className="text-muted-foreground">Loading API specification…</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            {spec && (
+              <Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </Badge>
+            )}
+            <Badge variant="outline" className="text-[10px] font-mono max-w-[260px] truncate" title={API_CONFIG.BASE_URL}>
+              {API_CONFIG.BASE_URL.replace(/^https?:\/\//, '')}
+            </Badge>
+          </div>
+        </div>
+
+        {isChecking ? (
+          <div className="p-10 space-y-6">
+            <div className="flex items-center justify-center flex-col gap-3 py-6">
+              <div className="relative inline-flex h-14 w-14 items-center justify-center">
+                <span className="absolute inset-0 rounded-full border-2 border-primary/20" />
+                <div className="h-14 w-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-medium text-sm">Loading API specification</p>
+                <p className="text-xs text-muted-foreground">Fetching 326+ endpoints from the backend…</p>
+              </div>
+            </div>
+            <div className="space-y-3 max-w-2xl mx-auto">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <Skeleton className="h-10 w-11/12 rounded-lg" />
+              <Skeleton className="h-10 w-10/12 rounded-lg" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
           </div>
         ) : spec ? (
           <SwaggerUI
@@ -404,11 +512,16 @@ grant_type=client_credentials
           />
         ) : (
           <div className="p-12 text-center space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="h-6 w-6 text-destructive" />
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-7 w-7 text-destructive" />
             </div>
-            <p className="text-muted-foreground">Failed to load API specification.</p>
-            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)}>
+            <div className="space-y-1">
+              <p className="font-semibold">Unable to load API specification</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                We couldn't reach the spec endpoint. Check your network or retry — the backend may be warming up.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setRetryCount(c => c + 1)} className="shadow-sm hover:shadow-md transition-all">
               <Terminal className="mr-2 h-4 w-4" /> Retry Loading Spec
             </Button>
             <p className="text-xs text-muted-foreground">
