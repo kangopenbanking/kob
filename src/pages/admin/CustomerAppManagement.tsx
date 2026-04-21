@@ -414,11 +414,11 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
 
 // ─── Walkthrough Manager ───
 function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }: {
-  const tr = useHarvestedT('admin');
   institutionId: string;
   walkthroughConfig: WalkthroughConfig;
   onConfigChange: (c: WalkthroughConfig) => void;
 }) {
+  const tr = useHarvestedT('admin');
   const queryClient = useQueryClient();
   const { data: slides = [], isLoading } = useWalkthroughSlides(institutionId);
   const [editSlide, setEditSlide] = useState<any>(null);
@@ -1496,7 +1496,6 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
 
 // ─── Main Component ───
 export default function CustomerAppManagement() {
-  const tr = useHarvestedT('admin');
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
