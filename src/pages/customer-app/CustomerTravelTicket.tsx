@@ -22,7 +22,7 @@ const QRCodeDisplay: React.FC<{ value: string; themeColor?: string }> = ({ value
         bgColor="#ffffff"
       />
     </div>
-    <p className="text-[9px] font-mono text-gray-400">{tr('Scan at boarding gate')}</p>
+    <p className="text-[9px] font-mono text-gray-400">Scan at boarding gate</p>
   </div>
 );
 
