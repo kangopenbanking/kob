@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
+import { LanguagePrompt } from '@/components/i18n/LanguagePrompt';
 import { loadAppNamespaces } from '@/lib/i18n/i18next';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -146,6 +147,7 @@ const BusinessAppInner: React.FC = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text">
       <TranslationHarvester category="business" />
+      <LanguagePrompt />
       <OfflineIndicator />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-20">
