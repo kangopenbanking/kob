@@ -19,11 +19,13 @@ import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
 
 const CustomerSettings: React.FC = () => {
   const tr = useHarvestedT('customer');
+  const { setLanguage: setAppLanguage } = useLanguage();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>(null);
   const [legalSlug, setLegalSlug] = useState('');
@@ -180,6 +182,9 @@ const CustomerSettings: React.FC = () => {
       if (error) throw error;
       toast.success('Language & region saved');
       setActiveSection(null);
+      // Trigger global language switch: persists, broadcasts to other tabs/apps,
+      // and seamlessly refreshes so all in-memory strings re-render in the new locale.
+      await setAppLanguage(language as 'en' | 'fr');
     } catch (err: any) { toast.error(extractEdgeFunctionError(err)); }
     finally { setSaving(false); }
   };
