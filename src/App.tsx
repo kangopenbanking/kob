@@ -329,6 +329,7 @@ const HomepageHeroManager = lazy(() => import("./pages/admin/HomepageHeroManager
 const PaymentFacilitationAdmin = lazy(() => import("./pages/admin/PaymentFacilitation"));
 const PaymentCommandCenter = lazy(() => import("./pages/admin/PaymentCommandCenter"));
 const TranslationManager = lazy(() => import("./pages/admin/TranslationManager"));
+const I18nCoverageDashboard = lazy(() => import("./pages/admin/I18nCoverageDashboard"));
 const HealthMonitoring = lazy(() => import("./pages/admin/HealthMonitoring"));
 const RLSMonitoring = lazy(() => import("./pages/admin/RLSMonitoring"));
 const ApiHealthDashboard = lazy(() => import("./pages/admin/ApiHealthDashboard"));
@@ -897,6 +898,7 @@ function App() {
               <Route path="access-roles" element={<AccessRoleManagement />} />
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
+              <Route path="i18n-coverage" element={<I18nCoverageDashboard />} />
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
