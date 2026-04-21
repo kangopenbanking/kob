@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { ensureSandboxMerchantId } from "../_shared/sandbox-merchant.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -64,9 +65,14 @@ Deno.serve(async (req) => {
 
     if (createError) throw createError;
 
-    console.log('Created sandbox account:', account.id);
+    const merchantId = await ensureSandboxMerchantId(supabase, user, {
+      accountId: account.id,
+      companyName: company_name,
+    });
 
-    return new Response(JSON.stringify({ account }), {
+    console.log('Created sandbox account:', account.id, 'merchant:', merchantId);
+
+    return new Response(JSON.stringify({ account: { ...account, merchant_id: merchantId } }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 201,
     });

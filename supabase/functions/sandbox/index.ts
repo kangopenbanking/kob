@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { ensureSandboxMerchantId } from "../_shared/sandbox-merchant.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -45,7 +46,8 @@ async function handleCreateAccount(body: any, user: any, supabase: any) {
   if (existing) return errResp(400, 'Sandbox account already exists');
   const { data: account, error } = await supabase.from('developer_sandbox_accounts').insert([{ user_id: user.id, company_name: body.company_name, website: body.website, description: body.description, status: 'active', tier: 'free' }]).select().single();
   if (error) throw error;
-  return new Response(JSON.stringify({ account }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const merchantId = await ensureSandboxMerchantId(supabase, user, { accountId: account.id, companyName: body.company_name });
+  return new Response(JSON.stringify({ account: { ...account, merchant_id: merchantId } }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 function randHex(len: number) {
@@ -59,6 +61,8 @@ async function sha256(text: string) {
 async function handleCreateApiKey(body: any, user: any, supabase: any) {
   const { data: account } = await supabase.from('developer_sandbox_accounts').select('*').eq('user_id', user.id).eq('status', 'active').single();
   if (!account) return errResp(404, 'No active sandbox account found');
+
+  const merchantId = await ensureSandboxMerchantId(supabase, user, { accountId: account.id, companyName: account.company_name });
 
   const { count } = await supabase.from('sandbox_api_keys').select('*', { count: 'exact', head: true }).eq('sandbox_account_id', account.id).eq('is_active', true);
   if (count && count >= 5) return errResp(400, 'Maximum API keys reached (5)');
@@ -93,7 +97,7 @@ async function handleCreateApiKey(body: any, user: any, supabase: any) {
     key_name: newKey.key_name,
     secret_key: secretKey,
     publishable_key: publishableKey,
-    merchant_id: account.merchant_id,
+    merchant_id: merchantId,
     webhook_secret: webhookSecret,
     environment: 'sandbox',
     rate_limits: tier,

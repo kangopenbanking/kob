@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from "../_shared/cors.ts";
+import { ensureSandboxMerchantId } from "../_shared/sandbox-merchant.ts";
 
 function randHex(len: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(len)))
@@ -57,6 +58,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const merchantId = await ensureSandboxMerchantId(supabase, user, {
+      accountId: account.id,
+      companyName: account.company_name,
+    });
+
     const { count } = await supabase
       .from('sandbox_api_keys')
       .select('*', { count: 'exact', head: true })
@@ -110,7 +116,7 @@ Deno.serve(async (req) => {
       key_name: newKey.key_name,
       secret_key: secretKey,
       publishable_key: publishableKey,
-      merchant_id: account.merchant_id,
+      merchant_id: merchantId,
       webhook_secret: webhookSecret,
       environment: 'sandbox',
       rate_limits: limits,
