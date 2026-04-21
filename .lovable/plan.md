@@ -1,158 +1,126 @@
 
 
-## KOB API Card + Bank Transfer Integration Audit
+# Security Posture Self-Verification Layer
 
-### Current State (Verified)
+Defensive layer so external reviewers (DeepSeek, auditors, prospective integrators) can verify FAPI/OIDC/mTLS claims in one click instead of guessing from stale npm packages.
 
-The integrator is correct. Tracing `gateway-create-charge` and the unified `/v1/gateway/charges` endpoint confirms:
+## What gets built
 
-| Channel | Status | Gap |
-|---|---|---|
-| `mobile_money` | ✅ Works E2E (Flutterwave/MTN/Orange) | `verify-status` returns optimistic "successful" without re-checking provider |
-| `card` | ⚠️ Charge row created, Stripe PaymentIntent created | Response omits `client_secret` and `redirect_url` — integrator has nothing to confirm with |
-| `bank_transfer` | ⚠️ Charge row created | Response omits account number / reference / instructions |
-| `paypal` | ⚠️ Order created | `approval_url` not surfaced on `/charges` (only on funding-intent flow) |
+### 1. Live `/healthz` endpoint with security posture
+New edge function `healthz` (separate from the existing operational `api-health`). Returns a flat, reviewer-friendly JSON snapshot:
 
-**Root cause**: `gateway-create-charge` returns the DB row only. Provider-specific `next_action` data (Stripe `client_secret`, Flutterwave `redirect_url`, bank account details, PayPal `approval_url`) is computed but never attached to the response. `provider_raw` stays `null` because it's populated only by the webhook callback.
-
-This violates **Standing Order P5 (Working Code Rule)**: every documented `card` / `bank_transfer` / `paypal` example fails for integrators because there is no field to act on.
-
-### Recommended Path: **Option B — Integrate Stripe.js + surface `next_action` for all channels**
-
-Hiding `card` (Option A) breaks the public API contract and contradicts the docs. Waiting on KOB support (Option C) is a no-op — *we are KOB*. The correct fix is to make `/charges` return a Stripe-style `next_action` block, then ship a thin Stripe.js helper for card confirmation.
-
----
-
-### Fix Plan
-
-**1. Standardize the `next_action` response envelope on `/v1/gateway/charges`**
-
-Update `supabase/functions/gateway-create-charge/index.ts` to return a `next_action` object alongside the charge row, shaped per channel:
-
-```jsonc
-// card
-"next_action": {
-  "type": "stripe_confirm_card",
-  "client_secret": "pi_xxx_secret_xxx",
-  "publishable_key": "pk_test_xxx",     // safe to expose
-  "publishable_key_env": "test"
+```json
+{
+  "status": "operational",
+  "version": "4.16.3",
+  "security": {
+    "oauth2":   { "status": "live", "endpoint": ".../oauth-token", "verified_at": "..." },
+    "oidc":     { "status": "live", "endpoint": ".../oidc-config" },
+    "mtls":     { "status": "supported", "fapi_profile": "1.0-Advanced",
+                  "note": "Cert-bound tokens active when cert headers forwarded" },
+    "dcr":      { "status": "live", "endpoint": ".../dcr-register", "spec": "RFC 7591" },
+    "par":      { "status": "live", "endpoint": ".../par-endpoint", "required": true },
+    "jar":      { "status": "live", "required": true },
+    "pkce":     { "status": "required", "methods": ["S256"] },
+    "webhooks": { "status": "live", "signing": "HMAC-SHA256", "header": "x-webhook-signature" },
+    "jwks":     { "status": "live", "endpoint": ".../jwks-endpoint", "rotation": "manual + scheduled" }
+  },
+  "compliance": { "fapi_1_0_advanced": true, "cobac": true, "beac": true, "iso20022": true, "psd2_aligned": true },
+  "sandbox":    { "status": "live", "key_prefix": "sbx_", "console": ".../developer/sandbox/console" },
+  "discovery":  { "oidc": ".../oidc-config", "openapi": "/openapi.json", "health": "/healthz" }
 }
-
-// bank_transfer
-"next_action": {
-  "type": "bank_transfer_instructions",
-  "bank_name": "...", "account_number": "...",
-  "account_name": "...", "reference": "...",
-  "expires_at": "..."
-}
-
-// mobile_money
-"next_action": {
-  "type": "mobile_money_push",
-  "message": "Approve the USSD prompt on 237677...",
-  "poll_url": "/v1/gateway/charges/{id}/verify"
-}
-
-// paypal
-"next_action": { "type": "paypal_redirect", "approval_url": "..." }
-
-// already-paid / no further action
-"next_action": null
 ```
+Each `endpoint` field probed live (5s timeout, fail → `degraded` not `down`). Cache `public, max-age=60`. CORS open. Adds a `/healthz` proxy wrapper alongside existing `/health` for the conventional path.
 
-This matches Stripe's PaymentIntent contract and the existing internal `FundingResult.tsx` shape — so the public API and the internal funding flow finally agree.
+### 2. Harden `/oidc-config`
+Additive only (Standing Order #1, #4):
+- Add `Cache-Control: public, max-age=3600, stale-while-revalidate=86400` (already partial — extend with SWR).
+- Add `ETag` based on config hash for conditional GETs.
+- Add new claims: `service_documentation` already there; add `op_policy_uri`, `op_tos_uri` pointing to whitepaper + ToS.
+- Add `version` field (non-standard but reviewer-helpful) tied to API `info.version` 4.16.3.
+- Append example JWKS rotation guidance via new `key_rotation_policy_uri` linking to docs.
 
-**2. Wire Stripe card flow end-to-end inside `gateway-create-charge`**
+No renames. No removals. Patch bump documented in changelog.
 
-For `channel: "card"`:
-- Create Stripe PaymentIntent (already done in `gateway-preauth-charge` — extract to `_shared/stripe-helpers.ts` and reuse).
-- Persist `provider_ref = pi_xxx` and `client_secret` in `gateway_charges.metadata.stripe`.
-- Return `client_secret` + the merchant's Stripe **publishable** key (read from `gateway_merchants.stripe_publishable_key`, fall back to platform `STRIPE_PUBLISHABLE_KEY` secret) inside `next_action`.
+### 3. Security & Compliance docs page
+New route `/developer/security` (public per Standing Order P1). Sections:
+- **Live verification panel** — fetches `/healthz` and `/oidc-config` client-side, renders green/amber pills per capability with the actual endpoint URLs as clickable links. Reviewer can verify in 5 seconds.
+- **Standards matrix** — FAPI 1.0 Advanced, OIDC Core, OAuth 2.1, RFC 7591 (DCR), RFC 9126 (PAR), RFC 9101 (JAR), RFC 7636 (PKCE S256), RFC 8705 (mTLS), ISO 20022, COBAC/BEAC.
+- **Token & session security** — SHA-256 token storage, refresh rotation, single-active-session, MFA step-up.
+- **Webhook security** — HMAC-SHA256 signing, timestamp tolerance, 7-attempt backoff, idempotency.
+- **Sandbox** — `sbx_` keys, free-forever badge, link to `/developer/sandbox/console`.
+- **Known limitations** — honest disclosure: mTLS cert-binding requires reverse-proxy header forwarding in self-hosted deployments; KMS recommended for TOTP secrets in regulated production. Cites your existing memory entries.
 
-**3. Wire bank-transfer instructions for `channel: "bank_transfer"`**
+Added to developer portal sidebar under "Build" track.
 
-Reuse the logic already present in the funding-intent path (`bank_transfer_instructions` branch in `FundingResult.tsx`):
-- For KOB-partner banks → generate virtual account via `kob-bank-transfer-issue` helper, return account_number + reference.
-- For non-partner banks → return Flutterwave-issued account from `/v3/charges?type=bank_transfer` response.
+### 4. Security & Compliance whitepaper
+PDF + HTML at `/developer/whitepapers/security-compliance.pdf` and `/developer/security/whitepaper`. Contents (~12 pages):
+- Executive summary
+- Architecture overview (diagram: client → mTLS → PAR → OIDC → resource server → ledger)
+- Authentication & authorization (OAuth2 flows, PKCE, DCR, scopes)
+- Cryptography (TLS 1.2+, JWS RS256/PS256/ES256, SHA-256 hashing)
+- Token lifecycle & rotation
+- Webhook integrity model
+- Audit logging (`audit_logs`, `security_audit_logs`, `consent_events`)
+- Regulatory mapping (FAPI / PSD2 / COBAC / CEMAC)
+- Deployment hardening checklist (mTLS proxy, KMS, secret rotation cadence)
+- Incident response & SLA
+- Version history
 
-**4. Fix the mobile-money verify-status bug**
+Generated to `/mnt/documents/` then committed under `public/whitepapers/`.
 
-`gateway-verify-charge` currently returns the local DB status without re-polling the provider. Update it to:
-1. If charge is terminal (`successful`/`failed`/`refunded`) → return as-is.
-2. Else → call provider's `getStatus()` (MTN MoMo `/requesttopay/{ref}`, Orange Money status, Flutterwave verify) via the existing `payment-connectors` adapters.
-3. Update DB row + emit `charge.successful` / `charge.failed` webhook event.
-4. Return refreshed status.
+### 5. Security FAQ widget
+New `<SecurityFAQ />` component on `/developer/security` and footer of `/developer`. Pre-seeded Q&A addressing the exact DeepSeek-style misreads:
 
-This eliminates the "fake success" without provider confirmation.
-
-**5. Publish a Stripe.js helper for integrators**
-
-Add a documented snippet (no new dependency for KOB itself — integrators install `@stripe/stripe-js` in their app):
-
-```js
-// docs/developer-portal/payments/card-confirmation.md (NEW)
-import { loadStripe } from '@stripe/stripe-js';
-
-const charge = await fetch('/v1/gateway/charges', { /* sk_test_, channel: 'card' */ }).then(r=>r.json());
-const stripe = await loadStripe(charge.next_action.publishable_key);
-const { error, paymentIntent } = await stripe.confirmCardPayment(
-  charge.next_action.client_secret,
-  { payment_method: { card: cardElement } }
-);
-// then POST /v1/gateway/charges/{id}/verify to finalize on KOB side
-```
-
-Add the same snippet in Node, Python, PHP, Java, Go (Standing Order P9).
-
-**6. Update OpenAPI + docs (Standing Order P10)**
-
-- `public/openapi.json` + `public/openapi.yaml` — add `next_action` discriminated union to `Charge` response schema.
-- `docs/developer-portal/payments/unified-payments.md` — replace example response with one showing `next_action`.
-- `docs/developer-portal/payments/payment-methods.md` — add "How to complete the payment" subsection per channel.
-- New: `docs/developer-portal/payments/card-confirmation.md` (Stripe.js flow, 6 languages).
-- New: `docs/developer-portal/payments/bank-transfer-instructions.md`.
-
-**7. Changelog (Standing Order #6 + P7)** — bump **v4.16.2 → v4.16.3**:
-> **Added**: `next_action` field on `POST /v1/gateway/charges` response, exposing `client_secret` (card), bank account details (bank_transfer), USSD message (mobile_money), and `approval_url` (paypal). **Fixed**: `POST /v1/gateway/charges/{id}/verify` now re-polls the upstream provider instead of returning cached status. Resolves P5 Working Code Rule violation for card and bank_transfer channels.
-
-**8. E2E verification**
-
-Live curl probes via `supabase--curl_edge_functions`:
-- `POST /gateway/charges` with `channel: "card"` → expect `next_action.client_secret` + `publishable_key` present.
-- `POST /gateway/charges` with `channel: "bank_transfer"` → expect `next_action.account_number`, `reference`.
-- `POST /gateway/charges` with `channel: "mobile_money"` → expect `next_action.poll_url`.
-- `POST /gateway/charges/{id}/verify` for a pending MoMo charge → expect upstream `getStatus()` call in logs (no fake success).
-- Re-run `api-contract-test` suite — must stay green.
-
----
-
-### Files Touched
-
-| File | Action |
+| Question | Answer pattern |
 |---|---|
-| `supabase/functions/_shared/stripe-helpers.ts` | **NEW** — extracted PaymentIntent creation |
-| `supabase/functions/_shared/charge-next-action.ts` | **NEW** — builds `next_action` per channel |
-| `supabase/functions/gateway-create-charge/index.ts` | Attach `next_action`, wire card + bank_transfer |
-| `supabase/functions/gateway-verify-charge/index.ts` | Re-poll provider, no fake success |
-| `public/openapi.json`, `public/openapi.yaml` | Add `next_action` schema |
-| `docs/developer-portal/payments/unified-payments.md` | Updated response example |
-| `docs/developer-portal/payments/payment-methods.md` | Per-channel completion steps |
-| `docs/developer-portal/payments/card-confirmation.md` | **NEW** (6 languages) |
-| `docs/developer-portal/payments/bank-transfer-instructions.md` | **NEW** |
-| `src/pages/developer/Changelog.tsx` | v4.16.3 entry |
+| "Is OAuth2 implemented?" | Yes — link to `/oidc-config` + `/healthz` |
+| "What FAPI profile?" | 1.0 Advanced — link to discovery doc |
+| "Is mTLS supported?" | Yes (with deployment note) |
+| "Is there a sandbox?" | Yes, free forever — link to console |
+| "Production-ready?" | Yes, v4.16.3 — link to changelog + healthz |
+| "Reviewing the npm package?" | Use `@kangopenbanking/sdk` v1.2.0 — direct link |
 
-**No table changes. No removals. No breaking changes.** The `next_action` field is additive — existing integrators ignoring it keep working; new integrators get a complete contract.
+Static data, no backend. Search-friendly per Standing Order P8.
 
-### Standing Order Compliance
+### 6. Changelog entry
+Per Standing Order P7: log "Added `/healthz` security posture endpoint, `/developer/security` page, whitepaper, OIDC ETag/SWR caching" within the changelog file. Patch bump 4.16.3 → 4.16.4.
+
+## Files
+
+| Action | Path |
+|---|---|
+| Create | `supabase/functions/healthz/index.ts` |
+| Edit | `supabase/functions/oidc-config/index.ts` (add ETag, SWR, version, policy URIs) |
+| Create | `src/pages/developer/Security.tsx` |
+| Create | `src/components/developer/security/LiveVerificationPanel.tsx` |
+| Create | `src/components/developer/security/StandardsMatrix.tsx` |
+| Create | `src/components/developer/security/SecurityFAQ.tsx` |
+| Edit | `src/App.tsx` or developer router (add `/developer/security` route — public) |
+| Edit | Developer portal sidebar config (add "Security & Compliance" link) |
+| Create | `public/whitepapers/security-compliance.pdf` (generated, QA'd page-by-page) |
+| Create | `src/pages/developer/SecurityWhitepaper.tsx` (HTML version) |
+| Edit | `public/changelog.json` + changelog page (entry for 4.16.4) |
+| Edit | `public/openapi.json` + `public/openapi.yaml` (add `/healthz` path, bump version) |
+
+## Standing Order compliance
 
 | Order | Verdict |
 |---|---|
-| #1 Lock — no renames | ✅ |
-| #2 Ratchet — only adds `next_action` | ✅ |
-| #3 Audit Trail — cites P5 Working Code Rule | ✅ |
-| #4 Surgeon — additive response field | ✅ |
-| #6 Version Gate — patch bump 4.16.2 → 4.16.3 | ✅ |
-| P5 Working Code Rule — restored for card/bank_transfer | ✅ |
-| P9 Multi-Language — 6 languages in new docs | ✅ |
-| P10 Living Docs — OpenAPI + 4 doc pages updated | ✅ |
+| #1 Lock — no renames | Pass — purely additive |
+| #2 Ratchet — only adds capabilities | Pass |
+| #3 Audit Trail — cites FAPI 1.0 Adv, RFC 7591/9126/9101/8705 | Pass |
+| #4 Surgeon — additive only | Pass |
+| #6 Version Gate — patch bump 4.16.3 → 4.16.4 | Pass |
+| P1 Public First — `/developer/security` & whitepaper public | Pass |
+| P4 Open Spec — `/healthz` added to OpenAPI | Pass |
+| P5 Working Code — live panel calls real endpoints | Pass |
+| P7 Changelog — entry within same deploy | Pass |
+| P10 Living Docs — docs ship with the change | Pass |
+
+## Out of scope (call out for honesty)
+
+- Actual KMS integration for TOTP secrets — documented as "recommended for self-hosted production", not implemented in this pass.
+- Reverse-proxy mTLS deployment guide — referenced in whitepaper, full runbook is a separate task.
+- Third-party penetration test report — would require external auditor engagement.
 
