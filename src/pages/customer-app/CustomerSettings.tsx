@@ -208,17 +208,17 @@ const CustomerSettings: React.FC = () => {
   }
 
   const settingsItems = [
-    { id: 'personal' as const, icon: User, label: 'Personal Information', description: name || email, color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
-    { id: 'security' as const, icon: Lock, label: 'Security', description: 'Password, PIN, biometrics', color: 'bg-[hsl(0,65%,93%)]', iconColor: 'text-[hsl(0,60%,45%)]' },
-    { id: 'notifications' as const, icon: Bell, label: 'Notifications', description: 'Push, email, SMS alerts', color: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(35,70%,40%)]' },
-    { id: 'language' as const, icon: Globe, label: 'Language & Region', description: `${language === 'en' ? 'English' : 'Français'} · ${currency}`, color: 'bg-[hsl(150,45%,90%)]', iconColor: 'text-[hsl(150,50%,35%)]' },
-    { id: 'legal' as const, icon: FileText, label: 'Legal & Policies', description: 'Terms, Privacy, KYC, AML', color: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,45%)]' },
-    { id: 'about' as const, icon: Info, label: 'About', description: 'App version & info', color: 'bg-[hsl(200,30%,92%)]', iconColor: 'text-[hsl(200,30%,40%)]' },
+    { id: 'personal' as const, icon: User, label: tr('Personal Information'), description: name || email, color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
+    { id: 'security' as const, icon: Lock, label: tr('Security'), description: tr('Password, PIN, biometrics'), color: 'bg-[hsl(0,65%,93%)]', iconColor: 'text-[hsl(0,60%,45%)]' },
+    { id: 'notifications' as const, icon: Bell, label: tr('Notifications'), description: tr('Push, email, SMS alerts'), color: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(35,70%,40%)]' },
+    { id: 'language' as const, icon: Globe, label: tr('Language & Region'), description: `${language === 'en' ? tr('English') : tr('Français')} · ${currency}`, color: 'bg-[hsl(150,45%,90%)]', iconColor: 'text-[hsl(150,50%,35%)]' },
+    { id: 'legal' as const, icon: FileText, label: tr('Legal & Policies'), description: tr('Terms, Privacy, KYC, AML'), color: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,45%)]' },
+    { id: 'about' as const, icon: Info, label: tr('About'), description: tr('App version & info'), color: 'bg-[hsl(200,30%,92%)]', iconColor: 'text-[hsl(200,30%,40%)]' },
   ];
 
   const BackButton = ({ onBack }: { onBack: () => void }) => (
     <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-primary">
-      <ArrowLeft className="h-4 w-4" strokeWidth={2} /> Back
+      <ArrowLeft className="h-4 w-4" strokeWidth={2} /> {tr('Back')}
     </button>
   );
 
@@ -268,7 +268,7 @@ const CustomerSettings: React.FC = () => {
                 <User className="h-6 w-6 text-primary" strokeWidth={1.5} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{name || 'Set your name'}</p>
+                <p className="text-sm font-bold text-foreground truncate">{name || tr('Set your name')}</p>
                 <p className="text-xs text-muted-foreground truncate">{email}</p>
               </div>
               <button onClick={() => setActiveSection('personal')}>
@@ -310,7 +310,7 @@ const CustomerSettings: React.FC = () => {
               <SettingRow
                 icon={<Moon className="h-5 w-5" strokeWidth={1.5} />}
                 label={tr('Dark Mode')}
-                description={darkMode ? 'On' : 'Off'}
+                description={darkMode ? tr('On') : tr('Off')}
                 right={<Switch checked={darkMode} onCheckedChange={toggleDarkMode} />}
               />
             </SettingCard>
@@ -327,7 +327,7 @@ const CustomerSettings: React.FC = () => {
             </SettingCard>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
-              Kang Open Banking · v2.1.0
+              {tr('Kang Open Banking · v2.1.0')}
             </p>
           </motion.div>
         )}
@@ -336,7 +336,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'personal' && (
           <motion.div key="personal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Personal Information')} subtitle="Update your profile details" />
+            <SectionTitle title={tr('Personal Information')} subtitle={tr('Update your profile details')} />
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground">{tr('Full Name')}</Label>
               <Input value={name} onChange={e => setName(e.target.value)} placeholder={tr('Your full name')} className="rounded-xl" />
@@ -352,7 +352,7 @@ const CustomerSettings: React.FC = () => {
             </div>
             <Button onClick={handleSavePersonal} disabled={saving} className="mt-2 gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? tr('Saving...') : tr('Save Changes')}
             </Button>
           </motion.div>
         )}
@@ -361,7 +361,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'security' && (
           <motion.div key="security" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Security')} subtitle="Manage your account security" />
+            <SectionTitle title={tr('Security')} subtitle={tr('Manage your account security')} />
 
             <SettingCard>
               <SettingRow
@@ -405,7 +405,7 @@ const CustomerSettings: React.FC = () => {
                 </div>
                 <Button onClick={handleChangePassword} disabled={saving || !currentPassword || !newPassword} size="sm" variant="outline" className="gap-2 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                  Update Password
+                  {tr('Update Password')}
                 </Button>
               </div>
             </div>
@@ -417,7 +417,7 @@ const CustomerSettings: React.FC = () => {
                   <p className="text-[11px] text-muted-foreground">{tr('6-digit PIN for payments')}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setShowPinDialog(true)} className="gap-1.5 rounded-xl">
-                  <KeyRound className="h-4 w-4" /> Set PIN
+                  <KeyRound className="h-4 w-4" /> {tr('Set PIN')}
                 </Button>
               </div>
             </div>
@@ -428,15 +428,15 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'notifications' && (
           <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Notifications')} subtitle="Choose what alerts you receive" />
+            <SectionTitle title={tr('Notifications')} subtitle={tr('Choose what alerts you receive')} />
 
             <SettingCard>
               {[
-                { label: 'Push Notifications', desc: 'Receive push alerts on your device', checked: pushEnabled, set: setPushEnabled },
-                { label: 'Email Notifications', desc: 'Receive email alerts', checked: emailNotifs, set: setEmailNotifs },
-                { label: 'SMS Notifications', desc: 'Receive SMS alerts', checked: smsNotifs, set: setSmsNotifs },
-                { label: 'Transaction Alerts', desc: 'Get notified on every transaction', checked: txAlerts, set: setTxAlerts },
-                { label: 'Promotions', desc: 'Offers & product updates', checked: promoAlerts, set: setPromoAlerts },
+                { label: tr('Push Notifications'), desc: tr('Receive push alerts on your device'), checked: pushEnabled, set: setPushEnabled },
+                { label: tr('Email Notifications'), desc: tr('Receive email alerts'), checked: emailNotifs, set: setEmailNotifs },
+                { label: tr('SMS Notifications'), desc: tr('Receive SMS alerts'), checked: smsNotifs, set: setSmsNotifs },
+                { label: tr('Transaction Alerts'), desc: tr('Get notified on every transaction'), checked: txAlerts, set: setTxAlerts },
+                { label: tr('Promotions'), desc: tr('Offers & product updates'), checked: promoAlerts, set: setPromoAlerts },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between border-b border-border/40 px-4 py-3.5 last:border-0">
                   <div>
@@ -450,7 +450,7 @@ const CustomerSettings: React.FC = () => {
 
             <Button onClick={handleSaveNotifications} disabled={saving} className="gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              {saving ? 'Saving...' : 'Save Preferences'}
+              {saving ? tr('Saving...') : tr('Save Preferences')}
             </Button>
           </motion.div>
         )}
@@ -459,7 +459,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'language' && (
           <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Language & Region')} subtitle="Set your preferred language and currency" />
+            <SectionTitle title={tr('Language & Region')} subtitle={tr('Set your preferred language and currency')} />
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground">{tr('Language')}</Label>
@@ -492,7 +492,7 @@ const CustomerSettings: React.FC = () => {
 
             <Button onClick={handleSaveLanguage} disabled={saving} className="mt-2 gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? tr('Saving...') : tr('Save')}
             </Button>
           </motion.div>
         )}
@@ -501,7 +501,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'legal' && (
           <motion.div key="legal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-2">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('Legal & Policies')} subtitle="Terms, privacy, compliance documents" />
+            <SectionTitle title={tr('Legal & Policies')} subtitle={tr('Terms, privacy, compliance documents')} />
             <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setActiveSection('legal-view'); }} />
           </motion.div>
         )}
@@ -518,7 +518,7 @@ const CustomerSettings: React.FC = () => {
         {activeSection === 'about' && (
           <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
             <BackButton onBack={() => setActiveSection(null)} />
-            <SectionTitle title={tr('About')} subtitle="App information" />
+            <SectionTitle title={tr('About')} subtitle={tr('App information')} />
 
             <SettingCard>
               <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label={tr('App Version')} description="2.1.0" right={<span className="text-xs text-muted-foreground">{tr('Latest')}</span>} />
@@ -528,12 +528,12 @@ const CustomerSettings: React.FC = () => {
 
             <div className="rounded-2xl border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Kang Open Banking (KOB) is a product of Kang Consultancy Co Ltd, registered under the Canada Business Corporations Act (CBCA) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada. In Cameroon, registered under Reg. No. RCBDA2021B000451, regulated by the Ministry of Small and Medium-Sized Enterprises.
+                {tr('Kang Open Banking (KOB) is a product of Kang Consultancy Co Ltd, registered under the Canada Business Corporations Act (CBCA) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada. In Cameroon, registered under Reg. No. RCBDA2021B000451, regulated by the Ministry of Small and Medium-Sized Enterprises.')}
               </p>
             </div>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
-              © 2026 Kang Open Banking. All rights reserved.
+              {tr('© 2026 Kang Open Banking. All rights reserved.')}
             </p>
           </motion.div>
         )}
@@ -567,7 +567,7 @@ const CustomerSettings: React.FC = () => {
             </div>
             <Button onClick={handleSetPin} disabled={saving} className="w-full gap-2 rounded-xl">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              {saving ? 'Setting...' : 'Set PIN'}
+              {saving ? tr('Setting...') : tr('Set PIN')}
             </Button>
           </div>
         </DialogContent>
