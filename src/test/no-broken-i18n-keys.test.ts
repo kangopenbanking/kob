@@ -1,6 +1,7 @@
+/// <reference types="node" />
 import { describe, it, expect } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import * as fs from "fs";
+import * as path from "path";
 
 /**
  * Guard test: prevents regression of the broken-i18n-key pattern.
@@ -9,23 +10,19 @@ import { join, relative } from "node:path";
  * the translations table — at runtime it renders the raw key string to the
  * user (e.g. "developer.hero.title.lead"). This test fails CI if any such
  * call is reintroduced in production source code.
- *
- * Test files themselves are allowed to use the pattern for testing the i18n
- * system directly.
  */
 
-const SRC_DIR = join(process.cwd(), "src");
+const SRC_DIR = path.join(process.cwd(), "src");
 const BROKEN_PATTERN = /\bt\(\s*["'][^"']+["']\s+as\s+any\s*\)/;
 const ALLOWED_FILES = new Set<string>([
-  // Tests of the i18n system itself may legitimately reference unknown keys.
   "src/test/i18n-fr-smoke.test.tsx",
   "src/test/no-broken-i18n-keys.test.ts",
 ]);
 
 function walk(dir: string, files: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    const stat = statSync(full);
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const stat = fs.statSync(full);
     if (stat.isDirectory()) {
       if (entry === "node_modules" || entry === "dist" || entry.startsWith(".")) continue;
       walk(full, files);
@@ -41,10 +38,10 @@ describe("i18n keys", () => {
     const offenders: { file: string; line: number; text: string }[] = [];
 
     for (const file of walk(SRC_DIR)) {
-      const rel = relative(process.cwd(), file).replace(/\\/g, "/");
+      const rel = path.relative(process.cwd(), file).replace(/\\/g, "/");
       if (ALLOWED_FILES.has(rel)) continue;
 
-      const lines = readFileSync(file, "utf8").split("\n");
+      const lines = fs.readFileSync(file, "utf8").split("\n");
       lines.forEach((text, idx) => {
         if (BROKEN_PATTERN.test(text)) {
           offenders.push({ file: rel, line: idx + 1, text: text.trim() });
