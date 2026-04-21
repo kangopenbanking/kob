@@ -1881,7 +1881,7 @@ export default function CustomerAppManagement() {
                                 <TableCell className="font-mono text-xs">{cs.user_id?.slice(0, 8)}...</TableCell>
                                 <TableCell className="font-bold text-lg">{cs.score}</TableCell>
                                 <TableCell><Badge variant={cs.score >= 700 ? "default" : cs.score >= 500 ? "secondary" : "destructive"} className="text-xs capitalize">{cs.category || (cs.score >= 700 ? 'Good' : cs.score >= 500 ? 'Fair' : 'Poor')}</Badge></TableCell>
-                                <TableCell className={cs.score_change > {tr('0 ? \'text-emerald-600\' : cs.score_change')} < 0 ? 'text-red-500' : ''}>
+                                <TableCell className={cs.score_change > 0 ? 'text-emerald-600' : cs.score_change < 0 ? 'text-red-500' : ''}>
                                   {cs.score_change > 0 ? '+' : ''}{cs.score_change || 0}
                                 </TableCell>
                                 <TableCell className="text-sm">{cs.calculated_at ? format(new Date(cs.calculated_at), "MMM d, yyyy") : "—"}</TableCell>

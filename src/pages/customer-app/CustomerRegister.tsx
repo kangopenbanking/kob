@@ -454,7 +454,7 @@ const CustomerRegister: React.FC = () => {
                         mode="single"
                         selected={dob}
                         onSelect={setDob}
-                        disabled={(date) => date > {tr('new Date() || date')} < new Date('1920-01-01')}
+                        disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
