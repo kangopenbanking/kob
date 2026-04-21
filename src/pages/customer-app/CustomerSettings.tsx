@@ -19,6 +19,7 @@ import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
 
