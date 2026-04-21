@@ -323,8 +323,8 @@ export default function MerchantApiKeyManagement() {
 
           {createdCredentials && (
             <div className="space-y-4 pt-2">
-              <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 flex gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <p className="text-xs text-foreground">
                   Copy the secret key now and store it in a secure vault. For security, we never display it again.
                 </p>
