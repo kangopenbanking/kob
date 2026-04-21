@@ -61,7 +61,7 @@ const DeveloperRegistration = () => {
           setCredentials({
             client_id: data.client_id,
             api_key: data.client_secret,
-            merchant_id: `mch_test_${crypto.randomUUID().slice(0, 16)}`,
+            merchant_id: `acct_test_${crypto.randomUUID().slice(0, 16)}`,
             webhook_secret: `whsec_test_${crypto.randomUUID().replace(/-/g, '')}`,
           });
           setStep("credentials");
