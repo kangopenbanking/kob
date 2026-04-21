@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Key, Plus, Copy, RefreshCw, Shield, Clock, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { Key, Plus, Copy, RefreshCw, Shield, Clock, AlertTriangle, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -20,6 +20,7 @@ export default function MerchantApiKeyManagement() {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyEnv, setNewKeyEnv] = useState("sandbox");
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [createdCredentials, setCreatedCredentials] = useState<any | null>(null);
 
   const { data: merchant } = useQuery({
     queryKey: ["merchant-for-api-keys"],
