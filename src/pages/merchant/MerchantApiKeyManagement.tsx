@@ -63,13 +63,15 @@ export default function MerchantApiKeyManagement() {
       queryClient.invalidateQueries({ queryKey: ["merchant-api-keys"] });
       setShowCreateDialog(false);
       setNewKeyName("");
-      toast.success("API key created successfully");
-      if (data?.public_key) {
-        navigator.clipboard.writeText(data.public_key);
-        toast.info("Public key copied to clipboard");
-      }
+      // Show the full credentials dialog (secret key shown only once)
+      setCreatedCredentials({
+        ...data,
+        merchant_id: merchant?.id,
+        environment: newKeyEnv,
+      });
+      toast.success("API key created — copy your secret key now");
     },
-    onError: () => toast.error("Failed to create API key"),
+    onError: (err: any) => toast.error(err?.message || "Failed to create API key"),
   });
 
   const revokeKeyMutation = useMutation({
