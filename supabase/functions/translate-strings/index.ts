@@ -11,127 +11,128 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const LANG_NAMES: Record<string, string> = {
+  fr: "French", es: "Spanish", de: "German",
+  pt: "Portuguese", ar: "Arabic", zh: "Chinese", en: "English",
+};
+
+async function translateWithOpenAI(inputObj: Record<string, string>, langName: string, apiKey: string) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: `You are a professional translator. Translate the JSON object values from English to ${langName}. Keep keys identical. Keep technical terms, brand names, currency codes (XAF, USD, EUR) unchanged. Return ONLY a valid JSON object, no markdown.` },
+        { role: "user", content: JSON.stringify(inputObj) },
+      ],
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  return JSON.parse(content);
+}
+
+async function translateWithLovable(inputObj: Record<string, string>, langName: string, apiKey: string) {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "openai/gpt-5-mini",
+      messages: [
+        { role: "system", content: `You are a professional translator. Translate the JSON object values from English to ${langName}. Keep keys identical. Keep technical terms, brand names, currency codes (XAF, USD, EUR) unchanged. Return ONLY a valid JSON object, no markdown.` },
+        { role: "user", content: JSON.stringify(inputObj) },
+      ],
+      temperature: 0.1,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    const err: any = new Error(`Lovable AI ${res.status}: ${t}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  let content = data.choices?.[0]?.message?.content?.trim() || "{}";
+  if (content.startsWith("```")) {
+    content = content.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+  }
+  return JSON.parse(content);
+}
+
 serve(async (req) => {
-  if (req.method === "OPTIONS")
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Soft IP-based limit: protects against LLM cost-abuse. Fails open.
     const ipId = getClientIdentifier(req, "ip");
-    const rl = await softCheckRateLimit(ipId, "translate-strings", 60, 10);
+    const rl = await softCheckRateLimit(ipId, "translate-strings", 60, 20);
     if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 60);
 
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!OPENAI_API_KEY && !LOVABLE_API_KEY) {
+      throw new Error("No translation provider configured");
+    }
 
     const { strings, target_language } = await req.json();
-
     if (!strings || !Array.isArray(strings) || !target_language) {
-      return new Response(
-        JSON.stringify({ error: "Missing strings array or target_language" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Missing strings or target_language" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const stringsMap = strings.map((s: { key: string; value: string }) => ({
-      key: s.key,
-      value: s.value,
-    }));
-
-    const langNames: Record<string, string> = { fr: "French", es: "Spanish", de: "German", pt: "Portuguese", ar: "Arabic", zh: "Chinese" };
-    const langName = langNames[target_language] || target_language;
-    
-    const inputObj = Object.fromEntries(stringsMap.map((s: any) => [s.key, s.value]));
-
-    // Use simple completion without tool_choice - more reliable across models
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-5-mini",
-          messages: [
-            {
-              role: "system",
-              content: `You are a professional translator. Translate the provided JSON object values from English to ${langName}. Keep all keys exactly the same. Keep technical terms, brand names, and currency abbreviations (XAF, USD) unchanged. Return ONLY a valid JSON object with the same keys and translated values. No markdown, no code blocks, no explanations.`,
-            },
-            {
-              role: "user",
-              content: JSON.stringify(inputObj),
-            },
-          ],
-          temperature: 0.1,
-        }),
-      }
+    const langName = LANG_NAMES[target_language] || target_language;
+    const inputObj = Object.fromEntries(
+      strings.map((s: { key: string; value: string }) => [s.key, s.value])
     );
 
-    if (!response.ok) {
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add credits." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
-
-    const data = await response.json();
     let translations: Record<string, string> = {};
+    let provider = "none";
 
-    // Try tool_calls first
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
+    // Primary: OpenAI direct
+    if (OPENAI_API_KEY) {
       try {
-        const parsed = JSON.parse(toolCall.function.arguments);
-        translations = parsed.translations || parsed;
+        translations = await translateWithOpenAI(inputObj, langName, OPENAI_API_KEY);
+        provider = "openai";
       } catch (e) {
-        console.error("Failed to parse tool_call arguments:", e);
+        console.warn("OpenAI failed, falling back to Lovable AI:", e instanceof Error ? e.message : e);
       }
     }
 
-    // Fallback: parse from message content
-    if (Object.keys(translations).length === 0) {
-      const content = data.choices?.[0]?.message?.content;
-      if (content) {
-        try {
-          // Strip markdown code blocks if present
-          let cleaned = content.trim();
-          if (cleaned.startsWith("```")) {
-            cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
-          }
-          const parsed = JSON.parse(cleaned);
-          translations = parsed.translations || parsed;
-        } catch (e) {
-          console.error("Failed to parse content as JSON:", e, "Content:", content.substring(0, 200));
+    // Fallback: Lovable AI Gateway
+    if (Object.keys(translations).length === 0 && LOVABLE_API_KEY) {
+      try {
+        translations = await translateWithLovable(inputObj, langName, LOVABLE_API_KEY);
+        provider = "lovable";
+      } catch (e: any) {
+        console.error("Lovable AI failed:", e?.message || e);
+        if (e?.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
-      } else {
-        console.error("No content or tool_calls in response. Full response:", JSON.stringify(data).substring(0, 500));
+        if (e?.status === 402) {
+          return new Response(JSON.stringify({ error: "Payment required" }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw e;
       }
     }
 
-    console.log(`Translated ${Object.keys(translations).length}/${strings.length} strings to ${langName}`);
+    console.log(`[${provider}] Translated ${Object.keys(translations).length}/${strings.length} → ${langName}`);
 
-    return new Response(JSON.stringify({ translations }), {
+    return new Response(JSON.stringify({ translations, provider }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("translate-strings error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
