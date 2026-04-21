@@ -8,7 +8,7 @@ The KOB sandbox lets you test all API functionality without real money.
 
 | Feature | Sandbox | Production |
 |---|---|---|
-| API Key prefix | `kob_test_*` | `kob_live_*` |
+| API Key prefix | `sk_test_*` (secret) / `pk_test_*` (publishable) | `sk_live_*` (secret) / `pk_live_*` (publishable) |
 | Real money | ❌ | ✅ |
 | Webhooks | ✅ Simulated | ✅ Real |
 | Rate limits | Same | Same |
@@ -42,7 +42,7 @@ Test webhook delivery without real transactions:
 
 ```bash
 curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhook-endpoints \
-  -H "Authorization: Bearer kob_test_xxxx" \
+  -H "Authorization: Bearer sk_test_xxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "test",

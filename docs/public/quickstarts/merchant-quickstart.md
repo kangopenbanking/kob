@@ -19,8 +19,8 @@ Your dashboard will show "KYB Under Review" until approved.
 ## 3. Get Your API Keys
 
 After KYB approval, find your keys in **Merchant Portal → API Keys**:
-- **Sandbox**: `kob_test_xxxx` — test freely
-- **Production**: `kob_live_xxxx` — real money
+- **Sandbox**: `sk_test_xxxx` — test freely
+- **Production**: `sk_live_xxxx` — real money
 
 ## 4. Create Your First Charge
 
@@ -28,7 +28,7 @@ After KYB approval, find your keys in **Merchant Portal → API Keys**:
 
 ```bash
 curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-charge \
-  -H "Authorization: Bearer kob_test_xxxx" \
+  -H "Authorization: Bearer sk_test_xxxx" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
   -d '{
@@ -51,7 +51,7 @@ const response = await fetch(
   {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer kob_test_xxxx',
+      'Authorization': 'Bearer sk_test_xxxx',
       'Content-Type': 'application/json',
       'Idempotency-Key': crypto.randomUUID(),
     },
@@ -108,7 +108,7 @@ function verifyWebhook(payload, signature, secret) {
 
 ```bash
 curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-refund \
-  -H "Authorization: Bearer kob_test_xxxx" \
+  -H "Authorization: Bearer sk_test_xxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "charge_id": "CHARGE_UUID",
@@ -121,7 +121,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-creat
 
 ```bash
 curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-export-transactions?format=csv&from=2026-01-01&to=2026-03-15" \
-  -H "Authorization: Bearer kob_test_xxxx"
+  -H "Authorization: Bearer sk_test_xxxx"
 ```
 
 ## Next Steps

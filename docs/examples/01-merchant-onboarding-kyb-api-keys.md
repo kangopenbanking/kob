@@ -90,8 +90,8 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merch
 ```json
 {
   "id": "key_xyz789",
-  "prefix": "kob_test_",
-  "api_key": "kob_test_abcdef1234567890",
+  "prefix": "sk_test_",
+  "api_key": "sk_test_abcdef1234567890",
   "environment": "sandbox",
   "created_at": "2026-03-23T12:00:00Z",
   "warning": "Store this key securely. It will not be shown again."

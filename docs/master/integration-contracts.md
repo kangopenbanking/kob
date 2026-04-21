@@ -125,8 +125,8 @@ The `software_statement` JWT must contain these claims:
 
 ### Auth Method
 - **API Key** (Bearer token in `Authorization` header)
-- Sandbox keys: `kob_test_*`
-- Production keys: `kob_live_*`
+- Sandbox keys: `sk_test_*`
+- Production keys: `sk_live_*`
 - Keys managed via `gateway-merchant-keys` edge function
 
 ### Required Endpoints (Collections)

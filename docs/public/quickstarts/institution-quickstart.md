@@ -45,7 +45,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr-register 
 Response:
 ```json
 {
-  "client_id": "kob_live_xxxxxxxx",
+  "client_id": "sk_live_xxxxxxxx",
   "client_secret": "kob_secret_xxxxxxxx",
   "client_id_issued_at": 1739750400
 }
