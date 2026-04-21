@@ -86,7 +86,7 @@ const CustomerHelp: React.FC = () => {
   });
 
   const handleSubmit = async () => {
-    if (!subject || !description) { toast.error('Please fill in all fields'); return; }
+    if (!subject || !description) { toast.error(tr('Please fill in all fields')); return; }
     setSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -102,9 +102,9 @@ const CustomerHelp: React.FC = () => {
       if (error) throw error;
       setSubject('');
       setDescription('');
-      toast.success('Report submitted. We\'ll get back to you soon.');
+      toast.success(tr('Report submitted. We\'ll get back to you soon.'));
     } catch (err: any) {
-      toast.error(extractEdgeFunctionError(err, 'Failed to submit report'));
+      toast.error(extractEdgeFunctionError(err, tr('Failed to submit report')));
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +137,7 @@ const CustomerHelp: React.FC = () => {
           <h1 className="text-xl font-bold text-primary-foreground">{tr('Help & Support')}</h1>
         </div>
         <p className="relative text-sm text-primary-foreground/80 mb-4">
-          How can we help you today?
+          {tr('How can we help you today?')}
         </p>
 
         {/* Search bar */}
@@ -175,7 +175,7 @@ const CustomerHelp: React.FC = () => {
         {/* FAQs */}
         <motion.div variants={fadeUp} className="flex flex-col gap-1">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Frequently Asked Questions
+            {tr('Frequently Asked Questions')}
           </h2>
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <Accordion type="single" collapsible>
@@ -204,11 +204,11 @@ const CustomerHelp: React.FC = () => {
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary">
                               {i + 1}
                             </span>
-                            {faq.q}
+                            {tr(faq.q)}
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pb-4 pl-8.5 text-sm leading-relaxed text-muted-foreground">
-                          {faq.a}
+                          {tr(faq.a)}
                         </AccordionContent>
                       </AccordionItem>
                     </motion.div>
@@ -222,7 +222,7 @@ const CustomerHelp: React.FC = () => {
         {/* Contact Us — stacked vertical cards */}
         <motion.div variants={fadeUp} className="flex flex-col gap-2">
           <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Contact Us
+            {tr('Contact Us')}
           </h2>
           <div className="flex flex-col gap-2.5">
             {contactOptions.map((opt, i) => (
@@ -252,7 +252,7 @@ const CustomerHelp: React.FC = () => {
         {/* Report a Problem */}
         <motion.div variants={fadeUp} className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Report a Problem
+            {tr('Report a Problem')}
           </h2>
           <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-3">
@@ -274,7 +274,7 @@ const CustomerHelp: React.FC = () => {
                 className="h-11 rounded-2xl font-semibold shadow-md"
               >
                 <Send className="mr-2 h-4 w-4" strokeWidth={1.8} />
-                {submitting ? 'Submitting...' : 'Submit Report'}
+                {submitting ? tr('Submitting...') : tr('Submit Report')}
               </Button>
             </div>
           </div>
@@ -283,14 +283,14 @@ const CustomerHelp: React.FC = () => {
         {/* Quick Links */}
         <motion.div variants={fadeUp} className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Quick Links
+            {tr('Quick Links')}
           </h2>
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             {quickLinks.map((link, i) => (
               <motion.button
                 key={i}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => link.path ? navigate(link.path) : toast.info(`${link.label} coming soon`)}
+                onClick={() => link.path ? navigate(link.path) : toast.info(`${link.label} ${tr('coming soon')}`)}
                 className="flex w-full items-center justify-between border-b border-border/40 px-4 py-3.5 last:border-0 transition-colors active:bg-muted/50"
               >
                 <div className="flex items-center gap-3">
@@ -309,7 +309,7 @@ const CustomerHelp: React.FC = () => {
         <motion.div variants={fadeUp} className="flex items-center justify-center gap-2 py-3">
           <Headphones className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
           <p className="text-[11px] text-muted-foreground/60">
-            Support available Mon–Sat, 8AM–6PM WAT
+            {tr('Support available Mon–Sat, 8AM–6PM WAT')}
           </p>
         </motion.div>
       </div>
