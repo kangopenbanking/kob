@@ -169,10 +169,59 @@ const ApiExplorer = () => {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">Base URL</span>
-              <code className="text-xs font-mono text-foreground/80">api.kangopenbanking.com</code>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Backend Base URL</span>
+              <code className="text-xs font-mono text-foreground/80 max-w-[280px] truncate" title={API_CONFIG.BASE_URL}>{API_CONFIG.BASE_URL}</code>
             </div>
           </div>
+        </div>
+
+        {/* Real-time OAuth / Credentials Status Banner */}
+        <div
+          className={`mt-6 flex items-center gap-3 rounded-xl border p-4 transition-colors ${
+            authStatus === 'ready'
+              ? 'border-emerald-500/30 bg-emerald-500/5'
+              : authStatus === 'missing'
+              ? 'border-amber-500/30 bg-amber-500/5'
+              : 'border-border bg-muted/30'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+              authStatus === 'ready'
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : authStatus === 'missing'
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {authStatus === 'ready' ? <Unlock className="h-5 w-5" /> : authStatus === 'missing' ? <Lock className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-sm">
+                {authStatus === 'ready' ? 'Authenticated — ready to send live requests' : authStatus === 'missing' ? 'Not authenticated — read-only mode' : 'Checking credentials…'}
+              </p>
+              {authStatus === 'ready' && (
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Token detected
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {authStatus === 'ready'
+                ? 'Your bearer token is active in this session. Try-it-out requests will use your credentials.'
+                : authStatus === 'missing'
+                ? 'Click the Authorize button in Swagger UI below, or follow the 3-step guide to obtain an Access Token.'
+                : 'Verifying your session token and OAuth state.'}
+            </p>
+          </div>
+          {authStatus === 'missing' && (
+            <Button size="sm" variant="outline" onClick={() => setAuthGuideOpen(true)} className="shrink-0 hidden sm:inline-flex">
+              <Key className="mr-2 h-3.5 w-3.5" /> Get Token
+            </Button>
+          )}
         </div>
       </div>
 
