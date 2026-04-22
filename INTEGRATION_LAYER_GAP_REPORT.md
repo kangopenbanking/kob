@@ -1,6 +1,6 @@
 # KOB Integration Layer — Gap & Fix Report
 
-**Version:** 4.10.0  
+**Version:** 4.17.0  
 **Date:** 2026-04-22  
 **Standing Orders:** All ten Docs Guardian orders + seven API Guardian orders honored. No removals, no renames.
 

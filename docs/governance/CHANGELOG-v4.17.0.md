@@ -1,4 +1,4 @@
-# Changelog — v4.10.0 (2026-04-22)
+# Changelog — v4.17.0 (2026-04-22)
 
 ## KOB Integration Layer (additive, non-breaking)
 
