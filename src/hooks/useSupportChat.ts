@@ -275,30 +275,38 @@ export function useSendMessage() {
       try {
         const { data: conv } = await supabase
           .from('support_conversations')
-          .select('user_id, subject')
+          .select('user_id, guest_email, guest_name, subject')
           .eq('id', conversationId)
           .single() as any;
 
+        // Resolve recipient: signed-in user > guest email
+        let recipientEmail: string | undefined;
+        let recipientName = 'Customer';
         if (conv?.user_id) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('email, full_name')
             .eq('id', conv.user_id)
             .single() as any;
+          recipientEmail = profile?.email;
+          recipientName = profile?.full_name || recipientName;
+        } else if (conv?.guest_email) {
+          recipientEmail = conv.guest_email;
+          recipientName = conv.guest_name || recipientName;
+        }
 
-          if (profile?.email) {
-            await supabase.functions.invoke('managed-send-email', {
-              body: {
-                email_key: 'support_agent_reply',
-                recipient_email: profile.email,
-                variables: {
-                  user_name: profile.full_name || 'Customer',
-                  subject: conv.subject || 'Support chat',
-                  message_preview: (content || 'Sent an attachment').substring(0, 100),
-                },
+        if (recipientEmail) {
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: 'support_agent_reply',
+              recipient_email: recipientEmail,
+              variables: {
+                user_name: recipientName,
+                subject: conv?.subject || 'Support chat',
+                message_preview: (content || 'Sent an attachment').substring(0, 100),
               },
-            });
-          }
+            },
+          });
         }
       } catch (e) {
         console.warn('Support email notification failed:', e);
