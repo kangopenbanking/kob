@@ -21,6 +21,8 @@ import { toast } from '@/hooks/use-toast';
 import { useAgentHeartbeat, useAgentPresenceList } from '@/hooks/useSupportAgentPresence';
 import { logSupportAudit } from '@/lib/supportAudit';
 import { SupportAuditLog } from '@/components/support/SupportAuditLog';
+import { AuditLogExportDialog } from '@/components/support/AuditLogExportDialog';
+import { AgentPresenceTimeline } from '@/components/support/AgentPresenceTimeline';
 
 const statusColors: Record<string, string> = {
   open: 'bg-yellow-500',
@@ -532,6 +534,10 @@ const AdminSupportChat: React.FC = () => {
                           Close
                         </Button>
                       )}
+                      <AuditLogExportDialog
+                        conversationId={activeConvId}
+                        conversationLabel={activeConv?.subject || activeConvId}
+                      />
                     </div>
                   )}
                   <div className="flex flex-1 min-h-0">
