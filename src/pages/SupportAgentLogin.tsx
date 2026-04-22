@@ -21,21 +21,50 @@ const SUPPORT_AGENT_PAGE_TESTID = 'support-agent-login-root';
  */
 const SupportAgentLogin: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState<'login' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Diagnostic beacon: logged exactly once per mount so post-publish failures
+  // (404 fallback, redirect loops, hydration mismatch) are easy to triage.
+  useEffect(() => {
+    try {
+      const beacon = {
+        event: 'support_agent_page_loaded',
+        route: location.pathname,
+        href: typeof window !== 'undefined' ? window.location.href : null,
+        host: typeof window !== 'undefined' ? window.location.host : null,
+        referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+        ts: new Date().toISOString(),
+      };
+      // eslint-disable-next-line no-console
+      console.info('[support-agent]', beacon);
+      // Expose for E2E/smoke probes.
+      if (typeof window !== 'undefined') {
+        (window as unknown as Record<string, unknown>).__supportAgentLoaded = beacon;
+      }
+    } catch { /* never let logging break the page */ }
+  }, [location.pathname]);
+
   // If already signed in & has agent/admin role, jump straight in.
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !mounted) return;
-      const { data: isAgent } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'support_agent' as any });
-      const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
-      if (isAgent || isAdmin) navigate('/admin/support-chat', { replace: true });
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !mounted) return;
+        const { data: isAgent } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'support_agent' as any });
+        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
+        // eslint-disable-next-line no-console
+        console.info('[support-agent] auth-resolved', { hasAgent: !!isAgent, hasAdmin: !!isAdmin });
+        if (isAgent || isAdmin) navigate('/admin/support-chat', { replace: true });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[support-agent] auth-probe-failed', err);
+      }
     })();
     return () => { mounted = false; };
   }, [navigate]);
