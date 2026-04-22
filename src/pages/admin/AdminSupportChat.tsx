@@ -723,6 +723,15 @@ const AdminSupportChat: React.FC = () => {
                           <span className={cn('mr-1.5 h-2 w-2 rounded-full', a.status === 'online' ? 'bg-green-500' : 'bg-muted-foreground')} />
                           {a.status}
                         </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          title="Edit agent profile"
+                          onClick={() => navigate(`/admin/support-chat/profile?agent_id=${a.user_id}`)}
+                        >
+                          <SettingsIcon className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeAgent(a.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
