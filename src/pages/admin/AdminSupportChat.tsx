@@ -641,10 +641,18 @@ const AdminSupportChat: React.FC = () => {
                 <p className="py-6 text-center text-sm text-muted-foreground">No agents yet — invite one to get started.</p>
               ) : (
                 <div className="space-y-3">
-                  {agents.map((a: any) => (
+                  {agents.map((a: any) => {
+                    const liveOnline = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                    return (
                     <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>
-                        <p className="text-sm font-semibold">{a.profiles?.full_name || a.profiles?.email || 'Unknown'}</p>
+                        <p className="text-sm font-semibold inline-flex items-center gap-2">
+                          <span className={cn('h-2 w-2 rounded-full', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
+                          {a.profiles?.full_name || a.profiles?.email || 'Unknown'}
+                          <span className="text-[10px] font-normal text-muted-foreground">
+                            {liveOnline ? 'Online now' : 'Offline'}
+                          </span>
+                        </p>
                         <p className="text-xs text-muted-foreground">{a.support_departments?.name} · Max {a.max_concurrent_chats} chats</p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -658,7 +666,7 @@ const AdminSupportChat: React.FC = () => {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </CardContent>
