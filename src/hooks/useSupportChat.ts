@@ -254,7 +254,7 @@ export function useCreateConversation() {
 export function useSendMessage() {
   return useCallback(async (
     conversationId: string,
-    senderId: string,
+    senderId: string | undefined,
     senderType: 'user' | 'agent',
     content: string,
     filePath?: string,
@@ -263,7 +263,7 @@ export function useSendMessage() {
     await supabase.from('support_messages').insert({
       conversation_id: conversationId,
       sender_type: senderType,
-      sender_id: senderId,
+      sender_id: senderId ?? null,
       content: content || null,
       file_url: filePath || null, // schema name is file_url; we now persist a storage path
       file_type: fileType || null,
