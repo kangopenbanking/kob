@@ -62,26 +62,25 @@ Deno.serve(async (req) => {
       subject: string,
       lines: string[],
       conversationId: string,
+      severity: 'warning' | 'breach',
     ) => {
       const deepLink = `${APP_BASE_URL}/admin/support-chat?conversation=${conversationId}`;
-      const html = `
-        <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px">
-          <h2 style="margin:0 0 12px 0;font-size:18px">${subject}</h2>
-          ${lines.map((l) => `<p style="margin:0 0 8px 0;color:#374151;font-size:14px">${l}</p>`).join('')}
-          <a href="${deepLink}" style="display:inline-block;margin-top:16px;padding:10px 16px;background:#0f172a;color:#ffffff;border-radius:6px;text-decoration:none;font-size:14px">Open conversation</a>
-          <p style="margin-top:16px;font-size:12px;color:#6b7280">Direct link: ${deepLink}</p>
-        </div>`;
       try {
         await admin.functions.invoke('send-transactional-email', {
           body: {
             templateName: 'support-sla-supervisor',
             recipientEmail: to,
-            idempotencyKey: `sla-${conversationId}-${subject.toLowerCase().includes('breach') ? 'breach' : 'warn'}`,
-            templateData: { subject, html, conversation_id: conversationId, deep_link: deepLink },
+            idempotencyKey: `sla-${conversationId}-${severity}`,
+            templateData: {
+              subject,
+              summaryLines: lines.map((l) => l.replace(/<[^>]+>/g, '')),
+              deepLink,
+              conversationId,
+              severity,
+            },
           },
         });
       } catch (err) {
-        // Fallback: managed-send-email or just log – don't block escalation
         console.warn('supervisor email failed:', err);
       }
     };
@@ -148,6 +147,7 @@ Deno.serve(async (req) => {
               `No agent has responded yet.`,
             ],
             c.id,
+            'warning',
           );
         }
         warned++;
@@ -234,6 +234,7 @@ Deno.serve(async (req) => {
               `Subject: ${(c as any).subject || '(no subject)'}.`,
             ],
             c.id,
+            'breach',
           );
         }
         escalated++;

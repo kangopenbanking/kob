@@ -181,6 +181,7 @@ export const adminNavigation: AdminNavSection[] = [
     items: [
       { title: "Support Chat", path: "/admin/support-chat", icon: MessageCircle },
       { title: "SLA & Escalation", path: "/admin/support-sla-settings", icon: Settings },
+      { title: "Email Delivery", path: "/admin/support-email-logs", icon: Mail },
     ],
   },
   {
