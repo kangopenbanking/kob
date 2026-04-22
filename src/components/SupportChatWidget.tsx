@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { MessageCircle, X, ArrowLeft, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { MessageCircle, X, ArrowLeft, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,19 +18,29 @@ import {
 } from '@/hooks/useSupportChat';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { getOrCreateGuestId } from '@/utils/supportGuest';
+import {
+  getOrCreateGuestId,
+  getPersistedDepartment,
+  setPersistedDepartment,
+} from '@/utils/supportGuest';
+import { validateStartChat, describeBackendError, type FieldErrors } from '@/utils/supportValidation';
+import { checkSupportBackendHealth, type HealthState } from '@/utils/supportHealth';
+import { trackSupport } from '@/utils/supportAnalytics';
 
 type Step = 'closed' | 'menu' | 'departments' | 'subject' | 'chat' | 'history';
 
 export const SupportChatWidget: React.FC = () => {
   const [step, setStep] = useState<Step>('closed');
   const [userId, setUserId] = useState<string>();
-  const [selectedDept, setSelectedDept] = useState<Department>();
+  const [selectedDept, setSelectedDept] = useState<Department | undefined>(() => getPersistedDepartment());
   const [subject, setSubject] = useState('');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [activeConvId, setActiveConvId] = useState<string>();
   const [starting, setStarting] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<{ subject?: boolean; guestEmail?: boolean }>({});
+  const [health, setHealth] = useState<{ state: HealthState; latencyMs?: number; error?: string }>({ state: 'unknown' });
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
@@ -64,33 +74,120 @@ export const SupportChatWidget: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [step]);
 
+  // Run a health probe whenever the user enters the subject step
+  const runHealthProbe = useCallback(async () => {
+    setHealth({ state: 'checking' });
+    const res = await checkSupportBackendHealth();
+    setHealth(res);
+    if (res.state === 'offline' || res.state === 'degraded') {
+      trackSupport('support_health_check_failed', { state: res.state, latencyMs: res.latencyMs, error: res.error });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (step === 'subject') runHealthProbe();
+  }, [step, runHealthProbe]);
+
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_user_count || 0), 0);
 
-  const handleDeptSelect = (dept: Department) => { setSelectedDept(dept); setStep('subject'); };
+  // Live (per-keystroke) validation for the form
+  const liveErrors = useMemo<FieldErrors>(() => {
+    const { errors: e } = validateStartChat({
+      departmentId: selectedDept?.id,
+      subject,
+      guestName: userId ? '' : guestName,
+      guestEmail: userId ? '' : guestEmail,
+    });
+    return e;
+  }, [selectedDept?.id, subject, guestName, guestEmail, userId]);
+
+  const formValid = Object.keys(liveErrors).length === 0;
+  const backendUp = health.state === 'healthy' || health.state === 'degraded' || health.state === 'unknown';
+  const canSubmit = formValid && backendUp && !starting;
+
+  const handleDeptSelect = (dept: Department) => {
+    setSelectedDept(dept);
+    setPersistedDepartment(dept);
+    trackSupport('support_dept_selected', { department_id: dept.id, department_name: dept.name });
+    setStep('subject');
+  };
+
+  const openWidget = () => {
+    setStep('menu');
+    trackSupport('support_widget_opened', { has_persisted_dept: !!selectedDept });
+  };
+
+  const startNewConversation = () => {
+    // Skip the dept picker if we already have a remembered department
+    if (selectedDept) setStep('subject');
+    else setStep('departments');
+  };
 
   const handleStartChat = async () => {
-    if (!selectedDept) {
-      toast.error('Please choose a department first.');
-      setStep('departments');
+    trackSupport('support_start_chat_clicked', {
+      department_id: selectedDept?.id,
+      has_subject: subject.trim().length > 0,
+      authenticated: !!userId,
+    });
+
+    // Field-level validation — show inline errors and keep user on the failing step
+    const { ok, errors: fieldErrors } = validateStartChat({
+      departmentId: selectedDept?.id,
+      subject,
+      guestName: userId ? '' : guestName,
+      guestEmail: userId ? '' : guestEmail,
+    });
+    setErrors(fieldErrors);
+    setTouched({ subject: true, guestEmail: true });
+
+    if (!ok) {
+      const firstError = Object.values(fieldErrors)[0] || 'Please fix the highlighted fields.';
+      trackSupport('support_validation_failed', { errors: fieldErrors });
+      toast.error(firstError);
+      // Keep user on the most relevant step
+      if (fieldErrors.departmentId) setStep('departments');
       return;
     }
+
+    // Health gate
+    if (!backendUp) {
+      toast.error(`Support backend is ${health.state}. ${health.error || 'Please retry shortly.'}`);
+      return;
+    }
+
     if (starting) return;
     setStarting(true);
     try {
       const convId = await createConversation(
         userId,
-        selectedDept.id,
-        subject.trim() || 'General inquiry',
+        selectedDept!.id,
+        subject.trim(),
         'website',
-        subject.trim() || undefined,
+        subject.trim(),
         userId ? undefined : { guestId, name: guestName.trim() || undefined, email: guestEmail.trim() || undefined },
       );
+      trackSupport('support_conversation_created', {
+        conversation_id: convId,
+        department_id: selectedDept!.id,
+        authenticated: !!userId,
+      });
       setActiveConvId(convId);
       setStep('chat');
       refreshConvs();
     } catch (e: any) {
+      const desc = describeBackendError(e);
       console.error('[SupportChat] start chat failed:', e);
-      toast.error(e?.message || 'Could not start chat. Please try again.');
+      trackSupport('support_conversation_error', {
+        code: desc.code,
+        message: desc.message,
+        details: desc.details,
+      });
+      toast.error(desc.message, {
+        description: desc.code ? `Error code: ${desc.code}` : undefined,
+        duration: 8000,
+      });
+      // Stay on the subject step so the user can retry
+      setStep('subject');
     } finally {
       setStarting(false);
     }
@@ -103,6 +200,10 @@ export const SupportChatWidget: React.FC = () => {
 
   const isOpen = step !== 'closed';
 
+  // Helpers for inline error display: only show after the user has touched the field OR after submit
+  const showSubjectError = (touched.subject || errors.subject) && (errors.subject || liveErrors.subject);
+  const showEmailError = (touched.guestEmail || errors.guestEmail) && (errors.guestEmail || liveErrors.guestEmail);
+
   return (
     <>
       <AnimatePresence>
@@ -111,7 +212,7 @@ export const SupportChatWidget: React.FC = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            onClick={() => setStep('menu')}
+            onClick={openWidget}
             className="fixed bottom-20 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
             aria-label="Open support chat"
           >
@@ -181,9 +282,21 @@ export const SupportChatWidget: React.FC = () => {
                     How can we help you today? Live support is free — no account needed.
                   </p>
                   <div className="mt-4 flex flex-col gap-2">
-                    <Button onClick={() => setStep('departments')} className="justify-start rounded-xl" variant="outline">
+                    <Button onClick={startNewConversation} className="justify-start rounded-xl" variant="outline">
                       <MessageCircle className="mr-2 h-4 w-4" strokeWidth={1.5} /> Start a new conversation
                     </Button>
+                    {selectedDept && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Last department: <span className="font-medium text-foreground">{selectedDept.name}</span>{' '}
+                        ·{' '}
+                        <button
+                          className="underline hover:text-foreground"
+                          onClick={() => { setSelectedDept(undefined); setPersistedDepartment(undefined); setStep('departments'); }}
+                        >
+                          Change
+                        </button>
+                      </p>
+                    )}
                     {conversations.length > 0 && (
                       <Button onClick={() => { refreshConvs(); setStep('history'); }} className="justify-start rounded-xl" variant="ghost">
                         View past conversations ({conversations.length})
@@ -199,13 +312,33 @@ export const SupportChatWidget: React.FC = () => {
 
               {step === 'subject' && (
                 <div className="flex flex-col gap-3 p-4">
+                  {/* Selected department summary */}
+                  {selectedDept && (
+                    <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Department</p>
+                        <p className="truncate text-sm font-medium text-foreground">{selectedDept.name}</p>
+                      </div>
+                      <button className="text-xs text-primary underline" onClick={() => setStep('departments')}>
+                        Change
+                      </button>
+                    </div>
+                  )}
+
                   <p className="text-sm font-medium text-foreground">What can we help you with?</p>
                   <Input
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, subject: true }))}
                     placeholder="Briefly describe your issue…"
                     className="rounded-xl"
+                    aria-invalid={!!showSubjectError}
+                    maxLength={200}
                   />
+                  {showSubjectError && (
+                    <p className="text-[11px] text-destructive">{errors.subject || liveErrors.subject}</p>
+                  )}
+
                   {!userId && (
                     <>
                       <Input
@@ -213,33 +346,66 @@ export const SupportChatWidget: React.FC = () => {
                         onChange={(e) => setGuestName(e.target.value)}
                         placeholder="Your name (optional)"
                         className="rounded-xl"
+                        maxLength={80}
                       />
                       <Input
                         type="email"
                         value={guestEmail}
                         onChange={(e) => setGuestEmail(e.target.value)}
+                        onBlur={() => setTouched((t) => ({ ...t, guestEmail: true }))}
                         placeholder="Email for replies (optional)"
                         className="rounded-xl"
+                        aria-invalid={!!showEmailError}
+                        maxLength={200}
                       />
-                      <p className="text-[11px] text-muted-foreground">
-                        Add an email if you'd like agent replies sent to your inbox.
-                      </p>
+                      {showEmailError ? (
+                        <p className="text-[11px] text-destructive">{errors.guestEmail || liveErrors.guestEmail}</p>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">
+                          Add an email if you'd like agent replies sent to your inbox.
+                        </p>
+                      )}
                     </>
                   )}
+
+                  {/* Backend health banner */}
+                  {(health.state === 'offline' || health.state === 'degraded') && (
+                    <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+                      <span>
+                        {health.state === 'offline' ? 'Support backend is unreachable.' : 'Support backend is slow.'}{' '}
+                        {health.error || ''}{' '}
+                        <button className="underline" onClick={runHealthProbe}>Retry</button>
+                      </span>
+                    </div>
+                  )}
+                  {health.state === 'healthy' && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-500" strokeWidth={1.5} />
+                      Backend healthy · {health.latencyMs}ms
+                    </div>
+                  )}
+
                   <Button
                     onClick={handleStartChat}
-                    disabled={starting || !selectedDept}
+                    disabled={!canSubmit}
                     className="rounded-xl"
                   >
                     {starting ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} /> Starting…</>
+                    ) : health.state === 'checking' ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} /> Checking backend…</>
+                    ) : !backendUp ? (
+                      'Backend unavailable'
                     ) : (
                       'Start chat'
                     )}
                   </Button>
+
                   {!selectedDept && (
                     <p className="text-[11px] text-destructive">
-                      No department selected. <button className="underline" onClick={() => setStep('departments')}>Choose one</button>.
+                      No department selected.{' '}
+                      <button className="underline" onClick={() => setStep('departments')}>Choose one</button>.
                     </p>
                   )}
                 </div>
