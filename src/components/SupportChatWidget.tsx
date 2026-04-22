@@ -97,6 +97,18 @@ export const SupportChatWidget: React.FC = () => {
 
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_user_count || 0), 0);
 
+  // Department-driven dynamic intake fields (e.g., order ID, account ID, urgency)
+  const intakeFields: IntakeField[] = useMemo(
+    () => (selectedDept?.intake_fields as IntakeField[] | undefined) ?? [],
+    [selectedDept?.id, selectedDept?.intake_fields],
+  );
+
+  // Reset intake state whenever the user picks a different department
+  useEffect(() => {
+    setIntakeValues({});
+    setIntakeErrors({});
+  }, [selectedDept?.id]);
+
   // Live (per-keystroke) validation for the form
   const liveErrors = useMemo<FieldErrors>(() => {
     const { errors: e } = validateStartChat({
@@ -108,14 +120,36 @@ export const SupportChatWidget: React.FC = () => {
     return e;
   }, [selectedDept?.id, subject, guestName, guestEmail, userId]);
 
-  const formValid = Object.keys(liveErrors).length === 0;
+  // Live validation for required intake fields
+  const liveIntakeErrors = useMemo<Record<string, string>>(() => {
+    const errs: Record<string, string> = {};
+    for (const f of intakeFields) {
+      if (f.required && !(intakeValues[f.key] || '').trim()) {
+        errs[f.key] = `${f.label} is required.`;
+      }
+    }
+    return errs;
+  }, [intakeFields, intakeValues]);
+
+  const formValid =
+    Object.keys(liveErrors).length === 0 && Object.keys(liveIntakeErrors).length === 0;
   const backendUp = health.state === 'healthy' || health.state === 'degraded' || health.state === 'unknown';
   const canSubmit = formValid && backendUp && !starting;
+
+  // The conversation summary backing the chat header (for SLA + meta)
+  const activeConv = useMemo(
+    () => conversations.find((c) => c.id === activeConvId),
+    [conversations, activeConvId],
+  );
 
   const handleDeptSelect = (dept: Department) => {
     setSelectedDept(dept);
     setPersistedDepartment(dept);
-    trackSupport('support_dept_selected', { department_id: dept.id, department_name: dept.name });
+    trackSupport('support_dept_selected', {
+      department_id: dept.id,
+      department_name: dept.name,
+      intake_field_count: (dept.intake_fields || []).length,
+    });
     setStep('subject');
   };
 
@@ -135,6 +169,7 @@ export const SupportChatWidget: React.FC = () => {
       department_id: selectedDept?.id,
       has_subject: subject.trim().length > 0,
       authenticated: !!userId,
+      intake_field_count: intakeFields.length,
     });
 
     // Field-level validation — show inline errors and keep user on the failing step
@@ -145,11 +180,18 @@ export const SupportChatWidget: React.FC = () => {
       guestEmail: userId ? '' : guestEmail,
     });
     setErrors(fieldErrors);
+    setIntakeErrors(liveIntakeErrors);
     setTouched({ subject: true, guestEmail: true });
 
-    if (!ok) {
-      const firstError = Object.values(fieldErrors)[0] || 'Please fix the highlighted fields.';
-      trackSupport('support_validation_failed', { errors: fieldErrors });
+    if (!ok || Object.keys(liveIntakeErrors).length > 0) {
+      const firstError =
+        Object.values(fieldErrors)[0] ||
+        Object.values(liveIntakeErrors)[0] ||
+        'Please fix the highlighted fields.';
+      trackSupport('support_validation_failed', {
+        errors: fieldErrors,
+        intake_errors: liveIntakeErrors,
+      });
       toast.error(firstError);
       // Keep user on the most relevant step
       if (fieldErrors.departmentId) setStep('departments');
@@ -165,6 +207,13 @@ export const SupportChatWidget: React.FC = () => {
     if (starting) return;
     setStarting(true);
     try {
+      // Trim & strip empty intake values so DB metadata stays clean
+      const cleanIntake: Record<string, string> = {};
+      for (const f of intakeFields) {
+        const v = (intakeValues[f.key] || '').trim();
+        if (v) cleanIntake[f.key] = v;
+      }
+
       const convId = await createConversation(
         userId,
         selectedDept!.id,
@@ -172,11 +221,13 @@ export const SupportChatWidget: React.FC = () => {
         'website',
         subject.trim(),
         userId ? undefined : { guestId, name: guestName.trim() || undefined, email: guestEmail.trim() || undefined },
+        cleanIntake,
       );
       trackSupport('support_conversation_created', {
         conversation_id: convId,
         department_id: selectedDept!.id,
         authenticated: !!userId,
+        intake_keys: Object.keys(cleanIntake),
       });
       setActiveConvId(convId);
       setStep('chat');
