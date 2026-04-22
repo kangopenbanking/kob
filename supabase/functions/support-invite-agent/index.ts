@@ -52,9 +52,15 @@ Deno.serve(async (req) => {
       userId = existingProfile.id;
     } else {
       // Try to invite via admin API (sends invite email so user sets their password)
+      // Use APP_URL secret if set, else derive a public origin from request.
+      // This must be the user-facing site (not the functions host) so the link works.
+      const appOrigin = (Deno.env.get('APP_URL') || '').replace(/\/$/, '') ||
+        new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app');
       const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: full_name ? { full_name } : undefined,
-        redirectTo: `${new URL(req.url).origin.replace('functions.', '')}/auth`,
+        data: full_name ? { full_name, support_agent_invite: true } : { support_agent_invite: true },
+        // Land them on /reset-password so they immediately set their password,
+        // then they can sign in at /support-agent.
+        redirectTo: `${appOrigin}/reset-password`,
       });
       if (inviteErr) {
         // Fallback: maybe user already exists in auth without profile — try to look up
@@ -99,7 +105,7 @@ Deno.serve(async (req) => {
           variables: {
             agent_name: full_name || email.split('@')[0],
             department_name: dept?.name || 'Support',
-            portal_url: `${new URL(req.url).origin.replace('functions.', '')}/admin/support-chat`,
+            portal_url: `${(Deno.env.get('APP_URL') || '').replace(/\/$/, '') || new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app')}/support-agent`,
             invite_sent: inviteSent,
           },
         },

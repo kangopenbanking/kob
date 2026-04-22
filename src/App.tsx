@@ -70,6 +70,8 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const SupportAgentLogin = lazy(() => import("./pages/SupportAgentLogin"));
+const AgentProfile = lazy(() => import("./pages/admin/AgentProfile"));
 const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -922,6 +924,7 @@ function App() {
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminSupportChat />} />
+              <Route path="support-chat/profile" element={<AgentProfile />} />
               <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
@@ -1271,6 +1274,8 @@ function App() {
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="/staff-login" element={<StaffLogin />} />
+            {/* Dedicated branded sign-in for support agents */}
+            <Route path="/support-agent" element={<SupportAgentLogin />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}

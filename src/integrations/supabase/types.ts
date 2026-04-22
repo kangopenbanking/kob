@@ -16880,6 +16880,7 @@ export type Database = {
           account_status: string
           account_type: string | null
           address: string | null
+          avatar_url: string | null
           city: string | null
           country_code: string | null
           created_at: string
@@ -16913,6 +16914,7 @@ export type Database = {
           account_status?: string
           account_type?: string | null
           address?: string | null
+          avatar_url?: string | null
           city?: string | null
           country_code?: string | null
           created_at?: string
@@ -16946,6 +16948,7 @@ export type Database = {
           account_status?: string
           account_type?: string | null
           address?: string | null
+          avatar_url?: string | null
           city?: string | null
           country_code?: string | null
           created_at?: string
@@ -20444,28 +20447,40 @@ export type Database = {
       }
       support_agents: {
         Row: {
+          away_message: string | null
           created_at: string | null
           department_id: string
           id: string
           max_concurrent_chats: number | null
+          notify_assignment: boolean
+          notify_email: boolean
+          notify_new_chat: boolean
           status: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          away_message?: string | null
           created_at?: string | null
           department_id: string
           id?: string
           max_concurrent_chats?: number | null
+          notify_assignment?: boolean
+          notify_email?: boolean
+          notify_new_chat?: boolean
           status?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          away_message?: string | null
           created_at?: string | null
           department_id?: string
           id?: string
           max_concurrent_chats?: number | null
+          notify_assignment?: boolean
+          notify_email?: boolean
+          notify_new_chat?: boolean
           status?: string
           updated_at?: string | null
           user_id?: string
