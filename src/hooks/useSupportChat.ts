@@ -72,22 +72,23 @@ export function useSupportConversations(userId?: string, guestId?: string) {
       }))
     );
     setLoading(false);
-  }, [userId]);
+  }, [userId, guestId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   // Live refresh whenever any of the user's conversations change
   useEffect(() => {
-    if (!userId) return;
+    if (!userId && !guestId) return;
+    const filter = userId ? `user_id=eq.${userId}` : `guest_id=eq.${guestId}`;
     const ch = supabase
-      .channel(`user-support-convs-${userId}`)
+      .channel(`user-support-convs-${userId || guestId}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'support_conversations',
-        filter: `user_id=eq.${userId}`,
+        filter,
       }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [userId, refresh]);
+  }, [userId, guestId, refresh]);
 
   return { conversations, loading, refresh };
 }
