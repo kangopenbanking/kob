@@ -51,11 +51,10 @@ const AdminSupportChat: React.FC = () => {
   const [editingDept, setEditingDept] = useState<any>(null);
   const [deptForm, setDeptForm] = useState({ name: '', description: '', icon: 'headphones', display_order: 0, is_active: true });
 
-  // Agent CRUD state
+  // Agent invite state
   const [agentDialogOpen, setAgentDialogOpen] = useState(false);
-  const [agentSearch, setAgentSearch] = useState('');
-  const [agentSearchResults, setAgentSearchResults] = useState<any[]>([]);
-  const [agentForm, setAgentForm] = useState({ user_id: '', department_id: '', max_concurrent_chats: 5 });
+  const [inviteForm, setInviteForm] = useState({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
+  const [inviting, setInviting] = useState(false);
 
   const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, user?.id);
   const sendMessage = useSendMessage();
@@ -175,28 +174,41 @@ const AdminSupportChat: React.FC = () => {
     fetchDepartments();
   };
 
-  // ---- Agent CRUD ----
-  const searchUsers = async (q: string) => {
-    setAgentSearch(q);
-    if (q.length < 2) { setAgentSearchResults([]); return; }
-    const { data } = await supabase.from('profiles').select('id, full_name, email').ilike('full_name', `%${q}%`).limit(8) as any;
-    setAgentSearchResults(data || []);
-  };
-
-  const saveAgent = async () => {
-    if (!agentForm.user_id || !agentForm.department_id) { toast({ title: 'Select user and department', variant: 'destructive' }); return; }
-    const { error } = await supabase.from('support_agents').insert({
-      user_id: agentForm.user_id,
-      department_id: agentForm.department_id,
-      max_concurrent_chats: agentForm.max_concurrent_chats,
-      status: 'online',
-    });
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Agent added' });
-    setAgentDialogOpen(false);
-    setAgentForm({ user_id: '', department_id: '', max_concurrent_chats: 5 });
-    setAgentSearch('');
-    fetchAgents();
+  // ---- Agent invite ----
+  const inviteAgent = async () => {
+    if (!inviteForm.email.trim() || !inviteForm.email.includes('@')) {
+      toast({ title: 'Valid email required', variant: 'destructive' }); return;
+    }
+    if (!inviteForm.department_id) {
+      toast({ title: 'Select a department', variant: 'destructive' }); return;
+    }
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          email: inviteForm.email.trim().toLowerCase(),
+          full_name: inviteForm.full_name.trim() || undefined,
+          department_id: inviteForm.department_id,
+          max_concurrent_chats: inviteForm.max_concurrent_chats,
+        },
+      });
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error || error?.message || 'Failed to invite agent');
+      }
+      toast({
+        title: 'Agent invited',
+        description: (data as any)?.invite_sent
+          ? 'Invitation email sent. They can set their password and log in.'
+          : 'Existing user added as a support agent.',
+      });
+      setAgentDialogOpen(false);
+      setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
+      fetchAgents();
+    } catch (e: any) {
+      toast({ title: 'Invite failed', description: e?.message || String(e), variant: 'destructive' });
+    } finally {
+      setInviting(false);
+    }
   };
 
   const removeAgent = async (id: string) => {
