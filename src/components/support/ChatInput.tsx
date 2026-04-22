@@ -143,21 +143,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         setProgress((p) => (p < 85 ? p + 7 : p));
       }, 120);
 
-      // Wire an AbortController so the user can cancel mid-flight
+      // Wire an AbortController so the user can "cancel" mid-flight.
+      // Note: supabase-js storage doesn't expose XHR cancellation, so on cancel
+      // we still let the upload finish, then delete the orphaned object.
       const controller = new AbortController();
       abortRef.current = controller;
 
       const { error } = await supabase.storage
         .from('support-attachments')
-        .upload(path, file, { contentType: file.type, upsert: false, duplex: 'half' as any } as any)
-        .abortSignal?.(controller.signal) as any ?? supabase.storage
-        .from('support-attachments')
         .upload(path, file, { contentType: file.type, upsert: false });
 
       if (progTimerRef.current) { clearInterval(progTimerRef.current); progTimerRef.current = null; }
-      // If the user cancelled while we were waiting, exit silently — cancelUpload reset the UI
+
+      // If the user cancelled while we were waiting, clean up + exit silently
       if (controller.signal.aborted) {
         abortRef.current = null;
+        if (!error) {
+          // Best-effort cleanup of the orphaned object
+          supabase.storage.from('support-attachments').remove([path]).catch(() => { /* noop */ });
+        }
         return;
       }
       abortRef.current = null;
