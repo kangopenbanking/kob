@@ -1,0 +1,10 @@
+{
+  "service": "support-agent-portal",
+  "route": "/support-agent",
+  "expected_marker": "support-agent-ok",
+  "expected_testid": "support-agent-login-root",
+  "page": "SupportAgentLogin",
+  "lands_on": "/admin/support-chat",
+  "version": "1.0.0",
+  "notes": "Static health manifest. If GET /support-agent returns the SPA shell containing #support-agent-health[data-state=ok], the route is live. Used by uptime probes and the published-url smoke test."
+}
