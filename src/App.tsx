@@ -371,6 +371,7 @@ const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceB
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
 const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
 const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
+const AdminSupportSlaSettings = lazy(() => import("./pages/admin/AdminSupportSlaSettings"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
@@ -921,6 +922,7 @@ function App() {
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminSupportChat />} />
+              <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />
