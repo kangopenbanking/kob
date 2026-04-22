@@ -120,7 +120,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Breadcrumbs />
             </div>
             <div className="flex items-center gap-2">
-              <AdminCommandPalette />
+              {!isSupportOnly && <AdminCommandPalette />}
               <LanguageSwitcher />
               <NotificationCenter />
               <UserProfileMenu variant="admin" />
