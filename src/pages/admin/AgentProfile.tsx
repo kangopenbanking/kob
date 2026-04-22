@@ -66,7 +66,7 @@ const AgentProfile: React.FC = () => {
     }
 
     const [{ data: prof }, { data: agentRow }, { data: depts }] = await Promise.all([
-      supabase.from('profiles').select('id, email, full_name, avatar_url').eq('id', targetUserId).maybeSingle(),
+      (supabase.from('profiles') as any).select('id, email, full_name, avatar_url').eq('id', targetUserId).maybeSingle(),
       (supabase.from('support_agents') as any)
         .select('*, support_departments(name)')
         .eq('user_id', targetUserId)
