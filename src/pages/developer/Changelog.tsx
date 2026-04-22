@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "Developer Portal 4.16.4",
+      date: "2026-04-22",
+      type: "feature",
+      changes: [
+        { type: "feature", description: "Kang AI Agent — a senior full-stack API integration assistant is now embedded as a floating chatbot across every /developer/* route. Powered by OpenAI (gpt-4o-mini) with an automatic Lovable AI (gemini-3-flash) fallback, it answers integration questions, generates working cURL / Node.js / Python snippets, walks through OAuth + PKCE and AISP/PISP flows, and produces webhook signature verification examples on demand." },
+        { type: "feature", description: "Deep links — any endpoint mentioned by the assistant (e.g. POST /v1/payments) is auto-linked to the matching section of /developer/api-explorer for one-click navigation." },
+        { type: "feature", description: "Transcript export — full conversations can be downloaded as Markdown for inclusion in internal integration docs." },
+        { type: "feature", description: "Optional developer login — supplying a developer token raises the per-IP rate limit from 15 → 60 requests / minute while keeping the portal anonymously accessible (ORDER P1)." },
+        { type: "improvement", description: "Refreshed Kang Open Banking logo applied across the developer portal header and the Kang AI Agent chat surface for a unified brand experience." },
+      ]
+    },
+    {
       version: "API Spec 4.16.3",
       date: "2026-04-21",
       type: "patch",

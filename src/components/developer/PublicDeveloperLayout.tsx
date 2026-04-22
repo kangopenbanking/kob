@@ -10,6 +10,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { DeveloperAIAssistant } from "@/components/developer/DeveloperAIAssistant";
+import kangAgentLogo from "@/assets/kang-agent-logo.png";
 import {
   ArrowLeft,
   Code,
@@ -544,7 +545,7 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
             <SidebarTrigger />
             <Link to="/developer" className="flex items-center gap-2">
-              <img src="/src/assets/kang-agent-logo.png" alt="Kang Open Banking" className="h-7 w-7 object-contain" />
+              <img src={kangAgentLogo} alt="Kang Open Banking" className="h-7 w-7 object-contain" />
               <span className="font-semibold">Kang Docs</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 ml-6">
