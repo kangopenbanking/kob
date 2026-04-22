@@ -20370,6 +20370,9 @@ export type Database = {
           created_at: string | null
           department_id: string | null
           first_response_at: string | null
+          guest_email: string | null
+          guest_id: string | null
+          guest_name: string | null
           id: string
           last_message_at: string | null
           last_message_preview: string | null
@@ -20383,7 +20386,7 @@ export type Database = {
           unread_agent_count: number
           unread_user_count: number
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           assigned_agent_id?: string | null
@@ -20391,6 +20394,9 @@ export type Database = {
           created_at?: string | null
           department_id?: string | null
           first_response_at?: string | null
+          guest_email?: string | null
+          guest_id?: string | null
+          guest_name?: string | null
           id?: string
           last_message_at?: string | null
           last_message_preview?: string | null
@@ -20404,7 +20410,7 @@ export type Database = {
           unread_agent_count?: number
           unread_user_count?: number
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           assigned_agent_id?: string | null
@@ -20412,6 +20418,9 @@ export type Database = {
           created_at?: string | null
           department_id?: string | null
           first_response_at?: string | null
+          guest_email?: string | null
+          guest_id?: string | null
+          guest_name?: string | null
           id?: string
           last_message_at?: string | null
           last_message_preview?: string | null
@@ -20425,7 +20434,7 @@ export type Database = {
           unread_agent_count?: number
           unread_user_count?: number
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
