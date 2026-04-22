@@ -64,6 +64,10 @@ const AdminSupportChat: React.FC = () => {
   const assignConversationEmail = useAssignConversation();
   const resolveNotification = useResolveNotification();
 
+  // Presence: heartbeat for this agent + watch all agents in workspace
+  useAgentHeartbeat(user?.id);
+  const presence = useAgentPresenceList();
+
   const fetchConversations = useCallback(async () => {
     let q = supabase
       .from('support_conversations')
@@ -123,16 +127,43 @@ const AdminSupportChat: React.FC = () => {
   };
 
   const updatePriority = async (convId: string, priority: string) => {
+    const conv = conversations.find((c) => c.id === convId);
     await supabase.from('support_conversations').update({ priority, updated_at: new Date().toISOString() }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'priority_change',
+      actorId: user?.id,
+      details: { from: conv?.priority, to: priority },
+    });
     fetchConversations();
   };
 
   const assignAgent = async (convId: string, agentId: string) => {
+    const conv = conversations.find((c) => c.id === convId);
+    // Block assigning to an offline / away agent
+    if (agentId) {
+      const target = agents.find((a: any) => a.id === agentId || a.user_id === agentId);
+      const isOnline = presence.isOnline(target?.user_id) || presence.isOnline(target?.id);
+      if (!isOnline) {
+        toast({
+          title: 'Agent unavailable',
+          description: 'This agent is offline or away. Pick someone online or wait for them to return.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     await supabase.from('support_conversations').update({
       assigned_agent_id: agentId || null,
       status: agentId ? 'assigned' : 'open',
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'assignment_change',
+      actorId: user?.id,
+      details: { from: conv?.assigned_agent_id, to: agentId || null },
+    });
     toast({ title: agentId ? 'Agent assigned' : 'Agent unassigned' });
     fetchConversations();
 
@@ -145,15 +176,50 @@ const AdminSupportChat: React.FC = () => {
     }
   };
 
+  // Claim chat — optimistic UI, atomic DB function rejects if already claimed
+  const claimConversation = async (convId: string) => {
+    const previous = conversations;
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convId
+          ? { ...c, claimed_by: user?.id, claimed_at: new Date().toISOString(), status: 'assigned' }
+          : c,
+      ),
+    );
+    const { data, error } = await (supabase.rpc as any)('claim_support_conversation', { _conversation_id: convId });
+    if (error) {
+      setConversations(previous);
+      toast({
+        title: 'Could not claim',
+        description: error.message === 'conversation_already_claimed'
+          ? 'Another agent claimed this chat first.'
+          : error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Chat claimed', description: 'You are now responsible for this conversation.' });
+    fetchConversations();
+  };
+
   // Transfer conversation to another department (and clear current agent)
   const transferDepartment = async (convId: string, departmentId: string) => {
     if (!departmentId) return;
+    const conv = conversations.find((c) => c.id === convId);
     await supabase.from('support_conversations').update({
       department_id: departmentId,
       assigned_agent_id: null,
+      claimed_by: null,
+      claimed_at: null,
       status: 'open',
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'transfer',
+      actorId: user?.id,
+      details: { from_department: conv?.department_id, to_department: departmentId },
+    });
     toast({ title: 'Conversation transferred', description: 'Re-routed to the selected department.' });
     fetchConversations();
     // Notify agents in the new department
@@ -175,6 +241,12 @@ const AdminSupportChat: React.FC = () => {
       priority: next,
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'escalate',
+      actorId: user?.id,
+      details: { from: currentPriority, to: next },
+    });
     toast({ title: `Escalated to ${next}` });
     fetchConversations();
   };
