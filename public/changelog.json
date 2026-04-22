@@ -1,9 +1,38 @@
 {
-  "apiVersion": "4.16.4",
+  "apiVersion": "4.17.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-21",
+  "lastUpdated": "2026-04-22",
   "entries": [
+    {
+      "version": "4.17.0",
+      "date": "2026-04-22",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "KOB Integration Layer — Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
+      "highlights": [
+        "New edge function POST /functions/v1/integration-layer/{resource}.{action} — unified router across customers, accounts, payments, transfers, payouts, refunds, webhooks, sandbox",
+        "Unified response envelope { id, object, status, amount, currency, created, livemode, metadata, data } and error envelope { error: { type, code, message, param, request_id, upstream } }",
+        "Smart routing engine (method × country × MSISDN) with automatic fallback chain; delegates to existing /v1/* handlers (Surgeon Rule honored)",
+        "Platform-wide Idempotency-Key support via integration_idempotency_keys (24h TTL) and webhook replay via integration_webhook_replays",
+        "Sandbox magic-value simulator (4242/4000/5555/9999) gated by x-integration-env: sandbox header (ORDER P3)",
+        "Public discovery: GET /integration-layer + public docs at /developer/integration-layer (ORDER P1, P4)",
+        "SDK: @kangopenbanking/sdk bumped to 1.3.0 with new kob.integration.* namespace (ORDER P9)",
+        "OpenAPI info.version → 4.17.0 (additive only — STANDING ORDERS 1, 4, 6)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1 (The Lock)",
+        "STANDING ORDER 4 (Surgeon Rule)",
+        "STANDING ORDER 6 (Version Gate)",
+        "ORDER P1 (Public First)",
+        "ORDER P3 (Free Sandbox)",
+        "ORDER P4 (Open Spec)",
+        "ORDER P5 (Working Code)",
+        "ORDER P7 (Changelog)",
+        "ORDER P9 (Multi-Language)",
+        "Stripe API conventions; FAPI 1.0 Advanced (auth flows delegated)"
+      ]
+    },
     {
       "version": "4.16.4",
       "date": "2026-04-21",
