@@ -45,6 +45,7 @@ export const SupportChatWidget: React.FC = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<{ subject?: boolean; guestEmail?: boolean }>({});
   const [health, setHealth] = useState<{ state: HealthState; latencyMs?: number; error?: string }>({ state: 'unknown' });
+  const [agentTyping, setAgentTyping] = useState(false);
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
