@@ -634,7 +634,8 @@ const AdminSupportChat: React.FC = () => {
         </TabsContent>
 
         {/* Agents Tab with CRUD */}
-        <TabsContent value="agents">
+        <TabsContent value="agents" className="space-y-4">
+          <AgentPresenceTimeline agents={agents} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Support Agents</CardTitle>
