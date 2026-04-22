@@ -554,6 +554,39 @@ const InstitutionBrandingForm: React.FC<{
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={!!testDialogKey} onOpenChange={(o) => { if (!o) { setTestDialogKey(null); setTestRecipient(''); } }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Send test email</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Sends a rendered preview of <span className="font-mono">{testDialogKey}</span>. Delivery status is recorded.
+          </p>
+          <div className="space-y-1">
+            <Label htmlFor="test-recipient">Recipient email</Label>
+            <Input
+              id="test-recipient"
+              type="email"
+              placeholder="agent@example.com (defaults to your admin email)"
+              value={testRecipient}
+              onChange={(e) => setTestRecipient(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setTestDialogKey(null)}>Cancel</Button>
+            <Button
+              onClick={() => testDialogKey && sendTest.mutate({ emailKey: testDialogKey, recipient: testRecipient })}
+              disabled={sendTest.isPending}
+            >
+              {sendTest.isPending ? 'Sending…' : 'Send test'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
