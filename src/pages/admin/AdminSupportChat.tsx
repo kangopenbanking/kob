@@ -14,10 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus, ArrowRightLeft, ArrowUpCircle } from 'lucide-react';
+import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus, ArrowRightLeft, ArrowUpCircle, Hand, Circle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { useAgentHeartbeat, useAgentPresenceList } from '@/hooks/useSupportAgentPresence';
+import { logSupportAudit } from '@/lib/supportAudit';
+import { SupportAuditLog } from '@/components/support/SupportAuditLog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-yellow-500',
