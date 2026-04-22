@@ -27,19 +27,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    setFileError(null);
     if (!f) return;
     if (!ALLOWED_TYPES.includes(f.type)) {
-      toast({ title: 'Unsupported file', description: 'Only images and PDF/DOC files are allowed.', variant: 'destructive' });
+      const msg = `Unsupported file type "${f.type || 'unknown'}". Allowed: images (JPG, PNG, WebP, GIF), PDF, DOC, DOCX.`;
+      setFileError(msg);
+      toast({ title: 'Unsupported file', description: msg, variant: 'destructive' });
+      if (fileRef.current) fileRef.current.value = '';
       return;
     }
     if (f.size > MAX_SIZE) {
-      toast({ title: 'File too large', description: 'Maximum size is 5 MB per file.', variant: 'destructive' });
+      const msg = `File is ${(f.size / (1024 * 1024)).toFixed(1)} MB. Maximum allowed is 5 MB.`;
+      setFileError(msg);
+      toast({ title: 'File too large', description: msg, variant: 'destructive' });
+      if (fileRef.current) fileRef.current.value = '';
       return;
     }
     setFile(f);
@@ -132,6 +140,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               />
             </div>
           )}
+        </div>
+      )}
+      {fileError && !file && (
+        <div className="mb-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+          {fileError}
         </div>
       )}
       <div className="flex items-end gap-2">

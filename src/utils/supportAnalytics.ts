@@ -9,7 +9,8 @@ export type SupportEvent =
   | 'support_validation_failed'
   | 'support_health_check_failed'
   | 'support_conversation_created'
-  | 'support_conversation_error';
+  | 'support_conversation_error'
+  | 'support_send_message_error';
 
 export function trackSupport(event: SupportEvent, props: Record<string, unknown> = {}) {
   const payload = { event, ts: Date.now(), ...props };

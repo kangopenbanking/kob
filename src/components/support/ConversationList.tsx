@@ -48,6 +48,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({ conversation
         subject: conv.subject,
         departmentName: conv.department_name,
         createdAt: conv.created_at,
+        updatedAt: conv.last_message_at || conv.updated_at,
+        slaTargetMinutes: conv.sla_target_minutes,
+        firstResponseAt: conv.first_response_at,
       });
       toast.success('Transcript downloaded');
     } catch (err: any) {

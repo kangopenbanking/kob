@@ -8,6 +8,23 @@ export interface TranscriptOptions {
   subject?: string;
   departmentName?: string;
   createdAt?: string;
+  /** Optional: last activity timestamp, used in filename + header date range. */
+  updatedAt?: string;
+  /** Optional: SLA target (minutes) included in the header for context. */
+  slaTargetMinutes?: number;
+  /** Optional: First-response timestamp included in the header. */
+  firstResponseAt?: string | null;
+}
+
+/** Strip diacritics & non-filename-safe characters. */
+function safeSlug(input: string, max = 40): string {
+  return (input || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9-_]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+    .slice(0, max) || 'support';
 }
 
 export async function exportConversationToPdf(opts: TranscriptOptions): Promise<void> {
@@ -37,7 +54,23 @@ export async function exportConversationToPdf(opts: TranscriptOptions): Promise<
   doc.setTextColor(100);
   doc.text(`Subject: ${opts.subject || 'Support chat'}`, margin, y); y += 14;
   if (opts.departmentName) { doc.text(`Department: ${opts.departmentName}`, margin, y); y += 14; }
-  if (opts.createdAt) { doc.text(`Started: ${format(new Date(opts.createdAt), 'PPpp')}`, margin, y); y += 14; }
+  doc.text(`Conversation ID: ${opts.conversationId}`, margin, y); y += 14;
+
+  // Date range (started → last activity)
+  const started = opts.createdAt ? format(new Date(opts.createdAt), 'PPpp') : '—';
+  const lastActivity = opts.updatedAt ? format(new Date(opts.updatedAt), 'PPpp') : started;
+  doc.text(`Date range: ${started}  →  ${lastActivity}`, margin, y); y += 14;
+
+  if (opts.slaTargetMinutes) {
+    const slaLine = opts.firstResponseAt
+      ? `SLA target: ${opts.slaTargetMinutes} min · First response: ${format(new Date(opts.firstResponseAt), 'PPpp')}`
+      : `SLA target: ${opts.slaTargetMinutes} min · First response: pending`;
+    doc.text(slaLine, margin, y); y += 14;
+  }
+
+  // Attachments summary (collected before rendering body)
+  const attachments = (messages || []).filter((m: any) => m.file_url) as any[];
+  doc.text(`Messages: ${(messages || []).length}  ·  Attachments: ${attachments.length}`, margin, y); y += 14;
   doc.text(`Exported: ${format(new Date(), 'PPpp')}`, margin, y); y += 18;
 
   doc.setDrawColor(220);
@@ -65,8 +98,43 @@ export async function exportConversationToPdf(opts: TranscriptOptions): Promise<
       doc.text(line, margin, y);
       y += 13;
     }
+
+    // If the message also has an attachment alongside text, list it explicitly
+    if (msg.file_url && msg.content) {
+      const attachLine = `↳ Attachment: ${msg.file_type || 'file'} · ${msg.file_url}`;
+      const wrapped = doc.splitTextToSize(attachLine, maxWidth);
+      doc.setTextColor(110);
+      for (const line of wrapped) {
+        if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+        doc.text(line, margin, y);
+        y += 12;
+      }
+      doc.setTextColor(20);
+    }
+
     y += 8;
     if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+  }
+
+  // Attachment index appendix
+  if (attachments.length) {
+    if (y > pageHeight - margin - 80) { doc.addPage(); y = margin; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Attachments', margin, y); y += 16;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    attachments.forEach((m, idx) => {
+      const time = format(new Date(m.created_at), 'PP HH:mm');
+      const line = `${idx + 1}. [${time}] ${m.file_type || 'file'} — ${m.file_url}`;
+      const wrapped = doc.splitTextToSize(line, maxWidth);
+      for (const w of wrapped) {
+        if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+        doc.text(w, margin, y); y += 12;
+      }
+    });
+    doc.setTextColor(20);
   }
 
   // Footer page numbers
@@ -78,6 +146,8 @@ export async function exportConversationToPdf(opts: TranscriptOptions): Promise<
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 20, { align: 'right' });
   }
 
-  const safeSubject = (opts.subject || 'support').replace(/[^a-z0-9-_]+/gi, '-').slice(0, 40);
-  doc.save(`kang-support-${safeSubject}-${opts.conversationId.slice(0, 8)}.pdf`);
+  // Filename: kang-support-<subject>-<YYYYMMDD>-<id>.pdf
+  const dateTag = format(new Date(opts.updatedAt || opts.createdAt || new Date()), 'yyyyMMdd');
+  const subjectSlug = safeSlug(opts.subject || 'support');
+  doc.save(`kang-support-${subjectSlug}-${dateTag}-${opts.conversationId.slice(0, 8)}.pdf`);
 }

@@ -18,6 +18,8 @@ import {
 } from '@/hooks/useSupportChat';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { IntakeFields, type IntakeField } from './support/IntakeFields';
+import { SlaBadge } from './support/SlaBadge';
 import {
   getOrCreateGuestId,
   getPersistedDepartment,
@@ -36,6 +38,8 @@ export const SupportChatWidget: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [intakeValues, setIntakeValues] = useState<Record<string, string>>({});
+  const [intakeErrors, setIntakeErrors] = useState<Record<string, string>>({});
   const [activeConvId, setActiveConvId] = useState<string>();
   const [starting, setStarting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -44,6 +48,9 @@ export const SupportChatWidget: React.FC = () => {
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
+
+  // Identity used for storage uploads + per-guest rate limiting (server-evaluated keys).
+  const supportIdentity = userId || `guest_${guestId}`;
 
   const { departments, loading: deptsLoading } = useSupportDepartments();
   const { conversations, loading: convsLoading, refresh: refreshConvs } = useSupportConversations(userId, guestId);
@@ -90,6 +97,18 @@ export const SupportChatWidget: React.FC = () => {
 
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_user_count || 0), 0);
 
+  // Department-driven dynamic intake fields (e.g., order ID, account ID, urgency)
+  const intakeFields: IntakeField[] = useMemo(
+    () => (selectedDept?.intake_fields as IntakeField[] | undefined) ?? [],
+    [selectedDept?.id, selectedDept?.intake_fields],
+  );
+
+  // Reset intake state whenever the user picks a different department
+  useEffect(() => {
+    setIntakeValues({});
+    setIntakeErrors({});
+  }, [selectedDept?.id]);
+
   // Live (per-keystroke) validation for the form
   const liveErrors = useMemo<FieldErrors>(() => {
     const { errors: e } = validateStartChat({
@@ -101,14 +120,36 @@ export const SupportChatWidget: React.FC = () => {
     return e;
   }, [selectedDept?.id, subject, guestName, guestEmail, userId]);
 
-  const formValid = Object.keys(liveErrors).length === 0;
+  // Live validation for required intake fields
+  const liveIntakeErrors = useMemo<Record<string, string>>(() => {
+    const errs: Record<string, string> = {};
+    for (const f of intakeFields) {
+      if (f.required && !(intakeValues[f.key] || '').trim()) {
+        errs[f.key] = `${f.label} is required.`;
+      }
+    }
+    return errs;
+  }, [intakeFields, intakeValues]);
+
+  const formValid =
+    Object.keys(liveErrors).length === 0 && Object.keys(liveIntakeErrors).length === 0;
   const backendUp = health.state === 'healthy' || health.state === 'degraded' || health.state === 'unknown';
   const canSubmit = formValid && backendUp && !starting;
+
+  // The conversation summary backing the chat header (for SLA + meta)
+  const activeConv = useMemo(
+    () => conversations.find((c) => c.id === activeConvId),
+    [conversations, activeConvId],
+  );
 
   const handleDeptSelect = (dept: Department) => {
     setSelectedDept(dept);
     setPersistedDepartment(dept);
-    trackSupport('support_dept_selected', { department_id: dept.id, department_name: dept.name });
+    trackSupport('support_dept_selected', {
+      department_id: dept.id,
+      department_name: dept.name,
+      intake_field_count: (dept.intake_fields || []).length,
+    });
     setStep('subject');
   };
 
@@ -128,6 +169,7 @@ export const SupportChatWidget: React.FC = () => {
       department_id: selectedDept?.id,
       has_subject: subject.trim().length > 0,
       authenticated: !!userId,
+      intake_field_count: intakeFields.length,
     });
 
     // Field-level validation — show inline errors and keep user on the failing step
@@ -138,11 +180,18 @@ export const SupportChatWidget: React.FC = () => {
       guestEmail: userId ? '' : guestEmail,
     });
     setErrors(fieldErrors);
+    setIntakeErrors(liveIntakeErrors);
     setTouched({ subject: true, guestEmail: true });
 
-    if (!ok) {
-      const firstError = Object.values(fieldErrors)[0] || 'Please fix the highlighted fields.';
-      trackSupport('support_validation_failed', { errors: fieldErrors });
+    if (!ok || Object.keys(liveIntakeErrors).length > 0) {
+      const firstError =
+        Object.values(fieldErrors)[0] ||
+        Object.values(liveIntakeErrors)[0] ||
+        'Please fix the highlighted fields.';
+      trackSupport('support_validation_failed', {
+        errors: fieldErrors,
+        intake_errors: liveIntakeErrors,
+      });
       toast.error(firstError);
       // Keep user on the most relevant step
       if (fieldErrors.departmentId) setStep('departments');
@@ -158,6 +207,13 @@ export const SupportChatWidget: React.FC = () => {
     if (starting) return;
     setStarting(true);
     try {
+      // Trim & strip empty intake values so DB metadata stays clean
+      const cleanIntake: Record<string, string> = {};
+      for (const f of intakeFields) {
+        const v = (intakeValues[f.key] || '').trim();
+        if (v) cleanIntake[f.key] = v;
+      }
+
       const convId = await createConversation(
         userId,
         selectedDept!.id,
@@ -165,11 +221,13 @@ export const SupportChatWidget: React.FC = () => {
         'website',
         subject.trim(),
         userId ? undefined : { guestId, name: guestName.trim() || undefined, email: guestEmail.trim() || undefined },
+        cleanIntake,
       );
       trackSupport('support_conversation_created', {
         conversation_id: convId,
         department_id: selectedDept!.id,
         authenticated: !!userId,
+        intake_keys: Object.keys(cleanIntake),
       });
       setActiveConvId(convId);
       setStep('chat');
@@ -195,7 +253,13 @@ export const SupportChatWidget: React.FC = () => {
 
   const handleSend = async (content: string, filePath?: string, fileType?: string) => {
     if (!activeConvId) return;
-    await sendMessage(activeConvId, userId, 'user', content, filePath, fileType);
+    try {
+      await sendMessage(activeConvId, userId, 'user', content, filePath, fileType, supportIdentity);
+    } catch (e: any) {
+      const desc = describeBackendError(e);
+      trackSupport('support_send_message_error', { code: desc.code, message: desc.message });
+      toast.error(desc.message);
+    }
   };
 
   const isOpen = step !== 'closed';
@@ -368,6 +432,39 @@ export const SupportChatWidget: React.FC = () => {
                     </>
                   )}
 
+                  {/* Department-specific intake fields (e.g., order ID, account ID) */}
+                  {intakeFields.length > 0 && (
+                    <div className="rounded-xl border border-border bg-muted/30 p-3">
+                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {selectedDept?.name} details
+                      </p>
+                      <IntakeFields
+                        fields={intakeFields}
+                        values={intakeValues}
+                        errors={intakeErrors}
+                        onChange={(key, value) => {
+                          setIntakeValues((v) => ({ ...v, [key]: value }));
+                          setIntakeErrors((e) => {
+                            if (!e[key]) return e;
+                            const { [key]: _, ...rest } = e;
+                            return rest;
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* SLA expectation hint based on the selected department */}
+                  {selectedDept?.sla_target_minutes && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Expected first response: within{' '}
+                      <span className="font-medium text-foreground">
+                        {selectedDept.sla_target_minutes} min
+                      </span>{' '}
+                      (target SLA).
+                    </p>
+                  )}
+
                   {/* Backend health banner */}
                   {(health.state === 'offline' || health.state === 'degraded') && (
                     <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
@@ -413,8 +510,19 @@ export const SupportChatWidget: React.FC = () => {
 
               {step === 'chat' && (
                 <>
+                  {activeConv && (
+                    <div className="border-b border-border bg-muted/30 px-3 py-2">
+                      <SlaBadge
+                        createdAt={activeConv.created_at}
+                        slaTargetMinutes={activeConv.sla_target_minutes}
+                        slaBreachAt={activeConv.sla_breach_at}
+                        firstResponseAt={activeConv.first_response_at}
+                        status={activeConv.status}
+                      />
+                    </div>
+                  )}
                   <ChatThread messages={messages} currentUserId={userId} viewerRole="user" className="flex-1" />
-                  <ChatInput onSend={handleSend} />
+                  <ChatInput onSend={handleSend} uploadIdentity={supportIdentity} />
                 </>
               )}
 
