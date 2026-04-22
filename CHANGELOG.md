@@ -3,9 +3,72 @@
 All notable changes to the Kang Open Banking API will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [4.17.0] — 2026-04-22
+
+### Added — KOB Integration Layer (Stripe-style facade)
+
+Strictly additive release. **No existing `/v1/*` endpoint, schema, or auth flow has been modified**
+(STANDING ORDER 1 — The Lock; STANDING ORDER 4 — Surgeon Rule).
+
+- New edge function `POST /functions/v1/integration-layer/{resource}.{action}` — unified router
+  across `customers`, `accounts`, `payments`, `transfers`, `payouts`, `refunds`, `webhooks`, `sandbox`.
+- Unified response envelope `{ id, object, status, amount, currency, created, livemode, metadata, data }`
+  and unified error envelope `{ error: { type, code, message, param, request_id, upstream } }`.
+- Smart routing engine (method × country × MSISDN) with automatic fallback chain; delegates to existing `/v1/*` handlers.
+- Platform-wide `Idempotency-Key` support via new `integration_idempotency_keys` table (24h TTL).
+- Webhook replay action + `integration_webhook_replays` audit table.
+- Sandbox magic-value simulator (`4242` / `4000` / `5555` / `9999`) gated by `x-integration-env: sandbox` (ORDER P3).
+- Public discovery: `GET /integration-layer` and public docs at `/developer/integration-layer` (ORDER P1, P4).
+- `@kangopenbanking/sdk` bumped to **1.3.0** with new `kob.integration.*` namespace (ORDER P9).
+- OpenAPI `info.version` → **4.17.0** (additive only).
+
+## [4.16.4] — 2026-04-21
+
+### Added — Security Posture Self-Verification Layer
+- New public edge function `/healthz` returning a reviewer-friendly JSON snapshot with live probes
+  for OAuth, OIDC, JWKS, DCR, PAR; declared posture for mTLS, JAR, PKCE, and webhooks (FAPI 1.0 Advanced).
+- `/oidc-config` hardened with ETag, conditional GET (304), `Cache-Control: public, max-age=3600,
+  stale-while-revalidate=86400`, plus `op_policy_uri`, `op_tos_uri`, `key_rotation_policy_uri`.
+- New public pages `/developer/security` and `/developer/security/whitepaper` + downloadable PDF
+  at `/whitepapers/security-compliance.pdf`.
+- Existing `/developer/compliance` route preserved (zero removals — STANDING ORDER 1).
+
+## [4.15.0] — 2026-04-17
+
+### Added — CEMAC Universal Bank Integration (Wave 4)
+- New public developer page `/developer/connectors/cemac-bank-integration` documenting the full
+  BankConnector architecture, adapter decision matrix, delivery waves, and operating runbook (ORDER P6).
+- OpenAPI `info.version` → 4.15.0 (zero changes to operationIds, schemas, parameters, security
+  schemes, or response codes — STANDING ORDER 1).
+
+## [4.14.0] — 2026-04-17
+
+### Added — CEMAC Universal Bank Integration (Wave 3)
+- Ledger audit fields added to bank-sourced transaction tables (additive columns only).
+- Six-stage bank onboarding wizard surfaced in the admin portal.
+
+## [4.13.0] — 2026-04-17
+
+### Added — CEMAC Universal Bank Integration (Wave 2)
+- Scheduled bank polling engine for pull-mode connectors.
+- Rule-based reconciliation worker for incoming bank statements.
+
+## [4.12.0] — 2026-04-17
+
+### Added — CEMAC Universal Bank Integration (Wave 1)
+- Unified `BankConnector` interface supporting REST, SQL, File, and SOAP adapters.
+- Adapter registry and per-bank configuration model.
+
+## [4.11.0] — 2026-04-17
+
+### Added — BYO Phase 2
+- Server-side polling worker for direct mobile-money rails.
+- SOAP Bank adapter for legacy core-banking systems.
 
 ## [4.10.0] — 2026-04-17
+
+### Added — BYO Mobile Money Connectors (Bring-Your-Own Credentials)
 
 ### Added — BYO Mobile Money Connectors (Bring-Your-Own Credentials)
 
