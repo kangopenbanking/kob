@@ -702,36 +702,44 @@ const AdminSupportChat: React.FC = () => {
         </TabsContent>
 
         {/* Agents Tab with CRUD */}
-        <TabsContent value="agents" className="space-y-4">
+        <TabsContent value="agents" className="mt-0 space-y-4">
           <AgentPresenceTimeline agents={agents} />
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Support Agents</CardTitle>
-              <Button size="sm" onClick={() => { setAgentDialogOpen(true); setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 }); }}>
-                <UserPlus className="mr-1 h-4 w-4" /> Invite Agent
+          <Card className="border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+              <div>
+                <CardTitle className="text-base">Support agents</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">Invite, manage and monitor agent availability.</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => { setAgentDialogOpen(true); setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 }); }}>
+                <UserPlus className="mr-1.5 h-4 w-4" strokeWidth={1.5} /> Invite agent
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               {agents.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">No agents yet — invite one to get started.</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                  <Users className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">No agents yet — invite one to get started.</p>
+                </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {agents.map((a: any) => {
                     const liveOnline = presence.isOnline(a.user_id) || presence.isOnline(a.id);
                     return (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                      <div>
-                        <p className="text-sm font-semibold inline-flex items-center gap-2">
-                          <span className={cn('h-2 w-2 rounded-full', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
+                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30">
+                      <div className="min-w-0">
+                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                          <span className={cn('h-2 w-2 rounded-full ring-2 ring-background', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
                           {a.profiles?.full_name || a.profiles?.email || 'Unknown'}
                           <span className="text-[10px] font-normal text-muted-foreground">
                             {liveOnline ? 'Online now' : 'Offline'}
                           </span>
                         </p>
-                        <p className="text-xs text-muted-foreground">{a.support_departments?.name} · Max {a.max_concurrent_chats} chats</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {a.support_departments?.name || 'No department'} · Max {a.max_concurrent_chats} chats
+                        </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" className="h-7 text-xs"
+                        <Button size="sm" variant="outline" className="h-8 text-xs"
                           onClick={() => toggleAgentStatus(a.id, a.status)}>
                           <span className={cn('mr-1.5 h-2 w-2 rounded-full', a.status === 'online' ? 'bg-green-500' : 'bg-muted-foreground')} />
                           {a.status}
@@ -739,14 +747,14 @@ const AdminSupportChat: React.FC = () => {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7"
+                          className="h-8 w-8"
                           title="Edit agent profile"
                           onClick={() => navigate(`/admin/support-chat/profile?agent_id=${a.user_id}`)}
                         >
-                          <SettingsIcon className="h-3.5 w-3.5" />
+                          <SettingsIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeAgent(a.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeAgent(a.id)}>
+                          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                         </Button>
                       </div>
                     </div>
