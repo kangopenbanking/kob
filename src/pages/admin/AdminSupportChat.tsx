@@ -390,14 +390,14 @@ const AdminSupportChat: React.FC = () => {
           </div>
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <code className="flex-1 truncate rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono text-foreground sm:max-w-[340px]">
-              https://kangopenbanking.com/support-agent
+              https://info.kangopenbanking.com/support-agent
             </code>
             <Button
               size="sm"
               variant="outline"
               className="h-9"
               onClick={() => {
-                const url = 'https://kangopenbanking.com/support-agent';
+                const url = 'https://info.kangopenbanking.com/support-agent';
                 navigator.clipboard?.writeText(url);
                 toast({ title: 'Link copied', description: url });
               }}
