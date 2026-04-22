@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 interface RoleGuardProps {
   children: React.ReactNode;
   /** Roles allowed to access this route. Admin always has access. */
-  allowedRoles: Array<'personal' | 'institution' | 'tpp' | 'staff' | 'developer' | 'merchant'>;
+  allowedRoles: Array<'personal' | 'institution' | 'tpp' | 'staff' | 'developer' | 'merchant' | 'support_agent'>;
   /** Where to redirect unauthorized users (defaults to /dashboard) */
   redirectTo?: string;
 }
