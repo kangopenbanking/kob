@@ -120,7 +120,9 @@ const SupportAgentLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid={SUPPORT_AGENT_PAGE_TESTID} data-route="/support-agent">
+      {/* Hidden machine-readable marker for E2E + uptime probes. */}
+      <div id="support-agent-health" data-state="ok" hidden aria-hidden="true">support-agent-ok</div>
       <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-12">
         <div className="grid w-full gap-10 lg:grid-cols-2 lg:gap-16">
           {/* Brand panel */}
