@@ -1067,3 +1067,6 @@ verify_jwt = false
 
 [functions.rent-payment-reminders]
 verify_jwt = false
+
+[functions.integration-layer]
+verify_jwt = false
