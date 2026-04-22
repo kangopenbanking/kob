@@ -33,7 +33,7 @@ describe('SupportAgentLogin', () => {
       </MemoryRouter>
     );
     expect(screen.getByTestId('support-agent-login-root')).toBeInTheDocument();
-    expect(screen.getByText(/Sign in to support/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Sign in to support$/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/work email/i)).toBeInTheDocument();
   });
 
