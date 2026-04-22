@@ -35,8 +35,8 @@ export function NotificationCenter() {
     const path = location.pathname;
     if (path.startsWith("/merchant")) return "/merchant/notification-history";
     if (path.startsWith("/business")) return "/business/notification-history";
-    if (path.startsWith("/admin")) return "/notification-history";
-    if (path.startsWith("/institution")) return "/notification-history";
+    if (path.startsWith("/admin")) return "/admin/notification-history";
+    if (path.startsWith("/institution")) return "/admin/notification-history";
     return "/notification-history";
   };
 
