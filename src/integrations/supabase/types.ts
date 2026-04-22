@@ -20404,6 +20404,44 @@ export type Database = {
           },
         ]
       }
+      support_agent_presence_events: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          previous_status: string | null
+          reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          previous_status?: string | null
+          reason?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          previous_status?: string | null
+          reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_agent_presence_events_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "support_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_agents: {
         Row: {
           created_at: string | null
