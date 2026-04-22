@@ -208,11 +208,15 @@ export function useCreateConversation() {
 
     // Notify admins (best-effort, non-blocking)
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', userId)
-        .single() as any;
+      let customerName: string = guest?.name || 'A guest visitor';
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', userId)
+          .single() as any;
+        if (profile?.full_name) customerName = profile.full_name;
+      }
 
       const { data: adminRoles } = await supabase
         .from('user_roles')
@@ -233,7 +237,7 @@ export function useCreateConversation() {
             variables: {
               user_name: p.full_name || 'Admin',
               subject: subject || 'General inquiry',
-              customer_name: profile?.full_name || 'A customer',
+              customer_name: customerName,
               channel,
             },
           },
