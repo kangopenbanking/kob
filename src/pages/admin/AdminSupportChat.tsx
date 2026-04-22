@@ -405,7 +405,7 @@ const AdminSupportChat: React.FC = () => {
               <Copy className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} /> Copy
             </Button>
             <Button asChild size="sm" variant="outline" className="h-9 w-9 p-0">
-              <a href="https://kangopenbanking.com/support-agent" target="_blank" rel="noreferrer" aria-label="Open agent portal">
+              <a href="https://info.kangopenbanking.com/support-agent" target="_blank" rel="noreferrer" aria-label="Open agent portal">
                 <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
               </a>
             </Button>
