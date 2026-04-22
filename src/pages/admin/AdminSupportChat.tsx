@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus } from 'lucide-react';
+import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus, ArrowRightLeft, ArrowUpCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -140,6 +140,40 @@ const AdminSupportChat: React.FC = () => {
         assignConversationEmail(convId, agent.user_id);
       }
     }
+  };
+
+  // Transfer conversation to another department (and clear current agent)
+  const transferDepartment = async (convId: string, departmentId: string) => {
+    if (!departmentId) return;
+    await supabase.from('support_conversations').update({
+      department_id: departmentId,
+      assigned_agent_id: null,
+      status: 'open',
+      updated_at: new Date().toISOString(),
+    }).eq('id', convId);
+    toast({ title: 'Conversation transferred', description: 'Re-routed to the selected department.' });
+    fetchConversations();
+    // Notify agents in the new department
+    try {
+      await supabase.functions.invoke('notify-support-agents', { body: { conversation_id: convId } });
+    } catch (e) { console.warn('notify-support-agents (transfer) failed:', e); }
+  };
+
+  // Escalate priority one level (medium → high → urgent)
+  const escalateConversation = async (convId: string, currentPriority: string) => {
+    const next = currentPriority === 'low' ? 'medium'
+      : currentPriority === 'medium' ? 'high'
+      : 'urgent';
+    if (next === currentPriority) {
+      toast({ title: 'Already at highest priority' });
+      return;
+    }
+    await supabase.from('support_conversations').update({
+      priority: next,
+      updated_at: new Date().toISOString(),
+    }).eq('id', convId);
+    toast({ title: `Escalated to ${next}` });
+    fetchConversations();
   };
 
   // ---- Department CRUD ----
