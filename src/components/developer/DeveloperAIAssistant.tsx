@@ -3,9 +3,10 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Sparkles, Loader2, User, Trash2, Download, Code2, ShieldCheck, ExternalLink } from "lucide-react";
+import { X, Send, Sparkles, Loader2, User, Trash2, Download, Code2, ShieldCheck, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import kangAgentLogo from "@/assets/kang-agent-logo.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -174,9 +175,9 @@ export function DeveloperAIAssistant() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Open Kang AI Agent"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-border transition-all hover:scale-105 hover:shadow-xl"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-background shadow-lg ring-1 ring-border transition-all hover:scale-105 hover:shadow-xl"
         >
-          <MessageCircle className="h-6 w-6" />
+          <img src={kangAgentLogo} alt="Kang AI Agent" className="h-10 w-10 object-contain" />
         </button>
       )}
 
@@ -185,8 +186,8 @@ export function DeveloperAIAssistant() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-primary/20">
-                <img src="/kob-logo.png" alt="Kang" className="h-7 w-7 object-contain" />
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-background ring-1 ring-border">
+                <img src={kangAgentLogo} alt="Kang AI Agent" className="h-8 w-8 object-contain" />
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">Kang AI Agent</p>
@@ -262,8 +263,8 @@ export function DeveloperAIAssistant() {
               {renderedMessages.map((m, i) => (
                 <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
                   {m.role === "assistant" && (
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-primary/20">
-                      <img src="/kob-logo.png" alt="Kang" className="h-5 w-5 object-contain" />
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background ring-1 ring-border">
+                      <img src={kangAgentLogo} alt="Kang AI Agent" className="h-6 w-6 object-contain" />
                     </div>
                   )}
                   <div
@@ -302,8 +303,8 @@ export function DeveloperAIAssistant() {
               ))}
               {loading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-2">
-                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-primary/20">
-                    <img src="/kob-logo.png" alt="Kang" className="h-5 w-5 object-contain" />
+                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background ring-1 ring-border">
+                    <img src={kangAgentLogo} alt="Kang AI Agent" className="h-6 w-6 object-contain" />
                   </div>
                   <div className="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5">
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
