@@ -66,7 +66,7 @@ export const template = {
   previewData: {
     agentName: 'Marie K.',
     departmentName: 'Technical Support',
-    portalUrl: 'https://info.kangopenbanking.com/support-agent',
+    portalUrl: 'https://info.kangfintechsolutions.com/support-agent',
     inviteSent: true,
   },
 } satisfies TemplateEntry
