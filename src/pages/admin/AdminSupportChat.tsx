@@ -534,14 +534,19 @@ const AdminSupportChat: React.FC = () => {
                       )}
                     </div>
                   )}
-                  <ChatThread messages={messages} currentUserId={user?.id} viewerRole="agent" className="flex-1" />
-                  <ChatInput
-                    onSend={handleSend}
-                    disabled={activeConv?.status === 'closed'}
-                    placeholder="Reply as agent..."
-                    conversationId={activeConvId}
-                    typingRole="agent"
-                  />
+                  <div className="flex flex-1 min-h-0">
+                    <div className="flex flex-1 flex-col min-w-0">
+                      <ChatThread messages={messages} currentUserId={user?.id} viewerRole="agent" className="flex-1" />
+                      <ChatInput
+                        onSend={handleSend}
+                        disabled={activeConv?.status === 'closed'}
+                        placeholder="Reply as agent..."
+                        conversationId={activeConvId}
+                        typingRole="agent"
+                      />
+                    </div>
+                    <SupportAuditLog conversationId={activeConvId} className="hidden w-72 shrink-0 border-l border-border lg:block" />
+                  </div>
                 </>
               )}
             </div>
