@@ -1,6 +1,7 @@
 // Admin-only: invite a user (by email) as a Support Agent in a department.
 // Creates the auth user if needed, assigns the support_agent role, and adds the support_agents row.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sendSupportEmail, SUPPORT_PORTAL_URL, APP_BASE_URL } from "../_shared/sendSupportEmail.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,16 +52,11 @@ Deno.serve(async (req) => {
     if (existingProfile?.id) {
       userId = existingProfile.id;
     } else {
-      // Try to invite via admin API (sends invite email so user sets their password)
-      // Use APP_URL secret if set, else derive a public origin from request.
-      // This must be the user-facing site (not the functions host) so the link works.
-      const appOrigin = (Deno.env.get('APP_URL') || '').replace(/\/$/, '') ||
-        new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app');
+      // Send invite via admin API. Redirect to the live, branded site so
+      // the password reset link always lands on https://kangopenbanking.com.
       const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
         data: full_name ? { full_name, support_agent_invite: true } : { support_agent_invite: true },
-        // Land them on /reset-password so they immediately set their password,
-        // then they can sign in at /support-agent.
-        redirectTo: `${appOrigin}/reset-password`,
+        redirectTo: `${APP_BASE_URL}/reset-password`,
       });
       if (inviteErr) {
         // Fallback: maybe user already exists in auth without profile — try to look up
@@ -96,28 +92,34 @@ Deno.serve(async (req) => {
     if (agentErr) return json({ error: `Failed to assign agent: ${agentErr.message}` }, 400);
 
     // 4) Send welcome / invite email via Lovable Cloud transactional email
+    //    (with retry-with-backoff via the shared support sender).
+    let emailResult: { ok: boolean; error?: string } = { ok: true };
     try {
       const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
-      const portalBase = (Deno.env.get('APP_URL') || '').replace(/\/$/, '') ||
-        new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app');
-      await admin.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'support-agent-invite',
-          recipientEmail: email,
-          idempotencyKey: `support-agent-invite-${userId}-${department_id}`,
-          templateData: {
-            agentName: full_name || email.split('@')[0],
-            departmentName: dept?.name || 'Support',
-            portalUrl: `${portalBase}/support-agent`,
-            inviteSent,
-          },
+      emailResult = await sendSupportEmail({
+        templateName: 'support-agent-invite',
+        recipientEmail: email,
+        idempotencyKey: `support-agent-invite-${userId}-${department_id}`,
+        templateData: {
+          agentName: full_name || email.split('@')[0],
+          departmentName: dept?.name || 'Support',
+          portalUrl: SUPPORT_PORTAL_URL,
+          inviteSent,
         },
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn('Invite email failed (non-fatal):', e);
+      emailResult = { ok: false, error: e?.message };
     }
 
-    return json({ success: true, user_id: userId, invite_sent: inviteSent });
+    return json({
+      success: true,
+      user_id: userId,
+      invite_sent: inviteSent,
+      welcome_email_sent: emailResult.ok,
+      welcome_email_error: emailResult.error || null,
+      portal_url: SUPPORT_PORTAL_URL,
+    });
   } catch (e: any) {
     console.error('support-invite-agent error:', e);
     return json({ error: e?.message || 'Internal error' }, 500);

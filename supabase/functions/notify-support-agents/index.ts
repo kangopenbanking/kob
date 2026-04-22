@@ -1,6 +1,7 @@
 // Sends an email to every support agent in a department when a new chat is created.
 // Invoked from the client right after createConversation succeeds.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sendSupportEmail, SUPPORT_PORTAL_URL, APP_BASE_URL } from "../_shared/sendSupportEmail.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,26 +52,22 @@ Deno.serve(async (req) => {
 
     await Promise.all(((agents as any[]) || []).map(async (a) => {
       if (!a?.email) return;
-      try {
-        await admin.functions.invoke('send-transactional-email', {
-          body: {
-            templateName: 'support-new-chat-agent',
-            recipientEmail: a.email,
-            idempotencyKey: `support-new-chat-${conversation_id}-${a.email}`,
-            templateData: {
-              agentName: a.full_name || 'Agent',
-              departmentName: deptName,
-              subject: (conv as any).subject || 'No subject',
-              customerName,
-              channel: (conv as any).channel || 'website',
-              portalUrl: `${new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app')}/admin/support-chat?conversation=${conversation_id}`,
-            },
-          },
-        });
-        sent++;
-      } catch (e) {
-        console.warn('agent email failed:', a.email, e);
-      }
+      const result = await sendSupportEmail({
+        templateName: 'support-new-chat-agent',
+        recipientEmail: a.email,
+        idempotencyKey: `support-new-chat-${conversation_id}-${a.email}`,
+        templateData: {
+          agentName: a.full_name || 'Agent',
+          departmentName: deptName,
+          subject: (conv as any).subject || 'No subject',
+          customerName,
+          channel: (conv as any).channel || 'website',
+          // Deep-link into the live admin workspace via the canonical site.
+          portalUrl: `${APP_BASE_URL}/admin/support-chat?conversation=${conversation_id}`,
+          agentLoginUrl: SUPPORT_PORTAL_URL,
+        },
+      });
+      if (result.ok) sent++;
     }));
 
     return new Response(JSON.stringify({ success: true, agents_notified: sent }), {

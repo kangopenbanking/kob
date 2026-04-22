@@ -66,7 +66,7 @@ export const template = {
   previewData: {
     agentName: 'Marie K.',
     departmentName: 'Technical Support',
-    portalUrl: 'https://kob.lovable.app/support-agent',
+    portalUrl: 'https://kangopenbanking.com/support-agent',
     inviteSent: true,
   },
 } satisfies TemplateEntry
