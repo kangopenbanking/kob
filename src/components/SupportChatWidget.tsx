@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MessageCircle, X, ArrowLeft } from 'lucide-react';
+import { MessageCircle, X, ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { DepartmentPicker, type Department } from './support/DepartmentPicker';
@@ -29,6 +30,7 @@ export const SupportChatWidget: React.FC = () => {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [activeConvId, setActiveConvId] = useState<string>();
+  const [starting, setStarting] = useState(false);
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
@@ -67,20 +69,31 @@ export const SupportChatWidget: React.FC = () => {
   const handleDeptSelect = (dept: Department) => { setSelectedDept(dept); setStep('subject'); };
 
   const handleStartChat = async () => {
-    if (!selectedDept) return;
+    if (!selectedDept) {
+      toast.error('Please choose a department first.');
+      setStep('departments');
+      return;
+    }
+    if (starting) return;
+    setStarting(true);
     try {
       const convId = await createConversation(
         userId,
         selectedDept.id,
-        subject || 'General inquiry',
+        subject.trim() || 'General inquiry',
         'website',
-        subject,
-        userId ? undefined : { guestId, name: guestName || undefined, email: guestEmail || undefined },
+        subject.trim() || undefined,
+        userId ? undefined : { guestId, name: guestName.trim() || undefined, email: guestEmail.trim() || undefined },
       );
       setActiveConvId(convId);
       setStep('chat');
       refreshConvs();
-    } catch { /* error handled upstream */ }
+    } catch (e: any) {
+      console.error('[SupportChat] start chat failed:', e);
+      toast.error(e?.message || 'Could not start chat. Please try again.');
+    } finally {
+      setStarting(false);
+    }
   };
 
   const handleSend = async (content: string, filePath?: string, fileType?: string) => {
@@ -213,9 +226,22 @@ export const SupportChatWidget: React.FC = () => {
                       </p>
                     </>
                   )}
-                  <Button onClick={handleStartChat} className="rounded-xl">
-                    Start chat
+                  <Button
+                    onClick={handleStartChat}
+                    disabled={starting || !selectedDept}
+                    className="rounded-xl"
+                  >
+                    {starting ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} /> Starting…</>
+                    ) : (
+                      'Start chat'
+                    )}
                   </Button>
+                  {!selectedDept && (
+                    <p className="text-[11px] text-destructive">
+                      No department selected. <button className="underline" onClick={() => setStep('departments')}>Choose one</button>.
+                    </p>
+                  )}
                 </div>
               )}
 
