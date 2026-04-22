@@ -12,11 +12,14 @@ export function useSupportDepartments() {
   useEffect(() => {
     supabase
       .from('support_departments')
-      .select('id, name, description, icon')
+      .select('id, name, description, icon, intake_fields, sla_target_minutes')
       .eq('is_active', true)
       .order('display_order')
       .then(({ data }) => {
-        setDepartments((data as any) || []);
+        setDepartments(((data as any) || []).map((d: any) => ({
+          ...d,
+          intake_fields: Array.isArray(d.intake_fields) ? d.intake_fields : [],
+        })));
         setLoading(false);
       });
   }, []);
@@ -58,7 +61,7 @@ export function useSupportConversations(userId?: string, guestId?: string) {
     if (!userId && !guestId) { setLoading(false); return; }
     let query = supabase
       .from('support_conversations')
-      .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, support_departments(name)')
+      .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, sla_target_minutes, sla_breach_at, first_response_at, support_departments(name)')
       .order('updated_at', { ascending: false })
       .limit(20);
     if (userId) query = query.eq('user_id', userId);
