@@ -358,7 +358,7 @@ const ManagedEmailAdmin: React.FC = () => {
                         <TableCell className="text-right space-x-1">
                           <Button variant="ghost" size="sm" onClick={() => openEdit(type)}><Edit className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="sm" onClick={() => setPreviewType(type)}><Eye className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => sendTest.mutate(type.email_key)} disabled={sendTest.isPending}>
+                          <Button variant="ghost" size="sm" onClick={() => { setTestDialogKey(type.email_key); setTestRecipient(''); }} disabled={sendTest.isPending} title="Send test email">
                             <Send className="h-3 w-3" />
                           </Button>
                         </TableCell>
