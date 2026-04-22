@@ -4,6 +4,7 @@ import type { ChatMessage } from '@/components/support/ChatThread';
 import { playNotificationSound } from '@/utils/notificationSound';
 import type { Department } from '@/components/support/DepartmentPicker';
 import type { ConversationSummary } from '@/components/support/ConversationList';
+import { checkSupportRateLimit } from '@/utils/supportRateLimit';
 
 export function useSupportDepartments() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -12,11 +13,14 @@ export function useSupportDepartments() {
   useEffect(() => {
     supabase
       .from('support_departments')
-      .select('id, name, description, icon')
+      .select('id, name, description, icon, intake_fields, sla_target_minutes')
       .eq('is_active', true)
       .order('display_order')
       .then(({ data }) => {
-        setDepartments((data as any) || []);
+        setDepartments(((data as any) || []).map((d: any) => ({
+          ...d,
+          intake_fields: Array.isArray(d.intake_fields) ? d.intake_fields : [],
+        })));
         setLoading(false);
       });
   }, []);
@@ -58,7 +62,7 @@ export function useSupportConversations(userId?: string, guestId?: string) {
     if (!userId && !guestId) { setLoading(false); return; }
     let query = supabase
       .from('support_conversations')
-      .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, support_departments(name)')
+      .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, sla_target_minutes, sla_breach_at, first_response_at, support_departments(name)')
       .order('updated_at', { ascending: false })
       .limit(20);
     if (userId) query = query.eq('user_id', userId);
@@ -167,11 +171,22 @@ export function useCreateConversation() {
     channel: string,
     initialMessage?: string,
     guest?: { guestId: string; name?: string; email?: string },
+    intakeMetadata?: Record<string, string>,
   ) => {
+    // Rate-limit guard (ad-hoc; backend has no shared primitives)
+    const identity = userId || (guest?.guestId ? `guest_${guest.guestId}` : undefined);
+    const rl = await checkSupportRateLimit(identity, 'create_conversation');
+    if (!rl.allowed) {
+      const err: any = new Error(`Too many chats started. Please wait ${rl.retryAfterSeconds || 60}s.`);
+      err.code = 'rate_limited';
+      throw err;
+    }
+
     const insertPayload: any = {
       department_id: departmentId,
       subject,
       channel,
+      metadata: intakeMetadata && Object.keys(intakeMetadata).length ? { intake: intakeMetadata } : {},
     };
     if (userId) {
       insertPayload.user_id = userId;
@@ -258,8 +273,17 @@ export function useSendMessage() {
     senderType: 'user' | 'agent',
     content: string,
     filePath?: string,
-    fileType?: string
+    fileType?: string,
+    rateLimitIdentity?: string,
   ) => {
+    if (senderType === 'user') {
+      const rl = await checkSupportRateLimit(rateLimitIdentity || senderId, 'send_message');
+      if (!rl.allowed) {
+        const err: any = new Error(`Sending too quickly. Please wait ${rl.retryAfterSeconds || 60}s.`);
+        err.code = 'rate_limited';
+        throw err;
+      }
+    }
     await supabase.from('support_messages').insert({
       conversation_id: conversationId,
       sender_type: senderType,

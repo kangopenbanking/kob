@@ -20460,8 +20460,10 @@ export type Database = {
           display_order: number | null
           icon: string | null
           id: string
+          intake_fields: Json
           is_active: boolean | null
           name: string
+          sla_target_minutes: number
           updated_at: string | null
         }
         Insert: {
@@ -20470,8 +20472,10 @@ export type Database = {
           display_order?: number | null
           icon?: string | null
           id?: string
+          intake_fields?: Json
           is_active?: boolean | null
           name: string
+          sla_target_minutes?: number
           updated_at?: string | null
         }
         Update: {
@@ -20480,8 +20484,10 @@ export type Database = {
           display_order?: number | null
           icon?: string | null
           id?: string
+          intake_fields?: Json
           is_active?: boolean | null
           name?: string
+          sla_target_minutes?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -20529,6 +20535,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_rate_limits: {
+        Row: {
+          action: string
+          count: number
+          id: string
+          identity: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          count?: number
+          id?: string
+          identity: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          count?: number
+          id?: string
+          identity?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       supported_countries: {
         Row: {
@@ -23603,6 +23636,19 @@ export type Database = {
           full_name: string
           id: string
           phone_masked: string
+        }[]
+      }
+      support_check_rate_limit: {
+        Args: {
+          p_action: string
+          p_identity: string
+          p_max_per_hour?: number
+          p_max_per_minute?: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after_seconds: number
         }[]
       }
       support_mark_read: {

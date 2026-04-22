@@ -8,6 +8,8 @@ interface ChatInputProps {
   onSend: (content: string, filePath?: string, fileType?: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Identity used for the storage folder + RLS check. Userless guests pass `guest_<guestId>`. */
+  uploadIdentity?: string;
 }
 
 const ALLOWED_TYPES = [
@@ -17,10 +19,16 @@ const ALLOWED_TYPES = [
 ];
 const MAX_SIZE = 5 * 1024 * 1024;
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placeholder = 'Type a message…' }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({
+  onSend,
+  disabled,
+  placeholder = 'Type a message…',
+  uploadIdentity,
+}) => {
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,21 +53,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
 
     if (file) {
       setUploading(true);
+      setProgress(5);
+
+      // Resolve identity: prefer signed-in user, else the guest identity passed by the widget.
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({ title: 'Sign-in required', description: 'Please sign in to attach files.', variant: 'destructive' });
+      const identity = user?.id ?? uploadIdentity;
+      if (!identity) {
+        toast({ title: 'Unable to upload', description: 'No identity available for upload.', variant: 'destructive' });
         setUploading(false);
+        setProgress(0);
         return;
       }
+
       const ext = file.name.split('.').pop();
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('support-attachments').upload(path, file);
+      const path = `${identity}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      // Approximate upload progress (the supabase-js SDK doesn't expose XHR progress directly).
+      const progTimer = setInterval(() => {
+        setProgress((p) => (p < 85 ? p + 7 : p));
+      }, 120);
+
+      const { error } = await supabase.storage
+        .from('support-attachments')
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      clearInterval(progTimer);
       if (error) {
+        setProgress(0);
         toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
         setUploading(false);
         return;
       }
-      // Persist the storage PATH, not a signed URL — signed URLs expire and break history.
+
+      setProgress(100);
       filePath = path;
       fileType = file.type;
       setUploading(false);
@@ -68,6 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
     onSend(text.trim(), filePath, fileType);
     setText('');
     setFile(null);
+    setProgress(0);
     if (fileRef.current) fileRef.current.value = '';
   };
 
@@ -81,16 +108,30 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
   return (
     <div className="border-t border-border bg-background p-3">
       {file && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs">
-          {file.type.startsWith('image/') ? (
-            <img src={URL.createObjectURL(file)} alt="Preview" className="h-10 w-10 rounded object-cover shrink-0" />
-          ) : (
-            <FileText className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+        <div className="mb-2 flex flex-col gap-1.5 rounded-lg bg-muted px-3 py-2 text-xs">
+          <div className="flex items-center gap-2">
+            {file.type.startsWith('image/') ? (
+              <img src={URL.createObjectURL(file)} alt="Preview" className="h-10 w-10 rounded object-cover shrink-0" />
+            ) : (
+              <FileText className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+            )}
+            <span className="flex-1 truncate">{file.name}</span>
+            <span className="shrink-0 text-[10px] text-muted-foreground">{(file.size / 1024).toFixed(0)} KB</span>
+            {!uploading && (
+              <button onClick={() => { setFile(null); setProgress(0); if (fileRef.current) fileRef.current.value = ''; }} aria-label="Remove attachment">
+                <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" strokeWidth={1.5} />
+              </button>
+            )}
+          </div>
+          {uploading && (
+            <div className="h-1 w-full overflow-hidden rounded-full bg-background">
+              <div
+                className="h-full bg-primary transition-all duration-150"
+                style={{ width: `${progress}%` }}
+                aria-label={`Upload progress ${progress}%`}
+              />
+            </div>
           )}
-          <span className="flex-1 truncate">{file.name}</span>
-          <button onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ''; }} aria-label="Remove attachment">
-            <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" strokeWidth={1.5} />
-          </button>
         </div>
       )}
       <div className="flex items-end gap-2">
@@ -123,6 +164,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, placehol
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
         </Button>
       </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">Images & PDFs · 5 MB max</p>
     </div>
   );
 };

@@ -7,6 +7,8 @@ export interface Department {
   name: string;
   description?: string;
   icon?: string;
+  intake_fields?: Array<{ key: string; label: string; type: 'text' | 'select' | 'textarea'; required?: boolean; placeholder?: string; options?: string[] }>;
+  sla_target_minutes?: number;
 }
 
 interface DepartmentPickerProps {
