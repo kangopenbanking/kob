@@ -277,8 +277,8 @@ const AdminSupportSlaSettings: React.FC = () => {
                       )}
                       <Button
                         size="sm"
-                        disabled={!row._dirty || !validation.ok || saveOne.isPending}
-                        onClick={() => saveOne.mutate(row)}
+                        disabled={!(row as DraftRow)._dirty || !validation.ok || saveOne.isPending}
+                        onClick={() => saveOne.mutate(row as DraftRow)}
                       >
                         {saveOne.isPending ? "Saving..." : "Save"}
                       </Button>
