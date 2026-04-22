@@ -50,18 +50,20 @@ export function useOnlineAgentCount() {
   return count;
 }
 
-export function useSupportConversations(userId?: string) {
+export function useSupportConversations(userId?: string, guestId?: string) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!userId) { setLoading(false); return; }
-    const { data } = await supabase
+    if (!userId && !guestId) { setLoading(false); return; }
+    let query = supabase
       .from('support_conversations')
       .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, support_departments(name)')
-      .eq('user_id', userId)
       .order('updated_at', { ascending: false })
-      .limit(20) as any;
+      .limit(20);
+    if (userId) query = query.eq('user_id', userId);
+    else if (guestId) query = query.eq('guest_id', guestId);
+    const { data } = await query as any;
 
     setConversations(
       (data || []).map((c: any) => ({
