@@ -161,15 +161,31 @@ export function useMarkRead() {
 
 export function useCreateConversation() {
   return useCallback(async (
-    userId: string,
+    userId: string | undefined,
     departmentId: string,
     subject: string,
     channel: string,
-    initialMessage?: string
+    initialMessage?: string,
+    guest?: { guestId: string; name?: string; email?: string },
   ) => {
+    const insertPayload: any = {
+      department_id: departmentId,
+      subject,
+      channel,
+    };
+    if (userId) {
+      insertPayload.user_id = userId;
+    } else if (guest?.guestId) {
+      insertPayload.guest_id = guest.guestId;
+      if (guest.name) insertPayload.guest_name = guest.name;
+      if (guest.email) insertPayload.guest_email = guest.email;
+    } else {
+      throw new Error('Either userId or guest identity is required');
+    }
+
     const { data: conv, error } = await supabase
       .from('support_conversations')
-      .insert({ user_id: userId, department_id: departmentId, subject, channel })
+      .insert(insertPayload)
       .select('id')
       .single() as any;
 
@@ -179,7 +195,7 @@ export function useCreateConversation() {
       await supabase.from('support_messages').insert({
         conversation_id: conv.id,
         sender_type: 'user',
-        sender_id: userId,
+        sender_id: userId ?? null,
         content: initialMessage,
       });
     }
