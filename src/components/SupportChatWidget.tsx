@@ -18,6 +18,8 @@ import {
 } from '@/hooks/useSupportChat';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { IntakeFields, type IntakeField } from './support/IntakeFields';
+import { SlaBadge } from './support/SlaBadge';
 import {
   getOrCreateGuestId,
   getPersistedDepartment,
@@ -36,6 +38,8 @@ export const SupportChatWidget: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [intakeValues, setIntakeValues] = useState<Record<string, string>>({});
+  const [intakeErrors, setIntakeErrors] = useState<Record<string, string>>({});
   const [activeConvId, setActiveConvId] = useState<string>();
   const [starting, setStarting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -44,6 +48,9 @@ export const SupportChatWidget: React.FC = () => {
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
+
+  // Identity used for storage uploads + per-guest rate limiting (server-evaluated keys).
+  const supportIdentity = userId || `guest_${guestId}`;
 
   const { departments, loading: deptsLoading } = useSupportDepartments();
   const { conversations, loading: convsLoading, refresh: refreshConvs } = useSupportConversations(userId, guestId);
