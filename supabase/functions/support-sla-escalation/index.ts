@@ -6,6 +6,7 @@
 //     audit log, optionally transfer to escalation_department_id, re-notify
 //     agents, and email the supervisor with a deep link.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { sendSupportEmail, APP_BASE_URL } from '../_shared/sendSupportEmail.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,8 +19,6 @@ const PRIORITY_NEXT: Record<string, string> = {
   high: 'urgent',
   urgent: 'urgent',
 };
-
-const APP_BASE_URL = Deno.env.get('APP_BASE_URL') || 'https://kob.lovable.app';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -65,24 +64,18 @@ Deno.serve(async (req) => {
       severity: 'warning' | 'breach',
     ) => {
       const deepLink = `${APP_BASE_URL}/admin/support-chat?conversation=${conversationId}`;
-      try {
-        await admin.functions.invoke('send-transactional-email', {
-          body: {
-            templateName: 'support-sla-supervisor',
-            recipientEmail: to,
-            idempotencyKey: `sla-${conversationId}-${severity}`,
-            templateData: {
-              subject,
-              summaryLines: lines.map((l) => l.replace(/<[^>]+>/g, '')),
-              deepLink,
-              conversationId,
-              severity,
-            },
-          },
-        });
-      } catch (err) {
-        console.warn('supervisor email failed:', err);
-      }
+      await sendSupportEmail({
+        templateName: 'support-sla-supervisor',
+        recipientEmail: to,
+        idempotencyKey: `sla-${conversationId}-${severity}`,
+        templateData: {
+          subject,
+          summaryLines: lines.map((l) => l.replace(/<[^>]+>/g, '')),
+          deepLink,
+          conversationId,
+          severity,
+        },
+      });
     };
 
     for (const c of convs || []) {

@@ -7688,31 +7688,46 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          attempt_count: number
           created_at: string
           error_message: string | null
           id: string
+          last_attempt_at: string | null
           message_id: string | null
           metadata: Json | null
+          next_retry_at: string | null
+          provider_event: string | null
+          provider_event_at: string | null
           recipient_email: string
           status: string
           template_name: string
         }
         Insert: {
+          attempt_count?: number
           created_at?: string
           error_message?: string | null
           id?: string
+          last_attempt_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          next_retry_at?: string | null
+          provider_event?: string | null
+          provider_event_at?: string | null
           recipient_email: string
           status: string
           template_name: string
         }
         Update: {
+          attempt_count?: number
           created_at?: string
           error_message?: string | null
           id?: string
+          last_attempt_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          next_retry_at?: string | null
+          provider_event?: string | null
+          provider_event_at?: string | null
           recipient_email?: string
           status?: string
           template_name?: string
