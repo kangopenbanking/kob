@@ -482,6 +482,41 @@ const ManagedEmailAdmin: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Send Test Email Dialog */}
+      <Dialog open={!!testDialogKey} onOpenChange={(o) => { if (!o) { setTestDialogKey(null); setTestRecipient(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Test Email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Send a preview of <span className="font-mono text-xs">{testDialogKey}</span> to confirm delivery and rendering. Leave blank to send to your own inbox.
+            </p>
+            <div>
+              <Label>Recipient email (optional)</Label>
+              <Input
+                type="email"
+                value={testRecipient}
+                onChange={(e) => setTestRecipient(e.target.value)}
+                placeholder="agent@example.com"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setTestDialogKey(null); setTestRecipient(''); }}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => testDialogKey && sendTest.mutate({ emailKey: testDialogKey, recipient: testRecipient })}
+                disabled={sendTest.isPending}
+              >
+                {sendTest.isPending ? 'Sending...' : 'Send Test'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
