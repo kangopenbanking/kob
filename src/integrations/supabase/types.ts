@@ -23421,6 +23421,14 @@ export type Database = {
           section_key: string
         }[]
       }
+      get_support_dept_agent_emails: {
+        Args: { _department_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_user_postiq_verification: {
         Args: { p_user_id: string }
         Returns: {
