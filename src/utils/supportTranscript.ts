@@ -116,23 +116,70 @@ export async function exportConversationToPdf(opts: TranscriptOptions): Promise<
     if (y > pageHeight - margin) { doc.addPage(); y = margin; }
   }
 
-  // Attachment index appendix
+  // Attachment index appendix — enriched with storage metadata for auditing
   if (attachments.length) {
     if (y > pageHeight - margin - 80) { doc.addPage(); y = margin; }
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text('Attachments', margin, y); y += 16;
+    doc.setTextColor(20);
+    doc.text('Attachments', margin, y); y += 14;
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(110);
+    doc.text('Uploader identity is the first folder segment of the storage path (user UUID or guest_<id>).', margin, y);
+    y += 14;
     doc.setFontSize(9);
-    doc.setTextColor(80);
-    attachments.forEach((m, idx) => {
-      const time = format(new Date(m.created_at), 'PP HH:mm');
-      const line = `${idx + 1}. [${time}] ${m.file_type || 'file'} — ${m.file_url}`;
-      const wrapped = doc.splitTextToSize(line, maxWidth);
-      for (const w of wrapped) {
-        if (y > pageHeight - margin) { doc.addPage(); y = margin; }
-        doc.text(w, margin, y); y += 12;
+
+    // Resolve per-file metadata in parallel from storage.objects
+    const enriched = await Promise.all(attachments.map(async (m) => {
+      const path: string = m.file_url || '';
+      const slash = path.indexOf('/');
+      const folder = slash > 0 ? path.slice(0, slash) : '';
+      const filename = slash > 0 ? path.slice(slash + 1) : path;
+      let sizeBytes: number | undefined;
+      let mimeType: string | undefined = m.file_type || undefined;
+      let lastModified: string | undefined;
+      try {
+        const { data } = await supabase.storage
+          .from('support-attachments')
+          .list(folder, { search: filename, limit: 1 }) as any;
+        const obj = (data || [])[0];
+        if (obj) {
+          sizeBytes = obj.metadata?.size ?? obj?.size;
+          mimeType = obj.metadata?.mimetype || obj.metadata?.contentType || mimeType;
+          lastModified = obj.updated_at || obj.created_at;
+        }
+      } catch { /* best-effort — leave fields undefined */ }
+      return { msg: m, path, folder, filename, sizeBytes, mimeType, lastModified };
+    }));
+
+    enriched.forEach((a, idx) => {
+      const time = format(new Date(a.msg.created_at), 'PP HH:mm');
+      const sizeLabel = a.sizeBytes != null
+        ? a.sizeBytes < 1024
+          ? `${a.sizeBytes} B`
+          : a.sizeBytes < 1024 * 1024
+            ? `${(a.sizeBytes / 1024).toFixed(1)} KB`
+            : `${(a.sizeBytes / (1024 * 1024)).toFixed(2)} MB`
+        : 'unknown size';
+
+      const lines = [
+        `${idx + 1}. [${time}] ${a.msg.sender_type === 'agent' ? 'Agent' : a.msg.sender_type === 'user' ? 'Customer' : 'System'}`,
+        `   Path:     ${a.path}`,
+        `   Uploader: ${a.folder || '—'}`,
+        `   MIME:     ${a.mimeType || 'unknown'}`,
+        `   Size:     ${sizeLabel}`,
+      ];
+      if (a.lastModified) lines.push(`   Stored:   ${format(new Date(a.lastModified), 'PPpp')}`);
+
+      for (const l of lines) {
+        const wrapped = doc.splitTextToSize(l, maxWidth);
+        for (const w of wrapped) {
+          if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+          doc.text(w, margin, y); y += 12;
+        }
       }
+      y += 4;
     });
     doc.setTextColor(20);
   }
