@@ -23727,6 +23727,7 @@ export type Database = {
         | "merchant"
         | "tpp"
         | "developer"
+        | "support_agent"
       approval_action_type:
         | "submit"
         | "approve"
@@ -24085,6 +24086,7 @@ export const Constants = {
         "merchant",
         "tpp",
         "developer",
+        "support_agent",
       ],
       approval_action_type: [
         "submit",
