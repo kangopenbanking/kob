@@ -352,56 +352,61 @@ const AdminSupportChat: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Support workspace</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage live conversations, agents and departments in one place.
+      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background">
+              <MessageCircle className="h-4 w-4 text-foreground" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Support workspace</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Manage live conversations, agents and departments in one unified workspace.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-9" onClick={() => navigate('/admin/support-chat/profile')}>
-            <UserCog className="mr-1.5 h-4 w-4" /> My profile
+            <UserCog className="mr-1.5 h-4 w-4" strokeWidth={1.5} /> My profile
           </Button>
           <Button variant="outline" size="sm" className="h-9" onClick={() => fetchConversations()}>
-            <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
+            <RefreshCw className="mr-1.5 h-4 w-4" strokeWidth={1.5} /> Refresh
           </Button>
         </div>
       </div>
 
       {/* Agent sign-in URL banner */}
-      <Card className="border-border bg-muted/30">
-        <CardContent className="flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="border-border shadow-sm transition-shadow hover:shadow-md">
+        <CardContent className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
-              <Link2 className="h-4 w-4 text-foreground" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+              <Link2 className="h-4 w-4 text-foreground" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Agent sign-in URL</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">Agent sign-in URL</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Share this branded portal with your support team. Invited agents land here after setting their password.
               </p>
             </div>
           </div>
           <div className="flex w-full items-center gap-2 sm:w-auto">
-            <code className="flex-1 truncate rounded-md border border-border bg-background px-3 py-1.5 text-xs font-mono text-foreground sm:max-w-[320px]">
+            <code className="flex-1 truncate rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono text-foreground sm:max-w-[340px]">
               {typeof window !== 'undefined' ? `${window.location.origin}/support-agent` : '/support-agent'}
             </code>
             <Button
               size="sm"
               variant="outline"
-              className="h-8"
+              className="h-9"
               onClick={() => {
                 const url = `${window.location.origin}/support-agent`;
                 navigator.clipboard?.writeText(url);
                 toast({ title: 'Link copied', description: url });
               }}
             >
-              <Copy className="mr-1 h-3.5 w-3.5" /> Copy
+              <Copy className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} /> Copy
             </Button>
-            <Button asChild size="sm" variant="ghost" className="h-8">
-              <Link to="/support-agent" target="_blank" rel="noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" />
+            <Button asChild size="sm" variant="outline" className="h-9 w-9 p-0">
+              <Link to="/support-agent" target="_blank" rel="noreferrer" aria-label="Open agent portal">
+                <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
               </Link>
             </Button>
           </div>
@@ -411,26 +416,26 @@ const AdminSupportChat: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { icon: Clock, label: 'Open', value: stats.open, tone: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-500/10' },
-          { icon: MessageCircle, label: 'Assigned', value: stats.assigned, tone: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10' },
-          { icon: CheckCircle2, label: 'Resolved', value: stats.resolved, tone: 'text-green-600 bg-green-50 dark:bg-green-500/10' },
-          { icon: Users, label: 'Agents', value: agents.length, tone: 'text-foreground bg-muted' },
+          { icon: Clock, label: 'Open', value: stats.open },
+          { icon: MessageCircle, label: 'Assigned', value: stats.assigned },
+          { icon: CheckCircle2, label: 'Resolved', value: stats.resolved },
+          { icon: Users, label: 'Agents', value: agents.length },
         ].map((s) => (
-          <Card key={s.label} className="border-border transition-shadow hover:shadow-sm">
+          <Card key={s.label} className="border-border shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
             <CardContent className="flex items-center gap-3 p-4">
-              <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', s.tone)}>
-                <s.icon className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background">
+                <s.icon className="h-4 w-4 text-foreground" strokeWidth={1.5} />
               </div>
               <div>
                 <p className="text-2xl font-semibold leading-none text-foreground">{s.value}</p>
-                <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
+                <p className="mt-1.5 text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="conversations">Conversations</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>
