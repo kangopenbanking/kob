@@ -13141,11 +13141,16 @@ export type Database = {
       }
       managed_email_test_sends: {
         Row: {
+          attempt_count: number
           created_at: string
           email_key: string
           error_message: string | null
+          http_status: number | null
           id: string
+          last_attempt_at: string
           message_id: string | null
+          provider_callback_ok: boolean | null
+          provider_response: Json | null
           recipient_email: string
           sent_by: string
           status: string
@@ -13153,11 +13158,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attempt_count?: number
           created_at?: string
           email_key: string
           error_message?: string | null
+          http_status?: number | null
           id?: string
+          last_attempt_at?: string
           message_id?: string | null
+          provider_callback_ok?: boolean | null
+          provider_response?: Json | null
           recipient_email: string
           sent_by: string
           status?: string
@@ -13165,11 +13175,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attempt_count?: number
           created_at?: string
           email_key?: string
           error_message?: string | null
+          http_status?: number | null
           id?: string
+          last_attempt_at?: string
           message_id?: string | null
+          provider_callback_ok?: boolean | null
+          provider_response?: Json | null
           recipient_email?: string
           sent_by?: string
           status?: string
@@ -20579,39 +20594,62 @@ export type Database = {
           created_at: string | null
           description: string | null
           display_order: number | null
+          escalation_department_id: string | null
           icon: string | null
           id: string
           intake_fields: Json
           is_active: boolean | null
           name: string
+          notify_supervisor: boolean
+          sla_escalation_pct: number
           sla_target_minutes: number
+          sla_warning_pct: number
+          supervisor_email: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          escalation_department_id?: string | null
           icon?: string | null
           id?: string
           intake_fields?: Json
           is_active?: boolean | null
           name: string
+          notify_supervisor?: boolean
+          sla_escalation_pct?: number
           sla_target_minutes?: number
+          sla_warning_pct?: number
+          supervisor_email?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          escalation_department_id?: string | null
           icon?: string | null
           id?: string
           intake_fields?: Json
           is_active?: boolean | null
           name?: string
+          notify_supervisor?: boolean
+          sla_escalation_pct?: number
           sla_target_minutes?: number
+          sla_warning_pct?: number
+          supervisor_email?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_departments_escalation_department_id_fkey"
+            columns: ["escalation_department_id"]
+            isOneToOne: false
+            referencedRelation: "support_departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {

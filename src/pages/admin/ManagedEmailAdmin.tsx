@@ -186,13 +186,15 @@ const ManagedEmailAdmin: React.FC = () => {
     },
   });
 
-  // Send test email — supports custom recipient (e.g. an agent's address)
-  // and records the attempt in managed_email_test_sends.
+  // Send test email — supports custom recipient (e.g. an agent's address),
+  // configurable retry attempts, and surfaces full provider diagnostics.
   const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
   const [testRecipient, setTestRecipient] = useState('');
+  const [testMaxAttempts, setTestMaxAttempts] = useState(1);
+  const [testResult, setTestResult] = useState<any | null>(null);
 
   const sendTest = useMutation({
-    mutationFn: async ({ emailKey, recipient }: { emailKey: string; recipient?: string }) => {
+    mutationFn: async ({ emailKey, recipient, maxAttempts }: { emailKey: string; recipient?: string; maxAttempts: number }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error('No authenticated user');
       const target = (recipient || '').trim() || user.email;
@@ -202,6 +204,7 @@ const ManagedEmailAdmin: React.FC = () => {
           email_key: emailKey,
           recipient_email: target,
           institution_id: selectedInstitution !== 'global' ? selectedInstitution : undefined,
+          max_attempts: maxAttempts,
           variables: {
             customer_name: user.user_metadata?.full_name || 'Test User',
             currency: 'XAF',
@@ -214,17 +217,20 @@ const ManagedEmailAdmin: React.FC = () => {
         },
       });
       if (error) throw error;
-      if ((data as any)?.status === 'failed') {
-        throw new Error((data as any)?.error || 'Delivery failed');
-      }
       return data;
     },
-    onSuccess: (_d, vars) => {
-      toast.success(`Test email sent to ${vars.recipient || 'your inbox'}`);
-      setTestDialogKey(null);
-      setTestRecipient('');
+    onSuccess: (data: any, vars) => {
+      setTestResult(data);
+      if (data?.status === 'sent') {
+        toast.success(`Test email sent to ${vars.recipient || 'your inbox'} (${data.attempts} attempt${data.attempts > 1 ? 's' : ''})`);
+      } else {
+        toast.error(`Delivery failed after ${data?.attempts || 1} attempt(s)`);
+      }
     },
-    onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
+    onError: (e: any) => {
+      setTestResult({ status: 'failed', error: extractEdgeFunctionError(e) });
+      toast.error(extractEdgeFunctionError(e));
+    },
   });
 
   const filtered = emailTypes.filter(t => {
@@ -358,7 +364,7 @@ const ManagedEmailAdmin: React.FC = () => {
                         <TableCell className="text-right space-x-1">
                           <Button variant="ghost" size="sm" onClick={() => openEdit(type)}><Edit className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="sm" onClick={() => setPreviewType(type)}><Eye className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setTestDialogKey(type.email_key); setTestRecipient(''); }} disabled={sendTest.isPending} title="Send test email">
+                          <Button variant="ghost" size="sm" onClick={() => { setTestDialogKey(type.email_key); setTestRecipient(''); setTestResult(null); setTestMaxAttempts(1); }} disabled={sendTest.isPending} title="Send test email">
                             <Send className="h-3 w-3" />
                           </Button>
                         </TableCell>
@@ -484,8 +490,8 @@ const ManagedEmailAdmin: React.FC = () => {
       </Dialog>
 
       {/* Send Test Email Dialog */}
-      <Dialog open={!!testDialogKey} onOpenChange={(o) => { if (!o) { setTestDialogKey(null); setTestRecipient(''); } }}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!testDialogKey} onOpenChange={(o) => { if (!o) { setTestDialogKey(null); setTestRecipient(''); setTestResult(null); setTestMaxAttempts(1); } }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Send Test Email</DialogTitle>
           </DialogHeader>
@@ -503,15 +509,86 @@ const ManagedEmailAdmin: React.FC = () => {
                 className="mt-1"
               />
             </div>
+            <div>
+              <Label>Retry attempts</Label>
+              <Select value={String(testMaxAttempts)} onValueChange={(v) => setTestMaxAttempts(parseInt(v))}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 attempt (no retry)</SelectItem>
+                  <SelectItem value="2">2 attempts</SelectItem>
+                  <SelectItem value="3">3 attempts (recommended)</SelectItem>
+                  <SelectItem value="5">5 attempts (max)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Retries use exponential backoff if the provider callback does not acknowledge delivery.
+              </p>
+            </div>
+
+            {testResult && (
+              <div className="rounded-md border p-3 space-y-2 bg-muted/30">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Result</span>
+                  <Badge variant={testResult.status === 'sent' ? 'default' : 'destructive'} className="text-xs">
+                    {testResult.status}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <div className="text-muted-foreground">Attempts</div>
+                    <div className="font-medium">{testResult.attempts || 1} / {testResult.max_attempts || 1}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">HTTP status</div>
+                    <div className="font-medium">{testResult.http_status ?? '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Provider callback</div>
+                    <div className="font-medium">
+                      {testResult.provider_callback_ok === true
+                        ? 'Acknowledged'
+                        : testResult.provider_callback_ok === false
+                        ? 'Did not acknowledge'
+                        : '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Message ID</div>
+                    <div className="font-mono text-[10px] truncate">{testResult.message_id || '—'}</div>
+                  </div>
+                </div>
+                {testResult.error && (
+                  <div className="text-xs text-destructive break-words">
+                    <span className="font-medium">Reason: </span>{testResult.error}
+                  </div>
+                )}
+                {Array.isArray(testResult.attempt_log) && testResult.attempt_log.length > 1 && (
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground">Attempt log</summary>
+                    <ul className="mt-1 space-y-1 pl-4 list-decimal">
+                      {testResult.attempt_log.map((a: any, i: number) => (
+                        <li key={i}>
+                          HTTP {a.status} · callback {a.provider_callback_ok ? 'ok' : 'failed'}
+                          {a.error_message ? ` — ${a.error_message}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setTestDialogKey(null); setTestRecipient(''); }}>
-                Cancel
+              <Button variant="outline" onClick={() => { setTestDialogKey(null); setTestRecipient(''); setTestResult(null); setTestMaxAttempts(1); }}>
+                Close
               </Button>
               <Button
-                onClick={() => testDialogKey && sendTest.mutate({ emailKey: testDialogKey, recipient: testRecipient })}
+                onClick={() => testDialogKey && sendTest.mutate({ emailKey: testDialogKey, recipient: testRecipient, maxAttempts: testMaxAttempts })}
                 disabled={sendTest.isPending}
               >
-                {sendTest.isPending ? 'Sending...' : 'Send Test'}
+                {sendTest.isPending ? 'Sending...' : testResult ? 'Retry' : 'Send Test'}
               </Button>
             </div>
           </div>
