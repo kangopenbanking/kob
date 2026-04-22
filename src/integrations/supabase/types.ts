@@ -11223,6 +11223,42 @@ export type Database = {
           },
         ]
       }
+      integration_idempotency_keys: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          idempotency_key: string
+          merchant_id: string | null
+          request_hash: string
+          resource: string
+          response_body: Json | null
+          response_status: number | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key: string
+          merchant_id?: string | null
+          request_hash: string
+          resource: string
+          response_body?: Json | null
+          response_status?: number | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
+          merchant_id?: string | null
+          request_hash?: string
+          resource?: string
+          response_body?: Json | null
+          response_status?: number | null
+        }
+        Relationships: []
+      }
       integration_mappings: {
         Row: {
           created_at: string
@@ -11321,6 +11357,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_webhook_replays: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          merchant_id: string | null
+          original_event_id: string
+          replay_status: string
+          replayed_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          merchant_id?: string | null
+          original_event_id: string
+          replay_status?: string
+          replayed_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          merchant_id?: string | null
+          original_event_id?: string
+          replay_status?: string
+          replayed_by?: string | null
+        }
+        Relationships: []
       }
       interbank_endpoints: {
         Row: {

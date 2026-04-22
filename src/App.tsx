@@ -298,6 +298,7 @@ const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReference
 const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
 const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
 const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegistration"));
+const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
@@ -1044,6 +1045,8 @@ function App() {
               <Route path="sandbox/simulate-webhooks" element={<SandboxSimulateWebhooks />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT */}
               <Route path="sandbox/api" element={<SandboxApiPage />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1) */}
+              <Route path="integration-layer" element={<IntegrationLayerOverview />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
