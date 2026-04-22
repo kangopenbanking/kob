@@ -3,10 +3,17 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
-// Configuration baked in at scaffold time
-const SITE_NAME = "Kang OB"
-const SENDER_DOMAIN = "notify.kangopenbanking.com"
-const FROM_DOMAIN = "support.kangopenbanking.com"
+// Configuration baked in at scaffold time — do NOT change these manually.
+// To update, re-run the email domain setup flow.
+const SITE_NAME = "kob"
+// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
+// It MUST match the subdomain delegated to Lovable's nameservers — never the root domain.
+// The email API looks up this exact domain; a mismatch causes "No email domain record found".
+const SENDER_DOMAIN = "notify.info.kangopenbanking.com"
+// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
+// When display_from_root is enabled, this can be the root domain for cleaner branding,
+// even though actual sending uses the subdomain above.
+const FROM_DOMAIN = "info.kangopenbanking.com"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,7 +60,6 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
-  let explicitLocale: string | undefined
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -63,8 +69,6 @@ Deno.serve(async (req) => {
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
-    // Optional caller-provided locale override ('en' | 'fr').
-    if (typeof body.locale === 'string') explicitLocale = body.locale
   } catch {
     return new Response(
       JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -278,52 +282,19 @@ Deno.serve(async (req) => {
     )
   }
 
-  // 3.5 Resolve recipient locale ('en' | 'fr').
-  // Priority: explicit body.locale → user_preferences.language → default 'en'.
-  let recipientLocale: 'en' | 'fr' = 'en'
-  if (explicitLocale === 'fr' || explicitLocale === 'en') {
-    recipientLocale = explicitLocale
-  } else {
-    try {
-      // Look up auth user by email, then user_preferences.language.
-      const { data: authUser } = await supabase
-        .from('auth_user_emails_view' as any) // Best-effort; falls through silently if view absent.
-        .select('id')
-        .eq('email', normalizedEmail)
-        .maybeSingle()
-      const authUserId = (authUser as any)?.id
-      if (authUserId) {
-        const { data: pref } = await supabase
-          .from('user_preferences')
-          .select('language')
-          .eq('user_id', authUserId)
-          .maybeSingle()
-        if (pref?.language === 'fr' || pref?.language === 'en') {
-          recipientLocale = pref.language
-        }
-      }
-    } catch (e) {
-      console.warn('Locale lookup failed; defaulting to en', e)
-    }
-  }
-
-  // Inject locale into templateData so templates can render bilingually.
-  // Templates that read `data.locale` will switch; legacy templates ignore it.
-  const localizedData = { ...templateData, locale: recipientLocale }
-
   // 4. Render React Email template to HTML and plain text
   const html = await renderAsync(
-    React.createElement(template.component, localizedData)
+    React.createElement(template.component, templateData)
   )
   const plainText = await renderAsync(
-    React.createElement(template.component, localizedData),
+    React.createElement(template.component, templateData),
     { plainText: true }
   )
 
   // Resolve subject — supports static string or dynamic function
   const resolvedSubject =
     typeof template.subject === 'function'
-      ? template.subject(localizedData)
+      ? template.subject(templateData)
       : template.subject
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
