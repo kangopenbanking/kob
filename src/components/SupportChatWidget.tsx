@@ -519,11 +519,23 @@ export const SupportChatWidget: React.FC = () => {
                         slaBreachAt={activeConv.sla_breach_at}
                         firstResponseAt={activeConv.first_response_at}
                         status={activeConv.status}
+                        liveCountdown
                       />
                     </div>
                   )}
-                  <ChatThread messages={messages} currentUserId={userId} viewerRole="user" className="flex-1" />
-                  <ChatInput onSend={handleSend} uploadIdentity={supportIdentity} />
+                  <ChatThread
+                    messages={messages}
+                    currentUserId={userId}
+                    viewerRole="user"
+                    className="flex-1"
+                    agentTyping={agentTyping}
+                  />
+                  <ChatInput
+                    onSend={handleSend}
+                    uploadIdentity={supportIdentity}
+                    conversationId={activeConvId}
+                    typingRole="user"
+                  />
                 </>
               )}
 
