@@ -186,16 +186,21 @@ const ManagedEmailAdmin: React.FC = () => {
     },
   });
 
-  // Send test email
+  // Send test email — supports custom recipient (e.g. an agent's address)
+  // and records the attempt in managed_email_test_sends.
+  const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
+  const [testRecipient, setTestRecipient] = useState('');
+
   const sendTest = useMutation({
-    mutationFn: async (emailKey: string) => {
+    mutationFn: async ({ emailKey, recipient }: { emailKey: string; recipient?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error('No authenticated user');
-      
-      const { data, error } = await supabase.functions.invoke('managed-send-email', {
+      const target = (recipient || '').trim() || user.email;
+
+      const { data, error } = await supabase.functions.invoke('managed-email-test', {
         body: {
           email_key: emailKey,
-          recipient_email: user.email,
+          recipient_email: target,
           institution_id: selectedInstitution !== 'global' ? selectedInstitution : undefined,
           variables: {
             customer_name: user.user_metadata?.full_name || 'Test User',
@@ -209,9 +214,16 @@ const ManagedEmailAdmin: React.FC = () => {
         },
       });
       if (error) throw error;
+      if ((data as any)?.status === 'failed') {
+        throw new Error((data as any)?.error || 'Delivery failed');
+      }
       return data;
     },
-    onSuccess: () => toast.success('Test email sent to your email'),
+    onSuccess: (_d, vars) => {
+      toast.success(`Test email sent to ${vars.recipient || 'your inbox'}`);
+      setTestDialogKey(null);
+      setTestRecipient('');
+    },
     onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
   });
 
@@ -346,7 +358,7 @@ const ManagedEmailAdmin: React.FC = () => {
                         <TableCell className="text-right space-x-1">
                           <Button variant="ghost" size="sm" onClick={() => openEdit(type)}><Edit className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="sm" onClick={() => setPreviewType(type)}><Eye className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => sendTest.mutate(type.email_key)} disabled={sendTest.isPending}>
+                          <Button variant="ghost" size="sm" onClick={() => { setTestDialogKey(type.email_key); setTestRecipient(''); }} disabled={sendTest.isPending} title="Send test email">
                             <Send className="h-3 w-3" />
                           </Button>
                         </TableCell>

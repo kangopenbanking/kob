@@ -13139,6 +13139,45 @@ export type Database = {
           },
         ]
       }
+      managed_email_test_sends: {
+        Row: {
+          created_at: string
+          email_key: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          recipient_email: string
+          sent_by: string
+          status: string
+          template_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_key: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          recipient_email: string
+          sent_by: string
+          status?: string
+          template_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_key?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          recipient_email?: string
+          sent_by?: string
+          status?: string
+          template_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       managed_email_types: {
         Row: {
           available_variables: Json | null
@@ -20318,6 +20357,38 @@ export type Database = {
         }
         Relationships: []
       }
+      support_agent_presence: {
+        Row: {
+          agent_id: string
+          last_heartbeat_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          last_heartbeat_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          last_heartbeat_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_agent_presence_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "support_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_agents: {
         Row: {
           created_at: string | null
@@ -20363,10 +20434,50 @@ export type Database = {
           },
         ]
       }
+      support_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string
+          conversation_id: string
+          created_at: string
+          details: Json | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type?: string
+          conversation_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string
+          conversation_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_audit_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_conversations: {
         Row: {
           assigned_agent_id: string | null
           channel: string
+          claimed_at: string | null
+          claimed_by: string | null
           created_at: string | null
           department_id: string | null
           first_response_at: string | null
@@ -20380,7 +20491,9 @@ export type Database = {
           priority: string
           resolved_at: string | null
           sla_breach_at: string | null
+          sla_escalated_at: string | null
           sla_target_minutes: number
+          sla_warned_at: string | null
           status: string
           subject: string | null
           unread_agent_count: number
@@ -20391,6 +20504,8 @@ export type Database = {
         Insert: {
           assigned_agent_id?: string | null
           channel?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string | null
           department_id?: string | null
           first_response_at?: string | null
@@ -20404,7 +20519,9 @@ export type Database = {
           priority?: string
           resolved_at?: string | null
           sla_breach_at?: string | null
+          sla_escalated_at?: string | null
           sla_target_minutes?: number
+          sla_warned_at?: string | null
           status?: string
           subject?: string | null
           unread_agent_count?: number
@@ -20415,6 +20532,8 @@ export type Database = {
         Update: {
           assigned_agent_id?: string | null
           channel?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string | null
           department_id?: string | null
           first_response_at?: string | null
@@ -20428,7 +20547,9 @@ export type Database = {
           priority?: string
           resolved_at?: string | null
           sla_breach_at?: string | null
+          sla_escalated_at?: string | null
           sla_target_minutes?: number
+          sla_warned_at?: string | null
           status?: string
           subject?: string | null
           unread_agent_count?: number
@@ -23307,6 +23428,43 @@ export type Database = {
           _window_minutes?: number
         }
         Returns: boolean
+      }
+      claim_support_conversation: {
+        Args: { _conversation_id: string }
+        Returns: {
+          assigned_agent_id: string | null
+          channel: string
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string | null
+          department_id: string | null
+          first_response_at: string | null
+          guest_email: string | null
+          guest_id: string | null
+          guest_name: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          metadata: Json | null
+          priority: string
+          resolved_at: string | null
+          sla_breach_at: string | null
+          sla_escalated_at: string | null
+          sla_target_minutes: number
+          sla_warned_at: string | null
+          status: string
+          subject: string | null
+          unread_agent_count: number
+          unread_user_count: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
       cleanup_expired_auth_records: { Args: never; Returns: undefined }

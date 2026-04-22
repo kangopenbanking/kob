@@ -14,10 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus, ArrowRightLeft, ArrowUpCircle } from 'lucide-react';
+import { MessageCircle, Users, Building2, Search, Loader2, RefreshCw, CheckCircle2, Clock, AlertTriangle, Plus, Trash2, Edit2, UserPlus, ArrowRightLeft, ArrowUpCircle, Hand, Circle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { useAgentHeartbeat, useAgentPresenceList } from '@/hooks/useSupportAgentPresence';
+import { logSupportAudit } from '@/lib/supportAudit';
+import { SupportAuditLog } from '@/components/support/SupportAuditLog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-yellow-500',
@@ -60,6 +63,10 @@ const AdminSupportChat: React.FC = () => {
   const sendMessage = useSendMessage();
   const assignConversationEmail = useAssignConversation();
   const resolveNotification = useResolveNotification();
+
+  // Presence: heartbeat for this agent + watch all agents in workspace
+  useAgentHeartbeat(user?.id);
+  const presence = useAgentPresenceList();
 
   const fetchConversations = useCallback(async () => {
     let q = supabase
@@ -120,16 +127,43 @@ const AdminSupportChat: React.FC = () => {
   };
 
   const updatePriority = async (convId: string, priority: string) => {
+    const conv = conversations.find((c) => c.id === convId);
     await supabase.from('support_conversations').update({ priority, updated_at: new Date().toISOString() }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'priority_change',
+      actorId: user?.id,
+      details: { from: conv?.priority, to: priority },
+    });
     fetchConversations();
   };
 
   const assignAgent = async (convId: string, agentId: string) => {
+    const conv = conversations.find((c) => c.id === convId);
+    // Block assigning to an offline / away agent
+    if (agentId) {
+      const target = agents.find((a: any) => a.id === agentId || a.user_id === agentId);
+      const isOnline = presence.isOnline(target?.user_id) || presence.isOnline(target?.id);
+      if (!isOnline) {
+        toast({
+          title: 'Agent unavailable',
+          description: 'This agent is offline or away. Pick someone online or wait for them to return.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     await supabase.from('support_conversations').update({
       assigned_agent_id: agentId || null,
       status: agentId ? 'assigned' : 'open',
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'assignment_change',
+      actorId: user?.id,
+      details: { from: conv?.assigned_agent_id, to: agentId || null },
+    });
     toast({ title: agentId ? 'Agent assigned' : 'Agent unassigned' });
     fetchConversations();
 
@@ -142,15 +176,50 @@ const AdminSupportChat: React.FC = () => {
     }
   };
 
+  // Claim chat — optimistic UI, atomic DB function rejects if already claimed
+  const claimConversation = async (convId: string) => {
+    const previous = conversations;
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convId
+          ? { ...c, claimed_by: user?.id, claimed_at: new Date().toISOString(), status: 'assigned' }
+          : c,
+      ),
+    );
+    const { data, error } = await (supabase.rpc as any)('claim_support_conversation', { _conversation_id: convId });
+    if (error) {
+      setConversations(previous);
+      toast({
+        title: 'Could not claim',
+        description: error.message === 'conversation_already_claimed'
+          ? 'Another agent claimed this chat first.'
+          : error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Chat claimed', description: 'You are now responsible for this conversation.' });
+    fetchConversations();
+  };
+
   // Transfer conversation to another department (and clear current agent)
   const transferDepartment = async (convId: string, departmentId: string) => {
     if (!departmentId) return;
+    const conv = conversations.find((c) => c.id === convId);
     await supabase.from('support_conversations').update({
       department_id: departmentId,
       assigned_agent_id: null,
+      claimed_by: null,
+      claimed_at: null,
       status: 'open',
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'transfer',
+      actorId: user?.id,
+      details: { from_department: conv?.department_id, to_department: departmentId },
+    });
     toast({ title: 'Conversation transferred', description: 'Re-routed to the selected department.' });
     fetchConversations();
     // Notify agents in the new department
@@ -172,6 +241,12 @@ const AdminSupportChat: React.FC = () => {
       priority: next,
       updated_at: new Date().toISOString(),
     }).eq('id', convId);
+    await logSupportAudit({
+      conversationId: convId,
+      action: 'escalate',
+      actorId: user?.id,
+      details: { from: currentPriority, to: next },
+    });
     toast({ title: `Escalated to ${next}` });
     fetchConversations();
   };
@@ -372,19 +447,46 @@ const AdminSupportChat: React.FC = () => {
                   {activeConv && (
                     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
                       <p className="flex-1 text-sm font-medium truncate">{activeConv.subject || 'Support Chat'}</p>
-                      {/* Assign agent */}
+                      {/* Claim chat */}
+                      {!activeConv.claimed_by && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => claimConversation(activeConvId)}
+                        >
+                          <Hand className="mr-1 h-3 w-3" /> Claim chat
+                        </Button>
+                      )}
+                      {activeConv.claimed_by && activeConv.claimed_by !== user?.id && (
+                        <Badge variant="secondary" className="h-6 text-[10px]">
+                          Claimed by another agent
+                        </Badge>
+                      )}
+                      {/* Assign agent — disabled options for offline agents */}
                       <Select
                         value={activeConv.assigned_agent_id || 'unassigned'}
                         onValueChange={(v) => assignAgent(activeConvId, v === 'unassigned' ? '' : v)}
                       >
-                        <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="Assign agent" /></SelectTrigger>
+                        <SelectTrigger className="h-7 w-40 text-xs"><SelectValue placeholder="Assign agent" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {agents.map((a: any) => (
-                            <SelectItem key={a.user_id} value={a.user_id}>
-                              {a.profiles?.full_name || a.profiles?.email || 'Agent'}
-                            </SelectItem>
-                          ))}
+                          {agents.map((a: any) => {
+                            const online = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                            return (
+                              <SelectItem key={a.user_id} value={a.user_id} disabled={!online}>
+                                <span className="inline-flex items-center gap-2">
+                                  <Circle
+                                    className={cn(
+                                      'h-2 w-2',
+                                      online ? 'fill-green-500 text-green-500' : 'fill-muted text-muted-foreground',
+                                    )}
+                                  />
+                                  {a.profiles?.full_name || a.profiles?.email || 'Agent'}
+                                  {!online && <span className="text-[10px] text-muted-foreground">(offline)</span>}
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <Select value={activeConv.priority} onValueChange={(v) => updatePriority(activeConvId, v)}>
@@ -432,14 +534,19 @@ const AdminSupportChat: React.FC = () => {
                       )}
                     </div>
                   )}
-                  <ChatThread messages={messages} currentUserId={user?.id} viewerRole="agent" className="flex-1" />
-                  <ChatInput
-                    onSend={handleSend}
-                    disabled={activeConv?.status === 'closed'}
-                    placeholder="Reply as agent..."
-                    conversationId={activeConvId}
-                    typingRole="agent"
-                  />
+                  <div className="flex flex-1 min-h-0">
+                    <div className="flex flex-1 flex-col min-w-0">
+                      <ChatThread messages={messages} currentUserId={user?.id} viewerRole="agent" className="flex-1" />
+                      <ChatInput
+                        onSend={handleSend}
+                        disabled={activeConv?.status === 'closed'}
+                        placeholder="Reply as agent..."
+                        conversationId={activeConvId}
+                        typingRole="agent"
+                      />
+                    </div>
+                    <SupportAuditLog conversationId={activeConvId} className="hidden w-72 shrink-0 border-l border-border lg:block" />
+                  </div>
                 </>
               )}
             </div>
@@ -534,10 +641,18 @@ const AdminSupportChat: React.FC = () => {
                 <p className="py-6 text-center text-sm text-muted-foreground">No agents yet — invite one to get started.</p>
               ) : (
                 <div className="space-y-3">
-                  {agents.map((a: any) => (
+                  {agents.map((a: any) => {
+                    const liveOnline = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                    return (
                     <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>
-                        <p className="text-sm font-semibold">{a.profiles?.full_name || a.profiles?.email || 'Unknown'}</p>
+                        <p className="text-sm font-semibold inline-flex items-center gap-2">
+                          <span className={cn('h-2 w-2 rounded-full', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
+                          {a.profiles?.full_name || a.profiles?.email || 'Unknown'}
+                          <span className="text-[10px] font-normal text-muted-foreground">
+                            {liveOnline ? 'Online now' : 'Offline'}
+                          </span>
+                        </p>
                         <p className="text-xs text-muted-foreground">{a.support_departments?.name} · Max {a.max_concurrent_chats} chats</p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -551,7 +666,7 @@ const AdminSupportChat: React.FC = () => {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </CardContent>
