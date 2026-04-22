@@ -924,6 +924,8 @@ function App() {
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminSupportChat />} />
+              <Route path="support-chat/profile" element={<AgentProfile />} />
+              <Route path="support-chat/agent/:agentId" element={<AgentProfile />} />
               <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
