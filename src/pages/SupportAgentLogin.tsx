@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Headphones, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import kangLogo from '@/assets/kang-logo.png';
+
+/** Stable test/diagnostic identifier — DO NOT RENAME. Used by E2E + smoke tests. */
+const SUPPORT_AGENT_PAGE_TESTID = 'support-agent-login-root';
 
 /**
  * Dedicated branded sign-in for Support Agents.
