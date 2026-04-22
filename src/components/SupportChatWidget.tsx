@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MessageCircle, X, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,19 +17,24 @@ import {
 } from '@/hooks/useSupportChat';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { getOrCreateGuestId } from '@/utils/supportGuest';
 
 type Step = 'closed' | 'menu' | 'departments' | 'subject' | 'chat' | 'history';
 
 export const SupportChatWidget: React.FC = () => {
-  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('closed');
   const [userId, setUserId] = useState<string>();
   const [selectedDept, setSelectedDept] = useState<Department>();
   const [subject, setSubject] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
   const [activeConvId, setActiveConvId] = useState<string>();
 
+  // Persistent guest identity for anonymous visitors (no account required)
+  const guestId = useMemo(() => getOrCreateGuestId(), []);
+
   const { departments, loading: deptsLoading } = useSupportDepartments();
-  const { conversations, loading: convsLoading, refresh: refreshConvs } = useSupportConversations(userId);
+  const { conversations, loading: convsLoading, refresh: refreshConvs } = useSupportConversations(userId, guestId);
   const { messages } = useSupportMessages(activeConvId, userId);
   const createConversation = useCreateConversation();
   const sendMessage = useSendMessage();
@@ -43,7 +47,7 @@ export const SupportChatWidget: React.FC = () => {
 
   // Mark agent messages as read whenever the user opens / receives new messages
   useEffect(() => {
-    if (activeConvId && userId && step === 'chat') markRead(activeConvId, 'user');
+    if (activeConvId && step === 'chat') markRead(activeConvId, 'user');
   }, [activeConvId, userId, step, messages.length, markRead]);
 
   // Esc to close
@@ -63,9 +67,16 @@ export const SupportChatWidget: React.FC = () => {
   const handleDeptSelect = (dept: Department) => { setSelectedDept(dept); setStep('subject'); };
 
   const handleStartChat = async () => {
-    if (!userId || !selectedDept) return;
+    if (!selectedDept) return;
     try {
-      const convId = await createConversation(userId, selectedDept.id, subject || 'General inquiry', 'website', subject);
+      const convId = await createConversation(
+        userId,
+        selectedDept.id,
+        subject || 'General inquiry',
+        'website',
+        subject,
+        userId ? undefined : { guestId, name: guestName || undefined, email: guestEmail || undefined },
+      );
       setActiveConvId(convId);
       setStep('chat');
       refreshConvs();
@@ -73,7 +84,7 @@ export const SupportChatWidget: React.FC = () => {
   };
 
   const handleSend = async (content: string, filePath?: string, fileType?: string) => {
-    if (!activeConvId || !userId) return;
+    if (!activeConvId) return;
     await sendMessage(activeConvId, userId, 'user', content, filePath, fileType);
   };
 
@@ -153,24 +164,17 @@ export const SupportChatWidget: React.FC = () => {
               {step === 'menu' && (
                 <div className="flex flex-col gap-3 p-4">
                   <p className="text-lg font-bold text-foreground">Hi there</p>
-                  <p className="text-sm text-muted-foreground">How can we help you today?</p>
+                  <p className="text-sm text-muted-foreground">
+                    How can we help you today? Live support is free — no account needed.
+                  </p>
                   <div className="mt-4 flex flex-col gap-2">
-                    {userId ? (
-                      <>
-                        <Button onClick={() => setStep('departments')} className="justify-start rounded-xl" variant="outline">
-                          <MessageCircle className="mr-2 h-4 w-4" strokeWidth={1.5} /> Start a new conversation
-                        </Button>
-                        <Button onClick={() => { refreshConvs(); setStep('history'); }} className="justify-start rounded-xl" variant="ghost">
-                          View past conversations ({conversations.length})
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-center text-xs text-muted-foreground">Sign in to chat with our team.</p>
-                        <Button onClick={() => { setStep('closed'); navigate('/auth'); }} className="rounded-xl">
-                          Sign in to continue
-                        </Button>
-                      </>
+                    <Button onClick={() => setStep('departments')} className="justify-start rounded-xl" variant="outline">
+                      <MessageCircle className="mr-2 h-4 w-4" strokeWidth={1.5} /> Start a new conversation
+                    </Button>
+                    {conversations.length > 0 && (
+                      <Button onClick={() => { refreshConvs(); setStep('history'); }} className="justify-start rounded-xl" variant="ghost">
+                        View past conversations ({conversations.length})
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -181,7 +185,7 @@ export const SupportChatWidget: React.FC = () => {
               )}
 
               {step === 'subject' && (
-                <div className="flex flex-col gap-4 p-4">
+                <div className="flex flex-col gap-3 p-4">
                   <p className="text-sm font-medium text-foreground">What can we help you with?</p>
                   <Input
                     value={subject}
@@ -189,7 +193,27 @@ export const SupportChatWidget: React.FC = () => {
                     placeholder="Briefly describe your issue…"
                     className="rounded-xl"
                   />
-                  <Button onClick={handleStartChat} disabled={!userId} className="rounded-xl">
+                  {!userId && (
+                    <>
+                      <Input
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        placeholder="Your name (optional)"
+                        className="rounded-xl"
+                      />
+                      <Input
+                        type="email"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        placeholder="Email for replies (optional)"
+                        className="rounded-xl"
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Add an email if you'd like agent replies sent to your inbox.
+                      </p>
+                    </>
+                  )}
+                  <Button onClick={handleStartChat} className="rounded-xl">
                     Start chat
                   </Button>
                 </div>
@@ -198,7 +222,7 @@ export const SupportChatWidget: React.FC = () => {
               {step === 'chat' && (
                 <>
                   <ChatThread messages={messages} currentUserId={userId} viewerRole="user" className="flex-1" />
-                  <ChatInput onSend={handleSend} disabled={!userId} />
+                  <ChatInput onSend={handleSend} />
                 </>
               )}
 

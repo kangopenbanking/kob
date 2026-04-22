@@ -50,18 +50,20 @@ export function useOnlineAgentCount() {
   return count;
 }
 
-export function useSupportConversations(userId?: string) {
+export function useSupportConversations(userId?: string, guestId?: string) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!userId) { setLoading(false); return; }
-    const { data } = await supabase
+    if (!userId && !guestId) { setLoading(false); return; }
+    let query = supabase
       .from('support_conversations')
       .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, support_departments(name)')
-      .eq('user_id', userId)
       .order('updated_at', { ascending: false })
-      .limit(20) as any;
+      .limit(20);
+    if (userId) query = query.eq('user_id', userId);
+    else if (guestId) query = query.eq('guest_id', guestId);
+    const { data } = await query as any;
 
     setConversations(
       (data || []).map((c: any) => ({
@@ -70,22 +72,23 @@ export function useSupportConversations(userId?: string) {
       }))
     );
     setLoading(false);
-  }, [userId]);
+  }, [userId, guestId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   // Live refresh whenever any of the user's conversations change
   useEffect(() => {
-    if (!userId) return;
+    if (!userId && !guestId) return;
+    const filter = userId ? `user_id=eq.${userId}` : `guest_id=eq.${guestId}`;
     const ch = supabase
-      .channel(`user-support-convs-${userId}`)
+      .channel(`user-support-convs-${userId || guestId}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'support_conversations',
-        filter: `user_id=eq.${userId}`,
+        filter,
       }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [userId, refresh]);
+  }, [userId, guestId, refresh]);
 
   return { conversations, loading, refresh };
 }
@@ -158,15 +161,31 @@ export function useMarkRead() {
 
 export function useCreateConversation() {
   return useCallback(async (
-    userId: string,
+    userId: string | undefined,
     departmentId: string,
     subject: string,
     channel: string,
-    initialMessage?: string
+    initialMessage?: string,
+    guest?: { guestId: string; name?: string; email?: string },
   ) => {
+    const insertPayload: any = {
+      department_id: departmentId,
+      subject,
+      channel,
+    };
+    if (userId) {
+      insertPayload.user_id = userId;
+    } else if (guest?.guestId) {
+      insertPayload.guest_id = guest.guestId;
+      if (guest.name) insertPayload.guest_name = guest.name;
+      if (guest.email) insertPayload.guest_email = guest.email;
+    } else {
+      throw new Error('Either userId or guest identity is required');
+    }
+
     const { data: conv, error } = await supabase
       .from('support_conversations')
-      .insert({ user_id: userId, department_id: departmentId, subject, channel })
+      .insert(insertPayload)
       .select('id')
       .single() as any;
 
@@ -176,7 +195,7 @@ export function useCreateConversation() {
       await supabase.from('support_messages').insert({
         conversation_id: conv.id,
         sender_type: 'user',
-        sender_id: userId,
+        sender_id: userId ?? null,
         content: initialMessage,
       });
     }
@@ -189,11 +208,15 @@ export function useCreateConversation() {
 
     // Notify admins (best-effort, non-blocking)
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', userId)
-        .single() as any;
+      let customerName: string = guest?.name || 'A guest visitor';
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', userId)
+          .single() as any;
+        if (profile?.full_name) customerName = profile.full_name;
+      }
 
       const { data: adminRoles } = await supabase
         .from('user_roles')
@@ -214,7 +237,7 @@ export function useCreateConversation() {
             variables: {
               user_name: p.full_name || 'Admin',
               subject: subject || 'General inquiry',
-              customer_name: profile?.full_name || 'A customer',
+              customer_name: customerName,
               channel,
             },
           },
@@ -231,7 +254,7 @@ export function useCreateConversation() {
 export function useSendMessage() {
   return useCallback(async (
     conversationId: string,
-    senderId: string,
+    senderId: string | undefined,
     senderType: 'user' | 'agent',
     content: string,
     filePath?: string,
@@ -240,7 +263,7 @@ export function useSendMessage() {
     await supabase.from('support_messages').insert({
       conversation_id: conversationId,
       sender_type: senderType,
-      sender_id: senderId,
+      sender_id: senderId ?? null,
       content: content || null,
       file_url: filePath || null, // schema name is file_url; we now persist a storage path
       file_type: fileType || null,
@@ -252,30 +275,38 @@ export function useSendMessage() {
       try {
         const { data: conv } = await supabase
           .from('support_conversations')
-          .select('user_id, subject')
+          .select('user_id, guest_email, guest_name, subject')
           .eq('id', conversationId)
           .single() as any;
 
+        // Resolve recipient: signed-in user > guest email
+        let recipientEmail: string | undefined;
+        let recipientName = 'Customer';
         if (conv?.user_id) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('email, full_name')
             .eq('id', conv.user_id)
             .single() as any;
+          recipientEmail = profile?.email;
+          recipientName = profile?.full_name || recipientName;
+        } else if (conv?.guest_email) {
+          recipientEmail = conv.guest_email;
+          recipientName = conv.guest_name || recipientName;
+        }
 
-          if (profile?.email) {
-            await supabase.functions.invoke('managed-send-email', {
-              body: {
-                email_key: 'support_agent_reply',
-                recipient_email: profile.email,
-                variables: {
-                  user_name: profile.full_name || 'Customer',
-                  subject: conv.subject || 'Support chat',
-                  message_preview: (content || 'Sent an attachment').substring(0, 100),
-                },
+        if (recipientEmail) {
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: 'support_agent_reply',
+              recipient_email: recipientEmail,
+              variables: {
+                user_name: recipientName,
+                subject: conv?.subject || 'Support chat',
+                message_preview: (content || 'Sent an attachment').substring(0, 100),
               },
-            });
-          }
+            },
+          });
         }
       } catch (e) {
         console.warn('Support email notification failed:', e);
