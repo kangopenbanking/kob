@@ -432,6 +432,39 @@ export const SupportChatWidget: React.FC = () => {
                     </>
                   )}
 
+                  {/* Department-specific intake fields (e.g., order ID, account ID) */}
+                  {intakeFields.length > 0 && (
+                    <div className="rounded-xl border border-border bg-muted/30 p-3">
+                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {selectedDept?.name} details
+                      </p>
+                      <IntakeFields
+                        fields={intakeFields}
+                        values={intakeValues}
+                        errors={intakeErrors}
+                        onChange={(key, value) => {
+                          setIntakeValues((v) => ({ ...v, [key]: value }));
+                          setIntakeErrors((e) => {
+                            if (!e[key]) return e;
+                            const { [key]: _, ...rest } = e;
+                            return rest;
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* SLA expectation hint based on the selected department */}
+                  {selectedDept?.sla_target_minutes && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Expected first response: within{' '}
+                      <span className="font-medium text-foreground">
+                        {selectedDept.sla_target_minutes} min
+                      </span>{' '}
+                      (target SLA).
+                    </p>
+                  )}
+
                   {/* Backend health banner */}
                   {(health.state === 'offline' || health.state === 'degraded') && (
                     <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
@@ -477,8 +510,19 @@ export const SupportChatWidget: React.FC = () => {
 
               {step === 'chat' && (
                 <>
+                  {activeConv && (
+                    <div className="border-b border-border bg-muted/30 px-3 py-2">
+                      <SlaBadge
+                        createdAt={activeConv.created_at}
+                        slaTargetMinutes={activeConv.sla_target_minutes}
+                        slaBreachAt={activeConv.sla_breach_at}
+                        firstResponseAt={activeConv.first_response_at}
+                        status={activeConv.status}
+                      />
+                    </div>
+                  )}
                   <ChatThread messages={messages} currentUserId={userId} viewerRole="user" className="flex-1" />
-                  <ChatInput onSend={handleSend} />
+                  <ChatInput onSend={handleSend} uploadIdentity={supportIdentity} />
                 </>
               )}
 
