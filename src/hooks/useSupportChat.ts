@@ -24,6 +24,32 @@ export function useSupportDepartments() {
   return { departments, loading };
 }
 
+/** Count of agents currently marked online — drives the presence indicator. */
+export function useOnlineAgentCount() {
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      const { count: c } = await supabase
+        .from('support_agents')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'online') as any;
+      if (!cancelled) setCount(c ?? 0);
+    };
+    refresh();
+
+    const ch = supabase
+      .channel('support-agent-presence')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_agents' }, () => refresh())
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, []);
+
+  return count;
+}
+
 export function useSupportConversations(userId?: string) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +58,7 @@ export function useSupportConversations(userId?: string) {
     if (!userId) { setLoading(false); return; }
     const { data } = await supabase
       .from('support_conversations')
-      .select('id, subject, status, priority, created_at, updated_at, support_departments(name)')
+      .select('id, subject, status, priority, created_at, updated_at, last_message_preview, last_message_at, unread_user_count, support_departments(name)')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
       .limit(20) as any;
@@ -48,6 +74,19 @@ export function useSupportConversations(userId?: string) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Live refresh whenever any of the user's conversations change
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel(`user-support-convs-${userId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'support_conversations',
+        filter: `user_id=eq.${userId}`,
+      }, () => refresh())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, refresh]);
+
   return { conversations, loading, refresh };
 }
 
@@ -58,7 +97,7 @@ export function useSupportMessages(conversationId?: string, currentUserId?: stri
 
   useEffect(() => {
     initialLoadDone.current = false;
-    if (!conversationId) { setLoading(false); return; }
+    if (!conversationId) { setLoading(false); setMessages([]); return; }
 
     const fetchMessages = async () => {
       const { data } = await supabase
@@ -82,10 +121,18 @@ export function useSupportMessages(conversationId?: string, currentUserId?: stri
       }, (payload) => {
         const newMsg = payload.new as ChatMessage;
         setMessages((prev) => [...prev, newMsg]);
-        // Play sound for incoming messages from others
         if (initialLoadDone.current && newMsg.sender_id !== currentUserId) {
           playNotificationSound();
         }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'support_messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      }, (payload) => {
+        const updated = payload.new as ChatMessage;
+        setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, ...updated } : m));
       })
       .subscribe();
 
@@ -93,6 +140,20 @@ export function useSupportMessages(conversationId?: string, currentUserId?: stri
   }, [conversationId, currentUserId]);
 
   return { messages, loading };
+}
+
+/** Marks the counterpart's messages in a conversation as read for the given role. */
+export function useMarkRead() {
+  return useCallback(async (conversationId: string, role: 'user' | 'agent') => {
+    try {
+      await supabase.rpc('support_mark_read' as any, {
+        p_conversation_id: conversationId,
+        p_role: role,
+      });
+    } catch (e) {
+      console.warn('mark_read failed:', e);
+    }
+  }, []);
 }
 
 export function useCreateConversation() {
@@ -120,14 +181,13 @@ export function useCreateConversation() {
       });
     }
 
-    // System welcome message
     await supabase.from('support_messages').insert({
       conversation_id: conv.id,
       sender_type: 'system',
-      content: 'Welcome! An agent will be with you shortly.',
+      content: 'Welcome — an agent will be with you shortly.',
     });
 
-    // Send email notification to admins about new conversation
+    // Notify admins (best-effort, non-blocking)
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -135,38 +195,33 @@ export function useCreateConversation() {
         .eq('id', userId)
         .single() as any;
 
-      // Get admin emails for email notifications
       const { data: adminRoles } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'admin') as any;
 
       if (adminRoles?.length) {
-        for (const admin of adminRoles) {
-          const { data: adminProfile } = await supabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('id', admin.user_id)
-            .single() as any;
+        const adminIds = adminRoles.map((r: any) => r.user_id);
+        const { data: adminProfiles } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .in('id', adminIds) as any;
 
-          if (adminProfile?.email) {
-            await supabase.functions.invoke('managed-send-email', {
-              body: {
-                email_key: 'support_new_conversation',
-                recipient_email: adminProfile.email,
-                variables: {
-                  user_name: adminProfile.full_name || 'Admin',
-                  subject: subject || 'General inquiry',
-                  customer_name: profile?.full_name || 'A customer',
-                  channel,
-                },
-              },
-            });
-          }
-        }
+        await Promise.all((adminProfiles || []).map((p: any) => p?.email && supabase.functions.invoke('managed-send-email', {
+          body: {
+            email_key: 'support_new_conversation',
+            recipient_email: p.email,
+            variables: {
+              user_name: p.full_name || 'Admin',
+              subject: subject || 'General inquiry',
+              customer_name: profile?.full_name || 'A customer',
+              channel,
+            },
+          },
+        })));
       }
     } catch (e) {
-      console.warn('Admin email notification for new conversation failed:', e);
+      console.warn('Admin email notification failed:', e);
     }
 
     return conv.id as string;
@@ -179,7 +234,7 @@ export function useSendMessage() {
     senderId: string,
     senderType: 'user' | 'agent',
     content: string,
-    fileUrl?: string,
+    filePath?: string,
     fileType?: string
   ) => {
     await supabase.from('support_messages').insert({
@@ -187,16 +242,12 @@ export function useSendMessage() {
       sender_type: senderType,
       sender_id: senderId,
       content: content || null,
-      file_url: fileUrl || null,
+      file_url: filePath || null, // schema name is file_url; we now persist a storage path
       file_type: fileType || null,
     });
 
-    await supabase
-      .from('support_conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId);
+    // updated_at, preview & unread counters are now handled by DB triggers.
 
-    // Fire email notification on agent reply
     if (senderType === 'agent') {
       try {
         const { data: conv } = await supabase
@@ -219,7 +270,7 @@ export function useSendMessage() {
                 recipient_email: profile.email,
                 variables: {
                   user_name: profile.full_name || 'Customer',
-                  subject: conv.subject || 'Support Chat',
+                  subject: conv.subject || 'Support chat',
                   message_preview: (content || 'Sent an attachment').substring(0, 100),
                 },
               },
@@ -233,9 +284,7 @@ export function useSendMessage() {
   }, []);
 }
 
-/**
- * Send email to assigned agent when a chat is assigned to them.
- */
+/** Fired from admin when an agent is assigned to a conversation. */
 export function useAssignConversation() {
   return useCallback(async (conversationId: string, agentUserId: string) => {
     try {
@@ -251,7 +300,7 @@ export function useAssignConversation() {
             recipient_email: agentProfile.email,
             variables: {
               agent_name: agentProfile.full_name || 'Agent',
-              subject: conv?.subject || 'Support Chat',
+              subject: conv?.subject || 'Support chat',
               channel: conv?.channel || 'website',
             },
           },
@@ -263,9 +312,6 @@ export function useAssignConversation() {
   }, []);
 }
 
-/**
- * Send email when a conversation is resolved/closed.
- */
 export function useResolveNotification() {
   return useCallback(async (conversationId: string, status: 'resolved' | 'closed') => {
     try {
@@ -289,7 +335,7 @@ export function useResolveNotification() {
               recipient_email: profile.email,
               variables: {
                 user_name: profile.full_name || 'Customer',
-                subject: conv.subject || 'Support Chat',
+                subject: conv.subject || 'Support chat',
                 status,
               },
             },
