@@ -51,11 +51,10 @@ const AdminSupportChat: React.FC = () => {
   const [editingDept, setEditingDept] = useState<any>(null);
   const [deptForm, setDeptForm] = useState({ name: '', description: '', icon: 'headphones', display_order: 0, is_active: true });
 
-  // Agent CRUD state
+  // Agent invite state
   const [agentDialogOpen, setAgentDialogOpen] = useState(false);
-  const [agentSearch, setAgentSearch] = useState('');
-  const [agentSearchResults, setAgentSearchResults] = useState<any[]>([]);
-  const [agentForm, setAgentForm] = useState({ user_id: '', department_id: '', max_concurrent_chats: 5 });
+  const [inviteForm, setInviteForm] = useState({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
+  const [inviting, setInviting] = useState(false);
 
   const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, user?.id);
   const sendMessage = useSendMessage();
@@ -175,28 +174,41 @@ const AdminSupportChat: React.FC = () => {
     fetchDepartments();
   };
 
-  // ---- Agent CRUD ----
-  const searchUsers = async (q: string) => {
-    setAgentSearch(q);
-    if (q.length < 2) { setAgentSearchResults([]); return; }
-    const { data } = await supabase.from('profiles').select('id, full_name, email').ilike('full_name', `%${q}%`).limit(8) as any;
-    setAgentSearchResults(data || []);
-  };
-
-  const saveAgent = async () => {
-    if (!agentForm.user_id || !agentForm.department_id) { toast({ title: 'Select user and department', variant: 'destructive' }); return; }
-    const { error } = await supabase.from('support_agents').insert({
-      user_id: agentForm.user_id,
-      department_id: agentForm.department_id,
-      max_concurrent_chats: agentForm.max_concurrent_chats,
-      status: 'online',
-    });
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Agent added' });
-    setAgentDialogOpen(false);
-    setAgentForm({ user_id: '', department_id: '', max_concurrent_chats: 5 });
-    setAgentSearch('');
-    fetchAgents();
+  // ---- Agent invite ----
+  const inviteAgent = async () => {
+    if (!inviteForm.email.trim() || !inviteForm.email.includes('@')) {
+      toast({ title: 'Valid email required', variant: 'destructive' }); return;
+    }
+    if (!inviteForm.department_id) {
+      toast({ title: 'Select a department', variant: 'destructive' }); return;
+    }
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          email: inviteForm.email.trim().toLowerCase(),
+          full_name: inviteForm.full_name.trim() || undefined,
+          department_id: inviteForm.department_id,
+          max_concurrent_chats: inviteForm.max_concurrent_chats,
+        },
+      });
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error || error?.message || 'Failed to invite agent');
+      }
+      toast({
+        title: 'Agent invited',
+        description: (data as any)?.invite_sent
+          ? 'Invitation email sent. They can set their password and log in.'
+          : 'Existing user added as a support agent.',
+      });
+      setAgentDialogOpen(false);
+      setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
+      fetchAgents();
+    } catch (e: any) {
+      toast({ title: 'Invite failed', description: e?.message || String(e), variant: 'destructive' });
+    } finally {
+      setInviting(false);
+    }
   };
 
   const removeAgent = async (id: string) => {
@@ -455,13 +467,13 @@ const AdminSupportChat: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Support Agents</CardTitle>
-              <Button size="sm" onClick={() => { setAgentDialogOpen(true); setAgentSearch(''); setAgentSearchResults([]); setAgentForm({ user_id: '', department_id: '', max_concurrent_chats: 5 }); }}>
-                <UserPlus className="mr-1 h-4 w-4" /> Add Agent
+              <Button size="sm" onClick={() => { setAgentDialogOpen(true); setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 }); }}>
+                <UserPlus className="mr-1 h-4 w-4" /> Invite Agent
               </Button>
             </CardHeader>
             <CardContent>
               {agents.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">No agents assigned yet</p>
+                <p className="py-6 text-center text-sm text-muted-foreground">No agents yet — invite one to get started.</p>
               ) : (
                 <div className="space-y-3">
                   {agents.map((a: any) => (
@@ -487,30 +499,29 @@ const AdminSupportChat: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Agent Dialog */}
+          {/* Invite Agent Dialog */}
           <Dialog open={agentDialogOpen} onOpenChange={setAgentDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Support Agent</DialogTitle>
+                <DialogTitle>Invite Support Agent</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Search User</Label>
-                  <Input value={agentSearch} onChange={(e) => searchUsers(e.target.value)} placeholder="Type name to search..." />
-                  {agentSearchResults.length > 0 && (
-                    <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-border">
-                      {agentSearchResults.map((u: any) => (
-                        <button key={u.id} onClick={() => { setAgentForm({ ...agentForm, user_id: u.id }); setAgentSearch(u.full_name || u.email); setAgentSearchResults([]); }}
-                          className={cn('w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors', agentForm.user_id === u.id && 'bg-accent')}>
-                          {u.full_name || u.email}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <Label>Agent Email</Label>
+                  <Input type="email" value={inviteForm.email}
+                    onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                    placeholder="agent@example.com" />
+                  <p className="text-xs text-muted-foreground mt-1">An invitation email will be sent if the user doesn't have an account yet.</p>
+                </div>
+                <div>
+                  <Label>Full Name (optional)</Label>
+                  <Input value={inviteForm.full_name}
+                    onChange={(e) => setInviteForm({ ...inviteForm, full_name: e.target.value })}
+                    placeholder="Jane Doe" />
                 </div>
                 <div>
                   <Label>Department</Label>
-                  <Select value={agentForm.department_id} onValueChange={(v) => setAgentForm({ ...agentForm, department_id: v })}>
+                  <Select value={inviteForm.department_id} onValueChange={(v) => setInviteForm({ ...inviteForm, department_id: v })}>
                     <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                     <SelectContent>
                       {departments.filter((d: any) => d.is_active).map((d: any) => (
@@ -521,9 +532,13 @@ const AdminSupportChat: React.FC = () => {
                 </div>
                 <div>
                   <Label>Max Concurrent Chats</Label>
-                  <Input type="number" value={agentForm.max_concurrent_chats} onChange={(e) => setAgentForm({ ...agentForm, max_concurrent_chats: parseInt(e.target.value) || 5 })} />
+                  <Input type="number" value={inviteForm.max_concurrent_chats}
+                    onChange={(e) => setInviteForm({ ...inviteForm, max_concurrent_chats: parseInt(e.target.value) || 5 })} />
                 </div>
-                <Button onClick={saveAgent} className="w-full">Add Agent</Button>
+                <Button onClick={inviteAgent} disabled={inviting} className="w-full">
+                  {inviting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                  Send Invite
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

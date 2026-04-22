@@ -262,6 +262,15 @@ export function useCreateConversation() {
       console.warn('Admin email notification failed:', e);
     }
 
+    // Notify all support agents in the department (best-effort, non-blocking)
+    try {
+      await supabase.functions.invoke('notify-support-agents', {
+        body: { conversation_id: conv.id },
+      });
+    } catch (e) {
+      console.warn('Support agent email notification failed:', e);
+    }
+
     return conv.id as string;
   }, []);
 }

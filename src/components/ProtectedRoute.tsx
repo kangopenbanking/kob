@@ -35,12 +35,22 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         if (requiredRole) {
           const { data, error } = await supabase.rpc('has_role', {
             _user_id: user.id,
-            _role: requiredRole as 'admin' | 'institution'
+            _role: requiredRole as any
           });
+
+          // Also allow support_agent users to enter /admin (they're filtered downstream)
+          let allowSupportAgent = false;
+          if (requiredRole === 'admin' && !data) {
+            const { data: isSA } = await supabase.rpc('has_role', {
+              _user_id: user.id,
+              _role: 'support_agent' as any,
+            });
+            allowSupportAgent = !!isSA;
+          }
 
           // Ensure consistent timing regardless of success/failure
           const elapsed = Date.now() - startTime;
-          await new Promise(resolve => 
+          await new Promise(resolve =>
             setTimeout(resolve, Math.max(0, MIN_RESPONSE_TIME - elapsed))
           );
 
@@ -48,7 +58,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
             console.error('Role check error:', error);
             setAuthorized(false);
           } else {
-            setAuthorized(data);
+            setAuthorized(!!data || allowSupportAgent);
           }
         } else {
           // Ensure consistent timing for non-role checks too
