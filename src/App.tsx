@@ -1278,6 +1278,9 @@ function App() {
             <Route path="/staff-login" element={<StaffLogin />} />
             {/* Dedicated branded sign-in for support agents */}
             <Route path="/support-agent" element={<SupportAgentLogin />} />
+            {/* Convenience redirects: shorthand paths land in the admin support workspace */}
+            <Route path="/support-chat" element={<Navigate to="/admin/support-chat" replace />} />
+            <Route path="/support" element={<Navigate to="/support-agent" replace />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
