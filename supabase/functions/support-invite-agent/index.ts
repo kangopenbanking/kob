@@ -95,18 +95,21 @@ Deno.serve(async (req) => {
     );
     if (agentErr) return json({ error: `Failed to assign agent: ${agentErr.message}` }, 400);
 
-    // 4) Send welcome / invite email (best effort)
+    // 4) Send welcome / invite email via Lovable Cloud transactional email
     try {
       const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
-      await admin.functions.invoke('managed-send-email', {
+      const portalBase = (Deno.env.get('APP_URL') || '').replace(/\/$/, '') ||
+        new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app');
+      await admin.functions.invoke('send-transactional-email', {
         body: {
-          email_key: 'support_agent_invite',
-          recipient_email: email,
-          variables: {
-            agent_name: full_name || email.split('@')[0],
-            department_name: dept?.name || 'Support',
-            portal_url: `${(Deno.env.get('APP_URL') || '').replace(/\/$/, '') || new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app')}/support-agent`,
-            invite_sent: inviteSent,
+          templateName: 'support-agent-invite',
+          recipientEmail: email,
+          idempotencyKey: `support-agent-invite-${userId}-${department_id}`,
+          templateData: {
+            agentName: full_name || email.split('@')[0],
+            departmentName: dept?.name || 'Support',
+            portalUrl: `${portalBase}/support-agent`,
+            inviteSent,
           },
         },
       });

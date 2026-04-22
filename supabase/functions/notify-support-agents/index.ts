@@ -52,17 +52,18 @@ Deno.serve(async (req) => {
     await Promise.all(((agents as any[]) || []).map(async (a) => {
       if (!a?.email) return;
       try {
-        await admin.functions.invoke('managed-send-email', {
+        await admin.functions.invoke('send-transactional-email', {
           body: {
-            email_key: 'support_new_chat_agent',
-            recipient_email: a.email,
-            variables: {
-              agent_name: a.full_name || 'Agent',
-              department_name: deptName,
+            templateName: 'support-new-chat-agent',
+            recipientEmail: a.email,
+            idempotencyKey: `support-new-chat-${conversation_id}-${a.email}`,
+            templateData: {
+              agentName: a.full_name || 'Agent',
+              departmentName: deptName,
               subject: (conv as any).subject || 'No subject',
-              customer_name: customerName,
+              customerName,
               channel: (conv as any).channel || 'website',
-              portal_url: `${new URL(req.url).origin.replace('functions.', '')}/admin/support-chat`,
+              portalUrl: `${new URL(req.url).origin.replace('functions.', '').replace('.supabase.co', '.lovable.app')}/admin/support-chat?conversation=${conversation_id}`,
             },
           },
         });
