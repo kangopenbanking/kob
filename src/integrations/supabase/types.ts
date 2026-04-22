@@ -20369,12 +20369,19 @@ export type Database = {
           channel: string
           created_at: string | null
           department_id: string | null
+          first_response_at: string | null
           id: string
+          last_message_at: string | null
+          last_message_preview: string | null
           metadata: Json | null
           priority: string
           resolved_at: string | null
+          sla_breach_at: string | null
+          sla_target_minutes: number
           status: string
           subject: string | null
+          unread_agent_count: number
+          unread_user_count: number
           updated_at: string | null
           user_id: string
         }
@@ -20383,12 +20390,19 @@ export type Database = {
           channel?: string
           created_at?: string | null
           department_id?: string | null
+          first_response_at?: string | null
           id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
           metadata?: Json | null
           priority?: string
           resolved_at?: string | null
+          sla_breach_at?: string | null
+          sla_target_minutes?: number
           status?: string
           subject?: string | null
+          unread_agent_count?: number
+          unread_user_count?: number
           updated_at?: string | null
           user_id: string
         }
@@ -20397,12 +20411,19 @@ export type Database = {
           channel?: string
           created_at?: string | null
           department_id?: string | null
+          first_response_at?: string | null
           id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
           metadata?: Json | null
           priority?: string
           resolved_at?: string | null
+          sla_breach_at?: string | null
+          sla_target_minutes?: number
           status?: string
           subject?: string | null
+          unread_agent_count?: number
+          unread_user_count?: number
           updated_at?: string | null
           user_id?: string
         }
@@ -23574,6 +23595,10 @@ export type Database = {
           id: string
           phone_masked: string
         }[]
+      }
+      support_mark_read: {
+        Args: { p_conversation_id: string; p_role: string }
+        Returns: undefined
       }
       travel_reserve_seats: {
         Args: { _seats: string[]; _trip_id: string }
