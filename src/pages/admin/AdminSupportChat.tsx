@@ -396,6 +396,30 @@ const AdminSupportChat: React.FC = () => {
                           <SelectItem value="urgent">Urgent</SelectItem>
                         </SelectContent>
                       </Select>
+                      {/* Transfer to another department */}
+                      <Select value="" onValueChange={(v) => transferDepartment(activeConvId, v)}>
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <ArrowRightLeft className="mr-1 h-3 w-3" />
+                          <SelectValue placeholder="Transfer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments
+                            .filter((d: any) => d.is_active && d.id !== activeConv.department_id)
+                            .map((d: any) => (
+                              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                            ))}
+                          {departments.filter((d: any) => d.is_active && d.id !== activeConv.department_id).length === 0 && (
+                            <SelectItem value="__none" disabled>No other departments</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {/* Escalate one priority level */}
+                      {activeConv.priority !== 'urgent' && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs"
+                          onClick={() => escalateConversation(activeConvId, activeConv.priority)}>
+                          <ArrowUpCircle className="mr-1 h-3 w-3" /> Escalate
+                        </Button>
+                      )}
                       {activeConv.status !== 'resolved' && (
                         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => updateConvStatus(activeConvId, 'resolved')}>
                           <CheckCircle2 className="mr-1 h-3 w-3" /> Resolve
