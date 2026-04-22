@@ -186,16 +186,21 @@ const ManagedEmailAdmin: React.FC = () => {
     },
   });
 
-  // Send test email
+  // Send test email — supports custom recipient (e.g. an agent's address)
+  // and records the attempt in managed_email_test_sends.
+  const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
+  const [testRecipient, setTestRecipient] = useState('');
+
   const sendTest = useMutation({
-    mutationFn: async (emailKey: string) => {
+    mutationFn: async ({ emailKey, recipient }: { emailKey: string; recipient?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error('No authenticated user');
-      
-      const { data, error } = await supabase.functions.invoke('managed-send-email', {
+      const target = (recipient || '').trim() || user.email;
+
+      const { data, error } = await supabase.functions.invoke('managed-email-test', {
         body: {
           email_key: emailKey,
-          recipient_email: user.email,
+          recipient_email: target,
           institution_id: selectedInstitution !== 'global' ? selectedInstitution : undefined,
           variables: {
             customer_name: user.user_metadata?.full_name || 'Test User',
@@ -209,9 +214,16 @@ const ManagedEmailAdmin: React.FC = () => {
         },
       });
       if (error) throw error;
+      if ((data as any)?.status === 'failed') {
+        throw new Error((data as any)?.error || 'Delivery failed');
+      }
       return data;
     },
-    onSuccess: () => toast.success('Test email sent to your email'),
+    onSuccess: (_d, vars) => {
+      toast.success(`Test email sent to ${vars.recipient || 'your inbox'}`);
+      setTestDialogKey(null);
+      setTestRecipient('');
+    },
     onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
   });
 
