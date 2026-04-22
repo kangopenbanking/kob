@@ -93,30 +93,56 @@ Deno.serve(async (req) => {
 
     // 4) Send welcome / invite email via Lovable Cloud transactional email
     //    (with retry-with-backoff via the shared support sender).
-    let emailResult: { ok: boolean; error?: string } = { ok: true };
-    try {
-      const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
-      emailResult = await sendSupportEmail({
-        templateName: 'support-agent-invite',
-        recipientEmail: email,
-        idempotencyKey: `support-agent-invite-${userId}-${department_id}`,
-        templateData: {
-          agentName: full_name || email.split('@')[0],
-          departmentName: dept?.name || 'Support',
-          portalUrl: SUPPORT_PORTAL_URL,
-          inviteSent,
-        },
-      });
-    } catch (e: any) {
-      console.warn('Invite email failed (non-fatal):', e);
-      emailResult = { ok: false, error: e?.message };
+    //
+    //    Idempotency + duplicate-send guard: the idempotencyKey is stable
+    //    per (user, department) so the underlying queue dedupes retries.
+    //    We additionally short-circuit if a non-failed send for the same
+    //    key was already logged in the last 60 seconds — this prevents
+    //    accidental double-sends from rapid double-clicks or client retries.
+    const idempotencyKey = `support-agent-invite-${userId}-${department_id}`;
+    let emailResult: { ok: boolean; error?: string; deduped?: boolean } = { ok: true };
+
+    const cooldownSince = new Date(Date.now() - 60_000).toISOString();
+    const { data: recentSend } = await admin
+      .from('email_send_log')
+      .select('id, status, created_at')
+      .eq('message_id', idempotencyKey)
+      .gte('created_at', cooldownSince)
+      .not('status', 'in', '(failed,dlq,bounced,complained)')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentSend?.id) {
+      console.log(`[support-invite-agent] duplicate suppressed for ${email} (${idempotencyKey})`);
+      emailResult = { ok: true, deduped: true };
+    } else {
+      try {
+        const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
+        emailResult = await sendSupportEmail({
+          templateName: 'support-agent-invite',
+          recipientEmail: email,
+          idempotencyKey,
+          templateData: {
+            agentName: full_name || email.split('@')[0],
+            departmentName: dept?.name || 'Support',
+            portalUrl: SUPPORT_PORTAL_URL,
+            inviteSent,
+          },
+        });
+      } catch (e: any) {
+        console.warn('Invite email failed (non-fatal):', e);
+        emailResult = { ok: false, error: e?.message };
+      }
     }
+
 
     return json({
       success: true,
       user_id: userId,
       invite_sent: inviteSent,
       welcome_email_sent: emailResult.ok,
+      welcome_email_deduped: !!emailResult.deduped,
       welcome_email_error: emailResult.error || null,
       portal_url: SUPPORT_PORTAL_URL,
     });
