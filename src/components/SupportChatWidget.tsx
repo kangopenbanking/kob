@@ -253,7 +253,13 @@ export const SupportChatWidget: React.FC = () => {
 
   const handleSend = async (content: string, filePath?: string, fileType?: string) => {
     if (!activeConvId) return;
-    await sendMessage(activeConvId, userId, 'user', content, filePath, fileType);
+    try {
+      await sendMessage(activeConvId, userId, 'user', content, filePath, fileType, supportIdentity);
+    } catch (e: any) {
+      const desc = describeBackendError(e);
+      trackSupport('support_send_message_error', { code: desc.code, message: desc.message });
+      toast.error(desc.message);
+    }
   };
 
   const isOpen = step !== 'closed';
