@@ -68,4 +68,4 @@
 - ✅ Zero auth-flow modifications
 - ✅ Two new tables only — additive — RLS enforced
 - ✅ One new edge function (`integration-layer`) — additive
-- ✅ Version bump path: 4.9.x → **4.10.0** (MINOR, additive)
+- ✅ Version bump path: 4.16.4 → **4.17.0** (MINOR, additive)

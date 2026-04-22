@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
   if (req.method === "GET" && url.pathname.endsWith("/integration-layer")) {
     return jsonResponse({
       object: "integration_layer",
-      version: "4.10.0",
+      version: "4.17.0",
       resources: ["customers", "accounts", "payments", "transfers", "payouts", "refunds", "webhooks", "sandbox"],
       docs_url: "https://kangopenbanking.com/developer/integration-layer",
       sandbox_magic_values: listMagicValues(),

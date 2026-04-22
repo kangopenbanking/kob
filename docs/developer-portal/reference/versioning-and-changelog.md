@@ -32,12 +32,14 @@ The full changelog is available at:
 - **Markdown**: [`/CHANGELOG.md`](https://github.com/kangopenbanking/kob/blob/main/CHANGELOG.md)
 - **Machine-readable**: [`/changelog.json`](https://kangopenbanking.com/changelog.json)
 
-### Current Version: 4.15.0
+### Current Version: 4.17.0
 
 Recent releases:
 
 | Version | Date | Summary |
 |---------|------|---------|
+| 4.17.0 | 2026-04-22 | KOB Integration Layer — Stripe-style facade over `/v1/*` (additive) |
+| 4.16.4 | 2026-04-21 | Security Posture Self-Verification Layer (`/healthz`, hardened `/oidc-config`) |
 | 4.15.0 | 2026-04-17 | CEMAC Universal Bank Integration — Wave 4: architecture overview & docs |
 | 4.14.0 | 2026-04-17 | Wave 3: ledger audit fields + six-stage bank onboarding wizard |
 | 4.13.0 | 2026-04-17 | Wave 2: scheduled bank polling engine + rule-based reconciliation |
@@ -62,6 +64,6 @@ KOB follows a strict **zero breaking changes** policy for v1:
 
 | SDK | Current Version | Package |
 |-----|----------------|---------|
-| Node.js | 1.1.0 | `@kangopenbanking/sdk` |
+| Node.js | 1.3.0 | `@kangopenbanking/sdk` |
 | Python | 1.1.0 | `kangopenbanking` |
 | PHP | 1.1.0 | `kangopenbanking/sdk-php` |
