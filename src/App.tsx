@@ -375,7 +375,6 @@ const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
 const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
 const AdminSupportSlaSettings = lazy(() => import("./pages/admin/AdminSupportSlaSettings"));
 const AdminSupportEmailLogs = lazy(() => import("./pages/admin/AdminSupportEmailLogs"));
-const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
