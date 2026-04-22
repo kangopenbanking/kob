@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
               `No agent has responded yet.`,
             ],
             c.id,
+            'warning',
           );
         }
         warned++;
