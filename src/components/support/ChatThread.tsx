@@ -1,14 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { FileText, Image as ImageIcon, Download } from 'lucide-react';
+import { Check, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SupportAttachment } from './AttachmentImage';
 
 export interface ChatMessage {
   id: string;
   sender_type: 'user' | 'agent' | 'system';
   sender_id?: string;
   content?: string;
-  file_url?: string;
+  file_url?: string;     // legacy: full URL or new: storage path
   file_type?: string;
   created_at: string;
   read_at?: string;
@@ -17,12 +18,16 @@ export interface ChatMessage {
 interface ChatThreadProps {
   messages: ChatMessage[];
   currentUserId?: string;
+  viewerRole?: 'user' | 'agent';
   className?: string;
 }
 
-const isImage = (type?: string) => type?.startsWith('image/');
-
-export const ChatThread: React.FC<ChatThreadProps> = ({ messages, currentUserId, className }) => {
+export const ChatThread: React.FC<ChatThreadProps> = ({
+  messages,
+  currentUserId,
+  viewerRole = 'user',
+  className,
+}) => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +37,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ messages, currentUserId,
   if (messages.length === 0) {
     return (
       <div className={cn('flex flex-1 items-center justify-center text-sm text-muted-foreground', className)}>
-        No messages yet. Start the conversation!
+        No messages yet — start the conversation.
       </div>
     );
   }
@@ -40,8 +45,12 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ messages, currentUserId,
   return (
     <div className={cn('flex flex-1 flex-col gap-3 overflow-y-auto p-4', className)}>
       {messages.map((msg) => {
-        const isOwn = msg.sender_type === 'user' && msg.sender_id === currentUserId;
         const isSystem = msg.sender_type === 'system';
+
+        // "Own" = a message I sent, regardless of role
+        const isOwn =
+          (viewerRole === 'user' && msg.sender_type === 'user' && msg.sender_id === currentUserId) ||
+          (viewerRole === 'agent' && msg.sender_type === 'agent' && msg.sender_id === currentUserId);
 
         if (isSystem) {
           return (
@@ -61,30 +70,23 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ messages, currentUserId,
                 ? 'bg-primary text-primary-foreground rounded-br-md'
                 : 'bg-muted text-foreground rounded-bl-md'
             )}>
-              {msg.sender_type === 'agent' && !isOwn && (
-                <p className="mb-0.5 text-[10px] font-semibold opacity-70">Support Agent</p>
+              {!isOwn && (
+                <p className="mb-0.5 text-[10px] font-semibold opacity-70">
+                  {msg.sender_type === 'agent' ? 'Support agent' : 'You'}
+                </p>
               )}
-              {msg.content && <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
+              {msg.content && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
               {msg.file_url && (
-                <div className="mt-2">
-                  {isImage(msg.file_type) ? (
-                    <img src={msg.file_url} alt="Attachment" className="max-h-48 rounded-lg object-cover" />
-                  ) : (
-                    <a href={msg.file_url} target="_blank" rel="noopener noreferrer"
-                      className={cn(
-                        'flex items-center gap-2 rounded-lg p-2 text-xs',
-                        isOwn ? 'bg-primary-foreground/10' : 'bg-background'
-                      )}>
-                      <FileText className="h-4 w-4" />
-                      <span>Download file</span>
-                      <Download className="h-3 w-3" />
-                    </a>
-                  )}
-                </div>
+                <SupportAttachment value={msg.file_url} fileType={msg.file_type} isOwn={isOwn} />
               )}
-              <p className={cn('mt-1 text-[10px] opacity-60', isOwn ? 'text-right' : 'text-left')}>
-                {format(new Date(msg.created_at), 'HH:mm')}
-              </p>
+              <div className={cn('mt-1 flex items-center gap-1 text-[10px] opacity-60', isOwn ? 'justify-end' : 'justify-start')}>
+                <span>{format(new Date(msg.created_at), 'HH:mm')}</span>
+                {isOwn && (
+                  msg.read_at
+                    ? <CheckCheck className="h-3 w-3" strokeWidth={2} aria-label="Read" />
+                    : <Check className="h-3 w-3" strokeWidth={2} aria-label="Sent" />
+                )}
+              </div>
             </div>
           </div>
         );
