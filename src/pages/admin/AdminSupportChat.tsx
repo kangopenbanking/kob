@@ -442,8 +442,8 @@ const AdminSupportChat: React.FC = () => {
           <TabsTrigger value="agents">Agents</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="conversations">
-          <div className="flex gap-4 rounded-xl border border-border bg-card" style={{ minHeight: 500 }}>
+        <TabsContent value="conversations" className="mt-0">
+          <div className="flex gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm" style={{ minHeight: 560 }}>
             {/* Left — Conversation list */}
             <div className="flex w-80 shrink-0 flex-col border-r border-border">
               <div className="flex items-center gap-2 border-b border-border p-3">
