@@ -186,13 +186,15 @@ const ManagedEmailAdmin: React.FC = () => {
     },
   });
 
-  // Send test email — supports custom recipient (e.g. an agent's address)
-  // and records the attempt in managed_email_test_sends.
+  // Send test email — supports custom recipient (e.g. an agent's address),
+  // configurable retry attempts, and surfaces full provider diagnostics.
   const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
   const [testRecipient, setTestRecipient] = useState('');
+  const [testMaxAttempts, setTestMaxAttempts] = useState(1);
+  const [testResult, setTestResult] = useState<any | null>(null);
 
   const sendTest = useMutation({
-    mutationFn: async ({ emailKey, recipient }: { emailKey: string; recipient?: string }) => {
+    mutationFn: async ({ emailKey, recipient, maxAttempts }: { emailKey: string; recipient?: string; maxAttempts: number }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error('No authenticated user');
       const target = (recipient || '').trim() || user.email;
@@ -202,6 +204,7 @@ const ManagedEmailAdmin: React.FC = () => {
           email_key: emailKey,
           recipient_email: target,
           institution_id: selectedInstitution !== 'global' ? selectedInstitution : undefined,
+          max_attempts: maxAttempts,
           variables: {
             customer_name: user.user_metadata?.full_name || 'Test User',
             currency: 'XAF',
@@ -214,17 +217,20 @@ const ManagedEmailAdmin: React.FC = () => {
         },
       });
       if (error) throw error;
-      if ((data as any)?.status === 'failed') {
-        throw new Error((data as any)?.error || 'Delivery failed');
-      }
       return data;
     },
-    onSuccess: (_d, vars) => {
-      toast.success(`Test email sent to ${vars.recipient || 'your inbox'}`);
-      setTestDialogKey(null);
-      setTestRecipient('');
+    onSuccess: (data: any, vars) => {
+      setTestResult(data);
+      if (data?.status === 'sent') {
+        toast.success(`Test email sent to ${vars.recipient || 'your inbox'} (${data.attempts} attempt${data.attempts > 1 ? 's' : ''})`);
+      } else {
+        toast.error(`Delivery failed after ${data?.attempts || 1} attempt(s)`);
+      }
     },
-    onError: (e: any) => toast.error(extractEdgeFunctionError(e)),
+    onError: (e: any) => {
+      setTestResult({ status: 'failed', error: extractEdgeFunctionError(e) });
+      toast.error(extractEdgeFunctionError(e));
+    },
   });
 
   const filtered = emailTypes.filter(t => {
