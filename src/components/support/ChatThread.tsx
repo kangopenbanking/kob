@@ -20,6 +20,8 @@ interface ChatThreadProps {
   currentUserId?: string;
   viewerRole?: 'user' | 'agent';
   className?: string;
+  /** When true, render a typing indicator bubble at the end of the thread. */
+  agentTyping?: boolean;
 }
 
 export const ChatThread: React.FC<ChatThreadProps> = ({
@@ -27,14 +29,15 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
   currentUserId,
   viewerRole = 'user',
   className,
+  agentTyping,
 }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, agentTyping]);
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !agentTyping) {
     return (
       <div className={cn('flex flex-1 items-center justify-center text-sm text-muted-foreground', className)}>
         No messages yet — start the conversation.
@@ -91,6 +94,18 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
           </div>
         );
       })}
+      {agentTyping && (
+        <div className="flex justify-start" aria-live="polite" aria-label="Support agent is typing">
+          <div className="rounded-2xl rounded-bl-md bg-muted px-4 py-2.5">
+            <p className="mb-0.5 text-[10px] font-semibold opacity-70">Support agent</p>
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/50 [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/50 [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/50" />
+            </div>
+          </div>
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   );

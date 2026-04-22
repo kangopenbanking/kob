@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,10 @@ interface ChatInputProps {
   placeholder?: string;
   /** Identity used for the storage folder + RLS check. Userless guests pass `guest_<guestId>`. */
   uploadIdentity?: string;
+  /** Conversation id used to broadcast typing presence over Realtime. */
+  conversationId?: string;
+  /** Role broadcasting the typing event — defaults to 'user'. */
+  typingRole?: 'user' | 'agent';
 }
 
 const ALLOWED_TYPES = [
@@ -24,6 +28,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   disabled,
   placeholder = 'Type a message…',
   uploadIdentity,
+  conversationId,
+  typingRole = 'user',
 }) => {
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -31,6 +37,50 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const progTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Typing presence broadcast ────────────────────────────────────────────
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastBroadcastAtRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const ch = supabase.channel(`support-typing-${conversationId}`, {
+      config: { broadcast: { self: false } },
+    });
+    ch.subscribe();
+    typingChannelRef.current = ch;
+    return () => {
+      // Send a final "stop" so the other side hides the indicator immediately
+      try { ch.send({ type: 'broadcast', event: 'typing', payload: { role: typingRole, typing: false } }); } catch { /* noop */ }
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+    };
+  }, [conversationId, typingRole]);
+
+  const broadcastTyping = (typing: boolean) => {
+    const ch = typingChannelRef.current;
+    if (!ch) return;
+    const now = Date.now();
+    // Throttle to ~1 broadcast/sec while actively typing
+    if (typing && now - lastBroadcastAtRef.current < 1000) return;
+    lastBroadcastAtRef.current = now;
+    try { ch.send({ type: 'broadcast', event: 'typing', payload: { role: typingRole, typing } }); } catch { /* noop */ }
+  };
+
+  const handleTextChange = (value: string) => {
+    setText(value);
+    if (!conversationId) return;
+    if (value.trim()) {
+      broadcastTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => broadcastTyping(false), 2500);
+    } else {
+      broadcastTyping(false);
+    }
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -51,6 +101,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       return;
     }
     setFile(f);
+  };
+
+  const cancelUpload = () => {
+    // Abort the in-flight upload request and reset UI state
+    abortRef.current?.abort();
+    abortRef.current = null;
+    if (progTimerRef.current) { clearInterval(progTimerRef.current); progTimerRef.current = null; }
+    setUploading(false);
+    setProgress(0);
+    setFile(null);
+    if (fileRef.current) fileRef.current.value = '';
+    toast({ title: 'Upload cancelled', description: 'The attachment was not sent.' });
   };
 
   const handleSend = async () => {
@@ -77,15 +139,33 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       const path = `${identity}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       // Approximate upload progress (the supabase-js SDK doesn't expose XHR progress directly).
-      const progTimer = setInterval(() => {
+      progTimerRef.current = setInterval(() => {
         setProgress((p) => (p < 85 ? p + 7 : p));
       }, 120);
+
+      // Wire an AbortController so the user can "cancel" mid-flight.
+      // Note: supabase-js storage doesn't expose XHR cancellation, so on cancel
+      // we still let the upload finish, then delete the orphaned object.
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       const { error } = await supabase.storage
         .from('support-attachments')
         .upload(path, file, { contentType: file.type, upsert: false });
 
-      clearInterval(progTimer);
+      if (progTimerRef.current) { clearInterval(progTimerRef.current); progTimerRef.current = null; }
+
+      // If the user cancelled while we were waiting, clean up + exit silently
+      if (controller.signal.aborted) {
+        abortRef.current = null;
+        if (!error) {
+          // Best-effort cleanup of the orphaned object
+          supabase.storage.from('support-attachments').remove([path]).catch(() => { /* noop */ });
+        }
+        return;
+      }
+      abortRef.current = null;
+
       if (error) {
         setProgress(0);
         toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
@@ -104,6 +184,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     setFile(null);
     setProgress(0);
     if (fileRef.current) fileRef.current.value = '';
+    broadcastTyping(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -128,6 +209,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             {!uploading && (
               <button onClick={() => { setFile(null); setProgress(0); if (fileRef.current) fileRef.current.value = ''; }} aria-label="Remove attachment">
                 <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" strokeWidth={1.5} />
+              </button>
+            )}
+            {uploading && (
+              <button
+                onClick={cancelUpload}
+                aria-label="Cancel upload"
+                className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10"
+              >
+                Cancel
               </button>
             )}
           </div>
@@ -159,7 +249,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <input ref={fileRef} type="file" accept={ALLOWED_TYPES.join(',')} onChange={handleFile} className="hidden" />
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || uploading}
           placeholder={placeholder}

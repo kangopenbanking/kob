@@ -45,6 +45,7 @@ export const SupportChatWidget: React.FC = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<{ subject?: boolean; guestEmail?: boolean }>({});
   const [health, setHealth] = useState<{ state: HealthState; latencyMs?: number; error?: string }>({ state: 'unknown' });
+  const [agentTyping, setAgentTyping] = useState(false);
 
   // Persistent guest identity for anonymous visitors (no account required)
   const guestId = useMemo(() => getOrCreateGuestId(), []);
@@ -518,11 +519,23 @@ export const SupportChatWidget: React.FC = () => {
                         slaBreachAt={activeConv.sla_breach_at}
                         firstResponseAt={activeConv.first_response_at}
                         status={activeConv.status}
+                        liveCountdown
                       />
                     </div>
                   )}
-                  <ChatThread messages={messages} currentUserId={userId} viewerRole="user" className="flex-1" />
-                  <ChatInput onSend={handleSend} uploadIdentity={supportIdentity} />
+                  <ChatThread
+                    messages={messages}
+                    currentUserId={userId}
+                    viewerRole="user"
+                    className="flex-1"
+                    agentTyping={agentTyping}
+                  />
+                  <ChatInput
+                    onSend={handleSend}
+                    uploadIdentity={supportIdentity}
+                    conversationId={activeConvId}
+                    typingRole="user"
+                  />
                 </>
               )}
 
