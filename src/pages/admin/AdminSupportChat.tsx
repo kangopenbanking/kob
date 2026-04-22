@@ -447,19 +447,46 @@ const AdminSupportChat: React.FC = () => {
                   {activeConv && (
                     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
                       <p className="flex-1 text-sm font-medium truncate">{activeConv.subject || 'Support Chat'}</p>
-                      {/* Assign agent */}
+                      {/* Claim chat */}
+                      {!activeConv.claimed_by && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => claimConversation(activeConvId)}
+                        >
+                          <Hand className="mr-1 h-3 w-3" /> Claim chat
+                        </Button>
+                      )}
+                      {activeConv.claimed_by && activeConv.claimed_by !== user?.id && (
+                        <Badge variant="secondary" className="h-6 text-[10px]">
+                          Claimed by another agent
+                        </Badge>
+                      )}
+                      {/* Assign agent — disabled options for offline agents */}
                       <Select
                         value={activeConv.assigned_agent_id || 'unassigned'}
                         onValueChange={(v) => assignAgent(activeConvId, v === 'unassigned' ? '' : v)}
                       >
-                        <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="Assign agent" /></SelectTrigger>
+                        <SelectTrigger className="h-7 w-40 text-xs"><SelectValue placeholder="Assign agent" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {agents.map((a: any) => (
-                            <SelectItem key={a.user_id} value={a.user_id}>
-                              {a.profiles?.full_name || a.profiles?.email || 'Agent'}
-                            </SelectItem>
-                          ))}
+                          {agents.map((a: any) => {
+                            const online = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                            return (
+                              <SelectItem key={a.user_id} value={a.user_id} disabled={!online}>
+                                <span className="inline-flex items-center gap-2">
+                                  <Circle
+                                    className={cn(
+                                      'h-2 w-2',
+                                      online ? 'fill-green-500 text-green-500' : 'fill-muted text-muted-foreground',
+                                    )}
+                                  />
+                                  {a.profiles?.full_name || a.profiles?.email || 'Agent'}
+                                  {!online && <span className="text-[10px] text-muted-foreground">(offline)</span>}
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <Select value={activeConv.priority} onValueChange={(v) => updatePriority(activeConvId, v)}>
