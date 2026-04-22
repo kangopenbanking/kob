@@ -620,35 +620,43 @@ const AdminSupportChat: React.FC = () => {
         </TabsContent>
 
         {/* Departments Tab with CRUD */}
-        <TabsContent value="departments">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Departments</CardTitle>
-              <Button size="sm" onClick={() => openDeptDialog()}>
-                <Plus className="mr-1 h-4 w-4" /> Add Department
+        <TabsContent value="departments" className="mt-0">
+          <Card className="border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+              <div>
+                <CardTitle className="text-base">Departments</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">Organise support routing across teams.</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => openDeptDialog()}>
+                <Plus className="mr-1.5 h-4 w-4" strokeWidth={1.5} /> Add department
               </Button>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-4">
+              <div className="space-y-2">
                 {departments.map((d: any) => (
-                  <div key={d.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div>
-                      <p className="text-sm font-semibold">{d.name}</p>
-                      <p className="text-xs text-muted-foreground">{d.description}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Icon: {d.icon} · Order: {d.display_order}</p>
+                  <div key={d.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{d.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{d.description || 'No description'}</p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">Icon: {d.icon} · Order: {d.display_order}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={d.is_active ? 'default' : 'secondary'}>{d.is_active ? 'Active' : 'Inactive'}</Badge>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openDeptDialog(d)}>
-                        <Edit2 className="h-3.5 w-3.5" />
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openDeptDialog(d)}>
+                        <Edit2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteDepartment(d.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteDepartment(d.id)}>
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                       </Button>
                     </div>
                   </div>
                 ))}
-                {departments.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">No departments yet</p>}
+                {departments.length === 0 && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                    <Building2 className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+                    <p className="text-sm text-muted-foreground">No departments yet</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
