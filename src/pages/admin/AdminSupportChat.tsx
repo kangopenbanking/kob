@@ -351,30 +351,83 @@ const AdminSupportChat: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Support Chat</h1>
-          <p className="text-sm text-muted-foreground">Manage customer support conversations</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Support workspace</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage live conversations, agents and departments in one place.
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchConversations()}>
-          <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-9" onClick={() => navigate('/admin/support-chat/profile')}>
+            <UserCog className="mr-1.5 h-4 w-4" /> My profile
+          </Button>
+          <Button variant="outline" size="sm" className="h-9" onClick={() => fetchConversations()}>
+            <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
+          </Button>
+        </div>
       </div>
 
+      {/* Agent sign-in URL banner */}
+      <Card className="border-border bg-muted/30">
+        <CardContent className="flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+              <Link2 className="h-4 w-4 text-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Agent sign-in URL</p>
+              <p className="text-xs text-muted-foreground">
+                Share this branded portal with your support team. Invited agents land here after setting their password.
+              </p>
+            </div>
+          </div>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <code className="flex-1 truncate rounded-md border border-border bg-background px-3 py-1.5 text-xs font-mono text-foreground sm:max-w-[320px]">
+              {typeof window !== 'undefined' ? `${window.location.origin}/support-agent` : '/support-agent'}
+            </code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8"
+              onClick={() => {
+                const url = `${window.location.origin}/support-agent`;
+                navigator.clipboard?.writeText(url);
+                toast({ title: 'Link copied', description: url });
+              }}
+            >
+              <Copy className="mr-1 h-3.5 w-3.5" /> Copy
+            </Button>
+            <Button asChild size="sm" variant="ghost" className="h-8">
+              <Link to="/support-agent" target="_blank" rel="noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardContent className="pt-4">
-          <div className="flex items-center gap-3"><Clock className="h-5 w-5 text-yellow-500" /><div><p className="text-2xl font-bold">{stats.open}</p><p className="text-xs text-muted-foreground">Open</p></div></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4">
-          <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5 text-blue-500" /><div><p className="text-2xl font-bold">{stats.assigned}</p><p className="text-xs text-muted-foreground">Assigned</p></div></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4">
-          <div className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-green-500" /><div><p className="text-2xl font-bold">{stats.resolved}</p><p className="text-xs text-muted-foreground">Resolved</p></div></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4">
-          <div className="flex items-center gap-3"><Users className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{agents.length}</p><p className="text-xs text-muted-foreground">Agents</p></div></div>
-        </CardContent></Card>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          { icon: Clock, label: 'Open', value: stats.open, tone: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-500/10' },
+          { icon: MessageCircle, label: 'Assigned', value: stats.assigned, tone: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10' },
+          { icon: CheckCircle2, label: 'Resolved', value: stats.resolved, tone: 'text-green-600 bg-green-50 dark:bg-green-500/10' },
+          { icon: Users, label: 'Agents', value: agents.length, tone: 'text-foreground bg-muted' },
+        ].map((s) => (
+          <Card key={s.label} className="border-border transition-shadow hover:shadow-sm">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', s.tone)}>
+                <s.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold leading-none text-foreground">{s.value}</p>
+                <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
