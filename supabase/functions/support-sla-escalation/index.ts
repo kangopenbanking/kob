@@ -234,6 +234,7 @@ Deno.serve(async (req) => {
               `Subject: ${(c as any).subject || '(no subject)'}.`,
             ],
             c.id,
+            'breach',
           );
         }
         escalated++;
