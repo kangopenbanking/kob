@@ -12,7 +12,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 
 export const SUPPORT_PORTAL_URL =
   (typeof Deno !== "undefined" && Deno.env.get("SUPPORT_PORTAL_URL")) ||
-  "https://kangopenbanking.com/support-agent";
+  "https://info.kangopenbanking.com/support-agent";
 
 export const APP_BASE_URL =
   (typeof Deno !== "undefined" && Deno.env.get("APP_BASE_URL")) ||
