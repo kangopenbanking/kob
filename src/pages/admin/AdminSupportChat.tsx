@@ -62,6 +62,7 @@ const AdminSupportChat: React.FC = () => {
   const [agentDialogOpen, setAgentDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
   const [inviting, setInviting] = useState(false);
+  const [resendingAgentId, setResendingAgentId] = useState<string | null>(null);
 
   const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, user?.id);
   const sendMessage = useSendMessage();
@@ -310,9 +311,9 @@ const AdminSupportChat: React.FC = () => {
       }
       toast({
         title: 'Agent invited',
-        description: (data as any)?.invite_sent
-          ? 'Invitation email sent. They can set their password and log in.'
-          : 'Existing user added as a support agent.',
+        description: (data as any)?.password_setup_email_sent === false
+          ? `Agent added, but password setup email failed: ${(data as any)?.password_setup_email_error || 'unknown error'}`
+          : 'Invite email and password setup email sent.',
       });
       setAgentDialogOpen(false);
       setInviteForm({ email: '', full_name: '', department_id: '', max_concurrent_chats: 5 });
@@ -321,6 +322,42 @@ const AdminSupportChat: React.FC = () => {
       toast({ title: 'Invite failed', description: e?.message || String(e), variant: 'destructive' });
     } finally {
       setInviting(false);
+    }
+  };
+
+  const resendAgentInvite = async (agent: any) => {
+    const email = agent?.profiles?.email?.trim()?.toLowerCase();
+    if (!email || !agent?.department_id) {
+      toast({ title: 'Missing invite data', description: 'This agent record is missing an email or department.', variant: 'destructive' });
+      return;
+    }
+
+    setResendingAgentId(agent.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          email,
+          full_name: agent?.profiles?.full_name || undefined,
+          department_id: agent.department_id,
+          max_concurrent_chats: agent.max_concurrent_chats || 5,
+          force: true,
+        },
+      });
+
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error || error?.message || 'Failed to resend invite');
+      }
+
+      toast({
+        title: 'Invite resent',
+        description: (data as any)?.password_setup_email_sent === false
+          ? `Support invite resent, but password setup email failed: ${(data as any)?.password_setup_email_error || 'unknown error'}`
+          : 'Support invite and password setup email were resent successfully.',
+      });
+    } catch (e: any) {
+      toast({ title: 'Resend failed', description: e?.message || String(e), variant: 'destructive' });
+    } finally {
+      setResendingAgentId(null);
     }
   };
 
@@ -739,6 +776,16 @@ const AdminSupportChat: React.FC = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs"
+                          onClick={() => resendAgentInvite(a)}
+                          disabled={resendingAgentId !== null}
+                        >
+                          {resendingAgentId === a.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserPlus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />}
+                          Re-invite
+                        </Button>
                         <Button size="sm" variant="outline" className="h-8 text-xs"
                           onClick={() => toggleAgentStatus(a.id, a.status)}>
                           <span className={cn('mr-1.5 h-2 w-2 rounded-full', a.status === 'online' ? 'bg-green-500' : 'bg-muted-foreground')} />

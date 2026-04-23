@@ -45,32 +45,31 @@ Deno.serve(async (req) => {
     if (!email || !email.includes('@')) return json({ error: 'Valid email required' }, 400);
     if (!department_id) return json({ error: 'Department required' }, 400);
 
-    // 1) Resolve or create the user (idempotent)
+    // 1) Resolve or create the user (idempotent). We no longer depend on the
+    // built-in invite email because that path can be disabled independently of
+    // the support-agent mailer and leaves agents stuck in pending.
     let userId: string | null = null;
-    let inviteSent = false;
 
-    // Look up existing profile
     const { data: existingProfile } = await admin
       .from('profiles').select('id').eq('email', email).maybeSingle();
 
     if (existingProfile?.id) {
       userId = existingProfile.id;
     } else {
-      // Send invite via admin API. Redirect to the live, branded site so
-      // the password reset link always lands on https://kangopenbanking.com.
-      const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: full_name ? { full_name, support_agent_invite: true } : { support_agent_invite: true },
-        redirectTo: `${APP_BASE_URL}/reset-password`,
-      });
-      if (inviteErr) {
-        // Fallback: maybe user already exists in auth without profile — try to look up
-        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-        const found = list?.users?.find((u: any) => (u.email || '').toLowerCase() === email);
-        if (!found) return json({ error: `Failed to invite user: ${inviteErr.message}` }, 400);
+      const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 500 });
+      if (listErr) return json({ error: `Failed to inspect existing users: ${listErr.message}` }, 500);
+
+      const found = list?.users?.find((u: any) => (u.email || '').toLowerCase() === email);
+      if (found?.id) {
         userId = found.id;
       } else {
-        userId = invited.user?.id ?? null;
-        inviteSent = true;
+        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: full_name ? { full_name, support_agent_invite: true } : { support_agent_invite: true },
+        });
+        if (createErr) return json({ error: `Failed to create user: ${createErr.message}` }, 400);
+        userId = created.user?.id ?? null;
       }
     }
 
@@ -94,6 +93,20 @@ Deno.serve(async (req) => {
       { onConflict: 'user_id,department_id', ignoreDuplicates: false }
     );
     if (agentErr) return json({ error: `Failed to assign agent: ${agentErr.message}` }, 400);
+
+    const { data: passwordLinkData, error: passwordLinkError } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo: `${APP_BASE_URL}/reset-password` },
+    });
+    if (passwordLinkError) {
+      return json({ error: `Failed to create password setup link: ${passwordLinkError.message}` }, 400);
+    }
+
+    const passwordSetupUrl = passwordLinkData?.properties?.action_link;
+    if (!passwordSetupUrl) {
+      return json({ error: 'Password setup link could not be created' }, 500);
+    }
 
     // 4) Send welcome / invite email via Lovable Cloud transactional email
     //    (with retry-with-backoff via the shared support sender).
@@ -154,7 +167,7 @@ Deno.serve(async (req) => {
             agentName: full_name || email.split('@')[0],
             departmentName: dept?.name || 'Support',
             portalUrl: SUPPORT_PORTAL_URL,
-            inviteSent,
+            inviteSent: true,
           },
         });
         if (isStale && emailResult.ok) {
@@ -171,17 +184,43 @@ Deno.serve(async (req) => {
     }
 
 
+    const passwordSetupKey = force
+      ? `support-agent-password-setup-${userId}-${department_id}__force-${Date.now()}`
+      : `support-agent-password-setup-${userId}-${department_id}__${Date.now()}`;
+
+    let passwordEmailResult: { ok: boolean; error?: string } = { ok: true };
+    if (emailResult.ok) {
+      try {
+        const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
+        passwordEmailResult = await sendSupportEmail({
+          templateName: 'support-agent-password-setup',
+          recipientEmail: email,
+          idempotencyKey: passwordSetupKey,
+          templateData: {
+            agentName: full_name || email.split('@')[0],
+            departmentName: dept?.name || 'Support',
+            setupUrl: passwordSetupUrl,
+          },
+        });
+      } catch (e: any) {
+        passwordEmailResult = { ok: false, error: e?.message || 'Failed to send password setup email' };
+      }
+    }
+
     return json({
       success: true,
       user_id: userId,
-      invite_sent: inviteSent,
+      invite_sent: true,
       welcome_email_sent: emailResult.ok,
       welcome_email_deduped: !!emailResult.deduped,
       welcome_email_error: emailResult.error || null,
       welcome_email_collision: (emailResult as any).collision || null,
       welcome_email_recovered_from: (emailResult as any).recovered_from || null,
+      password_setup_email_sent: passwordEmailResult.ok,
+      password_setup_email_error: passwordEmailResult.error || null,
       forced: force,
       portal_url: SUPPORT_PORTAL_URL,
+      password_setup_url_created: true,
     });
   } catch (e: any) {
     console.error('support-invite-agent error:', e);
