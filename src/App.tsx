@@ -376,6 +376,7 @@ const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
 const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
 const AdminSupportSlaSettings = lazy(() => import("./pages/admin/AdminSupportSlaSettings"));
 const AdminSupportEmailLogs = lazy(() => import("./pages/admin/AdminSupportEmailLogs"));
+const AdminInviteEmailHistory = lazy(() => import("./pages/admin/AdminInviteEmailHistory"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
@@ -929,6 +930,7 @@ function App() {
               <Route path="support-chat/profile" element={<AgentProfile />} />
               <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
               <Route path="support-email-logs" element={<AdminSupportEmailLogs />} />
+              <Route path="invite-email-history" element={<AdminInviteEmailHistory />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />

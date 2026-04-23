@@ -37,6 +37,10 @@ Deno.serve(async (req) => {
     const department_id = String(body.department_id || '').trim();
     const max_concurrent_chats = Number(body.max_concurrent_chats || 5);
     const full_name = body.full_name ? String(body.full_name).trim() : null;
+    // When true, append a timestamp suffix to the idempotency key so
+    // a fresh send is enqueued even if a stale (failed/DLQ/sent) entry
+    // exists. Used by the "Force resend" admin action.
+    const force = body.force === true || body.force === 'true';
 
     if (!email || !email.includes('@')) return json({ error: 'Valid email required' }, 400);
     if (!department_id) return json({ error: 'Department required' }, 400);
@@ -99,30 +103,53 @@ Deno.serve(async (req) => {
     //    We additionally short-circuit if a non-failed send for the same
     //    key was already logged in the last 60 seconds — this prevents
     //    accidental double-sends from rapid double-clicks or client retries.
-    const idempotencyKey = `support-agent-invite-${userId}-${department_id}`;
-    let emailResult: { ok: boolean; error?: string; deduped?: boolean } = { ok: true };
+    const baseIdempotencyKey = `support-agent-invite-${userId}-${department_id}`;
+    const idempotencyKey = force
+      ? `${baseIdempotencyKey}__force-${Date.now()}`
+      : baseIdempotencyKey;
+    let emailResult: { ok: boolean; error?: string; deduped?: boolean; collision?: any } = { ok: true };
 
-    const cooldownSince = new Date(Date.now() - 60_000).toISOString();
-    const { data: recentSend } = await admin
+    // Idempotency collision detection — look up ANY prior log for the base
+    // key (not just the cooldown window) so admins get visibility into the
+    // status of a stuck invite. We then decide whether to send.
+    const { data: priorSends } = await admin
       .from('email_send_log')
-      .select('id, status, created_at')
-      .eq('message_id', idempotencyKey)
-      .gte('created_at', cooldownSince)
-      .not('status', 'in', '(failed,dlq,bounced,complained)')
+      .select('id, status, error_message, created_at')
+      .eq('message_id', baseIdempotencyKey)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
 
-    if (recentSend?.id) {
-      console.log(`[support-invite-agent] duplicate suppressed for ${email} (${idempotencyKey})`);
-      emailResult = { ok: true, deduped: true };
+    const lastSend = priorSends?.[0];
+    const cooldownSince = new Date(Date.now() - 60_000).toISOString();
+    const blockedByCooldown = !force && lastSend &&
+      new Date(lastSend.created_at).toISOString() >= cooldownSince &&
+      !['failed', 'dlq', 'bounced', 'complained'].includes(lastSend.status);
+
+    // Stale-stuck detection: prior send exists in pending/failed/dlq state
+    // older than the cooldown — this is the case the user reported.
+    const isStale = !force && lastSend &&
+      ['pending', 'failed', 'dlq', 'bounced', 'complained'].includes(lastSend.status) &&
+      new Date(lastSend.created_at).toISOString() < cooldownSince;
+
+    if (blockedByCooldown) {
+      console.log(`[support-invite-agent] duplicate suppressed for ${email} (${baseIdempotencyKey})`);
+      emailResult = {
+        ok: true,
+        deduped: true,
+        collision: { last_status: lastSend.status, last_at: lastSend.created_at },
+      };
     } else {
       try {
         const { data: dept } = await admin.from('support_departments').select('name').eq('id', department_id).single();
+        // For stale-stuck cases, force a fresh key automatically so the
+        // queue dispatcher does not skip it.
+        const effectiveKey = isStale
+          ? `${baseIdempotencyKey}__auto-recover-${Date.now()}`
+          : idempotencyKey;
         emailResult = await sendSupportEmail({
           templateName: 'support-agent-invite',
           recipientEmail: email,
-          idempotencyKey,
+          idempotencyKey: effectiveKey,
           templateData: {
             agentName: full_name || email.split('@')[0],
             departmentName: dept?.name || 'Support',
@@ -130,6 +157,13 @@ Deno.serve(async (req) => {
             inviteSent,
           },
         });
+        if (isStale && emailResult.ok) {
+          (emailResult as any).recovered_from = {
+            stale_status: lastSend!.status,
+            stale_at: lastSend!.created_at,
+            stale_error: lastSend!.error_message,
+          };
+        }
       } catch (e: any) {
         console.warn('Invite email failed (non-fatal):', e);
         emailResult = { ok: false, error: e?.message };
@@ -144,6 +178,9 @@ Deno.serve(async (req) => {
       welcome_email_sent: emailResult.ok,
       welcome_email_deduped: !!emailResult.deduped,
       welcome_email_error: emailResult.error || null,
+      welcome_email_collision: (emailResult as any).collision || null,
+      welcome_email_recovered_from: (emailResult as any).recovered_from || null,
+      forced: force,
       portal_url: SUPPORT_PORTAL_URL,
     });
   } catch (e: any) {
