@@ -27,10 +27,6 @@ import { template as supportTicketCreated } from './support-ticket-created.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as apiKeyCreated } from './api-key-created.tsx'
 import { template as chatAssigned } from './chat-assigned.tsx'
-import { template as supportAgentInvite } from './support-agent-invite.tsx'
-import { template as supportAgentPasswordSetup } from './support-agent-password-setup.tsx'
-import { template as supportNewChatAgent } from './support-new-chat-agent.tsx'
-import { template as supportSlaSupervisor } from './support-sla-supervisor.tsx'
 import { template as crediqWeeklyDigest } from './crediq-weekly-digest.tsx'
 import { template as crediqMonthlyReport } from './crediq-monthly-report.tsx'
 import { template as crediqScoreChange } from './crediq-score-change.tsx'
@@ -57,10 +53,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-reply': supportReply,
   'api-key-created': apiKeyCreated,
   'chat-assigned': chatAssigned,
-  'support-agent-invite': supportAgentInvite,
-  'support-agent-password-setup': supportAgentPasswordSetup,
-  'support-new-chat-agent': supportNewChatAgent,
-  'support-sla-supervisor': supportSlaSupervisor,
   'crediq-weekly-digest': crediqWeeklyDigest,
   'crediq-monthly-report': crediqMonthlyReport,
   'crediq-score-change': crediqScoreChange,
