@@ -70,8 +70,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const SupportAgentLogin = lazy(() => import("./pages/SupportAgentLogin"));
-const AgentProfile = lazy(() => import("./pages/admin/AgentProfile"));
+const LiveSupportPage = lazy(() => import("./pages/LiveSupportPage"));
 const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -86,7 +85,7 @@ const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission")
 const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
 const PayByBankAuthorize = lazy(() => import("./pages/PayByBankAuthorize"));
 const PayByBankApproval = lazy(() => import("./pages/customer-app/PayByBankApproval"));
-const CustomerSupport = lazy(() => import("./pages/customer-app/CustomerSupport"));
+
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -373,10 +372,8 @@ const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners")
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
 const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
-const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
-const AdminSupportSlaSettings = lazy(() => import("./pages/admin/AdminSupportSlaSettings"));
-const AdminSupportEmailLogs = lazy(() => import("./pages/admin/AdminSupportEmailLogs"));
-const AdminInviteEmailHistory = lazy(() => import("./pages/admin/AdminInviteEmailHistory"));
+const AdminLiveSupport = lazy(() => import("./pages/admin/AdminLiveSupport"));
+const AdminSupportSettings = lazy(() => import("./pages/admin/AdminSupportSettings"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
@@ -547,7 +544,7 @@ const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
 const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
 const BankRemittances = lazy(() => import("./pages/banking-app/BankRemittances"));
-const BankSupport = lazy(() => import("./pages/banking-app/BankSupport"));
+
 
 
 // Customer App PWA
@@ -620,7 +617,7 @@ const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInvent
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
 const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
 const BusinessTravelLayout = lazy(() => import("./components/business-app/BusinessTravelLayout"));
-const BusinessSupport = lazy(() => import("./pages/business-app/BusinessSupport"));
+
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
@@ -926,11 +923,8 @@ function App() {
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
-              <Route path="support-chat" element={<AdminSupportChat />} />
-              <Route path="support-chat/profile" element={<AgentProfile />} />
-              <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
-              <Route path="support-email-logs" element={<AdminSupportEmailLogs />} />
-              <Route path="invite-email-history" element={<AdminInviteEmailHistory />} />
+              <Route path="support-chat" element={<AdminLiveSupport />} />
+              <Route path="support-settings" element={<AdminSupportSettings />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />
@@ -1281,11 +1275,10 @@ function App() {
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="/staff-login" element={<StaffLogin />} />
-            {/* Dedicated branded sign-in for support agents */}
-            <Route path="/support-agent" element={<SupportAgentLogin />} />
-            {/* Convenience redirects: shorthand paths land in the admin support workspace */}
+            {/* Public Live Support — no account required */}
+            <Route path="/support" element={<Layout showFooter={false}><LiveSupportPage /></Layout>} />
             <Route path="/support-chat" element={<Navigate to="/admin/support-chat" replace />} />
-            <Route path="/support" element={<Navigate to="/support-agent" replace />} />
+            <Route path="/support-agent" element={<Navigate to="/admin/support-chat" replace />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
@@ -1318,7 +1311,7 @@ function App() {
               <Route path="more/help" element={<BankHelp />} />
               <Route path="more/disputes" element={<BankDisputes />} />
               <Route path="more/remittances" element={<BankRemittances />} />
-              <Route path="more/support" element={<BankSupport />} />
+              <Route path="more/support" element={<LiveSupportPage />} />
             </Route>
 
             {/* Customer App PWA Routes — unified (no institutionId) */}
@@ -1369,7 +1362,7 @@ function App() {
               <Route path="send-money" element={<CustomerSendMoney />} />
               <Route path="remittances" element={<CustomerRemittances />} />
               <Route path="authorize-payment/:intentId" element={<PayByBankApproval />} />
-              <Route path="support" element={<CustomerSupport />} />
+              <Route path="support" element={<LiveSupportPage />} />
               <Route path="loyalty" element={<CustomerLoyalty />} />
               <Route path="marketplace" element={<CustomerMarketplace />} />
               <Route path="reviews" element={<CustomerReviews />} />
@@ -1426,7 +1419,7 @@ function App() {
               <Route path="enterprise" element={<BusinessEnterprise />} />
               <Route path="webhook-logs" element={<BusinessWebhookLogs />} />
               <Route path="disputes" element={<BusinessDisputesPage />} />
-              <Route path="support" element={<BusinessSupport />} />
+              <Route path="support" element={<LiveSupportPage />} />
               <Route path="kyb" element={<MerchantKYB />} />
               <Route path="trust-score" element={<BusinessTrustScore />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
