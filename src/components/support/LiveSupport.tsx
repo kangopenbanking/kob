@@ -16,7 +16,7 @@ interface LiveSupportProps {
 }
 
 export const LiveSupport: React.FC<LiveSupportProps> = ({ variant = 'page', source = 'web', onClose, className }) => {
-  const { token, conv, messages, loading, error, start, send, reset } = useLiveSupport();
+  const { token, conv, messages, availability, loading, error, start, send, reset } = useLiveSupport();
   const seed = getStoredIdentity();
   const [name, setName] = useState(seed.name);
   const [email, setEmail] = useState(seed.email);
@@ -53,6 +53,20 @@ export const LiveSupport: React.FC<LiveSupportProps> = ({ variant = 'page', sour
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-foreground" strokeWidth={1.5} />
           <h2 className="text-sm font-semibold text-foreground">Live Support</h2>
+          {availability && (
+            <span
+              className={cn(
+                'ml-1 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                availability.online
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                  : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+              )}
+              aria-label={availability.online ? 'Agents online' : 'Agents offline'}
+            >
+              <span className={cn('h-1.5 w-1.5 rounded-full', availability.online ? 'bg-emerald-500' : 'bg-amber-500')} />
+              {availability.online ? 'Online' : 'Offline'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           {token && (
@@ -67,6 +81,12 @@ export const LiveSupport: React.FC<LiveSupportProps> = ({ variant = 'page', sour
           )}
         </div>
       </header>
+
+      {availability && !availability.online && (
+        <div className="border-b border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-800 dark:text-amber-300 shrink-0">
+          Our team is currently offline. Replies arrive within <strong>15 minutes</strong> during business hours, and within <strong>24 hours</strong> otherwise.
+        </div>
+      )}
 
       {!token ? (
         <form onSubmit={handleStart} className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
