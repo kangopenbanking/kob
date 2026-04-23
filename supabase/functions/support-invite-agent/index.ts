@@ -178,6 +178,9 @@ Deno.serve(async (req) => {
       welcome_email_sent: emailResult.ok,
       welcome_email_deduped: !!emailResult.deduped,
       welcome_email_error: emailResult.error || null,
+      welcome_email_collision: (emailResult as any).collision || null,
+      welcome_email_recovered_from: (emailResult as any).recovered_from || null,
+      forced: force,
       portal_url: SUPPORT_PORTAL_URL,
     });
   } catch (e: any) {
