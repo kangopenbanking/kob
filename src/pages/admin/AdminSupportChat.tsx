@@ -91,8 +91,83 @@ const AdminSupportChat: React.FC = () => {
   }, []);
 
   const fetchAgents = useCallback(async () => {
-    const { data } = await supabase.from('support_agents').select('*, profiles(full_name, email), support_departments(name)') as any;
-    setAgents(data || []);
+    // NOTE: profiles.id (not user_id) is the auth user reference, so we
+    // can't rely on PostgREST FK embedding here — fetch profiles separately
+    // and merge by user_id. Otherwise the whole query fails and the agents
+    // list silently renders as empty ("No agents yet").
+    const { data: agentRows, error: agentErr } = await supabase
+      .from('support_agents')
+      .select('*, support_departments(name)')
+      .order('created_at', { ascending: false });
+
+    if (agentErr) {
+      console.error('[AdminSupportChat] fetchAgents failed:', agentErr);
+      toast({
+        title: 'Could not load agents',
+        description: agentErr.message,
+        variant: 'destructive',
+      });
+      setAgents([]);
+      return;
+    }
+
+    const userIds = Array.from(new Set((agentRows || []).map((a: any) => a.user_id).filter(Boolean)));
+    let profilesById: Record<string, { full_name: string | null; email: string | null }> = {};
+    if (userIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      profilesById = Object.fromEntries(
+        (profileRows || []).map((p: any) => [p.id, { full_name: p.full_name, email: p.email }])
+      );
+    }
+
+    const merged = (agentRows || []).map((a: any) => ({
+      ...a,
+      profiles: profilesById[a.user_id] || null,
+    }));
+
+    // Annotate each agent with their most recent invite delivery status so
+    // admins can immediately spot pending / failed invites and act on them.
+    const emails = Array.from(
+      new Set(
+        merged
+          .map((a: any) => a.profiles?.email?.toLowerCase())
+          .filter((e: string | undefined): e is string => !!e),
+      ),
+    );
+
+    const latestSendByEmail: Record<string, { status: string; created_at: string; error_message: string | null }> = {};
+    if (emails.length > 0) {
+      const { data: sendRows } = await supabase
+        .from('email_send_log')
+        .select('recipient_email, status, created_at, error_message, template_name')
+        .in('recipient_email', emails)
+        .in('template_name', ['support-agent-invite', 'support-agent-password-setup'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      for (const row of (sendRows || []) as any[]) {
+        const key = row.recipient_email?.toLowerCase();
+        if (key && !latestSendByEmail[key]) {
+          latestSendByEmail[key] = {
+            status: row.status,
+            created_at: row.created_at,
+            error_message: row.error_message,
+          };
+        }
+      }
+    }
+
+    const annotated = merged.map((a: any) => ({
+      ...a,
+      latest_invite: a.profiles?.email
+        ? latestSendByEmail[a.profiles.email.toLowerCase()] || null
+        : null,
+    }));
+
+    setAgents(annotated);
   }, []);
 
   useEffect(() => { fetchConversations(); fetchDepartments(); fetchAgents(); }, [fetchConversations, fetchDepartments, fetchAgents]);
@@ -326,13 +401,33 @@ const AdminSupportChat: React.FC = () => {
   };
 
   const resendAgentInvite = async (agent: any) => {
-    const email = agent?.profiles?.email?.trim()?.toLowerCase();
+    let email: string | undefined = agent?.profiles?.email?.trim()?.toLowerCase();
+
+    // Fallback: profile row may be missing/incomplete — fetch fresh by user_id
+    if (!email && agent?.user_id) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', agent.user_id)
+        .maybeSingle();
+      email = prof?.email?.trim()?.toLowerCase();
+    }
+
     if (!email || !agent?.department_id) {
-      toast({ title: 'Missing invite data', description: 'This agent record is missing an email or department.', variant: 'destructive' });
+      toast({
+        title: 'Missing invite data',
+        description: 'This agent record is missing an email or department.',
+        variant: 'destructive',
+      });
       return;
     }
 
     setResendingAgentId(agent.id);
+    toast({
+      title: 'Queuing invite…',
+      description: `Sending fresh invite + password setup link to ${email}.`,
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('support-invite-agent', {
         body: {
@@ -348,14 +443,42 @@ const AdminSupportChat: React.FC = () => {
         throw new Error((data as any)?.error || error?.message || 'Failed to resend invite');
       }
 
+      const payload = (data as any) || {};
+      const passwordOk = payload.password_setup_email_sent !== false;
+      const inviteOk = payload.welcome_email_sent !== false;
+
       toast({
-        title: 'Invite resent',
-        description: (data as any)?.password_setup_email_sent === false
-          ? `Support invite resent, but password setup email failed: ${(data as any)?.password_setup_email_error || 'unknown error'}`
-          : 'Support invite and password setup email were resent successfully.',
+        title: passwordOk && inviteOk ? 'Invite resent successfully' : 'Invite partially resent',
+        description: (
+          <div className="space-y-1">
+            <div>Recipient: <span className="font-medium">{email}</span></div>
+            <div>Welcome invite: {inviteOk ? '✅ enqueued' : `❌ ${payload.welcome_email_error || 'failed'}`}</div>
+            <div>Password setup: {passwordOk ? '✅ enqueued' : `❌ ${payload.password_setup_email_error || 'failed'}`}</div>
+            <div className="text-xs text-muted-foreground pt-1">
+              Track delivery in{' '}
+              <Link to="/admin/invite-email-history" className="underline">Invite Email History</Link>.
+            </div>
+          </div>
+        ) as any,
+        variant: passwordOk && inviteOk ? 'default' : 'destructive',
       });
+
+      fetchAgents();
     } catch (e: any) {
-      toast({ title: 'Resend failed', description: e?.message || String(e), variant: 'destructive' });
+      toast({
+        title: 'Resend failed',
+        description: (
+          <div className="space-y-1">
+            <div>{e?.message || String(e)}</div>
+            <div className="text-xs text-muted-foreground pt-1">
+              Open{' '}
+              <Link to="/admin/invite-email-history" className="underline">Invite Email History</Link>{' '}
+              for the full error trace.
+            </div>
+          </div>
+        ) as any,
+        variant: 'destructive',
+      });
     } finally {
       setResendingAgentId(null);
     }
@@ -761,27 +884,44 @@ const AdminSupportChat: React.FC = () => {
                 <div className="space-y-2">
                   {agents.map((a: any) => {
                     const liveOnline = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                    const inviteStatus: string | null = a.latest_invite?.status || null;
+                    const invitePending = !inviteStatus || ['pending', 'failed', 'dlq'].includes(inviteStatus);
                     return (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30">
+                    <div key={a.id} className={cn(
+                      'flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-muted/30',
+                      invitePending ? 'border-amber-300 bg-amber-50/40 dark:border-amber-700/50 dark:bg-amber-950/10' : 'border-border',
+                    )}>
                       <div className="min-w-0">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <p className="inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
                           <span className={cn('h-2 w-2 rounded-full ring-2 ring-background', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
                           {a.profiles?.full_name || a.profiles?.email || 'Unknown'}
                           <span className="text-[10px] font-normal text-muted-foreground">
                             {liveOnline ? 'Online now' : 'Offline'}
                           </span>
+                          {invitePending && (
+                            <Badge variant="outline" className="border-amber-400 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                              {inviteStatus === 'pending' ? 'Invite pending' : inviteStatus === 'dlq' || inviteStatus === 'failed' ? 'Invite failed' : 'No invite sent'}
+                            </Badge>
+                          )}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {a.support_departments?.name || 'No department'} · Max {a.max_concurrent_chats} chats
+                          {a.profiles?.email ? ` · ${a.profiles.email}` : ''}
                         </p>
+                        {invitePending && a.latest_invite?.error_message && (
+                          <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-400">
+                            Last error: {a.latest_invite.error_message}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant={invitePending ? 'default' : 'outline'}
                           className="h-8 text-xs"
                           onClick={() => resendAgentInvite(a)}
                           disabled={resendingAgentId !== null}
+                          title={invitePending ? 'Resend invite (current invite is stuck or missing)' : 'Resend invite + password setup'}
                         >
                           {resendingAgentId === a.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserPlus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />}
                           Re-invite
