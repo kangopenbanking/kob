@@ -127,7 +127,47 @@ const AdminSupportChat: React.FC = () => {
       ...a,
       profiles: profilesById[a.user_id] || null,
     }));
-    setAgents(merged);
+
+    // Annotate each agent with their most recent invite delivery status so
+    // admins can immediately spot pending / failed invites and act on them.
+    const emails = Array.from(
+      new Set(
+        merged
+          .map((a: any) => a.profiles?.email?.toLowerCase())
+          .filter((e: string | undefined): e is string => !!e),
+      ),
+    );
+
+    const latestSendByEmail: Record<string, { status: string; created_at: string; error_message: string | null }> = {};
+    if (emails.length > 0) {
+      const { data: sendRows } = await supabase
+        .from('email_send_log')
+        .select('recipient_email, status, created_at, error_message, template_name')
+        .in('recipient_email', emails)
+        .in('template_name', ['support-agent-invite', 'support-agent-password-setup'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      for (const row of (sendRows || []) as any[]) {
+        const key = row.recipient_email?.toLowerCase();
+        if (key && !latestSendByEmail[key]) {
+          latestSendByEmail[key] = {
+            status: row.status,
+            created_at: row.created_at,
+            error_message: row.error_message,
+          };
+        }
+      }
+    }
+
+    const annotated = merged.map((a: any) => ({
+      ...a,
+      latest_invite: a.profiles?.email
+        ? latestSendByEmail[a.profiles.email.toLowerCase()] || null
+        : null,
+    }));
+
+    setAgents(annotated);
   }, []);
 
   useEffect(() => { fetchConversations(); fetchDepartments(); fetchAgents(); }, [fetchConversations, fetchDepartments, fetchAgents]);
