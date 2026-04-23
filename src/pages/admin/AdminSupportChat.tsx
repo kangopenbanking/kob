@@ -361,13 +361,33 @@ const AdminSupportChat: React.FC = () => {
   };
 
   const resendAgentInvite = async (agent: any) => {
-    const email = agent?.profiles?.email?.trim()?.toLowerCase();
+    let email: string | undefined = agent?.profiles?.email?.trim()?.toLowerCase();
+
+    // Fallback: profile row may be missing/incomplete — fetch fresh by user_id
+    if (!email && agent?.user_id) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', agent.user_id)
+        .maybeSingle();
+      email = prof?.email?.trim()?.toLowerCase();
+    }
+
     if (!email || !agent?.department_id) {
-      toast({ title: 'Missing invite data', description: 'This agent record is missing an email or department.', variant: 'destructive' });
+      toast({
+        title: 'Missing invite data',
+        description: 'This agent record is missing an email or department.',
+        variant: 'destructive',
+      });
       return;
     }
 
     setResendingAgentId(agent.id);
+    const enqueueToastId = toast({
+      title: 'Queuing invite…',
+      description: `Sending fresh invite + password setup link to ${email}.`,
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('support-invite-agent', {
         body: {
@@ -383,14 +403,42 @@ const AdminSupportChat: React.FC = () => {
         throw new Error((data as any)?.error || error?.message || 'Failed to resend invite');
       }
 
+      const payload = (data as any) || {};
+      const passwordOk = payload.password_setup_email_sent !== false;
+      const inviteOk = payload.welcome_email_sent !== false;
+
       toast({
-        title: 'Invite resent',
-        description: (data as any)?.password_setup_email_sent === false
-          ? `Support invite resent, but password setup email failed: ${(data as any)?.password_setup_email_error || 'unknown error'}`
-          : 'Support invite and password setup email were resent successfully.',
+        title: passwordOk && inviteOk ? 'Invite resent successfully' : 'Invite partially resent',
+        description: (
+          <div className="space-y-1">
+            <div>Recipient: <span className="font-medium">{email}</span></div>
+            <div>Welcome invite: {inviteOk ? '✅ enqueued' : `❌ ${payload.welcome_email_error || 'failed'}`}</div>
+            <div>Password setup: {passwordOk ? '✅ enqueued' : `❌ ${payload.password_setup_email_error || 'failed'}`}</div>
+            <div className="text-xs text-muted-foreground pt-1">
+              Track delivery in{' '}
+              <Link to="/admin/invite-email-history" className="underline">Invite Email History</Link>.
+            </div>
+          </div>
+        ) as any,
+        variant: passwordOk && inviteOk ? 'default' : 'destructive',
       });
+
+      fetchAgents();
     } catch (e: any) {
-      toast({ title: 'Resend failed', description: e?.message || String(e), variant: 'destructive' });
+      toast({
+        title: 'Resend failed',
+        description: (
+          <div className="space-y-1">
+            <div>{e?.message || String(e)}</div>
+            <div className="text-xs text-muted-foreground pt-1">
+              Open{' '}
+              <Link to="/admin/invite-email-history" className="underline">Invite Email History</Link>{' '}
+              for the full error trace.
+            </div>
+          </div>
+        ) as any,
+        variant: 'destructive',
+      });
     } finally {
       setResendingAgentId(null);
     }
