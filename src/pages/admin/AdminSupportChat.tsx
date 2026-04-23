@@ -91,8 +91,43 @@ const AdminSupportChat: React.FC = () => {
   }, []);
 
   const fetchAgents = useCallback(async () => {
-    const { data } = await supabase.from('support_agents').select('*, profiles(full_name, email), support_departments(name)') as any;
-    setAgents(data || []);
+    // NOTE: profiles.id (not user_id) is the auth user reference, so we
+    // can't rely on PostgREST FK embedding here — fetch profiles separately
+    // and merge by user_id. Otherwise the whole query fails and the agents
+    // list silently renders as empty ("No agents yet").
+    const { data: agentRows, error: agentErr } = await supabase
+      .from('support_agents')
+      .select('*, support_departments(name)')
+      .order('created_at', { ascending: false });
+
+    if (agentErr) {
+      console.error('[AdminSupportChat] fetchAgents failed:', agentErr);
+      toast({
+        title: 'Could not load agents',
+        description: agentErr.message,
+        variant: 'destructive',
+      });
+      setAgents([]);
+      return;
+    }
+
+    const userIds = Array.from(new Set((agentRows || []).map((a: any) => a.user_id).filter(Boolean)));
+    let profilesById: Record<string, { full_name: string | null; email: string | null }> = {};
+    if (userIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      profilesById = Object.fromEntries(
+        (profileRows || []).map((p: any) => [p.id, { full_name: p.full_name, email: p.email }])
+      );
+    }
+
+    const merged = (agentRows || []).map((a: any) => ({
+      ...a,
+      profiles: profilesById[a.user_id] || null,
+    }));
+    setAgents(merged);
   }, []);
 
   useEffect(() => { fetchConversations(); fetchDepartments(); fetchAgents(); }, [fetchConversations, fetchDepartments, fetchAgents]);
