@@ -423,7 +423,7 @@ const AdminSupportChat: React.FC = () => {
     }
 
     setResendingAgentId(agent.id);
-    const enqueueToastId = toast({
+    toast({
       title: 'Queuing invite…',
       description: `Sending fresh invite + password setup link to ${email}.`,
     });
