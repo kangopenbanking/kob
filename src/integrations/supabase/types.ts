@@ -412,6 +412,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json
+          severity: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json
+          severity?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       admin_exchange_rates: {
         Row: {
           base_currency: string
@@ -7685,6 +7721,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_dlq_redeliveries: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          new_message_id: string
+          original_message_id: string
+          recipient_email: string
+          redelivery_attempt: number
+          result_status: string | null
+          template_name: string
+          triggered_by: string
+          triggered_by_user: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_message_id: string
+          original_message_id: string
+          recipient_email: string
+          redelivery_attempt?: number
+          result_status?: string | null
+          template_name: string
+          triggered_by?: string
+          triggered_by_user?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_message_id?: string
+          original_message_id?: string
+          recipient_email?: string
+          redelivery_attempt?: number
+          result_status?: string | null
+          template_name?: string
+          triggered_by?: string
+          triggered_by_user?: string | null
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
