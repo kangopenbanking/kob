@@ -23,6 +23,14 @@ export interface SupportConv {
   last_message_at: string;
 }
 
+export interface SupportAvailability {
+  online: boolean;
+  in_business_hours: boolean;
+  agents_available: boolean;
+  sla_online_minutes: number;
+  sla_offline_hours: number;
+}
+
 export function getStoredToken() {
   try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
 }
@@ -44,12 +52,17 @@ export function useLiveSupport() {
   const [token, setToken] = useState<string>(() => getStoredToken());
   const [conv, setConv] = useState<SupportConv | null>(null);
   const [messages, setMessages] = useState<SupportMsg[]>([]);
+  const [availability, setAvailability] = useState<SupportAvailability | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
 
   const refresh = useCallback(async (t = token) => {
-    if (!t) return;
+    if (!t) {
+      const { data } = await supabase.functions.invoke('support-fetch', { body: { status_only: true } });
+      if ((data as any)?.availability) setAvailability((data as any).availability);
+      return;
+    }
     const { data, error } = await supabase.functions.invoke('support-fetch', { body: { guest_token: t } });
     if (error || (data as any)?.error) {
       setError((data as any)?.error || error?.message || 'Failed to load');
@@ -57,9 +70,20 @@ export function useLiveSupport() {
     }
     setConv((data as any).conversation);
     setMessages((data as any).messages);
+    if ((data as any).availability) setAvailability((data as any).availability);
   }, [token]);
 
-  useEffect(() => { if (token) refresh(token); }, [token, refresh]);
+  useEffect(() => { refresh(token); }, [token, refresh]);
+
+  // Refresh availability every 60s so the badge stays accurate.
+  useEffect(() => {
+    const i = window.setInterval(() => {
+      supabase.functions.invoke('support-fetch', { body: token ? { guest_token: token } : { status_only: true } })
+        .then(({ data }) => { if ((data as any)?.availability) setAvailability((data as any).availability); })
+        .catch(() => {});
+    }, 60_000);
+    return () => clearInterval(i);
+  }, [token]);
 
   // Realtime subscription on the conversation
   useEffect(() => {
@@ -122,5 +146,5 @@ export function useLiveSupport() {
     setToken(''); setConv(null); setMessages([]); setError(null);
   }, []);
 
-  return { token, conv, messages, loading, error, start, send, refresh, reset };
+  return { token, conv, messages, availability, loading, error, start, send, refresh, reset };
 }
