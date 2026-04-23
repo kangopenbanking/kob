@@ -884,27 +884,44 @@ const AdminSupportChat: React.FC = () => {
                 <div className="space-y-2">
                   {agents.map((a: any) => {
                     const liveOnline = presence.isOnline(a.user_id) || presence.isOnline(a.id);
+                    const inviteStatus: string | null = a.latest_invite?.status || null;
+                    const invitePending = !inviteStatus || ['pending', 'failed', 'dlq'].includes(inviteStatus);
                     return (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30">
+                    <div key={a.id} className={cn(
+                      'flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-muted/30',
+                      invitePending ? 'border-amber-300 bg-amber-50/40 dark:border-amber-700/50 dark:bg-amber-950/10' : 'border-border',
+                    )}>
                       <div className="min-w-0">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <p className="inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
                           <span className={cn('h-2 w-2 rounded-full ring-2 ring-background', liveOnline ? 'bg-green-500' : 'bg-muted-foreground')} />
                           {a.profiles?.full_name || a.profiles?.email || 'Unknown'}
                           <span className="text-[10px] font-normal text-muted-foreground">
                             {liveOnline ? 'Online now' : 'Offline'}
                           </span>
+                          {invitePending && (
+                            <Badge variant="outline" className="border-amber-400 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                              {inviteStatus === 'pending' ? 'Invite pending' : inviteStatus === 'dlq' || inviteStatus === 'failed' ? 'Invite failed' : 'No invite sent'}
+                            </Badge>
+                          )}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {a.support_departments?.name || 'No department'} · Max {a.max_concurrent_chats} chats
+                          {a.profiles?.email ? ` · ${a.profiles.email}` : ''}
                         </p>
+                        {invitePending && a.latest_invite?.error_message && (
+                          <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-400">
+                            Last error: {a.latest_invite.error_message}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant={invitePending ? 'default' : 'outline'}
                           className="h-8 text-xs"
                           onClick={() => resendAgentInvite(a)}
                           disabled={resendingAgentId !== null}
+                          title={invitePending ? 'Resend invite (current invite is stuck or missing)' : 'Resend invite + password setup'}
                         >
                           {resendingAgentId === a.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserPlus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />}
                           Re-invite
