@@ -930,6 +930,7 @@ function App() {
               <Route path="support-chat/profile" element={<AgentProfile />} />
               <Route path="support-sla-settings" element={<AdminSupportSlaSettings />} />
               <Route path="support-email-logs" element={<AdminSupportEmailLogs />} />
+              <Route path="invite-email-history" element={<AdminInviteEmailHistory />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />
