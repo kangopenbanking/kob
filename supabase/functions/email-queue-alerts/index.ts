@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
         for (const p of adminProfiles || []) {
           if (!p.email) continue;
           await admin.functions.invoke("send-transactional-email", {
+            headers: { Authorization: `Bearer ${SERVICE_KEY}` },
             body: {
               templateName: "admin-email-queue-alert",
               recipientEmail: p.email,

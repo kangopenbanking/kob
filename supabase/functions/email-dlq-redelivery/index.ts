@@ -179,6 +179,7 @@ Deno.serve(async (req) => {
         const { data: invokeData, error: invokeErr } = await admin.functions.invoke(
           "send-transactional-email",
           {
+            headers: { Authorization: `Bearer ${SERVICE_KEY}` },
             body: {
               templateName: tpl,
               recipientEmail: row.recipient_email,
