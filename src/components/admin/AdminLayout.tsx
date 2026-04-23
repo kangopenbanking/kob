@@ -1,8 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { SessionGuard } from "@/components/auth/SessionGuard";
-import { Button } from "@/components/ui/button";
-import { Menu, Shield, Headphones } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -33,7 +32,6 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isSupportOnly, setIsSupportOnly] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,16 +39,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       const { data: admin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
-      if (cancelled) return;
-      if (admin) {
-        setIsAdmin(true);
-        setIsSupportOnly(false);
-        return;
-      }
-      const { data: agent } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'support_agent' as any });
-      if (cancelled) return;
-      setIsAdmin(false);
-      setIsSupportOnly(!!agent);
+      if (!cancelled) setIsAdmin(!!admin);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -60,10 +49,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
-  // Support agents only see the Support section in the sidebar
-  const visibleNavigation = isSupportOnly
-    ? adminNavigation.filter((s) => s.title === "Support")
-    : adminNavigation;
+  const visibleNavigation = adminNavigation;
 
   return (
     <SessionGuard logoutPath="/auth" appName="KOB Admin" appContext="admin">
@@ -73,17 +59,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <Sidebar className="border-r" collapsible="icon">
           {/* KOB Admin Branding Header */}
           <div className="p-4 border-b bg-primary/5">
-            <Link to={isSupportOnly ? "/admin/support-chat" : "/admin"} className="flex items-center gap-3">
+            <Link to="/admin" className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                {isSupportOnly ? <Headphones className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
+                <Shield className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold tracking-tight">
-                  {isSupportOnly ? "Support Workspace" : "KOB Admin"}
-                </span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 w-fit">
-                  {isSupportOnly ? "Support Agent" : "Super Admin"}
-                </Badge>
+                <span className="text-sm font-bold tracking-tight">KOB Admin</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 w-fit">Super Admin</Badge>
               </div>
             </Link>
           </div>
@@ -120,7 +102,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Breadcrumbs />
             </div>
             <div className="flex items-center gap-2">
-              {!isSupportOnly && <AdminCommandPalette />}
+              <AdminCommandPalette />
               <LanguageSwitcher />
               <NotificationCenter />
               <UserProfileMenu variant="admin" />
