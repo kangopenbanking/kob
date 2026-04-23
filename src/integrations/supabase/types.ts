@@ -20534,255 +20534,99 @@ export type Database = {
         }
         Relationships: []
       }
-      support_agent_presence: {
-        Row: {
-          agent_id: string
-          last_heartbeat_at: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          agent_id: string
-          last_heartbeat_at?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string
-          last_heartbeat_at?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_agent_presence_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: true
-            referencedRelation: "support_agents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_agent_presence_events: {
-        Row: {
-          agent_id: string
-          created_at: string
-          id: string
-          previous_status: string | null
-          reason: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          agent_id: string
-          created_at?: string
-          id?: string
-          previous_status?: string | null
-          reason?: string | null
-          status: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string
-          created_at?: string
-          id?: string
-          previous_status?: string | null
-          reason?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_agent_presence_events_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "support_agents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       support_agents: {
         Row: {
-          away_message: string | null
-          created_at: string | null
-          department_id: string
+          created_at: string
+          display_name: string | null
           id: string
-          max_concurrent_chats: number | null
-          notify_assignment: boolean
-          notify_email: boolean
-          notify_new_chat: boolean
-          status: string
-          updated_at: string | null
+          is_active: boolean
+          last_seen_at: string | null
           user_id: string
         }
         Insert: {
-          away_message?: string | null
-          created_at?: string | null
-          department_id: string
+          created_at?: string
+          display_name?: string | null
           id?: string
-          max_concurrent_chats?: number | null
-          notify_assignment?: boolean
-          notify_email?: boolean
-          notify_new_chat?: boolean
-          status?: string
-          updated_at?: string | null
+          is_active?: boolean
+          last_seen_at?: string | null
           user_id: string
         }
         Update: {
-          away_message?: string | null
-          created_at?: string | null
-          department_id?: string
+          created_at?: string
+          display_name?: string | null
           id?: string
-          max_concurrent_chats?: number | null
-          notify_assignment?: boolean
-          notify_email?: boolean
-          notify_new_chat?: boolean
-          status?: string
-          updated_at?: string | null
+          is_active?: boolean
+          last_seen_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "support_agents_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "support_departments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "support_agents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      support_audit_logs: {
+      support_business_hours: {
         Row: {
-          action: string
-          actor_id: string | null
-          actor_type: string
-          conversation_id: string
-          created_at: string
-          details: Json | null
-          id: string
+          active_days: number[]
+          end_hour: number
+          id: number
+          offline_message: string
+          start_hour: number
+          timezone: string
+          updated_at: string
         }
         Insert: {
-          action: string
-          actor_id?: string | null
-          actor_type?: string
-          conversation_id: string
-          created_at?: string
-          details?: Json | null
-          id?: string
+          active_days?: number[]
+          end_hour?: number
+          id?: number
+          offline_message?: string
+          start_hour?: number
+          timezone?: string
+          updated_at?: string
         }
         Update: {
-          action?: string
-          actor_id?: string | null
-          actor_type?: string
-          conversation_id?: string
-          created_at?: string
-          details?: Json | null
-          id?: string
+          active_days?: number[]
+          end_hour?: number
+          id?: number
+          offline_message?: string
+          start_hour?: number
+          timezone?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "support_audit_logs_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "support_conversations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       support_conversations: {
         Row: {
           assigned_agent_id: string | null
-          channel: string
-          claimed_at: string | null
-          claimed_by: string | null
-          created_at: string | null
-          department_id: string | null
-          first_response_at: string | null
-          guest_email: string | null
-          guest_id: string | null
-          guest_name: string | null
+          created_at: string
+          guest_email: string
+          guest_name: string
+          guest_token: string
           id: string
-          last_message_at: string | null
-          last_message_preview: string | null
-          metadata: Json | null
-          priority: string
-          resolved_at: string | null
-          sla_breach_at: string | null
-          sla_escalated_at: string | null
-          sla_target_minutes: number
-          sla_warned_at: string | null
+          last_message_at: string
+          source: string
           status: string
           subject: string | null
-          unread_agent_count: number
-          unread_user_count: number
-          updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           assigned_agent_id?: string | null
-          channel?: string
-          claimed_at?: string | null
-          claimed_by?: string | null
-          created_at?: string | null
-          department_id?: string | null
-          first_response_at?: string | null
-          guest_email?: string | null
-          guest_id?: string | null
-          guest_name?: string | null
+          created_at?: string
+          guest_email: string
+          guest_name: string
+          guest_token?: string
           id?: string
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          metadata?: Json | null
-          priority?: string
-          resolved_at?: string | null
-          sla_breach_at?: string | null
-          sla_escalated_at?: string | null
-          sla_target_minutes?: number
-          sla_warned_at?: string | null
+          last_message_at?: string
+          source?: string
           status?: string
           subject?: string | null
-          unread_agent_count?: number
-          unread_user_count?: number
-          updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
           assigned_agent_id?: string | null
-          channel?: string
-          claimed_at?: string | null
-          claimed_by?: string | null
-          created_at?: string | null
-          department_id?: string | null
-          first_response_at?: string | null
-          guest_email?: string | null
-          guest_id?: string | null
-          guest_name?: string | null
+          created_at?: string
+          guest_email?: string
+          guest_name?: string
+          guest_token?: string
           id?: string
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          metadata?: Json | null
-          priority?: string
-          resolved_at?: string | null
-          sla_breach_at?: string | null
-          sla_escalated_at?: string | null
-          sla_target_minutes?: number
-          sla_warned_at?: string | null
+          last_message_at?: string
+          source?: string
           status?: string
           subject?: string | null
-          unread_agent_count?: number
-          unread_user_count?: number
-          updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: [
           {
@@ -20792,109 +20636,34 @@ export type Database = {
             referencedRelation: "support_agents"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "support_conversations_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "support_departments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_departments: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          display_order: number | null
-          escalation_department_id: string | null
-          icon: string | null
-          id: string
-          intake_fields: Json
-          is_active: boolean | null
-          name: string
-          notify_supervisor: boolean
-          sla_escalation_pct: number
-          sla_target_minutes: number
-          sla_warning_pct: number
-          supervisor_email: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          escalation_department_id?: string | null
-          icon?: string | null
-          id?: string
-          intake_fields?: Json
-          is_active?: boolean | null
-          name: string
-          notify_supervisor?: boolean
-          sla_escalation_pct?: number
-          sla_target_minutes?: number
-          sla_warning_pct?: number
-          supervisor_email?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          escalation_department_id?: string | null
-          icon?: string | null
-          id?: string
-          intake_fields?: Json
-          is_active?: boolean | null
-          name?: string
-          notify_supervisor?: boolean
-          sla_escalation_pct?: number
-          sla_target_minutes?: number
-          sla_warning_pct?: number
-          supervisor_email?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_departments_escalation_department_id_fkey"
-            columns: ["escalation_department_id"]
-            isOneToOne: false
-            referencedRelation: "support_departments"
-            referencedColumns: ["id"]
-          },
         ]
       }
       support_messages: {
         Row: {
-          content: string | null
+          content: string
           conversation_id: string
-          created_at: string | null
-          file_type: string | null
-          file_url: string | null
+          created_at: string
           id: string
-          read_at: string | null
           sender_id: string | null
+          sender_name: string | null
           sender_type: string
         }
         Insert: {
-          content?: string | null
+          content: string
           conversation_id: string
-          created_at?: string | null
-          file_type?: string | null
-          file_url?: string | null
+          created_at?: string
           id?: string
-          read_at?: string | null
           sender_id?: string | null
+          sender_name?: string | null
           sender_type: string
         }
         Update: {
-          content?: string | null
+          content?: string
           conversation_id?: string
-          created_at?: string | null
-          file_type?: string | null
-          file_url?: string | null
+          created_at?: string
           id?: string
-          read_at?: string | null
           sender_id?: string | null
+          sender_name?: string | null
           sender_type?: string
         }
         Relationships: [
@@ -20906,33 +20675,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      support_rate_limits: {
-        Row: {
-          action: string
-          count: number
-          id: string
-          identity: string
-          updated_at: string
-          window_start: string
-        }
-        Insert: {
-          action: string
-          count?: number
-          id?: string
-          identity: string
-          updated_at?: string
-          window_start?: string
-        }
-        Update: {
-          action?: string
-          count?: number
-          id?: string
-          identity?: string
-          updated_at?: string
-          window_start?: string
-        }
-        Relationships: []
       }
       supported_countries: {
         Row: {
@@ -23678,43 +23420,6 @@ export type Database = {
           _window_minutes?: number
         }
         Returns: boolean
-      }
-      claim_support_conversation: {
-        Args: { _conversation_id: string }
-        Returns: {
-          assigned_agent_id: string | null
-          channel: string
-          claimed_at: string | null
-          claimed_by: string | null
-          created_at: string | null
-          department_id: string | null
-          first_response_at: string | null
-          guest_email: string | null
-          guest_id: string | null
-          guest_name: string | null
-          id: string
-          last_message_at: string | null
-          last_message_preview: string | null
-          metadata: Json | null
-          priority: string
-          resolved_at: string | null
-          sla_breach_at: string | null
-          sla_escalated_at: string | null
-          sla_target_minutes: number
-          sla_warned_at: string | null
-          status: string
-          subject: string | null
-          unread_agent_count: number
-          unread_user_count: number
-          updated_at: string | null
-          user_id: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "support_conversations"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
       cleanup_expired_auth_records: { Args: never; Returns: undefined }
