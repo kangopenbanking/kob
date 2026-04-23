@@ -35,6 +35,7 @@ import { template as crediqMonthlyReport } from './crediq-monthly-report.tsx'
 import { template as crediqScoreChange } from './crediq-score-change.tsx'
 import { template as crediqTipRecommendation } from './crediq-tip-recommendation.tsx'
 import { template as rentPaymentReminder } from './rent-payment-reminder.tsx'
+import { template as adminEmailQueueAlert } from './admin-email-queue-alert.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
@@ -63,4 +64,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'crediq-score-change': crediqScoreChange,
   'crediq-tip-recommendation': crediqTipRecommendation,
   'rent-payment-reminder': rentPaymentReminder,
+  'admin-email-queue-alert': adminEmailQueueAlert,
 }
