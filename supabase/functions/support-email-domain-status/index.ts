@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.info.kangopenbanking.com";
+const SENDER_DOMAIN = "notify.info.kangfintechsolutions.com";
 
 async function dohQuery(name: string, type: string) {
   const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`;
