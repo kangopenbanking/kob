@@ -49,9 +49,10 @@ export const API_RUNTIME_BASE_URL = API_BACKEND_BASE;
 
 /**
  * Display-facing API base URL for documentation and code examples.
- * Uses the direct backend URL so examples work immediately for developers.
+ * Now points at the branded gateway so copy-pasted snippets show
+ * api.kangopenbanking.com — backed by the Cloudflare Worker in /worker.
  */
-export const API_EXAMPLE_BASE_URL = API_BACKEND_BASE;
+export const API_EXAMPLE_BASE_URL = API_PUBLIC_GATEWAY_URL;
 
 /**
  * Returns a canonical public URL for the given path.
