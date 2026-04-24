@@ -167,11 +167,17 @@ const schemas = {
     properties: {
       installment_number: { type: 'integer', example: 1 },
       due_date: { type: 'string', format: 'date', example: '2026-03-16' },
-      principal: { type: 'number', example: 80000 },
-      interest: { type: 'number', example: 12500 },
-      fees: { type: 'number', example: 0 },
-      total_due: { type: 'number', example: 92500 },
-      outstanding_balance: { type: 'number', example: 920000 },
+      // Deprecated number-typed monetary fields — kept for backward compatibility (Standing Order 1: The Lock).
+      principal: { type: 'number', example: 80000, deprecated: true, description: 'Deprecated. Use principal_amount (string, minor units). Removed in v5.0.0.' },
+      interest: { type: 'number', example: 12500, deprecated: true, description: 'Deprecated. Use interest_amount (string, minor units). Removed in v5.0.0.' },
+      fees: { type: 'number', example: 0, deprecated: true, description: 'Deprecated. Use fees_amount (string, minor units). Removed in v5.0.0.' },
+      total_due: { type: 'number', example: 92500, deprecated: true, description: 'Deprecated. Use total_due_amount (string, minor units). Removed in v5.0.0.' },
+      // Canonical string-typed monetary fields per RFC 8259 / FAPI 1.0 Adv §5.2.2.
+      principal_amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '80000', description: 'Principal portion as a string integer in minor units.' },
+      interest_amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '12500', description: 'Interest portion as a string integer in minor units.' },
+      fees_amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '0', description: 'Fees portion as a string integer in minor units.' },
+      total_due_amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '92500', description: 'Total due as a string integer in minor units.' },
+      outstanding_balance: { type: 'string', pattern: '^[0-9]{1,15}$', example: '920000', description: 'Outstanding balance as a string integer in minor units.' },
       status: { type: 'string', enum: ['pending', 'paid', 'partial', 'overdue'] },
     },
   },
@@ -238,7 +244,9 @@ const schemas = {
     properties: {
       id: { type: 'string', format: 'uuid' },
       card_number_masked: { type: 'string', example: '**** **** **** 1234' },
-      balance_usd: { type: 'number', example: 100.00 },
+      balance_usd: { type: 'number', example: 100.00, deprecated: true, description: 'Deprecated. Floating-point USD balance. Use `balance` (string, minor units) and `currency`. Removed in v5.0.0.' },
+      balance: { type: 'string', pattern: '^[0-9]{1,15}$', example: '10000', description: 'Card balance as a string integer in the currency\'s minor unit.' },
+      currency: { type: 'string', enum: ['USD', 'XAF', 'EUR', 'GBP'], default: 'USD', example: 'USD', description: 'ISO 4217 currency code for the balance.' },
       status: { type: 'string', enum: ['active', 'frozen', 'cancelled'] },
       expiry_month: { type: 'integer' },
       expiry_year: { type: 'integer' },
