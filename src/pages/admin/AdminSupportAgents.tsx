@@ -100,7 +100,7 @@ const AdminSupportAgents: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('support-invite-agent', {
         body: {
           ...invite,
-          login_url: `${window.location.origin}/support-agent`,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
         },
       });
       if (error) { toast.error(error.message); return; }
@@ -123,7 +123,7 @@ const AdminSupportAgents: React.FC = () => {
         body: {
           resend: true,
           agent_id: agent.id,
-          login_url: `${window.location.origin}/support-agent`,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
         },
       });
       if (error) { toast.error(error.message); return; }
