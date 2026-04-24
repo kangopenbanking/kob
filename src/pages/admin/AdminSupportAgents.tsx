@@ -24,6 +24,9 @@ interface Agent {
 }
 interface Dept { id: string; name: string }
 
+// Canonical, persistent Support Agent Console URL — must NEVER point to a preview/lovable host.
+const SUPPORT_AGENT_CONSOLE_URL = 'https://info.kangfintechsolutions.com/support-agent';
+
 const AdminSupportAgents: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [depts, setDepts] = useState<Dept[]>([]);
