@@ -220,6 +220,15 @@ Deno.serve(async (req) => {
         console.warn('support-start: email dispatch failed', e);
       }
     })();
+    try {
+      // @ts-ignore EdgeRuntime is available in Deno Deploy / Supabase Edge runtime
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(dispatchEmails);
+      } else {
+        await dispatchEmails;
+      }
+    } catch { /* ignore */ }
 
     return json({
       conversation_id: conv.id,
