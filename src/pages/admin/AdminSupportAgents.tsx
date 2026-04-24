@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Pencil, Shield } from 'lucide-react';
+import { Pencil, Shield, UserPlus, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -31,6 +31,11 @@ const AdminSupportAgents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Agent | null>(null);
   const [editDepts, setEditDepts] = useState<string[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [invite, setInvite] = useState<{ email: string; full_name: string; display_name: string; is_supervisor: boolean; max_concurrent_chats: number; department_ids: string[] }>({
+    email: '', full_name: '', display_name: '', is_supervisor: false, max_concurrent_chats: 5, department_ids: [],
+  });
 
   const load = async () => {
     setLoading(true);
@@ -85,11 +90,40 @@ const AdminSupportAgents: React.FC = () => {
 
   const isOnline = (ts: string | null) => !!ts && (Date.now() - new Date(ts).getTime()) < 90_000;
 
+  const sendInvite = async () => {
+    if (!invite.email.trim() || !invite.full_name.trim()) {
+      toast.error('Email and full name are required.');
+      return;
+    }
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          ...invite,
+          login_url: `${window.location.origin}/support-agent`,
+        },
+      });
+      if (error) { toast.error(error.message); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const sent = (data as any)?.email_sent;
+      toast.success(sent ? 'Agent invited. Invitation email sent.' : 'Agent created. Email could not be sent — please share credentials manually.');
+      setInviteOpen(false);
+      setInvite({ email: '', full_name: '', display_name: '', is_supervisor: false, max_concurrent_chats: 5, department_ids: [] });
+      load();
+    } finally { setInviting(false); }
+  };
+
   return (
     <div className="space-y-4 p-4">
-      <div>
-        <h1 className="text-xl font-semibold">Support Agents</h1>
-        <p className="text-sm text-muted-foreground">Manage agent activation, departments, supervisor role, and chat capacity.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Support Agents</h1>
+          <p className="text-sm text-muted-foreground">Invite and manage agent activation, departments, supervisor role, and chat capacity.</p>
+        </div>
+        <Button onClick={() => setInviteOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+          Invite agent
+        </Button>
       </div>
 
       <Card className="overflow-hidden">
