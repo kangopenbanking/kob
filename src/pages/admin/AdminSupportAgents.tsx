@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Pencil, Shield, UserPlus, Loader2, Mail, Send } from 'lucide-react';
+import { Pencil, Shield, UserPlus, Loader2, Mail, Send, KeyRound, Copy, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -136,6 +136,60 @@ const AdminSupportAgents: React.FC = () => {
     } finally { setResendingId(null); }
   };
 
+  // --- Set / generate password dialog ---
+  const [pwAgent, setPwAgent] = useState<Agent | null>(null);
+  const [pwMode, setPwMode] = useState<'generate' | 'custom'>('generate');
+  const [pwCustom, setPwCustom] = useState('');
+  const [pwSendEmail, setPwSendEmail] = useState(true);
+  const [pwSubmitting, setPwSubmitting] = useState(false);
+  const [pwResult, setPwResult] = useState<{ password: string; email_sent: boolean } | null>(null);
+
+  const openPwDialog = (a: Agent) => {
+    setPwAgent(a);
+    setPwMode('generate');
+    setPwCustom('');
+    setPwSendEmail(!!a.email);
+    setPwResult(null);
+  };
+
+  const submitPassword = async () => {
+    if (!pwAgent) return;
+    if (pwMode === 'custom') {
+      if (pwCustom.length < 8 || !/[A-Za-z]/.test(pwCustom) || !/\d/.test(pwCustom)) {
+        toast.error('Password must be at least 8 characters and contain letters and numbers.');
+        return;
+      }
+    }
+    setPwSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-set-agent-password', {
+        body: {
+          agent_id: pwAgent.id,
+          password: pwMode === 'custom' ? pwCustom : undefined,
+          send_email: pwSendEmail,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
+        },
+      });
+      if (error) { toast.error(error.message); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const pw = (data as any).password as string;
+      const sent = !!(data as any).email_sent;
+      setPwResult({ password: pw, email_sent: sent });
+      toast.success(sent ? 'Password updated and emailed to the agent.' : 'Password updated. Copy and share it securely.');
+    } finally { setPwSubmitting(false); }
+  };
+
+  const copyPassword = async () => {
+    if (!pwResult) return;
+    try {
+      await navigator.clipboard.writeText(pwResult.password);
+      toast.success('Password copied to clipboard.');
+    } catch {
+      toast.error('Could not copy to clipboard.');
+    }
+  };
+
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
@@ -191,6 +245,9 @@ const AdminSupportAgents: React.FC = () => {
                 </Badge>
               </div>
               <div className="col-span-1 flex items-center justify-end gap-1">
+                <Button size="icon" variant="ghost" title="Set / generate password" onClick={() => openPwDialog(a)}>
+                  <KeyRound className="h-4 w-4" strokeWidth={1.5} />
+                </Button>
                 <Button size="icon" variant="ghost" title="Resend invite" onClick={() => resendInvite(a)} disabled={resendingId === a.id}>
                   {resendingId === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
                 </Button>
@@ -310,6 +367,84 @@ const AdminSupportAgents: React.FC = () => {
               {inviting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" strokeWidth={1.5} />}
               Send invitation
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pwAgent} onOpenChange={(o) => { if (!o) { setPwAgent(null); setPwResult(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" strokeWidth={1.5} /> Set agent password
+            </DialogTitle>
+          </DialogHeader>
+          {pwAgent && !pwResult && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs">
+                <p className="font-medium text-foreground">{pwAgent.display_name || pwAgent.full_name || 'Agent'}</p>
+                <p className="text-muted-foreground">{pwAgent.email || 'No email on file'}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant={pwMode === 'generate' ? 'default' : 'outline'} onClick={() => setPwMode('generate')}>
+                  <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} /> Auto-generate
+                </Button>
+                <Button type="button" size="sm" variant={pwMode === 'custom' ? 'default' : 'outline'} onClick={() => setPwMode('custom')}>
+                  <Pencil className="mr-2 h-4 w-4" strokeWidth={1.5} /> Set manually
+                </Button>
+              </div>
+              {pwMode === 'custom' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">New password</label>
+                  <Input
+                    type="text"
+                    value={pwCustom}
+                    onChange={(e) => setPwCustom(e.target.value)}
+                    placeholder="Min 8 chars, letters and numbers"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-muted-foreground">Must contain at least 8 characters with letters and numbers.</p>
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={pwSendEmail} onCheckedChange={setPwSendEmail} disabled={!pwAgent.email} />
+                Email the new password to the agent
+              </label>
+              <p className="text-xs text-muted-foreground">
+                The agent will be required to change this password on their next sign in.
+              </p>
+            </div>
+          )}
+          {pwAgent && pwResult && (
+            <div className="space-y-3">
+              <p className="text-sm text-foreground">
+                Password updated successfully. {pwResult.email_sent ? 'A copy was emailed to the agent.' : 'Email was not sent — share the password securely below.'}
+              </p>
+              <div className="rounded-lg border border-border bg-muted/40 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Temporary password</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all font-mono text-sm">{pwResult.password}</code>
+                  <Button size="icon" variant="outline" onClick={copyPassword} title="Copy password">
+                    <Copy className="h-4 w-4" strokeWidth={1.5} />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The agent must change this password on first login. This dialog will not show it again.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            {pwResult ? (
+              <Button onClick={() => { setPwAgent(null); setPwResult(null); }}>Done</Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setPwAgent(null)} disabled={pwSubmitting}>Cancel</Button>
+                <Button onClick={submitPassword} disabled={pwSubmitting}>
+                  {pwSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" strokeWidth={1.5} />}
+                  {pwMode === 'generate' ? 'Generate & apply' : 'Set password'}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
