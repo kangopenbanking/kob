@@ -1012,28 +1012,6 @@ export default function Changelog() {
           );
         })}
       </div>
-            <CardContent>
-              <div className="space-y-3">
-                {release.changes.map((change, changeIndex) => (
-                  <div key={changeIndex} className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      {getChangeIcon(change.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className={`text-xs ${getChangeColor(change.type)}`}>
-                          {change.type}
-                        </Badge>
-                      </div>
-                      <p className="text-sm">{change.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* Deprecation Notice */}
       <Card className="mt-12 border-yellow-500/20 bg-yellow-500/5">
