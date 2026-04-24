@@ -175,9 +175,14 @@ export function DeveloperAIAssistant() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Open Kang AI Agent"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-background shadow-lg ring-1 ring-border transition-all hover:scale-105 hover:shadow-xl"
+          className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-1 transition-all hover:scale-105"
         >
-          <img src={kangAgentLogo} alt="Kang AI Agent" className="h-10 w-10 object-contain" />
+          <span className="rounded-full bg-background/95 px-2.5 py-0.5 text-[11px] font-semibold text-foreground shadow ring-1 ring-border">
+            Kang AI Agent
+          </span>
+          <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-background shadow-lg ring-1 ring-border hover:shadow-xl">
+            <img src={kangAgentLogo} alt="Kang AI Agent" className="h-10 w-10 object-contain" />
+          </span>
         </button>
       )}
 
