@@ -20572,30 +20572,39 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          invited_at: string | null
+          invited_by: string | null
           is_active: boolean
           is_supervisor: boolean
           last_seen_at: string | null
           max_concurrent_chats: number
+          password_reset_required: boolean
           user_id: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
           is_supervisor?: boolean
           last_seen_at?: string | null
           max_concurrent_chats?: number
+          password_reset_required?: boolean
           user_id: string
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
           is_supervisor?: boolean
           last_seen_at?: string | null
           max_concurrent_chats?: number
+          password_reset_required?: boolean
           user_id?: string
         }
         Relationships: []

@@ -71,6 +71,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const LiveSupportPage = lazy(() => import("./pages/LiveSupportPage"));
+const SupportAgentPage = lazy(() => import("./pages/SupportAgentPage"));
 const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -1282,7 +1283,7 @@ function App() {
             {/* Public Live Support — no account required */}
             <Route path="/support" element={<Layout showFooter={false}><LiveSupportPage /></Layout>} />
             <Route path="/support-chat" element={<Navigate to="/admin/support-chat" replace />} />
-            <Route path="/support-agent" element={<Navigate to="/admin/support-chat" replace />} />
+            <Route path="/support-agent" element={<SupportAgentPage />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
