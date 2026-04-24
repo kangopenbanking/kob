@@ -10,6 +10,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { DeveloperAIAssistant } from "@/components/developer/DeveloperAIAssistant";
+import { DeveloperCanonical } from "@/components/developer/DeveloperCanonical";
 import kangAgentLogo from "@/assets/kang-agent-logo.png";
 import {
   ArrowLeft,
@@ -606,6 +607,8 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
           <div className="flex-1 flex">
             <main className="flex-1 p-6 min-w-0">
               <PortalErrorBoundary portalName="Developer Portal" fallbackPath="/developer">
+                {/* Auto-injects canonical + trailing-slash normalisation on every /developer/* page */}
+                <DeveloperCanonical />
                 <DeveloperBreadcrumb />
                 {children || <Outlet />}
                 <DocsFooter />
