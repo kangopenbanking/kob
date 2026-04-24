@@ -293,6 +293,7 @@ const SandboxTestCards = lazy(() => import("./pages/developer/SandboxTestCards")
 const SandboxMobileMoney = lazy(() => import("./pages/developer/SandboxMobileMoney"));
 const SandboxSimulateWebhooks = lazy(() => import("./pages/developer/SandboxSimulateWebhooks"));
 const SandboxApiPage = lazy(() => import("./pages/developer/SandboxApiPage"));
+const ObieMigration = lazy(() => import("./pages/developer/ObieMigration"));
 const ApiReferencePagination = lazy(() => import("./pages/developer/ApiReferencePagination"));
 const ApiReferenceVersioning = lazy(() => import("./pages/developer/ApiReferenceVersioning"));
 const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingConsents"));
@@ -1054,6 +1055,7 @@ function App() {
               <Route path="api-reference/pagination" element={<ApiReferencePagination />} />
               <Route path="api-reference/rate-limits" element={<RateLimitsGuide />} />
               <Route path="api-reference/versioning" element={<ApiReferenceVersioning />} />
+              <Route path="api-reference/obie-migration" element={<ObieMigration />} />
               <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
               <Route path="api-reference/token-lifecycle" element={<TokenLifecycleGuide />} />
               <Route path="api-reference/webhook-retry" element={<WebhookRetryGuide />} />
