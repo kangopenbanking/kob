@@ -187,8 +187,11 @@ const AdminSupportAgents: React.FC = () => {
                   {isOnline(a.last_seen_at) ? 'Online' : 'Offline'}
                 </Badge>
               </div>
-              <div className="col-span-1 flex items-center justify-end">
-                <Button size="icon" variant="ghost" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" strokeWidth={1.5} /></Button>
+              <div className="col-span-1 flex items-center justify-end gap-1">
+                <Button size="icon" variant="ghost" title="Resend invite" onClick={() => resendInvite(a)} disabled={resendingId === a.id}>
+                  {resendingId === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
+                </Button>
+                <Button size="icon" variant="ghost" title="Edit" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" strokeWidth={1.5} /></Button>
               </div>
             </div>
           );
