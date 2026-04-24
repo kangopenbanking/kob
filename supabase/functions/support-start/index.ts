@@ -135,8 +135,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fire-and-forget email notifications: guest acknowledgment + agent alerts
-    (async () => {
+    // Email notifications: guest acknowledgment + agent alerts.
+    // Use EdgeRuntime.waitUntil so the runtime keeps the worker alive until the
+    // dispatch finishes, without blocking the HTTP response to the caller.
+    const dispatchEmails = (async () => {
       try {
         // 1) Confirmation to the guest
         await supabase.functions.invoke('send-transactional-email', {
