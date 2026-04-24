@@ -19,6 +19,7 @@ export default function Changelog() {
         { type: "improvement", description: "New CI workflow openapi-parity.yml validates public/openapi.json + .yaml with @redocly/cli on every pull request and runs the JSON ↔ YAML parity test suite." },
       ]
     },
+    {
       version: "Developer Portal 4.16.4",
       date: "2026-04-22",
       type: "feature",
