@@ -136,6 +136,60 @@ const AdminSupportAgents: React.FC = () => {
     } finally { setResendingId(null); }
   };
 
+  // --- Set / generate password dialog ---
+  const [pwAgent, setPwAgent] = useState<Agent | null>(null);
+  const [pwMode, setPwMode] = useState<'generate' | 'custom'>('generate');
+  const [pwCustom, setPwCustom] = useState('');
+  const [pwSendEmail, setPwSendEmail] = useState(true);
+  const [pwSubmitting, setPwSubmitting] = useState(false);
+  const [pwResult, setPwResult] = useState<{ password: string; email_sent: boolean } | null>(null);
+
+  const openPwDialog = (a: Agent) => {
+    setPwAgent(a);
+    setPwMode('generate');
+    setPwCustom('');
+    setPwSendEmail(!!a.email);
+    setPwResult(null);
+  };
+
+  const submitPassword = async () => {
+    if (!pwAgent) return;
+    if (pwMode === 'custom') {
+      if (pwCustom.length < 8 || !/[A-Za-z]/.test(pwCustom) || !/\d/.test(pwCustom)) {
+        toast.error('Password must be at least 8 characters and contain letters and numbers.');
+        return;
+      }
+    }
+    setPwSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-set-agent-password', {
+        body: {
+          agent_id: pwAgent.id,
+          password: pwMode === 'custom' ? pwCustom : undefined,
+          send_email: pwSendEmail,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
+        },
+      });
+      if (error) { toast.error(error.message); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const pw = (data as any).password as string;
+      const sent = !!(data as any).email_sent;
+      setPwResult({ password: pw, email_sent: sent });
+      toast.success(sent ? 'Password updated and emailed to the agent.' : 'Password updated. Copy and share it securely.');
+    } finally { setPwSubmitting(false); }
+  };
+
+  const copyPassword = async () => {
+    if (!pwResult) return;
+    try {
+      await navigator.clipboard.writeText(pwResult.password);
+      toast.success('Password copied to clipboard.');
+    } catch {
+      toast.error('Could not copy to clipboard.');
+    }
+  };
+
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
