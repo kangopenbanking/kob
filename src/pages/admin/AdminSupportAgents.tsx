@@ -113,6 +113,26 @@ const AdminSupportAgents: React.FC = () => {
     } finally { setInviting(false); }
   };
 
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const resendInvite = async (agent: Agent) => {
+    if (!agent.email) { toast.error('Agent has no email on file.'); return; }
+    if (!confirm(`Resend invitation to ${agent.email}? A new temporary password will be generated and the previous one will stop working.`)) return;
+    setResendingId(agent.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          resend: true,
+          agent_id: agent.id,
+          login_url: `${window.location.origin}/support-agent`,
+        },
+      });
+      if (error) { toast.error(error.message); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const sent = (data as any)?.email_sent;
+      toast.success(sent ? `Invitation re-sent to ${agent.email}.` : 'Password reset, but the email could not be sent.');
+    } finally { setResendingId(null); }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
