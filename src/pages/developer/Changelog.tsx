@@ -7,6 +7,17 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.18.0",
+      date: "2026-04-24",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Branded API gateway — api.kangopenbanking.com is now served by an edge proxy (Cloudflare Worker, source in /worker) that forwards every request to the Supabase Edge Functions origin. SDK defaults (Node, Python, PHP) and OpenAPI servers[] now lead with the branded URL; the direct origin remains documented as a fallback. Zero runtime change to the apps — Standing Order 1 (The Lock) preserved; the Direct Backend Mandate test enforces the runtime/display split." },
+        { type: "feature", description: "Path aliases on the gateway: /openapi.json and /openapi.yaml resolve to the public-api-spec edge function; /health resolves to health-check; /v1/<resource> rewrites to /functions/v1/<resource>. CORS preflight answered at the edge." },
+        { type: "improvement", description: "src/config/api.ts now exposes API_PUBLIC_GATEWAY_URL alongside the runtime constants, decoupling display URLs from the runtime backend without weakening the regression guard (src/test/direct-backend-guard.test.ts extended)." },
+        { type: "improvement", description: "Developer landing page now surfaces the branded base URL with copy-friendly formatting next to the OpenAPI spec downloads." },
+      ]
+    },
+    {
       version: "API Spec 4.17.0",
       date: "2026-04-24",
       type: "minor",

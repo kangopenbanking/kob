@@ -1,0 +1,32 @@
+#:schema https://json.schemastore.org/wrangler.json
+# ----------------------------------------------------------------------------
+# Kang Open Banking — API Gateway Worker
+# Deployed at: https://api.kangopenbanking.com/*
+# Origin:      https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/*
+# ----------------------------------------------------------------------------
+
+name = "kob-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-04-24"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain — Cloudflare provisions and renews the cert automatically
+# once the zone (kangopenbanking.com) is added to your Cloudflare account.
+[[routes]]
+pattern = "api.kangopenbanking.com/*"
+custom_domain = true
+
+[vars]
+ORIGIN_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co"
+
+# Optional shared secret — set with: wrangler secret put GATEWAY_SHARED_SECRET
+# Edge functions can reject requests that arrive without this header to
+# guarantee traffic only comes through the gateway.
+# (Leave unset for an open public gateway.)
+
+[observability]
+enabled = true
+
+# Per-route limits — protects the Supabase backend from abuse.
+[limits]
+cpu_ms = 50
