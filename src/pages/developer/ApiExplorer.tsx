@@ -4,7 +4,7 @@ import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal, Sparkles, ChevronDown, Lock, Unlock, CheckCircle2, Code2, Server } from 'lucide-react';
+import { ExternalLink, Download, AlertCircle, Key, ShieldCheck, Terminal, Sparkles, ChevronDown, Lock, Unlock, CheckCircle2, Code2, Server, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { API_CONFIG } from '@/config/api';
 import yaml from 'js-yaml';
+import { Link } from 'react-router-dom';
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+
+const WHATS_NEW_DISMISS_KEY = 'kob_apiexplorer_whatsnew_v4_17_0_dismissed';
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -22,6 +25,22 @@ const ApiExplorer = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [authStatus, setAuthStatus] = useState<'checking' | 'ready' | 'missing'>('checking');
+  const [whatsNewVisible, setWhatsNewVisible] = useState(false);
+
+  // Show the v4.17.0 "What changed" summary on first visit; respect dismissal.
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem(WHATS_NEW_DISMISS_KEY) === 'true';
+      setWhatsNewVisible(!dismissed);
+    } catch {
+      setWhatsNewVisible(true);
+    }
+  }, []);
+
+  const dismissWhatsNew = () => {
+    try { localStorage.setItem(WHATS_NEW_DISMISS_KEY, 'true'); } catch { /* ignore */ }
+    setWhatsNewVisible(false);
+  };
 
   // Real-time OAuth/token readiness detection (visual only — no logic change)
   useEffect(() => {
@@ -154,7 +173,20 @@ const ApiExplorer = () => {
                 <Sparkles className="h-3 w-3" />
                 Interactive
               </Badge>
-              <Badge variant="outline" className="font-mono text-xs">v4.17.0</Badge>
+              <Link
+                to="/developer/changelog#v4-17-0"
+                aria-label="View v4.17.0 changelog"
+                title="View what changed in v4.17.0"
+                className="inline-flex"
+              >
+                <Badge
+                  variant="outline"
+                  className="font-mono text-xs cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition-colors"
+                >
+                  v4.17.0
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Badge>
+              </Link>
               <Badge variant="outline" className="gap-1.5 border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-400">
                 <Server className="h-3 w-3" />
                 Sandbox is the default server
@@ -170,6 +202,50 @@ const ApiExplorer = () => {
             <p className="text-lg text-muted-foreground leading-relaxed">
               Interactive documentation powered by Swagger UI. Authenticate, browse 326+ endpoints, and execute live requests directly from your browser. All try-it-out calls hit the sandbox by default — switch to production from the Servers dropdown only when you are ready.
             </p>
+
+            {whatsNewVisible && (
+              <div
+                role="region"
+                aria-label="What changed in v4.17.0"
+                className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">What changed in v4.17.0</p>
+                    <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                      <li>• String-typed monetary fields on <code className="font-mono text-xs">VirtualCard</code> and <code className="font-mono text-xs">LoanScheduleItem</code> (the original number fields are deprecated, not removed).</li>
+                      <li>• New reusable <code className="font-mono text-xs">Unauthorized</code> and <code className="font-mono text-xs">Forbidden</code> response components returning <code className="font-mono text-xs">application/problem+json</code>.</li>
+                      <li>• New <code className="font-mono text-xs">TransactionOBIE</code> schema for OBIE Read/Write Data API v3.1 consumers — see the <Link to="/developer/api-reference/obie-migration" className="underline text-primary">migration guide</Link>.</li>
+                    </ul>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link to="/developer/changelog#v4-17-0">
+                        <Button size="sm" variant="outline" className="h-8">
+                          Read full changelog
+                          <ExternalLink className="ml-1.5 h-3 w-3" />
+                        </Button>
+                      </Link>
+                      <Link to="/developer/api-reference/obie-migration">
+                        <Button size="sm" variant="ghost" className="h-8">
+                          OBIE migration guide
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
+                    onClick={dismissWhatsNew}
+                    aria-label="Dismiss what's new"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <div className="hidden md:flex flex-col items-end text-right">

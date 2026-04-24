@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { SecuredResponseSamples } from "@/components/developer/SecuredResponseSamples";
 
 const parRequest = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
@@ -123,6 +124,14 @@ export default function AuthOAuth2() {
             <p className="text-sm text-foreground font-medium">Refresh Token Reuse Detection</p>
             <p className="text-sm text-muted-foreground">Each refresh token can only be used once. If reuse is detected, all tokens for that session are immediately revoked (per FAPI 1.0 security requirements).</p>
           </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="errors">Common token errors</h2>
+          <p className="text-muted-foreground mb-4">
+            Both shapes below are returned as <code>application/problem+json</code> (RFC 7807). Implement handlers for both before going live.
+          </p>
+          <SecuredResponseSamples endpoint="POST /v1/oauth/token" scopeRequired="openid" />
         </section>
 
         <AutoDocNavigation />

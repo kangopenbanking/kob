@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { SecuredResponseSamples } from "@/components/developer/SecuredResponseSamples";
 
 export default function AispReference() {
   return (
@@ -20,6 +21,14 @@ export default function AispReference() {
           All AISP endpoints require a valid <code className="bg-muted px-2 py-1 rounded">x-consent-id</code> header with an active AISP consent.
         </AlertDescription>
       </Alert>
+
+      <section>
+        <h2 className="text-2xl font-bold mb-2">Error responses on every secured endpoint</h2>
+        <p className="text-muted-foreground mb-4">
+          Every AISP operation can return the following standardised error envelopes (RFC 7807 <code>application/problem+json</code>). Implement handlers for both before going live — they map directly to <code>components.responses.Unauthorized</code> and <code>components.responses.Forbidden</code> in the spec.
+        </p>
+        <SecuredResponseSamples endpoint="GET /v1/aisp/accounts" scopeRequired="accounts:read" />
+      </section>
 
       {/* Create Consent */}
       <div>

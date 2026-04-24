@@ -1,0 +1,89 @@
+# ============================================================
+# CI Gate: OpenAPI Spec Validity + JSON ↔ YAML Parity
+#
+# Runs on every pull request and on push to main:
+#   1. Validates public/openapi.json with @redocly/cli (strict).
+#   2. Confirms openapi.json and openapi.yaml describe the same
+#      spec (versions, paths, components, security schemes).
+#   3. Executes the openapi-parity.test.ts vitest suite.
+#
+# Justification: STANDING ORDER 2 (The Ratchet) — once a parity
+# check passes, it must keep passing. STANDING ORDER P4 (Open
+# Spec Rule) — the published spec must always be valid.
+# ============================================================
+
+name: OpenAPI Parity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-parity:
+    name: Validate spec and run parity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Confirm spec files exist
+        run: |
+          test -s public/openapi.json || { echo "::error::public/openapi.json missing or empty"; exit 1; }
+          test -s public/openapi.yaml || { echo "::error::public/openapi.yaml missing or empty"; exit 1; }
+          echo "Both spec files present."
+
+      - name: Validate OpenAPI JSON with Redocly
+        run: |
+          npx --yes @redocly/cli@latest lint public/openapi.json \
+            --format=stylish \
+            --skip-rule operation-4xx-response \
+            --skip-rule operation-summary
+
+      - name: Validate OpenAPI YAML with Redocly
+        run: |
+          npx --yes @redocly/cli@latest lint public/openapi.yaml \
+            --format=stylish \
+            --skip-rule operation-4xx-response \
+            --skip-rule operation-summary
+
+      - name: Confirm reusable Unauthorized + Forbidden responses are present
+        run: |
+          node -e "
+            const s = require('./public/openapi.json');
+            const r = (s.components && s.components.responses) || {};
+            const required = ['Unauthorized', 'Forbidden'];
+            const missing = required.filter(k => !r[k]);
+            if (missing.length) {
+              console.error('::error::Missing reusable responses: ' + missing.join(', '));
+              process.exit(1);
+            }
+            console.log('Reusable responses present:', Object.keys(r).join(', '));
+          "
+
+      - name: Confirm TransactionOBIE schema exists
+        run: |
+          node -e "
+            const s = require('./public/openapi.json');
+            const schemas = (s.components && s.components.schemas) || {};
+            if (!schemas.TransactionOBIE) {
+              console.error('::error::TransactionOBIE schema removed — Standing Order 1 (The Lock) violation.');
+              process.exit(1);
+            }
+            console.log('TransactionOBIE present with', Object.keys(schemas.TransactionOBIE.properties || {}).length, 'properties.');
+          "
+
+      - name: Run JSON ↔ YAML parity test suite
+        run: npx vitest run src/test/openapi-parity.test.ts --reporter=verbose

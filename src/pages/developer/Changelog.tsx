@@ -7,6 +7,19 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.17.0",
+      date: "2026-04-24",
+      type: "minor",
+      changes: [
+        { type: "fix", description: "VirtualCard.balance_usd is now deprecated; new balance (string, minor units) and currency (ISO 4217 enum) fields added. Fixes a long-standing floating-point representation bug for monetary values per RFC 8259 / FAPI 1.0 Adv §5.2.2. Original field still serialised — zero breaking changes (Standing Order 1 — The Lock)." },
+        { type: "fix", description: "LoanScheduleItem.principal / .interest / .fees / .total_due are now deprecated; new principal_amount, interest_amount, fees_amount, total_due_amount string-typed siblings added (pattern ^[0-9]{1,15}$, minor units)." },
+        { type: "feature", description: "New reusable response components Unauthorized (401) and Forbidden (403) added to components.responses, returning application/problem+json (RFC 7807) with WWW-Authenticate headers per RFC 6750 §3.1. Available for $ref from any operation." },
+        { type: "feature", description: "New TransactionOBIE schema published for OBIE Read/Write Data API v3.1.10 consumers. PascalCase aliases on Transaction are now flagged deprecated with x-replacement pointers — SDK generators no longer emit duplicate fields. See the new /developer/api-reference/obie-migration guide for the full mapping." },
+        { type: "feature", description: "API Explorer: version badge now links to the changelog and a dismissible 'What changed in v4.17.0' summary appears on first visit." },
+        { type: "improvement", description: "New CI workflow openapi-parity.yml validates public/openapi.json + .yaml with @redocly/cli on every pull request and runs the JSON ↔ YAML parity test suite." },
+      ]
+    },
+    {
       version: "Developer Portal 4.16.4",
       date: "2026-04-22",
       type: "feature",
@@ -953,41 +966,51 @@ export default function Changelog() {
       </div>
 
       <div className="space-y-8">
-        {releases.map((release, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <CardTitle>Version {release.version}</CardTitle>
-                  {getReleaseTypeBadge(release.type)}
-                </div>
-                <Badge variant="outline">{release.date}</Badge>
-              </div>
-              <CardDescription>
-                {release.changes.length} changes in this release
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {release.changes.map((change, changeIndex) => (
-                  <div key={changeIndex} className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      {getChangeIcon(change.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className={`text-xs ${getChangeColor(change.type)}`}>
-                          {change.type}
-                        </Badge>
-                      </div>
-                      <p className="text-sm">{change.description}</p>
-                    </div>
+        {releases.map((release, index) => {
+          // Build a stable slug from the version string so badges/links can anchor to a release
+          // (e.g. "API Spec 4.17.0" → "v4-17-0", matching the API Explorer "What changed" link).
+          const versionDigits = (release.version.match(/\d+(?:\.\d+)*/)?.[0] ?? "").replace(/\./g, "-");
+          const anchorId = versionDigits ? `v${versionDigits}` : `release-${index}`;
+          return (
+            <Card key={index} id={anchorId} className="scroll-mt-24">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <CardTitle>
+                      <a href={`#${anchorId}`} className="hover:underline">
+                        Version {release.version}
+                      </a>
+                    </CardTitle>
+                    {getReleaseTypeBadge(release.type)}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <Badge variant="outline">{release.date}</Badge>
+                </div>
+                <CardDescription>
+                  {release.changes.length} changes in this release
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {release.changes.map((change, changeIndex) => (
+                    <div key={changeIndex} className="flex items-start gap-3">
+                      <div className="mt-0.5">
+                        {getChangeIcon(change.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className={`text-xs ${getChangeColor(change.type)}`}>
+                            {change.type}
+                          </Badge>
+                        </div>
+                        <p className="text-sm">{change.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Deprecation Notice */}
