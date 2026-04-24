@@ -987,6 +987,7 @@ export type Database = {
           created_at: string
           icon: string | null
           id: string
+          idempotency_key: string | null
           institution_id: string | null
           is_read: boolean
           message: string
@@ -999,6 +1000,7 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_read?: boolean
           message: string
@@ -1011,6 +1013,7 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_read?: boolean
           message?: string
