@@ -216,7 +216,7 @@ function ExampleCard({
   );
 }
 
-export function SdkExamples() {
+export function SdkExamplesShowcase() {
   return (
     <div className="space-y-6 my-6">
       <ExampleCard

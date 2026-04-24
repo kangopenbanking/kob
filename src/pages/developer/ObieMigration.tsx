@@ -2,7 +2,7 @@ import { GuidePageShell, GuideSectionBlock, GuideCallout } from "@/components/de
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { SdkExamples } from "@/components/developer/SdkExamples";
+import { SdkExamplesShowcase } from "@/components/developer/SdkExamplesShowcase";
 import { ArrowRightLeft } from "lucide-react";
 
 const fieldMap: Array<{
@@ -160,7 +160,7 @@ export default function ObieMigration() {
           examples featured in the SDK Examples component and are kept in sync
           with the OpenAPI spec.
         </p>
-        <SdkExamples />
+        <SdkExamplesShowcase />
       </GuideSectionBlock>
 
       <GuideSectionBlock id="deprecation" title="Deprecation timeline">
