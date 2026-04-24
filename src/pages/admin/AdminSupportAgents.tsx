@@ -24,6 +24,9 @@ interface Agent {
 }
 interface Dept { id: string; name: string }
 
+// Canonical, persistent Support Agent Console URL — must NEVER point to a preview/lovable host.
+const SUPPORT_AGENT_CONSOLE_URL = 'https://info.kangfintechsolutions.com/support-agent';
+
 const AdminSupportAgents: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [depts, setDepts] = useState<Dept[]>([]);
@@ -100,7 +103,7 @@ const AdminSupportAgents: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('support-invite-agent', {
         body: {
           ...invite,
-          login_url: `${window.location.origin}/support-agent`,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
         },
       });
       if (error) { toast.error(error.message); return; }
@@ -123,7 +126,7 @@ const AdminSupportAgents: React.FC = () => {
         body: {
           resend: true,
           agent_id: agent.id,
-          login_url: `${window.location.origin}/support-agent`,
+          login_url: SUPPORT_AGENT_CONSOLE_URL,
         },
       });
       if (error) { toast.error(error.message); return; }

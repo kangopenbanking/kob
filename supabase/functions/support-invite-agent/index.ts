@@ -139,7 +139,12 @@ Deno.serve(async (req) => {
       deptNames = (dn || []).map((d: any) => d.name).join(', ');
     }
 
-    const loginUrl = String(body.login_url || 'https://info.kangfintechsolutions.com/support-agent');
+    // Always force the canonical, persistent Support Agent Console URL — never a preview host.
+    const CANONICAL_AGENT_CONSOLE = 'https://info.kangfintechsolutions.com/support-agent';
+    const incoming = String(body.login_url || '');
+    const loginUrl = (incoming && !/lovable\.app|localhost|127\.0\.0\.1/i.test(incoming))
+      ? incoming
+      : CANONICAL_AGENT_CONSOLE;
 
     const { data: inviterProf } = await admin.from('profiles')
       .select('full_name').eq('id', caller.user.id).maybeSingle();
