@@ -371,6 +371,84 @@ const AdminSupportAgents: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!pwAgent} onOpenChange={(o) => { if (!o) { setPwAgent(null); setPwResult(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" strokeWidth={1.5} /> Set agent password
+            </DialogTitle>
+          </DialogHeader>
+          {pwAgent && !pwResult && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs">
+                <p className="font-medium text-foreground">{pwAgent.display_name || pwAgent.full_name || 'Agent'}</p>
+                <p className="text-muted-foreground">{pwAgent.email || 'No email on file'}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant={pwMode === 'generate' ? 'default' : 'outline'} onClick={() => setPwMode('generate')}>
+                  <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} /> Auto-generate
+                </Button>
+                <Button type="button" size="sm" variant={pwMode === 'custom' ? 'default' : 'outline'} onClick={() => setPwMode('custom')}>
+                  <Pencil className="mr-2 h-4 w-4" strokeWidth={1.5} /> Set manually
+                </Button>
+              </div>
+              {pwMode === 'custom' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">New password</label>
+                  <Input
+                    type="text"
+                    value={pwCustom}
+                    onChange={(e) => setPwCustom(e.target.value)}
+                    placeholder="Min 8 chars, letters and numbers"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-muted-foreground">Must contain at least 8 characters with letters and numbers.</p>
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={pwSendEmail} onCheckedChange={setPwSendEmail} disabled={!pwAgent.email} />
+                Email the new password to the agent
+              </label>
+              <p className="text-xs text-muted-foreground">
+                The agent will be required to change this password on their next sign in.
+              </p>
+            </div>
+          )}
+          {pwAgent && pwResult && (
+            <div className="space-y-3">
+              <p className="text-sm text-foreground">
+                Password updated successfully. {pwResult.email_sent ? 'A copy was emailed to the agent.' : 'Email was not sent — share the password securely below.'}
+              </p>
+              <div className="rounded-lg border border-border bg-muted/40 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Temporary password</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all font-mono text-sm">{pwResult.password}</code>
+                  <Button size="icon" variant="outline" onClick={copyPassword} title="Copy password">
+                    <Copy className="h-4 w-4" strokeWidth={1.5} />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The agent must change this password on first login. This dialog will not show it again.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            {pwResult ? (
+              <Button onClick={() => { setPwAgent(null); setPwResult(null); }}>Done</Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setPwAgent(null)} disabled={pwSubmitting}>Cancel</Button>
+                <Button onClick={submitPassword} disabled={pwSubmitting}>
+                  {pwSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" strokeWidth={1.5} />}
+                  {pwMode === 'generate' ? 'Generate & apply' : 'Set password'}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
