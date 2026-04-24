@@ -155,7 +155,11 @@ Deno.serve(async (req) => {
           agentName: fullName, email, tempPassword, loginUrl, inviterName, departments: deptNames,
         },
       },
+      headers: { Authorization: `Bearer ${jwt}` },
     });
+    if (sendRes.error) {
+      console.error('[support-invite-agent] email send failed', sendRes.error);
+    }
 
     await admin.from('app_notifications').insert({
       user_id: userId,
