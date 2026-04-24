@@ -20534,13 +20534,48 @@ export type Database = {
         }
         Relationships: []
       }
+      support_agent_departments: {
+        Row: {
+          agent_id: string
+          created_at: string
+          department_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          department_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          department_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_agent_departments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "support_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_agent_departments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "support_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_agents: {
         Row: {
           created_at: string
           display_name: string | null
           id: string
           is_active: boolean
+          is_supervisor: boolean
           last_seen_at: string | null
+          max_concurrent_chats: number
           user_id: string
         }
         Insert: {
@@ -20548,7 +20583,9 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_active?: boolean
+          is_supervisor?: boolean
           last_seen_at?: string | null
+          max_concurrent_chats?: number
           user_id: string
         }
         Update: {
@@ -20556,7 +20593,9 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_active?: boolean
+          is_supervisor?: boolean
           last_seen_at?: string | null
+          max_concurrent_chats?: number
           user_id?: string
         }
         Relationships: []
@@ -20591,15 +20630,74 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversation_events: {
+        Row: {
+          actor_name: string | null
+          actor_user_id: string | null
+          conversation_id: string
+          created_at: string
+          event_type: string
+          from_agent_id: string | null
+          from_department_id: string | null
+          id: string
+          metadata: Json
+          reason: string | null
+          to_agent_id: string | null
+          to_department_id: string | null
+        }
+        Insert: {
+          actor_name?: string | null
+          actor_user_id?: string | null
+          conversation_id: string
+          created_at?: string
+          event_type: string
+          from_agent_id?: string | null
+          from_department_id?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          to_agent_id?: string | null
+          to_department_id?: string | null
+        }
+        Update: {
+          actor_name?: string | null
+          actor_user_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          event_type?: string
+          from_agent_id?: string | null
+          from_department_id?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          to_agent_id?: string | null
+          to_department_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversation_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_conversations: {
         Row: {
           assigned_agent_id: string | null
           created_at: string
+          department_id: string | null
+          escalated_at: string | null
+          first_response_at: string | null
           guest_email: string
           guest_name: string
           guest_token: string
           id: string
           last_message_at: string
+          priority: string
+          sla_escalation_due_at: string | null
+          sla_response_due_at: string | null
           source: string
           status: string
           subject: string | null
@@ -20607,11 +20705,17 @@ export type Database = {
         Insert: {
           assigned_agent_id?: string | null
           created_at?: string
+          department_id?: string | null
+          escalated_at?: string | null
+          first_response_at?: string | null
           guest_email: string
           guest_name: string
           guest_token?: string
           id?: string
           last_message_at?: string
+          priority?: string
+          sla_escalation_due_at?: string | null
+          sla_response_due_at?: string | null
           source?: string
           status?: string
           subject?: string | null
@@ -20619,11 +20723,17 @@ export type Database = {
         Update: {
           assigned_agent_id?: string | null
           created_at?: string
+          department_id?: string | null
+          escalated_at?: string | null
+          first_response_at?: string | null
           guest_email?: string
           guest_name?: string
           guest_token?: string
           id?: string
           last_message_at?: string
+          priority?: string
+          sla_escalation_due_at?: string | null
+          sla_response_due_at?: string | null
           source?: string
           status?: string
           subject?: string | null
@@ -20636,7 +20746,56 @@ export type Database = {
             referencedRelation: "support_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "support_conversations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "support_departments"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      support_departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          escalate_after_minutes: number
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          routing_keywords: string[]
+          sla_offline_hours: number
+          sla_online_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          escalate_after_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          routing_keywords?: string[]
+          sla_offline_hours?: number
+          sla_online_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          escalate_after_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          routing_keywords?: string[]
+          sla_offline_hours?: number
+          sla_online_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_messages: {
         Row: {
@@ -23776,6 +23935,7 @@ export type Database = {
         Args: { p_conversation_id: string; p_role: string }
         Returns: undefined
       }
+      support_route_department: { Args: { p_text: string }; Returns: string }
       travel_reserve_seats: {
         Args: { _seats: string[]; _trip_id: string }
         Returns: Json
