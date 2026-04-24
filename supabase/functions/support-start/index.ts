@@ -1,5 +1,7 @@
-// Public endpoint — no auth required. Creates a guest support conversation.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+// Public endpoint — no auth required. Creates a guest support conversation,
+// auto-routes to a department, computes SLA timestamps, and posts an offline
+// system notice when no agent is available or outside business hours.
+import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,11 +10,11 @@ const corsHeaders = {
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function isOnline(bh: { timezone: string; start_hour: number; end_hour: number; active_days: number[] }) {
+function isInHours(bh: { timezone: string; start_hour: number; end_hour: number; active_days: number[] } | null) {
+  if (!bh) return false;
   try {
     const fmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: bh.timezone || 'UTC',
-      hour: 'numeric', hour12: false, weekday: 'short',
+      timeZone: bh.timezone || 'UTC', hour: 'numeric', hour12: false, weekday: 'short',
     });
     const parts = fmt.formatToParts(new Date());
     const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
@@ -31,6 +33,7 @@ Deno.serve(async (req) => {
     const subject = String(body.subject || '').trim().slice(0, 200) || null;
     const initialMessage = String(body.message || '').trim().slice(0, 4000);
     const source = String(body.source || 'web').slice(0, 32);
+    const requestedDeptId = body.department_id ? String(body.department_id) : null;
 
     if (!name || name.length > 120) return json({ error: 'Name is required.' }, 400);
     if (!EMAIL_RX.test(email) || email.length > 255) return json({ error: 'A valid email is required.' }, 400);
@@ -40,9 +43,49 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Resolve department: explicit pick > keyword routing > default
+    let departmentId: string | null = requestedDeptId;
+    if (!departmentId) {
+      const { data: routed } = await supabase.rpc('support_route_department', {
+        p_text: `${subject || ''} ${initialMessage}`,
+      });
+      departmentId = (routed as string) || null;
+    }
+    const { data: dept } = await supabase
+      .from('support_departments')
+      .select('id, name, sla_online_minutes, sla_offline_hours, escalate_after_minutes')
+      .eq('id', departmentId)
+      .maybeSingle();
+
+    // Availability
+    const [{ data: bh }, { data: agentsOnline }] = await Promise.all([
+      supabase.from('support_business_hours').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('support_agents').select('id').eq('is_active', true)
+        .gte('last_seen_at', new Date(Date.now() - 90_000).toISOString()),
+    ]);
+    const inHours = isInHours(bh as any);
+    const anyOnline = (agentsOnline?.length || 0) > 0;
+    const isOnline = inHours && anyOnline;
+
+    const slaOnlineMin = dept?.sla_online_minutes ?? 15;
+    const slaOfflineHr = dept?.sla_offline_hours ?? 24;
+    const escalateMin = dept?.escalate_after_minutes ?? 60;
+
+    const now = Date.now();
+    const responseDue = isOnline ? now + slaOnlineMin * 60_000 : now + slaOfflineHr * 3600_000;
+    const escalationDue = now + escalateMin * 60_000;
+
     const { data: conv, error: cErr } = await supabase
       .from('support_conversations')
-      .insert({ guest_name: name, guest_email: email, subject, source })
+      .insert({
+        guest_name: name,
+        guest_email: email,
+        subject,
+        source,
+        department_id: departmentId,
+        sla_response_due_at: new Date(responseDue).toISOString(),
+        sla_escalation_due_at: new Date(escalationDue).toISOString(),
+      })
       .select('id, guest_token, last_message_at')
       .single();
     if (cErr || !conv) return json({ error: cErr?.message || 'Could not create conversation.' }, 500);
@@ -53,24 +96,55 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Determine if any agent is online and we're in business hours
-    const [{ data: bh }, { data: agentsOnline }] = await Promise.all([
-      supabase.from('support_business_hours').select('*').eq('id', 1).maybeSingle(),
-      supabase.from('support_agents').select('id').eq('is_active', true)
-        .gte('last_seen_at', new Date(Date.now() - 90_000).toISOString()),
-    ]);
-    const inHours = bh ? isOnline(bh as any) : false;
-    const anyOnline = (agentsOnline?.length || 0) > 0;
-
-    if (!inHours || !anyOnline) {
+    if (!isOnline) {
       const offlineMsg = bh?.offline_message ||
-        'Thanks for reaching out! Our team responds within 15 minutes during business hours, and within 24 hours otherwise.';
+        `Thanks for reaching out! Our ${dept?.name || 'support'} team responds within ${slaOnlineMin} minutes during business hours, and within ${slaOfflineHr} hours otherwise.`;
       await supabase.from('support_messages').insert({
         conversation_id: conv.id, sender_type: 'system', sender_name: 'KOB Support', content: offlineMsg,
       });
     }
 
-    return json({ conversation_id: conv.id, guest_token: conv.guest_token });
+    // Try hybrid auto-assign: pick a least-loaded online agent in the department
+    if (departmentId) {
+      const { data: candidates } = await supabase
+        .from('support_agent_departments')
+        .select('agent_id, support_agents!inner(id, is_active, last_seen_at, max_concurrent_chats)')
+        .eq('department_id', departmentId);
+      const cutoff = new Date(Date.now() - 90_000).toISOString();
+      const eligible = (candidates || []).filter((c: any) =>
+        c.support_agents?.is_active && c.support_agents?.last_seen_at && c.support_agents.last_seen_at >= cutoff
+      );
+      if (eligible.length) {
+        // Pick one with fewest open chats
+        const ids = eligible.map((c: any) => c.agent_id);
+        const { data: loads } = await supabase
+          .from('support_conversations')
+          .select('assigned_agent_id')
+          .in('assigned_agent_id', ids)
+          .eq('status', 'open');
+        const counts: Record<string, number> = {};
+        ids.forEach((id: string) => (counts[id] = 0));
+        (loads || []).forEach((r: any) => { counts[r.assigned_agent_id] = (counts[r.assigned_agent_id] || 0) + 1; });
+        const winner = ids.sort((a, b) => counts[a] - counts[b])[0];
+        await supabase.from('support_conversations').update({ assigned_agent_id: winner }).eq('id', conv.id);
+        await supabase.from('support_conversation_events').insert({
+          conversation_id: conv.id, event_type: 'assigned',
+          actor_name: 'System (auto-route)', to_agent_id: winner, to_department_id: departmentId,
+          reason: 'Auto-assigned on chat creation',
+        });
+      }
+    }
+
+    return json({
+      conversation_id: conv.id,
+      guest_token: conv.guest_token,
+      department: dept ? { id: dept.id, name: dept.name } : null,
+      sla: {
+        online: isOnline,
+        response_due_at: new Date(responseDue).toISOString(),
+        escalation_due_at: new Date(escalationDue).toISOString(),
+      },
+    });
   } catch (e: any) {
     return json({ error: e?.message || 'Unexpected error' }, 500);
   }

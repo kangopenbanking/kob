@@ -180,6 +180,8 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Support",
     items: [
       { title: "Live Support", path: "/admin/support-chat", icon: MessageCircle },
+      { title: "Departments", path: "/admin/support-departments", icon: Settings },
+      { title: "Agents", path: "/admin/support-agents", icon: Settings },
       { title: "Support Settings", path: "/admin/support-settings", icon: Settings },
     ],
   },

@@ -21,6 +21,13 @@ export interface SupportConv {
   status: 'open' | 'closed';
   created_at: string;
   last_message_at: string;
+  department_id: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  assigned_agent_id: string | null;
+  sla_response_due_at: string | null;
+  sla_escalation_due_at: string | null;
+  escalated_at: string | null;
+  first_response_at: string | null;
 }
 
 export interface SupportAvailability {
@@ -30,6 +37,8 @@ export interface SupportAvailability {
   sla_online_minutes: number;
   sla_offline_hours: number;
 }
+
+export interface SupportDepartmentLite { id: string; name: string }
 
 export function getStoredToken() {
   try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
@@ -43,9 +52,7 @@ export function getStoredIdentity() {
   } catch { return { name: '', email: '' }; }
 }
 export function clearSupportSession() {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {}
+  try { localStorage.removeItem(TOKEN_KEY); } catch {}
 }
 
 export function useLiveSupport() {
@@ -53,9 +60,18 @@ export function useLiveSupport() {
   const [conv, setConv] = useState<SupportConv | null>(null);
   const [messages, setMessages] = useState<SupportMsg[]>([]);
   const [availability, setAvailability] = useState<SupportAvailability | null>(null);
+  const [department, setDepartment] = useState<SupportDepartmentLite | null>(null);
+  const [departments, setDepartments] = useState<SupportDepartmentLite[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
+
+  // Load department list (public)
+  useEffect(() => {
+    supabase.functions.invoke('support-departments-public', { body: {} })
+      .then(({ data }) => setDepartments((data as any)?.departments || []))
+      .catch(() => {});
+  }, []);
 
   const refresh = useCallback(async (t = token) => {
     if (!t) {
@@ -71,21 +87,23 @@ export function useLiveSupport() {
     setConv((data as any).conversation);
     setMessages((data as any).messages);
     if ((data as any).availability) setAvailability((data as any).availability);
+    if ((data as any).department) setDepartment((data as any).department);
   }, [token]);
 
   useEffect(() => { refresh(token); }, [token, refresh]);
 
-  // Refresh availability every 60s so the badge stays accurate.
   useEffect(() => {
     const i = window.setInterval(() => {
       supabase.functions.invoke('support-fetch', { body: token ? { guest_token: token } : { status_only: true } })
-        .then(({ data }) => { if ((data as any)?.availability) setAvailability((data as any).availability); })
+        .then(({ data }) => {
+          if ((data as any)?.availability) setAvailability((data as any).availability);
+          if ((data as any)?.conversation) setConv((data as any).conversation);
+        })
         .catch(() => {});
     }, 60_000);
     return () => clearInterval(i);
   }, [token]);
 
-  // Realtime subscription on the conversation
   useEffect(() => {
     if (!conv?.id) return;
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -103,7 +121,7 @@ export function useLiveSupport() {
     return () => { supabase.removeChannel(ch); };
   }, [conv?.id]);
 
-  const start = useCallback(async (input: { name: string; email: string; subject?: string; message?: string; source?: string }) => {
+  const start = useCallback(async (input: { name: string; email: string; subject?: string; message?: string; source?: string; department_id?: string }) => {
     setLoading(true); setError(null);
     try {
       const { data, error } = await supabase.functions.invoke('support-start', { body: input });
@@ -143,8 +161,8 @@ export function useLiveSupport() {
 
   const reset = useCallback(() => {
     clearSupportSession();
-    setToken(''); setConv(null); setMessages([]); setError(null);
+    setToken(''); setConv(null); setMessages([]); setError(null); setDepartment(null);
   }, []);
 
-  return { token, conv, messages, availability, loading, error, start, send, refresh, reset };
+  return { token, conv, messages, availability, department, departments, loading, error, start, send, refresh, reset };
 }
