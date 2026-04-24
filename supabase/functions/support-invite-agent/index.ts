@@ -41,22 +41,62 @@ Deno.serve(async (req) => {
     if (!isAdmin) return json({ error: 'Forbidden' }, 403);
 
     const body = await req.json().catch(() => ({}));
-    const email = String(body.email || '').trim().toLowerCase();
-    const fullName = String(body.full_name || '').trim().slice(0, 120);
-    const displayName = String(body.display_name || fullName || '').trim().slice(0, 120) || null;
-    const isSupervisor = !!body.is_supervisor;
-    const maxConcurrent = Math.min(50, Math.max(1, Number(body.max_concurrent_chats) || 5));
-    const departmentIds: string[] = Array.isArray(body.department_ids) ? body.department_ids.map(String) : [];
+    const isResend = !!body.resend;
 
-    if (!EMAIL_RX.test(email)) return json({ error: 'A valid email is required.' }, 400);
-    if (!fullName) return json({ error: 'Full name is required.' }, 400);
+    let email = String(body.email || '').trim().toLowerCase();
+    let fullName = String(body.full_name || '').trim().slice(0, 120);
+    let displayName = String(body.display_name || fullName || '').trim().slice(0, 120) || null;
+    let isSupervisor = !!body.is_supervisor;
+    let maxConcurrent = Math.min(50, Math.max(1, Number(body.max_concurrent_chats) || 5));
+    let departmentIds: string[] = Array.isArray(body.department_ids) ? body.department_ids.map(String) : [];
 
-    // Find existing user by email
     let userId: string | null = null;
     let alreadyExisted = false;
-    const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const found = existingList?.users?.find(u => (u.email || '').toLowerCase() === email);
-    if (found) { userId = found.id; alreadyExisted = true; }
+
+    if (isResend) {
+      // Resend: look up by agent_id OR user_id OR email; reuse existing settings
+      const agentId = body.agent_id ? String(body.agent_id) : null;
+      const targetUserId = body.user_id ? String(body.user_id) : null;
+      let agentRow: any = null;
+      if (agentId) {
+        const { data } = await admin.from('support_agents').select('*').eq('id', agentId).maybeSingle();
+        agentRow = data;
+      } else if (targetUserId) {
+        const { data } = await admin.from('support_agents').select('*').eq('user_id', targetUserId).maybeSingle();
+        agentRow = data;
+      }
+      if (!agentRow && email) {
+        const { data: prof } = await admin.from('profiles').select('id').eq('email', email).maybeSingle();
+        if (prof?.id) {
+          const { data } = await admin.from('support_agents').select('*').eq('user_id', prof.id).maybeSingle();
+          agentRow = data;
+        }
+      }
+      if (!agentRow) return json({ error: 'Agent not found for resend.' }, 404);
+
+      userId = agentRow.user_id;
+      alreadyExisted = true;
+      isSupervisor = agentRow.is_supervisor;
+      maxConcurrent = agentRow.max_concurrent_chats;
+      displayName = agentRow.display_name || displayName;
+
+      const { data: prof } = await admin.from('profiles').select('email, full_name').eq('id', userId).maybeSingle();
+      email = (prof?.email || email || '').toLowerCase();
+      fullName = (prof?.full_name || fullName || displayName || 'Support Agent').slice(0, 120);
+
+      const { data: deptRows } = await admin.from('support_agent_departments').select('department_id').eq('agent_id', agentRow.id);
+      departmentIds = (deptRows || []).map((r: any) => r.department_id);
+
+      if (!EMAIL_RX.test(email)) return json({ error: 'Agent has no valid email on file.' }, 400);
+    } else {
+      if (!EMAIL_RX.test(email)) return json({ error: 'A valid email is required.' }, 400);
+      if (!fullName) return json({ error: 'Full name is required.' }, 400);
+
+      // Find existing user by email
+      const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const found = existingList?.users?.find(u => (u.email || '').toLowerCase() === email);
+      if (found) { userId = found.id; alreadyExisted = true; }
+    }
 
     const tempPassword = genPassword();
 

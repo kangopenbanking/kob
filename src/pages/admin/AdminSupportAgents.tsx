@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Pencil, Shield, UserPlus, Loader2, Mail } from 'lucide-react';
+import { Pencil, Shield, UserPlus, Loader2, Mail, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -113,6 +113,26 @@ const AdminSupportAgents: React.FC = () => {
     } finally { setInviting(false); }
   };
 
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const resendInvite = async (agent: Agent) => {
+    if (!agent.email) { toast.error('Agent has no email on file.'); return; }
+    if (!confirm(`Resend invitation to ${agent.email}? A new temporary password will be generated and the previous one will stop working.`)) return;
+    setResendingId(agent.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('support-invite-agent', {
+        body: {
+          resend: true,
+          agent_id: agent.id,
+          login_url: `${window.location.origin}/support-agent`,
+        },
+      });
+      if (error) { toast.error(error.message); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const sent = (data as any)?.email_sent;
+      toast.success(sent ? `Invitation re-sent to ${agent.email}.` : 'Password reset, but the email could not be sent.');
+    } finally { setResendingId(null); }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
@@ -167,8 +187,11 @@ const AdminSupportAgents: React.FC = () => {
                   {isOnline(a.last_seen_at) ? 'Online' : 'Offline'}
                 </Badge>
               </div>
-              <div className="col-span-1 flex items-center justify-end">
-                <Button size="icon" variant="ghost" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" strokeWidth={1.5} /></Button>
+              <div className="col-span-1 flex items-center justify-end gap-1">
+                <Button size="icon" variant="ghost" title="Resend invite" onClick={() => resendInvite(a)} disabled={resendingId === a.id}>
+                  {resendingId === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
+                </Button>
+                <Button size="icon" variant="ghost" title="Edit" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" strokeWidth={1.5} /></Button>
               </div>
             </div>
           );
