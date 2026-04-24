@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, Zap, ArrowRight, FileJson, FileCode, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Database, Zap, ArrowRight, FileJson, FileCode, Activity, Globe } from "lucide-react";
+import { API_PUBLIC_GATEWAY_URL } from "@/config/api";
 
 export function OpenBankingSection() {
   return (
@@ -89,6 +91,34 @@ export function OpenBankingSection() {
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/*
+        Branded API gateway URL — surfaced for documentation discovery.
+        Backed by the Cloudflare Worker in /worker which proxies to the
+        Supabase Edge Functions origin. Runtime apps continue to use the
+        direct backend URL (see src/config/api.ts).
+      */}
+      <div className="rounded-lg border bg-card p-6 space-y-3">
+        <div className="flex items-center gap-3">
+          <Globe className="h-5 w-5 text-primary" />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold">Branded API base URL</h3>
+            <p className="text-sm text-muted-foreground">
+              All SDK defaults and code examples use the gateway hostname below.
+            </p>
+          </div>
+          <Badge variant="outline">v1</Badge>
+        </div>
+        <code className="block rounded-md border bg-muted/50 px-3 py-2 text-sm font-mono break-all">
+          {API_PUBLIC_GATEWAY_URL}
+        </code>
+        <p className="text-xs text-muted-foreground">
+          Served by the Kang edge gateway. Forwards transparently to the Supabase
+          Edge Functions origin with full streaming, CORS, and rate-limit headers
+          preserved. Direct origin URL remains available for self-hosted clients
+          and is documented in the OpenAPI <code>servers</code> block.
+        </p>
       </div>
     </div>
   );
