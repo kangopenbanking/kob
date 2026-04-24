@@ -170,6 +170,7 @@ const BankOperationsMonitor = lazy(() => import("./pages/admin/BankOperationsMon
 
 // Developer Portal
 const DeveloperHome = lazy(() => import("./pages/developer/DeveloperHome"));
+const SeoCrawlCheck = lazy(() => import("./pages/developer/SeoCrawlCheck"));
 const GettingStarted = lazy(() => import("./pages/developer/GettingStarted"));
 const AispReference = lazy(() => import("./pages/developer/AispReference"));
 const PispReference = lazy(() => import("./pages/developer/PispReference"));
@@ -1014,6 +1015,8 @@ function App() {
               <Route path="redoc" element={<RedocPage />} />
               <Route path="redoc-sandbox" element={<RedocPage />} />
               <Route path="docs-health" element={<DocsHealth />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2) */}
+              <Route path="seo-crawl-check" element={<SeoCrawlCheck />} />
               {/* Plug-and-play aliases for common developer paths */}
               <Route path="swagger" element={<ApiExplorer />} />
               <Route path="openapi" element={<OpenApiDownloads />} />
