@@ -245,6 +245,9 @@ const AdminSupportAgents: React.FC = () => {
                 </Badge>
               </div>
               <div className="col-span-1 flex items-center justify-end gap-1">
+                <Button size="icon" variant="ghost" title="Set / generate password" onClick={() => openPwDialog(a)}>
+                  <KeyRound className="h-4 w-4" strokeWidth={1.5} />
+                </Button>
                 <Button size="icon" variant="ghost" title="Resend invite" onClick={() => resendInvite(a)} disabled={resendingId === a.id}>
                   {resendingId === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
                 </Button>
