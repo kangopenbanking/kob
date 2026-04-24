@@ -154,7 +154,11 @@ const ApiExplorer = () => {
                 <Sparkles className="h-3 w-3" />
                 Interactive
               </Badge>
-              <Badge variant="outline" className="font-mono text-xs">v4.16.4</Badge>
+              <Badge variant="outline" className="font-mono text-xs">v4.17.0</Badge>
+              <Badge variant="outline" className="gap-1.5 border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-400">
+                <Server className="h-3 w-3" />
+                Sandbox is the default server
+              </Badge>
               {!isChecking && spec && (
                 <Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -164,7 +168,7 @@ const ApiExplorer = () => {
             </div>
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl">API Explorer</h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Interactive documentation powered by Swagger UI. Authenticate, browse 326+ endpoints, and execute live requests directly from your browser.
+              Interactive documentation powered by Swagger UI. Authenticate, browse 326+ endpoints, and execute live requests directly from your browser. All try-it-out calls hit the sandbox by default — switch to production from the Servers dropdown only when you are ready.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
