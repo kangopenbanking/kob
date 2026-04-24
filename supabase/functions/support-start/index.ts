@@ -135,6 +135,90 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fire-and-forget email notifications: guest acknowledgment + agent alerts
+    (async () => {
+      try {
+        // 1) Confirmation to the guest
+        await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'support-ticket-created',
+            recipientEmail: email,
+            idempotencyKey: `support-ticket-${conv.id}`,
+            templateData: {
+              name,
+              subject: subject || 'Support request',
+              department: dept?.name || 'Support',
+              ticketId: conv.id.slice(0, 8).toUpperCase(),
+            },
+          },
+        });
+
+        // 2) Notify agents — assigned agent if any, else department / supervisors / all-active
+        const { data: assignedConv } = await supabase
+          .from('support_conversations')
+          .select('assigned_agent_id')
+          .eq('id', conv.id).maybeSingle();
+
+        let agentEmails: string[] = [];
+        if (assignedConv?.assigned_agent_id) {
+          const { data: a } = await supabase
+            .from('support_agents')
+            .select('display_name, user_id')
+            .eq('id', assignedConv.assigned_agent_id).maybeSingle();
+          if (a?.user_id) {
+            const { data: p } = await supabase.from('profiles').select('email').eq('id', a.user_id).maybeSingle();
+            if (p?.email) agentEmails = [p.email];
+          }
+        } else {
+          // Fallback chain mirrors notify_support_new_conversation
+          const tryFetch = async (q: any) => {
+            const { data } = await q;
+            return (data || []).map((r: any) => r.user_id).filter(Boolean);
+          };
+          let userIds: string[] = departmentId
+            ? await tryFetch(supabase.from('support_agent_departments')
+                .select('agent:support_agents!inner(user_id, is_active)')
+                .eq('department_id', departmentId)
+                .then((res: any) => ({ data: (res.data || []).map((r: any) => r.agent).filter((a: any) => a?.is_active) })))
+            : [];
+          if (!userIds.length) {
+            const { data } = await supabase.from('support_agents')
+              .select('user_id').eq('is_active', true).eq('is_supervisor', true);
+            userIds = (data || []).map((r: any) => r.user_id).filter(Boolean);
+          }
+          if (!userIds.length) {
+            const { data } = await supabase.from('support_agents')
+              .select('user_id').eq('is_active', true);
+            userIds = (data || []).map((r: any) => r.user_id).filter(Boolean);
+          }
+          if (userIds.length) {
+            const { data: profs } = await supabase
+              .from('profiles').select('email').in('id', userIds);
+            agentEmails = (profs || []).map((p: any) => p.email).filter(Boolean);
+          }
+        }
+
+        for (const agentEmail of agentEmails) {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'chat-assigned',
+              recipientEmail: agentEmail,
+              idempotencyKey: `support-agent-new-${conv.id}-${agentEmail}`,
+              templateData: {
+                guestName: name,
+                subject: subject || 'New support chat',
+                department: dept?.name || 'Support',
+                ticketId: conv.id.slice(0, 8).toUpperCase(),
+                messagePreview: initialMessage?.slice(0, 200) || '',
+              },
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('support-start: email dispatch failed', e);
+      }
+    })();
+
     return json({
       conversation_id: conv.id,
       guest_token: conv.guest_token,
