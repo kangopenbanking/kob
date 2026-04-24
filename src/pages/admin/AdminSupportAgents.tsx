@@ -225,6 +225,69 @@ const AdminSupportAgents: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-4 w-4" strokeWidth={1.5} /> Invite a support agent
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} placeholder="agent@example.com" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Full name</label>
+              <Input value={invite.full_name} onChange={(e) => setInvite({ ...invite, full_name: e.target.value, display_name: invite.display_name || e.target.value })} placeholder="Marie Kemegne" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Display name (optional)</label>
+              <Input value={invite.display_name} onChange={(e) => setInvite({ ...invite, display_name: e.target.value })} placeholder="Marie K." />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Max concurrent chats</label>
+              <Input type="number" min={1} max={50} value={invite.max_concurrent_chats}
+                onChange={(e) => setInvite({ ...invite, max_concurrent_chats: Number(e.target.value) })} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Departments</label>
+              <div className="rounded-lg border border-border p-3 space-y-2 max-h-40 overflow-y-auto">
+                {depts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No active departments. Create one first.</p>
+                ) : depts.map((d) => (
+                  <label key={d.id} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={invite.department_ids.includes(d.id)}
+                      onCheckedChange={(v) => setInvite({
+                        ...invite,
+                        department_ids: v ? [...invite.department_ids, d.id] : invite.department_ids.filter(x => x !== d.id),
+                      })}
+                    />
+                    {d.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={invite.is_supervisor} onCheckedChange={(v) => setInvite({ ...invite, is_supervisor: v })} />
+              Supervisor
+            </label>
+            <p className="text-xs text-muted-foreground">
+              A temporary password will be generated and emailed to the agent. They will be required to set a new password on first login at <code>/support-agent</code>.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)} disabled={inviting}>Cancel</Button>
+            <Button onClick={sendInvite} disabled={inviting}>
+              {inviting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" strokeWidth={1.5} />}
+              Send invitation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
