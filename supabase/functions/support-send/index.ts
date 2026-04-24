@@ -26,6 +26,10 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const guestToken = String(body.guest_token || '');
     const content = String(body.content || '').trim().slice(0, 4000);
+    // Optional: when an agent posts via the agent console, they call support-send
+    // with senderType='agent' + senderName so we can email the guest.
+    const senderType = body.sender_type === 'agent' ? 'agent' : 'guest';
+    const senderName = String(body.sender_name || '').trim().slice(0, 120) || null;
     if (!guestToken || !content) return json({ error: 'guest_token and content are required.' }, 400);
 
     const supabase = createClient(

@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
               recipientEmail: agentEmail,
               idempotencyKey: `support-agent-new-${conv.id}-${agentEmail}`,
               templateData: {
-                guestName: name,
+                customerName: name,
                 subject: subject || 'New support chat',
                 department: dept?.name || 'Support',
                 ticketId: conv.id.slice(0, 8).toUpperCase(),
