@@ -927,6 +927,8 @@ function App() {
               <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="support-chat" element={<AdminLiveSupport />} />
               <Route path="support-settings" element={<AdminSupportSettings />} />
+              <Route path="support-departments" element={<AdminSupportDepartments />} />
+              <Route path="support-agents" element={<AdminSupportAgents />} />
               <Route path="tenant-connectors" element={<AdminTenantConnectors />} />
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />
