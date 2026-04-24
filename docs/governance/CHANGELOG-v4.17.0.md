@@ -1,35 +1,61 @@
-# Changelog — v4.17.0 (2026-04-22)
+# Kang Open Banking API — v4.17.0
 
-## KOB Integration Layer (additive, non-breaking)
+**Release date:** 2026-04-24
+**Type:** Minor (additive, non-breaking)
+**Standing Orders satisfied:** SO-1 (The Lock), SO-2 (The Ratchet), SO-3 (Audit Trail), SO-4 (Surgeon Rule), SO-6 (Version Gate), SO-7 (Five Roles)
 
-A new Stripe-style facade layered on top of the existing Kang Open Banking API.
-**No existing endpoint, schema, or auth flow has been modified.**
+## Summary
 
-### Added
-- `POST /functions/v1/integration-layer/{resource}.{action}` — unified router
-- Resources: `customers`, `accounts`, `payments`, `transfers`, `payouts`, `refunds`, `webhooks`, `sandbox`
-- Unified response envelope `{ id, object, status, amount, currency, created, livemode, metadata, data }`
-- Unified error envelope `{ error: { type, code, message, param, request_id, upstream } }`
-- Smart routing engine (method × country × MSISDN) with automatic fallback chain
-- Platform-wide `Idempotency-Key` support via `integration_idempotency_keys` table (24h TTL)
-- Webhook replay: `webhooks.replay` action + `integration_webhook_replays` audit table
-- Sandbox magic-value simulator (4242/4000/5555/9999) — active only when `x-integration-env: sandbox`
-- Discovery endpoint: `GET /integration-layer` returns resources, version, and magic values
-- Public docs: `/developer/integration-layer` (no auth required — Order P1)
-- SDK: `kob.integration.*` namespace added to `@kangopenbanking/sdk` (Node) — bumped to **1.3.0**
+Spec correctness pass addressing the three real findings of the 2026-04-24 Developer API audit. All changes are additive — no `operationId`, path, schema, parameter, or security scheme has been renamed or removed.
 
-### Changed
-- *Nothing.* Standing Order 4 (Surgeon Rule): all changes additive.
+## Changes
 
-### Removed
-- *Nothing.* Standing Order 1 (The Lock) honored.
+### 1. Monetary type correctness — `VirtualCard`
 
-### Standards cited
-- Stripe API design conventions (envelope/error shape, `Idempotency-Key` semantics)
-- FAPI 1.0 Advanced — auth flows untouched, fully delegated to existing `/v1/*` handlers
-- Docs Guardian Orders P1 (Public First), P3 (Free Sandbox), P5 (Working Code), P9 (Multi-Language)
+**Justification:** RFC 8259 §6 (number representation is implementation-defined → unsafe for currency) and FAPI 1.0 Advanced §5.2.2 (monetary values must be lossless).
 
-### Verification
-- 15 Deno unit tests in `supabase/functions/integration-layer/index.test.ts`
-- Frontend smoke test in `src/test/integration-layer-e2e.test.ts`
-- Existing guard tests unchanged: `direct-backend-guard.test.ts`, `openapi-parity.test.ts`, `forbidden-domain-gate.yml`
+| Field | Before | After |
+|---|---|---|
+| `balance_usd` | `number` | `number`, `deprecated: true` (kept for backward compatibility — SO-1) |
+| `balance` *(new)* | — | `string`, `pattern: ^[0-9]{1,15}$` — minor-unit integer |
+| `currency` *(new)* | — | `string`, ISO 4217 enum `[USD, XAF, EUR, GBP]` |
+
+### 2. Monetary type correctness — `LoanScheduleItem`
+
+| Field | Before | After |
+|---|---|---|
+| `principal`, `interest`, `fees`, `total_due` | `number` | `number`, `deprecated: true` |
+| `principal_amount`, `interest_amount`, `fees_amount`, `total_due_amount` *(new)* | — | `string`, minor-unit integers |
+| `outstanding_balance` | `number` (edge fn) / `string` (public file) | `string` everywhere — synchronised |
+
+### 3. Reusable error responses (FAPI / RFC 7807)
+
+Added to `components.responses`:
+
+- **`Unauthorized`** — RFC 6750 §3.1. Returns `application/problem+json` (`ProblemDetails`) and includes a `WWW-Authenticate` header example.
+- **`Forbidden`** — Insufficient scope or non-owned resource. Returns `application/problem+json`.
+
+These are now available for `$ref` from any operation. Existing inline 401/403 declarations remain valid.
+
+### 4. OBIE schema split — `TransactionOBIE`
+
+**Justification:** OBIE Read/Write Data API v3.1 §Transaction. SDK generators (OpenAPI Generator, openapi-typescript, etc.) emit duplicate fields when snake_case and PascalCase coexist on one schema.
+
+- New `TransactionOBIE` schema in `components.schemas` containing all PascalCase OBIE fields with `x-obie-version: 3.1.10`.
+- The original PascalCase aliases on the primary `Transaction` schema are now `deprecated: true` with `x-replacement: "TransactionOBIE.<Field>"`.
+- Original snake_case fields on `Transaction` (e.g. `transaction_id`, `amount`) are unchanged.
+
+## Compatibility
+
+| Consumer | Impact |
+|---|---|
+| Existing clients reading `balance_usd`, `principal`, etc. | None. Fields still present and populated. |
+| New clients | Should read the string-typed siblings (`balance` + `currency`, `*_amount`). |
+| OBIE-aligned consumers | Switch from `Transaction` to `TransactionOBIE`. |
+| SDK generators | Re-generation will produce both old and new fields; mark deprecated ones for removal in v5.0.0. |
+
+## Files changed
+
+- `public/openapi.json`
+- `supabase/functions/public-api-spec/index.ts`
+- `docs/governance/CHANGELOG-v4.17.0.md` *(this file)*
