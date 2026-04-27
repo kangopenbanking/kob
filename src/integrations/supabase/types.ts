@@ -621,6 +621,59 @@ export type Database = {
           },
         ]
       }
+      api_client_keys: {
+        Row: {
+          activated_at: string | null
+          api_client_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          grace_until: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          key_version: number
+          label: string | null
+          status: string
+        }
+        Insert: {
+          activated_at?: string | null
+          api_client_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          grace_until?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          key_version: number
+          label?: string | null
+          status?: string
+        }
+        Update: {
+          activated_at?: string | null
+          api_client_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          grace_until?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          key_version?: number
+          label?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_client_keys_api_client_id_fkey"
+            columns: ["api_client_id"]
+            isOneToOne: false
+            referencedRelation: "api_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_clients: {
         Row: {
           allowed_ips: Json | null
@@ -8772,6 +8825,51 @@ export type Database = {
           },
         ]
       }
+      gateway_audit_logs: {
+        Row: {
+          client_id: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip: string | null
+          key_version: number | null
+          latency_ms: number | null
+          method: string
+          path: string
+          request_id: string | null
+          status: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          key_version?: number | null
+          latency_ms?: number | null
+          method: string
+          path: string
+          request_id?: string | null
+          status?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          key_version?: number | null
+          latency_ms?: number | null
+          method?: string
+          path?: string
+          request_id?: string | null
+          status?: number | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       gateway_beneficiaries: {
         Row: {
           account_number: string | null
@@ -9893,6 +9991,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gateway_rate_limit_windows: {
+        Row: {
+          client_id: string
+          id: string
+          limit_per_window: number
+          request_count: number
+          updated_at: string
+          window_seconds: number
+          window_started_at: string
+        }
+        Insert: {
+          client_id: string
+          id?: string
+          limit_per_window: number
+          request_count?: number
+          updated_at?: string
+          window_seconds?: number
+          window_started_at: string
+        }
+        Update: {
+          client_id?: string
+          id?: string
+          limit_per_window?: number
+          request_count?: number
+          updated_at?: string
+          window_seconds?: number
+          window_started_at?: string
+        }
+        Relationships: []
       }
       gateway_reconciliation_mismatches: {
         Row: {
@@ -23921,6 +24049,16 @@ export type Database = {
           p_route?: string
         }
         Returns: undefined
+      }
+      resolve_api_key: {
+        Args: { _hash: string }
+        Returns: {
+          client_id: string
+          expires_at: string
+          grace_until: string
+          key_version: number
+          status: string
+        }[]
       }
       search_profiles_by_name: {
         Args: { _limit?: number; _query: string }
