@@ -18,11 +18,18 @@ custom_domain = true
 
 [vars]
 ORIGIN_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co"
+GATEWAY_VERSION = "1.0.0"
 
-# Optional shared secret — set with: wrangler secret put GATEWAY_SHARED_SECRET
-# Edge functions can reject requests that arrive without this header to
-# guarantee traffic only comes through the gateway.
-# (Leave unset for an open public gateway.)
+# Secrets — set with `wrangler secret put <NAME>`:
+#   GATEWAY_SHARED_SECRET     Optional. Marks traffic as coming through the gateway.
+#   SUPABASE_SERVICE_ROLE_KEY Required for API-key validation against api_clients.
+
+# KV namespace caching validated API keys (5-min TTL). Create with:
+#   wrangler kv:namespace create API_KEY_CACHE
+# Then paste the returned id below and uncomment.
+# [[kv_namespaces]]
+# binding = "API_KEY_CACHE"
+# id      = "REPLACE_WITH_KV_NAMESPACE_ID"
 
 [observability]
 enabled = true
