@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     {
       name: 'KOB Sandbox',
       values: [
-        { key: 'base_url', value: `${Deno.env.get('SUPABASE_URL')!}/functions/v1`, enabled: true },
+        { key: 'base_url', value: (Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1').replace('://api.', '://sandbox-api.'), enabled: true },
         { key: 'environment', value: 'sandbox', enabled: true },
         { key: 'access_token', value: '', enabled: true },
         { key: 'client_id', value: 'YOUR_SANDBOX_CLIENT_ID', enabled: true },
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     {
       name: 'KOB Production',
       values: [
-        { key: 'base_url', value: `${Deno.env.get('SUPABASE_URL')!}/functions/v1`, enabled: true },
+        { key: 'base_url', value: Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1', enabled: true },
         { key: 'environment', value: 'production', enabled: true },
         { key: 'access_token', value: '', enabled: true },
         { key: 'client_id', value: 'YOUR_PROD_CLIENT_ID', enabled: true },
@@ -143,7 +143,7 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
       { listen: 'prerequest', script: { type: 'text/javascript', exec: preRequestAuth.split('\n') } },
     ],
     variable: [
-      { key: 'base_url', value: `${Deno.env.get('SUPABASE_URL')!}/functions/v1`, type: 'string' },
+      { key: 'base_url', value: Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1', type: 'string' },
       { key: 'access_token', value: 'YOUR_ACCESS_TOKEN', type: 'string' },
       { key: 'user_id', value: 'USER_UUID', type: 'string' },
       { key: 'account_id', value: 'ACCOUNT_UUID', type: 'string' },
