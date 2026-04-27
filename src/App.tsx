@@ -312,6 +312,7 @@ const ApiClientManagement = lazy(() => import("./pages/admin/ApiClientManagement
 const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
 const WebhookManagement = lazy(() => import("./pages/admin/WebhookManagement"));
 const TransactionMonitoring = lazy(() => import("./pages/admin/TransactionMonitoring"));
@@ -854,6 +855,7 @@ function App() {
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
               <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="gateway-audit" element={<GatewayAuditLogs />} />
               <Route path="system-config" element={<SystemConfig />} />
               <Route path="webhooks" element={<WebhookManagement />} />
               <Route path="branches" element={<BranchManagement />} />
