@@ -24,11 +24,12 @@ Deno.serve(async (req) => {
   const routeKey = parts[0]?.toLowerCase() ?? "";
 
   if (!routeKey) {
+    const PUBLIC_API = Deno.env.get("PUBLIC_API_BASE_URL") ?? "https://api.kangopenbanking.com/v1";
     return new Response(
       JSON.stringify({
         service: "Kang Open Banking — OAuth 2.0 / FAPI",
         routes: Object.keys(ROUTE_MAP),
-        discovery: `${SUPABASE_URL}/functions/v1/oidc-config`,
+        discovery: `${PUBLIC_API}/.well-known/openid-configuration`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

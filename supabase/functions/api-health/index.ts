@@ -94,12 +94,16 @@ Deno.serve(async (req) => {
         webhooks: dbOk ? 'operational' : 'degraded',
         database: dbOk ? 'operational' : 'degraded'
       },
-      documentation: {
-        openapi: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/public-api-spec`,
-        postman: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/postman-collection`,
-        explorer: 'https://kangopenbanking.com/developer/api-explorer',
-        oidc_discovery: `${Deno.env.get('SUPABASE_URL')!}/functions/v1/oidc-config`
-      },
+      documentation: (() => {
+        const PUBLIC_API = Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1';
+        const PUBLIC_SITE = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://kangopenbanking.com';
+        return {
+          openapi: `${PUBLIC_API}/public-api-spec`,
+          postman: `${PUBLIC_API}/postman-collection`,
+          explorer: `${PUBLIC_SITE}/developer/api-explorer`,
+          oidc_discovery: `${PUBLIC_API}/.well-known/openid-configuration`,
+        };
+      })(),
       fapi_compliance: {
         profile: 'FAPI 1.0 Advanced',
         mtls_supported: true,

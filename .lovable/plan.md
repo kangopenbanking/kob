@@ -1,99 +1,84 @@
+## Problem
 
+The `api-health` Edge Function leaks the raw Supabase project URL (`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/...`) in the `documentation` block of every `/health` response. This defeats the Cloudflare Worker proxy, which can rewrite headers but not JSON bodies.
 
-# Developer API Audit — Targeted Remediation Plan
+A second leak exists in `oauth/index.ts` — the root response exposes `discovery: ${SUPABASE_URL}/functions/v1/oidc-config` to any anonymous caller.
 
-## Audit reality check
+The `oidc-config` function also hardcodes `SUPABASE_URL` for every endpoint field (issuer, token_endpoint, jwks_uri, etc.). These are OAuth/OIDC discovery endpoints — by spec they must point to the public production URL, not the backend origin.
 
-I cross-checked every claim in the audit against the codebase. Several "emergency" findings are **factually incorrect** for this project — likely the audit was run against a stale crawl or against `kangopenbanking.com` rather than this Lovable preview / `info.kangfintechsolutions.com`.
+## Fix
 
-| Audit claim | Actual state in this repo |
-|---|---|
-| Fix 1 — Portal pages are blank stubs | **False.** 140+ real page components exist (`GettingStarted.tsx`, `SandboxOverview.tsx`, `GatewayQuickstart.tsx`, `WebhooksGuide.tsx`, `RealWorldExamples.tsx`, `ApiExplorer.tsx`, etc.), all wired in `src/App.tsx` under `/developer/*` with real content. |
-| Fix 2 — API Explorer not rendered | **False.** `/developer/api-explorer` already mounts Swagger UI with the live spec from `public-api-spec`, plus a static Redoc fallback at `/developer/api-explorer-static`. |
-| Fix 4 — No sandbox credentials page | **False.** `/developer/sandbox/credentials`, `/sandbox/test-cards`, `/sandbox/mobile-money`, `/sandbox/console` all exist. |
-| Fix 5 — No auth guide | **False.** `AuthenticationOverview`, `AuthOAuth2`, `AuthFapi`, `AuthMtls`, `AuthApiKeys`, `TokenLifecycleGuide` all exist. |
-| Fix 8 — No rate-limit page | **False.** `RateLimitsGuide.tsx` exists and the OpenAPI `info.description` already documents tier limits + headers. |
-| Fix 10 — Mintlify setup missing | **N/A.** This is a React/Vite app with custom GuidePageShell components, not a Mintlify site. Re-platforming to Mintlify is a separate strategic decision, not a fix. |
-| **Fix 6 — Monetary type bugs** | **TRUE.** `VirtualCard.balance_usd` is `type: number`. `LoanScheduleItem.principal/interest/fees/total_due` are `type: number`. Confirmed at lines 1342–1356, 1645–1648. |
-| **Fix 7 — Missing 401/403 components** | **TRUE.** `components.responses` contains only `NotModified` and `TooManyRequests`. No reusable `Unauthorized` / `Forbidden`. Inline 401/403 are present on most ops but not standardised. |
-| **Fix 9 — Transaction OBIE dual naming** | **PARTIAL.** PascalCase OBIE aliases (`AccountId`, `TransactionId`, `Amount`, `CreditDebitIndicator`, etc.) are mixed into the primary `Transaction` schema with `x-obie-mapping` annotations. SDK generators will emit duplicate fields. |
+### 1. Add a new Supabase secret
+- **`PUBLIC_API_BASE_URL`** = `https://api.kangopenbanking.com/v1`
+- **`PUBLIC_SITE_URL`** = `https://kangopenbanking.com` (used by oidc-config issuer / explorer links)
 
-## Scope of this plan
+A small helper resolves these with safe fallbacks so functions never crash if a secret is missing.
 
-I will fix the **three real spec bugs** plus add light portal polish for two pages flagged as weak. Everything else in the audit is already shipped.
+### 2. Patch `supabase/functions/api-health/index.ts`
+Replace the `documentation` block:
+```ts
+const PUBLIC_API = Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1';
+const PUBLIC_SITE = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://kangopenbanking.com';
 
----
-
-## Changes
-
-### 1. Fix monetary types in `public/openapi.json` (Fix 6)
-
-**Standing Order 4 (Surgeon Rule) + Order 6 (Version Gate) compliance:** these are **breaking schema changes**, so per the Guardian rules I will NOT silently rename. Instead:
-
-- `VirtualCard`: keep `balance_usd` (deprecated, add `deprecated: true` + `x-sunset` note) and add new sibling fields:
-  - `balance` → `type: string, pattern: "^[0-9]{1,15}$"` (minor units)
-  - `currency` → `type: string, enum: ["USD","XAF","EUR","GBP"]`, default `"USD"`
-- `LoanScheduleItem`: keep `principal`, `interest`, `fees`, `total_due` as deprecated and add string-typed siblings: `principal_amount`, `interest_amount`, `fees_amount`, `total_due_amount` (all `pattern: "^[0-9]{1,15}$"`).
-- Bump `info.version` 4.16.4 → **4.17.0** (minor — additive) and add a changelog entry citing FAPI 1.0 Adv §5.2.2 + RFC 8259 (no float for monetary).
-
-### 2. Add reusable `Unauthorized` / `Forbidden` response components (Fix 7)
-
-In `public/openapi.json` and the live `supabase/functions/public-api-spec/index.ts` source:
-
-```jsonc
-"components": {
-  "responses": {
-    "Unauthorized": {
-      "description": "Expired, revoked, or invalid access token (RFC 6750 §3.1).",
-      "content": {
-        "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } }
-      }
-    },
-    "Forbidden": {
-      "description": "Token valid but scope insufficient or resource not owned by client.",
-      "content": {
-        "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } }
-      }
-    }
-  }
+documentation: {
+  openapi:        `${PUBLIC_API}/public-api-spec`,
+  postman:        `${PUBLIC_API}/postman-collection`,
+  explorer:       `${PUBLIC_SITE}/developer/api-explorer`,
+  oidc_discovery: `${PUBLIC_API}/.well-known/openid-configuration`,
 }
 ```
+No more `Deno.env.get('SUPABASE_URL')` references in any user-facing field.
 
-Then sweep all secured operations and replace inline `401`/`403` with `$ref: "#/components/responses/Unauthorized"` / `Forbidden`. Done via a small Node script run once over the spec to keep the change mechanical and reviewable.
+### 3. Patch `supabase/functions/oauth/index.ts`
+The root listing response currently echoes the Supabase URL in `discovery`. Replace with:
+```ts
+discovery: `${PUBLIC_API}/.well-known/openid-configuration`,
+```
+Internal proxy logic (line 46) keeps using `SUPABASE_URL` — that's correct (it's a server-to-server call, never returned to the client).
 
-### 3. Resolve Transaction OBIE dual naming (Fix 9)
+### 4. Patch `supabase/functions/oidc-config/index.ts`
+OIDC discovery is a public document; every URL it advertises must be the branded public URL. Replace `apiBase` and `issuer`:
+```ts
+const PUBLIC_API  = Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1';
+const PUBLIC_SITE = Deno.env.get('PUBLIC_SITE_URL')     ?? 'https://kangopenbanking.com';
 
-- Create new `TransactionOBIE` schema in `components.schemas` containing only the PascalCase OBIE-mandated fields, with a top-level `description` linking to OBIE Read/Write Data API v3.1.
-- Mark each PascalCase field on the primary `Transaction` schema as `deprecated: true` with `x-replacement: "TransactionOBIE.<Field>"`.
-- Add a note in `info.description` pointing OBIE consumers to `TransactionOBIE`.
-- No removals (Standing Order 1 — The Lock).
+const issuer = PUBLIC_SITE;                       // stable issuer
+authorization_endpoint:               `${PUBLIC_API}/oauth/authorize`,
+token_endpoint:                       `${PUBLIC_API}/oauth/token`,
+userinfo_endpoint:                    `${PUBLIC_API}/userinfo`,
+jwks_uri:                             `${PUBLIC_API}/.well-known/jwks.json`,
+registration_endpoint:                `${PUBLIC_API}/oauth/register`,
+pushed_authorization_request_endpoint:`${PUBLIC_API}/oauth/par`,
+revocation_endpoint:                  `${PUBLIC_API}/oauth/revoke`,
+introspection_endpoint:               `${PUBLIC_API}/oauth/introspect`,
+```
+The Cloudflare Worker already maps `/v1/oauth/*` and `/v1/.well-known/*` paths to the corresponding flat Supabase functions, so these advertised URLs will resolve correctly through the proxy.
 
-### 4. Sync `public/openapi.json` with edge function source
+> Note: changing the `issuer` is technically a discovery-document change. Existing clients that pinned the old Supabase issuer would need to refresh discovery — acceptable because (a) the gateway is new and (b) the old value leaked the backend, which is the bug we're fixing.
 
-The static file (`public/openapi.json`) was flagged stale in `API_EXPLORER_DIAGNOSIS.md`. After edits I will mirror the same JSON tree into `supabase/functions/public-api-spec/index.ts` so both endpoints serve identical content.
+### 5. Worker route check
+Confirm `worker/src/index.ts` already handles:
+- `/v1/.well-known/openid-configuration` → `oidc-config`
+- `/v1/.well-known/jwks.json` → `jwks-endpoint`
+- `/v1/public-api-spec`, `/v1/postman-collection` → flat functions
+- `/v1/oauth/*` → `oauth` router
 
-### 5. Light polish — only where the audit found a real UX gap
+Add any missing mappings so the new public URLs return 200, not 404.
 
-- Add a prominent **"Default = sandbox"** server toggle banner at the top of `ApiExplorer.tsx` (audit Fix 2's underlying concern). Sandbox stays the default selected server.
-- Add a copy-paste **cURL + Node + Python** triple-tab snippet to the top of `GettingStarted.tsx` for the OAuth `/token` exchange (closes Fix 3 for the highest-traffic page; the `CodeBlock` component already supports multi-lang tabs).
+### 6. Deploy & verify
+1. Add `PUBLIC_API_BASE_URL` and `PUBLIC_SITE_URL` as Supabase secrets.
+2. Deploy `api-health`, `oauth`, `oidc-config` (and worker if route map updated).
+3. Smoke test:
+   ```bash
+   curl -s https://api.kangopenbanking.com/v1/health | grep -i 'supabase\.co'   # must return nothing
+   curl -s https://api.kangopenbanking.com/v1/oauth | grep -i 'supabase\.co'    # must return nothing
+   curl -s https://api.kangopenbanking.com/v1/.well-known/openid-configuration | grep -i 'supabase\.co'  # must return nothing
+   ```
+   All three greps must produce zero matches.
 
-## What I will **NOT** do
-
-- Re-platform to Mintlify (Fix 10) — out of scope, would discard 140+ existing pages.
-- Recreate pages that already exist (Fixes 1, 4, 5, 8).
-- Rename or remove any existing operationId, schema, parameter, or security scheme (Standing Order 1 — The Lock).
-
-## Verification after implementation
-
-1. `npm test` (existing `openapi-parity.test.ts`, `docs-smoke.test.ts`, `code-examples-smoke.test.ts`).
-2. Spot-check `/developer/api-explorer` renders with new spec.
-3. Confirm `info.version === "4.17.0"` and a changelog entry appears in `docs/governance/`.
-
-## Files touched
-
-- `public/openapi.json` (schema fixes + responses + version bump)
-- `supabase/functions/public-api-spec/index.ts` (mirror)
-- `src/pages/developer/ApiExplorer.tsx` (sandbox-default banner)
-- `src/pages/developer/GettingStarted.tsx` (multi-lang OAuth snippet)
-- `docs/governance/CHANGELOG-v4.17.0.md` (new — Standing Order 7)
-
+## Files Changed
+- `supabase/functions/api-health/index.ts` — branded documentation URLs
+- `supabase/functions/oauth/index.ts` — branded discovery URL in root response
+- `supabase/functions/oidc-config/index.ts` — branded issuer + endpoint URLs
+- `worker/src/index.ts` — confirm/extend route map for `.well-known/*` and `/oauth/*` (only if gaps found)
+- New secrets: `PUBLIC_API_BASE_URL`, `PUBLIC_SITE_URL`
