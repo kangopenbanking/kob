@@ -864,6 +864,7 @@ function App() {
               <Route path="health" element={<HealthMonitoring />} />
               <Route path="rls-monitoring" element={<RLSMonitoring />} />
               <Route path="api-health" element={<ApiHealthDashboard />} />
+              <Route path="platform-status" element={<PlatformStatus />} />
               <Route path="api-testing" element={<ApiTestingAdmin />} />
               <Route path="system-alerts" element={<SystemAlerts />} />
               <Route path="api-performance" element={<ApiPerformance />} />
