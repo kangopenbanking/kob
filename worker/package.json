@@ -6,10 +6,12 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --local=false",
+    "dev:local": "wrangler dev --local",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:smoke": "bash ./scripts/test-local.sh"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240924.0",
