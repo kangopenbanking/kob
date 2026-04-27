@@ -188,6 +188,7 @@ const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
 const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic"));
 const RedocPage = lazy(() => import("./pages/developer/RedocPage"));
 const DocsHealth = lazy(() => import("./pages/developer/DocsHealth"));
+const ApiGateway = lazy(() => import("./pages/developer/ApiGateway"));
 const OpenApiDownloads = lazy(() => import("./pages/developer/OpenApiDownloads"));
 const RealWorldExamples = lazy(() => import("./pages/developer/RealWorldExamples"));
 const RealWorldExampleDetail = lazy(() => import("./pages/developer/RealWorldExampleDetail"));
@@ -947,6 +948,7 @@ function App() {
             {/* Public Developer Documentation — no auth required */}
             <Route path="/developer" element={<PublicDeveloperLayout />}>
               <Route index element={<DeveloperHome />} />
+              <Route path="api-gateway" element={<ApiGateway />} />
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
               <Route path="getting-started/first-call" element={<GettingStarted />} />
