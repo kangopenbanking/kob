@@ -235,13 +235,12 @@ export default function PlatformStatus() {
         title="Platform Status"
         description="Live health of OAuth/OIDC, webhook routing, institution approvals, and rate-limit / audit subsystems."
         icon={Activity}
-        action={
-          <Button variant="outline" size="sm" onClick={handleRefreshAll}>
-            <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} />
-            Refresh all
-          </Button>
-        }
-      />
+      >
+        <Button variant="outline" size="sm" onClick={handleRefreshAll}>
+          <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} />
+          Refresh all
+        </Button>
+      </AdminPageHeader>
 
       {/* Summary metrics */}
       <div className="grid gap-3 md:grid-cols-4">
