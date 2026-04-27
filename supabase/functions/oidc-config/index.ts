@@ -14,20 +14,21 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const apiBase = `${supabaseUrl}/functions/v1`;
-    const issuer = `${supabaseUrl}/auth/v1`;
-    const publicBase = 'https://kangopenbanking.com';
+    const PUBLIC_API = Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1';
+    const PUBLIC_SITE = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://kangopenbanking.com';
+    // Issuer is the stable, branded public site (must match clients' configured issuer).
+    const issuer = PUBLIC_SITE;
 
     const config = {
       issuer,
-      authorization_endpoint: `${apiBase}/oauth-authorize`,
-      token_endpoint: `${apiBase}/oauth-token`,
-      userinfo_endpoint: `${apiBase}/userinfo`,
-      jwks_uri: `${apiBase}/jwks-endpoint`,
-      registration_endpoint: `${apiBase}/dcr-register`,
-      pushed_authorization_request_endpoint: `${apiBase}/par-endpoint`,
-      revocation_endpoint: `${apiBase}/oauth-revoke`,
-      introspection_endpoint: `${apiBase}/oauth-introspect`,
+      authorization_endpoint: `${PUBLIC_API}/oauth/authorize`,
+      token_endpoint: `${PUBLIC_API}/oauth/token`,
+      userinfo_endpoint: `${PUBLIC_API}/userinfo`,
+      jwks_uri: `${PUBLIC_API}/.well-known/jwks.json`,
+      registration_endpoint: `${PUBLIC_API}/oauth/register`,
+      pushed_authorization_request_endpoint: `${PUBLIC_API}/oauth/par`,
+      revocation_endpoint: `${PUBLIC_API}/oauth/revoke`,
+      introspection_endpoint: `${PUBLIC_API}/oauth/introspect`,
 
       scopes_supported: ['openid', 'accounts', 'payments', 'offline_access'],
       response_types_supported: ['code', 'code id_token'],
@@ -52,16 +53,16 @@ Deno.serve(async (req) => {
         'name', 'email', 'phone_number', 'updated_at'
       ],
 
-      service_documentation: `${publicBase}/developer`,
-      op_policy_uri: `${publicBase}/developer/security`,
-      op_tos_uri: `${publicBase}/legal/terms`,
-      key_rotation_policy_uri: `${publicBase}/developer/security#jwks-rotation`,
+      service_documentation: `${PUBLIC_SITE}/developer`,
+      op_policy_uri: `${PUBLIC_SITE}/developer/security`,
+      op_tos_uri: `${PUBLIC_SITE}/legal/terms`,
+      key_rotation_policy_uri: `${PUBLIC_SITE}/developer/security#jwks-rotation`,
       ui_locales_supported: ['en', 'fr'],
 
       // Non-standard, reviewer-friendly metadata
       'x-version': VERSION,
       'x-fapi_profile': 'FAPI 1.0 Advanced',
-      'x-health_endpoint': `${apiBase}/healthz`,
+      'x-health_endpoint': `${PUBLIC_API}/health`,
     };
 
     const body = JSON.stringify(config, null, 2);
