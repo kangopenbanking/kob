@@ -112,8 +112,10 @@ export default {
       }
     }
 
-    // Sandbox toggle (x-kob-environment: sandbox) — rewrite to sandbox adapter.
-    const isSandbox = (request.headers.get("x-kob-environment") ?? "").toLowerCase() === "sandbox"
+    // Sandbox toggle: explicit header, /v1/sandbox path, OR sandbox hostname.
+    const hostIsSandbox = isSandboxHost(url.host, env);
+    const isSandbox = hostIsSandbox
+      || (request.headers.get("x-kob-environment") ?? "").toLowerCase() === "sandbox"
       || url.pathname.startsWith("/v1/sandbox");
     const originPath = rewritePath(url.pathname, isSandbox);
     const originUrl = new URL(originPath + url.search, env.ORIGIN_BASE);
