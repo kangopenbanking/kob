@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, ShieldCheck, ShieldAlert, Copy } from "lucide-react";
+import { Send, ShieldCheck, ShieldAlert, Copy, FileWarning } from "lucide-react";
 import { toast } from "sonner";
+import { validateWebhookEvent, WEBHOOK_EVENT_SCHEMAS } from "@/lib/webhook-event-schemas";
 
 const PUBLIC_BASE = "https://api.kangopenbanking.com/v1";
 
