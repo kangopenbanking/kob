@@ -4,6 +4,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-https://api.kangopenbanking.com/v1}"
+SANDBOX_URL="${SANDBOX_URL:-https://sandbox-api.kangopenbanking.com/v1}"
 FORBIDDEN_PATTERN='supabase\.co|wdzkzeahdtxlynetndqw'
 
 ENDPOINTS=(
