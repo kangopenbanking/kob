@@ -319,6 +319,42 @@ const ErrorCodesReference = () => (
       </div>
     </div>
 
+    {/* Endpoint → Errors cross-link */}
+    <div>
+      <h2 className="text-xl font-bold mb-3">Errors by Endpoint</h2>
+      <p className="text-muted-foreground mb-4 text-sm">
+        Quick reference: which error codes can each endpoint return. Click an endpoint to open its API reference.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 font-semibold">Endpoint</th>
+              <th className="text-left py-2 font-semibold">Possible error codes</th>
+            </tr>
+          </thead>
+          <tbody className="text-muted-foreground">
+            {endpointErrorMap.map(({ method, path: ep, ref, codes }) => (
+              <tr key={`${method} ${ep}`} className="border-b">
+                <td className="py-2 font-mono text-xs whitespace-nowrap">
+                  <a href={ref} className="text-primary hover:underline">
+                    <span className="text-foreground font-semibold mr-1">{method}</span>{ep}
+                  </a>
+                </td>
+                <td className="py-2">
+                  <div className="flex flex-wrap gap-1">
+                    {codes.map((c) => (
+                      <code key={c} className="px-1.5 py-0.5 rounded bg-muted text-xs">{c}</code>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <AutoDocNavigation />
   </div>
 );
