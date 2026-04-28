@@ -235,8 +235,7 @@ function StepFirstTransfer({ onNext, onPrev }: StepProps) {
         return the original transfer instead of creating a duplicate.
       </p>
       <CodeBlock
-        defaultLanguage="bash"
-        snippets={[
+        examples={[
           {
             language: "bash", label: "cURL",
             code: `curl -X POST https://api.kangopenbanking.com/v1/pisp/payments \\
