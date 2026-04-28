@@ -316,6 +316,7 @@ const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
 const DeveloperRateLimits = lazy(() => import("./pages/developer/RateLimits"));
 const DeveloperClientSnippets = lazy(() => import("./pages/developer/ClientSnippets"));
+const SandboxWebhookTester = lazy(() => import("./pages/developer/SandboxWebhookTester"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
 const WebhookManagement = lazy(() => import("./pages/admin/WebhookManagement"));
@@ -968,6 +969,7 @@ function App() {
               <Route path="changelog" element={<Changelog />} />
               <Route path="rate-limits" element={<DeveloperRateLimits />} />
               <Route path="snippets" element={<DeveloperClientSnippets />} />
+              <Route path="sandbox/webhook-tester" element={<SandboxWebhookTester />} />
               <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />
               <Route path="api/pisp" element={<PispReference />} />
