@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Key, Code, Webhook, ShieldCheck, CheckCircle, ArrowRight, ArrowLeft,
-  Copy, Terminal, Globe, Zap, Play, Send
+  Copy, Terminal, Globe, Zap, Play, Send, Download
 } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { toast } from "sonner";
@@ -23,13 +23,50 @@ function StepCredentials({ onNext }: StepProps) {
     ["Secret Key", "sk_test_sandbox_KangOB2026Demo"],
     ["Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
     ["Merchant ID", "merch_test_001"],
-    ["Base URL", "https://api.kangopenbanking.com/v1"],
+    ["Webhook Secret", "whsec_test_sandbox_KangOB2026Demo"],
+    ["Base URL (Production)", "https://api.kangopenbanking.com/v1"],
+    ["Base URL (Sandbox)", "https://sandbox.kangopenbanking.com/v1"],
   ];
 
   const copyAll = () => {
     const text = creds.map(([k, v]) => `${k}: ${v}`).join("\n");
     navigator.clipboard.writeText(text);
     toast.success("All credentials copied");
+  };
+
+  const downloadEnv = () => {
+    const env = [
+      "# Kang Open Banking — Sandbox .env template",
+      "# Generated from the developer onboarding wizard",
+      "# Documentation: https://kangopenbanking.com/developer",
+      "",
+      "# Authentication",
+      "KOB_SECRET_KEY=sk_test_sandbox_KangOB2026Demo",
+      "KOB_PUBLISHABLE_KEY=pk_test_sandbox_KangOB2026Demo",
+      "KOB_MERCHANT_ID=merch_test_001",
+      "",
+      "# Webhook signature verification (HMAC-SHA256, header: X-KOB-Signature)",
+      "KOB_WEBHOOK_SECRET=whsec_test_sandbox_KangOB2026Demo",
+      "KOB_WEBHOOK_TOLERANCE_SECONDS=300",
+      "",
+      "# Base URLs",
+      "KOB_API_BASE_URL=https://sandbox.kangopenbanking.com/v1",
+      "KOB_API_BASE_URL_PRODUCTION=https://api.kangopenbanking.com/v1",
+      "",
+      "# Environment selector ('sandbox' or 'production')",
+      "KOB_ENVIRONMENT=sandbox",
+      "",
+    ].join("\n");
+    const blob = new Blob([env], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kang-openbanking.sandbox.env";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(".env template downloaded");
   };
 
   return (
@@ -58,9 +95,14 @@ function StepCredentials({ onNext }: StepProps) {
           </div>
         ))}
       </div>
-      <Button variant="outline" size="sm" onClick={copyAll}>
-        <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy All
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={copyAll}>
+          <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy All
+        </Button>
+        <Button variant="outline" size="sm" onClick={downloadEnv}>
+          <Download className="h-3.5 w-3.5 mr-1.5" /> Export as .env
+        </Button>
+      </div>
       <div className="pt-2 flex justify-end">
         <Button onClick={onNext}>
           Install SDK <ArrowRight className="h-4 w-4 ml-1.5" />
