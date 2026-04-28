@@ -17,10 +17,17 @@ export interface Env {
   ORIGIN_BASE: string;
   GATEWAY_SHARED_SECRET?: string;
   GATEWAY_VERSION?: string;
-  PUBLIC_GATEWAY_URL?: string; // e.g. https://api.kangopenbanking.com
+  PUBLIC_GATEWAY_URL?: string;          // e.g. https://api.kangopenbanking.com
+  PUBLIC_SANDBOX_GATEWAY_URL?: string;  // e.g. https://sandbox-api.kangopenbanking.com
+  SANDBOX_HOST?: string;                // e.g. sandbox-api.kangopenbanking.com
   SUPABASE_SERVICE_ROLE_KEY?: string;
   API_KEY_CACHE?: KVNamespace;
   RATE_LIMIT_KV?: KVNamespace;
+}
+
+function isSandboxHost(host: string, env: Env): boolean {
+  const sandboxHost = (env.SANDBOX_HOST ?? "sandbox-api.kangopenbanking.com").toLowerCase();
+  return host.toLowerCase() === sandboxHost;
 }
 
 const HOP_BY_HOP = new Set([
