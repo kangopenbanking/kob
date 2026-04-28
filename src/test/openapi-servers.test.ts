@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '../..');
 
-const PUBLIC = 'https://api.kangopenbanking.com';
+const ALLOWED_HOSTS = ['https://api.kangopenbanking.com', 'https://sandbox-api.kangopenbanking.com'];
 const FORBIDDEN = 'wdzkzeahdtxlynetndqw.supabase.co';
 
 function load(rel: string) {
@@ -32,11 +32,12 @@ const SPECS = [
 
 describe('OpenAPI server + flow URLs use the branded public gateway', () => {
   for (const rel of SPECS) {
-    it(`${rel} — servers[] all point at ${PUBLIC}`, () => {
+    it(`${rel} — servers[] all point at the branded public gateway (production or sandbox)`, () => {
       const spec: any = load(rel);
       expect(spec.servers?.length ?? 0).toBeGreaterThan(0);
       for (const s of spec.servers) {
-        expect(s.url, `server url in ${rel}`).toContain(PUBLIC);
+        const ok = ALLOWED_HOSTS.some((h) => (s.url as string).startsWith(h));
+        expect(ok, `server url in ${rel}: ${s.url}`).toBe(true);
         expect(s.url).not.toContain(FORBIDDEN);
       }
     });
@@ -50,7 +51,8 @@ describe('OpenAPI server + flow URLs use the branded public gateway', () => {
           for (const key of ['authorizationUrl', 'tokenUrl', 'refreshUrl']) {
             const url = flow?.[key];
             if (typeof url === 'string') {
-              expect(url, `${name}.${flowName}.${key} in ${rel}`).toContain(PUBLIC);
+              const ok = ALLOWED_HOSTS.some((h) => url.startsWith(h));
+              expect(ok, `${name}.${flowName}.${key} in ${rel}: ${url}`).toBe(true);
               expect(url).not.toContain(FORBIDDEN);
             }
           }

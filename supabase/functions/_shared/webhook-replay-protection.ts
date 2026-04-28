@@ -3,15 +3,12 @@
 // First insert wins; later inserts return { duplicate: true } so the caller
 // can return HTTP 200 idempotently without reprocessing the event.
 //
-// Usage:
-//   const seen = await checkAndRegisterWebhook(supabase, {
-//     source: "stripe",
-//     event_id: req.headers.get("X-Webhook-ID") ?? body.id,
-//     payload: body,
-//     signature: req.headers.get("X-Webhook-Signature") ?? "",
-//     ttl_seconds: 60 * 60 * 24, // 24h replay window
-//   });
-//   if (seen.duplicate) return new Response(JSON.stringify({ status: "duplicate" }), { status: 200 });
+// Header compatibility (added 2026-04-28, spec v4.17.3):
+//   We accept BOTH header families:
+//     X-Webhook-Signature  | Kang-Signature        (preferred)
+//     X-Webhook-ID         | Kang-Event-ID / Kang-Webhook-ID (preferred)
+//     X-Webhook-Timestamp  | Kang-Timestamp        (preferred)
+//   Use readWebhookHeaders(req) to read whichever is present.
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -31,6 +28,59 @@ export interface ReplayCheckResult {
 
 const DEFAULT_TTL = 60 * 60 * 24; // 24h
 
+/**
+ * Reads webhook identity headers from a request, accepting both the legacy
+ * X-Webhook-* family and the preferred Kang-* family. Kang-* takes precedence
+ * when both are present.
+ */
+export function readWebhookHeaders(req: Request): {
+  event_id: string | null;
+  signature: string | null;
+  timestamp: string | null;
+  event_type: string | null;
+} {
+  const h = req.headers;
+  const get = (...names: string[]) => {
+    for (const n of names) {
+      const v = h.get(n);
+      if (v) return v;
+    }
+    return null;
+  };
+  return {
+    event_id: get("Kang-Event-ID", "Kang-Webhook-ID", "X-Webhook-ID"),
+    signature: get("Kang-Signature", "X-Webhook-Signature"),
+    timestamp: get("Kang-Timestamp", "X-Webhook-Timestamp"),
+    event_type: get("Kang-Event", "X-Webhook-Event"),
+  };
+}
+
+/**
+ * Returns the headers that should be emitted on outbound webhook deliveries
+ * so subscribers can verify with either family. Always emits both.
+ */
+export function buildOutboundWebhookHeaders(opts: {
+  signature: string;
+  event_id: string;
+  timestamp: string;
+  event_type?: string;
+}): Record<string, string> {
+  const headers: Record<string, string> = {
+    "X-Webhook-Signature": opts.signature,
+    "Kang-Signature": opts.signature,
+    "X-Webhook-ID": opts.event_id,
+    "Kang-Event-ID": opts.event_id,
+    "Kang-Webhook-ID": opts.event_id,
+    "X-Webhook-Timestamp": opts.timestamp,
+    "Kang-Timestamp": opts.timestamp,
+  };
+  if (opts.event_type) {
+    headers["X-Webhook-Event"] = opts.event_type;
+    headers["Kang-Event"] = opts.event_type;
+  }
+  return headers;
+}
+
 export async function checkAndRegisterWebhook(
   supabase: SupabaseClient,
   args: ReplayCheckArgs,
@@ -38,7 +88,6 @@ export async function checkAndRegisterWebhook(
   const { source, event_id, payload, signature, ttl_seconds = DEFAULT_TTL } = args;
   if (!event_id) return { duplicate: false, reason: "missing_event_id" };
 
-  // Look up an existing inbox row for this (source,event_id) within TTL window.
   const cutoff = new Date(Date.now() - ttl_seconds * 1000).toISOString();
   const { data: existing } = await supabase
     .from("webhook_inbox")
@@ -52,9 +101,6 @@ export async function checkAndRegisterWebhook(
     return { duplicate: true, inbox_id: existing.id, reason: "duplicate_within_ttl" };
   }
 
-  // First time we see it — register. UNIQUE(source,event_id) protects against
-  // races: if two concurrent writers race, the loser will hit the constraint
-  // and we treat that as a duplicate as well.
   const { data: inserted, error } = await supabase
     .from("webhook_inbox")
     .insert({
@@ -68,7 +114,6 @@ export async function checkAndRegisterWebhook(
     .single();
 
   if (error) {
-    // 23505 = unique_violation → another worker won the race.
     if ((error as { code?: string }).code === "23505") {
       return { duplicate: true, reason: "duplicate_within_ttl" };
     }

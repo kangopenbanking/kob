@@ -1,0 +1,5343 @@
+{
+  "info": {
+    "name": "Kang Open Banking API v1",
+    "_postman_id": "kob-v1-2026-04-28",
+    "description": "Auto-generated from OpenAPI spec v4.17.3 on 2026-04-28. Canonical base URLs only \u2014 no internal Supabase URLs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "/healthz",
+      "item": [
+        {
+          "name": "Security posture self-verification",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/healthz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "healthz"
+              ]
+            },
+            "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 \u2014 S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/health",
+      "item": [
+        {
+          "name": "API health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "health"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/ready",
+      "item": [
+        {
+          "name": "Readiness probe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ready",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ready"
+              ]
+            },
+            "description": "Returns 200 when the API is ready to accept traffic. Checks database connectivity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/system-health",
+      "item": [
+        {
+          "name": "Detailed system health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/system-health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "system-health"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/oauth/authorize",
+      "item": [
+        {
+          "name": "Authorize OAuth request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/oauth/authorize",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "oauth",
+                "authorize"
+              ]
+            },
+            "description": "Initiate OAuth 2.0 authorization flow with PKCE (FAPI 1.0 Advanced)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/oauth/token",
+      "item": [
+        {
+          "name": "Exchange authorization code for token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/oauth/token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "oauth",
+                "token"
+              ]
+            },
+            "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE \u2014 no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) \u2014 present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/oauth/introspect",
+      "item": [
+        {
+          "name": "Introspect access token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/oauth/introspect",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "oauth",
+                "introspect"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/oauth/par",
+      "item": [
+        {
+          "name": "Pushed Authorization Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/oauth/par",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "oauth",
+                "par"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/dcr/register",
+      "item": [
+        {
+          "name": "Dynamic Client Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/dcr/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "dcr",
+                "register"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/oidc/.well-known/openid-configuration",
+      "item": [
+        {
+          "name": "OIDC discovery",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/oidc/.well-known/openid-configuration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "oidc",
+                ".well-known",
+                "openid-configuration"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/jwks",
+      "item": [
+        {
+          "name": "JSON Web Key Set",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/jwks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "jwks"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/phone/send-otp",
+      "item": [
+        {
+          "name": "Send OTP to phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/phone/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "phone",
+                "send-otp"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/phone/verify-otp",
+      "item": [
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/phone/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "phone",
+                "verify-otp"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/phone/pin-login",
+      "item": [
+        {
+          "name": "Login with PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/phone/pin-login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "phone",
+                "pin-login"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/pin/set",
+      "item": [
+        {
+          "name": "Set PIN code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/pin/set",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "pin",
+                "set"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/pin/verify",
+      "item": [
+        {
+          "name": "Verify PIN code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/pin/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "pin",
+                "verify"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/auth/password/reset-with-pin",
+      "item": [
+        {
+          "name": "Reset password with PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/password/reset-with-pin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "password",
+                "reset-with-pin"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/security/captcha/generate",
+      "item": [
+        {
+          "name": "Generate CAPTCHA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/security/captcha/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "security",
+                "captcha",
+                "generate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/security/captcha/verify",
+      "item": [
+        {
+          "name": "Verify CAPTCHA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/security/captcha/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "security",
+                "captcha",
+                "verify"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/security/sca/initiate",
+      "item": [
+        {
+          "name": "Initiate SCA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/security/sca/initiate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "security",
+                "sca",
+                "initiate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/security/sca/verify",
+      "item": [
+        {
+          "name": "Verify SCA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/security/sca/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "security",
+                "sca",
+                "verify"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/certificates",
+      "item": [
+        {
+          "name": "Upload certificate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/certificates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "certificates"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List certificates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/certificates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "certificates"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/certificates/revoke",
+      "item": [
+        {
+          "name": "Revoke certificate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/certificates/revoke",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "certificates",
+                "revoke"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/consents",
+      "item": [
+        {
+          "name": "Create AISP consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/consents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "consents"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}",
+      "item": [
+        {
+          "name": "Get account details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}/balances",
+      "item": [
+        {
+          "name": "Get account balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}/balances",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}",
+                "balances"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}/transactions",
+      "item": [
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}",
+                "transactions"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}/beneficiaries",
+      "item": [
+        {
+          "name": "List beneficiaries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}/beneficiaries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}",
+                "beneficiaries"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}/standing-orders",
+      "item": [
+        {
+          "name": "List standing orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}/standing-orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}",
+                "standing-orders"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/aisp/accounts/{accountId}/direct-debits",
+      "item": [
+        {
+          "name": "List direct debits",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/aisp/accounts/{accountId}/direct-debits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "aisp",
+                "accounts",
+                "{accountId}",
+                "direct-debits"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/pisp/consents",
+      "item": [
+        {
+          "name": "Create payment consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/pisp/consents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "pisp",
+                "consents"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/pisp/domestic-payment",
+      "item": [
+        {
+          "name": "Submit domestic payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/pisp/domestic-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "pisp",
+                "domestic-payment"
+              ]
+            },
+            "description": " Responses will conform to the StandardResponse envelope in a future minor release."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/pisp/payment-submission",
+      "item": [
+        {
+          "name": "Confirm payment submission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/pisp/payment-submission",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "pisp",
+                "payment-submission"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/pisp/payments/{paymentId}",
+      "item": [
+        {
+          "name": "Get payment details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/pisp/payments/{paymentId}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "pisp",
+                "payments",
+                "{paymentId}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/consents/{consentId}/authorize",
+      "item": [
+        {
+          "name": "Authorize consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/consents/{consentId}/authorize",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "consents",
+                "{consentId}",
+                "authorize"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/consents/{consentId}/revoke",
+      "item": [
+        {
+          "name": "Revoke consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/consents/{consentId}/revoke",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "consents",
+                "{consentId}",
+                "revoke"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/consents",
+      "item": [
+        {
+          "name": "List consents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/consents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "consents"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/credit/score",
+      "item": [
+        {
+          "name": "Get credit score",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/credit/score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "credit",
+                "score"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Calculate credit score",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/credit/score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "credit",
+                "score"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/credit/simulate",
+      "item": [
+        {
+          "name": "Simulate score impact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/credit/simulate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "credit",
+                "simulate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/credit/tips",
+      "item": [
+        {
+          "name": "Get improvement tips",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/credit/tips",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "credit",
+                "tips"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/credit/report",
+      "item": [
+        {
+          "name": "Generate credit report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/credit/report",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "credit",
+                "report"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/products",
+      "item": [
+        {
+          "name": "List loan products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "products"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/apply",
+      "item": [
+        {
+          "name": "Apply for loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/apply",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "apply"
+              ]
+            },
+            "description": " Responses will conform to the StandardResponse envelope in a future minor release."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/calculate",
+      "item": [
+        {
+          "name": "Calculate loan terms",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/calculate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "calculate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/{loanId}/approve",
+      "item": [
+        {
+          "name": "Approve loan application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/{loanId}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "{loanId}",
+                "approve"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/{loanId}/disburse",
+      "item": [
+        {
+          "name": "Disburse loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/{loanId}/disburse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "{loanId}",
+                "disburse"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/{loanId}/schedule",
+      "item": [
+        {
+          "name": "Get repayment schedule",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/{loanId}/schedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "{loanId}",
+                "schedule"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Generate repayment schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/{loanId}/schedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "{loanId}",
+                "schedule"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/loans/{loanId}/repay",
+      "item": [
+        {
+          "name": "Make loan repayment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/loans/{loanId}/repay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "loans",
+                "{loanId}",
+                "repay"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/savings/products",
+      "item": [
+        {
+          "name": "List savings products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "products"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/savings/accounts",
+      "item": [
+        {
+          "name": "Create savings account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List savings accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "accounts"
+              ]
+            },
+            "description": "Retrieve a paginated list of savings accounts for the authenticated user. Requires a valid AISP consent."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/savings/accounts/{accountId}/deposit",
+      "item": [
+        {
+          "name": "Deposit to savings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/accounts/{accountId}/deposit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "accounts",
+                "{accountId}",
+                "deposit"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/savings/accounts/{accountId}/withdraw",
+      "item": [
+        {
+          "name": "Withdraw from savings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/accounts/{accountId}/withdraw",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "accounts",
+                "{accountId}",
+                "withdraw"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/savings/accrue-interest",
+      "item": [
+        {
+          "name": "Accrue interest (cron)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/savings/accrue-interest",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "savings",
+                "accrue-interest"
+              ]
+            },
+            "description": "Trigger interest accrual across all eligible savings accounts. Designed for scheduled (cron) invocation."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/ledger/accounts",
+      "item": [
+        {
+          "name": "List ledger accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ledger/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ledger",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create ledger account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ledger/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ledger",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/ledger/accounts/{accountId}/balance",
+      "item": [
+        {
+          "name": "Get ledger account balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ledger/accounts/{accountId}/balance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ledger",
+                "accounts",
+                "{accountId}",
+                "balance"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/ledger/journal",
+      "item": [
+        {
+          "name": "Post journal entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ledger/journal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ledger",
+                "journal"
+              ]
+            },
+            "description": "Post a balanced double-entry journal entry. Sum of debits must equal sum of credits."
+          }
+        },
+        {
+          "name": "List journal entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/ledger/journal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "ledger",
+                "journal"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/mobile-money/charge",
+      "item": [
+        {
+          "name": "Charge mobile money",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/mobile-money/charge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "mobile-money",
+                "charge"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/mobile-money/transfer",
+      "item": [
+        {
+          "name": "Transfer to mobile money",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/mobile-money/transfer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "mobile-money",
+                "transfer"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/mobile-money/verify",
+      "item": [
+        {
+          "name": "Verify mobile money transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/mobile-money/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "mobile-money",
+                "verify"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/mobile-money/to-bank",
+      "item": [
+        {
+          "name": "Mobile money to bank transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/mobile-money/to-bank",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "mobile-money",
+                "to-bank"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/flutterwave/bank-transfer",
+      "item": [
+        {
+          "name": "Initiate bank transfer via Flutterwave",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/flutterwave/bank-transfer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "flutterwave",
+                "bank-transfer"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/flutterwave/banks",
+      "item": [
+        {
+          "name": "List supported banks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/flutterwave/banks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "flutterwave",
+                "banks"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/flutterwave/verify-bank",
+      "item": [
+        {
+          "name": "Verify bank account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/flutterwave/verify-bank",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "flutterwave",
+                "verify-bank"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/stripe/payment-intent",
+      "item": [
+        {
+          "name": "Create Stripe payment intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/stripe/payment-intent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "stripe",
+                "payment-intent"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/stripe/confirm-payment",
+      "item": [
+        {
+          "name": "Confirm Stripe payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/stripe/confirm-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "stripe",
+                "confirm-payment"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/banking/bulk-transfers",
+      "item": [
+        {
+          "name": "Initiate bulk transfers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/banking/bulk-transfers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "banking",
+                "bulk-transfers"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/banking/exchange-rate",
+      "item": [
+        {
+          "name": "Get exchange rate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/banking/exchange-rate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "banking",
+                "exchange-rate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/cards",
+      "item": [
+        {
+          "name": "Create virtual card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/cards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "cards"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List virtual cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/cards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "cards"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/cards/{cardId}/topup",
+      "item": [
+        {
+          "name": "Top up virtual card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/cards/{cardId}/topup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "cards",
+                "{cardId}",
+                "topup"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/cards/{cardId}/transactions",
+      "item": [
+        {
+          "name": "Card transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/cards/{cardId}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "cards",
+                "{cardId}",
+                "transactions"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/cards/{cardId}/status",
+      "item": [
+        {
+          "name": "Update card status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/cards/{cardId}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "cards",
+                "{cardId}",
+                "status"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/iso20022/pain001/parse",
+      "item": [
+        {
+          "name": "Parse pain.001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/iso20022/pain001/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "iso20022",
+                "pain001",
+                "parse"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/iso20022/camt053/parse",
+      "item": [
+        {
+          "name": "Parse camt.053",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/iso20022/camt053/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "iso20022",
+                "camt053",
+                "parse"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/iso20022/pacs008/generate",
+      "item": [
+        {
+          "name": "Generate pacs.008",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/iso20022/pacs008/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "iso20022",
+                "pacs008",
+                "generate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/iso20022/pacs002/generate",
+      "item": [
+        {
+          "name": "Generate pacs.002",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/iso20022/pacs002/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "iso20022",
+                "pacs002",
+                "generate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/swift/mt103/parse",
+      "item": [
+        {
+          "name": "Parse MT103",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt103/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt103",
+                "parse"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/swift/mt940/parse",
+      "item": [
+        {
+          "name": "Parse MT940",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt940/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt940",
+                "parse"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/swift/mt103/generate",
+      "item": [
+        {
+          "name": "Generate MT103",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt103/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt103",
+                "generate"
+              ]
+            },
+            "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). "
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/validate/iban",
+      "item": [
+        {
+          "name": "Validate IBAN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/validate/iban",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "validate",
+                "iban"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/validate/bic",
+      "item": [
+        {
+          "name": "Validate BIC/SWIFT code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/validate/bic",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "validate",
+                "bic"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/validate/rib",
+      "item": [
+        {
+          "name": "Validate Cameroon Domestic RIB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/validate/rib",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "validate",
+                "rib"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/standards/validate/account-identifier",
+      "item": [
+        {
+          "name": "Validate any account identifier (RIB, IBAN, LOCAL_BANK, MOMO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/validate/account-identifier",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "validate",
+                "account-identifier"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/directory/banks/cm",
+      "item": [
+        {
+          "name": "List Cameroon banks with RIB structure and SWIFT codes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/directory/banks/cm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "directory",
+                "banks",
+                "cm"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/kyc/submit",
+      "item": [
+        {
+          "name": "Submit KYC documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/kyc/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "kyc",
+                "submit"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/kyc/sanctions-screen",
+      "item": [
+        {
+          "name": "Sanctions screening",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/kyc/sanctions-screen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "kyc",
+                "sanctions-screen"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/kyc/data-export",
+      "item": [
+        {
+          "name": "Export personal data (GDPR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/kyc/data-export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "kyc",
+                "data-export"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/webhooks",
+      "item": [
+        {
+          "name": "Register webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "webhooks"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List webhooks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "webhooks"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/webhooks/{webhookId}/deliveries",
+      "item": [
+        {
+          "name": "List webhook deliveries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/webhooks/{webhookId}/deliveries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "webhooks",
+                "{webhookId}",
+                "deliveries"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/users",
+      "item": [
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "users"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/clients",
+      "item": [
+        {
+          "name": "Create API client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "clients"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/metrics",
+      "item": [
+        {
+          "name": "Platform metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/metrics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "metrics"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/sandbox/accounts",
+      "item": [
+        {
+          "name": "List sandbox accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/sandbox/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "sandbox",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/system-config",
+      "item": [
+        {
+          "name": "Get system configuration",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/system-config",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "system-config"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Update system configuration",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/system-config",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "system-config"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/webhooks",
+      "item": [
+        {
+          "name": "List all webhooks (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "webhooks"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/transactions/review",
+      "item": [
+        {
+          "name": "Review transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/transactions/review",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "transactions",
+                "review"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/loans",
+      "item": [
+        {
+          "name": "List all loans (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/loans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "loans"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/savings",
+      "item": [
+        {
+          "name": "List all savings accounts (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/savings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "savings"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/consents",
+      "item": [
+        {
+          "name": "List all consents (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/consents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "consents"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/staff/assign",
+      "item": [
+        {
+          "name": "Assign staff to branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/staff/assign",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "staff",
+                "assign"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/admin/branches",
+      "item": [
+        {
+          "name": "List branches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/branches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "branches"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/branches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "branches"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/communications/send",
+      "item": [
+        {
+          "name": "Send communication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/communications/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "communications",
+                "send"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/communications/bulk",
+      "item": [
+        {
+          "name": "Send bulk communication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/communications/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "communications",
+                "bulk"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/invoices/generate",
+      "item": [
+        {
+          "name": "Generate invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices",
+                "generate"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/institutions/register",
+      "item": [
+        {
+          "name": "Register institution",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/institutions/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "institutions",
+                "register"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/institutions/{institutionId}/clients",
+      "item": [
+        {
+          "name": "Create institution API client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/institutions/{institutionId}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "institutions",
+                "{institutionId}",
+                "clients"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/institutions/{institutionId}/kyb",
+      "item": [
+        {
+          "name": "Submit business KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/institutions/{institutionId}/kyb",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "institutions",
+                "{institutionId}",
+                "kyb"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/crediq/health-check",
+      "item": [
+        {
+          "name": "CrediQ health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/crediq/health-check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "crediq",
+                "health-check"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/crediq/baseline-score",
+      "item": [
+        {
+          "name": "Generate baseline score",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/crediq/baseline-score",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "crediq",
+                "baseline-score"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/crediq/health-metrics",
+      "item": [
+        {
+          "name": "Calculate health metrics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/crediq/health-metrics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "crediq",
+                "health-metrics"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/crediq/action-plan",
+      "item": [
+        {
+          "name": "Generate action plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/crediq/action-plan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "crediq",
+                "action-plan"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/postiq/codes",
+      "item": [
+        {
+          "name": "Create PostiQ code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/postiq/codes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "postiq",
+                "codes"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/postiq/codes/{code}",
+      "item": [
+        {
+          "name": "Lookup PostiQ code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/postiq/codes/{code}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "postiq",
+                "codes",
+                "{code}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/merchants",
+      "item": [
+        {
+          "name": "Register WooCommerce merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/merchants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "merchants"
+              ]
+            },
+            "description": "Register a WooCommerce store for Kang Open Banking payment processing. Returns API credentials."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/validate-install",
+      "item": [
+        {
+          "name": "Validate WooCommerce plugin installation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/validate-install",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "validate-install"
+              ]
+            },
+            "description": "Validates the plugin is correctly installed and API credentials are working."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/plugin/download",
+      "item": [
+        {
+          "name": "Download WooCommerce plugin ZIP",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/plugin/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "plugin",
+                "download"
+              ]
+            },
+            "description": "Downloads the complete Woo for Kang WordPress plugin as a ZIP file ready for installation. Authentication required. A developer account or merchant account bearer token must be provided."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/process-payment",
+      "item": [
+        {
+          "name": "Process WooCommerce payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/process-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "process-payment"
+              ]
+            },
+            "description": "Initiates a payment for a WooCommerce order. Called by the WordPress plugin during checkout."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/transactions",
+      "item": [
+        {
+          "name": "Sync WooCommerce transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "transactions"
+              ]
+            },
+            "description": "Retrieve transaction history for a WooCommerce merchant. Used by the plugin for transaction synchronization."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/woocommerce/webhook",
+      "item": [
+        {
+          "name": "WooCommerce payment webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/woocommerce/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "woocommerce",
+                "webhook"
+              ]
+            },
+            "description": "Receives payment status updates and updates the corresponding WooCommerce order."
+          }
+        }
+      ]
+    },
+    {
+      "name": "/v1/sandbox/accounts",
+      "item": [
+        {
+          "name": "Create sandbox account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "X-Kang-Client",
+                "value": "postman/1.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/sandbox/accounts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "sandbox",
+                "accounts"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

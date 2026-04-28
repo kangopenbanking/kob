@@ -7,6 +7,18 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.17.3 — Developer Platform Acceptance Pass",
+      date: "2026-04-28",
+      type: "patch",
+      changes: [
+        { type: "feature", description: "Canonical sandbox base URL — OpenAPI servers[] now declares https://sandbox-api.kangopenbanking.com/v1 as a distinct sandbox environment alongside production. Previously both server entries pointed at the same hostname; integrators can now switch environments by changing the base URL alone. Standing Order 4 — additive only." },
+        { type: "feature", description: "Webhook header alias compatibility — outbound webhook deliveries now emit BOTH the legacy X-Webhook-* family AND the preferred Kang-* family (Kang-Signature, Kang-Event-ID, Kang-Webhook-ID, Kang-Timestamp). Inbound verification accepts either family; new shared helpers readWebhookHeaders() and buildOutboundWebhookHeaders() in _shared/webhook-replay-protection.ts standardise the read/write paths. Standing Order 1 — The Lock preserved (no rename)." },
+        { type: "feature", description: "Sandbox simulation REST surface — POST /v1/sandbox/events/simulate, /v1/sandbox/payments/simulate, /v1/sandbox/webhooks/send-test, and /v1/sandbox/reset are now first-class documented endpoints. They route through the new sandbox-router edge function to the existing sandbox / sandbox-trigger-webhook / sandbox-test-webhook implementations — internal function names are never exposed." },
+        { type: "feature", description: "Static Postman collection — Kang_Open_Banking_API_v1.postman_collection.json plus Production and Sandbox environment files are now served directly from /postman/ with no edge-function cold start. Auto-generated from the published OpenAPI spec; refreshed on every release." },
+        { type: "improvement", description: "Acceptance matrix test — src/test/acceptance-matrix.test.ts asserts every Phase 15 acceptance criterion (no internal URL leaks, canonical servers, gateway/sandbox/webhook routes, error catalog, cursor pagination, SDK ecosystem, Postman files, changelog entry, dashboard tooling components) and writes an evidence report to docs/audit/2026-04-28-developer-platform-acceptance.md." },
+      ]
+    },
+    {
       version: "API Spec 4.17.2 / Developer Portal 4.19.0",
       date: "2026-04-28",
       type: "minor",
