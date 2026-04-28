@@ -9,7 +9,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { InteractiveDemoWidget } from "@/components/developer/InteractiveDemoWidget";
 
 const BubbleGuide = () => {
-  const apiBaseUrl = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
+  const apiBaseUrl = "https://api.kangopenbanking.com/v1";
 
   return (
     <div className="min-h-screen bg-background">

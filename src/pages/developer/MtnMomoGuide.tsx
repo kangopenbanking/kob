@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
-const mtnCharge = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+const mtnCharge = `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -88,7 +88,7 @@ func main() {
 		"tx_ref":         "order_12345",
 	})
 	req, _ := http.NewRequest("POST",
-		"https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
+		"https://api.kangopenbanking.com/v1/gateway-charges-router",
 		bytes.NewBuffer(body))
 	req.Header.Set("Authorization", "Bearer sk_test_sandbox_KangOB2026Demo")
 	req.Header.Set("Content-Type", "application/json")
@@ -109,7 +109,7 @@ public class MtnCharge {
              "tx_ref":"order_12345"}""";
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router"))
+            .uri(URI.create("https://api.kangopenbanking.com/v1/gateway-charges-router"))
             .header("Authorization", "Bearer sk_test_sandbox_KangOB2026Demo")
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -212,7 +212,7 @@ export default function MtnMomoGuide() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="disbursement">MTN MoMo Disbursement (Payout)</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-payouts-router \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/gateway-payouts-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '{

@@ -15,9 +15,9 @@ export default function Versioning() {
         <Card><CardHeader><CardTitle>Versioning Strategy</CardTitle></CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-3">
             <p>All Kang Open Banking API endpoints use the <code className="text-xs bg-muted px-1 rounded">/v1/</code> path prefix. The version is embedded in the URL path, not in headers.</p>
-            <div className="bg-muted rounded-lg p-4"><pre className="text-xs">https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router
-https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts
-https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token</pre></div>
+            <div className="bg-muted rounded-lg p-4"><pre className="text-xs">https://api.kangopenbanking.com/v1/gateway-charges-router
+https://api.kangopenbanking.com/v1/aisp/accounts
+https://api.kangopenbanking.com/v1/oauth-token</pre></div>
             <p>We follow semantic versioning (SemVer) for documentation releases but maintain a single API version (<code className="text-xs bg-muted px-1 rounded">v1</code>) for endpoint paths.</p>
           </CardContent>
         </Card>

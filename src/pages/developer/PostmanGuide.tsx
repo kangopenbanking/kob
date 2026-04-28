@@ -52,7 +52,7 @@ export default function PostmanGuide() {
                   </thead>
                   <tbody>
                     {[
-                      ["base_url", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+                      ["base_url", "https://api.kangopenbanking.com/v1"],
                       ["secret_key", "sk_test_sandbox_KangOB2026Demo"],
                       ["merchant_id", "merch_test_001"],
                     ].map(([v, val]) => (

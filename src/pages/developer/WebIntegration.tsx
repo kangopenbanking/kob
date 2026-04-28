@@ -58,7 +58,7 @@ export default function WebIntegration() {
                       code: `// src/services/kob-api.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE_URL = 'https://api.kangopenbanking.com/v1';
 
 export const kobApi = axios.create({
   baseURL: API_BASE_URL,
@@ -190,7 +190,7 @@ export function AccountList() {
 import { ref } from 'vue';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE_URL = 'https://api.kangopenbanking.com/v1';
 
 export function useKOB() {
   const loading = ref(false);
@@ -280,7 +280,7 @@ onMounted(async () => {
                       code: `// kob-sdk.js
 class KOBClient {
   constructor(baseURL) {
-    this.baseURL = baseURL || 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+    this.baseURL = baseURL || 'https://api.kangopenbanking.com/v1';
     this.token = localStorage.getItem('kob_token');
   }
 
@@ -395,7 +395,7 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const KOB_API = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const KOB_API = 'https://api.kangopenbanking.com/v1';
 const CLIENT_ID = process.env.KOB_CLIENT_ID;
 const CLIENT_SECRET = process.env.KOB_CLIENT_SECRET;
 
@@ -484,7 +484,7 @@ import os
 
 app = Flask(__name__)
 
-KOB_API = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1'
+KOB_API = 'https://api.kangopenbanking.com/v1'
 CLIENT_ID = os.getenv('KOB_CLIENT_ID')
 CLIENT_SECRET = os.getenv('KOB_CLIENT_SECRET')
 
@@ -564,7 +564,7 @@ use Illuminate\\Support\\Facades\\Http;
 
 class KOBService
 {
-    private $apiBase = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+    private $apiBase = 'https://api.kangopenbanking.com/v1';
     private $clientId;
     private $clientSecret;
 

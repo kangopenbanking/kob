@@ -3,11 +3,11 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const cursorExample = `# First page
-curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router?action=list_charges&limit=20 \\
+curl https://api.kangopenbanking.com/v1/gateway-charges-router?action=list_charges&limit=20 \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"
 
 # Next page using cursor
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router?action=list_charges&limit=20&cursor=eyJpZCI6IjEyMyJ9" \\
+curl "https://api.kangopenbanking.com/v1/gateway-charges-router?action=list_charges&limit=20&cursor=eyJpZCI6IjEyMyJ9" \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"`;
 
 const responseExample = `{

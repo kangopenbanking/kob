@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const authExample = `# Authenticate with sandbox credentials
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/auth/token \\
+curl -X POST https://api.kangopenbanking.com/v1/auth/token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=pk_test_sandbox_KangOB2026Demo" \\
@@ -100,8 +100,8 @@ export default function SandboxCredentials() {
               </thead>
               <tbody>
                 {[
-                  ["Sandbox", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
-                  ["Production", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+                  ["Sandbox", "https://api.kangopenbanking.com/v1"],
+                  ["Production", "https://api.kangopenbanking.com/v1"],
                 ].map(([env, url]) => (
                   <tr key={env} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{env}</td>

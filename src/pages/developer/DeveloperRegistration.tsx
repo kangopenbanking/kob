@@ -280,7 +280,7 @@ const DeveloperRegistration = () => {
                 </div>
                 <div className="relative">
                   <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto font-mono">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+{`curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer ${credentials.api_key}" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: test_charge_001" \\
@@ -299,7 +299,7 @@ const DeveloperRegistration = () => {
                     size="icon"
                     className="absolute top-2 right-2"
                     onClick={() => copyToClipboard(
-                      `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\\n  -H "Authorization: Bearer ${credentials.api_key}" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: test_charge_001" \\\n  -d '{"amount": 5000, "currency": "XAF", "description": "Test charge", "payment_method": "mobile_money", "customer": {"phone": "+237650000000"}}'`,
+                      `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\\n  -H "Authorization: Bearer ${credentials.api_key}" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: test_charge_001" \\\n  -d '{"amount": 5000, "currency": "XAF", "description": "Test charge", "payment_method": "mobile_money", "customer": {"phone": "+237650000000"}}'`,
                       "cURL command"
                     )}
                   >
@@ -315,7 +315,7 @@ const DeveloperRegistration = () => {
                 </div>
                 <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto font-mono">
 {`const response = await fetch(
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
+  "https://api.kangopenbanking.com/v1/gateway-charges-router",
   {
     method: "POST",
     headers: {
@@ -346,7 +346,7 @@ console.log(data);`}
 {`import requests
 
 response = requests.post(
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
+    "https://api.kangopenbanking.com/v1/gateway-charges-router",
     headers={
         "Authorization": "Bearer ${credentials.api_key}",
         "Content-Type": "application/json",

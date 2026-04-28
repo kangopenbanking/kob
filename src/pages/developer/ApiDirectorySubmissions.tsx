@@ -178,7 +178,7 @@ const ApiDirectorySubmissions = () => {
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   <span className="text-sm">Postman Collection</span>
                   <Badge variant="outline" className="ml-auto">
-                    <a href="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                    <a href="https://api.kangopenbanking.com/v1/postman-collection" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
                       View <ExternalLink className="h-3 w-3" />
                     </a>
                   </Badge>

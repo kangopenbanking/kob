@@ -10,7 +10,7 @@ import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
 import { TryItNowPlayground } from "@/components/developer/TryItNowPlayground";
 
 const curlFirstCall = `# 1. Create a charge using sandbox credentials (no signup required)
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -193,7 +193,7 @@ export default function GettingStarted() {
                 ["Secret Key", "sk_test_sandbox_KangOB2026Demo"],
                 ["Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
                 ["Merchant ID", "merch_test_001"],
-                ["Base URL", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+                ["Base URL", "https://api.kangopenbanking.com/v1"],
               ].map(([label, value]) => (
                 <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                   <span className="text-sm font-medium text-foreground min-w-[160px]">{label}:</span>

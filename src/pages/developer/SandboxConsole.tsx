@@ -253,19 +253,19 @@ export default function SandboxConsole() {
   };
 
   const sandboxCurlExample = `# 1. Register sandbox account
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/accounts \\
+curl -X POST https://api.kangopenbanking.com/v1/sandbox/accounts \\
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"company_name": "My FinTech App"}'
 
 # 2. Generate sandbox API key
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/api-keys \\
+curl -X POST https://api.kangopenbanking.com/v1/sandbox/api-keys \\
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"key_name": "Development Key"}'
 
 # 3. Seed test data (accounts + transactions + balances)
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/generate \\
+curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"data_type": "all", "count": 5}'`;
@@ -305,7 +305,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/
                 ["Secret Key", "sk_test_sandbox_KangOB2026Demo"],
                 ["Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
                 ["Merchant ID", "merch_test_001"],
-                ["Base URL", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+                ["Base URL", "https://api.kangopenbanking.com/v1"],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between bg-muted/30 border border-border rounded-md px-3 py-2">
                   <div>
@@ -709,7 +709,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/data/
                 </thead>
                 <tbody>
                   {[
-                    ["Base URL", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+                    ["Base URL", "https://api.kangopenbanking.com/v1"],
                     ["Free Tier", "1,000 requests/day, no credit card"],
                     ["Instant API Keys", "Self-service via /v1/sandbox/api-keys (sbx_ prefix)"],
                     ["Data Resets", "Every 24 hours (or on demand via API)"],

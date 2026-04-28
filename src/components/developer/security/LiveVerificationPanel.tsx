@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, Loader2, ExternalLink, RefreshCw } from "lucide-react";
 
-const HEALTHZ_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/healthz";
-const OIDC_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oidc-config";
+const HEALTHZ_URL = "https://api.kangopenbanking.com/v1/healthz";
+const OIDC_URL = "https://api.kangopenbanking.com/v1/oidc-config";
 
 interface SecurityCapability {
   key: string;

@@ -76,10 +76,10 @@ export default function Playground() {
     if (!endpoint) return "";
 
     if (endpoint.method === "GET") {
-      return `curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/${selectedEndpoint}" \\
+      return `curl -X GET "https://api.kangopenbanking.com/v1/${selectedEndpoint}" \\
   -H "Content-Type: application/json"`;
     } else {
-      return `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/${selectedEndpoint}" \\
+      return `curl -X POST "https://api.kangopenbanking.com/v1/${selectedEndpoint}" \\
   -H "Content-Type: application/json" \\
   -d '${requestBody}'`;
     }

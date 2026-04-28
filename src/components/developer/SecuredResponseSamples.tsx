@@ -18,7 +18,7 @@ export function SecuredResponseSamples({
 }) {
   const unauthorizedCurl = `# Replay the request with an expired or missing bearer token
 curl -i -X ${endpoint.split(" ")[0]} \\
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1${endpoint.split(" ")[1] ?? ""}" \\
+  "https://api.kangopenbanking.com/v1${endpoint.split(" ")[1] ?? ""}" \\
   -H "Authorization: Bearer expired_or_invalid_token"
 
 HTTP/1.1 401 Unauthorized
@@ -37,7 +37,7 @@ WWW-Authenticate: Bearer realm="kob", error="invalid_token", error_description="
 
   const forbiddenCurl = `# Same endpoint, valid token but missing the "${scopeRequired}" scope
 curl -i -X ${endpoint.split(" ")[0]} \\
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1${endpoint.split(" ")[1] ?? ""}" \\
+  "https://api.kangopenbanking.com/v1${endpoint.split(" ")[1] ?? ""}" \\
   -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIs..."
 
 HTTP/1.1 403 Forbidden

@@ -769,7 +769,7 @@ export default function Changelog() {
         { type: "feature", description: "Plugin ZIP edge function generates in-memory ZIP with gateway, API client, webhooks, logger, templates, readme, license, and uninstall handler" },
         { type: "feature", description: "OpenAPI spec: 6 WooCommerce endpoints with full request/response schemas (was 3 stubs)" },
         { type: "feature", description: "Postman collection: 6 WooCommerce requests with complete example bodies (was 3)" },
-        { type: "improvement", description: "API base URL fixed to production pattern (https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1)" },
+        { type: "improvement", description: "API base URL fixed to production pattern (https://api.kangopenbanking.com/v1)" },
         { type: "improvement", description: "WFK_PLUGIN_DIR constant added — fixes require path errors in plugin" },
         { type: "improvement", description: "Webhook handler rewritten with proper static dispatch, HMAC-SHA256 verification, and idempotency" },
         { type: "improvement", description: "Plugin code viewer updated with complete file set and corrected code" },

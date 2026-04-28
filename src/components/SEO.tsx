@@ -47,7 +47,7 @@ export function SEO({
     "@type": "WebAPI",
     "name": "Kang Open Banking API",
     "description": "COBAC-compliant Open Banking API for Cameroon enabling account information, payment initiation, credit scoring, and mobile money integration",
-    "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+    "url": "https://api.kangopenbanking.com/v1",
     "documentation": "https://kangopenbanking.com/developer",
     "termsOfService": "https://kangopenbanking.com/terms",
     "provider": {

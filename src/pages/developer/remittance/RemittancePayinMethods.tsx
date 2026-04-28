@@ -53,7 +53,7 @@ export default function RemittancePayinMethods() {
           title="Create Stripe Intent"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -84,7 +84,7 @@ export default function RemittancePayinMethods() {
           title="Create PayPal Order"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -102,7 +102,7 @@ export default function RemittancePayinMethods() {
           title="Initiate MoMo Charge"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -125,7 +125,7 @@ export default function RemittancePayinMethods() {
           title="Wallet Debit"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

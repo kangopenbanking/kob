@@ -110,7 +110,7 @@ export default function CreditAPIDocumentation() {
             codeExamples={[
               {
                 language: "curl",
-                code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/credit/auth \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/credit/auth \\
   -H "Content-Type: application/json" \\
   -d '{
     "api_key": "kob_live_abc123def456",
@@ -135,7 +135,7 @@ const { access_token } = await response.json();`
                 code: `import requests
 
 response = requests.post(
-    'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/credit/auth',
+    'https://api.kangopenbanking.com/v1/credit/auth',
     json={
         'api_key': os.getenv('CREDIT_API_KEY'),
         'api_secret': os.getenv('CREDIT_API_SECRET')
@@ -179,7 +179,7 @@ access_token = data['access_token']`
             codeExamples={[
               {
                 language: "curl",
-                code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/credit/query \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/credit/query \\
   -H "Authorization: Bearer eyJhbGc..." \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -412,7 +412,7 @@ async function getCreditScore(email, consentRef) {
   try {
     // Authenticate
     const authResponse = await axios.post(
-      'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/credit/auth',
+      'https://api.kangopenbanking.com/v1/credit/auth',
       {
         api_key: process.env.CREDIT_API_KEY,
         api_secret: process.env.CREDIT_API_SECRET
@@ -423,7 +423,7 @@ async function getCreditScore(email, consentRef) {
     
     // Query score
     const scoreResponse = await axios.post(
-      'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/credit/query',
+      'https://api.kangopenbanking.com/v1/credit/query',
       {
         user_identifier: email,
         consent_reference: consentRef,

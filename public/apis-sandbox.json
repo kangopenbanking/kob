@@ -10,7 +10,7 @@
       "name": "Kang Open Banking API (Sandbox)",
       "description": "Sandbox build of the Kang Open Banking API. Identical contract to production with sandbox-only test data. Use sbx_* API keys.",
       "image": "https://kangopenbanking.com/kob-logo.png",
-      "baseURL": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+      "baseURL": "https://api.kangopenbanking.com/v1",
       "humanURL": "https://kangopenbanking.com/developer/sandbox/api",
       "version": "4.16.4",
       "tags": [
@@ -37,7 +37,7 @@
         },
         {
           "type": "X-healthz",
-          "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/healthz"
+          "url": "https://api.kangopenbanking.com/v1/healthz"
         },
         {
           "type": "X-sandbox-console",

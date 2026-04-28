@@ -50,7 +50,7 @@ export function PostmanExportButton({ variant = "outline", size = "sm", classNam
 }
 
 function convertToPostmanCollection(spec: any) {
-  const baseUrl = spec.servers?.[0]?.url || "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1";
+  const baseUrl = spec.servers?.[0]?.url || "https://api.kangopenbanking.com/v1/v1";
   
   const items: any[] = [];
   const paths = spec.paths || {};

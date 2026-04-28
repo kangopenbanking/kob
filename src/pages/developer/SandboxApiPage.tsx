@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
 
 const SPEC_URL = '/openapi-sandbox.json';
-const HEALTHZ_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/healthz';
+const HEALTHZ_URL = 'https://api.kangopenbanking.com/v1/healthz';
 
 const SandboxApiPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);

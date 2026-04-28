@@ -32,7 +32,7 @@ export default function RemittanceSandboxTesting() {
           title="Step 1: List Corridors"
           examples={[{
             language: "bash",
-            code: `curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-engine?action=list_corridors&to_country=CM" \\
+            code: `curl "https://api.kangopenbanking.com/v1/remittance-engine?action=list_corridors&to_country=CM" \\
   -H "Authorization: Bearer SANDBOX_TOKEN"`
           }]}
         />
@@ -40,7 +40,7 @@ export default function RemittanceSandboxTesting() {
           title="Step 2: Create Quote"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-engine \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-engine \\
   -H "Authorization: Bearer SANDBOX_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"action":"create_quote","from_country":"FR","to_country":"CM","send_amount":50,"send_currency":"EUR","receive_currency":"XAF"}'`
@@ -50,7 +50,7 @@ export default function RemittanceSandboxTesting() {
           title="Step 3: Send Transfer"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-outbound \\
   -H "Authorization: Bearer SANDBOX_TOKEN" \\
   -H "Idempotency-Key: test_$(date +%s)" \\
   -H "Content-Type: application/json" \\
@@ -61,7 +61,7 @@ export default function RemittanceSandboxTesting() {
           title="Step 4: Fund via Stripe (sandbox)"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer SANDBOX_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"action":"create_stripe_intent","remittance_id":"rem_xxx"}'`
@@ -71,7 +71,7 @@ export default function RemittanceSandboxTesting() {
           title="Step 5: Track Status"
           examples={[{
             language: "bash",
-            code: `curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound?action=track&remittance_id=rem_xxx" \\
+            code: `curl "https://api.kangopenbanking.com/v1/remittance-outbound?action=track&remittance_id=rem_xxx" \\
   -H "Authorization: Bearer SANDBOX_TOKEN"`
           }]}
         />
@@ -112,7 +112,7 @@ export default function RemittanceSandboxTesting() {
           title="Register Test Webhook"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-client-webhooks \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-client-webhooks \\
   -H "Content-Type: application/json" \\
   -d '{
     "action": "register",

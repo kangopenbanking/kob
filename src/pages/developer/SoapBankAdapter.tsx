@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Server, ShieldAlert, KeyRound, Lock } from "lucide-react";
 
-const curlRegister = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/tenant-connectors-manage \\
+const curlRegister = `curl -X POST https://api.kangopenbanking.com/v1/tenant-connectors-manage \\
   -H "Authorization: Bearer <USER_JWT>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -50,7 +50,7 @@ await supabase.functions.invoke("tenant-connectors-manage", {
 
 const pythonRegister = `import requests
 requests.post(
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/tenant-connectors-manage",
+  "https://api.kangopenbanking.com/v1/tenant-connectors-manage",
   headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
   json={
     "action": "create", "owner_type": "institution", "owner_id": str(inst_id),

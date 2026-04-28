@@ -123,11 +123,11 @@
   },
   "servers": [
     {
-      "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+      "url": "https://api.kangopenbanking.com/v1",
       "description": "Sandbox"
     },
     {
-      "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+      "url": "https://api.kangopenbanking.com/v1",
       "description": "Production"
     }
   ],
@@ -322,8 +322,8 @@
         "type": "oauth2",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
-            "tokenUrl": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
+            "authorizationUrl": "https://api.kangopenbanking.com/v1/oauth-authorize",
+            "tokenUrl": "https://api.kangopenbanking.com/v1/oauth-token",
             "scopes": {
               "openid": "OpenID Connect",
               "accounts": "Read account information",
@@ -335,7 +335,7 @@
               "accounts:read": "Read account information on behalf of the PSU",
               "profile": "Read basic PSU profile information"
             },
-            "refreshUrl": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token"
+            "refreshUrl": "https://api.kangopenbanking.com/v1/oauth-token"
           }
         }
       }
@@ -3471,7 +3471,7 @@
             "type": "string",
             "format": "uri",
             "description": "URI reference identifying the problem type",
-            "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/errors/validation-error"
+            "example": "https://api.kangopenbanking.com/v1/errors/validation-error"
           },
           "title": {
             "type": "string",
@@ -5717,12 +5717,12 @@
                     },
                     "userinfo_endpoint": {
                       "type": "string",
-                      "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/userinfo",
+                      "example": "https://api.kangopenbanking.com/v1/oauth/userinfo",
                       "description": "URL of the UserInfo Endpoint (OIDC Core 1.0 Section 5.3)"
                     },
                     "registration_endpoint": {
                       "type": "string",
-                      "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr/register",
+                      "example": "https://api.kangopenbanking.com/v1/dcr/register",
                       "description": "URL of the Dynamic Client Registration endpoint (RFC 7591)"
                     },
                     "scopes_supported": {
@@ -5815,11 +5815,11 @@
                       "properties": {
                         "token_endpoint": {
                           "type": "string",
-                          "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1/oauth/token"
+                          "example": "https://api.kangopenbanking.com/v1/v1/oauth/token"
                         },
                         "par_endpoint": {
                           "type": "string",
-                          "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1/oauth/par"
+                          "example": "https://api.kangopenbanking.com/v1/v1/oauth/par"
                         }
                       }
                     },
@@ -5827,13 +5827,13 @@
                       "type": "string",
                       "format": "uri",
                       "description": "URL of the Pushed Authorisation Request (PAR) endpoint (RFC 9126). Clients SHOULD use PAR before calling the authorization endpoint.",
-                      "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth/par"
+                      "example": "https://api.kangopenbanking.com/v1/oauth/par"
                     },
                     "backchannel_authentication_endpoint": {
                       "type": "string",
                       "format": "uri",
                       "description": "URL of the CIBA (Client-Initiated Backchannel Authentication) endpoint for decoupled authentication flows. Optional advanced FAPI feature for mobile banking step-up authentication.",
-                      "example": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/auth/backchannel"
+                      "example": "https://api.kangopenbanking.com/v1/auth/backchannel"
                     }
                   }
                 }

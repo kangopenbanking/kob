@@ -180,12 +180,12 @@ export function TryItNowPlayground() {
   }, [endpoint]);
 
   const curlCommand = endpoint.method === "POST"
-    ? `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1${endpoint.path} \\
+    ? `curl -X POST https://api.kangopenbanking.com/v1${endpoint.path} \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '${JSON.stringify(endpoint.request, null, 2)}'`
-    : `curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1${endpoint.path} \\
+    : `curl https://api.kangopenbanking.com/v1${endpoint.path} \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"`;
 
   const copyResponse = () => {

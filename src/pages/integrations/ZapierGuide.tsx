@@ -25,7 +25,7 @@ const ZapierGuide = () => {
   };
 
   const webhookUrl = "YOUR_ZAPIER_WEBHOOK_URL";
-  const apiBaseUrl = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
+  const apiBaseUrl = "https://api.kangopenbanking.com/v1";
 
   return (
     <div className="min-h-screen bg-background">

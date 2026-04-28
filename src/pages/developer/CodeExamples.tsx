@@ -54,7 +54,7 @@ interface Balance {
   Currency: string;
 }
 
-const API_BASE = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 export default function AccountDashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -159,7 +159,7 @@ export default function AccountDashboard() {
 import { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 export default function PaymentCheckout() {
   const [formData, setFormData] = useState({
@@ -310,7 +310,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const router = express.Router();
 
-const API_BASE = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 // Initiate mobile money charge
 router.post('/charge', async (req, res) => {
@@ -422,7 +422,7 @@ module.exports = router;`
     }
 
     const response = await fetch(
-      'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
+      'https://api.kangopenbanking.com/v1/oauth-token',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -498,7 +498,7 @@ async function handleKOBRequest<T>(
 
 // Usage
 const { data, error } = await handleKOBRequest(() =>
-  axios.get('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts', {
+  axios.get('https://api.kangopenbanking.com/v1/aisp/accounts', {
     headers: { 'x-consent-id': consentId }
   })
 );`

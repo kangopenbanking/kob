@@ -23,7 +23,7 @@ const WooCommercePluginCode = () => {
     setDownloading(true);
     try {
       const response = await fetch(
-        `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/woocommerce-download-plugin`,
+        `https://api.kangopenbanking.com/v1/woocommerce-download-plugin`,
         { headers: { 'Content-Type': 'application/json' } }
       );
 
@@ -72,7 +72,7 @@ define('WFK_VERSION', '1.0.0');
 define('WFK_PLUGIN_FILE', __FILE__);
 define('WFK_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WFK_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WFK_API_BASE_URL', 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1');
+define('WFK_API_BASE_URL', 'https://api.kangopenbanking.com/v1');
 
 // Check WooCommerce dependency
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
@@ -166,7 +166,7 @@ class WFK_API_Client {
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
         $this->logger = $logger;
-        $this->base_url = WFK_API_BASE_URL; // https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
+        $this->base_url = WFK_API_BASE_URL; // https://api.kangopenbanking.com/v1
     }
 
     public function process_payment($payment_data) {
