@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Activity, RefreshCw, Webhook, ShieldCheck } from "lucide-react";
 
 const curlExample = `# Inspect pending poll rows for one of your charges
-curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/rest/v1/byo_charge_polls?provider_reference=eq.<REF>" \\
+curl -X GET "https://api.kangopenbanking.com/v1/rest/byo_charge_polls?provider_reference=eq.<REF>" \\
   -H "Authorization: Bearer <YOUR_USER_JWT>" \\
   -H "apikey: <ANON_KEY>"`;
 
