@@ -228,14 +228,32 @@ async function handleHealth(env: Env): Promise<Response> {
 /*  /openapi.json — branded servers[]                                         */
 /* -------------------------------------------------------------------------- */
 async function handleOpenApi(env: Env, request: Request, format: "json" | "yaml"): Promise<Response> {
+  const reqUrl = new URL(request.url);
   const upstreamPath = format === "json" ? "/functions/v1/public-api-spec" : "/functions/v1/public-api-spec.yaml";
   const upstream = await fetch(`${env.ORIGIN_BASE}${upstreamPath}`);
-  const publicBase = (env.PUBLIC_GATEWAY_URL ?? "https://api.kangopenbanking.com").replace(/\/$/, "");
-  const branded = `${publicBase}/v1`;
+
+  const prodBase = (env.PUBLIC_GATEWAY_URL ?? "https://api.kangopenbanking.com").replace(/\/$/, "");
+  const sandboxBase = (env.PUBLIC_SANDBOX_GATEWAY_URL ?? "https://sandbox-api.kangopenbanking.com").replace(/\/$/, "");
+  const brandedProd = `${prodBase}/v1`;
+  const brandedSandbox = `${sandboxBase}/v1`;
+
+  // When the spec is served from the sandbox host, list sandbox first so SDK
+  // generators / Swagger UI default to the sandbox environment.
+  const servedFromSandbox = isSandboxHost(reqUrl.host, env);
+  const orderedServers = servedFromSandbox
+    ? [
+        { url: brandedSandbox, description: "Kang Open Banking API (Sandbox)" },
+        { url: brandedProd, description: "Kang Open Banking API (Production)" },
+      ]
+    : [
+        { url: brandedProd, description: "Kang Open Banking API (Production)" },
+        { url: brandedSandbox, description: "Kang Open Banking API (Sandbox)" },
+      ];
 
   const headers = new Headers(upstream.headers);
   for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v);
   headers.set("x-served-by", "kob-edge-gateway");
+  headers.set("x-kob-environment", servedFromSandbox ? "sandbox" : "production");
 
   if (!upstream.ok) {
     return new Response(upstream.body, { status: upstream.status, headers });
@@ -244,10 +262,7 @@ async function handleOpenApi(env: Env, request: Request, format: "json" | "yaml"
   if (format === "json") {
     try {
       const spec: any = await upstream.json();
-      spec.servers = [
-        { url: branded, description: "Kang Open Banking API (Production)" },
-        { url: `${branded}/sandbox`, description: "Kang Open Banking API (Sandbox)" },
-      ];
+      spec.servers = orderedServers;
       headers.set("content-type", "application/json; charset=utf-8");
       return new Response(JSON.stringify(spec), { status: 200, headers });
     } catch {
@@ -257,9 +272,12 @@ async function handleOpenApi(env: Env, request: Request, format: "json" | "yaml"
 
   // YAML — string substitution of the servers block (best-effort).
   const text = await upstream.text();
+  const yamlServers = orderedServers
+    .map((s) => `  - url: ${s.url}\n    description: ${s.description}`)
+    .join("\n");
   const replaced = text.replace(
     /servers:\s*(?:\n\s*-\s*url:.*(?:\n\s+description:.*)?)+/m,
-    `servers:\n  - url: ${branded}\n    description: Kang Open Banking API (Production)\n  - url: ${branded}/sandbox\n    description: Kang Open Banking API (Sandbox)`,
+    `servers:\n${yamlServers}`,
   );
   headers.set("content-type", "application/yaml; charset=utf-8");
   return new Response(replaced, { status: 200, headers });
