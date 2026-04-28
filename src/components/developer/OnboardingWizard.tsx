@@ -219,6 +219,95 @@ System.out.println(charge.getData().getId());`
           <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
         </Button>
         <Button onClick={onNext}>
+          First Transfer <ArrowRight className="h-4 w-4 ml-1.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StepFirstTransfer({ onNext, onPrev }: StepProps) {
+  return (
+    <div className="space-y-4">
+      <p className="text-muted-foreground text-sm">
+        Initiate a sandbox PISP payment (account-to-account transfer). The same flow works for payouts.
+        Use a unique <code className="bg-muted px-1 rounded">Idempotency-Key</code> per request — replays
+        return the original transfer instead of creating a duplicate.
+      </p>
+      <CodeBlock
+        defaultLanguage="bash"
+        snippets={[
+          {
+            language: "bash", label: "cURL",
+            code: `curl -X POST https://api.kangopenbanking.com/v1/pisp/payments \\
+  -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{
+    "consent_id": "psr_sandbox_demo",
+    "amount": "5000",
+    "currency": "XAF",
+    "debtor_account": { "iban": "CM21 10001 00010 0000000000 21" },
+    "creditor_account": { "iban": "CM21 10001 00010 9999999999 99" },
+    "creditor_name": "Jean Nkomo",
+    "remittance_information": "First sandbox transfer"
+  }'`,
+          },
+          {
+            language: "javascript", label: "Node.js",
+            code: `import { KangOpenBanking } from "@kangopenbanking/sdk";
+import { randomUUID } from "node:crypto";
+
+const kob = new KangOpenBanking({
+  apiKey: "sk_test_sandbox_KangOB2026Demo",
+  environment: "sandbox",
+});
+
+const transfer = await kob.pisp.payments.create(
+  {
+    consent_id: "psr_sandbox_demo",
+    amount: "5000",
+    currency: "XAF",
+    debtor_account:   { iban: "CM21 10001 00010 0000000000 21" },
+    creditor_account: { iban: "CM21 10001 00010 9999999999 99" },
+    creditor_name: "Jean Nkomo",
+    remittance_information: "First sandbox transfer",
+  },
+  { idempotencyKey: randomUUID() }
+);
+console.log("Transfer status:", transfer.status, transfer.id);`,
+          },
+          {
+            language: "python", label: "Python",
+            code: `from uuid import uuid4
+from kangopenbanking import KangOpenBanking
+
+kob = KangOpenBanking(api_key="sk_test_sandbox_KangOB2026Demo", environment="sandbox")
+
+transfer = kob.pisp.payments.create(
+    consent_id="psr_sandbox_demo",
+    amount="5000",
+    currency="XAF",
+    debtor_account={"iban": "CM21 10001 00010 0000000000 21"},
+    creditor_account={"iban": "CM21 10001 00010 9999999999 99"},
+    creditor_name="Jean Nkomo",
+    remittance_information="First sandbox transfer",
+    idempotency_key=str(uuid4()),
+)
+print("Transfer status:", transfer.status, transfer.id)`,
+          },
+        ]}
+      />
+      <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+        <strong className="text-foreground">Sandbox guarantees:</strong> amount <code>5000</code> succeeds instantly,
+        <code className="mx-1">4000</code> is declined, <code>5555</code> triggers SCA. See
+        <Link to="/developer/standards" className="text-primary hover:underline ml-1">x-sandbox</Link>.
+      </div>
+      <div className="flex justify-between pt-2">
+        <Button variant="outline" onClick={onPrev}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
+        </Button>
+        <Button onClick={onNext}>
           Webhooks <ArrowRight className="h-4 w-4 ml-1.5" />
         </Button>
       </div>
