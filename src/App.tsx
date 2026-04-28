@@ -316,6 +316,7 @@ const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
 const DeveloperRateLimits = lazy(() => import("./pages/developer/RateLimits"));
 const DeveloperClientSnippets = lazy(() => import("./pages/developer/ClientSnippets"));
+const InternationalStandards = lazy(() => import("./pages/developer/InternationalStandards"));
 const SandboxWebhookTester = lazy(() => import("./pages/developer/SandboxWebhookTester"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
