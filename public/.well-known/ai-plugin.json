@@ -6,14 +6,14 @@
   "description_for_model": "Access Cameroon banking and payment services via the Kang Open Banking platform (API v3.7.0). Capabilities include: AISP (account information), PISP (payment initiation), Payment Gateway (charges via MoMo/Card/USSD/PayPal, payouts, refunds, disputes, settlements, payment links, subscriptions, split payments), Funding Intents (MoMo/Card/PayPal/Bank inbound funding with lifecycle tracking), POS Commerce (catalog, inventory, orders, QR payments, consumer marketplace), credit scoring (CrediQ), mobile money (MTN, Orange Money), virtual cards, loans (apply/approve/disburse/repay), savings accounts, double-entry ledger, merchant registration and KYB, webhook management (24 event types), KYC/compliance, ISO 20022 & SWIFT messaging, IBAN/BIC/RIB validation, Cameroon bank directory, WooCommerce integration, escrow & treasury, and consumer tools (Piggy Bank, Njangi). XAF currency native. OAuth 2.0 with PKCE, mTLS, and FAPI 1.0 Advanced support.",
   "auth": {
     "type": "oauth",
-    "client_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
-    "authorization_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
+    "client_url": "https://api.kangopenbanking.com/v1/oauth-authorize",
+    "authorization_url": "https://api.kangopenbanking.com/v1/oauth-token",
     "authorization_content_type": "application/x-www-form-urlencoded",
     "scope": "openid accounts balances transactions payments"
   },
   "api": {
     "type": "openapi",
-    "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec",
+    "url": "https://api.kangopenbanking.com/v1/public-api-spec",
     "is_user_authenticated": true
   },
   "logo_url": "https://kangopenbanking.com/kob-logo.png",
