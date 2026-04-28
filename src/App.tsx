@@ -1058,6 +1058,10 @@ function App() {
               <Route path="authentication/mtls" element={<AuthMtls />} />
               <Route path="sdks" element={<Navigate to="/developer/guides/sdks" replace />} />
               <Route path="downloads" element={<Navigate to="/developer/guides/sdks" replace />} />
+              <Route path="guides/sdk-versioning" element={<SdkVersionPinning />} />
+              <Route path="guides/pagination-examples" element={<PaginationExamples />} />
+              <Route path="webhook-simulator" element={<WebhookEventSimulator />} />
+              <Route path="idempotency-playground" element={<IdempotencyPlayground />} />
               <Route path="sandbox" element={<Navigate to="/developer/sandbox/overview" replace />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
               <Route path="sandbox/credentials" element={<SandboxCredentials />} />
