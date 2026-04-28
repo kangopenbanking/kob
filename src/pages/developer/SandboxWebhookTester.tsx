@@ -236,3 +236,41 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy: (
     </div>
   );
 }
+
+function ValidationPanel({
+  result,
+}: {
+  result: { ok: boolean; errors: { path: string; message: string }[]; event_type?: string };
+}) {
+  const knownEvents = Object.keys(WEBHOOK_EVENT_SCHEMAS);
+  return (
+    <div className="rounded border p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        {result.ok ? (
+          <Badge variant="outline" className="border-primary">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Schema valid
+          </Badge>
+        ) : (
+          <Badge variant="outline">
+            <FileWarning className="h-3 w-3 mr-1" /> Schema errors ({result.errors.length})
+          </Badge>
+        )}
+        {result.event_type && (
+          <span className="text-xs text-muted-foreground font-mono">{result.event_type}</span>
+        )}
+      </div>
+      {!result.ok && (
+        <ul className="text-xs font-mono space-y-1">
+          {result.errors.map((e, i) => (
+            <li key={i} className="text-muted-foreground">
+              <span className="text-foreground">{e.path}</span> — {e.message}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="text-[11px] text-muted-foreground">
+        Validated against the OpenAPI-described shapes for: {knownEvents.join(", ")}.
+      </div>
+    </div>
+  );
+}
