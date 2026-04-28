@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Key, Code, Webhook, ShieldCheck, CheckCircle, ArrowRight, ArrowLeft,
-  Copy, Terminal, Globe, Zap, Play, Send
+  Copy, Terminal, Globe, Zap, Play, Send, Download
 } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { toast } from "sonner";
