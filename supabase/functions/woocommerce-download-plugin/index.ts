@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 // ─── PHP Plugin Files ────────────────────────────────────────────────
 
 const PLUGIN_VERSION = '1.0.0';
+const API_BASE_URL = Deno.env.get('PUBLIC_API_BASE_URL') ?? 'https://api.kangopenbanking.com/v1';
 
 const mainPluginFile = `<?php
 /**
