@@ -214,6 +214,7 @@ export default function SandboxWebhookTester() {
                   </div>
                 </div>
               )}
+              {verifierValidation && <ValidationPanel result={verifierValidation} />}
             </CardContent>
           </Card>
         </TabsContent>
