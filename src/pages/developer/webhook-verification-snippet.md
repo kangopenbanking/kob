@@ -1,21 +1,23 @@
 # Webhook Signature Verification — Reference Snippet
 
-Runtime emits the following headers from `gateway-webhook-deliver-v2`:
+The runtime delivery worker `gateway-webhook-deliver-v2` emits the following headers:
 
-- `X-Webhook-Signature` — HMAC-SHA256 of the raw request body using your endpoint secret.
+- `X-Webhook-Signature` — `HMAC-SHA256(rawBody, endpointSecret)` encoded as lowercase hex.
 - `X-Webhook-Event` — event type (e.g. `charge.succeeded`).
-- `X-Webhook-Timestamp` — Unix seconds; reject deliveries older than 5 minutes to prevent replay.
+- `X-Webhook-ID` — unique delivery UUID, used for replay deduplication on the receiver side.
 
 ```js
-// Node.js verification (must match runtime in gateway-webhook-deliver-v2)
+// Node.js verification (parity with runtime gateway-webhook-deliver-v2)
 import crypto from 'node:crypto';
 
 export function verify(rawBody, headers, secret) {
   const sig = headers['x-webhook-signature'];
-  const ts  = headers['x-webhook-timestamp'];
-  if (!sig || !ts) return false;
-  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false; // replay guard
+  if (!sig) return false;
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  const a = Buffer.from(sig, 'hex');
+  const b = Buffer.from(expected, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 ```
+
+Receivers must store `X-Webhook-ID` and reject duplicates to prevent replay.

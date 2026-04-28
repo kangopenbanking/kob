@@ -50,4 +50,9 @@ describe('Webhook signature: docs match runtime', () => {
     expect(blob).toMatch(/sha-?256/);
     expect(blob).toMatch(/secret/);
   });
+
+  it('documentation references X-Webhook-ID for replay protection', () => {
+    const blob = DOC_FILES.map(read).join('\n');
+    expect(blob).toContain('X-Webhook-ID');
+  });
 });
