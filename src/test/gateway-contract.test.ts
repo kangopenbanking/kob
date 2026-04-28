@@ -28,8 +28,8 @@ const ENVS = [
 const SAFE_GET_PATHS = [
   '/v1/health',
   '/v1/ready',
-  '/v1/.well-known/openid-configuration',
 ];
+const DISCOVERY_PATHS = ['/v1/.well-known/openid-configuration'];
 
 function load(rel: string) {
   return JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8'));
