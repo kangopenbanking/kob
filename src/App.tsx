@@ -313,6 +313,7 @@ const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
 const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
+const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
 const WebhookManagement = lazy(() => import("./pages/admin/WebhookManagement"));
@@ -866,6 +867,7 @@ function App() {
               <Route path="rls-monitoring" element={<RLSMonitoring />} />
               <Route path="api-health" element={<ApiHealthDashboard />} />
               <Route path="platform-status" element={<PlatformStatus />} />
+              <Route path="docs-diagnostics" element={<DocsDiagnostics />} />
               <Route path="api-testing" element={<ApiTestingAdmin />} />
               <Route path="system-alerts" element={<SystemAlerts />} />
               <Route path="api-performance" element={<ApiPerformance />} />
