@@ -4,6 +4,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-https://api.kangopenbanking.com/v1}"
+SANDBOX_URL="${SANDBOX_URL:-https://sandbox-api.kangopenbanking.com/v1}"
 FORBIDDEN_PATTERN='supabase\.co|wdzkzeahdtxlynetndqw'
 
 ENDPOINTS=(
@@ -16,26 +17,32 @@ ENDPOINTS=(
 )
 
 FAIL=0
-echo "Scanning $BASE_URL for internal origin leaks..."
+scan_host() {
+  local label="$1"; local base="$2"
+  echo "Scanning $label ($base) for internal origin leaks..."
+  for path in "${ENDPOINTS[@]}"; do
+    url="${base}${path}"
+    body=$(curl -sS -L --max-time 15 "$url" || echo "")
+    if [ -z "$body" ]; then
+      echo "WARN  [$label] $path  (empty response — skipped)"
+      continue
+    fi
+    matches=$(printf '%s' "$body" | grep -oE "$FORBIDDEN_PATTERN" | sort -u || true)
+    if [ -n "$matches" ]; then
+      echo "FAIL  [$label] $path"
+      echo "      leaked: $(echo "$matches" | tr '\n' ' ')"
+      FAIL=1
+    else
+      echo "PASS  [$label] $path"
+    fi
+  done
+}
+
 echo "Forbidden pattern: $FORBIDDEN_PATTERN"
 echo "---"
-
-for path in "${ENDPOINTS[@]}"; do
-  url="${BASE_URL}${path}"
-  body=$(curl -sS -L --max-time 15 "$url" || echo "")
-  if [ -z "$body" ]; then
-    echo "WARN  $path  (empty response — skipped)"
-    continue
-  fi
-  matches=$(printf '%s' "$body" | grep -oE "$FORBIDDEN_PATTERN" | sort -u || true)
-  if [ -n "$matches" ]; then
-    echo "FAIL  $path"
-    echo "      leaked: $(echo "$matches" | tr '\n' ' ')"
-    FAIL=1
-  else
-    echo "PASS  $path"
-  fi
-done
+scan_host "production" "$BASE_URL"
+echo "---"
+scan_host "sandbox"    "$SANDBOX_URL"
 
 echo "---"
 if [ "$FAIL" -ne 0 ]; then
