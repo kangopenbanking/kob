@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Key, Code, Webhook, ShieldCheck, CheckCircle, ArrowRight, ArrowLeft,
-  Copy, Terminal, Globe, Zap, Play
+  Copy, Terminal, Globe, Zap, Play, Send
 } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { toast } from "sonner";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface StepProps {
   onNext: () => void;
