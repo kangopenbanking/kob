@@ -980,7 +980,8 @@ export default function Changelog() {
         {releases.map((release, index) => {
           // Build a stable slug from the version string so badges/links can anchor to a release
           // (e.g. "API Spec 4.17.0" → "v4-17-0", matching the API Explorer "What changed" link).
-          const versionDigits = (release.version.match(/\d+(?:\.\d+)*/)?.[0] ?? "").replace(/\./g, "-");
+          const versionString = release.version ?? `release-${index}`;
+          const versionDigits = (versionString.match(/\d+(?:\.\d+)*/)?.[0] ?? "").replace(/\./g, "-");
           const anchorId = versionDigits ? `v${versionDigits}` : `release-${index}`;
           return (
             <Card key={index} id={anchorId} className="scroll-mt-24">
@@ -989,7 +990,7 @@ export default function Changelog() {
                   <div className="flex items-center gap-3">
                     <CardTitle>
                       <a href={`#${anchorId}`} className="hover:underline">
-                        Version {release.version}
+                        Version {versionString}
                       </a>
                     </CardTitle>
                     {getReleaseTypeBadge(release.type)}
