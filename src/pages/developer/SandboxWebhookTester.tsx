@@ -52,6 +52,27 @@ export default function SandboxWebhookTester() {
   const [verifySecret, setVerifySecret] = useState("");
   const [verifyResult, setVerifyResult] = useState<null | { ok: boolean; expected: string }>(null);
 
+  // Live schema validation of the sender payload against the documented event schema.
+  const senderValidation = (() => {
+    try {
+      const parsed = JSON.parse(payload);
+      return validateWebhookEvent(parsed);
+    } catch (e: any) {
+      return { ok: false, errors: [{ path: "$", message: `invalid JSON: ${e.message}` }], event_type: undefined };
+    }
+  })();
+
+  // Schema validation of the verifier payload (what the receiver got).
+  const verifierValidation = verifyBody.trim()
+    ? (() => {
+        try {
+          return validateWebhookEvent(JSON.parse(verifyBody));
+        } catch (e: any) {
+          return { ok: false, errors: [{ path: "$", message: `invalid JSON: ${e.message}` }], event_type: undefined };
+        }
+      })()
+    : null;
+
   async function send() {
     try {
       const sig = await hmacSha256Hex(secret, payload);
