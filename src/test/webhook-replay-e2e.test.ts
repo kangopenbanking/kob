@@ -63,7 +63,7 @@ function buildDuplicateResponse(spec: Spec) {
     },
     body: {
       error: "duplicate_webhook",
-      error_code: "WH_002",
+      error_code: "WH_004",
       message: "Webhook with this X-Webhook-ID was already received within the deduplication window.",
       error_id: `err_${crypto.randomUUID().slice(0, 8)}`,
       timestamp: new Date().toISOString(),
