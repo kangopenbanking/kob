@@ -451,7 +451,8 @@ function StepGoLive({ onPrev }: StepProps) {
 const steps = [
   { title: "Get Credentials", icon: Key, description: "Instant sandbox access" },
   { title: "Install SDK", icon: Code, description: "Choose your language" },
-  { title: "First API Call", icon: Terminal, description: "Create a charge" },
+  { title: "First Charge", icon: Terminal, description: "Create a charge" },
+  { title: "First Transfer", icon: Send, description: "Initiate a PISP payment" },
   { title: "Webhooks", icon: Webhook, description: "Real-time events" },
   { title: "Go Live", icon: Zap, description: "Production checklist" },
 ];
@@ -462,7 +463,7 @@ export function OnboardingWizard() {
   const onNext = useCallback(() => setCurrentStep(s => Math.min(s + 1, TOTAL_STEPS - 1)), []);
   const onPrev = useCallback(() => setCurrentStep(s => Math.max(s - 1, 0)), []);
 
-  const StepComponent = [StepCredentials, StepInstallSDK, StepFirstCall, StepWebhooks, StepGoLive][currentStep];
+  const StepComponent = [StepCredentials, StepInstallSDK, StepFirstCall, StepFirstTransfer, StepWebhooks, StepGoLive][currentStep];
 
   return (
     <Card>
@@ -470,7 +471,7 @@ export function OnboardingWizard() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <CardTitle className="text-xl">Integration Guide</CardTitle>
-            <CardDescription>From zero to first payment in 5 steps</CardDescription>
+            <CardDescription>From zero to first payment in 6 steps</CardDescription>
           </div>
           <Badge variant="outline">Step {currentStep + 1} of {TOTAL_STEPS}</Badge>
         </div>
