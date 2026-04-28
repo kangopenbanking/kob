@@ -169,6 +169,26 @@ const commonMistakes = [
   { mistake: "Not implementing exponential backoff on 5xx errors", fix: "Use exponential backoff with jitter: delay = min(base * 2^attempt + random_ms, max_delay)." },
 ];
 
+// Endpoint → likely error codes (curated for the most-called endpoints).
+// Keep in sync with the OpenAPI spec — see src/test/pagination-contract.test.ts
+// and src/test/webhook-replay-e2e.test.ts for related contracts.
+const endpointErrorMap: Array<{ method: string; path: string; ref: string; codes: string[] }> = [
+  { method: "POST", path: "/v1/oauth/token",                    ref: "/developer/auth/oauth2", codes: ["AUTH_001","AUTH_002","AUTH_004","AUTH_005","GEN_001"] },
+  { method: "POST", path: "/v1/charges",                        ref: "/developer/api/payments", codes: ["PAY_001","PAY_002","PAY_003","PAY_004","PAY_007","PAY_008","GEN_001","GEN_002"] },
+  { method: "GET",  path: "/v1/charges/{id}",                   ref: "/developer/api/payments", codes: ["PAY_007","GEN_001"] },
+  { method: "POST", path: "/v1/refunds",                        ref: "/developer/api/payments", codes: ["PAY_005","PAY_007","GEN_001"] },
+  { method: "POST", path: "/v1/payouts",                        ref: "/developer/api/payments", codes: ["PAY_006","PAY_010","PAY_008","GEN_001","GEN_002"] },
+  { method: "POST", path: "/v1/aisp/consents",                  ref: "/developer/api/aisp", codes: ["AISP_002","CERT_001","CERT_004","GEN_001"] },
+  { method: "GET",  path: "/v1/aisp/accounts",                  ref: "/developer/api/aisp", codes: ["AISP_001","AISP_002","AISP_004","GEN_002"] },
+  { method: "GET",  path: "/v1/aisp/accounts/{accountId}/transactions", ref: "/developer/api/aisp", codes: ["AISP_001","AISP_002","AISP_003","GEN_002"] },
+  { method: "POST", path: "/v1/pisp/payments",                  ref: "/developer/api/pisp", codes: ["PISP_001","PISP_002","PISP_003","PISP_004","PISP_005","PISP_006","PISP_007"] },
+  { method: "POST", path: "/v1/webhooks",                       ref: "/developer/webhooks", codes: ["WH_003","GEN_001"] },
+  { method: "POST", path: "/v1/webhooks/inbound",               ref: "/developer/webhooks", codes: ["WH_001","WH_004","WH_005"] },
+  { method: "POST", path: "/v1/loans",                          ref: "/developer/api/loans", codes: ["LED_001","LED_002","GEN_001"] },
+  { method: "POST", path: "/v1/savings/accounts/{id}/deposit",  ref: "/developer/api/savings", codes: ["LED_001","LED_002","PAY_010","GEN_001"] },
+  { method: "POST", path: "/v1/charges (Mobile Money)",         ref: "/developer/api/mobile-money", codes: ["MM_001","MM_002","MM_003","MM_004","MM_005"] },
+];
+
 const ErrorCodesReference = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
     <SEO title="Error Codes Reference | Kang Open Banking" description="Complete RFC 7807 error code catalogue with 60+ errors organized by domain, recovery actions, and retry guidance." />
