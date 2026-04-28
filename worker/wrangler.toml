@@ -1,7 +1,9 @@
 #:schema https://json.schemastore.org/wrangler.json
 # ----------------------------------------------------------------------------
 # Kang Open Banking — API Gateway Worker
-# Deployed at: https://api.kangopenbanking.com/*
+# Deployed at:
+#   https://api.kangopenbanking.com/*          (Production)
+#   https://sandbox-api.kangopenbanking.com/*  (Sandbox — same Worker, host-routed)
 # Origin:      https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/*
 # ----------------------------------------------------------------------------
 
@@ -10,16 +12,25 @@ main = "src/index.ts"
 compatibility_date = "2026-04-24"
 compatibility_flags = ["nodejs_compat"]
 
-# Custom domain — Cloudflare provisions and renews the cert automatically
-# once the zone (kangopenbanking.com) is added to your Cloudflare account.
+# Custom domains — Cloudflare provisions and renews certs automatically once
+# the zone (kangopenbanking.com) is added to your Cloudflare account.
+# The sandbox hostname is served by the SAME Worker; the Worker forces sandbox
+# mode (x-kob-environment: sandbox) when the inbound Host header matches the
+# sandbox-api.* prefix, so no second deployment is required.
 [[routes]]
 pattern = "api.kangopenbanking.com/*"
 custom_domain = true
 
+[[routes]]
+pattern = "sandbox-api.kangopenbanking.com/*"
+custom_domain = true
+
 [vars]
 ORIGIN_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co"
-GATEWAY_VERSION = "1.1.0"
+GATEWAY_VERSION = "1.2.0"
 PUBLIC_GATEWAY_URL = "https://api.kangopenbanking.com"
+PUBLIC_SANDBOX_GATEWAY_URL = "https://sandbox-api.kangopenbanking.com"
+SANDBOX_HOST = "sandbox-api.kangopenbanking.com"
 
 # Secrets — set with `wrangler secret put <NAME>`:
 #   GATEWAY_SHARED_SECRET     Optional. Marks traffic as coming through the gateway.
