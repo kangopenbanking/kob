@@ -124,6 +124,8 @@ const errorDomains = [
       { code: "WH_001", type: "invalid_signature", status: 401, title: "Invalid Webhook Signature", description: "The X-KOB-Signature header does not match the computed HMAC.", recovery: "Verify you are using the correct webhook secret and computing HMAC-SHA256 over the raw body." },
       { code: "WH_002", type: "delivery_failed", status: 502, title: "Webhook Delivery Failed", description: "The webhook endpoint did not return 200 within 5 seconds.", recovery: "Ensure your endpoint responds 200 quickly. Defer processing to a background queue." },
       { code: "WH_003", type: "unsupported_event", status: 422, title: "Event Type Not Supported", description: "The requested event type is not available for webhook subscription.", recovery: "Check the list of supported event types in the Webhooks guide." },
+      { code: "WH_004", type: "duplicate_webhook", status: 409, title: "Duplicate Webhook (Replay)", description: "An event with this X-Webhook-ID was already received within the 24h deduplication window.", recovery: "This is the expected outcome of an at-least-once retry. Treat the duplicate as success and ack with HTTP 200 — do not reprocess." },
+      { code: "WH_005", type: "stale_timestamp", status: 401, title: "Stale Webhook Timestamp", description: "X-Webhook-Timestamp is outside the accepted ±5 minute window — possible replay attack.", recovery: "Reject the request. Verify your server clock is in sync (NTP). If legitimate, the producer must regenerate the signature with a fresh timestamp." },
     ],
   },
   {
