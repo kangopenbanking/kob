@@ -104,7 +104,7 @@ const HttpCachingGuide = () => (
       <h3 className="font-semibold mb-2">Conditional Request Example</h3>
       <pre className="bg-background rounded p-3 text-xs overflow-x-auto border">
 {`# First request — get the ETag
-curl -i https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/acc_123/balances \\
+curl -i https://api.kangopenbanking.com/v1/accounts/acc_123/balances \\
   -H "Authorization: Bearer sk_live_..."
 
 # Response includes:
@@ -112,7 +112,7 @@ curl -i https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/acc_123/b
 # Cache-Control: no-cache
 
 # Subsequent request — send ETag for conditional fetch
-curl -i https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/acc_123/balances \\
+curl -i https://api.kangopenbanking.com/v1/accounts/acc_123/balances \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "If-None-Match: \\"v1-balance-abc123\\""
 
@@ -132,7 +132,7 @@ async function pollAccountBalance(accountId) {
   if (lastETag) headers['If-None-Match'] = lastETag;
   
   const res = await fetch(
-    \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts/\${accountId}/balances\`,
+    \`https://api.kangopenbanking.com/v1/accounts/\${accountId}/balances\`,
     { headers }
   );
   

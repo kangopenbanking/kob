@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-const HEALTHZ = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/healthz";
-const OIDC = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oidc-config";
+const HEALTHZ = "https://api.kangopenbanking.com/v1/healthz";
+const OIDC = "https://api.kangopenbanking.com/v1/oidc-config";
 
 const FAQS = [
   {

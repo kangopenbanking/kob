@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const rotateExample = `# Rotate your API key (old key remains valid for 24 hours)
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-keys/rotate \\
+curl -X POST https://api.kangopenbanking.com/v1/api-keys/rotate \\
   -H "Authorization: Bearer sk_live_current_key" \\
   -H "Content-Type: application/json" \\
   -d '{"reason": "scheduled_rotation"}'
@@ -18,7 +18,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-keys/rota
 }`;
 
 const restrictedExample = `# Create a restricted key with specific scopes
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-keys \\
+curl -X POST https://api.kangopenbanking.com/v1/api-keys \\
   -H "Authorization: Bearer sk_live_master_key" \\
   -H "Content-Type: application/json" \\
   -d '{

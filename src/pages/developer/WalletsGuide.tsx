@@ -158,7 +158,7 @@ const WalletsGuide = () => (
       <div className="space-y-3">
         <h3 className="font-medium text-sm">Create a Wallet (curl)</h3>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/wallets \\
+{`curl -X POST https://api.kangopenbanking.com/v1/wallets \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -171,7 +171,7 @@ const WalletsGuide = () => (
         <h3 className="font-medium text-sm">Credit a Wallet (Node.js)</h3>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
 {`const response = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/wallets/wal_abc123/credit',
+  'https://api.kangopenbanking.com/v1/wallets/wal_abc123/credit',
   {
     method: 'POST',
     headers: {

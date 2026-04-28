@@ -142,7 +142,7 @@ export default function InstitutionSettings() {
           </CardHeader>
           <CardContent className="space-y-2">
             {[
-              { label: "Base URL", value: "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1" },
+              { label: "Base URL", value: "https://api.kangopenbanking.com/v1" },
               { label: "Token Endpoint", value: "POST /v1/oauth/token" },
               { label: "Idempotency", value: "All POST requests require Idempotency-Key header (UUID v4, 24h expiry)" },
             ].map(item => (

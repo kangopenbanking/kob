@@ -223,8 +223,8 @@ const Documentation = () => {
                 <Badge className="bg-accent text-accent-foreground">Production</Badge>
               </div>
               <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3 font-mono text-sm">
-                <code>https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1</code>
-                <CopyButton text="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1" id="prod" />
+                <code>https://api.kangopenbanking.com/v1</code>
+                <CopyButton text="https://api.kangopenbanking.com/v1" id="prod" />
               </div>
             </div>
             <div className="rounded-xl border p-4 space-y-2">
@@ -232,8 +232,8 @@ const Documentation = () => {
                 <Badge variant="outline">Sandbox</Badge>
               </div>
               <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3 font-mono text-sm">
-                <code>https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1</code>
-                <CopyButton text="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/v1" id="sandbox" />
+                <code>https://api.kangopenbanking.com/v1/v1</code>
+                <CopyButton text="https://api.kangopenbanking.com/v1/v1" id="sandbox" />
               </div>
             </div>
           </div>
@@ -362,7 +362,7 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
           <CodeBlock
             label="cURL — Initiate a Charge"
             id="example-charge"
-            code={`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router" \\
+            code={`curl -X POST "https://api.kangopenbanking.com/v1/gateway-charges-router" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\

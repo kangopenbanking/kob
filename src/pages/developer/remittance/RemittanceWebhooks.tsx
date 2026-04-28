@@ -69,7 +69,7 @@ export default function RemittanceWebhooks() {
           title="POST register"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-client-webhooks \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-client-webhooks \\
   -H "Content-Type: application/json" \\
   -d '{
     "action": "register",
@@ -151,7 +151,7 @@ def verify_remittance_webhook(payload: dict, signature: str, secret: str) -> boo
           title="POST rotate_secret"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-client-webhooks \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-client-webhooks \\
   -H "Content-Type: application/json" \\
   -d '{
     "action": "rotate_secret",
@@ -168,7 +168,7 @@ def verify_remittance_webhook(payload: dict, signature: str, secret: str) -> boo
           title="GET list_deliveries"
           examples={[{
             language: "bash",
-            code: `curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-client-webhooks?action=list_deliveries&endpoint_id=ep_xxx" \\
+            code: `curl "https://api.kangopenbanking.com/v1/remittance-client-webhooks?action=list_deliveries&endpoint_id=ep_xxx" \\
   -H "Content-Type: application/json"`
           }]}
         />

@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
-const parseCamt052 = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/standards/iso20022/camt052/parse \\
+const parseCamt052 = `curl -X POST https://api.kangopenbanking.com/v1/standards/iso20022/camt052/parse \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/xml" \\
   -d '<?xml version="1.0" encoding="UTF-8"?>
@@ -48,7 +48,7 @@ const parseResponse = `{
   }
 }`;
 
-const generatePacs008 = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/standards/iso20022/pacs008/generate \\
+const generatePacs008 = `curl -X POST https://api.kangopenbanking.com/v1/standards/iso20022/pacs008/generate \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{

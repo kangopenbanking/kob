@@ -31,7 +31,7 @@ export const EmbeddableStatusWidget = () => {
       setIsRetrying(attemptNumber > 0);
       
       try {
-        const response = await fetch("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/api-health");
+        const response = await fetch("https://api.kangopenbanking.com/v1/api-health");
         const endTime = Date.now();
         const responseTime = endTime - startTime;
         

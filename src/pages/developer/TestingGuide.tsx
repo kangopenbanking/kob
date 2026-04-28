@@ -17,7 +17,7 @@ const TestingGuide = () => (
     <div className="bg-muted/50 rounded-lg p-4 border">
       <h3 className="font-semibold mb-2">Sandbox Base URL</h3>
       <pre className="bg-background rounded p-3 text-xs overflow-x-auto border">
-{`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/
+{`https://api.kangopenbanking.com/v1/
 # Use sandbox API keys (prefix: sk_test_)`}
       </pre>
     </div>

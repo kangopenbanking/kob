@@ -39,7 +39,7 @@ export default function RemittanceCreateTransfer() {
           title="POST send"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-outbound \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Idempotency-Key: rem_send_ord456_20260325" \\
   -H "Content-Type: application/json" \\
@@ -103,7 +103,7 @@ export default function RemittanceCreateTransfer() {
           title="GET track"
           examples={[{
             language: "bash",
-            code: `curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound?action=track&remittance_id=rem_xxx" \\
+            code: `curl "https://api.kangopenbanking.com/v1/remittance-outbound?action=track&remittance_id=rem_xxx" \\
   -H "Authorization: Bearer YOUR_TOKEN"`
           }]}
         />
@@ -120,7 +120,7 @@ export default function RemittanceCreateTransfer() {
           title="POST cancel"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-outbound \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

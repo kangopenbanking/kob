@@ -88,7 +88,7 @@ const GatewayRefundsGuide = () => (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Code Example</h2>
       <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-refund \\
+{`curl -X POST https://api.kangopenbanking.com/v1/gateway-create-refund \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: refund_order_001" \\

@@ -31,7 +31,7 @@ export default function IdempotencyGuide() {
             {
               language: "bash",
               label: "cURL",
-              code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+              code: `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\

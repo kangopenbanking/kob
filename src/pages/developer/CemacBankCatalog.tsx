@@ -189,13 +189,13 @@ export default function CemacBankCatalog() {
         <CardContent className="space-y-3">
           <pre className="overflow-x-auto rounded-md border bg-muted p-4 text-xs">
 {`# List all presets
-curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-presets
+curl https://api.kangopenbanking.com/v1/bank-presets
 
 # Filter by country and adapter
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-presets?country=CM&adapter_type=rest"
+curl "https://api.kangopenbanking.com/v1/bank-presets?country=CM&adapter_type=rest"
 
 # Fetch a single bank
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-presets?bank_code=AFRILAND_CM"`}
+curl "https://api.kangopenbanking.com/v1/bank-presets?bank_code=AFRILAND_CM"`}
           </pre>
           <p className="text-xs text-muted-foreground">
             Response schema: <code>{`{ count, presets[], meta }`}</code>. Cached for 5 minutes.

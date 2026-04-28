@@ -2,8 +2,8 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Code2 } from "lucide-react";
 
-const TOKEN_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token";
-const TX_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/transactions";
+const TOKEN_URL = "https://api.kangopenbanking.com/v1/oauth-token";
+const TX_URL = "https://api.kangopenbanking.com/v1/aisp/transactions";
 
 /* ─── 1. OAuth — Client Credentials grant ─────────────────────────────── */
 

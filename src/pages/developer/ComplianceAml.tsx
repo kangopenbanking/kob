@@ -21,7 +21,7 @@ export default function ComplianceAml() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="screening">AML Screening</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/compliance/screening \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/compliance/screening \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -46,7 +46,7 @@ export default function ComplianceAml() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="sar">File SAR</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/compliance/sar \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/compliance/sar \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{

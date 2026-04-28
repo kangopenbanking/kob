@@ -263,10 +263,10 @@ const TPPRegistration = () => {
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Available Endpoints</h4>
               <ul className="space-y-1 text-sm text-muted-foreground font-mono">
-                <li>• JWKS: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/jwks-endpoint</li>
-                <li>• OIDC Config: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oidc-config</li>
-                <li>• PAR: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint</li>
-                <li>• DCR: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/dcr-register</li>
+                <li>• JWKS: https://api.kangopenbanking.com/v1/jwks-endpoint</li>
+                <li>• OIDC Config: https://api.kangopenbanking.com/v1/oidc-config</li>
+                <li>• PAR: https://api.kangopenbanking.com/v1/par-endpoint</li>
+                <li>• DCR: https://api.kangopenbanking.com/v1/dcr-register</li>
               </ul>
             </div>
           </CardContent>

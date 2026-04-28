@@ -101,7 +101,7 @@ const SandboxPayoutSimGuide = () => (
       <h2 className="text-xl font-semibold">Code Example</h2>
       <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
 {`// Test the "reversed_after_success" scenario
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/payout-sim \\
+curl -X POST https://api.kangopenbanking.com/v1/sandbox/payout-sim \\
   -H "Authorization: Bearer sk_test_..." \\
   -H "Content-Type: application/json" \\
   -d '{

@@ -4,7 +4,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const aispExample = `// 1. Create AISP consent
-const consent = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents', {
+const consent = await fetch('https://api.kangopenbanking.com/v1/aisp/consents', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer ' + accessToken,
@@ -23,19 +23,19 @@ const { data: consentData } = await consent.json();
 // 2. After user authorises, exchange code for token (see OAuth 2.0 guide)
 
 // 3. Read account data
-const accounts = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts', {
+const accounts = await fetch('https://api.kangopenbanking.com/v1/aisp/accounts', {
   headers: { 'Authorization': 'Bearer ' + aispAccessToken },
 });
 const { data: accountList } = await accounts.json();
 
 // 4. Read balances
 const balances = await fetch(
-  \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/\${accountList[0].id}/balances\`,
+  \`https://api.kangopenbanking.com/v1/aisp/accounts/\${accountList[0].id}/balances\`,
   { headers: { 'Authorization': 'Bearer ' + aispAccessToken } }
 );`;
 
 const pispExample = `// 1. Create PISP consent
-const pispConsent = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp/domestic-payment-consents', {
+const pispConsent = await fetch('https://api.kangopenbanking.com/v1/pisp/domestic-payment-consents', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer ' + accessToken,
@@ -61,7 +61,7 @@ const pispConsent = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functi
 });
 
 // 2. After user authorises consent, initiate payment
-const payment = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pisp/domestic-payments', {
+const payment = await fetch('https://api.kangopenbanking.com/v1/pisp/domestic-payments', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer ' + pispAccessToken,

@@ -23,7 +23,7 @@ const { data } = await supabase.functions.invoke("payment-router-charge", {
 console.log(data.connector_used, data.attempts);`;
 
 const pythonCharge = `r = requests.post(
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payment-router-charge",
+  "https://api.kangopenbanking.com/v1/payment-router-charge",
   headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
   json={
     "owner_type": "institution", "owner_id": str(inst_id),

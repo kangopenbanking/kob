@@ -10,7 +10,7 @@
       "name": "Kang Open Banking API",
       "description": "Full payment gateway and open banking API: AISP, PISP, mobile money (MTN, Orange), card payments, virtual cards, credit scoring, POS commerce, funding intents, escrow, ISO 20022, and SWIFT messaging for the CEMAC region",
       "image": "https://kangopenbanking.com/kob-logo.png",
-      "baseURL": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+      "baseURL": "https://api.kangopenbanking.com/v1",
       "humanURL": "https://kangopenbanking.com/developer",
       "version": "4.0.0",
       "tags": [
@@ -34,7 +34,7 @@
       "properties": [
         {
           "type": "X-openapi",
-          "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/public-api-spec"
+          "url": "https://api.kangopenbanking.com/v1/public-api-spec"
         },
         {
           "type": "X-openapi-static",
@@ -42,7 +42,7 @@
         },
         {
           "type": "X-postman-collection",
-          "url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection"
+          "url": "https://api.kangopenbanking.com/v1/postman-collection"
         },
         {
           "type": "X-changelog",

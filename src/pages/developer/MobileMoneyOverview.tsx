@@ -4,7 +4,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const momoCharge = `// Initiate MTN MoMo charge
-const charge = await fetch('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router', {
+const charge = await fetch('https://api.kangopenbanking.com/v1/gateway-charges-router', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer sk_test_sandbox_KangOB2026Demo',
@@ -27,13 +27,13 @@ const { data } = await charge.json();
 
 // Poll for completion
 const result = await fetch(
-  \`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router?action=get_charge&charge_id=\${data.id}\`,
+  \`https://api.kangopenbanking.com/v1/gateway-charges-router?action=get_charge&charge_id=\${data.id}\`,
   { headers: { 'Authorization': 'Bearer sk_test_sandbox_KangOB2026Demo' } }
 );
 // result.data.status: 'successful' | 'failed'`;
 
 const payoutExample = `# Payout to mobile money wallet
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-payouts-router \\
+curl -X POST https://api.kangopenbanking.com/v1/gateway-payouts-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

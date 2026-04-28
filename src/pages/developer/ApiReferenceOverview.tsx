@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
-const requestFormat = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/{endpoint} \\
+const requestFormat = `curl -X POST https://api.kangopenbanking.com/v1/{endpoint} \\
   -H "Authorization: Bearer {your_secret_key}" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: {unique_uuid}" \\
@@ -42,11 +42,11 @@ const paginatedResponse = `{
 }`;
 
 const errorResponse = `{
-  "type": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/errors/insufficient-funds",
+  "type": "https://api.kangopenbanking.com/v1/errors/insufficient-funds",
   "title": "Insufficient Funds",
   "status": 422,
   "detail": "The account balance of 2,000 XAF is insufficient for the 5,000 XAF charge.",
-  "instance": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/errors/log/err_a1b2c3d4",
+  "instance": "https://api.kangopenbanking.com/v1/errors/log/err_a1b2c3d4",
   "error_id": "err_a1b2c3d4",
   "timestamp": "2026-03-27T14:32:00Z"
 }`;
@@ -81,11 +81,11 @@ export default function ApiReferenceOverview() {
               <tbody>
                 <tr className="border-t border-border">
                   <td className="p-3 font-medium text-foreground">Production</td>
-                  <td className="p-3 font-mono text-sm text-muted-foreground">https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1</td>
+                  <td className="p-3 font-mono text-sm text-muted-foreground">https://api.kangopenbanking.com/v1</td>
                 </tr>
                 <tr className="border-t border-border">
                   <td className="p-3 font-medium text-foreground">Sandbox</td>
-                  <td className="p-3 font-mono text-sm text-muted-foreground">https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1</td>
+                  <td className="p-3 font-mono text-sm text-muted-foreground">https://api.kangopenbanking.com/v1</td>
                 </tr>
               </tbody>
             </table>
@@ -190,7 +190,7 @@ GET /v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=20`, language: "bash" }]} 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="idempotency">Idempotency</h2>
           <CodeBlock examples={[{ code: `# Safe to retry — server deduplicates by Idempotency-Key
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Idempotency-Key: order_12345_attempt_1" \\
   ...same body...
 
