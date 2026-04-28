@@ -21,7 +21,7 @@ const GatewayWebhooksGuide = () => (
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">Register a webhook URL for your merchant to start receiving events.</p>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhooks-router \\
+{`curl -X POST https://api.kangopenbanking.com/v1/gateway-webhooks-router \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -467,7 +467,7 @@ Content-Type: application/json
         <p className="text-sm text-muted-foreground">Rotate your webhook secret without downtime:</p>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
 {`# Rotate the secret
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-webhooks-router (action: rotate_secret) \\
+curl -X POST https://api.kangopenbanking.com/v1/gateway-webhooks-router (action: rotate_secret) \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{ "merchant_id": "mch_uuid" }'

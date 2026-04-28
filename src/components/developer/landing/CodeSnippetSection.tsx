@@ -6,14 +6,14 @@ const snippets = {
   curl: {
     label: "cURL",
     code: `# 1. Get an access token
-curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
+curl -X POST "https://api.kangopenbanking.com/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
   -d "client_secret=YOUR_CLIENT_SECRET"
 
 # 2. Create a charge
-curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges" \\
+curl -X POST "https://api.kangopenbanking.com/v1/gateway-charges" \\
   -H "Authorization: Bearer ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

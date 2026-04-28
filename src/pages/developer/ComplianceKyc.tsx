@@ -51,7 +51,7 @@ export default function ComplianceKyc() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="submit">Submit KYC Verification</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/compliance/kyc/verify \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/compliance/kyc/verify \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

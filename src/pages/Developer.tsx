@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Code, Database, TestTube, Send, Loader2, FileText, Shield, Key, BookOpen, CheckCircle2, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_BASE_URL = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+const API_BASE_URL = 'https://api.kangopenbanking.com/v1';
 
 const Developer = () => {
   const { toast } = useToast();

@@ -219,7 +219,7 @@ const InstantPayoutsGuide = () => (
       <div className="space-y-3">
         <h3 className="font-medium text-sm">Instant MoMo Payout (curl)</h3>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payouts/instant \\
+{`curl -X POST https://api.kangopenbanking.com/v1/payouts/instant \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: payout_unique_001" \\
@@ -240,7 +240,7 @@ const InstantPayoutsGuide = () => (
 
         <h3 className="font-medium text-sm">Push-to-Card (curl)</h3>
         <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
-{`curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payouts/push-to-card \\
+{`curl -X POST https://api.kangopenbanking.com/v1/payouts/push-to-card \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{

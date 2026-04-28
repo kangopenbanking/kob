@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const registerCert = `# Register your client certificate
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/certificates \\
+curl -X POST https://api.kangopenbanking.com/v1/certificates \\
   -H "Authorization: Bearer sk_live_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -25,7 +25,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/certificates 
 
 const useMtls = `# Make a request with mTLS
 curl --cert client.pem --key client-key.pem \\
-  -X GET https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts \\
+  -X GET https://api.kangopenbanking.com/v1/accounts \\
   -H "Authorization: Bearer eyJhbGciOiJQUzI1NiIs..."`;
 
 const nodeMtls = `import https from 'https';
@@ -38,7 +38,7 @@ const agent = new https.Agent({
 });
 
 const response = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/accounts',
+  'https://api.kangopenbanking.com/v1/accounts',
   {
     headers: { 'Authorization': 'Bearer ' + accessToken },
     agent,

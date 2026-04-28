@@ -23,7 +23,7 @@ export default function RemittanceCorridorsQuotes() {
           title="GET corridors"
           examples={[{
             language: "bash",
-            code: `curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-engine?action=list_corridors&to_country=CM" \\
+            code: `curl "https://api.kangopenbanking.com/v1/remittance-engine?action=list_corridors&to_country=CM" \\
   -H "Authorization: Bearer YOUR_TOKEN"`
           }]}
         />
@@ -103,7 +103,7 @@ export default function RemittanceCorridorsQuotes() {
           title="POST create_quote"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-engine \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-engine \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

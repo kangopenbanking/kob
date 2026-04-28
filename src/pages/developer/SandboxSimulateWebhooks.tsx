@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const triggerExample = `# Trigger a test webhook event
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/sandbox/webhooks/trigger \\
+curl -X POST https://api.kangopenbanking.com/v1/sandbox/webhooks/trigger \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{

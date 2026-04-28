@@ -56,16 +56,16 @@ export default function AuthFapi() {
           <p className="text-muted-foreground mb-4">
             The OpenID Connect discovery endpoint provides all configuration details:
           </p>
-          <CodeBlock examples={[{ code: `curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/.well-known/openid-configuration
+          <CodeBlock examples={[{ code: `curl https://api.kangopenbanking.com/v1/.well-known/openid-configuration
 
 # Key fields:
 {
-  "issuer": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
-  "authorization_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-authorize",
-  "token_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token",
-  "pushed_authorization_request_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/par-endpoint",
-  "backchannel_authentication_endpoint": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-bc-authorize",
-  "jwks_uri": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/.well-known/jwks.json",
+  "issuer": "https://api.kangopenbanking.com/v1",
+  "authorization_endpoint": "https://api.kangopenbanking.com/v1/oauth-authorize",
+  "token_endpoint": "https://api.kangopenbanking.com/v1/oauth-token",
+  "pushed_authorization_request_endpoint": "https://api.kangopenbanking.com/v1/par-endpoint",
+  "backchannel_authentication_endpoint": "https://api.kangopenbanking.com/v1/oauth-bc-authorize",
+  "jwks_uri": "https://api.kangopenbanking.com/v1/.well-known/jwks.json",
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],
   "id_token_signing_alg_values_supported": ["PS256"]

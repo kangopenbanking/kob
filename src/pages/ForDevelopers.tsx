@@ -37,11 +37,11 @@ export default function ForDevelopers() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const quickStartCode = `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
+  const quickStartCode = `curl -X POST "https://api.kangopenbanking.com/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d 'grant_type=client_credentials&client_id=YOUR_CLIENT_ID&client_secret=YOUR_CLIENT_SECRET'`;
 
-  const exampleRequest = `curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts" \\
+  const exampleRequest = `curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "x-consent-id: consent_abc123" \\
   -H "Content-Type: application/json"`;

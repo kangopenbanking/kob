@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Network, ListOrdered, History, ShieldCheck } from "lucide-react";
 
-const curlAttempts = `curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/rest/v1/byo_routing_attempts?charge_reference=eq.KOB-2026-0001&order=attempt_index.asc" \\
+const curlAttempts = `curl -X GET "https://api.kangopenbanking.com/v1/rest/byo_routing_attempts?charge_reference=eq.KOB-2026-0001&order=attempt_index.asc" \\
   -H "Authorization: Bearer <USER_JWT>" \\
   -H "apikey: <ANON_KEY>"`;
 
@@ -23,7 +23,7 @@ const { data } = await supabase.functions.invoke("payment-router-charge", {
 console.log(data.connector_used, data.attempts);`;
 
 const pythonCharge = `r = requests.post(
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payment-router-charge",
+  "https://api.kangopenbanking.com/v1/payment-router-charge",
   headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
   json={
     "owner_type": "institution", "owner_id": str(inst_id),

@@ -88,7 +88,7 @@ export default function RemittanceOverview() {
           title="Create Quote"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-engine \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-engine \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -107,7 +107,7 @@ export default function RemittanceOverview() {
           title="Send Money"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-outbound \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-outbound \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Idempotency-Key: rem_txn_001_20260325" \\
   -H "Content-Type: application/json" \\
@@ -126,7 +126,7 @@ export default function RemittanceOverview() {
           title="Create Pay-in Intent"
           examples={[{
             language: "bash",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/remittance-payin-intent \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/remittance-payin-intent \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

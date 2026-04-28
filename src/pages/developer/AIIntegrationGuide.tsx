@@ -29,7 +29,7 @@ const AIIntegrationGuide = () => {
 3. Integrate mobile money (MTN, Orange Money)
 
 API Details:
-- Base URL: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
+- Base URL: https://api.kangopenbanking.com/v1
 - OpenAPI Spec: https://kangopenbanking.com/openapi.json
 - Authentication: OAuth 2.0
 - Documentation: https://kangopenbanking.com/developer
@@ -61,7 +61,7 @@ Show me:
 
     cursor: `// Kang Open Banking API Integration
 // OpenAPI Spec: https://kangopenbanking.com/openapi.json
-// Base URL: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
+// Base URL: https://api.kangopenbanking.com/v1
 
 // Generate code for:
 // 1. OAuth 2.0 authentication with PKCE
@@ -216,11 +216,11 @@ Show me:
               <div className="space-y-2">
                 <h3 className="font-semibold">Postman Collection</h3>
                 <div className="bg-muted p-3 rounded-lg flex items-center justify-between">
-                  <code className="text-sm">https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection</code>
+                  <code className="text-sm">https://api.kangopenbanking.com/v1/postman-collection</code>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => window.open('https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/postman-collection', '_blank')}
+                    onClick={() => window.open('https://api.kangopenbanking.com/v1/postman-collection', '_blank')}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View
@@ -291,7 +291,7 @@ interface KOBConfig {
 }
 
 class KangOpenBanking {
-  private baseUrl = 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1';
+  private baseUrl = 'https://api.kangopenbanking.com/v1';
   private accessToken: string | null = null;
 
   constructor(private config: KOBConfig) {}

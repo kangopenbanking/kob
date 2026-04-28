@@ -136,7 +136,7 @@ export default function MerchantsPOSGuide() {
     "order.created",
     "order.updated"
   ],
-  "webhook_url": "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pos-woo-webhook-ingestion"
+  "webhook_url": "https://api.kangopenbanking.com/v1/pos-woo-webhook-ingestion"
 }`}
         />
       </section>

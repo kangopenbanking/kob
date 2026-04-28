@@ -133,7 +133,7 @@ $status = $kob->payByBank->getIntent($intent['intent_id']);`}</pre>
             </TabsContent>
             <TabsContent value="curl">
               <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto">{`# Create intent
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \\
+curl -X POST https://api.kangopenbanking.com/v1/pay-by-bank \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -146,7 +146,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \
   }'
 
 # Get intent status
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/pay-by-bank \\
+curl -X POST https://api.kangopenbanking.com/v1/pay-by-bank \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"action": "get_intent", "intent_id": "INTENT_ID"}'`}</pre>

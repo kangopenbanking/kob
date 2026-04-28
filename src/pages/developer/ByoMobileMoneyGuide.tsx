@@ -3,7 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const registerCurl = `# Register your own MTN MoMo credentials
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/tenant-connectors-manage \\
+curl -X POST https://api.kangopenbanking.com/v1/tenant-connectors-manage \\
   -H "Authorization: Bearer <YOUR_USER_JWT>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -23,7 +23,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/tenant-connec
   }'`;
 
 const chargeCurl = `# Charge using your own connector (with Flutterwave fallback)
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payment-router-charge \\
+curl -X POST https://api.kangopenbanking.com/v1/payment-router-charge \\
   -H "Authorization: Bearer <YOUR_USER_JWT>" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -62,7 +62,7 @@ console.log(data.attempts);          // full audit of every rail tried`;
 const chargePython = `import os, requests, uuid
 
 resp = requests.post(
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/payment-router-charge",
+  "https://api.kangopenbanking.com/v1/payment-router-charge",
   headers={
     "Authorization": f"Bearer {USER_JWT}",
     "Idempotency-Key": str(uuid.uuid4()),

@@ -169,7 +169,7 @@ def logged_api_call(method, url, body=None, idempotency_key=None):
               {
                 language: "bash",
                 label: "cURL",
-                code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: go-live-verify-001" \\
@@ -219,7 +219,7 @@ echo $charge['data']['status'];`
     "customer_phone": "+237677000001", "tx_ref": "go_live_test_001",
 })
 req, _ := http.NewRequest("POST",
-    "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router",
+    "https://api.kangopenbanking.com/v1/gateway-charges-router",
     bytes.NewBuffer(body))
 req.Header.Set("Authorization", "Bearer sk_live_YOUR_KEY")
 req.Header.Set("Content-Type", "application/json")
@@ -234,7 +234,7 @@ fmt.Println("Status:", resp.Status)`
      "currency":"XAF","channel":"mobile_money",
      "customer_phone":"+237677000001","tx_ref":"go_live_test_001"}""";
 HttpRequest req = HttpRequest.newBuilder()
-    .uri(URI.create("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router"))
+    .uri(URI.create("https://api.kangopenbanking.com/v1/gateway-charges-router"))
     .header("Authorization", "Bearer sk_live_YOUR_KEY")
     .header("Content-Type", "application/json")
     .POST(HttpRequest.BodyPublishers.ofString(body)).build();

@@ -31,7 +31,7 @@ export default function QuickStart() {
               {
                 language: "bash",
                 label: "cURL",
-                code: `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
+                code: `curl -X POST "https://api.kangopenbanking.com/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
@@ -42,7 +42,7 @@ export default function QuickStart() {
                 language: "javascript",
                 label: "Node.js",
                 code: `const res = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
+  'https://api.kangopenbanking.com/v1/oauth-token',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -61,7 +61,7 @@ const { access_token } = await res.json();`,
                 label: "Python",
                 code: `import os, requests
 res = requests.post(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token',
+  'https://api.kangopenbanking.com/v1/oauth-token',
   data={
     'grant_type': 'client_credentials',
     'client_id': os.environ['KOB_CLIENT_ID'],
@@ -86,7 +86,7 @@ access_token = res.json()['access_token']`,
               {
                 language: "bash",
                 label: "cURL",
-                code: `curl -X GET "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts" \\
+                code: `curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "x-consent-id: YOUR_CONSENT_ID"`,
               },
@@ -94,7 +94,7 @@ access_token = res.json()['access_token']`,
                 language: "javascript",
                 label: "Node.js",
                 code: `const accounts = await fetch(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts',
+  'https://api.kangopenbanking.com/v1/aisp/accounts',
   { headers: { Authorization: \`Bearer \${access_token}\`, 'x-consent-id': consentId } }
 ).then(r => r.json());`,
               },
@@ -102,7 +102,7 @@ access_token = res.json()['access_token']`,
                 language: "python",
                 label: "Python",
                 code: `accounts = requests.get(
-  'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts',
+  'https://api.kangopenbanking.com/v1/aisp/accounts',
   headers={'Authorization': f'Bearer {access_token}', 'x-consent-id': consent_id},
 ).json()`,
               },

@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
-const createConsent = `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents \\
+const createConsent = `curl -X POST https://api.kangopenbanking.com/v1/aisp/consents \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -38,7 +38,7 @@ const consentResponse = `{
   }
 }`;
 
-const revokeConsent = `curl -X DELETE https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/consents/cns_abc123def456 \\
+const revokeConsent = `curl -X DELETE https://api.kangopenbanking.com/v1/aisp/consents/cns_abc123def456 \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"`;
 
 const nodeExample = `import { KangOpenBanking } from '@kangopenbanking/sdk';

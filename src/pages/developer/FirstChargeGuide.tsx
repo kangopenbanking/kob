@@ -33,7 +33,7 @@ export default function FirstChargeGuide() {
               {
                 language: "bash",
                 label: "cURL",
-                code: `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
+                code: `curl -X POST "https://api.kangopenbanking.com/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials&client_id=...&client_secret=...&scope=payments"`,
               },
@@ -49,7 +49,7 @@ export default function FirstChargeGuide() {
               {
                 language: "bash",
                 label: "cURL",
-                code: `curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router" \\
+                code: `curl -X POST "https://api.kangopenbanking.com/v1/gateway-charges-router" \\
   -H "Authorization: Bearer ACCESS_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -H "Content-Type: application/json" \\

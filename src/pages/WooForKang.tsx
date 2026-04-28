@@ -84,7 +84,7 @@ const WooForKang = () => {
     setDownloading(true);
     try {
       const response = await fetch(
-        `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/woocommerce-download-plugin`,
+        `https://api.kangopenbanking.com/v1/woocommerce-download-plugin`,
         { headers: { 'Content-Type': 'application/json' } }
       );
 

@@ -89,7 +89,7 @@ const Security = () => (
           <code className="mx-1 rounded bg-muted px-1">kid</code> miss.
         </p>
         <Button asChild variant="outline" size="sm">
-          <a href="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/jwks-endpoint" target="_blank" rel="noopener noreferrer">
+          <a href="https://api.kangopenbanking.com/v1/jwks-endpoint" target="_blank" rel="noopener noreferrer">
             View JWKS <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         </Button>

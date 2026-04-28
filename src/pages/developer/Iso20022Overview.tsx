@@ -57,7 +57,7 @@ export default function Iso20022Overview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="generate-pacs008">Example: Generate pacs.008</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/standards/iso20022/pacs008/generate \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/standards/iso20022/pacs008/generate \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -88,7 +88,7 @@ export default function Iso20022Overview() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="parse-camt054">Example: Parse camt.054</h2>
-          <CodeBlock examples={[{ code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/standards/iso20022/camt054/parse \\
+          <CodeBlock examples={[{ code: `curl -X POST https://api.kangopenbanking.com/v1/standards/iso20022/camt054/parse \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/xml" \\
   --data-binary @notification.xml

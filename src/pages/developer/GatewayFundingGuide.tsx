@@ -58,7 +58,7 @@ const GatewayFundingGuide = () => (
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-{`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-fund-account" \\
+{`curl -X POST "https://api.kangopenbanking.com/v1/gateway-fund-account" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\

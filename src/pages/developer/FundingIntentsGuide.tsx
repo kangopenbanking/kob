@@ -93,7 +93,7 @@ const FundingIntentsGuide = () => (
               <CardHeader className="pb-2"><CardTitle className="text-sm">Step 1: Get access token</CardTitle></CardHeader>
               <CardContent>
                 <pre className="text-sm overflow-x-auto">
-{`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/oauth-token" \\
+{`curl -X POST "https://api.kangopenbanking.com/v1/oauth-token" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
   -d "client_secret=YOUR_CLIENT_SECRET" \\
@@ -108,7 +108,7 @@ const FundingIntentsGuide = () => (
               <CardHeader className="pb-2"><CardTitle className="text-sm">Step 2: Create funding intent</CardTitle></CardHeader>
               <CardContent>
                 <pre className="text-sm overflow-x-auto">
-{`curl -X POST "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-create-funding-intent" \\
+{`curl -X POST "https://api.kangopenbanking.com/v1/gateway-create-funding-intent" \\
   -H "Authorization: Bearer ACCESS_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '{

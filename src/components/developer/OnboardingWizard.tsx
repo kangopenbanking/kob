@@ -23,7 +23,7 @@ function StepCredentials({ onNext }: StepProps) {
     ["Secret Key", "sk_test_sandbox_KangOB2026Demo"],
     ["Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
     ["Merchant ID", "merch_test_001"],
-    ["Base URL", "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"],
+    ["Base URL", "https://api.kangopenbanking.com/v1"],
   ];
 
   const copyAll = () => {
@@ -107,7 +107,7 @@ function StepFirstCall({ onNext, onPrev }: StepProps) {
         examples={[
           {
             language: "bash", label: "cURL",
-            code: `curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway-charges-router \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
