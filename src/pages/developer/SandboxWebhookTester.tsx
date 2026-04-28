@@ -159,6 +159,7 @@ export default function SandboxWebhookTester() {
               <Button onClick={send} variant="outline">
                 <Send className="h-4 w-4 mr-2" /> Sign &amp; dispatch
               </Button>
+              <ValidationPanel result={senderValidation} />
             </CardContent>
           </Card>
 
