@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, ShieldCheck, ShieldAlert, Copy } from "lucide-react";
+import { Send, ShieldCheck, ShieldAlert, Copy, FileWarning } from "lucide-react";
 import { toast } from "sonner";
+import { validateWebhookEvent, WEBHOOK_EVENT_SCHEMAS } from "@/lib/webhook-event-schemas";
 
 const PUBLIC_BASE = "https://api.kangopenbanking.com/v1";
 
@@ -50,6 +51,27 @@ export default function SandboxWebhookTester() {
   const [verifySig, setVerifySig] = useState("");
   const [verifySecret, setVerifySecret] = useState("");
   const [verifyResult, setVerifyResult] = useState<null | { ok: boolean; expected: string }>(null);
+
+  // Live schema validation of the sender payload against the documented event schema.
+  const senderValidation = (() => {
+    try {
+      const parsed = JSON.parse(payload);
+      return validateWebhookEvent(parsed);
+    } catch (e: any) {
+      return { ok: false, errors: [{ path: "$", message: `invalid JSON: ${e.message}` }], event_type: undefined };
+    }
+  })();
+
+  // Schema validation of the verifier payload (what the receiver got).
+  const verifierValidation = verifyBody.trim()
+    ? (() => {
+        try {
+          return validateWebhookEvent(JSON.parse(verifyBody));
+        } catch (e: any) {
+          return { ok: false, errors: [{ path: "$", message: `invalid JSON: ${e.message}` }], event_type: undefined };
+        }
+      })()
+    : null;
 
   async function send() {
     try {
@@ -137,6 +159,7 @@ export default function SandboxWebhookTester() {
               <Button onClick={send} variant="outline">
                 <Send className="h-4 w-4 mr-2" /> Sign &amp; dispatch
               </Button>
+              <ValidationPanel result={senderValidation} />
             </CardContent>
           </Card>
 
@@ -191,6 +214,7 @@ export default function SandboxWebhookTester() {
                   </div>
                 </div>
               )}
+              {verifierValidation && <ValidationPanel result={verifierValidation} />}
             </CardContent>
           </Card>
         </TabsContent>
@@ -209,6 +233,44 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy: (
       <Button size="sm" variant="outline" onClick={() => onCopy(value, label)}>
         <Copy className="h-3 w-3" />
       </Button>
+    </div>
+  );
+}
+
+function ValidationPanel({
+  result,
+}: {
+  result: { ok: boolean; errors: { path: string; message: string }[]; event_type?: string };
+}) {
+  const knownEvents = Object.keys(WEBHOOK_EVENT_SCHEMAS);
+  return (
+    <div className="rounded border p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        {result.ok ? (
+          <Badge variant="outline" className="border-primary">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Schema valid
+          </Badge>
+        ) : (
+          <Badge variant="outline">
+            <FileWarning className="h-3 w-3 mr-1" /> Schema errors ({result.errors.length})
+          </Badge>
+        )}
+        {result.event_type && (
+          <span className="text-xs text-muted-foreground font-mono">{result.event_type}</span>
+        )}
+      </div>
+      {!result.ok && (
+        <ul className="text-xs font-mono space-y-1">
+          {result.errors.map((e, i) => (
+            <li key={i} className="text-muted-foreground">
+              <span className="text-foreground">{e.path}</span> — {e.message}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="text-[11px] text-muted-foreground">
+        Validated against the OpenAPI-described shapes for: {knownEvents.join(", ")}.
+      </div>
     </div>
   );
 }
