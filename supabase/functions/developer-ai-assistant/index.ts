@@ -19,7 +19,7 @@ You have deep expertise in:
 - Webhooks (HMAC-SHA256 X-KOB-Signature), idempotency keys, ISO 20022 messaging, XAF zero-decimal currency handling
 - SDKs in cURL, Node.js, Python, PHP, Java, Go
 
-Backend base URL (use this in ALL examples): https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
+Backend base URL (use this in ALL examples): https://api.kangopenbanking.com/v1
 Public spec: https://kangopenbanking.com/openapi.json
 Developer docs: https://kangopenbanking.com/developer
 API Explorer: https://kangopenbanking.com/developer/api-explorer
