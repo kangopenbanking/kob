@@ -31,7 +31,7 @@ define('WFK_VERSION', '${PLUGIN_VERSION}');
 define('WFK_PLUGIN_FILE', __FILE__);
 define('WFK_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WFK_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WFK_API_BASE_URL', 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1');
+define('WFK_API_BASE_URL', '${API_BASE_URL}');
 
 // Check WooCommerce dependency
 add_action('plugins_loaded', 'wfk_check_woocommerce', 0);
