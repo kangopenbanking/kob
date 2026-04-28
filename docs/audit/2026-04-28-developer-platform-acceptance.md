@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-28  
 **Spec version:** v4.17.3  
-**Score:** 13/15  (8.7/10)
+**Score:** 14/15  (9.3/10)
 
 ## Acceptance matrix
 
@@ -19,7 +19,7 @@
 | 9 | Developer doc pages present | FAIL | missing=Webhooks.tsx,PostmanCollection.tsx |
 | 10 | SDK ecosystem | PASS | node.js / typescript,python,php / laravel,postman |
 | 11 | Postman static files | PASS | missing=none |
-| 12 | Changelog v4.17.3 | FAIL | not found |
+| 12 | Changelog v4.17.3 | PASS | found |
 | 13 | Dashboard tooling components | PASS | missing=none |
 | 14 | Contract test count | PASS | 32 test files |
 | 15 | Foundational routes preserved | PASS | missing=none |

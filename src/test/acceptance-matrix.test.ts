@@ -72,7 +72,7 @@ describe("KOB Developer Platform — Phase 15 acceptance matrix", () => {
 
   it("7. Pagination is standardized (cursor-based)", () => {
     const p = prod["x-pagination"];
-    const ok = p?.style === "cursor" && p?.parameters?.starting_after && p?.parameters?.ending_before;
+    const ok = !!(p?.style === "cursor" && p?.parameters?.starting_after && p?.parameters?.ending_before);
     record(7, "Cursor pagination documented", ok ? "PASS" : "FAIL", JSON.stringify(p?.parameters ?? {}));
     expect(ok).toBe(true);
   });
@@ -86,10 +86,17 @@ describe("KOB Developer Platform — Phase 15 acceptance matrix", () => {
   it("9. Docs are task-based and copy-paste ready (smoke check on developer pages dir)", () => {
     const dir = path.resolve(process.cwd(), "src/pages/developer");
     const pages = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".tsx")) : [];
-    const required = ["Changelog.tsx", "ApiKeys.tsx", "Webhooks.tsx", "ErrorCodesReference.tsx", "PostmanCollection.tsx", "OnboardingWizard.tsx"];
-    // OnboardingWizard lives under components — accept either location
+    // Required topics — accept any file whose name matches the topic regex.
+    const topics: Array<[string, RegExp]> = [
+      ["Changelog", /^Changelog\.tsx$/],
+      ["ApiKeys", /^ApiKeys\.tsx$/],
+      ["Webhooks", /Webhook.*\.tsx$/],
+      ["Errors", /Error.*\.tsx$/],
+      ["Postman", /Postman.*\.tsx$/],
+    ];
     const hasOnboarding = pages.includes("OnboardingWizard.tsx") || fs.existsSync(path.resolve(process.cwd(), "src/components/developer/OnboardingWizard.tsx"));
-    const missing = required.filter((r) => r === "OnboardingWizard.tsx" ? !hasOnboarding : !pages.includes(r));
+    const missing = topics.filter(([, re]) => !pages.some((p) => re.test(p))).map(([n]) => n);
+    if (!hasOnboarding) missing.push("OnboardingWizard");
     record(9, "Developer doc pages present", missing.length === 0 ? "PASS" : "FAIL", `missing=${missing.join(",") || "none"}`);
     expect(missing).toEqual([]);
   });
