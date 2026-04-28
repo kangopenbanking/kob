@@ -970,6 +970,7 @@ function App() {
               <Route path="changelog" element={<Changelog />} />
               <Route path="rate-limits" element={<DeveloperRateLimits />} />
               <Route path="snippets" element={<DeveloperClientSnippets />} />
+              <Route path="standards" element={<InternationalStandards />} />
               <Route path="sandbox/webhook-tester" element={<SandboxWebhookTester />} />
               <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />
