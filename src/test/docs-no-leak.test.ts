@@ -28,6 +28,7 @@ const ALLOWLIST = new Set<string>([
   'src/integrations/supabase/client.ts',
   'src/test/gateway-integration.test.ts',
   'src/test/docs-no-leak.test.ts',
+  'src/test/openapi-servers.test.ts', // contains the forbidden host as a literal it asserts against
   'src/pages/admin/AdminBankDirectory.tsx', // /storage/v1/object link only
   'src/pages/admin/DocsDiagnostics.tsx', // diagnostics page references the string
   '.env',
