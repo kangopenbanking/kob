@@ -7,6 +7,23 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 export default function Changelog() {
   const releases = [
     {
+      version: "API Spec 4.17.2 / Developer Portal 4.19.0",
+      date: "2026-04-28",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Cursor pagination — /v1/aisp/accounts, /v1/aisp/accounts/{accountId}/transactions, and /v1/consents now accept starting_after and ending_before parameters and return X-Pagination-Mode, X-Pagination-Has-More, and X-Pagination-Next-Cursor response headers. Legacy offset is preserved for backward compatibility (STANDING ORDER 1 — The Lock; STANDING ORDER 4 — additive only)." },
+        { type: "feature", description: "Webhook replay protection — duplicate X-Webhook-ID submissions now return HTTP 409 with code WH_004 (duplicate_webhook). Stale timestamps (>300s) return HTTP 401 with code WH_005 (stale_timestamp). Both codes are documented in the Error Catalog and enforced by the shared _shared/webhook-replay-protection.ts helper using the webhook_inbox table and a UNIQUE(source, event_id) constraint." },
+        { type: "feature", description: "New system endpoints — GET /v1/status returns service health (DB, OAuth, Gateway) and GET /v1/version returns environment metadata and supported API versions. Both backed by the api-status and api-version edge functions and covered by contract tests for production and sandbox." },
+        { type: "feature", description: "New developer pages: /developer/guides/sdk-versioning (SDK pinning recipes + per-language release history with API version mapping), /developer/guides/pagination-examples (copy-paste cursor recipes + cursor metadata mapping table), /developer/webhook-simulator (generate any documented webhook payload variant — fresh, stale timestamp, duplicate ID, invalid signature — and see the matching Error Catalog entry), /developer/idempotency-playground (simulate duplicate charges/transfers/refunds/payouts and inspect the documented response envelope for first call, exact replay, conflicting replay, and concurrent-in-flight scenarios)." },
+        { type: "feature", description: "Onboarding wizard now exports a downloadable .env template (kang-openbanking.sandbox.env) containing sandbox API keys, webhook secret, tolerance window, and both production + sandbox base URLs — one click from the Credentials step." },
+        { type: "feature", description: "Error Catalog extended with WH_004 (duplicate_webhook) and WH_005 (stale_timestamp); a new 'Errors by Endpoint' cross-reference section links each error code to the endpoints that can return it." },
+        { type: "feature", description: "International Standards page (/developer/standards) now publishes the OpenAPI x-extensions (x-pagination, x-error-catalog, x-deprecation-policy, x-rate-limits, x-sla, x-sandbox, x-webhook-policy, x-webhook-events, x-sdks) directly from the live spec." },
+        { type: "improvement", description: "OpenAPI bumped to 4.17.2 (production) and 4.16.5 (sandbox). Servers[] continue to advertise the canonical https://api.kangopenbanking.com/v1 base URL with no Supabase leakage." },
+        { type: "improvement", description: "CI hardening: added pagination-contract.test.ts, webhook-replay-e2e.test.ts, status-version-contract.test.ts, idempotency-contract.test.ts, openapi-fixtures.test.ts, webhook-event-schemas.test.ts, and international-standards-audit.test.ts. The OpenAPI fixtures generator (src/test/_fixtures/openapi-fixtures.ts) synthesises canonical request/response payloads from the spec so contract tests stay aligned automatically." },
+        { type: "fix", description: "Changelog renderer hardened — entries without a version field no longer crash with 'Cannot read properties of undefined (reading match)'." },
+      ]
+    },
+    {
       version: "API Spec 4.18.0",
       date: "2026-04-24",
       type: "minor",
@@ -980,7 +997,8 @@ export default function Changelog() {
         {releases.map((release, index) => {
           // Build a stable slug from the version string so badges/links can anchor to a release
           // (e.g. "API Spec 4.17.0" → "v4-17-0", matching the API Explorer "What changed" link).
-          const versionDigits = (release.version.match(/\d+(?:\.\d+)*/)?.[0] ?? "").replace(/\./g, "-");
+          const versionString = release.version ?? `release-${index}`;
+          const versionDigits = (versionString.match(/\d+(?:\.\d+)*/)?.[0] ?? "").replace(/\./g, "-");
           const anchorId = versionDigits ? `v${versionDigits}` : `release-${index}`;
           return (
             <Card key={index} id={anchorId} className="scroll-mt-24">
@@ -989,7 +1007,7 @@ export default function Changelog() {
                   <div className="flex items-center gap-3">
                     <CardTitle>
                       <a href={`#${anchorId}`} className="hover:underline">
-                        Version {release.version}
+                        Version {versionString}
                       </a>
                     </CardTitle>
                     {getReleaseTypeBadge(release.type)}
