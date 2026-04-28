@@ -124,6 +124,8 @@ const errorDomains = [
       { code: "WH_001", type: "invalid_signature", status: 401, title: "Invalid Webhook Signature", description: "The X-KOB-Signature header does not match the computed HMAC.", recovery: "Verify you are using the correct webhook secret and computing HMAC-SHA256 over the raw body." },
       { code: "WH_002", type: "delivery_failed", status: 502, title: "Webhook Delivery Failed", description: "The webhook endpoint did not return 200 within 5 seconds.", recovery: "Ensure your endpoint responds 200 quickly. Defer processing to a background queue." },
       { code: "WH_003", type: "unsupported_event", status: 422, title: "Event Type Not Supported", description: "The requested event type is not available for webhook subscription.", recovery: "Check the list of supported event types in the Webhooks guide." },
+      { code: "WH_004", type: "duplicate_webhook", status: 409, title: "Duplicate Webhook (Replay)", description: "An event with this X-Webhook-ID was already received within the 24h deduplication window.", recovery: "This is the expected outcome of an at-least-once retry. Treat the duplicate as success and ack with HTTP 200 — do not reprocess." },
+      { code: "WH_005", type: "stale_timestamp", status: 401, title: "Stale Webhook Timestamp", description: "X-Webhook-Timestamp is outside the accepted ±5 minute window — possible replay attack.", recovery: "Reject the request. Verify your server clock is in sync (NTP). If legitimate, the producer must regenerate the signature with a fresh timestamp." },
     ],
   },
   {
@@ -165,6 +167,26 @@ const commonMistakes = [
   { mistake: "Processing webhooks before verifying the signature", fix: "Always verify HMAC-SHA256 signature first. Reject unverified payloads." },
   { mistake: "Hardcoding API keys in client-side JavaScript", fix: "Store keys in server-side environment variables. Use publishable keys only on the client." },
   { mistake: "Not implementing exponential backoff on 5xx errors", fix: "Use exponential backoff with jitter: delay = min(base * 2^attempt + random_ms, max_delay)." },
+];
+
+// Endpoint → likely error codes (curated for the most-called endpoints).
+// Keep in sync with the OpenAPI spec — see src/test/pagination-contract.test.ts
+// and src/test/webhook-replay-e2e.test.ts for related contracts.
+const endpointErrorMap: Array<{ method: string; path: string; ref: string; codes: string[] }> = [
+  { method: "POST", path: "/v1/oauth/token",                    ref: "/developer/auth/oauth2", codes: ["AUTH_001","AUTH_002","AUTH_004","AUTH_005","GEN_001"] },
+  { method: "POST", path: "/v1/charges",                        ref: "/developer/api/payments", codes: ["PAY_001","PAY_002","PAY_003","PAY_004","PAY_007","PAY_008","GEN_001","GEN_002"] },
+  { method: "GET",  path: "/v1/charges/{id}",                   ref: "/developer/api/payments", codes: ["PAY_007","GEN_001"] },
+  { method: "POST", path: "/v1/refunds",                        ref: "/developer/api/payments", codes: ["PAY_005","PAY_007","GEN_001"] },
+  { method: "POST", path: "/v1/payouts",                        ref: "/developer/api/payments", codes: ["PAY_006","PAY_010","PAY_008","GEN_001","GEN_002"] },
+  { method: "POST", path: "/v1/aisp/consents",                  ref: "/developer/api/aisp", codes: ["AISP_002","CERT_001","CERT_004","GEN_001"] },
+  { method: "GET",  path: "/v1/aisp/accounts",                  ref: "/developer/api/aisp", codes: ["AISP_001","AISP_002","AISP_004","GEN_002"] },
+  { method: "GET",  path: "/v1/aisp/accounts/{accountId}/transactions", ref: "/developer/api/aisp", codes: ["AISP_001","AISP_002","AISP_003","GEN_002"] },
+  { method: "POST", path: "/v1/pisp/payments",                  ref: "/developer/api/pisp", codes: ["PISP_001","PISP_002","PISP_003","PISP_004","PISP_005","PISP_006","PISP_007"] },
+  { method: "POST", path: "/v1/webhooks",                       ref: "/developer/webhooks", codes: ["WH_003","GEN_001"] },
+  { method: "POST", path: "/v1/webhooks/inbound",               ref: "/developer/webhooks", codes: ["WH_001","WH_004","WH_005"] },
+  { method: "POST", path: "/v1/loans",                          ref: "/developer/api/loans", codes: ["LED_001","LED_002","GEN_001"] },
+  { method: "POST", path: "/v1/savings/accounts/{id}/deposit",  ref: "/developer/api/savings", codes: ["LED_001","LED_002","PAY_010","GEN_001"] },
+  { method: "POST", path: "/v1/charges (Mobile Money)",         ref: "/developer/api/mobile-money", codes: ["MM_001","MM_002","MM_003","MM_004","MM_005"] },
 ];
 
 const ErrorCodesReference = () => (
@@ -310,6 +332,42 @@ const ErrorCodesReference = () => (
               <tr key={m.mistake} className="border-b">
                 <td className="py-2">{m.mistake}</td>
                 <td className="py-2">{m.fix}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* Endpoint → Errors cross-link */}
+    <div>
+      <h2 className="text-xl font-bold mb-3">Errors by Endpoint</h2>
+      <p className="text-muted-foreground mb-4 text-sm">
+        Quick reference: which error codes can each endpoint return. Click an endpoint to open its API reference.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 font-semibold">Endpoint</th>
+              <th className="text-left py-2 font-semibold">Possible error codes</th>
+            </tr>
+          </thead>
+          <tbody className="text-muted-foreground">
+            {endpointErrorMap.map(({ method, path: ep, ref, codes }) => (
+              <tr key={`${method} ${ep}`} className="border-b">
+                <td className="py-2 font-mono text-xs whitespace-nowrap">
+                  <a href={ref} className="text-primary hover:underline">
+                    <span className="text-foreground font-semibold mr-1">{method}</span>{ep}
+                  </a>
+                </td>
+                <td className="py-2">
+                  <div className="flex flex-wrap gap-1">
+                    {codes.map((c) => (
+                      <code key={c} className="px-1.5 py-0.5 rounded bg-muted text-xs">{c}</code>
+                    ))}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -1057,6 +1057,7 @@ function App() {
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
               <Route path="sdks" element={<Navigate to="/developer/guides/sdks" replace />} />
+              <Route path="downloads" element={<Navigate to="/developer/guides/sdks" replace />} />
               <Route path="sandbox" element={<Navigate to="/developer/sandbox/overview" replace />} />
               <Route path="sandbox/overview" element={<SandboxOverview />} />
               <Route path="sandbox/credentials" element={<SandboxCredentials />} />

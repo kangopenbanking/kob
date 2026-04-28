@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.17.1
+  version: 4.17.2
   summary: Unified Open Banking API for Cameroon
   description: "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit\
     \ Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening,\
@@ -6648,7 +6648,7 @@ paths:
         schema:
           type: integer
           default: 0
-        description: Items to skip
+        description: 'Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).'
       - name: sort_by
         in: query
         schema:
@@ -6667,6 +6667,21 @@ paths:
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
+      - name: starting_after
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before.
+          Preferred for new integrations (see x-pagination).
+        schema:
+          type: string
+          example: acc_01HZQ...
+      - name: ending_before
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.
+        schema:
+          type: string
+          example: acc_01HZQ...
       responses:
         '200':
           description: Accounts list
@@ -6694,6 +6709,21 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+            X-Pagination-Mode:
+              description: Either `cursor` or `offset` — echoes which mode the gateway interpreted.
+              schema:
+                type: string
+                enum:
+                - cursor
+                - offset
+            X-Pagination-Has-More:
+              description: Boolean (`true`/`false`) — whether more results are available.
+              schema:
+                type: string
+            X-Pagination-Next-Cursor:
+              description: Resource id to pass as `starting_after` for the next page (cursor mode only).
+              schema:
+                type: string
         '400':
           description: Bad request
           content:
@@ -7128,7 +7158,7 @@ paths:
         schema:
           type: integer
           default: 0
-        description: Items to skip
+        description: 'Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).'
       - name: sort_by
         in: query
         schema:
@@ -7147,6 +7177,21 @@ paths:
       - $ref: '#/components/parameters/XFapiInteractionId'
       - $ref: '#/components/parameters/XFapiCustomerIpAddress'
       - $ref: '#/components/parameters/XFapiAuthDate'
+      - name: starting_after
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before.
+          Preferred for new integrations (see x-pagination).
+        schema:
+          type: string
+          example: acc_01HZQ...
+      - name: ending_before
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.
+        schema:
+          type: string
+          example: acc_01HZQ...
       responses:
         '200':
           description: Transactions list
@@ -7174,6 +7219,21 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+            X-Pagination-Mode:
+              description: Either `cursor` or `offset` — echoes which mode the gateway interpreted.
+              schema:
+                type: string
+                enum:
+                - cursor
+                - offset
+            X-Pagination-Has-More:
+              description: Boolean (`true`/`false`) — whether more results are available.
+              schema:
+                type: string
+            X-Pagination-Next-Cursor:
+              description: Resource id to pass as `starting_after` for the next page (cursor mode only).
+              schema:
+                type: string
         '400':
           description: Bad request
           content:
@@ -8643,7 +8703,7 @@ paths:
         schema:
           type: integer
           default: 0
-        description: Items to skip
+        description: 'Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).'
       - name: sort_by
         in: query
         schema:
@@ -8659,6 +8719,21 @@ paths:
           - desc
           default: desc
         description: Sort direction
+      - name: starting_after
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before.
+          Preferred for new integrations (see x-pagination).
+        schema:
+          type: string
+          example: acc_01HZQ...
+      - name: ending_before
+        in: query
+        required: false
+        description: Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.
+        schema:
+          type: string
+          example: acc_01HZQ...
       responses:
         '200':
           description: Consents list
@@ -8686,6 +8761,21 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+            X-Pagination-Mode:
+              description: Either `cursor` or `offset` — echoes which mode the gateway interpreted.
+              schema:
+                type: string
+                enum:
+                - cursor
+                - offset
+            X-Pagination-Has-More:
+              description: Boolean (`true`/`false`) — whether more results are available.
+              schema:
+                type: string
+            X-Pagination-Next-Cursor:
+              description: Resource id to pass as `starting_after` for the next page (cursor mode only).
+              schema:
+                type: string
         '400':
           description: Bad request
           content:

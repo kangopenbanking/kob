@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Key, Code, Webhook, ShieldCheck, CheckCircle, ArrowRight, ArrowLeft,
-  Copy, Terminal, Globe, Zap, Play
+  Copy, Terminal, Globe, Zap, Play, Send
 } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { toast } from "sonner";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface StepProps {
   onNext: () => void;
@@ -219,6 +219,94 @@ System.out.println(charge.getData().getId());`
           <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
         </Button>
         <Button onClick={onNext}>
+          First Transfer <ArrowRight className="h-4 w-4 ml-1.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StepFirstTransfer({ onNext, onPrev }: StepProps) {
+  return (
+    <div className="space-y-4">
+      <p className="text-muted-foreground text-sm">
+        Initiate a sandbox PISP payment (account-to-account transfer). The same flow works for payouts.
+        Use a unique <code className="bg-muted px-1 rounded">Idempotency-Key</code> per request — replays
+        return the original transfer instead of creating a duplicate.
+      </p>
+      <CodeBlock
+        examples={[
+          {
+            language: "bash", label: "cURL",
+            code: `curl -X POST https://api.kangopenbanking.com/v1/pisp/payments \\
+  -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{
+    "consent_id": "psr_sandbox_demo",
+    "amount": "5000",
+    "currency": "XAF",
+    "debtor_account": { "iban": "CM21 10001 00010 0000000000 21" },
+    "creditor_account": { "iban": "CM21 10001 00010 9999999999 99" },
+    "creditor_name": "Jean Nkomo",
+    "remittance_information": "First sandbox transfer"
+  }'`,
+          },
+          {
+            language: "javascript", label: "Node.js",
+            code: `import { KangOpenBanking } from "@kangopenbanking/sdk";
+import { randomUUID } from "node:crypto";
+
+const kob = new KangOpenBanking({
+  apiKey: "sk_test_sandbox_KangOB2026Demo",
+  environment: "sandbox",
+});
+
+const transfer = await kob.pisp.payments.create(
+  {
+    consent_id: "psr_sandbox_demo",
+    amount: "5000",
+    currency: "XAF",
+    debtor_account:   { iban: "CM21 10001 00010 0000000000 21" },
+    creditor_account: { iban: "CM21 10001 00010 9999999999 99" },
+    creditor_name: "Jean Nkomo",
+    remittance_information: "First sandbox transfer",
+  },
+  { idempotencyKey: randomUUID() }
+);
+console.log("Transfer status:", transfer.status, transfer.id);`,
+          },
+          {
+            language: "python", label: "Python",
+            code: `from uuid import uuid4
+from kangopenbanking import KangOpenBanking
+
+kob = KangOpenBanking(api_key="sk_test_sandbox_KangOB2026Demo", environment="sandbox")
+
+transfer = kob.pisp.payments.create(
+    consent_id="psr_sandbox_demo",
+    amount="5000",
+    currency="XAF",
+    debtor_account={"iban": "CM21 10001 00010 0000000000 21"},
+    creditor_account={"iban": "CM21 10001 00010 9999999999 99"},
+    creditor_name="Jean Nkomo",
+    remittance_information="First sandbox transfer",
+    idempotency_key=str(uuid4()),
+)
+print("Transfer status:", transfer.status, transfer.id)`,
+          },
+        ]}
+      />
+      <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+        <strong className="text-foreground">Sandbox guarantees:</strong> amount <code>5000</code> succeeds instantly,
+        <code className="mx-1">4000</code> is declined, <code>5555</code> triggers SCA. See
+        <Link to="/developer/standards" className="text-primary hover:underline ml-1">x-sandbox</Link>.
+      </div>
+      <div className="flex justify-between pt-2">
+        <Button variant="outline" onClick={onPrev}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
+        </Button>
+        <Button onClick={onNext}>
           Webhooks <ArrowRight className="h-4 w-4 ml-1.5" />
         </Button>
       </div>
@@ -363,7 +451,8 @@ function StepGoLive({ onPrev }: StepProps) {
 const steps = [
   { title: "Get Credentials", icon: Key, description: "Instant sandbox access" },
   { title: "Install SDK", icon: Code, description: "Choose your language" },
-  { title: "First API Call", icon: Terminal, description: "Create a charge" },
+  { title: "First Charge", icon: Terminal, description: "Create a charge" },
+  { title: "First Transfer", icon: Send, description: "Initiate a PISP payment" },
   { title: "Webhooks", icon: Webhook, description: "Real-time events" },
   { title: "Go Live", icon: Zap, description: "Production checklist" },
 ];
@@ -374,7 +463,7 @@ export function OnboardingWizard() {
   const onNext = useCallback(() => setCurrentStep(s => Math.min(s + 1, TOTAL_STEPS - 1)), []);
   const onPrev = useCallback(() => setCurrentStep(s => Math.max(s - 1, 0)), []);
 
-  const StepComponent = [StepCredentials, StepInstallSDK, StepFirstCall, StepWebhooks, StepGoLive][currentStep];
+  const StepComponent = [StepCredentials, StepInstallSDK, StepFirstCall, StepFirstTransfer, StepWebhooks, StepGoLive][currentStep];
 
   return (
     <Card>
@@ -382,7 +471,7 @@ export function OnboardingWizard() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <CardTitle className="text-xl">Integration Guide</CardTitle>
-            <CardDescription>From zero to first payment in 5 steps</CardDescription>
+            <CardDescription>From zero to first payment in 6 steps</CardDescription>
           </div>
           <Badge variant="outline">Step {currentStep + 1} of {TOTAL_STEPS}</Badge>
         </div>
