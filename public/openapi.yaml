@@ -106,7 +106,7 @@ info:
 servers:
 - url: https://api.kangopenbanking.com/v1
   description: Production
-- url: https://api.kangopenbanking.com/v1
+- url: https://sandbox-api.kangopenbanking.com/v1
   description: Sandbox
 security:
 - bearerAuth: []
