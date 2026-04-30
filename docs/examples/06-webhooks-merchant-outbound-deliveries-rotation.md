@@ -68,7 +68,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merch
 ## 3. Check Delivery Logs
 
 ```bash
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks/wh_xyz789/deliveries?limit=10&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/merchants/webhooks/wh_xyz789/deliveries?page=1&limit=10" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

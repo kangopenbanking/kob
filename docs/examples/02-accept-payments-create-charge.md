@@ -69,7 +69,7 @@ curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges/chg_a
 ## 3. List Charges (with pagination)
 
 ```bash
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges?limit=20&offset=0&status=successful" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charges?page=1&limit=20&status=successful" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

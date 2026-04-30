@@ -91,7 +91,7 @@ curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts \
 ## 3. Get Transactions (with pagination)
 
 ```bash
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/acc_001/transactions?limit=25&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/acc_001/transactions?page=1&limit=25" \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "x-fapi-interaction-id: 93bac548-d2de-4546-b106-880a5018460d"
 ```

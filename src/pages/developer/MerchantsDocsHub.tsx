@@ -41,8 +41,8 @@ const TOPICS: MerchantTopic[] = [
   {
     title: "API keys (sandbox & production)",
     description:
-      "Generate, rotate, and revoke restricted API keys. Plaintext secret is shown ONCE — see the cryptographic key governance rules.",
-    href: "/developer/authentication/api-keys",
+      "Generate, rotate, and revoke restricted API keys with per-permission scoping. The plaintext secret is shown ONCE — see the cryptographic key governance rules. Audit log included.",
+    href: "/developer/merchants/api-keys",
     icon: KeyRound,
     badge: "shown once",
   },
@@ -183,6 +183,40 @@ export default function MerchantsDocsHub() {
               );
             })}
           </div>
+        </section>
+
+        <section aria-labelledby="pagination" className="rounded-lg border bg-card p-6 mb-8">
+          <h2 id="pagination" className="text-base font-semibold mb-2">Pagination contract</h2>
+          <p className="text-sm text-muted-foreground mb-3">
+            Every list endpoint accepts <code>page</code> (1-based, default 1) and{" "}
+            <code>limit</code> (max 100, default 20), or an opaque <code>cursor</code>{" "}
+            from the previous response. Responses always wrap results in a{" "}
+            <code>PaginatedResponse</code> envelope: <code>{`{ data, pagination, meta }`}</code>.
+          </p>
+          <pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
+{`# Page-based (recommended starter)
+curl "https://api.kangopenbanking.com/v1/gateway/charges?page=1&limit=20&status=successful" \\
+  -H "Authorization: Bearer $KOB_API_KEY"
+
+# Cursor-based (recommended for large result sets)
+curl "https://api.kangopenbanking.com/v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9&limit=50" \\
+  -H "Authorization: Bearer $KOB_API_KEY"
+
+# Response shape (PaginatedResponse)
+{
+  "data": [ /* charge objects */ ],
+  "pagination": {
+    "page": 1, "limit": 20, "total": 142,
+    "next_cursor": "eyJpZCI6IjE0MiJ9", "has_more": true
+  },
+  "meta": { "request_id": "req_…", "api_version": "4.26.3" }
+}`}
+          </pre>
+          <p className="text-xs text-muted-foreground mt-2">
+            Reference: <code>CursorParam</code>, <code>LimitParam</code>, <code>PageParam</code>{" "}
+            and the <code>PaginatedResponse</code> schema in{" "}
+            <Link to="/openapi.json" className="text-primary hover:underline">/openapi.json</Link>.
+          </p>
         </section>
 
         <section

@@ -1,12 +1,42 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.3** · Last updated: **2026-04-30**
+Current API version: **4.26.4** · Last updated: **2026-04-30**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.26.4 — 2026-04-30
+**Type:** patch · **Breaking changes:** none
+
+Phase 5 follow-up — Embedded webhook simulator into /developer/api-explorer (Webhook simulator tab), shipped /developer/merchants/api-keys with create/rotate/revoke + per-permission scoping + audit log, fixed pagination snippets in docs/examples/* to use the documented page+limit / cursor contract (was offset=0), and added scripts/postman-contract-check.mjs (npm run postman:contract) that runs the published Postman collection against sandbox via Newman and validates each response against its OpenAPI schema with Ajv.
+
+### Highlights
+- ApiExplorer.tsx — third tab 'Webhook simulator' lazy-loads SandboxWebhookTester (HMAC-SHA256, send to user URL) + WebhookEventSimulator (failure-mode replay).
+- MerchantApiKeysManager.tsx — sandbox/production toggle, 8 fine-grained permissions, 24h rotation overlap, secret shown ONCE (cryptographic key governance), audit_logs surfaced in-page.
+- docs/examples/02,06,07,08,09: replaced ?limit=N&offset=0 with ?page=1&limit=N to match CursorParam/LimitParam/PageParam in OpenAPI components.
+- docs/examples/12: switched bank-aggregator loop to cursor-based pagination.
+- MerchantsDocsHub.tsx — added 'Pagination contract' reference block with both page-based and cursor-based curl examples + PaginatedResponse envelope.
+- scripts/postman-contract-check.mjs — Newman runner + Ajv schema validator, fails CI on schema mismatches; ratchet per Standing Order 2.
+
+### Fixed
+- docs/examples — pagination params now match the published OpenAPI contract (was using offset=0 which is not a documented parameter).
+
+### Standards & citations
+- STANDING ORDER 1 — additive only, no renames
+- STANDING ORDER 2 — ratchet (Postman contract check fails CI on regression)
+- STANDING ORDER 6 — version gate (patch bump for docs/UI/CI)
+- ORDER P5 — working code rule (curl examples now actually match the spec)
+- ORDER P6 — complete content rule (Pagination contract block added to Merchants hub)
+- ORDER P9 — multi-language rule (curl + JS variants in updated examples)
+- RFC 7807 — Problem Details (preserved across all 4xx/5xx responses)
+
+### Migration notes
+If you copied old curl snippets that used &offset=0, switch to &page=1 (page-based) or &cursor=… (cursor-based). The endpoints accepted offset previously as an undocumented alias and may stop accepting it in a future version.
 
 ---
 

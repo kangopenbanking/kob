@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense, lazy } from "react";
 import { Helmet } from "react-helmet-async";
+
+// Phase 5 follow-up — interactive webhook simulator embedded directly in the API Explorer.
+// Lets developers compute the X-KOB-Signature, send sample payloads to their own
+// endpoint, replay events, and verify signatures — see ORDER P5 / P6.
+const SandboxWebhookTester = lazy(() => import("./SandboxWebhookTester"));
+const WebhookEventSimulator = lazy(() => import("./WebhookEventSimulator"));
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -322,7 +328,7 @@ const ApiExplorer = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"reference" | "tryit">("reference");
+  const [activeTab, setActiveTab] = useState<"reference" | "tryit" | "webhooks">("reference");
   const navRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch spec
@@ -505,6 +511,9 @@ const ApiExplorer = () => {
               </TabsTrigger>
               <TabsTrigger value="tryit">
                 <PlayCircle className="mr-1.5 h-3.5 w-3.5" /> Try it out
+              </TabsTrigger>
+              <TabsTrigger value="webhooks">
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Webhook simulator
               </TabsTrigger>
             </TabsList>
 
@@ -772,6 +781,33 @@ const ApiExplorer = () => {
                   </div>
                 )}
               </Card>
+            </TabsContent>
+
+            <TabsContent value="webhooks" className="m-0 space-y-6">
+              <Alert>
+                <ShieldCheck className="h-4 w-4" />
+                <AlertDescription>
+                  Compute the <code>X-KOB-Signature</code> for any payload, send the
+                  event to your own endpoint (use a tunnel such as ngrok in dev), and
+                  verify HMAC-SHA256 verification end-to-end. Failed deliveries follow
+                  the documented retry schedule (1m → 48h, 7 attempts) — see the
+                  <Link to="/developer/api-reference/webhook-retry" className="ml-1 underline">retry guide</Link>.
+                </AlertDescription>
+              </Alert>
+              <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                <SandboxWebhookTester />
+              </Suspense>
+              <div className="border-t pt-6">
+                <h2 className="text-lg font-semibold mb-2">Failure-mode catalog</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Replay common failure variants (stale timestamp, duplicate id,
+                  invalid signature) to confirm your receiver returns the right
+                  RFC 7807 status codes.
+                </p>
+                <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+                  <WebhookEventSimulator />
+                </Suspense>
+              </div>
             </TabsContent>
           </Tabs>
 
