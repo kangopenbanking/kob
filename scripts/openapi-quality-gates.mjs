@@ -47,7 +47,7 @@ const FINANCIAL_PATH_PATTERNS = [
 const WEBHOOK_PATH = /\/webhooks\//i;
 
 const failures = [];
-const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0 };
+const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0 };
 
 function fail(gate, opKey, message) {
   if ((allow[gate] || []).includes(opKey)) return;
