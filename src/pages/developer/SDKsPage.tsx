@@ -1,12 +1,33 @@
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Code, CheckCircle2, ExternalLink, Copy, Terminal, Package, Info } from "lucide-react";
+import {
+  Download,
+  Code,
+  CheckCircle2,
+  ExternalLink,
+  Copy,
+  Terminal,
+  Package,
+  Info,
+  BookOpen,
+  ShieldCheck,
+  Zap,
+  GitBranch,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import {
+  CurlLogo,
+  NodeLogo,
+  PythonLogo,
+  PhpLogo,
+  JavaLogo,
+  GoLogo,
+} from "@/components/developer/ClientLibraryLogos";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
@@ -401,12 +422,17 @@ openapi-generator-cli generate \\
 type SDKDef = {
   key: string;
   title: string;
+  language: string;
   desc: string;
   install: string;
+  installLabel: string;
   badge: string;
   repo: string;
   registry: string;
+  registryLabel: string;
+  runtime: string;
   features: string[];
+  Logo: (props: { size?: number; className?: string }) => JSX.Element;
   auth: string;
   charge: string;
   webhook: string;
@@ -417,11 +443,15 @@ const sdks: SDKDef[] = [
   {
     key: "node",
     title: "Node.js / TypeScript",
+    language: "typescript",
     desc: "Full-featured SDK with TypeScript types, auto token refresh, and webhook verification. ESM + CJS dual build.",
     install: "npm install @kangopenbanking/sdk",
+    installLabel: "npm",
     badge: "v1.1.0",
     repo: "https://github.com/kangfinance/openbanking-node",
     registry: "https://www.npmjs.com/package/@kangopenbanking/sdk",
+    registryLabel: "npm",
+    runtime: "Node.js 18+",
     features: [
       "Node.js 18+ and browser (ESM + CJS)",
       "Full TypeScript definitions for all 286 endpoints",
@@ -430,6 +460,7 @@ const sdks: SDKDef[] = [
       "Retry with exponential backoff",
       "Idempotency key auto-generation for payments",
     ],
+    Logo: NodeLogo,
     auth: NODE_AUTH,
     charge: NODE_CHARGE,
     webhook: NODE_WEBHOOK,
@@ -438,11 +469,15 @@ const sdks: SDKDef[] = [
   {
     key: "python",
     title: "Python",
+    language: "python",
     desc: "Typed responses with PEP 484 hints, sync + async support via httpx, and context manager pattern.",
     install: "pip install kangopenbanking",
+    installLabel: "pip",
     badge: "v1.1.0",
     repo: "https://github.com/kangfinance/openbanking-python",
     registry: "https://pypi.org/project/kangopenbanking/",
+    registryLabel: "PyPI",
+    runtime: "Python 3.9+",
     features: [
       "Python 3.9+ compatible",
       "PEP 484 type hints on all models",
@@ -451,6 +486,7 @@ const sdks: SDKDef[] = [
       "Retry with exponential backoff",
       "Idempotency key auto-generation",
     ],
+    Logo: PythonLogo,
     auth: PYTHON_AUTH,
     charge: PYTHON_CHARGE,
     webhook: PYTHON_WEBHOOK,
@@ -459,11 +495,15 @@ const sdks: SDKDef[] = [
   {
     key: "php",
     title: "PHP / Laravel",
+    language: "php",
     desc: "PSR-4 autoloaded with Laravel service provider, Guzzle HTTP client, and webhook middleware.",
     install: "composer require kangopenbanking/sdk",
+    installLabel: "composer",
     badge: "v1.1.0",
     repo: "https://github.com/kangfinance/openbanking-php",
     registry: "https://packagist.org/packages/kangopenbanking/sdk",
+    registryLabel: "Packagist",
+    runtime: "PHP 8.1+",
     features: [
       "PHP 8.1+ with PSR-4 autoloading",
       "Laravel service provider + facade",
@@ -472,6 +512,7 @@ const sdks: SDKDef[] = [
       "Retry with exponential backoff",
       "Idempotency key auto-generation",
     ],
+    Logo: PhpLogo,
     auth: PHP_AUTH,
     charge: PHP_CHARGE,
     webhook: PHP_WEBHOOK,
@@ -480,11 +521,15 @@ const sdks: SDKDef[] = [
   {
     key: "java",
     title: "Java",
+    language: "java",
     desc: "Strongly typed models with CompletableFuture async support. Maven and Gradle compatible.",
-    install: "<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>sdk</artifactId>\n  <version>1.1.0</version>\n</dependency>",
+    install: "com.kangopenbanking:sdk:1.1.0",
+    installLabel: "Maven",
     badge: "v1.1.0",
     repo: "https://github.com/kangfinance/openbanking-java",
     registry: "https://central.sonatype.com/artifact/com.kangopenbanking/sdk",
+    registryLabel: "Maven Central",
+    runtime: "Java 11+",
     features: [
       "Java 11+ compatible",
       "CompletableFuture async support",
@@ -493,6 +538,7 @@ const sdks: SDKDef[] = [
       "Webhook HMAC-SHA256 verification",
       "Retry with exponential backoff",
     ],
+    Logo: JavaLogo,
     auth: JAVA_AUTH,
     charge: JAVA_CHARGE,
     webhook: JAVA_WEBHOOK,
@@ -501,11 +547,15 @@ const sdks: SDKDef[] = [
   {
     key: "go",
     title: "Go",
+    language: "go",
     desc: "Idiomatic Go with context support, structured errors, and functional options pattern.",
     install: "go get github.com/kangopenbanking/sdk-go",
+    installLabel: "go get",
     badge: "v1.1.0",
     repo: "https://github.com/kangopenbanking/sdk-go",
     registry: "https://pkg.go.dev/github.com/kangopenbanking/sdk-go",
+    registryLabel: "pkg.go.dev",
+    runtime: "Go 1.21+",
     features: [
       "Go 1.21+ with generics",
       "Context-aware API calls",
@@ -514,6 +564,7 @@ const sdks: SDKDef[] = [
       "Retry with exponential backoff",
       "Idempotency key auto-generation",
     ],
+    Logo: GoLogo,
     auth: GO_AUTH,
     charge: GO_CHARGE,
     webhook: GO_WEBHOOK,
@@ -521,224 +572,473 @@ const sdks: SDKDef[] = [
   },
 ];
 
-const CodeCard = ({ title, code, lang }: { title: string; code: string; lang: string }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
-      <CardTitle className="text-sm">{title}</CardTitle>
-      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(code)}>
-        <Copy className="h-3.5 w-3.5 mr-1" /> Copy
-      </Button>
-    </CardHeader>
-    <CardContent>
-      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs leading-relaxed"><code>{code}</code></pre>
-    </CardContent>
-  </Card>
-);
+const EXAMPLE_TABS = [
+  { key: "auth", label: "Authentication", desc: "Initialize the client and prepare an OAuth2 PKCE flow." },
+  { key: "charge", label: "Create a charge", desc: "Charge a customer over Mobile Money with idempotency." },
+  { key: "webhook", label: "Verify a webhook", desc: "Validate the HMAC-SHA256 signature on inbound events." },
+  { key: "aisp", label: "Read accounts", desc: "List accounts, fetch balances, and pull transactions." },
+] as const;
+
+type ExampleKey = (typeof EXAMPLE_TABS)[number]["key"];
+
+const HIGHLIGHTS = [
+  {
+    icon: ShieldCheck,
+    title: "Production-grade security",
+    body: "OAuth2 PKCE, automatic token rotation, and HMAC-SHA256 webhook verification baked in.",
+  },
+  {
+    icon: Zap,
+    title: "Idempotent by default",
+    body: "Every payment endpoint accepts an idempotency key and is safe to retry under load.",
+  },
+  {
+    icon: GitBranch,
+    title: "Versioned and stable",
+    body: "Semantic versioning, deprecation windows, and changelogs for every release.",
+  },
+  {
+    icon: BookOpen,
+    title: "Generated from OpenAPI 3.1",
+    body: "Identical surface across languages — every model is typed and traceable to a spec field.",
+  },
+] as const;
+
+const COVERAGE = [
+  { domain: "Authentication", endpoints: "OAuth2 PKCE, mTLS, token refresh, DCR" },
+  { domain: "AISP", endpoints: "Accounts, balances, transactions, beneficiaries, consents" },
+  { domain: "PISP", endpoints: "Domestic + international payments, standing orders" },
+  { domain: "Gateway Charges", endpoints: "Create, verify, list, cancel, refund" },
+  { domain: "Gateway Payouts", endpoints: "Single + batch payouts, instant payouts" },
+  { domain: "Mobile Money", endpoints: "MTN MoMo, Orange Money, charge + disburse" },
+  { domain: "Webhooks", endpoints: "HMAC-SHA256 verification, event parsing" },
+  { domain: "Wallets + Escrow", endpoints: "Custodial wallets, escrow lifecycle" },
+  { domain: "Compliance", endpoints: "KYC, AML screening, sanctions checks" },
+  { domain: "ISO 20022", endpoints: "pacs.002-009, camt.052-056 parse + generate" },
+  { domain: "Sandbox", endpoints: "Test data, webhook simulation, payout sim" },
+  { domain: "Bank Directory", endpoints: "Bank lookup, branch search, BIC validation" },
+] as const;
+
+function CodePanel({
+  code,
+  language,
+  filename,
+}: {
+  code: string;
+  language: string;
+  filename: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs font-mono text-muted-foreground truncate">{filename}</span>
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+            {language}
+          </Badge>
+        </div>
+        <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyToClipboard(code)}>
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copy
+        </Button>
+      </div>
+      <pre className="bg-card p-4 overflow-x-auto text-xs leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
 
 export default function SDKsPage() {
+  const [activeSdk, setActiveSdk] = useState<string>("node");
+  const [activeExample, setActiveExample] = useState<ExampleKey>("auth");
+
+  const sdk = useMemo(() => sdks.find((s) => s.key === activeSdk) ?? sdks[0], [activeSdk]);
+  const exampleCode = sdk[activeExample];
+  const exampleMeta = EXAMPLE_TABS.find((t) => t.key === activeExample)!;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight mb-4">SDKs and Client Libraries</h1>
-        <p className="text-xl text-muted-foreground">
-          Official SDKs covering all 286 endpoints across 42 modules -- with full type safety, automatic authentication, webhook verification, and retry logic.
-        </p>
-        <p className="text-sm text-muted-foreground mt-2">Last updated: 10 April 2026 | Contact: developers@kangopenbanking.com</p>
-      </div>
+    <div className="space-y-12">
+      {/* Hero */}
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="font-mono text-[11px]">
+            v4.23.0
+          </Badge>
+          <Badge variant="outline" className="text-[11px]">
+            OpenAPI 3.1
+          </Badge>
+          <Badge variant="outline" className="text-[11px]">
+            286 endpoints
+          </Badge>
+        </div>
+        <div className="space-y-3 max-w-3xl">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Official SDKs and client libraries
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Drop-in client libraries for the Kang Open Banking API. Identical surface across languages,
+            generated from the same OpenAPI specification, with built-in authentication, retries, and
+            webhook verification.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Last updated 10 April 2026 · Contact{" "}
+            <a className="underline" href="mailto:developers@kangopenbanking.com">
+              developers@kangopenbanking.com
+            </a>
+          </p>
+        </div>
+
+        {/* Install matrix — Stripe-style quick install grid */}
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="border-b px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Install in seconds</span>
+            </div>
+            <a
+              href="/openapi.json"
+              className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              OpenAPI spec <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x">
+            {sdks.map((s) => {
+              const Logo = s.Logo;
+              const isActive = s.key === activeSdk;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setActiveSdk(s.key)}
+                  className={`text-left px-5 py-4 hover:bg-muted/40 transition-colors ${
+                    isActive ? "bg-muted/60" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Logo size={20} />
+                    <span className="text-sm font-semibold">{s.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="font-mono text-[11px] text-muted-foreground truncate">
+                      {s.install}
+                    </code>
+                    <Copy
+                      className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(s.install);
+                      }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Highlights row */}
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {HIGHLIGHTS.map((h) => (
+          <div key={h.title} className="rounded-lg border bg-card p-4">
+            <div className="h-9 w-9 rounded-md border flex items-center justify-center mb-3">
+              <h.icon className="h-4 w-4" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1">{h.title}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">{h.body}</p>
+          </div>
+        ))}
+      </section>
 
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          All SDKs are open source on GitHub. They are generated from the{" "}
-          <a href="/openapi.json" className="underline font-medium">OpenAPI 3.1 specification</a> and cover
-          every endpoint including Gateway, AISP, PISP, Mobile Money, Escrow, Compliance, and ISO 20022.
+          All SDKs are open source on GitHub and generated from the{" "}
+          <a href="/openapi.json" className="underline font-medium">
+            OpenAPI 3.1 specification
+          </a>
+          . Coverage includes Gateway, AISP, PISP, Mobile Money, Escrow, Compliance, and ISO 20022.
         </AlertDescription>
       </Alert>
 
-      {/* Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>What the SDKs Cover</CardTitle>
-          <CardDescription>Every SDK provides the same complete API surface</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { domain: "Authentication", endpoints: "OAuth2 PKCE, mTLS, token refresh, DCR" },
-              { domain: "AISP", endpoints: "Accounts, balances, transactions, beneficiaries, consents" },
-              { domain: "PISP", endpoints: "Domestic + international payments, standing orders" },
-              { domain: "Gateway Charges", endpoints: "Create, verify, list, cancel, refund" },
-              { domain: "Gateway Payouts", endpoints: "Single + batch payouts, instant payouts" },
-              { domain: "Mobile Money", endpoints: "MTN MoMo, Orange Money, charge + disburse" },
-              { domain: "Webhooks", endpoints: "HMAC-SHA256 verification, event parsing" },
-              { domain: "Wallets + Escrow", endpoints: "Custodial wallets, escrow lifecycle" },
-              { domain: "Compliance", endpoints: "KYC, AML screening, sanctions checks" },
-              { domain: "ISO 20022", endpoints: "pacs.002-009, camt.052-056 parse + generate" },
-              { domain: "Sandbox", endpoints: "Test data, webhook simulation, payout sim" },
-              { domain: "Bank Directory", endpoints: "Bank lookup, branch search, BIC validation" },
-            ].map((item) => (
-              <div key={item.domain} className="border rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-sm">{item.domain}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{item.endpoints}</p>
-              </div>
-            ))}
+      {/* Library cards */}
+      <section className="space-y-4">
+        <div className="flex items-end justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Client libraries</h2>
+            <p className="text-sm text-muted-foreground">
+              Pick the SDK that matches your stack. Every library exposes the same modules and naming.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <a
+            href="https://github.com/kangfinance"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+          >
+            View all repositories <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
 
-      {/* SDK Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sdks.map((sdk) => (
-          <Card key={sdk.key} className="relative overflow-hidden">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-1">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{sdk.title}</CardTitle>
-                  <Badge variant="default" className="text-[10px] mt-0.5">{sdk.badge}</Badge>
-                </div>
-              </div>
-              <CardDescription>{sdk.desc}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                {sdk.features.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span>{f}</span>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {sdks.map((s) => {
+            const Logo = s.Logo;
+            return (
+              <Card key={s.key} className="flex flex-col transition-shadow hover:shadow-md">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-lg border bg-card flex items-center justify-center">
+                        <Logo size={24} />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base">{s.title}</CardTitle>
+                        <p className="text-xs text-muted-foreground mt-0.5">{s.runtime}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {s.badge}
+                    </Badge>
                   </div>
-                ))}
-              </div>
+                  <CardDescription className="pt-2 leading-relaxed">{s.desc}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1 gap-4">
+                  <div className="space-y-1.5">
+                    {s.features.slice(0, 4).map((f) => (
+                      <div key={f} className="flex items-start gap-2 text-xs">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
 
-              <div
-                className="bg-muted p-3 rounded-lg font-mono text-xs flex items-center justify-between gap-2 cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => copyToClipboard(sdk.install.includes('<') ? sdk.install : sdk.install)}
-                title="Click to copy"
-              >
-                <code className="truncate whitespace-pre-wrap">{sdk.key === 'java' ? 'mvn: com.kangopenbanking:sdk:1.1.0' : sdk.install}</code>
-                <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              </div>
+                  <div className="rounded-md border bg-muted/40 px-3 py-2 flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] uppercase shrink-0">
+                        {s.installLabel}
+                      </Badge>
+                      <code className="font-mono text-xs truncate">{s.install}</code>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(s.install)}
+                      className="text-muted-foreground hover:text-foreground shrink-0"
+                      aria-label="Copy install command"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
 
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  variant="outline"
-                  onClick={() => copyToClipboard(sdk.install)}
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Install
-                </Button>
-                <Button variant="outline" size="icon" asChild>
-                  <a href={sdk.repo} target="_blank" rel="noopener noreferrer" title="GitHub">
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <div className="flex gap-2 mt-auto">
+                    <Button variant="outline" className="flex-1" asChild>
+                      <a href={s.repo} target="_blank" rel="noopener noreferrer">
+                        <GitBranch className="mr-2 h-4 w-4" /> GitHub
+                      </a>
+                    </Button>
+                    <Button variant="outline" className="flex-1" asChild>
+                      <a href={s.registry} target="_blank" rel="noopener noreferrer">
+                        <Package className="mr-2 h-4 w-4" /> {s.registryLabel}
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
 
       <Separator />
 
-      {/* Language Tabs with Full Examples */}
-      <div className="space-y-4">
-        <h2 className="text-3xl font-bold">Integration Examples</h2>
-        <p className="text-muted-foreground">
-          Each tab shows authentication setup, a payment charge, webhook verification, and account information retrieval.
-        </p>
+      {/* Persistent code explorer */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Integration examples</h2>
+          <p className="text-sm text-muted-foreground">
+            Pick a library and a task. Every example runs against the public sandbox using your test
+            credentials.
+          </p>
+        </div>
 
-        <Tabs defaultValue="node" className="w-full">
-          <TabsList className="flex flex-wrap h-auto gap-1">
-            <TabsTrigger value="node">Node.js / TypeScript</TabsTrigger>
-            <TabsTrigger value="python">Python</TabsTrigger>
-            <TabsTrigger value="php">PHP / Laravel</TabsTrigger>
-            <TabsTrigger value="java">Java</TabsTrigger>
-            <TabsTrigger value="go">Go</TabsTrigger>
-          </TabsList>
+        <div className="grid lg:grid-cols-[260px,1fr] gap-4">
+          {/* Sidebar — language picker */}
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <div className="px-4 py-2.5 border-b bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Language
+            </div>
+            <div className="flex lg:flex-col overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(`curl https://api.kangopenbanking.com/v1/charges \\
+  -H "Authorization: Bearer $KOB_API_KEY" \\
+  -H "Idempotency-Key: $(uuidgen)"`)}
+                className="hidden lg:flex items-center gap-2 px-4 py-2.5 text-sm border-b text-muted-foreground hover:bg-muted/40"
+                title="Copy a starter cURL request"
+              >
+                <CurlLogo size={18} />
+                <span>cURL (raw)</span>
+              </button>
+              {sdks.map((s) => {
+                const Logo = s.Logo;
+                const active = s.key === activeSdk;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setActiveSdk(s.key)}
+                    className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors border-b last:border-b-0 lg:border-b ${
+                      active
+                        ? "bg-muted text-foreground font-medium"
+                        : "text-muted-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <Logo size={18} />
+                    <span className="whitespace-nowrap">{s.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          {sdks.map((sdk) => (
-            <TabsContent key={sdk.key} value={sdk.key} className="space-y-4">
-              <CodeCard title="Authentication Setup" code={sdk.auth} lang={sdk.key} />
-              <CodeCard title="Charge a Customer" code={sdk.charge} lang={sdk.key} />
-              <CodeCard title="Verify a Webhook" code={sdk.webhook} lang={sdk.key} />
-              <CodeCard title="Get Account Balance (AISP)" code={sdk.aisp} lang={sdk.key} />
+          {/* Main panel */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-1 border-b">
+              {EXAMPLE_TABS.map((t) => {
+                const active = t.key === activeExample;
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setActiveExample(t.key)}
+                    className={`px-3 py-2 text-sm border-b-2 -mb-px transition-colors ${
+                      active
+                        ? "border-primary text-foreground font-medium"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-sm text-muted-foreground">{exampleMeta.desc}</p>
+            <CodePanel
+              code={exampleCode}
+              language={sdk.language}
+              filename={`example.${
+                sdk.key === "node"
+                  ? "ts"
+                  : sdk.key === "python"
+                    ? "py"
+                    : sdk.key === "php"
+                      ? "php"
+                      : sdk.key === "java"
+                        ? "java"
+                        : "go"
+              }`}
+            />
+            <div className="text-xs text-muted-foreground">
+              Full reference:{" "}
+              <a href="/developer/api-explorer" className="text-primary underline">
+                API Reference
+              </a>{" "}
+              ·{" "}
+              <a href={sdk.repo} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                Repository
+              </a>{" "}
+              ·{" "}
+              <a
+                href={sdk.registry}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                {sdk.registryLabel}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <div className="text-sm text-muted-foreground">
-                Full API reference: <a href="/developer/api-explorer" className="text-primary underline">API Explorer</a>{" | "}
-                Repository: <a href={sdk.repo} target="_blank" rel="noopener noreferrer" className="text-primary underline">GitHub</a>{" | "}
-                Registry: <a href={sdk.registry} target="_blank" rel="noopener noreferrer" className="text-primary underline">Package</a>
+      <Separator />
+
+      {/* Coverage */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">What every SDK covers</h2>
+          <p className="text-sm text-muted-foreground">
+            Identical module surface across all languages — switching libraries does not change your code
+            shape.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {COVERAGE.map((item) => (
+            <div key={item.domain} className="rounded-lg border bg-card p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">{item.domain}</span>
               </div>
-            </TabsContent>
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.endpoints}</p>
+            </div>
           ))}
-        </Tabs>
-      </div>
+        </div>
+      </section>
 
       <Separator />
 
       {/* Generate from OpenAPI */}
-      <div className="space-y-4">
-        <h2 className="text-3xl font-bold">Generate a Client in Any Language</h2>
-        <p className="text-muted-foreground">
-          The full OpenAPI 3.1 specification is publicly available at{" "}
-          <a href="/openapi.json" className="text-primary underline font-medium">/openapi.json</a>.
-          Use <code className="bg-muted px-1.5 py-0.5 rounded text-sm">openapi-generator-cli</code> to generate
-          a type-safe client in 50+ languages including Rust, Kotlin, Swift, Dart, C#, Ruby, and more.
-        </p>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base">Generate with openapi-generator-cli</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => copyToClipboard(OPENAPI_GEN)}>
-              <Copy className="h-4 w-4 mr-1" /> Copy
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs leading-relaxed"><code>{OPENAPI_GEN}</code></pre>
-          </CardContent>
-        </Card>
-
-        <div className="bg-muted/50 rounded-lg p-4 border text-sm text-muted-foreground">
-          The specification includes all 286 endpoints, 49+ schemas with <code className="bg-muted px-1 rounded">required[]</code> arrays,
-          and standardized response envelopes. Generated clients will have typed models for every request and response.
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Generate a client in any language</h2>
+          <p className="text-sm text-muted-foreground">
+            The full OpenAPI 3.1 specification is publicly available at{" "}
+            <a href="/openapi.json" className="text-primary underline font-medium">
+              /openapi.json
+            </a>
+            . Use <code className="bg-muted px-1.5 py-0.5 rounded text-xs">openapi-generator-cli</code> to
+            generate a type-safe client in 50+ languages including Rust, Kotlin, Swift, Dart, C#, and Ruby.
+          </p>
         </div>
-      </div>
+        <CodePanel code={OPENAPI_GEN} language="bash" filename="generate-client.sh" />
+        <div className="rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
+          The specification includes all 286 endpoints, 49+ schemas with{" "}
+          <code className="bg-muted px-1 rounded">required[]</code> arrays, and standardized response
+          envelopes. Generated clients carry typed models for every request and response.
+        </div>
+      </section>
 
       {/* Resources */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Resources</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {[
-              { label: "OpenAPI 3.1 Spec (JSON)", href: "/openapi.json", icon: Code },
-              { label: "OpenAPI 3.1 Spec (YAML)", href: "/openapi.yaml", icon: Code },
-              { label: "Sandbox Spec", href: "/openapi-sandbox.json", icon: Code },
-              { label: "Postman Collection", href: "https://www.postman.com/kangfinance/kang-open-banking-api", icon: Download },
-              { label: "API Explorer", href: "/developer/api-explorer", icon: Terminal },
-              { label: "Webhook Guide", href: "/developer/gateway/webhooks", icon: Package },
-            ].map((r) => (
-              <a
-                key={r.label}
-                href={r.href}
-                target={r.href.startsWith("http") ? "_blank" : undefined}
-                rel={r.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <r.icon className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">{r.label}</span>
-                <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight">Additional resources</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { label: "OpenAPI 3.1 Spec (JSON)", href: "/openapi.json", icon: Code },
+            { label: "OpenAPI 3.1 Spec (YAML)", href: "/openapi.yaml", icon: Code },
+            { label: "Sandbox Spec", href: "/openapi-sandbox.json", icon: Code },
+            {
+              label: "Postman Collection",
+              href: "https://www.postman.com/kangfinance/kang-open-banking-api",
+              icon: Download,
+            },
+            { label: "API Reference", href: "/developer/api-explorer", icon: Terminal },
+            { label: "Webhook Guide", href: "/developer/gateway/webhooks", icon: Package },
+          ].map((r) => (
+            <a
+              key={r.label}
+              href={r.href}
+              target={r.href.startsWith("http") ? "_blank" : undefined}
+              rel={r.href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-muted/40 transition-colors"
+            >
+              <r.icon className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{r.label}</span>
+              <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
+            </a>
+          ))}
+        </div>
+      </section>
 
       <AutoDocNavigation />
     </div>
