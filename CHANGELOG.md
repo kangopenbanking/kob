@@ -1,12 +1,38 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.5** · Last updated: **2026-04-30**
+Current API version: **4.26.6** · Last updated: **2026-04-30**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.26.6 — 2026-04-30
+**Type:** patch · **Breaking changes:** none
+
+Phase 5 hardening — Added /developer/status POS Commerce health probe (api-health now returns services.pos by reading pos_products / pos_orders / pos_store_profiles), shipped scripts/generate-typed-sdks.mjs (npm run sdk:generate) producing TypeScript / Python / Go / Java clients via openapi-generator-cli from public/openapi.json, wired .github/workflows/sdk-generate.yml (Java 17 + Node 20) to build them on every PR and upload the kangopenbanking-typed-sdks artifact on main, and surfaced them in the existing /developer/guides/sdks hub alongside the curated SDKs.
+
+### Highlights
+- supabase/functions/api-health — added checkPosHealth() probing pos_products + pos_orders + pos_store_profiles; services.pos now reports operational/degraded instead of falling through to down.
+- scripts/generate-typed-sdks.mjs — version pinned to spec info.version, ratchet per Standing Order 6; emits sdks/generated/{typescript,python,go,java}/ with GENERATED.md guard files.
+- .github/workflows/sdk-generate.yml — runs on every PR touching public/openapi.json or the generator script; uploads kangopenbanking-typed-sdks artifact on main (90-day retention).
+- src/pages/developer/SDKsPage.tsx — new 'Generated typed clients' section with install commands per language and link to the CI artifact (positioned below the curated SDKs to preserve recommended DX path).
+
+### Fixed
+- /developer/status — POS Commerce row no longer reports down; live api-health response now includes services.pos.
+
+### Standards & citations
+- STANDING ORDER 2 — ratchet (CI now blocks regressions on SDK generation)
+- STANDING ORDER 6 — version gate (generated SDK packageVersion mirrors openapi info.version)
+- ORDER P5 — working code rule (generated clients build cleanly from the published spec on every commit)
+- ORDER P6 — complete content rule (SDKs hub now documents both curated and generated clients)
+- ORDER P9 — multi-language rule (TypeScript + Python + Go + Java coverage)
+
+### Migration notes
+No action required. The generated SDKs are additive and live under sdks/generated/ (gitignored, distributed via the GitHub Actions artifact).
 
 ---
 
