@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.20.0
+  version: 4.21.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial
@@ -7199,6 +7199,8 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Account balances
@@ -7559,6 +7561,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Beneficiaries list
@@ -7704,6 +7708,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Standing orders list
@@ -7848,6 +7854,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Direct debits list
@@ -9611,6 +9619,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/credit/report:
     post:
       tags:
@@ -10509,6 +10520,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Repayment schedule
@@ -28517,6 +28530,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Virtual accounts list
@@ -28794,6 +28809,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Merchant wallet balances
@@ -34388,6 +34405,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Customer payment tokens
@@ -34822,6 +34841,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Charge event timeline
@@ -36515,6 +36536,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: API keys list
@@ -36948,6 +36971,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Settlement accounts
@@ -37253,6 +37278,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Merchant webhooks
@@ -39638,6 +39665,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Withdrawal policies list
@@ -40273,6 +40302,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Staff authorizations
@@ -47239,6 +47270,8 @@ paths:
           in: query
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Available payout rails with speeds and fees
@@ -47849,6 +47882,8 @@ paths:
           schema:
             type: string
             format: date
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: SLA metric data
@@ -48834,6 +48869,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Webhook endpoints
@@ -49864,6 +49901,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/reconciliation/mismatches:
     get:
       tags:
@@ -51218,6 +51258,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Connector instances list
@@ -52947,6 +52989,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/interbank/messages:
     get:
       tags:
