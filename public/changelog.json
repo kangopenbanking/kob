@@ -1,9 +1,41 @@
 {
-  "apiVersion": "4.23.0",
+  "apiVersion": "4.24.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.24.0",
+      "date": "2026-04-30",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 1 — Open Banking readiness: spec aliases for OIDC discovery, consent lifecycle completeness, AISP pagination parity.",
+      "highlights": [
+        "Added GET /v1/consents/{consentId}/status (already deployed as `consent-status` runtime function)",
+        "Added POST /v1/consents/{consentId}/extend (already deployed as `consent-extend` runtime function)",
+        "Added GET /v1/certificates/{certificateId} for individual certificate retrieval (eIDAS / FAPI 1.0 Advanced §5.2.2)",
+        "Added POST /v1/oauth/register — Dynamic Client Registration (RFC 7591), aligning spec with OIDC discovery advertisement",
+        "Added GET /v1/.well-known/jwks.json alias to match OIDC discovery `jwks_uri` (RFC 8414 §3); existing /v1/jwks retained",
+        "Added GET /v1/userinfo alias to match OIDC discovery `userinfo_endpoint`; existing /v1/oauth/userinfo retained",
+        "Added additive `limit`/`offset` query params on AISP balances/beneficiaries/direct-debits/standing-orders sub-resources (omitting params preserves legacy behaviour)",
+        "Verified FAPI-grade signing algs (RS256/PS256/ES256), `cnf.x5t#S256` certificate-bound tokens (RFC 8705), PKCE-required, hashed refresh tokens (SHA-256, 30-day expiry)",
+        "Verified consent state machine: AwaitingAuthorisation → Authorised/Rejected → Revoked/Expired/Consumed; all transitions audit-logged via log_consent_event RPC"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1 — additive only, no renames",
+        "STANDING ORDER 3 — every entry cites a standard",
+        "STANDING ORDER 4 — surgeon rule (additive)",
+        "STANDING ORDER 6 — version gate (4.23.0 → 4.24.0 minor)",
+        "ORDER P1 — public docs unchanged",
+        "ORDER P4 — open spec preserved",
+        "ORDER P7 — changelog within 48h",
+        "FAPI 1.0 Advanced §5.2.2",
+        "RFC 7591 (DCR)",
+        "RFC 8414 §3 (Discovery aliases)",
+        "RFC 8705 (Certificate-bound tokens)",
+        "PSD2 RTS Article 5(1)(a), Article 10"
+      ]
+    },
     {
       "version": "4.23.0",
       "date": "2026-04-30",
