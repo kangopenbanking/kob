@@ -161,6 +161,14 @@ export default function AdminKybReviewQueue() {
         </div>
       </div>
 
+      {schemaWarning && (
+        <Alert variant="default" className="border-amber-500/40">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Database migration pending</AlertTitle>
+          <AlertDescription>{schemaWarning}</AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>{rows.length} merchant{rows.length === 1 ? "" : "s"}</CardTitle>
