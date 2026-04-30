@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense, lazy } from "react";
 import { Helmet } from "react-helmet-async";
+
+// Phase 5 follow-up — interactive webhook simulator embedded directly in the API Explorer.
+// Lets developers compute the X-KOB-Signature, send sample payloads to their own
+// endpoint, replay events, and verify signatures — see ORDER P5 / P6.
+const SandboxWebhookTester = lazy(() => import("./SandboxWebhookTester"));
+const WebhookEventSimulator = lazy(() => import("./WebhookEventSimulator"));
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
