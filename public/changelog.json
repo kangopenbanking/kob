@@ -1,24 +1,149 @@
 {
-  "apiVersion": "4.17.0",
+  "apiVersion": "4.23.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-04-22",
+  "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.23.0",
+      "date": "2026-04-30",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 7 \u2014 Per-phase changelog backfill, versioning policy reaffirmation, OpenAPI tag alignment.",
+      "highlights": [
+        "Backfilled per-phase changelog entries for Phases 2\u20136 (webhook reliability, CSV exports, idempotency hardening, runtime + spec hardening, E2E test gate)",
+        "OpenAPI info.version bumped 4.22.0 \u2192 4.23.0; tagged in changelog (STANDING ORDER 6 \u2014 Version Gate)",
+        "Versioning policy pages /api/versioning and /developer/api-reference/versioning verified public and SSR-readable (ORDER P1, P4)",
+        "No removals, renames, or schema changes \u2014 additive metadata only (STANDING ORDER 1, 4)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P1",
+        "ORDER P4",
+        "ORDER P7",
+        "ORDER P10"
+      ]
+    },
+    {
+      "version": "4.22.0",
+      "date": "2026-04-29",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 6 \u2014 End-to-end test CI gate covering provider webhook ingestion, merchant lifecycle, outbound webhooks, contract summary, and dashboard routes.",
+      "highlights": [
+        "Added 5 E2E suites (37/37 passing) plus 6 companion ratchets (13/13 passing) wired into .github/workflows/phase6-e2e.yml",
+        "Provider webhook ingestion: Stripe HMAC, Flutterwave verif-hash, PayPal cert validation; 401 on bad signature; webhook_inbox dedup",
+        "Merchant lifecycle: KYB submit \u2192 admin approve \u2192 key issuance \u2192 24h grace on rotation",
+        "Outbound merchant webhooks: endpoint create \u2192 delivery log \u2192 exponential backoff \u2192 manual replay",
+        "Contract summary gate enforces 2xx/3xx + valid content schema across every operation",
+        "Sandbox spec patched with 200 schemas for /v1/sandbox/webhooks/send-test and /v1/sandbox/reset (openapi-sandbox v4.17.5)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P5",
+        "ORDER P7"
+      ]
+    },
+    {
+      "version": "4.21.0",
+      "date": "2026-04-28",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 5 \u2014 Runtime + spec hardening: idempotency runtime, pagination contract sweep, error catalog completeness, Postman/SDK regen.",
+      "highlights": [
+        "Idempotency helper rewritten with UUID v4 validation, atomic in-flight reservation, replay vs conflict vs in-flight outcomes (X-Idempotent-Replay, Retry-After: 2)",
+        "Pagination: 21 list endpoints linked to LimitParam/CursorParam; PaginatedResponse envelope across all 73 list ops",
+        "Error catalog: 42 ops patched for missing 4xx/5xx; 9 unschemad responses fixed; canonical Error/ProblemDetails/RateLimitError refs",
+        "Postman regenerated to 346 requests via scripts/regen-postman.mjs; Node SDK 1.4.0 with IdempotencyError, WebhookReplayResult, ReportQuery types",
+        "3 new ratchets locked: pagination coverage, error catalog coverage, idempotency runtime contract"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P5",
+        "ORDER P7",
+        "ORDER P9"
+      ]
+    },
+    {
+      "version": "4.20.0",
+      "date": "2026-04-27",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 4 \u2014 Idempotency hardening across all financial mutation endpoints.",
+      "highlights": [
+        "Added Idempotency-Key header parameter (uuid, optional) to 18 financial POST/PUT/PATCH operations across Payment Gateway, Pay by Bank, Overdraft, etc.",
+        "New CI ratchet src/test/openapi-idempotency-coverage.test.ts enforces uuid-format Idempotency-Key on every financial mutation",
+        "Backward compatible: required:false keeps the parameter additive (STANDING ORDER 4)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1",
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P7"
+      ]
+    },
+    {
+      "version": "4.19.0",
+      "date": "2026-04-26",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 3 \u2014 CSV export endpoints for settlements, transactions, and disputes.",
+      "highlights": [
+        "New edge function gateway-reports exposes CSV-ready report endpoints with text/csv content-type and RFC 4180 quoting",
+        "OpenAPI documents both application/json and text/csv responses; pagination cursors honored",
+        "Audit at docs/audits/phase-3-csv-exports.md"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P5",
+        "ORDER P7"
+      ]
+    },
+    {
+      "version": "4.18.0",
+      "date": "2026-04-25",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 2 \u2014 Outbound webhook reliability: endpoint health probe, manual replay, exponential-backoff governance.",
+      "highlights": [
+        "New edge functions: gateway-webhook-endpoint-health and gateway-webhook-replay-delivery",
+        "gateway-webhooks-router emits structured delivery_log rows with attempt count, response_status, next_retry_at",
+        "7-attempt exponential backoff (1m,5m,30m,2h,8h,24h,48h) documented in info.description",
+        "Audit at docs/audits/phase-2-webhook-reliability.md"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 2",
+        "STANDING ORDER 4",
+        "STANDING ORDER 6",
+        "ORDER P5",
+        "ORDER P7"
+      ]
+    },
     {
       "version": "4.17.0",
       "date": "2026-04-22",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "KOB Integration Layer — Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
+      "summary": "KOB Integration Layer \u2014 Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
       "highlights": [
-        "New edge function POST /functions/v1/integration-layer/{resource}.{action} — unified router across customers, accounts, payments, transfers, payouts, refunds, webhooks, sandbox",
+        "New edge function POST /functions/v1/integration-layer/{resource}.{action} \u2014 unified router across customers, accounts, payments, transfers, payouts, refunds, webhooks, sandbox",
         "Unified response envelope { id, object, status, amount, currency, created, livemode, metadata, data } and error envelope { error: { type, code, message, param, request_id, upstream } }",
-        "Smart routing engine (method × country × MSISDN) with automatic fallback chain; delegates to existing /v1/* handlers (Surgeon Rule honored)",
+        "Smart routing engine (method \u00d7 country \u00d7 MSISDN) with automatic fallback chain; delegates to existing /v1/* handlers (Surgeon Rule honored)",
         "Platform-wide Idempotency-Key support via integration_idempotency_keys (24h TTL) and webhook replay via integration_webhook_replays",
         "Sandbox magic-value simulator (4242/4000/5555/9999) gated by x-integration-env: sandbox header (ORDER P3)",
         "Public discovery: GET /integration-layer + public docs at /developer/integration-layer (ORDER P1, P4)",
         "SDK: @kangopenbanking/sdk bumped to 1.3.0 with new kob.integration.* namespace (ORDER P9)",
-        "OpenAPI info.version → 4.17.0 (additive only — STANDING ORDERS 1, 4, 6)"
+        "OpenAPI info.version \u2192 4.17.0 (additive only \u2014 STANDING ORDERS 1, 4, 6)"
       ],
       "standard_citations": [
         "STANDING ORDER 1 (The Lock)",
@@ -153,14 +278,14 @@
       "date": "2026-04-17",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "BYO Phase 2 — server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
+      "summary": "BYO Phase 2 \u2014 server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
       "highlights": [
         "New cron edge function byo-charge-poller reconciles pending MTN/Orange/SOAP charges and fires synthetic webhooks via existing dispatcher",
         "New connector soap_bank with WS-Security UsernameToken authentication for T24, Flexcube, OBDX-class cores",
         "payment-router-charge now performs multi-rail failover across ALL enabled tenant connectors before Flutterwave fallback",
         "New tables byo_charge_polls and byo_routing_attempts with RLS scoped to owner + admin read-all",
         "Three new developer guides under /developer/connectors with cURL, Node, Python examples",
-        "All v4.10.0 contracts preserved unchanged — additive only (STANDING ORDER 1)"
+        "All v4.10.0 contracts preserved unchanged \u2014 additive only (STANDING ORDER 1)"
       ],
       "standard_citations": [
         "STANDING ORDER 1",
@@ -388,13 +513,13 @@
       "breaking_changes": false,
       "summary": "FAPI 1.0 Advanced Certification + Schema Hardening",
       "highlights": [
-        "FAPI 1.0 Advanced certification ready — code_challenge and code_challenge_method now required on /v1/oauth/authorize",
-        "Schema validation hardened — required[] arrays added to all 49 API schemas",
+        "FAPI 1.0 Advanced certification ready \u2014 code_challenge and code_challenge_method now required on /v1/oauth/authorize",
+        "Schema validation hardened \u2014 required[] arrays added to all 49 API schemas",
         "Idempotency-Key header added to 15 payment-related POST endpoints",
         "StandardResponse envelope applied to all 19 single-resource GET endpoints",
         "PaginatedResponse envelope applied to all 67 list GET endpoints",
         "RFC 7807 application/problem+json support expanded to all 330+ error responses",
-        "WebhookEventPayload base schema added — 52 event types with deduplication ID"
+        "WebhookEventPayload base schema added \u2014 52 event types with deduplication ID"
       ]
     },
     {
@@ -419,7 +544,7 @@
         "Auto-generated code examples in 9 languages on all 60+ API reference pages",
         "Official SDK examples for Node.js, Python, and PHP added to API reference",
         "Postman Collection v2.1 auto-export from OpenAPI spec",
-        "Response validation test suite — 8 automated tests for OpenAPI contract integrity"
+        "Response validation test suite \u2014 8 automated tests for OpenAPI contract integrity"
       ]
     },
     {
@@ -441,7 +566,7 @@
       "date": "2026-03-21",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "Pay by Bank — Redirect-Based SCA",
+      "summary": "Pay by Bank \u2014 Redirect-Based SCA",
       "highlights": [
         "Pay by Bank with Strong Customer Authentication",
         "New pay_by_bank_intents table",
@@ -469,13 +594,13 @@
       "date": "2026-03-14",
       "type": "major",
       "breaking_changes": false,
-      "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle",
+      "summary": "Identity Modernization \u2014 unified registration, login, MFA, onboarding lifecycle",
       "highlights": [
         "Unified /v1/identity/register endpoint supporting personal, merchant, institution, and developer account types",
-        "MFA system — TOTP, SMS OTP, email OTP with step-up challenges",
-        "Session management — device tracking, rotating tokens, session revocation",
-        "Onboarding lifecycle — unified onboarding_applications table",
-        "Developer organizations with sandbox_active→prod_approved lifecycle"
+        "MFA system \u2014 TOTP, SMS OTP, email OTP with step-up challenges",
+        "Session management \u2014 device tracking, rotating tokens, session revocation",
+        "Onboarding lifecycle \u2014 unified onboarding_applications table",
+        "Developer organizations with sandbox_active\u2192prod_approved lifecycle"
       ]
     },
     {
@@ -485,8 +610,8 @@
       "breaking_changes": false,
       "summary": "Admin Rewards & Referral Management, 5 new banking fee types",
       "highlights": [
-        "Admin Rewards Management — full referral tracking, reward history, manual credit",
-        "Dynamic reward settings — referral bonus, cashback rate configurable via system_config",
+        "Admin Rewards Management \u2014 full referral tracking, reward history, manual credit",
+        "Dynamic reward settings \u2014 referral bonus, cashback rate configurable via system_config",
         "5 new fee types: overdraft_fee, loan_processing_fee, atm_withdrawal, standing_order, dormancy_fee"
       ]
     },
@@ -497,9 +622,9 @@
       "breaking_changes": false,
       "summary": "Overdraft Eligibility Engine + Credit Report Purchase",
       "highlights": [
-        "Overdraft Eligibility Engine — 7-factor scoring with risk bands (A-F)",
+        "Overdraft Eligibility Engine \u2014 7-factor scoring with risk bands (A-F)",
         "Full overdraft lifecycle: recalculate, request, approve, suspend, revoke",
-        "Credit Report Purchase — wallet-based payment with 30-day access"
+        "Credit Report Purchase \u2014 wallet-based payment with 30-day access"
       ]
     },
     {
@@ -509,8 +634,8 @@
       "breaking_changes": false,
       "summary": "POS Consumer Marketplace + QR Payments",
       "highlights": [
-        "POS Consumer Marketplace — merchants publish storefronts",
-        "QR Code Payments — static/dynamic merchant QR generation",
+        "POS Consumer Marketplace \u2014 merchants publish storefronts",
+        "QR Code Payments \u2014 static/dynamic merchant QR generation",
         "Wallet payment method added to pos-pay-order"
       ]
     },
@@ -519,7 +644,7 @@
       "date": "2026-03-01",
       "type": "minor",
       "breaking_changes": false,
-      "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT",
+      "summary": "Cameroon Banking Identifiers \u2014 RIB, IBAN, BIC/SWIFT",
       "highlights": [
         "Full RIB (23-digit) and IBAN (27-char) validation with MOD-97 checksum",
         "DOMESTIC_RIB added to account_scheme enum",
@@ -534,7 +659,7 @@
       "summary": "30+ institutional pages, regulatory compliance, fraud engine",
       "highlights": [
         "BEAC/COBAC regulatory framework",
-        "Fraud Engine — 5-layer defence model",
+        "Fraud Engine \u2014 5-layer defence model",
         "Double-Entry Ledger and Reconciliation Framework"
       ]
     },
@@ -558,7 +683,7 @@
       "date": "2024-11-01",
       "type": "major",
       "breaking_changes": false,
-      "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
+      "summary": "Initial public release \u2014 AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
       "highlights": [
         "Account Information Service (AISP)",
         "Payment Initiation Service (PISP)",
@@ -575,7 +700,7 @@
         "date": "2026-04-22",
         "type": "minor",
         "breaking_changes": false,
-        "summary": "KOB Integration Layer — Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
+        "summary": "KOB Integration Layer \u2014 Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
         "entry_offset": 0
       },
       "4.16.4": {
@@ -617,7 +742,7 @@
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
-        "summary": "BYO Phase 2 — server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
+        "summary": "BYO Phase 2 \u2014 server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
         "entry_offset": 6
       },
       "4.10.0": {
@@ -715,7 +840,7 @@
         "date": "2026-03-21",
         "type": "minor",
         "breaking_changes": false,
-        "summary": "Pay by Bank — Redirect-Based SCA",
+        "summary": "Pay by Bank \u2014 Redirect-Based SCA",
         "entry_offset": 20
       },
       "4.1.0": {
@@ -729,7 +854,7 @@
         "date": "2026-03-14",
         "type": "major",
         "breaking_changes": false,
-        "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle",
+        "summary": "Identity Modernization \u2014 unified registration, login, MFA, onboarding lifecycle",
         "entry_offset": 22
       },
       "3.9.0": {
@@ -757,7 +882,7 @@
         "date": "2026-03-01",
         "type": "minor",
         "breaking_changes": false,
-        "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT",
+        "summary": "Cameroon Banking Identifiers \u2014 RIB, IBAN, BIC/SWIFT",
         "entry_offset": 26
       },
       "3.0.0": {
@@ -778,7 +903,7 @@
         "date": "2024-11-01",
         "type": "major",
         "breaking_changes": false,
-        "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
+        "summary": "Initial public release \u2014 AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
         "entry_offset": 29
       }
     },
