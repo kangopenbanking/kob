@@ -1070,3 +1070,6 @@ verify_jwt = false
 
 [functions.integration-layer]
 verify_jwt = false
+
+[functions.seed-e2e-users]
+verify_jwt = false

@@ -6,7 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 
-export const ROLES = ['admin', 'merchant', 'bank', 'consumer'] as const;
+export const ROLES = ['admin', 'merchant', 'institution', 'consumer'] as const;
 export type Role = typeof ROLES[number];
 
 export function getCreds(role: Role): { email: string; password: string } | null {
@@ -15,7 +15,7 @@ export function getCreds(role: Role): { email: string; password: string } | null
   const email =
     role === 'admin' ? process.env.E2E_ADMIN_EMAIL :
     role === 'merchant' ? process.env.E2E_MERCHANT_EMAIL :
-    role === 'bank' ? process.env.E2E_BANK_EMAIL :
+    role === 'institution' ? (process.env.E2E_INSTITUTION_EMAIL ?? process.env.E2E_BANK_EMAIL) :
     process.env.E2E_CONSUMER_EMAIL;
   if (!email) return null;
   return { email, password };

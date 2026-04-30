@@ -25,7 +25,7 @@ test.describe('KYB visibility per dashboard role', () => {
   });
 
   test('bank staff see customer KYC list', async ({ page }) => {
-    const ok = await loginAs(page, 'bank');
+    const ok = await loginAs(page, 'institution');
     expect(ok, 'bank login failed').toBe(true);
     await page.goto('/fi-portal/kyc');
     await expect(page).toHaveURL(/\/fi-portal\/kyc/);
