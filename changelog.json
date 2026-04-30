@@ -1,9 +1,35 @@
 {
-  "apiVersion": "4.26.10",
+  "apiVersion": "4.26.11",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.11",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Slice 6 — Webhook Inbox Dead-Letter Queue (DLQ). Additive migration adds attempt_count/max_attempts/next_retry_at/failed_permanently_at/dlq_reason columns to webhook_inbox, creates webhook_inbox_dlq table (admin-readable, service-role-writable) and SECURITY DEFINER helper move_webhook_to_dlq(). New cron-driven edge function webhook-inbox-retry-worker scans due rows, applies capped exponential backoff (60s base, 1h cap, 5 attempts default), and atomically moves exhausted entries into the DLQ. New admin-only edge function admin-webhook-dlq-replay lets platform admins re-enqueue a DLQ entry with an audit_logs trail. No public spec contract changes — patch bump for governance.",
+      "highlights": [
+        "Migration: webhook_inbox gains 5 retry-tracking columns + partial index idx_webhook_inbox_retry_scan(status, next_retry_at) WHERE is_processed=false.",
+        "Table public.webhook_inbox_dlq with RLS: admins SELECT only; service_role full access; replay tracking via replayed_at/replay_status.",
+        "Function move_webhook_to_dlq(uuid, text) is SECURITY DEFINER, search_path=public, granted only to service_role; uses FOR UPDATE row lock for atomic move.",
+        "Edge function webhook-inbox-retry-worker — cron-secret-gated, 50/batch, source→handler routing for flutterwave/paypal/stripe/woocommerce/bank.",
+        "Edge function admin-webhook-dlq-replay — verifies caller via has_role('admin'), resets original inbox row when present or inserts replay row with suffixed event_id, writes audit_logs."
+      ],
+      "additions": [
+        "supabase/migrations/* — webhook_inbox DLQ schema",
+        "supabase/functions/webhook-inbox-retry-worker/index.ts",
+        "supabase/functions/admin-webhook-dlq-replay/index.ts"
+      ],
+      "deprecations": [],
+      "fixes": [],
+      "standard_citations": [
+        "STANDING ORDER 2 — ratchet (only adds columns, table, function; nothing removed)",
+        "STANDING ORDER 4 — surgeon rule (additive migration + new functions; no edits to existing webhook handlers)",
+        "STANDING ORDER 6 — version gate (patch bump 4.26.10 → 4.26.11; no public spec contract changes)"
+      ]
+    },
     {
       "version": "4.26.10",
       "date": "2026-04-30",
