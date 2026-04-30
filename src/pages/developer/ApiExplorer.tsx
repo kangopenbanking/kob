@@ -30,6 +30,8 @@ import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { API_CONFIG } from "@/config/api";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { CLIENT_LIBRARIES, type ClientLanguageId } from "@/components/developer/ClientLibraryLogos";
+import { generateForLanguage } from "@/components/developer/sdkCodeGenerator";
 
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT
 // /developer/api-explorer must remain publicly accessible (ORDER P1, P4).
@@ -176,6 +178,138 @@ function CodeSnippet({ code, language }: { code: string; language: string }) {
         </Button>
       </div>
       <pre className="p-4 text-xs font-mono text-gray-100 leading-relaxed overflow-x-auto whitespace-pre">{code}</pre>
+    </div>
+  );
+}
+
+function SdkCodeGeneratorPanel({
+  spec,
+  baseUrl,
+  method,
+  path,
+  op,
+}: {
+  spec: any;
+  baseUrl: string;
+  method: HttpMethod;
+  path: string;
+  op: OpenAPIOperation;
+}) {
+  const { toast } = useToast();
+  const [lang, setLang] = useState<ClientLanguageId>("curl");
+  const [copied, setCopied] = useState(false);
+
+  const snippet = useMemo(
+    () => generateForLanguage(lang, { spec, baseUrl, method: method as any, path, op }),
+    [lang, spec, baseUrl, method, path, op]
+  );
+
+  const onCopy = async () => {
+    await navigator.clipboard.writeText(snippet.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  const onDownload = () => {
+    const blob = new Blob([snippet.code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = snippet.filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Snippet downloaded", description: snippet.filename });
+  };
+
+  const activeMeta = CLIENT_LIBRARIES.find((c) => c.id === lang)!;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          SDK code generator
+        </p>
+        <Badge variant="outline" className="gap-1.5 text-[10px] font-mono">
+          <activeMeta.Logo size={11} /> {activeMeta.label}
+        </Badge>
+      </div>
+
+      {/* Client libraries grid — logos */}
+      <div className="rounded-lg border bg-card p-2">
+        <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Client libraries
+        </p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {CLIENT_LIBRARIES.map(({ id, label, Logo }) => {
+            const active = id === lang;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setLang(id)}
+                aria-pressed={active}
+                aria-label={`Generate ${label} code`}
+                className={`group flex flex-col items-center gap-1 rounded-md border px-2 py-2.5 transition-all ${
+                  active
+                    ? "border-primary/60 bg-primary/5 shadow-sm"
+                    : "border-border hover:border-primary/30 hover:bg-muted/40"
+                }`}
+              >
+                <Logo size={22} />
+                <span
+                  className={`text-[10px] font-medium tracking-tight ${
+                    active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Generated code */}
+      <div className="relative rounded-lg border border-white/10 bg-[#0d1117] overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10 bg-[#161b22]">
+          <div className="flex items-center gap-2">
+            <activeMeta.Logo size={13} />
+            <span className="text-[11px] font-mono uppercase tracking-wider text-gray-300">
+              {activeMeta.label}
+            </span>
+            <span className="text-[10px] font-mono text-gray-500">· {snippet.filename}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onDownload}
+              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              aria-label="Download snippet"
+            >
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onCopy}
+              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              aria-label="Copy snippet"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+        </div>
+        <pre className="p-4 text-xs font-mono text-gray-100 leading-relaxed overflow-x-auto whitespace-pre max-h-[480px]">
+          {snippet.code}
+        </pre>
+      </div>
+
+      <p className="px-1 text-[10px] text-muted-foreground leading-relaxed">
+        Snippets include real example payloads from the OpenAPI spec and an{" "}
+        <code className="font-mono">Idempotency-Key</code> header on POST/PUT/PATCH requests, per the
+        Kang Open Banking idempotency contract.
+      </p>
     </div>
   );
 }
@@ -573,27 +707,14 @@ const ApiExplorer = () => {
                   <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] overflow-y-auto space-y-3">
                     {selected ? (
                       <>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Request samples</p>
-                        <Tabs defaultValue="curl">
-                          <TabsList className="grid grid-cols-4 h-9">
-                            <TabsTrigger value="curl" className="text-xs">cURL</TabsTrigger>
-                            <TabsTrigger value="node" className="text-xs">Node</TabsTrigger>
-                            <TabsTrigger value="python" className="text-xs">Python</TabsTrigger>
-                            <TabsTrigger value="php" className="text-xs">PHP</TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="curl" className="mt-3">
-                            <CodeSnippet language="cURL" code={buildCurl(selected.method, baseUrl, selected.path, selected.op)} />
-                          </TabsContent>
-                          <TabsContent value="node" className="mt-3">
-                            <CodeSnippet language="Node.js" code={buildNode(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                          <TabsContent value="python" className="mt-3">
-                            <CodeSnippet language="Python" code={buildPython(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                          <TabsContent value="php" className="mt-3">
-                            <CodeSnippet language="PHP" code={buildPHP(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                        </Tabs>
+                        <SdkCodeGeneratorPanel
+                          spec={spec}
+                          baseUrl={baseUrl}
+                          method={selected.method}
+                          path={selected.path}
+                          op={selected.op}
+                        />
+
 
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1 pt-3">Example response</p>
                         <CodeSnippet
