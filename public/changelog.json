@@ -1,9 +1,40 @@
 {
-  "apiVersion": "4.24.0",
+  "apiVersion": "4.25.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.25.0",
+      "date": "2026-04-30",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 2 — File-based Bank Connector Kit: spec exposure for SFTP/CSV ingestion, batch payment generation (CSV + ISO 20022 pain.001), status-file ingestion and reconciliation. All endpoints already deployed; this release adds them to the public OpenAPI surface so banks without APIs can integrate via documented contracts.",
+      "highlights": [
+        "Added POST /v1/banks/{bankId}/connector/files/upload — manual CSV/XML upload (accounts, balances, transactions, beneficiaries, payment_instructions, payment_status, statement)",
+        "Added POST /v1/banks/{bankId}/connector/sftp/config and POST /v1/banks/{bankId}/connector/sftp/pull — SFTP credentials and pull-now trigger",
+        "Added GET /v1/banks/{bankId}/connector/imports and GET /v1/banks/{bankId}/connector/imports/{importId} — import history with line-level errors",
+        "Added GET/POST /v1/banks/{bankId}/connector/mappings and POST /v1/banks/{bankId}/connector/validate-template — versioned column-mapping templates with transforms",
+        "Added POST/GET /v1/banks/{bankId}/batch-payments, GET /v1/banks/{bankId}/batch-payments/{batchId}, GET /v1/banks/{bankId}/batch-payments/{batchId}/download — outbound payment batches in CSV or ISO 20022 pain.001.001.09",
+        "Added POST /v1/banks/{bankId}/connector/status-files/upload — ingest bank-returned status files (CSV or pacs.002)",
+        "Added GET /v1/banks/{bankId}/reconciliation and POST /v1/banks/{bankId}/reconciliation/resolve — buckets: matched, missing_at_bank, missing_at_kob, amount_mismatch, duplicate",
+        "AISP /v1/aisp/accounts response description annotated with file-connector freshness fields (`last_imported_at`, `data_source`)",
+        "Existing mTLS API-connector endpoints (/v1/banks/{bankId}/connectors/*) untouched per Standing Order 1"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1 — additive only, no renames",
+        "STANDING ORDER 3 — every entry cites a standard",
+        "STANDING ORDER 4 — surgeon rule (additive)",
+        "STANDING ORDER 6 — version gate (4.24.0 → 4.25.0 minor: 13 new paths)",
+        "ORDER P1 — public docs unchanged",
+        "ORDER P4 — open spec preserved",
+        "ORDER P7 — changelog within 48h",
+        "PSD2 RTS Article 36 (Contingency Mechanism / Alternative Interface)",
+        "ISO 20022 pain.001.001.09 (Customer Credit Transfer Initiation)",
+        "ISO 20022 pacs.002 (Payment Status Report)",
+        "ISO 20022 camt.052/053/054 (Account Reporting / Statement)"
+      ]
+    },
     {
       "version": "4.24.0",
       "date": "2026-04-30",
