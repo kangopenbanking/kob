@@ -388,6 +388,14 @@ async function handleDisburse(req: Request, body: any, bodyText: string) {
   const responseBody = { data: { loan_account_id, status: 'disbursed', amount_disbursed: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursed_at: now } };
   await supabase.from('idempotency_keys').insert({ idempotency_key: idempotencyKey, client_id: roleResult.userId!, endpoint: 'loan-disburse', payload_hash: payloadHash, response_status: 200, response_body: responseBody, expires_at: new Date(Date.now() + 86400000).toISOString() });
 
+  await recordAuditEvent({
+    action_type: 'loan_disbursed',
+    entity_type: 'loan_account',
+    entity_id: loan_account_id,
+    performed_by: roleResult.userId,
+    details: { amount: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursement_method: disbursement_method || 'bank_transfer', notes },
+  });
+
   return new Response(JSON.stringify(responseBody), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey } });
 }
 
