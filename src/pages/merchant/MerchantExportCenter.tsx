@@ -26,13 +26,15 @@ const TABLE_MAP: Record<Resource, { table: string; dateCol: string; currencyCol:
 
 function toCSV(rows: any[]): string {
   if (!rows.length) return "";
-  const cols = Array.from(rows.reduce((s, r) => { Object.keys(r).forEach(k => s.add(k)); return s; }, new Set<string>()));
+  const colSet = new Set<string>();
+  rows.forEach((r) => Object.keys(r).forEach((k) => colSet.add(k)));
+  const cols = Array.from(colSet);
   const esc = (v: any) => {
     if (v === null || v === undefined) return "";
     const s = typeof v === "object" ? JSON.stringify(v) : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  return [cols.join(","), ...rows.map(r => cols.map(c => esc(r[c])).join(","))].join("\n");
+  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
 }
 
 function downloadBlob(name: string, data: string, mime: string) {
