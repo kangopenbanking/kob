@@ -575,27 +575,14 @@ const ApiExplorer = () => {
                   <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] overflow-y-auto space-y-3">
                     {selected ? (
                       <>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Request samples</p>
-                        <Tabs defaultValue="curl">
-                          <TabsList className="grid grid-cols-4 h-9">
-                            <TabsTrigger value="curl" className="text-xs">cURL</TabsTrigger>
-                            <TabsTrigger value="node" className="text-xs">Node</TabsTrigger>
-                            <TabsTrigger value="python" className="text-xs">Python</TabsTrigger>
-                            <TabsTrigger value="php" className="text-xs">PHP</TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="curl" className="mt-3">
-                            <CodeSnippet language="cURL" code={buildCurl(selected.method, baseUrl, selected.path, selected.op)} />
-                          </TabsContent>
-                          <TabsContent value="node" className="mt-3">
-                            <CodeSnippet language="Node.js" code={buildNode(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                          <TabsContent value="python" className="mt-3">
-                            <CodeSnippet language="Python" code={buildPython(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                          <TabsContent value="php" className="mt-3">
-                            <CodeSnippet language="PHP" code={buildPHP(selected.method, baseUrl, selected.path)} />
-                          </TabsContent>
-                        </Tabs>
+                        <SdkCodeGeneratorPanel
+                          spec={spec}
+                          baseUrl={baseUrl}
+                          method={selected.method}
+                          path={selected.path}
+                          op={selected.op}
+                        />
+
 
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1 pt-3">Example response</p>
                         <CodeSnippet
