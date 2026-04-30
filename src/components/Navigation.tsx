@@ -49,6 +49,8 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { BrandName } from "./BrandName";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mega-menu data model — keeps the markup clean and easy to maintain.
@@ -279,6 +281,83 @@ const MEGA_MENUS: MegaMenu[] = [
     },
   },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mega-menu data hook — returns the static menu instantly today, but provides
+// a single seam for future async sources (CMS, feature flags, A/B). When that
+// happens, the loading state below will render the skeleton automatically.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const useMegaMenuData = (): { menus: MegaMenu[]; isLoading: boolean } => {
+  // Static for now → instant render, no flicker.
+  return { menus: MEGA_MENUS, isLoading: false };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Skeleton — mirrors MegaPanel layout so the transition is imperceptible.
+// Reused for both desktop dropdown and mobile accordion.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MegaPanelSkeleton = ({ withFeature = true }: { withFeature?: boolean }) => (
+  <div
+    className={cn(
+      "grid gap-8 p-6 md:p-8 w-[760px] lg:w-[880px]",
+      withFeature ? "grid-cols-[1fr_280px]" : "grid-cols-1",
+    )}
+    aria-busy="true"
+    aria-live="polite"
+  >
+    <div className="grid grid-cols-2 gap-x-6 gap-y-6">
+      {[0, 1].map((col) => (
+        <div key={col} className="space-y-3">
+          <Skeleton className="h-3 w-24" />
+          <ul className="space-y-1.5">
+            {[0, 1, 2].map((row) => (
+              <li key={row} className="flex items-start gap-3 p-3">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-md" />
+                <div className="flex-1 space-y-2 pt-1">
+                  <Skeleton className="h-3.5 w-2/3" />
+                  <Skeleton className="h-3 w-11/12" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    {withFeature && (
+      <div className="flex flex-col justify-between rounded-xl border bg-muted/30 p-5">
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-16 rounded-full" />
+          <Skeleton className="h-11 w-11 rounded-lg" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+        <Skeleton className="mt-5 h-3.5 w-32" />
+      </div>
+    )}
+  </div>
+);
+
+const MobileMegaSkeleton = () => (
+  <div className="space-y-4 pl-1" aria-busy="true">
+    {[0, 1].map((s) => (
+      <div key={s} className="space-y-2">
+        <Skeleton className="ml-2 h-3 w-20" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-start gap-3 p-2.5">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+            <div className="flex-1 space-y-1.5 pt-1">
+              <Skeleton className="h-3.5 w-1/2" />
+              <Skeleton className="h-3 w-4/5" />
+            </div>
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mega-menu panel — multi-column with optional feature card.
