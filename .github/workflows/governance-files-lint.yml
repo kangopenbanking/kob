@@ -1,0 +1,71 @@
+name: governance-files-lint
+
+# Validates that .github/CODEOWNERS parses cleanly and the PR template is
+# present. Slice 4 governance ratchet (Standing Order 2): if a future PR
+# silently drops these files, CI blocks the merge.
+
+on:
+  pull_request:
+    paths:
+      - '.github/CODEOWNERS'
+      - '.github/pull_request_template.md'
+      - 'docs/governance/guardian-roster.md'
+      - '.github/workflows/governance-files-lint.yml'
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CODEOWNERS exists
+        run: test -f .github/CODEOWNERS
+
+      - name: PR template exists
+        run: test -f .github/pull_request_template.md
+
+      - name: Guardian roster exists
+        run: test -f docs/governance/guardian-roster.md
+
+      - name: CODEOWNERS — every non-comment line has at least one owner
+        run: |
+          set -euo pipefail
+          bad=0
+          while IFS= read -r line; do
+            # Skip blanks and comments
+            trimmed="$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            [ -z "$trimmed" ] && continue
+            case "$trimmed" in
+              \#*) continue ;;
+            esac
+            # Owners are tokens starting with @ or containing @
+            owner_count=$(echo "$line" | tr ' \t' '\n' | grep -c '^@' || true)
+            if [ "$owner_count" -lt 1 ]; then
+              echo "::error file=.github/CODEOWNERS::Pattern line has no owners: $line"
+              bad=1
+            fi
+          done < .github/CODEOWNERS
+          exit $bad
+
+      - name: PR template — required Standing Order checkboxes present
+        run: |
+          set -euo pipefail
+          required=(
+            "ORDER 1 — The Lock"
+            "ORDER 2 — The Ratchet"
+            "ORDER 3 — The Audit Trail"
+            "ORDER 4 — The Surgeon Rule"
+            "ORDER 5 — The Dead Code Rule"
+            "ORDER 6 — The Version Gate"
+            "ORDER 7 — The Five Roles"
+          )
+          missing=0
+          for marker in "${required[@]}"; do
+            if ! grep -qF "$marker" .github/pull_request_template.md; then
+              echo "::error::PR template missing required marker: $marker"
+              missing=1
+            fi
+          done
+          exit $missing

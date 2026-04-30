@@ -1,0 +1,82 @@
+# =============================================================================
+# Kang Open Banking — CODEOWNERS
+# =============================================================================
+# Enforces Guardian Standing Orders by routing reviews of high-risk surfaces
+# (OpenAPI spec, DB migrations, edge functions, governance docs, ratchet
+# scripts) to the API Guardians group.
+#
+# Order matters: later patterns override earlier ones for matched files.
+# Replace @kang-fintech/api-guardians with the actual GitHub team handle
+# once the org/team is provisioned.
+# =============================================================================
+
+# ---- 1. Default fallback -----------------------------------------------------
+# Every PR gets at least one Guardian review.
+*                                       @kang-fintech/api-guardians
+
+# ---- 2. OpenAPI specification (Standing Order 1, 2, 6) -----------------------
+# Any rename, removal, or version bump must be approved by Guardians.
+/public/openapi.json                    @kang-fintech/api-guardians @kang-fintech/spec-architects
+/public/openapi.yaml                    @kang-fintech/api-guardians @kang-fintech/spec-architects
+/public/openapi-sandbox.json            @kang-fintech/api-guardians @kang-fintech/spec-architects
+/public/openapi-sandbox.yaml            @kang-fintech/api-guardians @kang-fintech/spec-architects
+/public/apis.json                       @kang-fintech/api-guardians
+/public/apis-sandbox.json               @kang-fintech/api-guardians
+
+# ---- 3. Quality-gate ratchets (Standing Order 2) -----------------------------
+# Modifying a ratchet is itself a governance event; never weaken silently.
+/scripts/openapi-quality-gates.mjs      @kang-fintech/api-guardians
+/scripts/openapi-quality-gates.allow.json @kang-fintech/api-guardians
+/scripts/postman-contract-check.mjs     @kang-fintech/api-guardians
+/scripts/scan-forbidden-domains.sh      @kang-fintech/api-guardians
+/scripts/build-changelog-*.mjs          @kang-fintech/api-guardians
+/scripts/regen-postman.mjs              @kang-fintech/api-guardians
+/scripts/generate-typed-sdks.mjs        @kang-fintech/api-guardians @kang-fintech/sdk-maintainers
+
+# ---- 4. CI workflows (Standing Order 2, ORDER P5) ----------------------------
+/.github/workflows/api-contract-gates.yml   @kang-fintech/api-guardians
+/.github/workflows/openapi-parity.yml       @kang-fintech/api-guardians
+/.github/workflows/forbidden-domain-gate.yml @kang-fintech/api-guardians
+/.github/workflows/phase6-e2e.yml           @kang-fintech/api-guardians
+/.github/workflows/sdk-generate.yml         @kang-fintech/api-guardians @kang-fintech/sdk-maintainers
+/.github/workflows/publish-sdks.yml         @kang-fintech/api-guardians @kang-fintech/sdk-maintainers
+/.github/CODEOWNERS                         @kang-fintech/api-guardians
+/.github/pull_request_template.md           @kang-fintech/api-guardians
+
+# ---- 5. Database migrations (Financial Safety, DB Hardening) -----------------
+# Every migration touches production data; require dual review.
+/supabase/migrations/                   @kang-fintech/db-stewards @kang-fintech/api-guardians
+/supabase/config.toml                   @kang-fintech/db-stewards
+
+# ---- 6. Edge functions (server-side authority) -------------------------------
+/supabase/functions/                    @kang-fintech/edge-maintainers
+# Shared libs underpin every function — extra scrutiny.
+/supabase/functions/_shared/            @kang-fintech/edge-maintainers @kang-fintech/api-guardians
+
+# ---- 7. Governance & audit documentation (Standing Order 3) ------------------
+/docs/governance/                       @kang-fintech/api-guardians
+/docs/audit/                            @kang-fintech/api-guardians
+/docs/audits/                           @kang-fintech/api-guardians
+/docs/internal/                         @kang-fintech/api-guardians
+/changelog.json                         @kang-fintech/api-guardians
+
+# ---- 8. Public developer documentation (ORDER P1, P2, P5, P6, P7, P10) -------
+/docs/public/                           @kang-fintech/devrel @kang-fintech/api-guardians
+/docs/developer-portal/                 @kang-fintech/devrel @kang-fintech/api-guardians
+/docs/portal/                           @kang-fintech/devrel @kang-fintech/api-guardians
+/docs/examples/                         @kang-fintech/devrel @kang-fintech/api-guardians
+
+# ---- 9. SDK packages (ORDER P5, P9) ------------------------------------------
+/packages/                              @kang-fintech/sdk-maintainers
+/packages/sdk-node/                     @kang-fintech/sdk-maintainers
+/packages/sdk-python/                   @kang-fintech/sdk-maintainers
+/packages/sdk-php/                      @kang-fintech/sdk-maintainers
+/packages/sdk-go/                       @kang-fintech/sdk-maintainers
+
+# ---- 10. Edge infra (Cloudflare worker, mTLS proxy) --------------------------
+/infra/                                 @kang-fintech/platform-eng @kang-fintech/api-guardians
+/worker/                                @kang-fintech/platform-eng @kang-fintech/api-guardians
+
+# ---- 11. E2E test harness ---------------------------------------------------
+/e2e/                                   @kang-fintech/qa @kang-fintech/api-guardians
+/playwright.config.ts                   @kang-fintech/qa
