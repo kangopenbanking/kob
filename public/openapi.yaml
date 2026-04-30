@@ -49222,6 +49222,143 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+  /v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay:
+    post:
+      tags:
+      - Webhooks
+      summary: Replay a single webhook delivery
+      description: Re-send the original payload of a previously attempted delivery to the same endpoint. A new delivery record is created (one-shot, no automatic retry) so the original audit trail is preserved.
+      operationId: webhookV2ReplayDelivery
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: endpointId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookReplayRequest'
+      responses:
+        '201':
+          description: Replay attempted; new delivery record returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookReplayResult'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Endpoint or delivery not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Endpoint inactive
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/webhooks/v2/endpoints/{endpointId}/health:
+    get:
+      tags:
+      - Webhooks
+      summary: Get webhook endpoint health snapshot
+      description: Return a 24-hour health snapshot for an endpoint with success rate, latency percentiles, totals by status, and last delivery / failure timestamps.
+      operationId: webhookV2EndpointHealth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: endpointId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Health snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointHealth'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Endpoint not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/sandbox/payout-sim:
     post:
       tags:
