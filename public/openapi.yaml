@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.26.8
+  version: 4.26.9
   summary: Unified Open Banking API for Cameroon
   description: |-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{"mtls":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.
@@ -27183,6 +27183,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "204":
           description: Beneficiary deleted
@@ -31592,6 +31593,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "204":
           description: Payment link deleted
@@ -32939,6 +32941,7 @@ paths:
             default: false
           description: If true, cancel immediately without finishing the current period
         - $ref: "#/components/parameters/XFapiInteractionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
           description: Subscription cancelled successfully
@@ -33777,6 +33780,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "204":
           description: Subaccount deleted
@@ -34647,6 +34651,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "204":
           description: Token revoked
@@ -36884,6 +36889,8 @@ paths:
               $ref: "#/components/headers/XRateLimitRemaining"
             X-RateLimit-Reset:
               $ref: "#/components/headers/XRateLimitReset"
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
   /v1/merchants/settlement-accounts:
     post:
       tags:
@@ -49258,6 +49265,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "204":
           description: Endpoint deleted
@@ -57324,6 +57332,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
           description: Success
@@ -57505,6 +57514,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
           description: Success

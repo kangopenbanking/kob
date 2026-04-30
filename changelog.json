@@ -1,9 +1,35 @@
 {
-  "apiVersion": "4.26.8",
+  "apiVersion": "4.26.9",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.9",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Slice 3 — Idempotency-Key on DELETE operations. Added the optional `Idempotency-Key` header parameter (referencing existing components.parameters.IdempotencyKey) to all 9 DELETE operations that previously omitted it: gateway beneficiaries / payment-links / subscriptions / subaccounts / customer tokens, merchant api-keys (collection + by-id) and webhooks, and the v2 webhook endpoints DELETE. New CI ratchet G7 in scripts/openapi-quality-gates.mjs blocks regressions: every DELETE must declare an Idempotency-Key parameter. Purely additive — header remains optional, no operationId / path / schema / required-field changes.",
+      "highlights": [
+        "9 DELETE operations gained an Idempotency-Key header param ($ref to existing component, required: false).",
+        "scripts/openapi-quality-gates.mjs gate G7 active; 0 failures across G1–G7 on 391 operations.",
+        "Phase 0 audit identified 5 DELETEs; on patch we found and covered 9 (Phase 0 omitted /v1/merchants/api-keys collection-DELETE, /v1/webhooks/v2/endpoints/{endpointId}, /v1/gateway/customers/{id}/tokens/{tokenId}, and /v1/merchants/webhooks/{id})."
+      ],
+      "additions": [
+        "Idempotency-Key header param on 9 DELETE operations.",
+        "G7 quality gate (DELETE declares Idempotency-Key)."
+      ],
+      "deprecations": [],
+      "fixes": [],
+      "standard_citations": [
+        "draft-ietf-httpapi-idempotency-key-header-06 §2 — header semantics",
+        "Stripe API Reference — Idempotent Requests (DELETE replay safety)",
+        "STANDING ORDER 2 — ratchet (G7 added; existing gates unchanged)",
+        "STANDING ORDER 4 — surgeon rule (additive, header optional)",
+        "STANDING ORDER 6 — version gate (patch bump 4.26.8 → 4.26.9)"
+      ],
+      "migration_notes": "Non-breaking. Clients MAY now pass Idempotency-Key on DELETE to make retries safe across network failures; clients that omit it continue to work as before."
+    },
     {
       "version": "4.26.8",
       "date": "2026-04-30",

@@ -10,6 +10,8 @@
  *  G5 — every 4xx/5xx response uses application/problem+json (RFC 7807) with ProblemDetails
  *  G6 — every state-mutating operation (POST/PUT/PATCH/DELETE) declares 409 + 429
  *       (RFC 7231 §6.5.8 Conflict, RFC 6585 §4 Too Many Requests)
+ *  G7 — every DELETE operation accepts an Idempotency-Key header
+ *       (draft-ietf-httpapi-idempotency-key-header §2)
  *
  * Usage:   node scripts/openapi-quality-gates.mjs [--spec public/openapi.json]
  * Exit 0 = all gates pass. Exit 1 = at least one gate failed.
@@ -32,7 +34,7 @@ if (!fs.existsSync(specPath)) {
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const allow = fs.existsSync(allowExceptionsPath)
   ? JSON.parse(fs.readFileSync(allowExceptionsPath, 'utf8'))
-  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [] };
+  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [], G7: [] };
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
@@ -47,7 +49,7 @@ const FINANCIAL_PATH_PATTERNS = [
 const WEBHOOK_PATH = /\/webhooks\//i;
 
 const failures = [];
-const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0 };
+const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0, G7: 0 };
 
 function fail(gate, opKey, message) {
   if ((allow[gate] || []).includes(opKey)) return;
@@ -125,7 +127,12 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
       }
       if (!op.responses?.['429']) {
         fail('G6', opKey, `${opId}: mutation missing 429 Too Many Requests response (RFC 6585 §4)`);
-      }
+    }
+
+    // G7 — DELETE operations must accept Idempotency-Key (safe replay)
+    if (method === 'delete' && !hasIdempotencyKey(op)) {
+      fail('G7', opKey, `${opId}: DELETE missing Idempotency-Key header parameter`);
+    }
     }
 
     // G3 — Idempotency-Key on financial mutations
