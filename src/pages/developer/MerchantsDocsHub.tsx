@@ -28,7 +28,7 @@ const TOPICS: MerchantTopic[] = [
     title: "Merchant onboarding",
     description:
       "Step-by-step guide to creating a merchant account, choosing an environment (sandbox or production), and going live.",
-    href: "/developer/onboarding",
+    href: "/developer/onboarding-guide",
     icon: Building2,
   },
   {
@@ -42,53 +42,61 @@ const TOPICS: MerchantTopic[] = [
     title: "API keys (sandbox & production)",
     description:
       "Generate, rotate, and revoke restricted API keys. Plaintext secret is shown ONCE — see the cryptographic key governance rules.",
-    href: "/developer/api-keys",
+    href: "/developer/authentication/api-keys",
     icon: KeyRound,
     badge: "shown once",
   },
   {
-    title: "Webhooks (outbound + inbound)",
+    title: "Webhooks (outbound)",
     description:
-      "Receive event callbacks from KOB and forward provider webhooks (Stripe, Flutterwave, PayPal). Includes signature verification, replay, and dedupe (webhook_inbox).",
-    href: "/developer/webhooks/v2",
+      "Receive event callbacks from KOB. Includes signature verification (HMAC-SHA256 X-KOB-Signature), 7-attempt retry policy, replay endpoint, and dedupe via webhook_inbox.",
+    href: "/developer/gateway/webhooks",
+    icon: Webhook,
+  },
+  {
+    title: "Provider webhook receivers (inbound)",
+    description:
+      "Public URLs that accept Stripe, Flutterwave, and PayPal webhooks. Documents required signature headers and the shared (source, event_id) deduplication contract.",
+    href: "/developer/webhooks/provider-receivers",
     icon: Webhook,
   },
   {
     title: "Settlements",
     description:
       "Daily/weekly/monthly settlement schedules, statement downloads, and the settlement bank account flow. Reads from /v1/gateway/settlements and /v1/gateway/statements.",
-    href: "/developer/settlements",
+    href: "/developer/gateway/settlements",
     icon: Banknote,
   },
   {
     title: "Refunds",
     description:
       "Full and partial refunds, reason codes, idempotency requirements, and how refund events propagate to webhooks and reconciliation.",
-    href: "/developer/refunds",
+    href: "/developer/gateway/refunds",
     icon: Undo2,
   },
   {
     title: "Disputes & chargebacks",
     description:
       "Dispute lifecycle (Kanban view), evidence upload, SLA timers, and the merchant-side dispute portal.",
-    href: "/developer/disputes",
+    href: "/developer/gateway/disputes",
     icon: AlertTriangle,
   },
   {
-    title: "Reconciliation",
+    title: "Reconciliation & exports",
     description:
       "Daily reconciliation runs across charges, payouts, fees, and settlements. Bucketed mismatches, CSV/XLSX exports, and the /v1/gateway/reconciliation/{runId} endpoint.",
-    href: "/developer/exports",
+    href: "/developer/api/exports",
     icon: ListChecks,
   },
   {
     title: "Funding (Flutterwave / Stripe / PayPal / bank)",
     description:
       "Top up the merchant wallet via Flutterwave, Stripe, PayPal, or bank transfer. Funding intents, hosted checkout, and inbound webhook receivers.",
-    href: "/developer/funding-intents",
+    href: "/developer/gateway/funding-intents",
     icon: Wallet,
   },
 ];
+
 
 const jsonLd = {
   "@context": "https://schema.org",
