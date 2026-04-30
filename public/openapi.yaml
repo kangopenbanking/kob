@@ -264,6 +264,102 @@ components:
             webhook_deliveries: { type: integer, minimum: 0 }
             customers: { type: integer, minimum: 0 }
         request_id: { type: string }
+    WebhookReplayRequest:
+      type: object
+      description: Optional body for a webhook delivery replay. Both fields are inferred from the URL when omitted.
+      properties:
+        endpoint_id:
+          type: string
+          format: uuid
+        delivery_id:
+          type: string
+          format: uuid
+    WebhookReplayResult:
+      type: object
+      description: Outcome of a single-delivery webhook replay. A new delivery row is created so the original record remains intact for audit. Manual replays are one-shot.
+      required:
+      - replay_delivery_id
+      - original_delivery_id
+      - endpoint_id
+      - status
+      - created_at
+      properties:
+        replay_delivery_id:
+          type: string
+          format: uuid
+        original_delivery_id:
+          type: string
+          format: uuid
+        endpoint_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [delivered, failed]
+        response_status:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    WebhookEndpointHealth:
+      type: object
+      description: 24-hour operational health snapshot for a webhook endpoint.
+      required:
+      - endpoint_id
+      - url
+      - is_active
+      - window
+      - health
+      - totals
+      - generated_at
+      properties:
+        endpoint_id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        is_active:
+          type: boolean
+        window:
+          type: string
+          enum: ['24h']
+        health:
+          type: string
+          enum: [healthy, degraded, unhealthy, idle]
+        totals:
+          type: object
+          required: [total, delivered, failed, pending, exhausted]
+          properties:
+            total: { type: integer, minimum: 0 }
+            delivered: { type: integer, minimum: 0 }
+            failed: { type: integer, minimum: 0 }
+            pending: { type: integer, minimum: 0 }
+            exhausted: { type: integer, minimum: 0 }
+        success_rate_pct:
+          type: number
+          format: float
+          nullable: true
+          minimum: 0
+          maximum: 100
+        latency_ms:
+          type: object
+          properties:
+            p50: { type: integer, nullable: true, minimum: 0 }
+            p95: { type: integer, nullable: true, minimum: 0 }
+            p99: { type: integer, nullable: true, minimum: 0 }
+        last_delivery_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_failure_at:
+          type: string
+          format: date-time
+          nullable: true
+        generated_at:
+          type: string
+          format: date-time
     DcrRegistrationRequest:
       type: object
       required:
