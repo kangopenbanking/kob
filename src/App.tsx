@@ -183,6 +183,7 @@ const MobileIntegration = lazy(() => import("./pages/developer/MobileIntegration
 const WebhooksGuide = lazy(() => import("./pages/developer/WebhooksGuide"));
 const CodeExamples = lazy(() => import("./pages/developer/CodeExamples"));
 const SDKsPage = lazy(() => import("./pages/developer/SDKsPage"));
+const SdkLibraryPage = lazy(() => import("./pages/developer/SdkLibraryPage"));
 const ApiTesting = lazy(() => import("./pages/developer/ApiTesting"));
 const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
 const ApiExplorerStatic = lazy(() => import("./pages/developer/ApiExplorerStatic"));
@@ -1030,6 +1031,8 @@ function App() {
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
               <Route path="guides/sdks" element={<SDKsPage />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2, P6) */}
+              <Route path="guides/sdks/:slug" element={<SdkLibraryPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="api-explorer-static" element={<ApiExplorerStatic />} />
               <Route path="redoc" element={<RedocPage />} />

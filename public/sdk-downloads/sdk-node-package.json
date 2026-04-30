@@ -1,0 +1,43 @@
+{
+  "name": "@kangopenbanking/sdk",
+  "version": "1.4.0",
+  "description": "Official Kang Open Banking (KOB) SDK for Node.js and TypeScript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kangopenbanking/sdk-node"
+  },
+  "bugs": {
+    "url": "https://github.com/kangopenbanking/sdk-node/issues"
+  },
+  "homepage": "https://kangopenbanking.com/developer",
+  "keywords": [
+    "open-banking",
+    "cameroon",
+    "xaf",
+    "aisp",
+    "pisp",
+    "payment-gateway",
+    "fintech"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
