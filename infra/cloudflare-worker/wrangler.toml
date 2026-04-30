@@ -1,0 +1,26 @@
+name = "kob-webhooks-edge"
+main = "src/worker.js"
+compatibility_date = "2026-04-30"
+workers_dev = false
+
+# Production: served at https://api.kangopenbanking.com/webhooks/v1/*
+[[routes]]
+pattern = "api.kangopenbanking.com/webhooks/v1/*"
+zone_name = "kangopenbanking.com"
+
+# Sandbox: served at https://sandbox.api.kangopenbanking.com/webhooks/v1/*
+[env.sandbox]
+name = "kob-webhooks-edge-sandbox"
+[[env.sandbox.routes]]
+pattern = "sandbox.api.kangopenbanking.com/webhooks/v1/*"
+zone_name = "kangopenbanking.com"
+
+# REQUIRED secrets — set with `wrangler secret put` (NEVER commit values):
+#   UPSTREAM_BASE        e.g. https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1
+#   UPSTREAM_INVOKE_KEY  the platform anon key used to invoke upstream
+#
+# Set per environment:
+#   wrangler secret put UPSTREAM_BASE
+#   wrangler secret put UPSTREAM_INVOKE_KEY
+#   wrangler --env sandbox secret put UPSTREAM_BASE
+#   wrangler --env sandbox secret put UPSTREAM_INVOKE_KEY
