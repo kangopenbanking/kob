@@ -86583,7 +86583,7 @@
         "operationId": "simulateSandboxEvent",
         "security": [
           {
-            "BearerAuth": []
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -86654,7 +86654,7 @@
         "operationId": "simulateSandboxPayment",
         "security": [
           {
-            "BearerAuth": []
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -86723,7 +86723,7 @@
         "operationId": "sendTestWebhook",
         "security": [
           {
-            "BearerAuth": []
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -86764,7 +86764,7 @@
         "operationId": "resetSandbox",
         "security": [
           {
-            "BearerAuth": []
+            "bearerAuth": []
           }
         ],
         "responses": {
