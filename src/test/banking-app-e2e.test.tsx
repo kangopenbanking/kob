@@ -63,9 +63,7 @@ vi.mock('@/components/pwa/PWATopBar', () => ({
   PWATopBar: () => <div data-testid="pwa-topbar">TopBar</div>,
 }));
 
-vi.mock('@/components/pwa/TenantProvider', () => ({
-  TenantProvider: ({ children }: any) => <>{children}</>,
-}));
+// TenantProvider is mocked centrally in src/test/setup.ts (exposes useTenant + features).
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>{children}</BrowserRouter>
