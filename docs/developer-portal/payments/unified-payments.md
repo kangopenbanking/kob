@@ -8,10 +8,10 @@ KOB provides a single `POST /v1/gateway/charges` endpoint that routes payments t
 
 | Channel | Provider | Currencies | Regions |
 |---------|----------|-----------|---------|
-| `mobile_money` | Flutterwave | XAF, XOF, NGN | Cameroon, CEMAC, Nigeria |
-| `card` | Stripe / Flutterwave | XAF, USD, EUR, GBP | Global |
-| `bank_transfer` | Flutterwave | XAF, NGN | Cameroon, Nigeria |
-| `ussd` | Flutterwave | NGN | Nigeria |
+| `mobile_money` | Flutterwave | **XAF**, XOF, GHS, KES, RWF | **Cameroon (default)**, CEMAC, UEMOA |
+| `card` | Stripe / Flutterwave | **XAF**, USD, EUR, GBP | Global |
+| `bank_transfer` | Flutterwave | **XAF**, XOF, NGN | **CEMAC (default)**, UEMOA, regional |
+| `ussd` | Flutterwave | NGN | Nigeria (cross-border) |
 | `paypal` | PayPal | USD, EUR, GBP | Global |
 | `apple_pay` | Stripe | USD, EUR, GBP | Supported regions |
 | `google_pay` | Stripe | USD, EUR, GBP | Supported regions |
@@ -34,7 +34,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charg
   }'
 ```
 
-### Response
+### Response — `201 Created`
 
 ```json
 {
@@ -48,6 +48,44 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/charg
   "provider": "flutterwave",
   "redirect_url": "https://checkout.flutterwave.com/...",
   "created_at": "2026-03-22T10:00:00Z"
+}
+```
+
+### Response — `400 Bad Request` (amount below minimum)
+
+```json
+{
+  "error": "charge_minimum",
+  "error_code": "PAY_001",
+  "message": "Charge amount 50 XAF is below the 100 XAF minimum.",
+  "error_id": "err_aa11bb22",
+  "timestamp": "2026-03-22T10:00:00Z",
+  "details": { "minimum_amount": "100", "currency": "XAF" }
+}
+```
+
+### Response — `402 Payment Required` (declined by provider)
+
+```json
+{
+  "error": "charge_declined",
+  "error_code": "PAY_002",
+  "message": "Payment declined by mobile money provider.",
+  "error_id": "err_77a3e451",
+  "timestamp": "2026-03-22T10:00:00Z",
+  "details": { "provider": "mtn_momo", "provider_reason": "INSUFFICIENT_FUNDS", "retryable": true }
+}
+```
+
+### Response — `409 Conflict` (idempotency key reused with different payload)
+
+```json
+{
+  "error": "duplicate_charge",
+  "error_code": "PAY_004",
+  "message": "Idempotency key already used with a different request payload.",
+  "error_id": "err_3f00ab12",
+  "timestamp": "2026-03-22T10:00:00Z"
 }
 ```
 

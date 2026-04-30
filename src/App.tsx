@@ -330,6 +330,8 @@ const SandboxWebhookTester = lazy(() => import("./pages/developer/SandboxWebhook
 const SdkVersionPinning = lazy(() => import("./pages/developer/SdkVersionPinning"));
 const PaginationExamples = lazy(() => import("./pages/developer/PaginationExamples"));
 const WebhookEventSimulator = lazy(() => import("./pages/developer/WebhookEventSimulator"));
+// PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6)
+const BankConnectorRunbook = lazy(() => import("./pages/developer/BankConnectorRunbook"));
 const IdempotencyPlayground = lazy(() => import("./pages/developer/IdempotencyPlayground"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
@@ -1135,6 +1137,8 @@ function App() {
               <Route path="connectors/bank-onboarding-flow" element={<BankOnboardingFlow />} />
               <Route path="connectors/cemac-bank-integration" element={<CemacBankIntegration />} />
               <Route path="connectors/cemac-bank-catalog" element={<CemacBankCatalog />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6) */}
+              <Route path="connectors/bank-connector-runbook" element={<BankConnectorRunbook />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />

@@ -289,9 +289,9 @@ const ErrorCodesReference = () => (
             </thead>
             <tbody className="text-muted-foreground">
               {domain.errors.map(e => (
-                <tr key={e.code} className="border-b">
+                <tr key={e.code} id={e.code} className="border-b scroll-mt-24 target:bg-muted/40">
                   <td className="py-2 font-mono text-xs whitespace-nowrap">
-                    {e.code}
+                    <a href={`#${e.code}`} className="text-primary hover:underline">{e.code}</a>
                     {e.retryable && <span className="ml-1 text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary">retryable</span>}
                   </td>
                   <td className="py-2">{e.status}</td>
@@ -364,7 +364,9 @@ const ErrorCodesReference = () => (
                 <td className="py-2">
                   <div className="flex flex-wrap gap-1">
                     {codes.map((c) => (
-                      <code key={c} className="px-1.5 py-0.5 rounded bg-muted text-xs">{c}</code>
+                      <a key={c} href={`#${c}`} className="px-1.5 py-0.5 rounded bg-muted text-xs hover:bg-primary/10 hover:text-primary transition-colors">
+                        <code>{c}</code>
+                      </a>
                     ))}
                   </div>
                 </td>

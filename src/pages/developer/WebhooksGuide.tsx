@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Webhook, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Info, Webhook, CheckCircle2, AlertTriangle, PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 export default function WebhooksGuide() {
@@ -14,6 +16,33 @@ export default function WebhooksGuide() {
           Receive real-time notifications for payment status changes, consent updates, and account events
         </p>
       </div>
+
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <PlayCircle className="h-5 w-5 text-primary" />
+            Try the Webhook Simulator
+          </CardTitle>
+          <CardDescription>
+            Generate a real webhook payload (fresh, stale timestamp, duplicate ID, or invalid signature)
+            and inspect the headers, body, and the exact RFC 7807 error envelope your endpoint should return.
+            Includes a copy/paste signature-verification snippet you can run against the simulated request.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link to="/developer/webhook-simulator">
+              <PlayCircle className="h-4 w-4 mr-2" /> Open Simulator
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/developer/api-reference/webhook-retry">Retry & DLQ Policy</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/developer/api-reference/errors">Error Catalog</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <Alert>
         <Info className="h-4 w-4" />

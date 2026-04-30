@@ -33,6 +33,34 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/dispu
   }'
 ```
 
+### Response — `200 OK` (evidence accepted)
+
+```json
+{
+  "id": "disp_xyz123",
+  "charge_id": "chg_abc123",
+  "status": "under_review",
+  "amount": 5000,
+  "currency": "XAF",
+  "reason": "fraudulent",
+  "evidence_submitted_at": "2026-03-22T10:05:00Z",
+  "due_by": "2026-03-29T23:59:59Z"
+}
+```
+
+### Response — `409 Conflict` (evidence already submitted or dispute closed)
+
+```json
+{
+  "error": "dispute_invalid_state",
+  "error_code": "PAY_009",
+  "message": "Evidence cannot be submitted: dispute is already in 'lost' state.",
+  "error_id": "err_5b2c3a44",
+  "timestamp": "2026-03-22T10:05:00Z",
+  "details": { "current_status": "lost" }
+}
+```
+
 ## Webhook Events
 
 - `dispute.created` — New dispute filed
@@ -42,3 +70,8 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/dispu
 ## Auto-Sync
 
 For Stripe-based charges, disputes are automatically created when `charge.dispute.created` webhooks are received. The status is auto-updated when `charge.dispute.closed` fires.
+
+## Related
+
+- Error catalog: [PAY_009](/developer/api-reference/errors#PAY_009)
+- Webhook signature verification: [Webhooks Overview](../webhooks/webhooks-overview.md#signature-verification)

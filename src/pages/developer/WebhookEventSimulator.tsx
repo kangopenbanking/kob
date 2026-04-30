@@ -210,7 +210,92 @@ export default function WebhookEventSimulator() {
               <CodeBlock examples={[{ language: "json", label: "Error envelope (RFC 7807)", code: errorEnvelope }]} />
             )}
             <p className="text-xs text-muted-foreground mt-3">
-              See the full <a className="underline" href="/developer/errors">Error Catalog</a> for every documented code.
+              See the full <a className="underline" href="/developer/api-reference/errors">Error Catalog</a> for every documented code.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Verify the signature</CardTitle>
+            <CardDescription>
+              Run this snippet against the exact <code>headers</code> and raw <code>body</code> shown above.
+              Set <code>WEBHOOK_SECRET</code> to your endpoint secret. Constant-time comparison is mandatory.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CodeBlock
+              examples={[
+                {
+                  language: "javascript",
+                  label: "Node.js",
+                  code: `// Parity with runtime worker gateway-webhook-deliver-v2
+import crypto from 'node:crypto';
+
+export function verifyKobWebhook(rawBody, headers, secret) {
+  const sigHeader = headers['x-kob-signature'] || '';      // e.g. "t=1714503600,v1=<hex>"
+  const ts = headers['x-kob-timestamp'];
+  if (!sigHeader || !ts) return false;
+
+  // 1. Reject stale events (±300s) — prevents WH_005
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;
+
+  // 2. Recompute HMAC-SHA256 over "\${ts}.\${rawBody}"
+  const v1 = sigHeader.split(',').find(p => p.startsWith('v1='))?.slice(3);
+  if (!v1) return false;
+  const expected = crypto.createHmac('sha256', secret)
+    .update(\`\${ts}.\${rawBody}\`)
+    .digest('hex');
+
+  // 3. Constant-time compare — prevents WH_002
+  const a = Buffer.from(v1, 'hex');
+  const b = Buffer.from(expected, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}`,
+                },
+                {
+                  language: "python",
+                  label: "Python",
+                  code: `import hmac, hashlib, time
+
+def verify_kob_webhook(raw_body: bytes, headers: dict, secret: str) -> bool:
+    sig_header = headers.get("x-kob-signature", "")
+    ts = headers.get("x-kob-timestamp")
+    if not sig_header or not ts:
+        return False
+
+    # 1. Reject stale events (±300s) — WH_005
+    if abs(time.time() - int(ts)) > 300:
+        return False
+
+    # 2. Recompute HMAC-SHA256 over "{ts}.{rawBody}"
+    parts = dict(p.split("=", 1) for p in sig_header.split(","))
+    v1 = parts.get("v1")
+    if not v1:
+        return False
+    expected = hmac.new(
+        secret.encode(),
+        f"{ts}.".encode() + raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+
+    # 3. Constant-time compare — WH_002
+    return hmac.compare_digest(v1, expected)`,
+                },
+                {
+                  language: "bash",
+                  label: "cURL test",
+                  code: `# Replay the simulated request to your local webhook endpoint
+curl -X POST http://localhost:3000/webhooks/kob \\
+  ${Object.entries(headers).map(([k, v]) => `-H "${k}: ${v}"`).join(" \\\n  ")} \\
+  --data-raw '${body.replace(/\n/g, "")}'`,
+                },
+              ]}
+            />
+            <p className="text-xs text-muted-foreground mt-3">
+              The <Badge variant="outline" className="mx-1 font-mono text-[10px]">stale_timestamp</Badge>
+              and <Badge variant="outline" className="mx-1 font-mono text-[10px]">invalid_signature</Badge>
+              variants must be rejected by the snippet above. Returning 2xx for them is a security failure.
             </p>
           </CardContent>
         </Card>
