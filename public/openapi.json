@@ -368,11 +368,8 @@
           "generated_at": { "type": "string", "format": "date-time", "description": "Timestamp at which this snapshot was computed." }
         }
       },
+      "DcrRegistrationRequest": {
         "type": "object",
-        "required": [
-          "software_statement",
-          "redirect_uris"
-        ],
         "description": "Dynamic Client Registration request per RFC 7591, with FAPI 1.0 Advanced extensions. The software_statement is a signed JWT (SSA) issued by the KOB Directory containing the TPP's identity claims.",
         "properties": {
           "software_statement": {
