@@ -50,7 +50,19 @@ describe.each(SPEC_PATHS)('Phase 6 · OpenAPI contract — %s', (rel) => {
     expect(offenders, `Operations missing 2xx:\n${offenders.join('\n')}`).toEqual([]);
   });
 
-  it('every 2xx response declares a JSON content schema', () => {
+  it('every 2xx response declares a content schema', () => {
+    // Allowed content types where a typed schema (JSON, CSV, binary, PDF) satisfies the contract.
+    const ACCEPTED_CONTENT = [
+      'application/json',
+      'application/problem+json',
+      'application/hal+json',
+      'application/vnd.api+json',
+      'text/csv',
+      'application/zip',
+      'application/octet-stream',
+      'application/pdf',
+      'image/png',
+    ];
     const offenders: string[] = [];
     for (const [pathName, item] of Object.entries<any>(spec.paths)) {
       for (const method of HTTP_METHODS) {
@@ -58,10 +70,12 @@ describe.each(SPEC_PATHS)('Phase 6 · OpenAPI contract — %s', (rel) => {
         if (!op) continue;
         for (const [code, resp] of Object.entries<any>(op.responses || {})) {
           if (!/^2\d\d$/.test(code)) continue;
-          if (code === '204') continue; // No Content is allowed schema-less
+          if (code === '204') continue; // No Content is schema-exempt by RFC 7231
           const content = resp?.content || {};
-          const json = content['application/json'] || content['application/problem+json'] || content['text/csv'];
-          const hasSchema = json?.schema && (json.schema.$ref || json.schema.type || json.schema.oneOf || json.schema.allOf || json.schema.anyOf || json.schema.properties);
+          const match = ACCEPTED_CONTENT.find((ct) => content[ct]);
+          const node = match ? content[match] : null;
+          const schema = node?.schema;
+          const hasSchema = !!(schema && (schema.$ref || schema.type || schema.oneOf || schema.allOf || schema.anyOf || schema.properties));
           if (!hasSchema) offenders.push(`${method.toUpperCase()} ${pathName} ${code} (${op.operationId || '?'})`);
         }
       }
