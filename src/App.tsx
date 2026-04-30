@@ -305,6 +305,8 @@ const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegi
 const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
 // Phase 3 — additive public guide for inbound provider webhooks
 const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
+const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
+const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 // Phase 5 — additive merchants documentation hub
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 // Phase 5 follow-up — interactive merchant API key management page
