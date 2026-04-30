@@ -303,6 +303,8 @@ const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingCons
 const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
 const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegistration"));
 const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
+// Phase 3 — additive public guide for inbound provider webhooks
+const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
