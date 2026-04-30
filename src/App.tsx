@@ -307,6 +307,8 @@ const IntegrationLayerOverview = lazy(() => import("./pages/developer/Integratio
 const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
 // Phase 5 — additive merchants documentation hub
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
+// Phase 5 follow-up — interactive merchant API key management page
+const MerchantApiKeysManager = lazy(() => import("./pages/developer/MerchantApiKeysManager"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
