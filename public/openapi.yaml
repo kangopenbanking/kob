@@ -231,6 +231,39 @@ components:
             profile: Read basic PSU profile information
           refreshUrl: https://api.kangopenbanking.com/v1/oauth-token
   schemas:
+    SandboxWebhookSendResult:
+      type: object
+      description: Result of dispatching a test webhook to a registered sandbox endpoint.
+      required: [object, livemode, endpoint_id, event_type, delivery_id, status, dispatched_at]
+      properties:
+        object: { type: string, enum: [sandbox.webhook_send_result] }
+        livemode: { type: boolean, enum: [false] }
+        endpoint_id: { type: string }
+        event_type: { type: string }
+        delivery_id: { type: string }
+        status: { type: string, enum: [queued, delivered, failed] }
+        response_status: { type: integer, minimum: 100, maximum: 599 }
+        dispatched_at: { type: string, format: date-time }
+        request_id: { type: string }
+    SandboxResetResult:
+      type: object
+      description: Result of resetting sandbox data for the calling merchant. Production data is never affected.
+      required: [object, livemode, merchant_id, reset_at, cleared]
+      properties:
+        object: { type: string, enum: [sandbox.reset_result] }
+        livemode: { type: boolean, enum: [false] }
+        merchant_id: { type: string }
+        reset_at: { type: string, format: date-time }
+        cleared:
+          type: object
+          properties:
+            charges: { type: integer, minimum: 0 }
+            payments: { type: integer, minimum: 0 }
+            refunds: { type: integer, minimum: 0 }
+            payouts: { type: integer, minimum: 0 }
+            webhook_deliveries: { type: integer, minimum: 0 }
+            customers: { type: integer, minimum: 0 }
+        request_id: { type: string }
     DcrRegistrationRequest:
       type: object
       required:
@@ -55303,6 +55336,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/sandbox/events/simulate:
+    post:
+      tags: [Sandbox]
+      summary: Simulate a sandbox webhook event
+      operationId: simulateSandboxEvent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type]
+              properties:
+                event_type: { type: string, example: charge.successful }
+                resource_id: { type: string }
+      responses:
+        '200':
+          description: Event simulated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object: { type: string, enum: [sandbox.event_simulation] }
+                  livemode: { type: boolean, enum: [false] }
+                  event_type: { type: string }
+                  request_id: { type: string }
+  /v1/sandbox/payments/simulate:
+    post:
+      tags: [Sandbox]
+      summary: Simulate a sandbox payment outcome
+      operationId: simulateSandboxPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency, outcome]
+              properties:
+                amount: { type: string, pattern: '^[0-9]{1,15}$' }
+                currency: { type: string, example: XAF }
+                outcome: { type: string, enum: [succeeded, failed, requires_action] }
+      responses:
+        '200':
+          description: Payment simulated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object: { type: string, enum: [sandbox.payment_simulation] }
+                  livemode: { type: boolean, enum: [false] }
+                  outcome: { type: string }
+                  charge_id: { type: string }
+                  request_id: { type: string }
+  /v1/sandbox/webhooks/send-test:
+    post:
+      tags: [Sandbox]
+      summary: Send a test webhook to a registered endpoint
+      operationId: sendTestWebhook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [endpoint_id]
+              properties:
+                endpoint_id: { type: string }
+                event_type: { type: string }
+      responses:
+        '200':
+          description: Test webhook dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxWebhookSendResult'
+  /v1/sandbox/reset:
+    post:
+      tags: [Sandbox]
+      summary: Reset sandbox data for the calling merchant
+      description: Truncates the caller's sandbox charges, payments, and webhook delivery history. Production data is never affected.
+      operationId: resetSandbox
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sandbox reset complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxResetResult'
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
   url: https://kangopenbanking.com/developer
