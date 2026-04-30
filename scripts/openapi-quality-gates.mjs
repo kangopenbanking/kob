@@ -127,7 +127,12 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
       }
       if (!op.responses?.['429']) {
         fail('G6', opKey, `${opId}: mutation missing 429 Too Many Requests response (RFC 6585 §4)`);
-      }
+    }
+
+    // G7 — DELETE operations must accept Idempotency-Key (safe replay)
+    if (method === 'delete' && !hasIdempotencyKey(op)) {
+      fail('G7', opKey, `${opId}: DELETE missing Idempotency-Key header parameter`);
+    }
     }
 
     // G3 — Idempotency-Key on financial mutations
