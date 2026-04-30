@@ -139,7 +139,7 @@ async function syncTransactions(accountId, accessToken, lastSyncDate) {
   while (true) {
     const response = await fetch(
       `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/aisp/accounts/${accountId}/transactions` +
-      `?from_date=${lastSyncDate}&limit=${limit}&offset=${offset}`,
+      `?from_date=${lastSyncDate}&limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`,
       { headers: { 'Authorization': `Bearer ${accessToken}` } }
     );
 

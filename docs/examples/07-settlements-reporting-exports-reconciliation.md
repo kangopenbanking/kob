@@ -28,7 +28,7 @@ sequenceDiagram
 ## 1. List Settlements
 
 ```bash
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/settlements?limit=10&offset=0" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/settlements?page=1&limit=10" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 

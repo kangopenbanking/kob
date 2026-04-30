@@ -28,7 +28,7 @@ sequenceDiagram
 ## 1. List Disputes
 
 ```bash
-curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes?limit=10&offset=0&status=open" \
+curl "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/gateway/disputes?page=1&limit=10&status=open" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
