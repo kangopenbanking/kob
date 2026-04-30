@@ -50,7 +50,6 @@ import { BrandName } from "./BrandName";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mega-menu data model — keeps the markup clean and easy to maintain.
