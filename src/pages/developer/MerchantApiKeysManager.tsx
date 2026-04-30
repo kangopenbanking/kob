@@ -275,10 +275,7 @@ export default function MerchantApiKeysManager() {
         {!authReady ? (
           <Skeleton className="h-32 w-full" />
         ) : !isAuthed ? (
-          <AuthRequiredAlert
-            title="Sign in required"
-            description="Please sign in with your merchant account to manage API keys. Public docs and the OpenAPI spec remain accessible without an account."
-          />
+          <AuthRequiredAlert feature="merchant API key management" />
         ) : (
           <>
             <Card>
