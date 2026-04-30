@@ -30,12 +30,15 @@ Deno.serve(async (req) => {
     }
 
     const action = body.action || url.searchParams.get('action');
-    if (!action) return jsonResp({ error: 'missing_action', message: 'action is required: endpoints, deliver, deliver_v2' }, 400);
+    if (!action) return jsonResp({ error: 'missing_action', message: 'action is required: endpoints, deliver, deliver_v2, replay_delivery, endpoint_health' }, 400);
 
     const functionMap: Record<string, string> = {
       endpoints: 'gateway-webhook-endpoints',
       deliver: 'gateway-deliver-webhook',
       deliver_v2: 'gateway-webhook-deliver-v2',
+      // Phase 2 (additive — Standing Order 4 The Surgeon Rule)
+      replay_delivery: 'gateway-webhook-replay-delivery',
+      endpoint_health: 'gateway-webhook-endpoint-health',
     };
 
     const targetFunction = functionMap[action];
