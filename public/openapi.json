@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.23.0",
+    "version": "4.24.0",
     "summary": "Unified Open Banking API for Cameroon",
     "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating — each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
@@ -10380,6 +10380,29 @@
           },
           {
             "$ref": "#/components/parameters/CursorParam"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -10970,6 +10993,29 @@
           },
           {
             "$ref": "#/components/parameters/CursorParam"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -11214,6 +11260,29 @@
           },
           {
             "$ref": "#/components/parameters/CursorParam"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -11456,6 +11525,29 @@
           },
           {
             "$ref": "#/components/parameters/CursorParam"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -88360,6 +88452,405 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/consents/{consentId}/status": {
+      "get": {
+        "tags": [
+          "Consent Management"
+        ],
+        "summary": "Get consent status",
+        "description": "Returns current status, scopes and recent audit events for a consent. Status values: AwaitingAuthorisation, Authorised, Rejected, Revoked, Expired, Consumed. Justification: PSD2 RTS Article 5(1)(a).",
+        "operationId": "getConsentStatus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "consentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consent status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "consentId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "AwaitingAuthorisation",
+                        "Authorised",
+                        "Rejected",
+                        "Revoked",
+                        "Expired",
+                        "Consumed"
+                      ]
+                    },
+                    "statusUpdateDateTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/v1/consents/{consentId}/extend": {
+      "post": {
+        "tags": [
+          "Consent Management"
+        ],
+        "summary": "Extend an authorised consent",
+        "description": "Extends the validity window of an Authorised consent up to the PSD2 maximum of 180 days. Re-authorisation by the user is required and recorded as a consent_event. Justification: PSD2 RTS Article 10.",
+        "operationId": "extendConsent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "consentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "expiresAt"
+                ],
+                "properties": {
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "New expiry timestamp (max 180 days from now)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Consent extended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "consentId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "Authorised"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Consent not in extendable state"
+          }
+        }
+      }
+    },
+    "/v1/certificates/{certificateId}": {
+      "get": {
+        "tags": [
+          "Certificates"
+        ],
+        "summary": "Get a certificate by ID",
+        "description": "Returns metadata for a registered TPP certificate (subject DN, fingerprint, expiry, status). Justification: eIDAS / FAPI 1.0 Advanced §5.2.2.",
+        "operationId": "getCertificate",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "issuer": {
+                      "type": "string"
+                    },
+                    "thumbprint_sha256": {
+                      "type": "string"
+                    },
+                    "not_before": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "not_after": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "revoked",
+                        "expired"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/v1/oauth/register": {
+      "post": {
+        "tags": [
+          "OAuth"
+        ],
+        "summary": "Dynamic Client Registration (RFC 7591)",
+        "description": "Registers a new OAuth2/OIDC client using a signed Software Statement Assertion (SSA) JWT. Justification: RFC 7591, FAPI-CIBA §5.",
+        "operationId": "oauthDynamicClientRegister",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "software_statement",
+                  "redirect_uris"
+                ],
+                "properties": {
+                  "software_statement": {
+                    "type": "string",
+                    "description": "Signed SSA JWT issued by the regulator/operator."
+                  },
+                  "redirect_uris": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "token_endpoint_auth_method": {
+                    "type": "string",
+                    "enum": [
+                      "tls_client_auth",
+                      "private_key_jwt"
+                    ]
+                  },
+                  "grant_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "response_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "scope": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_id_issued_at": {
+                      "type": "integer"
+                    },
+                    "client_secret_expires_at": {
+                      "type": "integer",
+                      "example": 0
+                    },
+                    "registration_access_token": {
+                      "type": "string"
+                    },
+                    "registration_client_uri": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid software statement"
+          },
+          "401": {
+            "description": "Software statement signature invalid"
+          }
+        }
+      }
+    },
+    "/v1/.well-known/jwks.json": {
+      "get": {
+        "tags": [
+          "OAuth"
+        ],
+        "summary": "JWKS (well-known alias)",
+        "description": "Alias for `/v1/jwks` advertised by OIDC discovery. Returns the JSON Web Key Set used to verify ID tokens and signed request objects. Justification: RFC 8414 §3.",
+        "operationId": "getJwksWellKnown",
+        "responses": {
+          "200": {
+            "description": "JWKS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/userinfo": {
+      "get": {
+        "tags": [
+          "OAuth"
+        ],
+        "summary": "UserInfo (OIDC alias)",
+        "description": "Alias for `/v1/oauth/userinfo` advertised by OIDC discovery. Returns claims about the authenticated end-user. Justification: OpenID Connect Core §5.3.",
+        "operationId": "getUserInfoAlias",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UserInfo claims",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
