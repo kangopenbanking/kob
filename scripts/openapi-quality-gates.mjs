@@ -8,6 +8,8 @@
  *  G3 — every financial mutation accepts an Idempotency-Key header
  *  G4 — every list endpoint exposes a pagination contract (cursor OR page+limit)
  *  G5 — every 4xx/5xx response uses application/problem+json (RFC 7807) with ProblemDetails
+ *  G6 — every state-mutating operation (POST/PUT/PATCH/DELETE) declares 409 + 429
+ *       (RFC 7231 §6.5.8 Conflict, RFC 6585 §4 Too Many Requests)
  *
  * Usage:   node scripts/openapi-quality-gates.mjs [--spec public/openapi.json]
  * Exit 0 = all gates pass. Exit 1 = at least one gate failed.
@@ -30,7 +32,7 @@ if (!fs.existsSync(specPath)) {
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const allow = fs.existsSync(allowExceptionsPath)
   ? JSON.parse(fs.readFileSync(allowExceptionsPath, 'utf8'))
-  : { G1: [], G2: [], G3: [], G4: [], G5: [] };
+  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [] };
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
@@ -45,7 +47,7 @@ const FINANCIAL_PATH_PATTERNS = [
 const WEBHOOK_PATH = /\/webhooks\//i;
 
 const failures = [];
-const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0 };
+const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0 };
 
 function fail(gate, opKey, message) {
   if ((allow[gate] || []).includes(opKey)) return;
@@ -113,6 +115,16 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
       const usesProblem = !!content['application/problem+json'];
       if (!usesProblem && !resp.$ref) {
         fail('G5', opKey, `${opId}: response ${code} should use application/problem+json (RFC 7807)`);
+      }
+    }
+
+    // G6 — Conflict + Too Many Requests on every mutation
+    if (['post', 'put', 'patch', 'delete'].includes(method)) {
+      if (!op.responses?.['409']) {
+        fail('G6', opKey, `${opId}: mutation missing 409 Conflict response (RFC 7231 §6.5.8)`);
+      }
+      if (!op.responses?.['429']) {
+        fail('G6', opKey, `${opId}: mutation missing 429 Too Many Requests response (RFC 6585 §4)`);
       }
     }
 

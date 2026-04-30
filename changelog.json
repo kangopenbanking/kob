@@ -1,9 +1,37 @@
 {
-  "apiVersion": "4.26.7",
+  "apiVersion": "4.26.8",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.8",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Slice 2 — Error catalog tightening. Added reusable components.responses.Conflict (RFC 7231 §6.5.8) and attached 409 + 429 declarations to all 244 state-mutating operations (POST/PUT/PATCH/DELETE) that previously omitted them. New CI ratchet G6 in scripts/openapi-quality-gates.mjs blocks regressions: every mutation must now declare both 409 (idempotency-key conflict / version precondition) and 429 (rate limit). Purely additive — no operationId, path, schema, or required-field changes.",
+      "highlights": [
+        "components.responses.Conflict added with application/problem+json + application/json content per RFC 7807.",
+        "34 operations gained 409 Conflict response refs (sandbox, oauth/register, bank connector, merchant api-key/webhook lifecycle, admin merchant lifecycle, ISO 20022 generators).",
+        "27 operations gained 429 Too Many Requests response refs (same surface plus consents/extend and provider webhook receivers).",
+        "scripts/openapi-quality-gates.mjs now runs gate G6: mutations missing 409 or 429 fail CI. All 244 mutations pass; 0 failures across G1–G6 on 391 operations."
+      ],
+      "additions": [
+        "components.responses.Conflict (reusable RFC 7807 response).",
+        "G6 quality gate (mutations declare 409 + 429)."
+      ],
+      "deprecations": [],
+      "fixes": [],
+      "standard_citations": [
+        "RFC 7231 §6.5.8 — 409 Conflict semantics",
+        "RFC 6585 §4 — 429 Too Many Requests",
+        "RFC 7807 — Problem Details for HTTP APIs",
+        "STANDING ORDER 2 — ratchet (G6 added without removing any prior gate)",
+        "STANDING ORDER 4 — surgeon rule (additive only)",
+        "STANDING ORDER 6 — version gate (patch bump 4.26.7 → 4.26.8)"
+      ],
+      "migration_notes": "Non-breaking. SDK consumers may now branch on 409 (retry with new Idempotency-Key) and 429 (honor Retry-After header) explicitly. No client code changes required."
+    },
     {
       "version": "4.26.7",
       "date": "2026-04-30",
