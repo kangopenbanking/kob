@@ -386,11 +386,11 @@ const MegaPanel = ({ menu }: { menu: MegaMenu }) => {
                     <NavigationMenuLink asChild>
                       <Link
                         to={item.to}
-                        className="group flex items-start gap-3 rounded-lg border border-transparent p-3 transition-all duration-200 hover:border-border hover:bg-muted/60 hover:shadow-sm"
+                        className="group flex items-start gap-3 rounded-lg border border-transparent p-3 transition-all duration-200 hover:border-accent/40 hover:bg-accent hover:text-accent-foreground hover:shadow-sm"
                       >
                         <span
                           className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-background transition-transform duration-200 group-hover:scale-105",
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-background transition-transform duration-200 group-hover:scale-105 group-hover:border-white/40 group-hover:bg-white group-hover:text-accent",
                             tone,
                           )}
                         >
@@ -398,17 +398,17 @@ const MegaPanel = ({ menu }: { menu: MegaMenu }) => {
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                            <span className="text-sm font-semibold text-foreground transition-colors group-hover:text-accent-foreground">
                               {item.title}
                             </span>
                             {item.badge && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 group-hover:border-white/40 group-hover:bg-white/15 group-hover:text-accent-foreground dark:text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 group-hover:bg-white" />
                                 {item.badge}
                               </span>
                             )}
                           </span>
-                          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground transition-colors group-hover:text-accent-foreground/85">
                             {item.description}
                           </span>
                         </span>
@@ -425,23 +425,23 @@ const MegaPanel = ({ menu }: { menu: MegaMenu }) => {
       {menu.feature && (
         <Link
           to={menu.feature.to}
-          className="group relative flex flex-col justify-between overflow-hidden rounded-xl border bg-muted/40 p-5 transition-all duration-200 hover:border-primary/40 hover:bg-muted/70"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-xl border bg-muted/40 p-5 transition-all duration-200 hover:border-accent/40 hover:bg-accent hover:text-accent-foreground"
         >
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary group-hover:border-white/40 group-hover:bg-white/15 group-hover:text-accent-foreground">
               {menu.feature.eyebrow}
             </span>
-            <div className="mt-4 flex h-11 w-11 items-center justify-center rounded-lg border border-primary/30 bg-background text-primary">
+            <div className="mt-4 flex h-11 w-11 items-center justify-center rounded-lg border border-primary/30 bg-background text-primary group-hover:border-white/40 group-hover:bg-white group-hover:text-accent">
               <menu.feature.icon className="h-5 w-5" strokeWidth={1.75} />
             </div>
-            <h4 className="mt-4 text-base font-semibold text-foreground">
+            <h4 className="mt-4 text-base font-semibold text-foreground group-hover:text-accent-foreground">
               {menu.feature.title}
             </h4>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground group-hover:text-accent-foreground/85">
               {menu.feature.description}
             </p>
           </div>
-          <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+          <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:text-accent-foreground">
             {menu.feature.cta}
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </span>
@@ -461,7 +461,7 @@ const MobileMegaItem = ({ item }: { item: MegaItem }) => {
   return (
     <Link
       to={item.to}
-      className="group flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted"
+      className="group flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-accent hover:text-accent-foreground"
     >
       <span
         className={cn(
