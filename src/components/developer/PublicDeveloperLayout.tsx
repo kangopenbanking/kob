@@ -129,6 +129,7 @@ const navSections = [
     title: "Payment Gateway",
     icon: CreditCard,
     items: [
+      { title: "Merchants Hub", path: "/developer/merchants" },
       { title: "Quickstart", path: "/developer/gateway/quickstart" },
       { title: "Charges", path: "/developer/gateway/charges" },
       { title: "Refunds", path: "/developer/gateway/refunds" },
