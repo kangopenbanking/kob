@@ -4,6 +4,8 @@ import { validateUserRole, errorResponse } from '../_shared/role-middleware.ts';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendManagedEmail, getUserName, emailManagers } from '../_shared/send-managed-email.ts';
+import { notifyAdmins } from '../_shared/admin-notify.ts';
+import { recordAuditEvent } from '../_shared/audit-trail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -153,6 +155,27 @@ async function handleApply(req: Request, body: any) {
     }
   }
 
+  // Audit trail + admin notification (additive, non-blocking)
+  if (submit && application) {
+    const adminClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    await recordAuditEvent({
+      action_type: 'loan_application_submitted',
+      entity_type: 'loan_application',
+      entity_id: application.id,
+      performed_by: user.id,
+      details: { application_number: applicationNumber, requested_amount, tenure_months, institution_id, credit_score: creditScore, auto_decision: autoDecision },
+    });
+    notifyAdmins(adminClient, {
+      event_type: 'loan_application_submitted',
+      entity_type: 'loan_application',
+      entity_id: application.id,
+      title: 'New loan application',
+      message: `Application ${applicationNumber} for ${new Intl.NumberFormat('fr-CM').format(requested_amount)} XAF awaiting review.`,
+      institution_id,
+      metadata: { application_number: applicationNumber, requested_amount, credit_score: creditScore, auto_decision: autoDecision },
+    });
+  }
+
   return new Response(JSON.stringify({ success: true, application, message: submit ? 'Application submitted successfully' : 'Application saved as draft' }), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
@@ -258,6 +281,14 @@ async function handleApprove(req: Request, body: any) {
     recipient_user_id: app.user_id,
     institution_id: app.institution_id || undefined,
     variables: { customer_name: approvedCustomerName, currency: 'XAF', approved_amount: new Intl.NumberFormat('fr-CM').format(principal), interest_rate: rate, monthly_payment: new Intl.NumberFormat('fr-CM').format(Math.round(emi * 100) / 100), tenure_months: tenure, loan_account_number: loanAccountNumber },
+  });
+
+  await recordAuditEvent({
+    action_type: 'loan_approved',
+    entity_type: 'loan_account',
+    entity_id: loanAccount.id,
+    performed_by: roleResult.userId,
+    details: { application_id, principal, tenure, rate, emi: Math.round(emi * 100) / 100, notes },
   });
 
   return new Response(JSON.stringify({ data: { loan_account: loanAccount, schedule_count: scheduleRows.length, emi: Math.round(emi * 100) / 100, total_payable: Math.round(totalPayable * 100) / 100 } }), {
