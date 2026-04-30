@@ -311,7 +311,63 @@
           "request_id": { "type": "string", "description": "Correlation identifier echoed in the X-Request-ID response header." }
         }
       },
-      "DcrRegistrationRequest": {
+      "WebhookReplayRequest": {
+        "type": "object",
+        "description": "Optional body for a webhook delivery replay. Both fields are inferred from the URL when omitted; supplying them keeps the request compatible with action-based router invocations.",
+        "properties": {
+          "endpoint_id": { "type": "string", "format": "uuid", "description": "Endpoint identifier. Optional; defaults to the {endpointId} path parameter." },
+          "delivery_id": { "type": "string", "format": "uuid", "description": "Original delivery identifier. Optional; defaults to the {deliveryId} path parameter." }
+        }
+      },
+      "WebhookReplayResult": {
+        "type": "object",
+        "description": "Outcome of a single-delivery webhook replay. A new delivery row is created so the original record remains intact for audit. Manual replays are one-shot and do not enter the automatic retry chain.",
+        "required": ["replay_delivery_id", "original_delivery_id", "endpoint_id", "status", "created_at"],
+        "properties": {
+          "replay_delivery_id": { "type": "string", "format": "uuid", "description": "Identifier of the newly created delivery record for this replay attempt." },
+          "original_delivery_id": { "type": "string", "format": "uuid", "description": "Identifier of the delivery that was replayed." },
+          "endpoint_id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["delivered", "failed"], "description": "Outcome of the replay attempt." },
+          "response_status": { "type": "integer", "nullable": true, "description": "HTTP status code returned by the receiver, or null if the request never completed." },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WebhookEndpointHealth": {
+        "type": "object",
+        "description": "24-hour operational health snapshot for a webhook endpoint. Used by integrators to monitor receiver reliability and by support to triage incidents.",
+        "required": ["endpoint_id", "url", "is_active", "window", "health", "totals", "generated_at"],
+        "properties": {
+          "endpoint_id": { "type": "string", "format": "uuid" },
+          "url": { "type": "string", "format": "uri" },
+          "is_active": { "type": "boolean" },
+          "window": { "type": "string", "enum": ["24h"], "description": "Observation window for this snapshot." },
+          "health": { "type": "string", "enum": ["healthy", "degraded", "unhealthy", "idle"], "description": "Overall classification: idle (no traffic), healthy (>=95% success), degraded (>=75%), unhealthy (<75%)." },
+          "totals": {
+            "type": "object",
+            "required": ["total", "delivered", "failed", "pending", "exhausted"],
+            "properties": {
+              "total": { "type": "integer", "minimum": 0 },
+              "delivered": { "type": "integer", "minimum": 0 },
+              "failed": { "type": "integer", "minimum": 0 },
+              "pending": { "type": "integer", "minimum": 0 },
+              "exhausted": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "success_rate_pct": { "type": "number", "format": "float", "nullable": true, "minimum": 0, "maximum": 100, "description": "Percentage of deliveries with status=delivered. Null when there has been no traffic." },
+          "latency_ms": {
+            "type": "object",
+            "description": "End-to-end latency from delivery creation to successful acknowledgement, in milliseconds. Null fields indicate insufficient samples.",
+            "properties": {
+              "p50": { "type": "integer", "nullable": true, "minimum": 0 },
+              "p95": { "type": "integer", "nullable": true, "minimum": 0 },
+              "p99": { "type": "integer", "nullable": true, "minimum": 0 }
+            }
+          },
+          "last_delivery_at": { "type": "string", "format": "date-time", "nullable": true },
+          "last_failure_at": { "type": "string", "format": "date-time", "nullable": true },
+          "generated_at": { "type": "string", "format": "date-time", "description": "Timestamp at which this snapshot was computed." }
+        }
+      },
         "type": "object",
         "required": [
           "software_statement",
