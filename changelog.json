@@ -5,6 +5,30 @@
   "lastUpdated": "2026-04-30",
   "entries": [
     {
+      "version": "sdk-1.5.0",
+      "date": "2026-04-30",
+      "type": "sdk-release",
+      "breaking_changes": false,
+      "summary": "SDK regeneration aligned to OpenAPI v4.26.11. All four official SDKs (Node @kangopenbanking/sdk, Python kangopenbanking, PHP kangopenbanking/sdk, Go github.com/kangopenbanking/sdk-go) bumped to 1.5.0. Typed SDKs (TypeScript/Python/Go/Java) regenerated under sdks/generated/ at packageVersion=4.26.11. Publish triggered via tag sdk-v1.5.0 — npm + PyPI + Packagist via .github/workflows/publish-sdks.yml.",
+      "highlights": [
+        "Curated SDKs bumped uniformly: Node 1.4.0 → 1.5.0, Python 1.4.0/1.2.0 → 1.5.0 (pyproject realigned), PHP 1.2.0 → 1.5.0, Go tagged 1.5.0.",
+        "Typed clients regenerated from public/openapi.json v4.26.11 — covers slices 1–6 (error catalog, DELETE idempotency, governance ratchets, perf budget, deployed parity, webhook DLQ).",
+        "public/sdk-downloads/ manifests mirrored to match published packages.",
+        "Publish pipeline: push tag sdk-v1.5.0 → publish-sdks.yml fans out to npm (NODE_AUTH_TOKEN), PyPI (PYPI_API_TOKEN), Packagist (GitHub Release auto-trigger)."
+      ],
+      "additions": [
+        "sdks/generated/{typescript,python,go,java} regenerated at v4.26.11"
+      ],
+      "deprecations": [],
+      "fixes": [
+        "Python SDK pyproject.toml drifted at 1.2.0 vs __init__.py 1.4.0 — realigned to 1.5.0."
+      ],
+      "standard_citations": [
+        "STANDING ORDER 6 — version gate (minor bump for accumulated additive endpoints from slices 1–6)",
+        "ORDER P5 — working code rule (CI sdk-generate.yml verifies generated SDKs build cleanly on every push)"
+      ]
+    },
+    {
       "version": "4.26.11",
       "date": "2026-04-30",
       "type": "patch",
