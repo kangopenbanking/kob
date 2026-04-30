@@ -152,7 +152,7 @@ describe('Phase 6 · Merchant lifecycle — Key rotation + grace', () => {
     expect(within.in_grace).toBe(true);
 
     // New key valid normally
-    const newKey = l.verifyKey(r.body.new_key.secret_key_hash, now + 60 * 60 * 1000);
+    const newKey = l.verifyKey((r.body as any).new_key.secret_key_hash, now + 60 * 60 * 1000);
     expect(newKey.valid).toBe(true);
     expect(newKey.in_grace).toBe(false);
   });
