@@ -886,6 +886,7 @@ function App() {
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
               <Route path="system-config" element={<SystemConfig />} />
               <Route path="webhooks" element={<WebhookManagement />} />
+              <Route path="webhooks/replay" element={<AdminWebhookReplay />} />
               <Route path="branches" element={<BranchManagement />} />
               <Route path="transactions" element={<TransactionMonitoring />} />
               <Route path="consent-data" element={<ConsentDataManagement />} />
