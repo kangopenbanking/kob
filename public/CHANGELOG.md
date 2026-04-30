@@ -1,12 +1,34 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.4** · Last updated: **2026-04-30**
+Current API version: **4.26.5** · Last updated: **2026-04-30**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.26.5 — 2026-04-30
+**Type:** patch · **Breaking changes:** none
+
+Phase 5 hardening — Added newman + ajv (+ ajv-formats) as devDependencies and wired .github/workflows/api-contract-gates.yml. The workflow runs OpenAPI quality gates G1–G5 (npm run openapi:gates) on every PR/push and, when SANDBOX_API_KEY is configured, executes the Postman collection against sandbox via Newman with Ajv schema validation (npm run postman:contract). Adds a changelog/version alignment guard so info.version in openapi.json must match the changelog head.
+
+### Highlights
+- devDependencies: newman@^6, ajv@^8, ajv-formats@^3 — required by scripts/postman-contract-check.mjs.
+- .github/workflows/api-contract-gates.yml — two jobs: openapi-gates (always) + postman-contract (skips gracefully without SANDBOX_API_KEY secret).
+- CI version-alignment guard prevents merging spec changes whose version does not appear in changelog.json head (Standing Order 6).
+- postman-contract job is needs: openapi-gates so a failing gate short-circuits the live run.
+
+### Standards & citations
+- STANDING ORDER 2 — ratchet (CI now blocks regressions on G1–G5 + Postman contract)
+- STANDING ORDER 6 — version gate (CI enforces changelog ↔ openapi.json version match)
+- ORDER P5 — working code rule (Postman collection executed against sandbox on every PR)
+- ORDER P7 — changelog rule (entry filed within 48h of CI deployment)
+
+### Migration notes
+Add SANDBOX_BASE_URL and SANDBOX_API_KEY to GitHub repo secrets to enable the live Postman contract job. Without them the job logs a warning and is skipped — the gates job still runs.
 
 ---
 

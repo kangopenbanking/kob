@@ -1,0 +1,99 @@
+# ============================================================
+# CI Gate: OpenAPI Quality Gates + Postman Contract Validation
+#
+# Enforces Standing Orders 2 (The Ratchet) and P5 (Working Code).
+#
+# Jobs:
+#   1. openapi-gates  — runs scripts/openapi-quality-gates.mjs
+#                       (G1 schemas / G2 webhooks / G3 idempotency
+#                       / G4 pagination / G5 RFC 7807).
+#   2. postman-contract — runs scripts/postman-contract-check.mjs
+#                         which executes the published Postman
+#                         collection against the sandbox via newman
+#                         and validates every response body against
+#                         the published OpenAPI schemas with ajv.
+#
+# Skips contract job gracefully when sandbox secrets are not
+# configured (e.g. forks). The gates job always runs.
+# ============================================================
+
+name: API Contract Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  openapi-gates:
+    name: OpenAPI Quality Gates (G1–G5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run OpenAPI quality gates
+        run: npm run openapi:gates
+
+      - name: Confirm changelog matches OpenAPI version
+        run: |
+          node -e "
+            const spec = require('./public/openapi.json');
+            const log = require('./public/changelog.json');
+            const head = Array.isArray(log) ? log[0] : (log.entries || [])[0];
+            const v = head && (head.version || head.tag);
+            if (!v) { console.error('::error::changelog.json missing latest version'); process.exit(1); }
+            if (!String(v).includes(spec.info.version)) {
+              console.error('::error::Changelog head ' + v + ' does not match OpenAPI ' + spec.info.version);
+              process.exit(1);
+            }
+            console.log('Version aligned:', spec.info.version);
+          "
+
+  postman-contract:
+    name: Postman ↔ OpenAPI Contract (sandbox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: openapi-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Check sandbox secrets availability
+        id: secrets
+        env:
+          SANDBOX_API_KEY: ${{ secrets.SANDBOX_API_KEY }}
+        run: |
+          if [ -z "$SANDBOX_API_KEY" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SANDBOX_API_KEY not configured — skipping live contract run. Configure in repo secrets to enable."
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Postman collection against sandbox + ajv schema validation
+        if: steps.secrets.outputs.available == 'true'
+        env:
+          SANDBOX_BASE_URL: ${{ secrets.SANDBOX_BASE_URL }}
+          SANDBOX_API_KEY: ${{ secrets.SANDBOX_API_KEY }}
+        run: npm run postman:contract
