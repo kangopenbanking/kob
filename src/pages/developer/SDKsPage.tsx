@@ -1041,6 +1041,98 @@ export default function SDKsPage() {
         </div>
       </section>
 
+      {/* Generated typed clients — produced by openapi-generator-cli on every commit
+          via .github/workflows/sdk-generate.yml from public/openapi.json. These are
+          low-level, fully-typed bindings for institutions that prefer raw spec
+          coverage over the curated DX of the hand-tuned packages above. */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Generated typed clients</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Auto-generated from the published OpenAPI specification on every API release.
+              100% endpoint coverage, fully typed, refreshed via CI.
+            </p>
+          </div>
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            <GitBranch className="h-3 w-3 mr-1" />
+            Tracks <code className="ml-1">info.version</code>
+          </Badge>
+        </div>
+
+        <Alert className="border-border/60">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            Prefer the curated SDKs above for production integrations — they include retries,
+            idempotency helpers, and FAPI-1.0 hardening. Use the generated clients when you
+            need raw, exhaustive coverage of every endpoint and schema in the spec.
+          </AlertDescription>
+        </Alert>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { lang: "TypeScript", generator: "typescript-fetch", path: "typescript", install: "npm install ./sdks/generated/typescript", Icon: NodeLogo },
+            { lang: "Python", generator: "python (urllib3)", path: "python", install: "pip install ./sdks/generated/python", Icon: PythonLogo },
+            { lang: "Go", generator: "go", path: "go", install: "go get ./sdks/generated/go", Icon: GoLogo },
+            { lang: "Java", generator: "java (okhttp-gson)", path: "java", install: "mvn install -f sdks/generated/java/pom.xml", Icon: JavaLogo },
+          ].map((c) => (
+            <Card key={c.lang} className="border-border/60">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <c.Icon className="h-6 w-6" />
+                  <CardTitle className="text-base">{c.lang}</CardTitle>
+                </div>
+                <CardDescription className="text-xs">{c.generator}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="bg-muted/60 rounded-md p-2 text-xs font-mono break-all">
+                  {c.install}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => copyToClipboard(c.install)}
+                >
+                  <Copy className="h-3 w-3 mr-2" />
+                  Copy install
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-primary" />
+              Regenerate locally
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Java 11+ required. Output is written to <code>sdks/generated/&lt;lang&gt;/</code>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted/60 rounded-md p-3 text-xs font-mono">
+              npm run sdk:generate
+            </div>
+          </CardContent>
+        </Card>
+
+        <p className="text-xs text-muted-foreground">
+          Latest CI build artifact:{" "}
+          <a
+            href="https://github.com/kangopenbanking/platform/actions/workflows/sdk-generate.yml"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline"
+          >
+            kangopenbanking-typed-sdks
+          </a>{" "}
+          (90-day retention).
+        </p>
+      </section>
+
       <AutoDocNavigation />
     </div>
   );
