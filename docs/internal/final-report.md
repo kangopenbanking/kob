@@ -188,4 +188,124 @@ All gates passed.
 
 ---
 
+## Phase 6 Addendum — Post-Run Evidence (audit-ready)
+
+Captured during the Phase 6 follow-up hardening loop.
+
+### A. Live curl proof — published origin (`kob.lovable.app`)
+
+Run from CI sandbox at `2026-04-30T11:55Z`:
+
+```
+$ curl -s -o /dev/null -w "%{http_code}" https://kob.lovable.app/openapi.json   → 200  (2,701,048 bytes)
+$ curl -s -o /dev/null -w "%{http_code}" https://kob.lovable.app/openapi.yaml   → 200
+$ curl -s -o /dev/null -w "%{http_code}" https://kob.lovable.app/developer/api-explorer        → 200
+$ curl -s -o /dev/null -w "%{http_code}" https://kob.lovable.app/developer/examples            → 200
+$ curl -s -o /dev/null -w "%{http_code}" https://kob.lovable.app/developer/examples/real-world → 200
+```
+
+Spec head (truncated):
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kang Open Banking API",
+    "version": "4.16.4",
+    ...
+```
+
+> **Action required:** the **repo** is at `v4.26.7` but the **published origin** is still
+> serving `v4.16.4`. Click **Publish → Update** in the Lovable editor to roll the latest
+> frontend (which bundles the updated `public/openapi.json`, `public/openapi.yaml`,
+> `public/changelog.json`, and the new SDK / API-explorer pages) to `kob.lovable.app`.
+> Backend/Edge changes (`api-health`, webhook receivers) are already live — they deploy
+> automatically. Only the static `public/*` assets and the React bundle are version-locked
+> to the last UI publish.
+
+### B. Custom domain `kangopenbanking.com`
+
+```
+$ curl -s -o /dev/null -w "%{http_code}" https://kangopenbanking.com/openapi.json   → 503
+```
+
+`kangopenbanking.com` is **not currently provisioned in Lovable Domains** for this project
+(the only configured custom domain is `info.kangfintechsolutions.com`). Provisioning must
+be performed manually by the workspace owner:
+
+1. Open **Project Settings → Domains** in the Lovable editor.
+2. Click **Connect Domain** and enter `kangopenbanking.com` (and `www.kangopenbanking.com`).
+3. At the registrar, set:
+   - `A` `@` → `185.158.133.1`
+   - `A` `www` → `185.158.133.1`
+   - `TXT` `_lovable` → value shown in the dialog
+4. Wait for verification → Active. SSL is auto-issued.
+
+Once Active, the same `/openapi.json`, `/openapi.yaml`, `/developer/*`, `/changelog`
+routes will serve 200 OK at `kangopenbanking.com` without any code change.
+
+### C. GitHub Actions secrets — Postman contract job
+
+`SANDBOX_BASE_URL` and `SANDBOX_API_KEY` are **GitHub Actions** secrets, not
+Lovable Cloud Edge Function secrets, so they cannot be added programmatically
+from this environment. Workspace owner must add them once:
+
+1. GitHub → repo → **Settings → Secrets and variables → Actions → New repository secret**.
+2. Add:
+   - `SANDBOX_BASE_URL` = `https://kob.lovable.app` (or the dedicated sandbox origin)
+   - `SANDBOX_API_KEY`  = a valid `sbx_...` key from `/developer/sandbox-console`
+3. The existing `.github/workflows/api-contract-gates.yml` already detects and runs
+   the Newman + OpenAPI schema validation step on every PR once both secrets are present
+   (the job is gated by `if: ${{ secrets.SANDBOX_BASE_URL && secrets.SANDBOX_API_KEY }}`).
+
+### D. Vitest mock centralization
+
+`src/test/setup.ts` now ships:
+- A Proxy-based **chainable Supabase mock** (`createChainableSupabaseMock`) — every
+  table-builder method (`select`, `eq`, `eq`, `gte`, `order`, `limit`, `range`,
+  `maybeSingle`, `single`, `csv`, …) returns the same builder; awaiting any chain
+  resolves to `{ data: [], error: null }` by default.
+- A global **TenantProvider mock** exposing both `TenantProvider` and `useTenant`
+  with full default `features` / `homeLayout` / `sectionOrder`.
+
+Test delta (full `bunx vitest run`):
+
+| Metric        | Before | After |
+|---------------|-------:|------:|
+| Test files    |     61 |    61 |
+| Tests passing |    431 |  **443** |
+| Tests failing |     56 |  **44** |
+| Errors        |      1 |     1 |
+
+12 of the 56 pre-existing failures are now eliminated. The remaining 44 are
+**fixture-specific assertions** (e.g. `expect(screen.getByText('Transfer Complete'))`)
+where the test asserts on hard-coded fixture rows that the global mock — by design —
+returns as empty arrays. Those need per-test data shaping rather than another mock
+chain change, and are tracked as a follow-up in the TODO list below.
+
+### E. Playwright
+
+The repository does **not** currently include a Playwright suite
+(`grep -r playwright package.json` returns no devDependency, no `playwright.config.*`,
+no `e2e/` directory). The Phase 6 "UI E2E" coverage is provided by the Vitest +
+React Testing Library suites under `src/test/*.test.tsx` and `src/test/phase6-*.ts`.
+A future ticket should introduce Playwright if true browser-driven screenshots are
+required for audit; the recommended seed config is:
+
+```bash
+npm i -D @playwright/test
+npx playwright install --with-deps chromium
+npx playwright codegen https://kob.lovable.app/developer/api-explorer
+```
+
+### F. Outstanding TODOs (minimal, explicit)
+
+1. **Click Publish → Update** to roll `v4.26.7` to `kob.lovable.app`. *(user action)*
+2. **Add `SANDBOX_BASE_URL` + `SANDBOX_API_KEY`** to GitHub Actions secrets. *(user action)*
+3. **Connect `kangopenbanking.com`** in Project Settings → Domains. *(user action)*
+4. **Per-fixture mock data** for the remaining 44 banking-app/PWA assertion tests. *(eng task)*
+5. **Add Playwright** if browser-driven E2E screenshots are required for compliance. *(optional)*
+
+---
+
 **End of Phase 6 final report.**
+

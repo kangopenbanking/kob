@@ -4,42 +4,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
 
-// Mock supabase
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: 'test-user', email: 'test@test.com', user_metadata: { full_name: 'Test User' } } },
-      }),
-      updateUser: vi.fn().mockResolvedValue({ error: null }),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            order: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-            })),
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-          order: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })),
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-        })),
-        order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      })),
-      upsert: vi.fn().mockResolvedValue({ error: null }),
-    })),
-    functions: {
-      invoke: vi.fn().mockResolvedValue({ data: {}, error: null }),
-    },
-  },
-}));
+// Supabase + TenantProvider are mocked centrally in src/test/setup.ts.
+// Locally override only the auth user so banking pages render with a logged-in user.
+vi.mock('@/integrations/supabase/client', async () => {
+  const { createChainableSupabaseMock } = await import('./setup');
+  const sb = createChainableSupabaseMock();
+  sb.auth.getUser = vi.fn().mockResolvedValue({
+    data: { user: { id: 'test-user', email: 'test@test.com', user_metadata: { full_name: 'Test User' } } },
+    error: null,
+  });
+  return { supabase: sb };
+});
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
@@ -88,9 +63,7 @@ vi.mock('@/components/pwa/PWATopBar', () => ({
   PWATopBar: () => <div data-testid="pwa-topbar">TopBar</div>,
 }));
 
-vi.mock('@/components/pwa/TenantProvider', () => ({
-  TenantProvider: ({ children }: any) => <>{children}</>,
-}));
+// TenantProvider is mocked centrally in src/test/setup.ts (exposes useTenant + features).
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>{children}</BrowserRouter>
