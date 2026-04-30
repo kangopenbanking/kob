@@ -1082,6 +1082,8 @@ function App() {
               <Route path="sandbox/api" element={<SandboxApiPage />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1) */}
               <Route path="integration-layer" element={<IntegrationLayerOverview />} />
+              {/* Phase 3 — Provider webhook receivers (Stripe, Flutterwave, PayPal) */}
+              <Route path="webhooks/provider-receivers" element={<ProviderWebhookReceiversGuide />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
