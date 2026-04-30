@@ -41,8 +41,8 @@ const TOPICS: MerchantTopic[] = [
   {
     title: "API keys (sandbox & production)",
     description:
-      "Generate, rotate, and revoke restricted API keys. Plaintext secret is shown ONCE — see the cryptographic key governance rules.",
-    href: "/developer/authentication/api-keys",
+      "Generate, rotate, and revoke restricted API keys with per-permission scoping. The plaintext secret is shown ONCE — see the cryptographic key governance rules. Audit log included.",
+    href: "/developer/merchants/api-keys",
     icon: KeyRound,
     badge: "shown once",
   },
