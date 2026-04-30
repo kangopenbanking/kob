@@ -782,6 +782,33 @@ const ApiExplorer = () => {
                 )}
               </Card>
             </TabsContent>
+
+            <TabsContent value="webhooks" className="m-0 space-y-6">
+              <Alert>
+                <ShieldCheck className="h-4 w-4" />
+                <AlertDescription>
+                  Compute the <code>X-KOB-Signature</code> for any payload, send the
+                  event to your own endpoint (use a tunnel such as ngrok in dev), and
+                  verify HMAC-SHA256 verification end-to-end. Failed deliveries follow
+                  the documented retry schedule (1m → 48h, 7 attempts) — see the
+                  <Link to="/developer/api-reference/webhook-retry" className="ml-1 underline">retry guide</Link>.
+                </AlertDescription>
+              </Alert>
+              <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                <SandboxWebhookTester />
+              </Suspense>
+              <div className="border-t pt-6">
+                <h2 className="text-lg font-semibold mb-2">Failure-mode catalog</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Replay common failure variants (stale timestamp, duplicate id,
+                  invalid signature) to confirm your receiver returns the right
+                  RFC 7807 status codes.
+                </p>
+                <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+                  <WebhookEventSimulator />
+                </Suspense>
+              </div>
+            </TabsContent>
           </Tabs>
 
           <noscript>
