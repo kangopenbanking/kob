@@ -505,6 +505,11 @@ const MerchantSettlements = lazy(() => import("./pages/merchant/MerchantSettleme
 const MerchantRefunds = lazy(() => import("./pages/merchant/MerchantRefunds"));
 const MerchantApiKeys = lazy(() => import("./pages/merchant/MerchantApiKeys"));
 const MerchantWebhooks = lazy(() => import("./pages/merchant/MerchantWebhooks"));
+// Phase 3 — additive merchant + admin pages
+const MerchantExportCenter = lazy(() => import("./pages/merchant/MerchantExportCenter"));
+const MerchantWebhookDeliveries = lazy(() => import("./pages/merchant/MerchantWebhookDeliveries"));
+const AdminKybReviewQueue = lazy(() => import("./pages/admin/AdminKybReviewQueue"));
+const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeliveries"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
@@ -821,6 +826,8 @@ function App() {
               <Route path="refunds" element={<MerchantRefunds />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />
+              <Route path="webhooks/deliveries" element={<MerchantWebhookDeliveries />} />
+              <Route path="export-center" element={<MerchantExportCenter />} />
               <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
               <Route path="subaccounts" element={<MerchantSubaccounts />} />
               <Route path="kyb" element={<MerchantKYB />} />
@@ -891,6 +898,8 @@ function App() {
               <Route path="payment-facilitation" element={<PaymentFacilitationAdmin />} />
               <Route path="kyc-verification" element={<KYCVerificationReview />} />
               <Route path="business-kyc" element={<BusinessKYCReview />} />
+              <Route path="kyb-review-queue" element={<AdminKybReviewQueue />} />
+              <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="institution-management" element={<InstitutionManagement />} />
