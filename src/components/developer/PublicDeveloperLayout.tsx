@@ -134,6 +134,7 @@ const navSections = [
       { title: "Refunds", path: "/developer/gateway/refunds" },
       { title: "Payouts", path: "/developer/gateway/payouts" },
       { title: "Webhooks", path: "/developer/gateway/webhooks" },
+      { title: "Provider Webhook Receivers", path: "/developer/webhooks/provider-receivers" },
       { title: "Subscriptions", path: "/developer/gateway/subscriptions" },
       { title: "Payment Links", path: "/developer/gateway/payment-links" },
       { title: "Virtual Accounts", path: "/developer/gateway/virtual-accounts" },
