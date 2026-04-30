@@ -527,13 +527,25 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
                   <SidebarMenu>
                     {section.items.map((item) => {
                       const isLocked = !isAuthenticated && (item as any).protected;
+                      const isExternal = !!(item as any).external;
                       return (
                         <SidebarMenuItem key={item.path}>
                           <SidebarMenuButton asChild isActive={isActivePath(item.path)}>
-                            <Link to={isLocked ? "/auth" : item.path} className="flex items-center justify-between">
-                              <span className={isLocked ? "text-muted-foreground" : ""}>{item.title}</span>
-                              {isLocked && <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />}
-                            </Link>
+                            {isExternal ? (
+                              <a
+                                href={isLocked ? "/auth" : item.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between"
+                              >
+                                <span>{item.title}</span>
+                              </a>
+                            ) : (
+                              <Link to={isLocked ? "/auth" : item.path} className="flex items-center justify-between">
+                                <span className={isLocked ? "text-muted-foreground" : ""}>{item.title}</span>
+                                {isLocked && <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />}
+                              </Link>
+                            )}
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
