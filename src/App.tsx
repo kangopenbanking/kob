@@ -1099,6 +1099,8 @@ function App() {
               <Route path="integration-layer" element={<IntegrationLayerOverview />} />
               {/* Phase 3 — Provider webhook receivers (Stripe, Flutterwave, PayPal) */}
               <Route path="webhooks/provider-receivers" element={<ProviderWebhookReceiversGuide />} />
+              {/* Phase 5 — Merchants documentation hub */}
+              <Route path="merchants" element={<MerchantsDocsHub />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
