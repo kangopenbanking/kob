@@ -36,6 +36,7 @@ export const merchantNavigation = [
       { title: "Settlements", path: "/merchant/settlements", icon: DollarSign },
       { title: "Refunds", path: "/merchant/refunds", icon: Undo2 },
       { title: "Bulk Operations", path: "/merchant/bulk-operations", icon: FileSpreadsheet },
+      { title: "Export Center", path: "/merchant/export-center", icon: FileSpreadsheet },
     ],
   },
   {
@@ -44,6 +45,7 @@ export const merchantNavigation = [
       { title: "API Keys", path: "/merchant/api-keys", icon: Key },
       { title: "API Key Management", path: "/merchant/api-key-management", icon: Key },
       { title: "Webhooks", path: "/merchant/webhooks", icon: Webhook },
+      { title: "Webhook Deliveries", path: "/merchant/webhooks/deliveries", icon: Webhook },
       { title: "Settlement Accounts", path: "/merchant/settlement-accounts", icon: Building2 },
       { title: "Subaccounts", path: "/merchant/subaccounts", icon: GitBranch },
     ],
