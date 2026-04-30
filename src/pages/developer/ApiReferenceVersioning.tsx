@@ -13,7 +13,7 @@ curl -I https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo"
 
 # Response headers include:
-# X-API-Version: 4.6.0
+# X-API-Version: 4.23.0
 # X-Request-Id: req_a1b2c3d4`;
 
 export default function ApiReferenceVersioning() {
@@ -29,7 +29,7 @@ export default function ApiReferenceVersioning() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-3">API Versioning</h1>
           <p className="text-lg text-muted-foreground">
-            The Kang API uses URL-based versioning. The current production version is v1 (specification v4.6.0). We follow a strict zero-breaking-changes policy.
+            The Kang API uses URL-based versioning. The current production version is v1 (specification v4.23.0). We follow a strict zero-breaking-changes policy.
           </p>
         </div>
 
