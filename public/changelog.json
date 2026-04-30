@@ -1,9 +1,25 @@
 {
-  "apiVersion": "4.26.0",
+  "apiVersion": "4.26.1",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.1",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Phase 4 — Dashboard & mobile-app E2E readiness: catalogued 700 routes across 12 dashboards into docs/internal/ui-inventory.json, scaffolded a Playwright smoke harness with one test per dashboard root, and audited Edge Functions for missing notifyAdmins/audit_logs coverage. Documentation-only; no API contract changes.",
+      "highlights": [
+        "Added playwright.config.ts and e2e/smoke/dashboards.spec.ts (12 smoke tests: Admin, FI Portal, Merchant, Personal, Customer PWA, Business PWA, Banking App, Developer, Marketing, API Explorer, Changelog).",
+        "Generated docs/internal/ui-inventory.json (700 routes, 83 admin nav items, 38 merchant nav items).",
+        "Identified 4 confirmed notification gaps in loan-ops / savings-ops / piggybank / njangi-ops (no audit_logs, no notifyAdmins). Targeted fixes pending approval.",
+        "No OpenAPI changes — Standing Order 1 (THE LOCK) and Standing Order 6 (THE VERSION GATE) preserved."
+      ],
+      "additions": [],
+      "deprecations": [],
+      "fixes": []
+    },
     {
       "version": "4.26.0",
       "date": "2026-04-30",
