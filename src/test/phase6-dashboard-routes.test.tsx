@@ -35,12 +35,12 @@ const MERCHANT_PAGES: Array<{ name: string; path: string }> = [
 ];
 
 const ADMIN_PAGES: Array<{ name: string; importer: () => Promise<any> }> = [
-  // KYB review queue
+  // KYB review queue (BusinessKYC = merchant business KYB review)
   { name: 'AdminKYBReview', importer: async () => {
       const candidates = [
+        '@/pages/admin/BusinessKYCReview',
+        '@/pages/admin/KYCVerificationReview',
         '@/pages/admin/MerchantKYBReview',
-        '@/pages/admin/KYBReview',
-        '@/pages/admin/AdminKYBQueue',
       ];
       for (const c of candidates) {
         try { return await import(/* @vite-ignore */ c); } catch { /* try next */ }
