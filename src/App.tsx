@@ -303,6 +303,8 @@ const OpenBankingConsents = lazy(() => import("./pages/developer/OpenBankingCons
 const Iso20022Messages = lazy(() => import("./pages/developer/Iso20022Messages"));
 const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegistration"));
 const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
+// Phase 3 — additive public guide for inbound provider webhooks
+const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
@@ -503,6 +505,11 @@ const MerchantSettlements = lazy(() => import("./pages/merchant/MerchantSettleme
 const MerchantRefunds = lazy(() => import("./pages/merchant/MerchantRefunds"));
 const MerchantApiKeys = lazy(() => import("./pages/merchant/MerchantApiKeys"));
 const MerchantWebhooks = lazy(() => import("./pages/merchant/MerchantWebhooks"));
+// Phase 3 — additive merchant + admin pages
+const MerchantExportCenter = lazy(() => import("./pages/merchant/MerchantExportCenter"));
+const MerchantWebhookDeliveries = lazy(() => import("./pages/merchant/MerchantWebhookDeliveries"));
+const AdminKybReviewQueue = lazy(() => import("./pages/admin/AdminKybReviewQueue"));
+const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeliveries"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
@@ -819,6 +826,8 @@ function App() {
               <Route path="refunds" element={<MerchantRefunds />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />
+              <Route path="webhooks/deliveries" element={<MerchantWebhookDeliveries />} />
+              <Route path="export-center" element={<MerchantExportCenter />} />
               <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
               <Route path="subaccounts" element={<MerchantSubaccounts />} />
               <Route path="kyb" element={<MerchantKYB />} />
@@ -889,6 +898,8 @@ function App() {
               <Route path="payment-facilitation" element={<PaymentFacilitationAdmin />} />
               <Route path="kyc-verification" element={<KYCVerificationReview />} />
               <Route path="business-kyc" element={<BusinessKYCReview />} />
+              <Route path="kyb-review-queue" element={<AdminKybReviewQueue />} />
+              <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="institution-management" element={<InstitutionManagement />} />
@@ -1080,6 +1091,8 @@ function App() {
               <Route path="sandbox/api" element={<SandboxApiPage />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1) */}
               <Route path="integration-layer" element={<IntegrationLayerOverview />} />
+              {/* Phase 3 — Provider webhook receivers (Stripe, Flutterwave, PayPal) */}
+              <Route path="webhooks/provider-receivers" element={<ProviderWebhookReceiversGuide />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-reference" element={<ApiReferenceOverview />} />
               <Route path="api-reference/errors" element={<ErrorCodesReference />} />
