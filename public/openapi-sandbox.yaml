@@ -55325,6 +55325,105 @@ x-deprecation-policy:
   - Never tighten a request schema in-place
   - Never repurpose an enum value
   - Add new enum values only in additive batches with changelog entry
+  /v1/sandbox/events/simulate:
+    post:
+      tags: [Sandbox]
+      summary: Simulate a sandbox webhook event
+      operationId: simulateSandboxEvent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type]
+              properties:
+                event_type: { type: string, example: charge.successful }
+                resource_id: { type: string }
+      responses:
+        '200':
+          description: Event simulated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object: { type: string, enum: [sandbox.event_simulation] }
+                  livemode: { type: boolean, enum: [false] }
+                  event_type: { type: string }
+                  request_id: { type: string }
+  /v1/sandbox/payments/simulate:
+    post:
+      tags: [Sandbox]
+      summary: Simulate a sandbox payment outcome
+      operationId: simulateSandboxPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency, outcome]
+              properties:
+                amount: { type: string, pattern: '^[0-9]{1,15}$' }
+                currency: { type: string, example: XAF }
+                outcome: { type: string, enum: [succeeded, failed, requires_action] }
+      responses:
+        '200':
+          description: Payment simulated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object: { type: string, enum: [sandbox.payment_simulation] }
+                  livemode: { type: boolean, enum: [false] }
+                  outcome: { type: string }
+                  charge_id: { type: string }
+                  request_id: { type: string }
+  /v1/sandbox/webhooks/send-test:
+    post:
+      tags: [Sandbox]
+      summary: Send a test webhook to a registered endpoint
+      operationId: sendTestWebhook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [endpoint_id]
+              properties:
+                endpoint_id: { type: string }
+                event_type: { type: string }
+      responses:
+        '200':
+          description: Test webhook dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxWebhookSendResult'
+  /v1/sandbox/reset:
+    post:
+      tags: [Sandbox]
+      summary: Reset sandbox data for the calling merchant
+      description: Truncates the caller's sandbox charges, payments, and webhook delivery history. Production data is never affected.
+      operationId: resetSandbox
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sandbox reset complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxResetResult'
 x-rate-limits:
   tiers:
     oauth_token:
