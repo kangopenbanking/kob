@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.25.0
+  version: 4.26.0
   summary: Unified Open Banking API for Cameroon
   description: "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC\
     \ discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating — each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained."
@@ -134,6 +134,10 @@ tags:
   description: Internal operational controls — teller transactions, withdrawal policies, and staff authorisations
 - name: Standards - ISO 20022
   description: ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.
+- name: Merchants
+  description: Merchants endpoints
+- name: Gateway
+  description: Gateway endpoints
 components:
   securitySchemes:
     bearerAuth:
@@ -57149,6 +57153,1167 @@ paths:
                 notes:
                   type: string
                   maxLength: 2000
+  /v1/merchants/api-keys/{keyId}:
+    get:
+      tags:
+      - Merchants
+      summary: Get API key
+      operationId: merchantApiKeyGet
+      description: Retrieve metadata for a single API key (never the plaintext secret — secrets are shown one-time at creation per cryptographic-and-api-key-governance).
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:read
+      parameters:
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+    delete:
+      tags:
+      - Merchants
+      summary: Revoke API key
+      operationId: merchantApiKeyRevoke
+      description: Permanently revoke an API key. Subsequent requests using the key receive 401 invalid_key.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/merchants/api-keys/{keyId}/rotate:
+    post:
+      tags:
+      - Merchants
+      summary: Rotate API key
+      operationId: merchantApiKeyRotate
+      description: 'Rotate the secret for an existing API key. Returns the new plaintext secret exactly once. The previous secret is revoked immediately. Justification: NIST SP 800-57 Part 1 §5.3 (cryptoperiod bounding).'
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Rotated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - key_id
+                - public_key
+                - secret_key
+                - rotated_at
+                properties:
+                  key_id:
+                    type: string
+                    format: uuid
+                  public_key:
+                    type: string
+                  secret_key:
+                    type: string
+                    description: Plaintext secret — shown ONCE; store securely.
+                  rotated_at:
+                    type: string
+                    format: date-time
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+  /v1/merchants/webhooks/{webhookId}:
+    get:
+      tags:
+      - Merchants
+      summary: Get webhook endpoint
+      operationId: merchantWebhookGet
+      description: Retrieve a single webhook endpoint configuration.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:read
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+    patch:
+      tags:
+      - Merchants
+      summary: Update webhook endpoint
+      operationId: merchantWebhookUpdate
+      description: Update URL, subscribed events, or active flag. Secret rotation uses /rotate-secret.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                active:
+                  type: boolean
+    delete:
+      tags:
+      - Merchants
+      summary: Delete webhook endpoint
+      operationId: merchantWebhookDelete
+      description: Permanently delete a webhook endpoint. In-flight deliveries continue to retry up to max_attempts.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/merchants/webhooks/{webhookId}/rotate-secret:
+    post:
+      tags:
+      - Merchants
+      summary: Rotate webhook signing secret
+      operationId: merchantWebhookRotateSecret
+      description: 'Rotate the HMAC signing secret for a webhook endpoint. The new secret is returned once. The previous secret remains valid for a 24h overlap window so receivers can roll over. Justification: webhook-governance-and-security memory + NIST SP 800-57.'
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Rotated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - webhook_id
+                - secret
+                - rotated_at
+                - previous_secret_valid_until
+                properties:
+                  webhook_id:
+                    type: string
+                    format: uuid
+                  secret:
+                    type: string
+                    description: New HMAC secret — shown ONCE.
+                  rotated_at:
+                    type: string
+                    format: date-time
+                  previous_secret_valid_until:
+                    type: string
+                    format: date-time
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                overlap_hours:
+                  type: integer
+                  minimum: 0
+                  maximum: 72
+                  default: 24
+  /v1/merchants/webhooks/{webhookId}/deliveries:
+    get:
+      tags:
+      - Merchants
+      summary: List webhook deliveries
+      operationId: merchantWebhookDeliveries
+      description: 'List delivery attempts for a webhook endpoint with status, response code, and retry information. Per webhook-governance-and-security: 7-attempt exponential backoff.'
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:read
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - delivered
+          - failed
+          - retrying
+          - abandoned
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive RFC 3339 lower bound
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive RFC 3339 upper bound
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/merchants/webhooks/{webhookId}/deliveries/{deliveryId}/replay:
+    post:
+      tags:
+      - Merchants
+      summary: Replay a webhook delivery
+      operationId: merchantWebhookReplayDelivery
+      description: Re-deliver a single past event to the endpoint. Useful when receivers were temporarily down. Replay creates a new delivery attempt record.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - merchants:write
+      parameters:
+      - name: webhookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/admin/merchants:
+    get:
+      tags:
+      - Admin
+      summary: List merchants (admin)
+      operationId: adminMerchantsList
+      description: 'Admin-only listing of all merchants with KYB status, environment, plan tier and last activity. Justification: COBAC supervisory access (PSD2 RTS Article 95).'
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:read
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - draft
+          - pending_review
+          - active
+          - suspended
+          - terminated
+      - name: kyb_status
+        in: query
+        schema:
+          type: string
+          enum:
+          - not_submitted
+          - submitted
+          - under_review
+          - approved
+          - rejected
+      - name: environment
+        in: query
+        schema:
+          type: string
+          enum:
+          - sandbox
+          - prod
+          default: sandbox
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 200
+        description: Search business_name / email / id
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/admin/kyb/queue:
+    get:
+      tags:
+      - Admin
+      summary: KYB review queue (admin)
+      operationId: adminKybQueue
+      description: Admin queue of merchants awaiting KYB review, sorted by submission time. Returns documents, risk score, sanctions screening result.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:read
+      parameters:
+      - name: priority
+        in: query
+        schema:
+          type: string
+          enum:
+          - low
+          - normal
+          - high
+          - urgent
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/admin/merchants/{merchantId}/approve:
+    post:
+      tags:
+      - Admin
+      summary: Approve merchant KYB (admin)
+      operationId: adminMerchantApprove
+      description: Approve KYB and activate merchant for production. Audited (4-eyes when configured per banking-operations-and-risk-governance).
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:write
+      parameters:
+      - name: merchantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 2000
+                limits:
+                  type: object
+                  description: Optional per-merchant override of daily/single/monthly limits
+  /v1/admin/merchants/{merchantId}/reject:
+    post:
+      tags:
+      - Admin
+      summary: Reject merchant KYB (admin)
+      operationId: adminMerchantReject
+      description: Reject KYB submission with reason. Merchant returns to `not_submitted` and may resubmit.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:write
+      parameters:
+      - name: merchantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 2000
+                reason_code:
+                  type: string
+                  enum:
+                  - incomplete_documents
+                  - sanctions_hit
+                  - prohibited_industry
+                  - fraud_suspected
+                  - other
+  /v1/admin/merchants/{merchantId}/suspend:
+    post:
+      tags:
+      - Admin
+      summary: Suspend merchant (admin)
+      operationId: adminMerchantSuspend
+      description: Suspend a merchant. All charges/payouts return 403 merchant_suspended until reinstated. Existing settlements continue per policy.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:write
+      parameters:
+      - name: merchantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - reason
+              properties:
+                reason:
+                  type: string
+                  maxLength: 2000
+                reason_code:
+                  type: string
+                  enum:
+                  - risk_review
+                  - compliance_breach
+                  - fraud_suspected
+                  - customer_complaints
+                  - regulatory_request
+                  - other
+                freeze_payouts:
+                  type: boolean
+                  default: true
+  /v1/admin/merchants/{merchantId}/reinstate:
+    post:
+      tags:
+      - Admin
+      summary: Reinstate merchant (admin)
+      operationId: adminMerchantReinstate
+      description: Reinstate a previously suspended merchant.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - admin:write
+      parameters:
+      - name: merchantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 2000
+  /v1/gateway/reports/transactions/export:
+    get:
+      tags:
+      - Gateway
+      summary: Export transactions report
+      operationId: gatewayReportsTransactionsExport
+      description: Download a transactions report (CSV or XLSX) for the requested period.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive RFC 3339 lower bound
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive RFC 3339 upper bound
+      - name: environment
+        in: query
+        schema:
+          type: string
+          enum:
+          - sandbox
+          - prod
+          default: sandbox
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          default: csv
+      - name: currency
+        in: query
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 3
+      responses:
+        '200':
+          description: Export file
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+  /v1/gateway/reports/settlements/export:
+    get:
+      tags:
+      - Gateway
+      summary: Export settlements report
+      operationId: gatewayReportsSettlementsExport
+      description: Download a settlements report covering payout batches, gross/fees/net per period.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive RFC 3339 lower bound
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive RFC 3339 upper bound
+      - name: environment
+        in: query
+        schema:
+          type: string
+          enum:
+          - sandbox
+          - prod
+          default: sandbox
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          default: csv
+      - name: currency
+        in: query
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 3
+      responses:
+        '200':
+          description: Export file
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+  /v1/gateway/reports/fees/export:
+    get:
+      tags:
+      - Gateway
+      summary: Export fee breakdown
+      operationId: gatewayReportsFeesExport
+      description: 'Download fee analytics broken down by category (per fee-management-and-governance: 49 categories).'
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive RFC 3339 lower bound
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive RFC 3339 upper bound
+      - name: environment
+        in: query
+        schema:
+          type: string
+          enum:
+          - sandbox
+          - prod
+          default: sandbox
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          default: csv
+      - name: currency
+        in: query
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 3
+      responses:
+        '200':
+          description: Export file
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+  /v1/gateway/statements:
+    get:
+      tags:
+      - Gateway
+      summary: List merchant settlement statements
+      operationId: gatewayStatementsList
+      description: List downloadable settlement statements per period. Each statement aggregates charges, refunds, fees, FX, and net payout.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: merchant_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Required for admin; ignored otherwise (defaults to caller's merchant)
+      - name: period
+        in: query
+        schema:
+          type: string
+          enum:
+          - daily
+          - weekly
+          - monthly
+          - custom
+          default: monthly
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive RFC 3339 lower bound
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive RFC 3339 upper bound
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/gateway/statements/{statementId}/download:
+    get:
+      tags:
+      - Gateway
+      summary: Download settlement statement
+      operationId: gatewayStatementDownload
+      description: Download a settlement statement as PDF or CSV. PDF is signed with KOB issuer chain.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: statementId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - pdf
+          - csv
+          default: pdf
+      responses:
+        '200':
+          description: Statement
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+        '404':
+          description: Not Found
+  /v1/gateway/reconciliation/{runId}:
+    get:
+      tags:
+      - Gateway
+      summary: Get reconciliation run detail
+      operationId: gatewayReconciliationRunGet
+      description: Retrieve a single reconciliation run with bucketed counts (matched / missing_at_provider / missing_at_kob / amount_mismatch / duplicate) and per-mismatch references.
+      security:
+      - bearerAuth: []
+      - oauth2:
+        - gateway:read
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /webhooks/stripe:
+    post:
+      tags:
+      - Webhooks
+      summary: Inbound Stripe webhook receiver
+      operationId: inboundWebhookStripe
+      description: 'Public endpoint that receives webhook callbacks from Stripe. Verifies signature via the `stripe-signature` header(s) (HMAC-SHA256 over `t=<timestamp>.<rawBody>`). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Stripe merchant dashboard. Justification: Stripe API reference — Webhook signatures (constructEvent).'
+      security: []
+      parameters:
+      - name: stripe-signature
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        '401':
+          description: Invalid signature
+        '409':
+          description: Duplicate event (idempotent acknowledgement)
+  /webhooks/flutterwave:
+    post:
+      tags:
+      - Webhooks
+      summary: Inbound Flutterwave webhook receiver
+      operationId: inboundWebhookFlutterwave
+      description: 'Public endpoint that receives webhook callbacks from Flutterwave. Verifies signature via the `verif-hash` header(s) (static secret comparison). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Flutterwave merchant dashboard. Justification: Flutterwave Webhooks documentation §Verifying webhook requests.'
+      security: []
+      parameters:
+      - name: verif-hash
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        '401':
+          description: Invalid signature
+        '409':
+          description: Duplicate event (idempotent acknowledgement)
+  /webhooks/paypal:
+    post:
+      tags:
+      - Webhooks
+      summary: Inbound PayPal webhook receiver
+      operationId: inboundWebhookPayPal
+      description: 'Public endpoint that receives webhook callbacks from PayPal. Verifies signature using PayPal''s `notifications/verify-webhook-signature` API with headers `paypal-auth-algo`, `paypal-cert-url`, `paypal-transmission-id`, `paypal-transmission-sig`, `paypal-transmission-time`. Deduplicates by `event_id` via `webhook_inbox(source,event_id)` UNIQUE index. Maps PayPal payout transaction statuses to KOB statuses via `mapPayPalStatus`. Justification: PayPal Webhook Verification (REST API v2).'
+      security: []
+      parameters:
+      - name: paypal-auth-algo
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: paypal-cert-url
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uri
+      - name: paypal-transmission-id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: paypal-transmission-sig
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: paypal-transmission-time
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        '401':
+          description: Invalid signature
+        '409':
+          description: Duplicate event (idempotent acknowledgement)
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
   url: https://kangopenbanking.com/developer

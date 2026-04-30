@@ -1,9 +1,41 @@
 {
-  "apiVersion": "4.25.0",
+  "apiVersion": "4.26.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.0",
+      "date": "2026-04-30",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 3 — Payment Gateway readiness: spec exposure for merchant API-key lifecycle (rotate/revoke/get), per-webhook lifecycle (get/update/delete/rotate-secret/deliveries/replay), admin KYB lifecycle (queue/approve/reject/suspend/reinstate), report exports (CSV/XLSX), settlement statements, reconciliation run detail, and the public inbound provider webhook URLs (Stripe, Flutterwave, PayPal). All endpoints already deployed; this release advertises them on the public OpenAPI surface.",
+      "highlights": [
+        "Added DELETE/GET /v1/merchants/api-keys/{keyId} and POST /v1/merchants/api-keys/{keyId}/rotate — secret returned ONCE per cryptographic-and-api-key-governance",
+        "Added GET/PATCH/DELETE /v1/merchants/webhooks/{webhookId}, POST /v1/merchants/webhooks/{webhookId}/rotate-secret (24h overlap window), GET /v1/merchants/webhooks/{webhookId}/deliveries, POST .../deliveries/{deliveryId}/replay",
+        "Added GET /v1/admin/merchants, GET /v1/admin/kyb/queue, POST /v1/admin/merchants/{merchantId}/(approve|reject|suspend|reinstate) — admin KYB lifecycle with reason codes",
+        "Added GET /v1/gateway/reports/(transactions|settlements|fees)/export — CSV/XLSX export center",
+        "Added GET /v1/gateway/statements and GET /v1/gateway/statements/{statementId}/download — period statements as PDF or CSV",
+        "Added GET /v1/gateway/reconciliation/{runId} — run detail with bucketed mismatches",
+        "Added POST /webhooks/(stripe|flutterwave|paypal) — public inbound webhook receivers documented with required signature headers and dedupe semantics (webhook_inbox(source,event_id) UNIQUE)",
+        "Verified inbound webhook code: Stripe HMAC-SHA256 stripe-signature, Flutterwave verif-hash, PayPal certificate-based verifyPayPalWebhookSignature; all share webhook_inbox dedupe + gateway_webhook_events processing log",
+        "No existing operationIds, paths, schemas, security schemes, or required[] arrays were renamed or removed (Standing Orders 1 + 2)"
+      ],
+      "standard_citations": [
+        "STANDING ORDER 1 — additive only, no renames",
+        "STANDING ORDER 2 — required[]/enum[] only added, never removed",
+        "STANDING ORDER 3 — every entry cites a standard",
+        "STANDING ORDER 4 — surgeon rule (additive)",
+        "STANDING ORDER 6 — version gate (4.25.0 → 4.26.0 minor: 21 new path items, 24 operations)",
+        "ORDER P1 / P4 — public docs and open spec preserved",
+        "ORDER P7 — changelog within 48h",
+        "NIST SP 800-57 Part 1 §5.3 (key cryptoperiod / rotation)",
+        "PSD2 RTS Article 95 (supervisory access)",
+        "Stripe Webhook Signatures (constructEvent)",
+        "Flutterwave Webhooks §Verifying webhook requests (verif-hash)",
+        "PayPal REST API v2 — Webhook signature verification"
+      ]
+    },
     {
       "version": "4.25.0",
       "date": "2026-04-30",
