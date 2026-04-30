@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, ShieldCheck, ShieldX, ShieldAlert, RotateCcw, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldX, ShieldAlert, RotateCcw, RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { extractEdgeFunctionError } from "@/lib/edge-function-error";
