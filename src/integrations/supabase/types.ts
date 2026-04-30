@@ -9615,7 +9615,9 @@ export type Database = {
           fee_bearer: string
           id: string
           institution_id: string | null
+          kyb_reviewed_at: string | null
           kyb_status: string
+          kyb_submitted_at: string | null
           metadata: Json | null
           monthly_volume_limit: number | null
           onboarding_status: string | null
@@ -9650,7 +9652,9 @@ export type Database = {
           fee_bearer?: string
           id?: string
           institution_id?: string | null
+          kyb_reviewed_at?: string | null
           kyb_status?: string
+          kyb_submitted_at?: string | null
           metadata?: Json | null
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
@@ -9685,7 +9689,9 @@ export type Database = {
           fee_bearer?: string
           id?: string
           institution_id?: string | null
+          kyb_reviewed_at?: string | null
           kyb_status?: string
+          kyb_submitted_at?: string | null
           metadata?: Json | null
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
