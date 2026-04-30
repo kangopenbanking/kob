@@ -1,0 +1,8725 @@
+{
+  "apiVersion": "4.26.7",
+  "total": 391,
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/healthz",
+      "operationId": "securityHealthz",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/health",
+      "operationId": "apiHealth",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "429",
+        "500",
+        "503"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ready",
+      "operationId": "apiReady",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "429",
+        "500",
+        "503"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/system-health",
+      "operationId": "systemHealth",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/oauth/authorize",
+      "operationId": "oauthAuthorize",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "302",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/oauth/token",
+      "operationId": "oauthToken",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        null,
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/oauth/introspect",
+      "operationId": "oauthIntrospect",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/oauth/par",
+      "operationId": "parEndpoint",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/dcr/register",
+      "operationId": "dcrRegister",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/oidc/.well-known/openid-configuration",
+      "operationId": "oidcConfig",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/jwks",
+      "operationId": "jwksEndpoint",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/phone/send-otp",
+      "operationId": "phoneAuthSendOtp",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/phone/verify-otp",
+      "operationId": "phoneAuthVerifyOtp",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/phone/pin-login",
+      "operationId": "phoneAuthPinLogin",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/pin/set",
+      "operationId": "pinCodeSet",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/pin/verify",
+      "operationId": "pinCodeVerify",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/password/reset-with-pin",
+      "operationId": "passwordResetWithPin",
+      "tags": [
+        "Authentication"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/security/captcha/generate",
+      "operationId": "captchaGenerate",
+      "tags": [
+        "Security"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/security/captcha/verify",
+      "operationId": "captchaVerify",
+      "tags": [
+        "Security"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/security/sca/initiate",
+      "operationId": "scaInitiate",
+      "tags": [
+        "Security"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/security/sca/verify",
+      "operationId": "scaVerify",
+      "tags": [
+        "Security"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/certificates",
+      "operationId": "certificateList",
+      "tags": [
+        "Certificates"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/certificates",
+      "operationId": "certificateUpload",
+      "tags": [
+        "Certificates"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/certificates/revoke",
+      "operationId": "certificateRevoke",
+      "tags": [
+        "Certificates"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/aisp/consents",
+      "operationId": "aispCreateConsent",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts",
+      "operationId": "aispAccounts",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}",
+      "operationId": "aispAccountDetail",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}/balances",
+      "operationId": "aispBalances",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}/transactions",
+      "operationId": "aispTransactions",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}/beneficiaries",
+      "operationId": "aispBeneficiaries",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}/standing-orders",
+      "operationId": "aispStandingOrders",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aisp/accounts/{accountId}/direct-debits",
+      "operationId": "aispDirectDebits",
+      "tags": [
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pisp/consents",
+      "operationId": "pispCreateConsent",
+      "tags": [
+        "PISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pisp/domestic-payment",
+      "operationId": "pispDomesticPayment",
+      "tags": [
+        "PISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pisp/payment-submission",
+      "operationId": "pispPaymentSubmission",
+      "tags": [
+        "PISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pisp/payments/{paymentId}",
+      "operationId": "pispPaymentDetails",
+      "tags": [
+        "PISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consents/{consentId}/authorize",
+      "operationId": "consentAuthorize",
+      "tags": [
+        "Consent Management"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consents/{consentId}/revoke",
+      "operationId": "consentRevoke",
+      "tags": [
+        "Consent Management"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/consents",
+      "operationId": "consentsList",
+      "tags": [
+        "Consent Management"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/credit/score",
+      "operationId": "creditScoreFetch",
+      "tags": [
+        "Credit Scoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/credit/score",
+      "operationId": "creditScoreCalculate",
+      "tags": [
+        "Credit Scoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/credit/simulate",
+      "operationId": "creditScoreSimulate",
+      "tags": [
+        "Credit Scoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/credit/tips",
+      "operationId": "creditScoreTips",
+      "tags": [
+        "Credit Scoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/credit/report",
+      "operationId": "creditReportGenerate",
+      "tags": [
+        "Credit Scoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/loans/products",
+      "operationId": "loanProducts",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/apply",
+      "operationId": "loanApply",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/calculate",
+      "operationId": "loanCalculate",
+      "tags": [
+        "Loans"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/{loanId}/approve",
+      "operationId": "loanApprove",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/{loanId}/disburse",
+      "operationId": "loanDisburse",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/loans/{loanId}/schedule",
+      "operationId": "loanSchedule",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/{loanId}/schedule",
+      "operationId": "loanGenerateSchedule",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/loans/{loanId}/repay",
+      "operationId": "loanRepay",
+      "tags": [
+        "Loans"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/savings/products",
+      "operationId": "savingsProducts",
+      "tags": [
+        "Savings"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/savings/accounts",
+      "operationId": "listSavingsAccounts",
+      "tags": [
+        "Savings",
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/savings/accounts",
+      "operationId": "savingsCreate",
+      "tags": [
+        "Savings"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/savings/accounts/{accountId}/deposit",
+      "operationId": "savingsDeposit",
+      "tags": [
+        "Savings"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/savings/accounts/{accountId}/withdraw",
+      "operationId": "savingsWithdraw",
+      "tags": [
+        "Savings"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/savings/accrue-interest",
+      "operationId": "savingsAccrueInterest",
+      "tags": [
+        "Savings"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ledger/accounts",
+      "operationId": "ledgerAccounts",
+      "tags": [
+        "Ledger"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/ledger/accounts",
+      "operationId": "ledgerAccountCreate",
+      "tags": [
+        "Ledger"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ledger/accounts/{accountId}/balance",
+      "operationId": "ledgerBalance",
+      "tags": [
+        "Ledger"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ledger/journal",
+      "operationId": "journalList",
+      "tags": [
+        "Ledger"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/ledger/journal",
+      "operationId": "journalPost",
+      "tags": [
+        "Ledger"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/mobile-money/charge",
+      "operationId": "mobileMoneyCharge",
+      "tags": [
+        "Mobile Money"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/mobile-money/transfer",
+      "operationId": "mobileMoneyTransfer",
+      "tags": [
+        "Mobile Money"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/mobile-money/verify",
+      "operationId": "mobileMoneyVerify",
+      "tags": [
+        "Mobile Money"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/mobile-money/to-bank",
+      "operationId": "mobileMoneyToBank",
+      "tags": [
+        "Mobile Money"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/flutterwave/bank-transfer",
+      "operationId": "flutterwaveBankTransfer",
+      "tags": [
+        "Payments"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/flutterwave/banks",
+      "operationId": "flutterwaveListBanks",
+      "tags": [
+        "Payments"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/flutterwave/verify-bank",
+      "operationId": "flutterwaveVerifyBank",
+      "tags": [
+        "Payments"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/stripe/payment-intent",
+      "operationId": "stripePaymentIntent",
+      "tags": [
+        "Payments"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/stripe/confirm-payment",
+      "operationId": "stripeConfirmPayment",
+      "tags": [
+        "Payments"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/bulk-transfers",
+      "operationId": "bulkTransfers",
+      "tags": [
+        "Banking Operations"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banking/exchange-rate",
+      "operationId": "exchangeRate",
+      "tags": [
+        "Banking Operations"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/cards",
+      "operationId": "virtualCardList",
+      "tags": [
+        "Virtual Cards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/cards",
+      "operationId": "virtualCardCreate",
+      "tags": [
+        "Virtual Cards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/cards/{cardId}/topup",
+      "operationId": "virtualCardTopup",
+      "tags": [
+        "Virtual Cards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/cards/{cardId}/transactions",
+      "operationId": "virtualCardTransactions",
+      "tags": [
+        "Virtual Cards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/cards/{cardId}/status",
+      "operationId": "virtualCardUpdateStatus",
+      "tags": [
+        "Virtual Cards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/pain001/parse",
+      "operationId": "iso20022Pain001Parser",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/camt053/parse",
+      "operationId": "iso20022Camt053Parser",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/pacs008/generate",
+      "operationId": "iso20022Pacs008Generator",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/pacs002/generate",
+      "operationId": "iso20022Pacs002Generator",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/swift/mt103/parse",
+      "operationId": "swiftMt103Parser",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/swift/mt940/parse",
+      "operationId": "swiftMt940Parser",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/swift/mt103/generate",
+      "operationId": "swiftMt103Generator",
+      "tags": [
+        "Standards"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/validate/iban",
+      "operationId": "validateIban",
+      "tags": [
+        "Standards"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/validate/bic",
+      "operationId": "validateBic",
+      "tags": [
+        "Standards"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/validate/rib",
+      "operationId": "validateRib",
+      "tags": [
+        "Standards"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/validate/account-identifier",
+      "operationId": "validateAccountIdentifier",
+      "tags": [
+        "Standards"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/directory/banks/cm",
+      "operationId": "directoryBanksCm",
+      "tags": [
+        "Directory"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/kyc/submit",
+      "operationId": "kycSubmit",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/kyc/sanctions-screen",
+      "operationId": "sanctionsScreen",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/kyc/data-export",
+      "operationId": "dataExport",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks",
+      "operationId": "webhookList",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks",
+      "operationId": "webhookRegister",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/{webhookId}/deliveries",
+      "operationId": "webhookDeliveries",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/users",
+      "operationId": "adminCreateUser",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/clients",
+      "operationId": "adminCreateClient",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/metrics",
+      "operationId": "adminMetrics",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/sandbox/accounts",
+      "operationId": "adminSandboxAccounts",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/system-config",
+      "operationId": "adminSystemConfig",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/admin/system-config",
+      "operationId": "adminSystemConfigUpdate",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/webhooks",
+      "operationId": "adminWebhooks",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/transactions/review",
+      "operationId": "adminTransactionReview",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/loans",
+      "operationId": "adminListLoans",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/savings",
+      "operationId": "adminListSavings",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/consents",
+      "operationId": "adminListConsents",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/staff/assign",
+      "operationId": "adminAssignStaff",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/branches",
+      "operationId": "adminManageBranches",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/branches",
+      "operationId": "adminCreateBranch",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/communications/send",
+      "operationId": "sendCommunication",
+      "tags": [
+        "Communications"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/communications/bulk",
+      "operationId": "sendBulkCommunication",
+      "tags": [
+        "Communications"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/generate",
+      "operationId": "generateInvoice",
+      "tags": [
+        "Settlement"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/institutions/register",
+      "operationId": "institutionRegister",
+      "tags": [
+        "Institution"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/institutions/{institutionId}/clients",
+      "operationId": "institutionCreateClient",
+      "tags": [
+        "Institution"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/institutions/{institutionId}/kyb",
+      "operationId": "businessKycSubmit",
+      "tags": [
+        "Institution"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/crediq/health-check",
+      "operationId": "crediqHealthCheck",
+      "tags": [
+        "CrediQ"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/crediq/baseline-score",
+      "operationId": "crediqBaselineScore",
+      "tags": [
+        "CrediQ"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/crediq/health-metrics",
+      "operationId": "crediqHealthMetrics",
+      "tags": [
+        "CrediQ"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/crediq/action-plan",
+      "operationId": "crediqActionPlan",
+      "tags": [
+        "CrediQ"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/postiq/codes",
+      "operationId": "postiqCreateCode",
+      "tags": [
+        "PostiQ"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/postiq/codes/{code}",
+      "operationId": "postiqLookupCode",
+      "tags": [
+        "PostiQ"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/woocommerce/merchants",
+      "operationId": "woocommerceRegisterMerchant",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/woocommerce/validate-install",
+      "operationId": "woocommerceValidateInstall",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/woocommerce/plugin/download",
+      "operationId": "woocommerceDownloadPlugin",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/woocommerce/process-payment",
+      "operationId": "woocommerceProcessPayment",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/woocommerce/transactions",
+      "operationId": "woocommerceListTransactions",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/woocommerce/webhook",
+      "operationId": "woocommercePaymentWebhook",
+      "tags": [
+        "WooCommerce"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/accounts",
+      "operationId": "sandboxCreateAccount",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/api-keys",
+      "operationId": "sandboxCreateApiKey",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/data/generate",
+      "operationId": "sandboxGenerateData",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/webhooks",
+      "operationId": "sandboxRegisterWebhook",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/developers/register",
+      "operationId": "developerRegisterApp",
+      "tags": [
+        "Developer"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/charges",
+      "operationId": "gatewayListCharges",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges",
+      "operationId": "gatewayCreateCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/charges/{chargeId}",
+      "operationId": "gatewayGetCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/{chargeId}/verify",
+      "operationId": "gatewayVerifyCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/{chargeId}/cancel",
+      "operationId": "gatewayCancelCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/fee-estimate",
+      "operationId": "gatewayFeeEstimate",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/refunds",
+      "operationId": "gatewayListRefunds",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/refunds",
+      "operationId": "gatewayCreateRefund",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/refunds/{refundId}",
+      "operationId": "gatewayGetRefund",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payouts",
+      "operationId": "gatewayListPayouts",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payouts",
+      "operationId": "gatewayCreatePayout",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payouts/{payoutId}",
+      "operationId": "gatewayGetPayout",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payout-batches",
+      "operationId": "gatewayCreatePayoutBatch",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payout-batches/{batchId}",
+      "operationId": "gatewayGetPayoutBatch",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payouts/paypal",
+      "operationId": "gatewayCreatePayPalPayout",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/withdraw-to-paypal",
+      "operationId": "gatewayWithdrawToPayPal",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/disputes",
+      "operationId": "gatewayListDisputes",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/disputes/{disputeId}",
+      "operationId": "gatewayGetDispute",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/disputes/{disputeId}/evidence",
+      "operationId": "gatewaySubmitDisputeEvidence",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/settlements",
+      "operationId": "gatewayListSettlements",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/settlements/{settlementId}",
+      "operationId": "gatewayGetSettlement",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/beneficiaries",
+      "operationId": "gatewayListBeneficiaries",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/beneficiaries",
+      "operationId": "gatewayCreateBeneficiary",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/gateway/beneficiaries/{beneficiaryId}",
+      "operationId": "gatewayDeleteBeneficiary",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/transactions",
+      "operationId": "gatewayReportTransactions",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/settlements",
+      "operationId": "gatewayReportSettlements",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/export/transactions",
+      "operationId": "gatewayExportTransactions",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/preauth",
+      "operationId": "gatewayPreauthCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/{chargeId}/capture",
+      "operationId": "gatewayCaptureCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/{chargeId}/void",
+      "operationId": "gatewayVoidCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/validate",
+      "operationId": "gatewayValidateCharge",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/virtual-accounts",
+      "operationId": "gatewayListVirtualAccounts",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/virtual-accounts",
+      "operationId": "gatewayCreateVirtualAccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/virtual-accounts/{accountId}",
+      "operationId": "gatewayGetVirtualAccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/balances",
+      "operationId": "gatewayGetMerchantBalance",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/verify-bank-account",
+      "operationId": "gatewayVerifyBankAccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/resolve-bvn",
+      "operationId": "gatewayResolveBvn",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/fund-account",
+      "operationId": "gatewayFundAccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/withdraw-to-bank",
+      "operationId": "gatewayWithdrawToBank",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/internal-transfer",
+      "operationId": "bankingInternalTransfer",
+      "tags": [
+        "Banking Operations"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/facilitated-transfer",
+      "operationId": "bankingFacilitatedTransfer",
+      "tags": [
+        "Banking Operations"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/facilitated-mobile-money-charge",
+      "operationId": "facilitatedMobileMoneyCharge",
+      "tags": [
+        "Payment Facilitation"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/settlement/calculate",
+      "operationId": "settlementCalculate",
+      "tags": [
+        "Payment Facilitation"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/settlement/process",
+      "operationId": "settlementProcess",
+      "tags": [
+        "Payment Facilitation"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/risk/score",
+      "operationId": "gatewayRiskScore",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/exchange-rate",
+      "operationId": "gatewayExchangeRate",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payment-links",
+      "operationId": "gatewayListPaymentLinks",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payment-links",
+      "operationId": "gatewayCreatePaymentLink",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/gateway/payment-links/{linkId}",
+      "operationId": "gatewayUpdatePaymentLink",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/gateway/payment-links/{linkId}",
+      "operationId": "gatewayDeletePaymentLink",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payment-plans",
+      "operationId": "gatewayListPaymentPlans",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payment-plans",
+      "operationId": "gatewayCreatePaymentPlan",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/payment-plans/{planId}",
+      "operationId": "gatewayGetPaymentPlan",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/gateway/payment-plans/{planId}",
+      "operationId": "gatewayUpdatePaymentPlan",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/subscriptions",
+      "operationId": "gatewayListSubscriptions",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/subscriptions",
+      "operationId": "gatewayCreateSubscription",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/subscriptions/{subscriptionId}",
+      "operationId": "gatewayGetSubscription",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/gateway/subscriptions/{subscriptionId}",
+      "operationId": "updateSubscription",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "404",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/gateway/subscriptions/{subscriptionId}",
+      "operationId": "deleteSubscription",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "404",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/subscriptions/cancel",
+      "operationId": "gatewayCancelSubscription",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/subaccounts",
+      "operationId": "gatewayListSubaccounts",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/subaccounts",
+      "operationId": "gatewayCreateSubaccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/subaccounts/{subaccountId}",
+      "operationId": "gatewayGetSubaccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/gateway/subaccounts/{subaccountId}",
+      "operationId": "gatewayUpdateSubaccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/gateway/subaccounts/{subaccountId}",
+      "operationId": "gatewayDeleteSubaccount",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/customers",
+      "operationId": "gatewayListCustomers",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/customers",
+      "operationId": "gatewayCreateCustomer",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/customers/{customerId}",
+      "operationId": "gatewayGetCustomer",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/gateway/customers/{customerId}",
+      "operationId": "gatewayUpdateCustomer",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/customers/{customerId}/tokens",
+      "operationId": "gatewayListCustomerTokens",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/gateway/customers/{customerId}/tokens/{tokenId}",
+      "operationId": "gatewayRevokeCustomerToken",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/charges/token",
+      "operationId": "gatewayChargeToken",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/charges/{chargeId}/events",
+      "operationId": "gatewayGetChargeEvents",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reconciliation",
+      "operationId": "gatewayListReconciliationRuns",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/reconciliation",
+      "operationId": "gatewayRunReconciliation",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/fees",
+      "operationId": "gatewayReportFees",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/payouts/{payoutId}/retry",
+      "operationId": "gatewayRetryPayout",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants",
+      "operationId": "merchantList",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants",
+      "operationId": "merchantCreate",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/merchants",
+      "operationId": "merchantUpdate",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/kyb",
+      "operationId": "merchantGetKyb",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/kyb",
+      "operationId": "merchantSubmitKyb",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/api-keys",
+      "operationId": "merchantListApiKeys",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/api-keys",
+      "operationId": "merchantIssueApiKey",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/merchants/api-keys",
+      "operationId": "merchantRevokeApiKey",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/settlement-accounts",
+      "operationId": "merchantListSettlementAccounts",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/settlement-accounts",
+      "operationId": "merchantAddSettlementAccount",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/webhooks",
+      "operationId": "merchantListWebhooks",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/webhooks",
+      "operationId": "merchantRegisterWebhook",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/oauth/revoke",
+      "operationId": "oauthRevoke",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/oauth/userinfo",
+      "operationId": "oauthUserInfo",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/piggybank",
+      "operationId": "piggybankCreate",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/piggybank/pay",
+      "operationId": "piggybankPay",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/njangi",
+      "operationId": "njangiCreate",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/njangi/join",
+      "operationId": "njangiJoin",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/njangi/contribute",
+      "operationId": "njangiContribute",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consumer/njangi/payout",
+      "operationId": "njangiPayout",
+      "tags": [
+        "Consumer Tools"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/funding-intents",
+      "operationId": "gatewayListFundingIntents",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/funding-intents",
+      "operationId": "gatewayCreateFundingIntent",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/funding-intents/{intentId}",
+      "operationId": "gatewayGetFundingIntent",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/funding-intents/{intentId}/cancel",
+      "operationId": "gatewayCancelFundingIntent",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/funding-intents/{intentId}/confirm",
+      "operationId": "gatewayConfirmFundingIntent",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/teller/transaction",
+      "operationId": "tellerTransaction",
+      "tags": [
+        "Banking Operations"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/withdrawal-policies",
+      "operationId": "listWithdrawalPolicies",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/withdrawal-policies",
+      "operationId": "createWithdrawalPolicy",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/withdrawal-policies/{policyId}",
+      "operationId": "getWithdrawalPolicy",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/admin/withdrawal-policies/{policyId}",
+      "operationId": "updateWithdrawalPolicy",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/staff/authorizations",
+      "operationId": "listStaffAuthorizations",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/staff/authorizations",
+      "operationId": "createStaffAuthorization",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/staff/authorizations/{authorizationId}",
+      "operationId": "getStaffAuthorization",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/admin/staff/authorizations/{authorizationId}",
+      "operationId": "updateStaffAuthorization",
+      "tags": [
+        "Operational Controls"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banking/withdrawal-requests",
+      "operationId": "listWithdrawalRequests",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/withdrawal-requests",
+      "operationId": "createWithdrawalRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "202",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banking/withdrawal-requests/{requestId}",
+      "operationId": "getWithdrawalRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/withdrawal-requests/{requestId}/submit",
+      "operationId": "submitWithdrawalRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/withdrawal-requests/{requestId}/cancel",
+      "operationId": "cancelWithdrawalRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banking/approvals",
+      "operationId": "listApprovals",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banking/approvals/{approvalId}",
+      "operationId": "getApproval",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/approvals/{approvalId}/approve",
+      "operationId": "approveRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/approvals/{approvalId}/reject",
+      "operationId": "rejectRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banking/approvals/{approvalId}/escalate",
+      "operationId": "escalateRequest",
+      "tags": [
+        "Approval Workflows"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/accounts/{accountId}/overdraft",
+      "operationId": "getOverdraftProfile",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/recalculate",
+      "operationId": "recalculateOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/request",
+      "operationId": "requestOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "202",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/approve",
+      "operationId": "approveOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/suspend",
+      "operationId": "suspendOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/revoke",
+      "operationId": "revokeOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{accountId}/overdraft/reinstate",
+      "operationId": "reinstateOverdraft",
+      "tags": [
+        "Overdraft"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/wallets",
+      "operationId": "walletList",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/wallets",
+      "operationId": "walletCreate",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/wallets/{walletId}",
+      "operationId": "walletGet",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/wallets/{walletId}/credit",
+      "operationId": "walletCredit",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/wallets/{walletId}/debit",
+      "operationId": "walletDebit",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/wallets/{walletId}/freeze",
+      "operationId": "walletFreeze",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/wallets/{walletId}/statement",
+      "operationId": "walletStatement",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/escrow",
+      "operationId": "escrowList",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/escrow",
+      "operationId": "escrowCreate",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/escrow/{escrowId}/fund",
+      "operationId": "escrowFund",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/escrow/{escrowId}/release",
+      "operationId": "escrowRelease",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/escrow/{escrowId}/refund",
+      "operationId": "escrowRefund",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/escrow/{escrowId}/freeze",
+      "operationId": "escrowFreeze",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/compliance/screen",
+      "operationId": "complianceScreen",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/compliance/sar",
+      "operationId": "sarList",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/compliance/sar",
+      "operationId": "sarFile",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/compliance/sar/{sarId}/review",
+      "operationId": "sarReview",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/compliance/sar/{sarId}/submit",
+      "operationId": "sarSubmit",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/safeguarding/reconcile",
+      "operationId": "safeguardingReconcile",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/safeguarding/snapshots",
+      "operationId": "safeguardingSnapshots",
+      "tags": [
+        "KYC & Compliance"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/instant",
+      "operationId": "payoutInstant",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/push-to-card",
+      "operationId": "payoutPushToCard",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/payouts/rails",
+      "operationId": "payoutRails",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/{payoutId}/cancel",
+      "operationId": "payoutCancel",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/treasury/float",
+      "operationId": "treasuryFloat",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/replenish",
+      "operationId": "treasuryReplenish",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sla/metrics",
+      "operationId": "slaMetrics",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sla/metrics",
+      "operationId": "slaMetricRecord",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sla/incidents",
+      "operationId": "slaIncidentList",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sla/incidents",
+      "operationId": "slaIncidentCreate",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/sla/incidents/{incidentId}",
+      "operationId": "slaIncidentUpdate",
+      "tags": [
+        "Monitoring"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/v2/endpoints",
+      "operationId": "webhookV2List",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/v2/endpoints",
+      "operationId": "webhookV2Create",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/webhooks/v2/endpoints/{endpointId}",
+      "operationId": "webhookV2Update",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/webhooks/v2/endpoints/{endpointId}",
+      "operationId": "webhookV2Delete",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": false,
+      "responseCodes": [
+        "204",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/v2/deliveries",
+      "operationId": "webhookV2Deliveries",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay",
+      "operationId": "webhookV2ReplayDelivery",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/v2/endpoints/{endpointId}/health",
+      "operationId": "webhookV2EndpointHealth",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sandbox/payout-sim",
+      "operationId": "sandboxScenarioList",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/payout-sim",
+      "operationId": "sandboxPayoutSim",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/reconciliation/mismatches",
+      "operationId": "reconciliationMismatches",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/reconciliation/mismatches/{mismatchId}/resolve",
+      "operationId": "reconciliationResolve",
+      "tags": [
+        "Payment Gateway"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/directory/banks",
+      "operationId": "directoryBanksList",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/register",
+      "operationId": "bankRegister",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks",
+      "operationId": "banksList",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}",
+      "operationId": "banksGet",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/banks/{bankId}",
+      "operationId": "banksUpdate",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/approve",
+      "operationId": "bankApprove",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/suspend",
+      "operationId": "bankSuspend",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/connectors",
+      "operationId": "connectorsList",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connectors",
+      "operationId": "connectorRegister",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/connectors/{connectorId}/health",
+      "operationId": "connectorHealth",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connectors/{connectorId}/certificates",
+      "operationId": "connectorCertUpload",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/connectors/{bankId}/accounts",
+      "operationId": "connectorIngestAccounts",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/connectors/{bankId}/transactions",
+      "operationId": "connectorIngestTransactions",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/interbank/payments",
+      "operationId": "interbankPaymentsList",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/interbank/payments",
+      "operationId": "interbankPaymentCreate",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/interbank/payments/{paymentId}",
+      "operationId": "interbankPaymentGet",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/interbank/payments/{paymentId}/submit",
+      "operationId": "interbankPaymentSubmit",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/interbank/participants",
+      "operationId": "interbankParticipantsList",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/interbank/messages",
+      "operationId": "interbankMessagesList",
+      "tags": [
+        "Interbank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/link",
+      "operationId": "bankLinkPsu",
+      "tags": [
+        "Bank Directory"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/payments",
+      "operationId": "bankPaymentsList",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/connectors/{bankId}/payments/status",
+      "operationId": "connectorPaymentStatus",
+      "tags": [
+        "Bank Connectors"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pay-by-bank/intents",
+      "operationId": "payByBankListIntents",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pay-by-bank/intents",
+      "operationId": "payByBankCreateIntent",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pay-by-bank/intents/{intentId}",
+      "operationId": "payByBankGetIntent",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pay-by-bank/intents/{intentId}/authorize",
+      "operationId": "payByBankAuthorize",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pay-by-bank/intents/{intentId}/reject",
+      "operationId": "payByBankReject",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/pay-by-bank/callback",
+      "operationId": "payByBankCallback",
+      "tags": [
+        "Pay by Bank"
+      ],
+      "security": [
+        "mtls"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/gateway/merchants/webhooks/{webhookId}/rotate-secret",
+      "operationId": "rotateMerchantWebhookSecret",
+      "tags": [
+        "Merchant Onboarding"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "404",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/providers/stripe",
+      "operationId": "receiveStripeWebhook",
+      "tags": [
+        "Provider Webhooks (Inbound)"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/providers/flutterwave",
+      "operationId": "receiveFlutterwaveWebhook",
+      "tags": [
+        "Provider Webhooks (Inbound)"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/providers/paypal",
+      "operationId": "receivePaypalWebhook",
+      "tags": [
+        "Provider Webhooks (Inbound)"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/savings/accounts/{accountId}",
+      "operationId": "getSavingsAccount",
+      "tags": [
+        "Savings",
+        "AISP"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "404",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/pacs004/generate",
+      "operationId": "generatePacs004",
+      "tags": [
+        "Standards - ISO 20022"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/pacs009/generate",
+      "operationId": "generatePacs009",
+      "tags": [
+        "Standards - ISO 20022"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/camt056/generate",
+      "operationId": "generateCamt056",
+      "tags": [
+        "Standards - ISO 20022"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/camt052/parse",
+      "operationId": "parseISO20022Camt052",
+      "tags": [
+        "Standards - ISO 20022"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/standards/iso20022/camt054/parse",
+      "operationId": "parseISO20022Camt054",
+      "tags": [
+        "Standards - ISO 20022"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "429",
+        "500"
+      ],
+      "hasIdempotencyKey": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/events/simulate",
+      "operationId": "simulateSandboxEvent",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/payments/simulate",
+      "operationId": "simulateSandboxPayment",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/webhooks/send-test",
+      "operationId": "sendTestWebhook",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sandbox/reset",
+      "operationId": "resetSandbox",
+      "tags": [
+        "Sandbox"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "500"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/consents/{consentId}/status",
+      "operationId": "getConsentStatus",
+      "tags": [
+        "Consent Management"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/consents/{consentId}/extend",
+      "operationId": "extendConsent",
+      "tags": [
+        "Consent Management"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "404",
+        "409"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/certificates/{certificateId}",
+      "operationId": "getCertificate",
+      "tags": [
+        "Certificates"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/oauth/register",
+      "operationId": "oauthDynamicClientRegister",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "201",
+        "400",
+        "401"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/.well-known/jwks.json",
+      "operationId": "getJwksWellKnown",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/userinfo",
+      "operationId": "getUserInfoAlias",
+      "tags": [
+        "OAuth"
+      ],
+      "security": [
+        "bearerAuth"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/files/upload",
+      "operationId": "connectorFileUpload",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/sftp/config",
+      "operationId": "connectorSftpConfig",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/sftp/pull",
+      "operationId": "connectorSftpPullNow",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/connector/imports",
+      "operationId": "connectorImportsList",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/connector/imports/{importId}",
+      "operationId": "connectorImportGet",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/connector/mappings",
+      "operationId": "connectorMappingsList",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/mappings",
+      "operationId": "connectorMappingsUpsert",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/validate-template",
+      "operationId": "connectorValidateTemplate",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/batch-payments",
+      "operationId": "connectorBatchList",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/batch-payments",
+      "operationId": "connectorBatchCreate",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/batch-payments/{batchId}",
+      "operationId": "connectorBatchGet",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/batch-payments/{batchId}/download",
+      "operationId": "connectorBatchDownload",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/connector/status-files/upload",
+      "operationId": "connectorStatusFileUpload",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/banks/{bankId}/reconciliation",
+      "operationId": "connectorReconciliationList",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/banks/{bankId}/reconciliation/resolve",
+      "operationId": "connectorReconciliationResolve",
+      "tags": [
+        "BankConnectors"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/api-keys/{keyId}",
+      "operationId": "merchantApiKeyGet",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/merchants/api-keys/{keyId}",
+      "operationId": "merchantApiKeyRevoke",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/api-keys/{keyId}/rotate",
+      "operationId": "merchantApiKeyRotate",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/webhooks/{webhookId}",
+      "operationId": "merchantWebhookGet",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/merchants/webhooks/{webhookId}",
+      "operationId": "merchantWebhookUpdate",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/merchants/webhooks/{webhookId}",
+      "operationId": "merchantWebhookDelete",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/webhooks/{webhookId}/rotate-secret",
+      "operationId": "merchantWebhookRotateSecret",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/merchants/webhooks/{webhookId}/deliveries",
+      "operationId": "merchantWebhookDeliveries",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/merchants/webhooks/{webhookId}/deliveries/{deliveryId}/replay",
+      "operationId": "merchantWebhookReplayDelivery",
+      "tags": [
+        "Merchants"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/merchants",
+      "operationId": "adminMerchantsList",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/admin/kyb/queue",
+      "operationId": "adminKybQueue",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/merchants/{merchantId}/approve",
+      "operationId": "adminMerchantApprove",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/merchants/{merchantId}/reject",
+      "operationId": "adminMerchantReject",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/merchants/{merchantId}/suspend",
+      "operationId": "adminMerchantSuspend",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/merchants/{merchantId}/reinstate",
+      "operationId": "adminMerchantReinstate",
+      "tags": [
+        "Admin"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/transactions/export",
+      "operationId": "gatewayReportsTransactionsExport",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/settlements/export",
+      "operationId": "gatewayReportsSettlementsExport",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reports/fees/export",
+      "operationId": "gatewayReportsFeesExport",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/statements",
+      "operationId": "gatewayStatementsList",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/statements/{statementId}/download",
+      "operationId": "gatewayStatementDownload",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gateway/reconciliation/{runId}",
+      "operationId": "gatewayReconciliationRunGet",
+      "tags": [
+        "Gateway"
+      ],
+      "security": [
+        "bearerAuth",
+        "oauth2"
+      ],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/stripe",
+      "operationId": "inboundWebhookStripe",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "409"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/flutterwave",
+      "operationId": "inboundWebhookFlutterwave",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "409"
+      ],
+      "hasIdempotencyKey": false
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/paypal",
+      "operationId": "inboundWebhookPayPal",
+      "tags": [
+        "Webhooks"
+      ],
+      "security": [],
+      "has2xxSchema": true,
+      "responseCodes": [
+        "200",
+        "401",
+        "409"
+      ],
+      "hasIdempotencyKey": false
+    }
+  ]
+}
