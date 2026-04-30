@@ -141,7 +141,7 @@ describe('Phase 6 · Merchant lifecycle — Key rotation + grace', () => {
   });
 
   it('issue key, rotate key, old key still valid during grace', () => {
-    const k1 = l.issueKey('m1', 'sandbox').body;
+    const k1 = (l.issueKey("m1", "sandbox").body as any);
     const now = Date.parse('2026-04-30T00:00:00Z');
     const r = l.rotateKey(k1.id, now);
     expect(r.status).toBe(200);
@@ -158,7 +158,7 @@ describe('Phase 6 · Merchant lifecycle — Key rotation + grace', () => {
   });
 
   it('old key invalid after grace window expires', () => {
-    const k1 = l.issueKey('m1', 'sandbox').body;
+    const k1 = (l.issueKey("m1", "sandbox").body as any);
     const now = Date.parse('2026-04-30T00:00:00Z');
     l.rotateKey(k1.id, now);
 
