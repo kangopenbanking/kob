@@ -34,7 +34,7 @@ if (!fs.existsSync(specPath)) {
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const allow = fs.existsSync(allowExceptionsPath)
   ? JSON.parse(fs.readFileSync(allowExceptionsPath, 'utf8'))
-  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [] };
+  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [], G7: [] };
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
