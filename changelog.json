@@ -5,6 +5,29 @@
   "lastUpdated": "2026-04-30",
   "entries": [
     {
+      "version": "trust-layer-2026-04-30b",
+      "date": "2026-04-30",
+      "type": "docs",
+      "breaking_changes": false,
+      "summary": "Trust-layer follow-up: added /developer/install single-page SDK install reference (Node, Python, PHP, Go at v1.5.0 with public registry + GitHub repo links), and /v1/heartbeat lightweight public uptime probe for status pages and external monitors.",
+      "highlights": [
+        "New public route: /developer/install — copy/paste npm, pip, composer, go-get commands plus init snippets for all four official SDKs.",
+        "New public edge function: heartbeat — minimal sub-50ms JSON ping used by /status and external uptime monitors. Supports GET and HEAD.",
+        "All install commands pinned to SDK v1.5.0 to match curated SDK manifests."
+      ],
+      "additions": [
+        "src/pages/developer/SdkInstallPage.tsx",
+        "supabase/functions/heartbeat/index.ts"
+      ],
+      "deprecations": [],
+      "fixes": [],
+      "standard_citations": [
+        "ORDER P1 — public-first rule (install page anonymous-accessible)",
+        "ORDER P4 — open spec rule (registries linked publicly, no login)",
+        "ORDER P9 — multi-language rule (Node, Python, PHP, Go covered explicitly)"
+      ]
+    },
+    {
       "version": "4.27.0",
       "date": "2026-04-30",
       "type": "minor",

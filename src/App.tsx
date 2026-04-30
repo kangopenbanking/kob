@@ -236,6 +236,7 @@ const SLAMonitorGuide = lazy(() => import("./pages/developer/SLAMonitorGuide"));
 const SLAPage = lazy(() => import("./pages/developer/SLAPage"));
 const ErrorCodesReference = lazy(() => import("./pages/developer/ErrorCodesReference"));
 const RateLimitsGuide = lazy(() => import("./pages/developer/RateLimitsGuide"));
+const SdkInstallPage = lazy(() => import("./pages/developer/SdkInstallPage"));
 const IdempotencyGuide = lazy(() => import("./pages/developer/IdempotencyGuide"));
 const SupportedCurrenciesPage = lazy(() => import("./pages/developer/SupportedCurrenciesPage"));
 const SupportedCountriesPage = lazy(() => import("./pages/developer/SupportedCountriesPage"));
@@ -1089,6 +1090,8 @@ function App() {
               <Route path="authentication/mtls" element={<AuthMtls />} />
               <Route path="sdks" element={<Navigate to="/developer/guides/sdks" replace />} />
               <Route path="downloads" element={<Navigate to="/developer/guides/sdks" replace />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (ORDER P1, P4, P9) */}
+              <Route path="install" element={<SdkInstallPage />} />
               <Route path="guides/sdk-versioning" element={<SdkVersionPinning />} />
               <Route path="guides/pagination-examples" element={<PaginationExamples />} />
               <Route path="webhook-simulator" element={<WebhookEventSimulator />} />
