@@ -1,12 +1,39 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.2** · Last updated: **2026-04-30**
+Current API version: **4.26.3** · Last updated: **2026-04-30**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.26.3 — 2026-04-30
+**Type:** patch · **Breaking changes:** none
+
+Phase 5 — Developer experience hardening: new Merchants documentation hub at /developer/merchants, public Markdown changelog at /CHANGELOG.md generated from changelog.json, and an OpenAPI quality-gate CI script (scripts/openapi-quality-gates.mjs) enforcing 2xx schema, RFC 7807 errors, idempotency on financial mutations, list-endpoint pagination, and webhook signature/dedupe documentation. Baseline allow-list captured per Standing Order 2 (THE RATCHET). info.version bumped to 4.26.2 across openapi.json/yaml + sandbox specs to match the live changelog.
+
+### Highlights
+- Added src/pages/developer/MerchantsDocsHub.tsx — consolidated index of onboarding, KYB, API keys, webhooks (in/out), settlements, refunds, disputes, reconciliation, and funding (ORDER P6 — Complete Content Rule).
+- Added scripts/build-changelog-md.mjs and npm run changelog:md — emits public/CHANGELOG.md and CHANGELOG.md from the JSON source of truth (ORDER P7).
+- Added scripts/openapi-quality-gates.mjs and npm run openapi:gates — CI ratchet enforcing G1 (2xx schema), G2 (webhook signature + dedupe), G3 (Idempotency-Key on financial mutations), G4 (pagination on list endpoints), G5 (RFC 7807 application/problem+json on 4xx/5xx).
+- Captured baseline in scripts/openapi-quality-gates.allow.json — known exceptions only; new violations beyond this set fail CI (Standing Order 2 — THE RATCHET).
+- Synced openapi.json, openapi.yaml, openapi-sandbox.json, openapi-sandbox.yaml info.version to 4.26.2 (no path/operationId/schema changes — Standing Order 1 preserved).
+
+### Standards & citations
+- STANDING ORDER 1 — additive only, no renames
+- STANDING ORDER 2 — ratchet (baseline allow-list, never grow)
+- STANDING ORDER 6 — version gate (patch bump for docs-only changes)
+- ORDER P1 — public first (docs hub publicly accessible)
+- ORDER P4 — open spec rule preserved
+- ORDER P6 — complete content rule (hub page has unique content + topic descriptions, not just nav)
+- ORDER P7 — changelog within 48h
+- RFC 7807 — Problem Details for HTTP APIs (G5 gate)
+
+### Migration notes
+None. All changes are additive UI/docs/CI surface.
 
 ---
 
