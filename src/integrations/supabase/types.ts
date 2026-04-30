@@ -23167,11 +23167,16 @@ export type Database = {
       }
       webhook_inbox: {
         Row: {
+          attempt_count: number
           created_at: string
+          dlq_reason: string | null
           event_id: string | null
           event_type: string | null
+          failed_permanently_at: string | null
           id: string
           is_processed: boolean
+          max_attempts: number
+          next_retry_at: string | null
           payload: Json
           processed_at: string | null
           processing_error: string | null
@@ -23181,11 +23186,16 @@ export type Database = {
           status: string
         }
         Insert: {
+          attempt_count?: number
           created_at?: string
+          dlq_reason?: string | null
           event_id?: string | null
           event_type?: string | null
+          failed_permanently_at?: string | null
           id?: string
           is_processed?: boolean
+          max_attempts?: number
+          next_retry_at?: string | null
           payload: Json
           processed_at?: string | null
           processing_error?: string | null
@@ -23195,11 +23205,16 @@ export type Database = {
           status?: string
         }
         Update: {
+          attempt_count?: number
           created_at?: string
+          dlq_reason?: string | null
           event_id?: string | null
           event_type?: string | null
+          failed_permanently_at?: string | null
           id?: string
           is_processed?: boolean
+          max_attempts?: number
+          next_retry_at?: string | null
           payload?: Json
           processed_at?: string | null
           processing_error?: string | null
@@ -23207,6 +23222,63 @@ export type Database = {
           signature?: string | null
           source?: string
           status?: string
+        }
+        Relationships: []
+      }
+      webhook_inbox_dlq: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          dlq_reason: string
+          event_id: string | null
+          event_type: string | null
+          id: string
+          last_error: string | null
+          moved_to_dlq_at: string
+          original_inbox_id: string | null
+          original_received_at: string | null
+          payload: Json
+          provider: string | null
+          replay_status: string | null
+          replayed_at: string | null
+          signature: string | null
+          source: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          dlq_reason: string
+          event_id?: string | null
+          event_type?: string | null
+          id?: string
+          last_error?: string | null
+          moved_to_dlq_at?: string
+          original_inbox_id?: string | null
+          original_received_at?: string | null
+          payload: Json
+          provider?: string | null
+          replay_status?: string | null
+          replayed_at?: string | null
+          signature?: string | null
+          source: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          dlq_reason?: string
+          event_id?: string | null
+          event_type?: string | null
+          id?: string
+          last_error?: string | null
+          moved_to_dlq_at?: string
+          original_inbox_id?: string | null
+          original_received_at?: string | null
+          payload?: Json
+          provider?: string | null
+          replay_status?: string | null
+          replayed_at?: string | null
+          signature?: string | null
+          source?: string
         }
         Relationships: []
       }
@@ -24064,6 +24136,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      move_webhook_to_dlq: {
+        Args: { p_inbox_id: string; p_reason: string }
+        Returns: string
       }
       notify_subscription_expiry_warning: { Args: never; Returns: undefined }
       pos_adjust_inventory: {
