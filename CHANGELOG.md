@@ -1,12 +1,35 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.6** · Last updated: **2026-04-30**
+Current API version: **4.26.7** · Last updated: **2026-04-30**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.26.7 — 2026-04-30
+**Type:** patch · **Breaking changes:** none
+
+Phase 6 closeout — Final production-readiness run. OpenAPI quality gates G1–G5 pass on 391 operations, all three webhook receivers (Stripe / Flutterwave / PayPal) verified to reject unsigned payloads with 401 invalid_signature on production edge runtime, all five required public docs URLs return 200 on the canonical published origin, and docs/internal/final-report.md captures full evidence including DB migration scope (330 migrations clean), unit test results (431/493 pass; 56 pre-existing mock-chain failures documented), Playwright E2E scaffold readiness, and explicit remaining TODOs.
+
+### Highlights
+- docs/internal/final-report.md — Phase 6 production-readiness report with per-gate evidence, webhook live-probe results, public docs URL probes, and standing-order compliance matrix.
+- Webhook ingestion: stripe / flutterwave / paypal receivers all return 401 invalid_signature to unsigned payloads, proving HMAC + verif-hash + transmission-sig verification are active in production.
+- Public docs URL verification: kob.lovable.app/openapi.json, /openapi.yaml, /developer/api-explorer, /developer/examples, /developer/examples/real-world all 200 OK.
+- Outstanding: user must click Publish to roll the frontend (published origin still on 4.16.4); add SANDBOX_BASE_URL + SANDBOX_API_KEY in GitHub repo secrets to enable live Postman contract job.
+
+### Standards & citations
+- STANDING ORDER 2 — ratchet (gates remain at 0 failures)
+- STANDING ORDER 6 — version gate (patch bump for non-breaking closeout report)
+- STANDING ORDER 7 — five roles active throughout phase 6
+- ORDER P5 — working code rule (live webhook probes confirm production receivers)
+- ORDER P7 — changelog rule (entry filed same day as Phase 6 close)
+
+### Migration notes
+No code action required. User must click Publish/Update in Lovable to roll the frontend (current published apiVersion 4.16.4 → HEAD 4.26.7).
 
 ---
 
