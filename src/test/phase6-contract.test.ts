@@ -36,7 +36,7 @@ describe.each(SPEC_PATHS)('Phase 6 · OpenAPI contract — %s', (rel) => {
     expect(spec.components).toBeTruthy();
   });
 
-  it('every operation declares at least one 2xx response', () => {
+  it('every operation declares at least one 2xx (or 3xx redirect for OAuth-style flows)', () => {
     const offenders: string[] = [];
     for (const [pathName, item] of Object.entries<any>(spec.paths)) {
       for (const method of HTTP_METHODS) {
@@ -44,7 +44,9 @@ describe.each(SPEC_PATHS)('Phase 6 · OpenAPI contract — %s', (rel) => {
         if (!op) continue;
         const codes = Object.keys(op.responses || {});
         const has2xx = codes.some((c) => /^2\d\d$/.test(c) || c === '2XX');
-        if (!has2xx) offenders.push(`${method.toUpperCase()} ${pathName} (${op.operationId || '?'})`);
+        // OAuth2 authorize/redirect-flow endpoints terminate with 302 by RFC 6749 §4.1.2
+        const has3xx = codes.some((c) => c === '302' || c === '303' || c === '307');
+        if (!has2xx && !has3xx) offenders.push(`${method.toUpperCase()} ${pathName} (${op.operationId || '?'})`);
       }
     }
     expect(offenders, `Operations missing 2xx:\n${offenders.join('\n')}`).toEqual([]);
