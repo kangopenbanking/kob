@@ -1,0 +1,87 @@
+name: spec-perf-and-parity
+
+# Slice 5 — Two new ratchets:
+#   1. perf-budget   — runs on every PR + push to main. Blocks bloat or
+#                      accidental floor drops in the OpenAPI spec.
+#   2. deployed-parity — runs on push to main and nightly. Compares the
+#                      repo HEAD spec against the published origin
+#                      (https://kob.lovable.app/openapi.json) and warns
+#                      if they diverge too long.
+#
+# Standing Orders cited:
+#   - ORDER 2 (Ratchet)  — counts may only move up; ceilings catch bloat.
+#   - ORDER 6 (Version)  — deployed-parity catches stale-publish drift.
+#   - ORDER P4 (Open Spec) — published spec must always be valid + current.
+
+on:
+  pull_request:
+    paths:
+      - 'public/openapi.json'
+      - 'public/openapi.yaml'
+      - 'scripts/openapi-perf-budget.*'
+      - 'scripts/openapi-deployed-parity.mjs'
+      - '.github/workflows/spec-perf-and-parity.yml'
+  push:
+    branches: [main]
+  schedule:
+    # Nightly 04:17 UTC — catches stale published spec without dev action.
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  perf-budget:
+    name: OpenAPI Performance Budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run perf budget
+        run: node scripts/openapi-perf-budget.mjs --spec public/openapi.json
+
+  deployed-parity-soft:
+    name: Deployed Spec Parity (PR — soft)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Compare deployed spec to repo (informational)
+        run: |
+          node scripts/openapi-deployed-parity.mjs \
+            --url https://kob.lovable.app/openapi.json \
+            --spec public/openapi.json \
+            --allow-behind \
+            --max-path-delta 999 \
+            --max-op-delta 999 || true
+
+  deployed-parity-strict:
+    name: Deployed Spec Parity (main + nightly — strict)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Compare deployed spec to repo (strict version, lenient counts)
+        # On nightly: still allow `behind` because Publish is manual; only fail
+        # if deployed version is AHEAD of repo (out-of-sync repo). Allow up to
+        # 200 path/op delta to absorb staged-but-unpublished slices.
+        run: |
+          node scripts/openapi-deployed-parity.mjs \
+            --url https://kob.lovable.app/openapi.json \
+            --spec public/openapi.json \
+            --allow-behind \
+            --max-path-delta 200 \
+            --max-op-delta 200
