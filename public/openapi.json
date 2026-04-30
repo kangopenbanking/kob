@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.26.0",
+    "version": "4.26.3",
     "summary": "Unified Open Banking API for Cameroon",
-    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push \u2014 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true \u2014 FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas \u2014 complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints \u2014 universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints \u2014 consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints \u2014 universal paginated envelope. G6: application/problem+json added to all 400 responses \u2014 RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating \u2014 each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv \u00a75.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 \u00a73.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes \u2014 Standing Order 1 (The Lock) preserved; all original field names retained.",
+    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating — each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
     "contact": {
       "name": "Kang Open Banking Support",
@@ -181,19 +181,19 @@
     },
     {
       "name": "Payment Gateway",
-      "description": "Unified payment gateway \u2014 charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation"
+      "description": "Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation"
     },
     {
       "name": "Payment Facilitation",
-      "description": "White-label payment processing \u2014 facilitated charges, settlement calculation and processing"
+      "description": "White-label payment processing — facilitated charges, settlement calculation and processing"
     },
     {
       "name": "Merchant Onboarding",
-      "description": "Merchant lifecycle \u2014 registration, KYB verification, API keys, settlement accounts, webhooks"
+      "description": "Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks"
     },
     {
       "name": "Consumer Tools",
-      "description": "Consumer financial tools \u2014 Piggy Bank (savings goals) and Njangi (group rotation savings)"
+      "description": "Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)"
     },
     {
       "name": "Bank Directory",
@@ -205,19 +205,19 @@
     },
     {
       "name": "Interbank",
-      "description": "Interbank payment engine \u2014 ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)"
+      "description": "Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)"
     },
     {
       "name": "Pay by Bank",
-      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) \u2014 payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
+      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
     },
     {
       "name": "Provider Webhooks (Inbound)",
-      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification \u2014 no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention."
+      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention."
     },
     {
       "name": "Overdraft",
-      "description": "Account overdraft facility \u2014 eligibility, limits, approval, suspension, and reinstatement lifecycle"
+      "description": "Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle"
     },
     {
       "name": "Approval Workflows",
@@ -225,15 +225,15 @@
     },
     {
       "name": "Directory",
-      "description": "Public institution and bank directory \u2014 read-only public endpoints"
+      "description": "Public institution and bank directory — read-only public endpoints"
     },
     {
       "name": "Operational Controls",
-      "description": "Internal operational controls \u2014 teller transactions, withdrawal policies, and staff authorisations"
+      "description": "Internal operational controls — teller transactions, withdrawal policies, and staff authorisations"
     },
     {
       "name": "Standards - ISO 20022",
-      "description": "ISO 20022 message generation and parsing \u2014 pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows."
+      "description": "ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows."
     },
     {
       "name": "Merchants",
@@ -1165,20 +1165,20 @@
           },
           "AccountId": {
             "type": "string",
-            "description": "OBIE alias for the account identifier. Maps to account_id in parent resource context. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for the account identifier. Maps to account_id in parent resource context. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.AccountId"
           },
           "TransactionId": {
             "type": "string",
-            "description": "OBIE alias for transaction_id. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for transaction_id. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.TransactionId"
           },
           "Amount": {
             "type": "string",
             "pattern": "^[0-9]{1,15}$",
-            "description": "OBIE alias for amount. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for amount. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.Amount"
           },
@@ -1196,7 +1196,7 @@
               "KES",
               "ZAR"
             ],
-            "description": "OBIE alias for currency. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for currency. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.Currency"
           },
@@ -1206,29 +1206,29 @@
               "Credit",
               "Debit"
             ],
-            "description": "OBIE alias for type. Maps credit/debit to transaction direction. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for type. Maps credit/debit to transaction direction. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.CreditDebitIndicator"
           },
           "BookingDateTime": {
             "type": "string",
             "format": "date-time",
-            "description": "OBIE alias for booking_date. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for booking_date. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.BookingDateTime"
           },
           "ValueDateTime": {
             "type": "string",
             "format": "date-time",
-            "description": "OBIE alias for value_date. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE alias for value_date. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.ValueDateTime"
           },
           "TransactionInformation": {
             "type": "string",
             "maxLength": 500,
-            "description": "OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
-            "example": "Payment for Invoice INV-2025-001 \u2014 Professional Services",
+            "description": "OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "example": "Payment for Invoice INV-2025-001 — Professional Services",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.TransactionInformation"
           },
@@ -1239,7 +1239,7 @@
               "Pending",
               "Rejected"
             ],
-            "description": "OBIE OBTransaction6 transaction status. Booked = settled, Pending = authorised but not yet settled, Rejected = declined or failed. Deprecated on the primary Transaction schema \u2014 use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
+            "description": "OBIE OBTransaction6 transaction status. Booked = settled, Pending = authorised but not yet settled, Rejected = declined or failed. Deprecated on the primary Transaction schema — use TransactionOBIE for OBIE Read/Write Data API v3.1 consumers.",
             "deprecated": true,
             "x-replacement": "TransactionOBIE.Status"
           }
@@ -4071,7 +4071,7 @@
             "type": "string",
             "maxLength": 500,
             "description": "OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction.",
-            "example": "Payment for Invoice INV-2025-001 \u2014 Professional Services"
+            "example": "Payment for Invoice INV-2025-001 — Professional Services"
           },
           "Status": {
             "type": "string",
@@ -4307,7 +4307,7 @@
         }
       },
       "TooManyRequests": {
-        "description": "Too Many Requests \u2014 rate limit exceeded. See `Retry-After` header for backoff.",
+        "description": "Too Many Requests — rate limit exceeded. See `Retry-After` header for backoff.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/X-RateLimit-Limit"
@@ -4331,7 +4331,7 @@
         }
       },
       "Unauthorized": {
-        "description": "Expired, revoked, or invalid access token (RFC 6750 \u00a73.1).",
+        "description": "Expired, revoked, or invalid access token (RFC 6750 §3.1).",
         "headers": {
           "WWW-Authenticate": {
             "schema": {
@@ -4377,7 +4377,7 @@
           "Monitoring"
         ],
         "summary": "Security posture self-verification",
-        "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 \u2014 S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.",
+        "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 — S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.",
         "operationId": "securityHealthz",
         "security": [],
         "responses": {
@@ -4393,7 +4393,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4467,7 +4467,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4477,7 +4477,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -4576,7 +4576,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4586,7 +4586,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -5430,7 +5430,7 @@
             }
           }
         },
-        "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE \u2014 no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) \u2014 present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
+        "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced."
       }
     },
     "/v1/oauth/introspect": {
@@ -6372,7 +6372,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6382,7 +6382,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -6483,7 +6483,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6493,7 +6493,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -9817,7 +9817,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -9854,7 +9854,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -9864,7 +9864,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -9916,7 +9916,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -9926,7 +9926,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
+                "description": "Boolean (`true`/`false`) — whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -10400,7 +10400,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Page size (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
           },
           {
             "name": "offset",
@@ -10411,7 +10411,7 @@
               "minimum": 0,
               "default": 0
             },
-            "description": "Page offset (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -10684,7 +10684,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -10721,7 +10721,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -10731,7 +10731,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -10783,7 +10783,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -10793,7 +10793,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
+                "description": "Boolean (`true`/`false`) — whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -11013,7 +11013,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Page size (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
           },
           {
             "name": "offset",
@@ -11024,7 +11024,7 @@
               "minimum": 0,
               "default": 0
             },
-            "description": "Page offset (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -11280,7 +11280,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Page size (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
           },
           {
             "name": "offset",
@@ -11291,7 +11291,7 @@
               "minimum": 0,
               "default": 0
             },
-            "description": "Page offset (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -11545,7 +11545,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Page size (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page size (additive — omitting preserves legacy behaviour)."
           },
           {
             "name": "offset",
@@ -11556,7 +11556,7 @@
               "minimum": 0,
               "default": 0
             },
-            "description": "Page offset (additive \u2014 omitting preserves legacy behaviour)."
+            "description": "Page offset (additive — omitting preserves legacy behaviour)."
           }
         ],
         "responses": {
@@ -13261,7 +13261,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -13289,7 +13289,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -13299,7 +13299,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -13351,7 +13351,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -13361,7 +13361,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
+                "description": "Boolean (`true`/`false`) — whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -17131,7 +17131,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -17162,7 +17162,7 @@
             }
           },
           "403": {
-            "description": "Forbidden \u2014 consent does not include savings accounts",
+            "description": "Forbidden — consent does not include savings accounts",
             "content": {
               "application/json": {
                 "schema": {
@@ -17183,7 +17183,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -19508,7 +19508,7 @@
             }
           }
         },
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release.",
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release.",
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)"
       }
@@ -19767,7 +19767,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/mobile-money/verify": {
@@ -20000,7 +20000,7 @@
         ],
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/mobile-money/to-bank": {
@@ -20254,7 +20254,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/flutterwave/bank-transfer": {
@@ -20527,7 +20527,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/flutterwave/banks": {
@@ -20767,7 +20767,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/flutterwave/verify-bank": {
@@ -20991,7 +20991,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -21265,7 +21265,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: stripe)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/stripe/confirm-payment": {
@@ -21506,7 +21506,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: stripe)",
-        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
+        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. "
       }
     },
     "/v1/banking/bulk-transfers": {
@@ -24455,7 +24455,7 @@
           }
         },
         "deprecated": true,
-        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/pacs008/generate"
       }
@@ -24703,7 +24703,7 @@
           }
         },
         "deprecated": true,
-        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/camt053/parse"
       }
@@ -24935,7 +24935,7 @@
           }
         },
         "deprecated": true,
-        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/pacs008/generate"
       }
@@ -25994,7 +25994,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -26004,7 +26004,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -34384,7 +34384,7 @@
             }
           },
           "401": {
-            "description": "Unauthorised \u2014 a valid bearer token is required to download the plugin.",
+            "description": "Unauthorised — a valid bearer token is required to download the plugin.",
             "content": {
               "application/json": {
                 "schema": {
@@ -46859,7 +46859,7 @@
                   },
                   "bank_name": {
                     "type": "string",
-                    "example": "Soci\u00e9t\u00e9 G\u00e9n\u00e9rale Cameroun"
+                    "example": "Société Générale Cameroun"
                   },
                   "amount": {
                     "type": "string",
@@ -47974,7 +47974,7 @@
           "Payment Gateway"
         ],
         "summary": "Score transaction risk",
-        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0\u2013100 risk score, flags, and recommended action (allow | flag_for_review | block).",
+        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0–100 risk score, flags, and recommended action (allow | flag_for_review | block).",
         "operationId": "gatewayRiskScore",
         "security": [
           {
@@ -51569,7 +51569,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -58483,7 +58483,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "HMAC secret \u2014 shown once"
+                      "description": "HMAC secret — shown once"
                     },
                     "status": {
                       "type": "string"
@@ -59204,7 +59204,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -59234,7 +59234,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -76863,7 +76863,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "whsec_... \u2014 shown only on creation"
+                      "description": "whsec_... — shown only on creation"
                     },
                     "events": {
                       "type": "array",
@@ -78008,7 +78008,7 @@
           "Webhooks"
         ],
         "summary": "Replay a single webhook delivery",
-        "description": "Re-send the original payload of a previously attempted delivery to the same endpoint. A new delivery record is created (one-shot, no automatic retry) so the original audit trail is preserved. Useful when a downstream service was temporarily unavailable. Justification: Stripe webhook reliability parity; FAPI-1.0-Adv \u00a76.2 (delivery accountability).",
+        "description": "Re-send the original payload of a previously attempted delivery to the same endpoint. A new delivery record is created (one-shot, no automatic retry) so the original audit trail is preserved. Useful when a downstream service was temporarily unavailable. Justification: Stripe webhook reliability parity; FAPI-1.0-Adv §6.2 (delivery accountability).",
         "operationId": "webhookV2ReplayDelivery",
         "security": [
           {
@@ -86261,7 +86261,7 @@
           "Merchant Onboarding"
         ],
         "summary": "Rotate webhook signing secret",
-        "description": "Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once \u2014 store it securely.",
+        "description": "Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once — store it securely.",
         "operationId": "rotateMerchantWebhookSecret",
         "parameters": [
           {
@@ -86300,7 +86300,7 @@
                         },
                         "secret": {
                           "type": "string",
-                          "description": "New webhook signing secret \u2014 shown once only"
+                          "description": "New webhook signing secret — shown once only"
                         }
                       }
                     },
@@ -86328,7 +86328,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -86396,7 +86396,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -86518,7 +86518,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -86675,7 +86675,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -86761,7 +86761,7 @@
           "Provider Webhooks (Inbound)"
         ],
         "summary": "PayPal inbound webhook",
-        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API \u2014 not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` \u2192 funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` \u2192 auto-captures PayPal order\n- `PAYOUTS-ITEM.*` \u2192 payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post\n\n**PayPal Webhook Request Headers (present on every delivery):**\n\n| Header | Description |\n|--------|-------------|\n| `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |\n| `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |\n| `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |\n| `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |\n| `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |\n\n**Manual Verification Algorithm (alternative to API-based verification):**\n1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)\n2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`\n3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`\n4. Reject any request where verification fails \u2014 return HTTP 400 to halt retries\n5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically",
+        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post\n\n**PayPal Webhook Request Headers (present on every delivery):**\n\n| Header | Description |\n|--------|-------------|\n| `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |\n| `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |\n| `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |\n| `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |\n| `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |\n\n**Manual Verification Algorithm (alternative to API-based verification):**\n1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)\n2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`\n3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`\n4. Reject any request where verification fails — return HTTP 400 to halt retries\n5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically",
         "operationId": "receivePaypalWebhook",
         "security": [],
         "requestBody": {
@@ -86825,7 +86825,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -87087,7 +87087,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -87139,7 +87139,7 @@
             }
           },
           "429": {
-            "description": "Too Many Requests \u2014 rate limit exceeded.",
+            "description": "Too Many Requests — rate limit exceeded.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/RetryAfter"
@@ -87283,7 +87283,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 invalid input data",
+            "description": "Bad Request — invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -87474,7 +87474,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 invalid input data",
+            "description": "Bad Request — invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -87665,7 +87665,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 invalid input data",
+            "description": "Bad Request — invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -87856,7 +87856,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 invalid input data",
+            "description": "Bad Request — invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -88047,7 +88047,7 @@
             }
           },
           "400": {
-            "description": "Bad Request \u2014 invalid input data",
+            "description": "Bad Request — invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -88199,7 +88199,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -88299,7 +88299,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -88376,7 +88376,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -88433,7 +88433,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 validation failed or malformed input.",
+            "description": "Bad request — validation failed or malformed input.",
             "content": {
               "application/json": {
                 "schema": {
@@ -88638,7 +88638,7 @@
           "Certificates"
         ],
         "summary": "Get a certificate by ID",
-        "description": "Returns metadata for a registered TPP certificate (subject DN, fingerprint, expiry, status). Justification: eIDAS / FAPI 1.0 Advanced \u00a75.2.2.",
+        "description": "Returns metadata for a registered TPP certificate (subject DN, fingerprint, expiry, status). Justification: eIDAS / FAPI 1.0 Advanced §5.2.2.",
         "operationId": "getCertificate",
         "security": [
           {
@@ -88713,7 +88713,7 @@
           "OAuth"
         ],
         "summary": "Dynamic Client Registration (RFC 7591)",
-        "description": "Registers a new OAuth2/OIDC client using a signed Software Statement Assertion (SSA) JWT. Justification: RFC 7591, FAPI-CIBA \u00a75.",
+        "description": "Registers a new OAuth2/OIDC client using a signed Software Statement Assertion (SSA) JWT. Justification: RFC 7591, FAPI-CIBA §5.",
         "operationId": "oauthDynamicClientRegister",
         "requestBody": {
           "required": true,
@@ -88809,7 +88809,7 @@
           "OAuth"
         ],
         "summary": "JWKS (well-known alias)",
-        "description": "Alias for `/v1/jwks` advertised by OIDC discovery. Returns the JSON Web Key Set used to verify ID tokens and signed request objects. Justification: RFC 8414 \u00a73.",
+        "description": "Alias for `/v1/jwks` advertised by OIDC discovery. Returns the JSON Web Key Set used to verify ID tokens and signed request objects. Justification: RFC 8414 §3.",
         "operationId": "getJwksWellKnown",
         "responses": {
           "200": {
@@ -88839,7 +88839,7 @@
           "OAuth"
         ],
         "summary": "UserInfo (OIDC alias)",
-        "description": "Alias for `/v1/oauth/userinfo` advertised by OIDC discovery. Returns claims about the authenticated end-user. Justification: OpenID Connect Core \u00a75.3.",
+        "description": "Alias for `/v1/oauth/userinfo` advertised by OIDC discovery. Returns claims about the authenticated end-user. Justification: OpenID Connect Core §5.3.",
         "operationId": "getUserInfoAlias",
         "security": [
           {
@@ -89447,7 +89447,7 @@
                   },
                   "mapping_json": {
                     "type": "object",
-                    "description": "Column\u2192canonical-field mapping with optional transforms (trim, uppercase, parseDecimal, parsePhone, maskAccount)"
+                    "description": "Column→canonical-field mapping with optional transforms (trim, uppercase, parseDecimal, parsePhone, maskAccount)"
                   },
                   "is_active": {
                     "type": "boolean",
@@ -90182,7 +90182,7 @@
         ],
         "summary": "Get API key",
         "operationId": "merchantApiKeyGet",
-        "description": "Retrieve metadata for a single API key (never the plaintext secret \u2014 secrets are shown one-time at creation per cryptographic-and-api-key-governance).",
+        "description": "Retrieve metadata for a single API key (never the plaintext secret — secrets are shown one-time at creation per cryptographic-and-api-key-governance).",
         "security": [
           {
             "bearerAuth": []
@@ -90290,7 +90290,7 @@
         ],
         "summary": "Rotate API key",
         "operationId": "merchantApiKeyRotate",
-        "description": "Rotate the secret for an existing API key. Returns the new plaintext secret exactly once. The previous secret is revoked immediately. Justification: NIST SP 800-57 Part 1 \u00a75.3 (cryptoperiod bounding).",
+        "description": "Rotate the secret for an existing API key. Returns the new plaintext secret exactly once. The previous secret is revoked immediately. Justification: NIST SP 800-57 Part 1 §5.3 (cryptoperiod bounding).",
         "security": [
           {
             "bearerAuth": []
@@ -90335,7 +90335,7 @@
                     },
                     "secret_key": {
                       "type": "string",
-                      "description": "Plaintext secret \u2014 shown ONCE; store securely."
+                      "description": "Plaintext secret — shown ONCE; store securely."
                     },
                     "rotated_at": {
                       "type": "string",
@@ -90606,7 +90606,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "New HMAC secret \u2014 shown ONCE."
+                      "description": "New HMAC secret — shown ONCE."
                     },
                     "rotated_at": {
                       "type": "string",
@@ -91841,7 +91841,7 @@
         ],
         "summary": "Inbound Stripe webhook receiver",
         "operationId": "inboundWebhookStripe",
-        "description": "Public endpoint that receives webhook callbacks from Stripe. Verifies signature via the `stripe-signature` header(s) (HMAC-SHA256 over `t=<timestamp>.<rawBody>`). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Stripe merchant dashboard. Justification: Stripe API reference \u2014 Webhook signatures (constructEvent).",
+        "description": "Public endpoint that receives webhook callbacks from Stripe. Verifies signature via the `stripe-signature` header(s) (HMAC-SHA256 over `t=<timestamp>.<rawBody>`). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Stripe merchant dashboard. Justification: Stripe API reference — Webhook signatures (constructEvent).",
         "security": [],
         "parameters": [
           {
@@ -91895,7 +91895,7 @@
         ],
         "summary": "Inbound Flutterwave webhook receiver",
         "operationId": "inboundWebhookFlutterwave",
-        "description": "Public endpoint that receives webhook callbacks from Flutterwave. Verifies signature via the `verif-hash` header(s) (static secret comparison). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Flutterwave merchant dashboard. Justification: Flutterwave Webhooks documentation \u00a7Verifying webhook requests.",
+        "description": "Public endpoint that receives webhook callbacks from Flutterwave. Verifies signature via the `verif-hash` header(s) (static secret comparison). Deduplicates by provider event ID via `webhook_inbox(source,event_id)` UNIQUE index. Stores the raw event and processes it asynchronously, mapping outcomes to KOB charge / refund / payout / funding-intent state. This URL is configured in the Flutterwave merchant dashboard. Justification: Flutterwave Webhooks documentation §Verifying webhook requests.",
         "security": [],
         "parameters": [
           {
@@ -92031,7 +92031,7 @@
     }
   },
   "externalDocs": {
-    "description": "Kang Open Banking Developer Portal \u2014 guides, SDKs, sandbox, security & compliance",
+    "description": "Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance",
     "url": "https://kangopenbanking.com/developer"
   },
   "x-api-standards": {
@@ -92076,9 +92076,9 @@
   "x-error-catalog": {
     "envelope": {
       "error": "Machine-readable error type (e.g. invalid_request_error, authentication_error, rate_limit_error)",
-      "error_code": "Domain-prefixed code (AUTH_001, PAY_003, LED_002, \u2026)",
+      "error_code": "Domain-prefixed code (AUTH_001, PAY_003, LED_002, …)",
       "message": "Human-readable description",
-      "error_id": "Trace id \u2014 include in support tickets",
+      "error_id": "Trace id — include in support tickets",
       "timestamp": "ISO 8601",
       "details": "Optional field-level validation errors"
     },
@@ -92116,7 +92116,7 @@
       "Dashboard banner",
       "X-API-Deprecation header"
     ],
-    "version_strategy": "Path-based major (/v1, /v2). Minor & patch are backwards compatible. Major version supported \u2265 12 months after successor GA.",
+    "version_strategy": "Path-based major (/v1, /v2). Minor & patch are backwards compatible. Major version supported ≥ 12 months after successor GA.",
     "backwards_compat_rules": [
       "Never remove a documented field from a response without major version bump",
       "Never tighten a request schema in-place",
@@ -92159,7 +92159,7 @@
       "Retry-After"
     ],
     "error_status": 429,
-    "error_format": "application/problem+json (RFC 7807) \u2014 see RateLimitError schema"
+    "error_format": "application/problem+json (RFC 7807) — see RateLimitError schema"
   },
   "x-sla": {
     "uptime_target": "99.95%",

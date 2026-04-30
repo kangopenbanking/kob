@@ -75,6 +75,7 @@ const navSections = [
       { title: "Developer Home", path: "/developer" },
       { title: "Getting Started", path: "/developer/getting-started" },
       { title: "Changelog", path: "/developer/changelog" },
+      { title: "Changelog (Markdown)", path: "/CHANGELOG.md", external: true },
       { title: "Forum", path: "/developer/forum" },
       { title: "Widgets SDK", path: "/developer/widgets" },
       { title: "Test Report", path: "/developer/test-report" },
@@ -129,6 +130,7 @@ const navSections = [
     title: "Payment Gateway",
     icon: CreditCard,
     items: [
+      { title: "Merchants Hub", path: "/developer/merchants" },
       { title: "Quickstart", path: "/developer/gateway/quickstart" },
       { title: "Charges", path: "/developer/gateway/charges" },
       { title: "Refunds", path: "/developer/gateway/refunds" },
@@ -525,13 +527,25 @@ export function PublicDeveloperLayout({ children }: PublicDeveloperLayoutProps) 
                   <SidebarMenu>
                     {section.items.map((item) => {
                       const isLocked = !isAuthenticated && (item as any).protected;
+                      const isExternal = !!(item as any).external;
                       return (
                         <SidebarMenuItem key={item.path}>
                           <SidebarMenuButton asChild isActive={isActivePath(item.path)}>
-                            <Link to={isLocked ? "/auth" : item.path} className="flex items-center justify-between">
-                              <span className={isLocked ? "text-muted-foreground" : ""}>{item.title}</span>
-                              {isLocked && <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />}
-                            </Link>
+                            {isExternal ? (
+                              <a
+                                href={isLocked ? "/auth" : item.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between"
+                              >
+                                <span>{item.title}</span>
+                              </a>
+                            ) : (
+                              <Link to={isLocked ? "/auth" : item.path} className="flex items-center justify-between">
+                                <span className={isLocked ? "text-muted-foreground" : ""}>{item.title}</span>
+                                {isLocked && <Lock className="h-3 w-3 text-muted-foreground/60 ml-1 flex-shrink-0" />}
+                              </Link>
+                            )}
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
