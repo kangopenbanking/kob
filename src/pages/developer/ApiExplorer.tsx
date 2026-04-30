@@ -512,6 +512,9 @@ const ApiExplorer = () => {
               <TabsTrigger value="tryit">
                 <PlayCircle className="mr-1.5 h-3.5 w-3.5" /> Try it out
               </TabsTrigger>
+              <TabsTrigger value="webhooks">
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Webhook simulator
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="reference" className="m-0">
