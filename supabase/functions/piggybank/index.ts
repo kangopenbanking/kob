@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { recordAuditEvent } from '../_shared/audit-trail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -236,6 +237,14 @@ async function handleCancel(req: Request, body: any) {
   // Recompute credit score
   let scoreResult = null;
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
+
+  await recordAuditEvent({
+    action_type: 'piggybank_cancelled',
+    entity_type: 'piggybank_plan',
+    entity_id: plan_id,
+    performed_by: user.id,
+    details: { plan_name: plan.plan_name, plan_type: plan.plan_type, credit_impact: -5, new_score: scoreResult?.score ?? null },
+  });
 
   return new Response(JSON.stringify({ success: true, credit_impact: -5, new_score: scoreResult?.score || null }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
