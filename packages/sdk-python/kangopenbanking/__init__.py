@@ -7,12 +7,14 @@ from .types import (
     PayByBankIntent, PayByBankStatus,
     ChargeChannel, ChargeStatus,
 )
+from .phase3 import MerchantOps
 
-__version__ = "1.2.0"
+__version__ = "1.4.0"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",
     "Charge", "Refund", "Payout", "FeeEstimate",
     "PayByBankIntent", "PayByBankStatus",
     "ChargeChannel", "ChargeStatus",
+    "MerchantOps",
 ]
