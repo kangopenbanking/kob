@@ -10,6 +10,8 @@
  *  G5 — every 4xx/5xx response uses application/problem+json (RFC 7807) with ProblemDetails
  *  G6 — every state-mutating operation (POST/PUT/PATCH/DELETE) declares 409 + 429
  *       (RFC 7231 §6.5.8 Conflict, RFC 6585 §4 Too Many Requests)
+ *  G7 — every DELETE operation accepts an Idempotency-Key header
+ *       (draft-ietf-httpapi-idempotency-key-header §2)
  *
  * Usage:   node scripts/openapi-quality-gates.mjs [--spec public/openapi.json]
  * Exit 0 = all gates pass. Exit 1 = at least one gate failed.
