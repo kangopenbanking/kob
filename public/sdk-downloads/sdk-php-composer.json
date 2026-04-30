@@ -1,0 +1,32 @@
+{
+  "name": "kangopenbanking/sdk",
+  "description": "Official Kang Open Banking (KOB) PHP SDK with Laravel support",
+  "type": "library",
+  "license": "MIT",
+  "version": "1.2.0",
+  "require": {
+    "php": ">=8.1",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "KangOpenBanking\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "KangOpenBanking\\Laravel\\KOBServiceProvider"
+      ],
+      "aliases": {
+        "KOB": "KangOpenBanking\\Laravel\\Facades\\KOB"
+      }
+    }
+  },
+  "keywords": ["open-banking", "cameroon", "xaf", "fintech", "aisp", "pisp", "payment-gateway", "laravel"],
+  "homepage": "https://kangopenbanking.com",
+  "support": {
+    "docs": "https://kangopenbanking.com/developer/guides/sdks",
+    "email": "developers@kangopenbanking.com"
+  }
+}

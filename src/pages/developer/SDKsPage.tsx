@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -773,12 +774,12 @@ export default function SDKsPage() {
             </p>
           </div>
           <a
-            href="https://github.com/kangfinance"
+            href="/openapi.json"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
           >
-            View all repositories <ExternalLink className="h-3.5 w-3.5" />
+            Browse the OpenAPI spec <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
 
@@ -833,14 +834,14 @@ export default function SDKsPage() {
 
                   <div className="flex gap-2 mt-auto">
                     <Button variant="outline" className="flex-1" asChild>
-                      <a href={s.repo} target="_blank" rel="noopener noreferrer">
-                        <GitBranch className="mr-2 h-4 w-4" /> GitHub
-                      </a>
+                      <Link to={`/developer/guides/sdks/${s.key}`}>
+                        <BookOpen className="mr-2 h-4 w-4" /> Open library docs
+                      </Link>
                     </Button>
                     <Button variant="outline" className="flex-1" asChild>
-                      <a href={s.registry} target="_blank" rel="noopener noreferrer">
-                        <Package className="mr-2 h-4 w-4" /> {s.registryLabel}
-                      </a>
+                      <Link to={`/developer/guides/sdks/${s.key}#examples`}>
+                        <Code className="mr-2 h-4 w-4" /> View examples
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

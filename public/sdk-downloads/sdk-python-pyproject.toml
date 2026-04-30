@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kangopenbanking"
+version = "1.2.0"
+description = "Official Kang Open Banking (KOB) Python SDK"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = ["httpx>=0.24.0"]
+keywords = ["open-banking", "cameroon", "xaf", "fintech", "aisp", "pisp"]
+
+[project.urls]
+Homepage = "https://kangopenbanking.com"
+Documentation = "https://kangopenbanking.com/developer"
+Repository = "https://github.com/kangopenbanking/sdk-python"
+Issues = "https://github.com/kangopenbanking/sdk-python/issues"
+Changelog = "https://kangopenbanking.com/changelog.json"
