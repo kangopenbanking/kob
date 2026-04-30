@@ -30,6 +30,8 @@ import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { API_CONFIG } from "@/config/api";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { CLIENT_LIBRARIES, type ClientLanguageId } from "@/components/developer/ClientLibraryLogos";
+import { generateForLanguage } from "@/components/developer/sdkCodeGenerator";
 
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT
 // /developer/api-explorer must remain publicly accessible (ORDER P1, P4).
