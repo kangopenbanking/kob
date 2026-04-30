@@ -214,6 +214,52 @@ Deno.serve(async (req) => {
       return json({ merchant_id, kyb_status: 'under_review', merchant_status: 'UNDER_REVIEW' });
     }
 
+    // ─── SUSPEND / REINSTATE — Admin lifecycle controls (Phase 3, additive) ───
+    if (action === 'suspend' || action === 'reinstate') {
+      if (!isAdmin) return rfc7807('forbidden', 'Forbidden', 403, 'Only admins can change merchant lifecycle');
+      const { reason_code, reason } = body as { reason_code?: string; reason?: string };
+      if (action === 'suspend' && !reason_code) {
+        return rfc7807('validation_error', 'Validation Error', 400, 'reason_code is required to suspend');
+      }
+      const newStatus = action === 'suspend' ? 'SUSPENDED' : (merchant.kyb_status === 'verified' ? 'VERIFIED' : 'UNDER_REVIEW');
+      const { error } = await supabase.from('gateway_merchants').update({
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        metadata: {
+          ...(merchant.metadata || {}),
+          last_lifecycle_action: action,
+          last_lifecycle_reason_code: reason_code ?? null,
+          last_lifecycle_reason: reason ?? null,
+          last_lifecycle_by: user.id,
+          last_lifecycle_at: new Date().toISOString(),
+        },
+      }).eq('id', merchant_id);
+      if (error) return rfc7807('lifecycle_failed', 'Lifecycle Update Failed', 500, error.message);
+
+      await supabase.from('audit_logs').insert({
+        action_type: `merchant_${action}`,
+        entity_type: 'gateway_merchant',
+        entity_id: merchant_id,
+        performed_by: user.id,
+        details: { reason_code, reason, previous_status: merchant.status },
+      });
+
+      if (merchant.user_id) {
+        await notifyUser(supabase, {
+          user_id: merchant.user_id,
+          type: action === 'suspend' ? 'warning' : 'info',
+          title: action === 'suspend' ? 'Merchant Account Suspended' : 'Merchant Account Reinstated',
+          message: action === 'suspend'
+            ? `Your merchant account "${merchant.business_name}" has been suspended. Reason: ${reason_code}${reason ? ' — ' + reason : ''}.`
+            : `Your merchant account "${merchant.business_name}" has been reinstated.`,
+          icon: 'shield',
+          metadata: { merchant_id, reason_code, reason },
+        });
+      }
+
+      return json({ merchant_id, status: newStatus, action, reason_code: reason_code ?? null });
+    }
+
     return rfc7807('invalid_action', 'Invalid Action', 400, `Unknown action: ${action}`);
   } catch (err: any) {
     const errorId = crypto.randomUUID().slice(0, 8);
