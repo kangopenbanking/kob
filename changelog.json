@@ -1,9 +1,37 @@
 {
-  "apiVersion": "4.26.9",
+  "apiVersion": "4.26.10",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.10",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Slice 5 — New CI ratchets for spec performance and deployed-vs-repo parity. Added scripts/openapi-perf-budget.mjs (raw + gzip ceilings, ratcheted floor counts for paths/operations/schemas) and scripts/openapi-deployed-parity.mjs (compares HEAD spec to the public origin). Wired both into .github/workflows/spec-perf-and-parity.yml: perf budget runs on every PR; deployed parity runs as a soft check on PRs and as a strict scheduled nightly job at 04:17 UTC. Baseline locked at 333 paths / 391 operations / 59 schemas / 110 KB gzip on api version 4.26.9. Patch version bump documents the new ratchets — no spec contract changes.",
+      "highlights": [
+        "scripts/openapi-perf-budget.mjs — gzip ceiling 200 KB, ops ceiling 600, schemas ceiling 150, ratchet floors locked to current 333 / 391 / 59.",
+        "scripts/openapi-deployed-parity.mjs — fails when deployed spec is AHEAD of repo (out-of-sync warning), warns when behind, and bounds path/operation deltas.",
+        ".github/workflows/spec-perf-and-parity.yml — perf-budget job mandatory on PRs touching the spec; deployed-parity-strict runs nightly + on push to main.",
+        "Verified regression detection: removing 5 paths from a copy of the spec correctly triggers `paths.count FLOOR breached` and exit code 1."
+      ],
+      "additions": [
+        "scripts/openapi-perf-budget.mjs",
+        "scripts/openapi-perf-budget.json (baseline budget)",
+        "scripts/openapi-deployed-parity.mjs",
+        ".github/workflows/spec-perf-and-parity.yml"
+      ],
+      "deprecations": [],
+      "fixes": [],
+      "standard_citations": [
+        "STANDING ORDER 2 — ratchet (path/op/schema floors locked at current values)",
+        "STANDING ORDER 4 — surgeon rule (additive: new scripts + workflow, no spec changes)",
+        "STANDING ORDER 6 — version gate (patch bump 4.26.9 → 4.26.10 for governance ratchets)",
+        "ORDER P4 — open spec rule (deployed parity ensures the public origin stays current)"
+      ],
+      "migration_notes": "No client action. Maintainers: when adding new endpoints, the perf-budget floors auto-fail until you bump minCount in scripts/openapi-perf-budget.json — bump them in the same PR that adds the endpoints."
+    },
     {
       "version": "4.26.9",
       "date": "2026-04-30",
