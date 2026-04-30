@@ -8,11 +8,15 @@ The KOB sandbox lets you test all API functionality without real money.
 
 | Feature | Sandbox | Production |
 |---|---|---|
-| API Key prefix | `sk_test_*` (secret) / `pk_test_*` (publishable) | `sk_live_*` (secret) / `pk_live_*` (publishable) |
-| Real money | ❌ | ✅ |
-| Webhooks | ✅ Simulated | ✅ Real |
-| Rate limits | Same | Same |
-| Base URL | Same | Same |
+| Base URL | `https://sandbox-api.kangopenbanking.com/v1` | `https://api.kangopenbanking.com/v1` |
+| API Key prefix | `sk_test_*` / `pk_test_*` / `sbx_*` | `sk_live_*` / `pk_live_*` |
+| Real money movement | No | Yes |
+| Provider calls | Mocked (deterministic test numbers/cards) | Real Stripe / Flutterwave / PayPal / MTN / Orange |
+| Webhooks | Simulated; deterministic event ordering | Real provider signatures, real timing jitter |
+| Rate limits | Same envelope (per-key) | Same envelope (per-key) |
+| KYB enforcement | Bypassed for test merchants | Strict — production keys gated on KYB approval |
+| Settlement | Instant book to test wallet | Real settlement windows (T+1 / T+2 per channel) |
+| Persistence | Sandbox data isolated; resettable from Sandbox Console | Permanent, audited |
 
 ## Test Data
 

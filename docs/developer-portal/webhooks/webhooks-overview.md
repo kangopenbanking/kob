@@ -85,17 +85,30 @@ def verify_webhook(payload: dict, signature: str, secret: str) -> bool:
 
 ## Retry Policy
 
-| Attempt | Delay |
-|---|---|
-| 1 | Immediate |
-| 2 | 30 seconds |
-| 3 | 2 minutes |
-| 4 | 10 minutes |
-| 5 | 30 minutes |
-| 6 | 2 hours |
-| 7 | 6 hours |
+KOB retries failed webhook deliveries up to **7 times** with capped exponential
+backoff. The schedule below is the canonical contract — the runtime worker
+(`gateway-webhook-deliver-v2`) and the inbound retry worker
+(`webhook-inbox-retry-worker`) both honour it.
 
-After 7 failed attempts, the webhook is marked as failed. You can manually retry from the Merchant Portal.
+| Attempt | Delay | Cumulative |
+|---|---|---|
+| 1 | Immediate | 0 |
+| 2 | 1 minute | ~1 min |
+| 3 | 5 minutes | ~6 min |
+| 4 | 30 minutes | ~36 min |
+| 5 | 2 hours | ~2.5 h |
+| 6 | 8 hours | ~10.5 h |
+| 7 | 24 hours | ~34.5 h |
+
+After 7 failed attempts the event is moved to the **Dead-Letter Queue (DLQ)**.
+DLQ entries are retained for 30 days and can be replayed manually:
+
+- **Merchant self-service:** `POST /v1/webhooks/v2/endpoints/{endpointId}/replay`
+- **Operator replay:** Admin Portal → Webhook Deliveries (calls
+  `admin-webhook-dlq-replay` — every replay is written to `audit_logs`).
+
+See [Webhook Retry & DLQ Policy](../reference/webhook-retry-policy.md) for full headers,
+backoff guarantees, and replay semantics.
 
 ## Requirements
 

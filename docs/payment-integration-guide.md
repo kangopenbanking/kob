@@ -2,24 +2,30 @@
 
 ## Overview
 
-KOB (Kang Open Banking) supports three payment methods:
-- **Mobile Money** (via Flutterwave) - Multi-currency mobile payments
-- **Credit/Debit Cards** (via Stripe) - International card payments
-- **Bank Transfers** (via Flutterwave) - Direct bank account transfers
+KOB (Kang Open Banking) is an **XAF-native** gateway for the CEMAC region.
+Cameroon (XAF) is the default currency and country for every example below.
+Other currencies are supported for cross-border flows but should be treated
+as opt-in.
+
+Supported payment methods:
+- **Mobile Money** (via Flutterwave) - MTN MoMo, Orange Money — XAF first
+- **Credit/Debit Cards** (via Stripe) - International card payments in XAF
+- **Bank Transfers** (via Flutterwave) - CEMAC bank rails (RIB), plus regional fallbacks
 
 ---
 
 ## 1. Mobile Money Payments
 
 ### Supported Currencies
-- **XAF** - Central African CFA Franc (Default)
-- **NGN** - Nigerian Naira
-- **GHS** - Ghanaian Cedi
-- **KES** - Kenyan Shilling
-- **UGX** - Ugandan Shilling
-- **TZS** - Tanzanian Shilling
-- **ZAR** - South African Rand
-- **RWF** - Rwandan Franc
+- **XAF** - Central African CFA Franc (Cameroon, **default**)
+- **XOF** - West African CFA Franc
+- GHS - Ghanaian Cedi
+- KES - Kenyan Shilling
+- UGX - Ugandan Shilling
+- TZS - Tanzanian Shilling
+- ZAR - South African Rand
+- RWF - Rwandan Franc
+- NGN - Nigerian Naira (cross-border only; not the primary KOB market)
 
 ### Supported Providers
 - MTN Mobile Money
@@ -169,13 +175,14 @@ Stripe sends webhooks to `stripe-confirm-payment` endpoint for payment status up
 Fetched dynamically based on selected currency/country via Flutterwave API.
 
 ### Supported Currencies
-- **XAF** - Central African CFA Franc (Cameroon banks)
-- **NGN** - Nigerian Naira (Nigerian banks)
-- **GHS** - Ghanaian Cedi (Ghanaian banks)
-- **KES** - Kenyan Shilling (Kenyan banks)
-- **UGX** - Ugandan Shilling (Ugandan banks)
-- **TZS** - Tanzanian Shilling (Tanzanian banks)
-- **ZAR** - South African Rand (South African banks)
+- **XAF** - Central African CFA Franc (Cameroon / CEMAC banks, **default**)
+- **XOF** - West African CFA Franc (UEMOA banks)
+- GHS - Ghanaian Cedi (Ghanaian banks)
+- KES - Kenyan Shilling (Kenyan banks)
+- UGX - Ugandan Shilling (Ugandan banks)
+- TZS - Tanzanian Shilling (Tanzanian banks)
+- ZAR - South African Rand (South African banks)
+- NGN - Nigerian Naira (cross-border only; not the primary KOB market)
 
 ### Transaction Flow
 
@@ -263,18 +270,14 @@ Fetched dynamically based on selected currency/country via Flutterwave API.
 Transfer funds from mobile money wallets directly to bank accounts.
 
 **Supported Currencies:**
-- XAF (Central African CFA Franc) - Default
-- NGN (Nigerian Naira)
-- GHS (Ghanaian Cedi)
-- KES (Kenyan Shilling)
-- UGX (Ugandan Shilling)
-- TZS (Tanzanian Shilling)
-- ZAR (South African Rand)
-- RWF (Rwandan Franc)
+- XAF (Central African CFA Franc) — **Default**
+- XOF (West African CFA Franc)
+- GHS, KES, UGX, TZS, ZAR, RWF (regional)
+- NGN (cross-border only)
 
 **Provider Support:**
-- **MTN**: XAF, NGN, GHS, UGX, RWF, ZAR
-- **Orange Money**: XAF, NGN, GHS
+- **MTN**: XAF (primary), XOF, GHS, UGX, RWF, ZAR, NGN
+- **Orange Money**: XAF (primary), XOF, GHS, NGN
 
 **API Endpoint:**
 ```
