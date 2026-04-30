@@ -305,6 +305,8 @@ const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegi
 const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
 // Phase 3 — additive public guide for inbound provider webhooks
 const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
+// Phase 5 — additive merchants documentation hub
+const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
