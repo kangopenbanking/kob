@@ -118,6 +118,16 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
       }
     }
 
+    // G6 — Conflict + Too Many Requests on every mutation
+    if (['post', 'put', 'patch', 'delete'].includes(method)) {
+      if (!op.responses?.['409']) {
+        fail('G6', opKey, `${opId}: mutation missing 409 Conflict response (RFC 7231 §6.5.8)`);
+      }
+      if (!op.responses?.['429']) {
+        fail('G6', opKey, `${opId}: mutation missing 429 Too Many Requests response (RFC 6585 §4)`);
+      }
+    }
+
     // G3 — Idempotency-Key on financial mutations
     const isMutation = ['post', 'put', 'patch', 'delete'].includes(method);
     const isFinancial = FINANCIAL_PATH_PATTERNS.some((re) => re.test(pathKey));
