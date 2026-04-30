@@ -774,12 +774,12 @@ export default function SDKsPage() {
             </p>
           </div>
           <a
-            href="https://github.com/kangfinance"
+            href="/openapi.json"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
           >
-            View all repositories <ExternalLink className="h-3.5 w-3.5" />
+            Browse the OpenAPI spec <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
 
