@@ -1,18 +1,48 @@
-// KOB Integration Layer — Idempotency
-// Stores response per (merchant_id, idempotency_key). Replays cached response
-// when client retries with the same key + same request hash.
+// KOB Integration Layer — Idempotency (Phase 5a hardened)
+//
+// Contract:
+//   1. miss               → reserve in-flight row, caller processes, then store()
+//   2. in_flight          → 409 with retry-after; another worker is processing the same key
+//   3. replay (same hash) → return cached response + X-Idempotent-Replay: true
+//   4. conflict (diff hash)→ 409 with code IDEMPOTENCY_KEY_REUSED
+//   5. invalid_format     → 400 with code IDEMPOTENCY_KEY_INVALID
+//
+// Justification:
+//   - Stripe API: idempotency keys must be unique strings ≤255 chars; UUID v4 recommended.
+//   - PSD2 RTS Article 36(1)(b): deterministic retry semantics.
+//   - Project Core Memory: UUID v4 idempotency_key + row-level locks mandatory.
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 export interface IdempotencyHit {
+  kind: "replay";
   status: number;
   body: unknown;
+}
+export interface IdempotencyConflict { kind: "conflict"; reason: "request_hash_mismatch" }
+export interface IdempotencyInFlight { kind: "in_flight" }
+export interface IdempotencyInvalid  { kind: "invalid"; reason: string }
+export interface IdempotencyMiss     { kind: "miss" }
+
+export type IdempotencyResult =
+  | IdempotencyHit | IdempotencyConflict | IdempotencyInFlight | IdempotencyInvalid | IdempotencyMiss;
+
+// UUID v4 (RFC 4122 §4.4)
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_KEY_LEN = 255;
+
+export function validateIdempotencyKey(key: string | null | undefined): IdempotencyInvalid | null {
+  if (!key) return null; // optional — absence is allowed; only validate when supplied
+  if (typeof key !== "string") return { kind: "invalid", reason: "not_a_string" };
+  if (key.length > MAX_KEY_LEN) return { kind: "invalid", reason: "exceeds_255_chars" };
+  if (!UUID_V4_RE.test(key)) return { kind: "invalid", reason: "not_uuid_v4" };
+  return null;
 }
 
 export async function sha256(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
   const hash = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function admin(): SupabaseClient {
@@ -22,9 +52,92 @@ function admin(): SupabaseClient {
   );
 }
 
+/**
+ * Reserve an idempotency slot atomically.
+ *
+ * - Validates the key format (UUID v4, ≤255 chars).
+ * - Returns `replay` if a completed response is cached for the same request hash.
+ * - Returns `conflict` if a completed response exists for a different request hash.
+ * - Returns `in_flight` if another worker holds an in-flight reservation that has not expired.
+ * - Returns `miss` AND inserts an in-flight reservation row (response_status NULL) so concurrent
+ *   duplicate requests see `in_flight` until the caller completes and calls storeIdempotency().
+ */
+export async function reserveIdempotency(args: {
+  key: string;
+  merchantId: string | null;
+  resource: string;
+  requestHash: string;
+  inFlightTtlMs?: number; // default 60s — abandoned reservations recover automatically
+}): Promise<IdempotencyResult> {
+  const invalid = validateIdempotencyKey(args.key);
+  if (invalid) return invalid;
+  if (!args.key) return { kind: "miss" };
+
+  const sb = admin();
+  const inFlightTtl = args.inFlightTtlMs ?? 60_000;
+
+  // 1. Try to claim the slot atomically via insert with ON CONFLICT DO NOTHING.
+  const { data: inserted, error: insErr } = await sb
+    .from("integration_idempotency_keys")
+    .insert({
+      idempotency_key: args.key,
+      merchant_id: args.merchantId,
+      resource: args.resource,
+      request_hash: args.requestHash,
+      response_status: null,
+      response_body: null,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (!insErr && inserted) return { kind: "miss" };
+
+  // 2. Conflict on insert → row already exists. Read it.
+  const { data: existing } = await sb
+    .from("integration_idempotency_keys")
+    .select("request_hash, response_status, response_body, created_at, expires_at")
+    .eq("idempotency_key", args.key)
+    .eq("merchant_id", args.merchantId)
+    .maybeSingle();
+
+  if (!existing) return { kind: "miss" }; // race: row vanished
+  if (new Date(existing.expires_at).getTime() < Date.now()) {
+    // Expired — overwrite as a fresh reservation.
+    await sb.from("integration_idempotency_keys")
+      .update({
+        request_hash: args.requestHash,
+        response_status: null,
+        response_body: null,
+        resource: args.resource,
+      })
+      .eq("idempotency_key", args.key)
+      .eq("merchant_id", args.merchantId);
+    return { kind: "miss" };
+  }
+
+  if (existing.request_hash !== args.requestHash) {
+    return { kind: "conflict", reason: "request_hash_mismatch" };
+  }
+
+  if (existing.response_status == null) {
+    const ageMs = Date.now() - new Date(existing.created_at).getTime();
+    if (ageMs < inFlightTtl) return { kind: "in_flight" };
+    // Stale reservation — claim it.
+    return { kind: "miss" };
+  }
+
+  return { kind: "replay", status: existing.response_status, body: existing.response_body };
+}
+
+/**
+ * Legacy lookup helper retained for back-compat.
+ * Prefer `reserveIdempotency` for new code (atomic in-flight protection).
+ */
 export async function lookupIdempotency(
-  key: string, merchantId: string | null, requestHash: string,
-): Promise<IdempotencyHit | { conflict: true } | null> {
+  key: string,
+  merchantId: string | null,
+  requestHash: string,
+): Promise<{ status: number; body: unknown } | { conflict: true } | null> {
   if (!key) return null;
   const sb = admin();
   const { data, error } = await sb
@@ -58,4 +171,39 @@ export async function storeIdempotency(args: {
     response_status: args.status,
     response_body: args.body as Record<string, unknown>,
   }, { onConflict: "merchant_id,idempotency_key" });
+}
+
+/**
+ * Standard headers/body to emit when reserve() returns a non-miss outcome.
+ * Centralises wire-format so every caller emits the same envelope.
+ */
+export function idempotencyResponse(result: IdempotencyResult, corsHeaders: Record<string, string> = {}): Response | null {
+  if (result.kind === "miss") return null;
+
+  if (result.kind === "replay") {
+    return new Response(JSON.stringify(result.body), {
+      status: result.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json", "X-Idempotent-Replay": "true" },
+    });
+  }
+
+  if (result.kind === "invalid") {
+    return new Response(JSON.stringify({
+      error: { type: "invalid_request_error", code: "IDEMPOTENCY_KEY_INVALID",
+        message: `Idempotency-Key is invalid: ${result.reason}. Use a UUID v4 string ≤255 chars.` },
+    }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  if (result.kind === "conflict") {
+    return new Response(JSON.stringify({
+      error: { type: "idempotency_error", code: "IDEMPOTENCY_KEY_REUSED",
+        message: "Idempotency-Key was previously used with a different request body. Use a fresh key." },
+    }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // in_flight
+  return new Response(JSON.stringify({
+    error: { type: "idempotency_error", code: "IDEMPOTENCY_KEY_IN_FLIGHT",
+      message: "A request with this Idempotency-Key is currently being processed. Retry after a short delay." },
+  }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "2" } });
 }
