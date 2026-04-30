@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "openapi:gates": "node scripts/openapi-quality-gates.mjs"
+    "openapi:gates": "node scripts/openapi-quality-gates.mjs",
+    "changelog:md": "node scripts/build-changelog-md.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
