@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, ShieldCheck, ShieldX, ShieldAlert, RotateCcw, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldX, ShieldAlert, RotateCcw, RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { extractEdgeFunctionError } from "@/lib/edge-function-error";
@@ -50,18 +51,58 @@ export default function AdminKybReviewQueue() {
   const [reasonCode, setReasonCode] = useState<string>("");
   const [reasonText, setReasonText] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [schemaWarning, setSchemaWarning] = useState<string | null>(null);
 
   useEffect(() => { load(); }, [statusFilter]);
 
+  const isMissingKybTimestampError = (err: any): boolean => {
+    if (!err) return false;
+    // Postgres "undefined column" code is 42703; PostgREST surfaces it via code/message
+    const code = err.code || err?.details?.code;
+    const msg = `${err.message ?? ""} ${err.details ?? ""} ${err.hint ?? ""}`.toLowerCase();
+    return code === "42703" || (msg.includes("kyb_submitted_at") || msg.includes("kyb_reviewed_at")) && msg.includes("does not exist");
+  };
+
+  const runQuery = async (withKybTimestamps: boolean) => {
+    const cols = withKybTimestamps
+      ? "id, business_name, status, kyb_status, kyb_submitted_at, kyb_reviewed_at, user_id, created_at, updated_at"
+      : "id, business_name, status, kyb_status, user_id, created_at, updated_at";
+    let q = supabase.from("gateway_merchants").select(cols).limit(200);
+    q = withKybTimestamps
+      ? q.order("kyb_submitted_at", { ascending: false, nullsFirst: false })
+      : q.order("created_at", { ascending: false });
+    if (statusFilter !== "all") q = q.eq("kyb_status", statusFilter);
+    return q;
+  };
+
   const load = async () => {
     setLoading(true);
-    let q = supabase.from("gateway_merchants")
-      .select("id, business_name, status, kyb_status, kyb_submitted_at, kyb_reviewed_at, user_id")
-      .order("kyb_submitted_at", { ascending: false }).limit(200);
-    if (statusFilter !== "all") q = q.eq("kyb_status", statusFilter);
-    const { data, error } = await q;
-    if (error) toast.error(extractEdgeFunctionError(error));
-    setRows(data ?? []);
+    setSchemaWarning(null);
+    let { data, error } = await runQuery(true);
+    if (error && isMissingKybTimestampError(error)) {
+      // Graceful fallback — KYB timestamp columns missing or migration pending.
+      setSchemaWarning(
+        "KYB timestamp columns are not available yet (database migration pending). " +
+        "Showing review queue with submission/review dates derived from record timestamps. " +
+        "Run the latest migration to enable accurate KYB submission tracking."
+      );
+      const fallback = await runQuery(false);
+      data = fallback.data as any;
+      error = fallback.error;
+    }
+    if (error) {
+      toast.error(extractEdgeFunctionError(error));
+      setRows([]);
+    } else {
+      // Normalize rows so the UI always has the timestamp keys, falling back to created/updated.
+      setRows((data ?? []).map((r: any) => ({
+        ...r,
+        kyb_submitted_at: r.kyb_submitted_at ?? r.created_at ?? null,
+        kyb_reviewed_at: r.kyb_reviewed_at ?? (
+          ["verified", "rejected", "VERIFIED", "SUSPENDED"].includes(r.kyb_status) ? r.updated_at : null
+        ),
+      })));
+    }
     setLoading(false);
   };
 
@@ -119,6 +160,14 @@ export default function AdminKybReviewQueue() {
           <Button variant="outline" onClick={load} className="gap-2"><RefreshCw className="h-4 w-4" /> Refresh</Button>
         </div>
       </div>
+
+      {schemaWarning && (
+        <Alert variant="default" className="border-amber-500/40">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Database migration pending</AlertTitle>
+          <AlertDescription>{schemaWarning}</AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
