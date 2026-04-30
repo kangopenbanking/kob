@@ -75,6 +75,7 @@ const navSections = [
       { title: "Developer Home", path: "/developer" },
       { title: "Getting Started", path: "/developer/getting-started" },
       { title: "Changelog", path: "/developer/changelog" },
+      { title: "Changelog (Markdown)", path: "/CHANGELOG.md", external: true },
       { title: "Forum", path: "/developer/forum" },
       { title: "Widgets SDK", path: "/developer/widgets" },
       { title: "Test Report", path: "/developer/test-report" },
