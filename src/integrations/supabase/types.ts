@@ -23195,6 +23195,48 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_replay_audit: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          id: string
+          idempotent_skip: boolean
+          inbox_id: string
+          notes: string | null
+          provider: string
+          replayed_by: string
+          result_code: string | null
+          result_status: number | null
+          signature_valid: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          idempotent_skip?: boolean
+          inbox_id: string
+          notes?: string | null
+          provider: string
+          replayed_by: string
+          result_code?: string | null
+          result_status?: number | null
+          signature_valid?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          idempotent_skip?: boolean
+          inbox_id?: string
+          notes?: string | null
+          provider?: string
+          replayed_by?: string
+          result_code?: string | null
+          result_status?: number | null
+          signature_valid?: boolean | null
+        }
+        Relationships: []
+      }
       webhooks: {
         Row: {
           client_id: string
