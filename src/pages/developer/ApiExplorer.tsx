@@ -200,7 +200,7 @@ function SdkCodeGeneratorPanel({
   const [copied, setCopied] = useState(false);
 
   const snippet = useMemo(
-    () => generateForLanguage(lang, { spec, baseUrl, method, path, op }),
+    () => generateForLanguage(lang, { spec, baseUrl, method: method as any, path, op }),
     [lang, spec, baseUrl, method, path, op]
   );
 
