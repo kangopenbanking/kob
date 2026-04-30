@@ -68,15 +68,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    const [flutterwaveOk, dbOk, oauthOk, aispOk, pispOk] = await Promise.all([
+    // POS Commerce health — probes the core merchant storefront tables that
+    // back products, orders, and store subscriptions. If any of these reads
+    // fail, the POS Commerce surface (storefront, checkout, order capture)
+    // cannot serve traffic and must report degraded.
+    async function checkPosHealth(): Promise<boolean> {
+      try {
+        const [products, orders, stores] = await Promise.all([
+          supabase.from('pos_products').select('id', { head: true, count: 'exact' }).limit(1),
+          supabase.from('pos_orders').select('id', { head: true, count: 'exact' }).limit(1),
+          supabase.from('pos_store_profiles').select('id', { head: true, count: 'exact' }).limit(1),
+        ]);
+        return !products.error && !orders.error && !stores.error;
+      } catch {
+        return false;
+      }
+    }
+
+    const [flutterwaveOk, dbOk, oauthOk, aispOk, pispOk, posOk] = await Promise.all([
       checkFlutterwaveHealth(),
       checkDatabaseHealth(),
       checkOAuthHealth(),
       checkAispHealth(),
-      checkPispHealth()
+      checkPispHealth(),
+      checkPosHealth(),
     ]);
 
-    const allServicesOk = flutterwaveOk && dbOk && oauthOk && aispOk && pispOk;
+    const allServicesOk = flutterwaveOk && dbOk && oauthOk && aispOk && pispOk && posOk;
 
     const health = {
       status: allServicesOk ? 'operational' : 'degraded',
@@ -90,6 +108,7 @@ Deno.serve(async (req) => {
         mobile_money: flutterwaveOk ? 'operational' : 'degraded',
         banking: flutterwaveOk ? 'operational' : 'degraded',
         credit_scoring: dbOk ? 'operational' : 'degraded',
+        pos: posOk ? 'operational' : 'degraded',
         virtual_cards: 'dormant',
         webhooks: dbOk ? 'operational' : 'degraded',
         database: dbOk ? 'operational' : 'degraded'
