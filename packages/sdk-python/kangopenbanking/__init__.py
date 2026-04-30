@@ -9,7 +9,7 @@ from .types import (
 )
 from .phase3 import MerchantOps
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kangopenbanking"
-version = "1.2.0"
+version = "1.5.0"
 description = "Official Kang Open Banking (KOB) Python SDK"
 readme = "README.md"
 license = {text = "MIT"}
