@@ -1,9 +1,35 @@
 {
-  "apiVersion": "4.26.11",
+  "apiVersion": "4.27.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.27.0",
+      "date": "2026-04-30",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Schema convention alignment: GatewayMerchantWallet.pending_balance and ledger_balance retyped from floating-point number to string-integer minor units, matching the API's stated monetary convention (already enforced on available_balance and all other monetary fields). Eliminates floating-point precision risk for zero-decimal currencies (XAF, XOF) — the API's primary regional currencies.",
+      "highlights": [
+        "GatewayMerchantWallet.pending_balance: type number → string with pattern ^[0-9]{1,15}$ and explicit zero-decimal-currency description.",
+        "GatewayMerchantWallet.ledger_balance: same correction.",
+        "Both fields now consistent with available_balance and the project-wide Zero Decimal Currency Logic (XAF/XOF string precision)."
+      ],
+      "additions": [
+        "pattern ^[0-9]{1,15}$ on pending_balance and ledger_balance",
+        "Description text on both fields citing zero-decimal currency precision rationale"
+      ],
+      "deprecations": [],
+      "fixes": [
+        "Resolved schema-convention inconsistency flagged in external trust-layer audit (floating-point monetary fields could produce precision loss in client SDKs)."
+      ],
+      "standard_citations": [
+        "STANDING ORDER 6 — version gate (minor bump: additive pattern + description, field type aligned to documented contract)",
+        "STANDING ORDER 4 — surgeon rule (additive correction, no operationId/path/schema rename)",
+        "STANDING ORDER 1 — the lock (no field renamed or removed; type tightened to match documented convention)",
+        "Project memory: Zero Decimal Currency Logic — XAF/XOF string precision in OpenAPI ^[0-9]{1,15}$"
+      ]
+    },
     {
       "version": "sdk-1.5.0",
       "date": "2026-04-30",
