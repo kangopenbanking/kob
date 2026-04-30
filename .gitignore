@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated typed SDKs (built in CI, distributed via Actions artifact)
+sdks/generated/

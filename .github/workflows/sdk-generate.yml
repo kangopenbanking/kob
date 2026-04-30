@@ -1,0 +1,71 @@
+# ============================================================
+# CI: Generate Typed SDKs (TS / Python / Go / Java)
+#
+# Runs on every PR + push to main, and verifies the generator
+# completes without errors. On main, it uploads the generated
+# clients as a workflow artifact so they can be downloaded by
+# integrators directly from the Actions tab.
+#
+# Standing Order P5 (Working Code Rule) — generated SDKs must
+# build cleanly from the published spec on every commit.
+# Standing Order 6 (Version Gate) — package version is read from
+# info.version of public/openapi.json.
+# ============================================================
+
+name: Typed SDK Generation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/openapi.json"
+      - "scripts/generate-typed-sdks.mjs"
+      - ".github/workflows/sdk-generate.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "public/openapi.json"
+      - "scripts/generate-typed-sdks.mjs"
+      - ".github/workflows/sdk-generate.yml"
+
+jobs:
+  generate:
+    name: Generate TS / Python / Go / Java clients
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Java (required by openapi-generator-cli)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate typed SDKs
+        run: npm run sdk:generate
+
+      - name: Confirm generated SDKs exist
+        run: |
+          for d in typescript python go java; do
+            test -d "sdks/generated/$d" || { echo "::error::Missing sdks/generated/$d"; exit 1; }
+          done
+          echo "All four typed SDKs generated successfully."
+
+      - name: Upload generated SDKs as artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kangopenbanking-typed-sdks
+          path: sdks/generated/
+          retention-days: 90
