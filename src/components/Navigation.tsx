@@ -1,7 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, Wallet, TrendingUp, CreditCard, Target, BarChart3, Package } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Menu,
+  ArrowRight,
+  Database,
+  Send,
+  Smartphone,
+  Shield,
+  FileText,
+  DollarSign,
+  Activity,
+  HelpCircle,
+  MessageCircle,
+  BookOpen,
+  Lightbulb,
+  Wallet,
+  TrendingUp,
+  CreditCard,
+  Target,
+  BarChart3,
+  Package,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -10,465 +38,517 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import kobLogo from "@/assets/kob-logo.png";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { BrandName } from "./BrandName";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Mega-menu data model — keeps the markup clean and easy to maintain.
+// `tone` maps to a semantic accent token defined in tailwind.config / index.css
+// (primary, success, warning, info, accent). Icons are rendered as outline.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type Tone = "primary" | "success" | "warning" | "info" | "accent";
+
+interface MegaItem {
+  title: string;
+  description: string;
+  to: string;
+  icon: LucideIcon;
+  tone?: Tone;
+  badge?: string;
+}
+
+interface MegaSection {
+  heading: string;
+  items: MegaItem[];
+}
+
+interface MegaFeature {
+  eyebrow: string;
+  title: string;
+  description: string;
+  to: string;
+  cta: string;
+  icon: LucideIcon;
+}
+
+interface MegaMenu {
+  label: string;
+  sections: MegaSection[];
+  feature?: MegaFeature;
+}
+
+const TONE_RING: Record<Tone, string> = {
+  primary: "border-primary/30 bg-primary/5 text-primary",
+  success: "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400",
+  warning: "border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400",
+  info: "border-sky-500/30 bg-sky-500/5 text-sky-600 dark:text-sky-400",
+  accent: "border-violet-500/30 bg-violet-500/5 text-violet-600 dark:text-violet-400",
+};
+
+const MEGA_MENUS: MegaMenu[] = [
+  {
+    label: "Credit Score",
+    sections: [
+      {
+        heading: "Personal credit",
+        items: [
+          {
+            title: "My Credit Score",
+            description: "View your current score and trends over time.",
+            to: "/crediq",
+            icon: TrendingUp,
+            tone: "primary",
+          },
+          {
+            title: "Credit Report",
+            description: "Detailed credit history and account activity.",
+            to: "/credit-report",
+            icon: FileText,
+            tone: "info",
+          },
+        ],
+      },
+      {
+        heading: "Improve & learn",
+        items: [
+          {
+            title: "CrediQ Dashboard",
+            description: "Track goals and personalised improvement plans.",
+            to: "/crediq/dashboard",
+            icon: Target,
+            tone: "success",
+          },
+          {
+            title: "How Scores Work",
+            description: "Learn the methodology behind our scoring system.",
+            to: "/credit-scores-info",
+            icon: BarChart3,
+            tone: "accent",
+          },
+        ],
+      },
+    ],
+    feature: {
+      eyebrow: "New",
+      title: "Free credit monitoring",
+      description: "Get alerts the moment your score changes — no card required.",
+      to: "/crediq",
+      cta: "Check my score",
+      icon: Sparkles,
+    },
+  },
+  {
+    label: "Solutions",
+    sections: [
+      {
+        heading: "Open Banking",
+        items: [
+          {
+            title: "Account Information (AISP)",
+            description: "Account data, balances and transactions.",
+            to: "/guides/aisp",
+            icon: Database,
+            tone: "primary",
+          },
+          {
+            title: "Payment Initiation (PISP)",
+            description: "Initiate secure account-to-account payments.",
+            to: "/guides/pisp",
+            icon: Send,
+            tone: "info",
+          },
+          {
+            title: "Compliance & Security",
+            description: "PSD2, GDPR and enterprise-grade controls.",
+            to: "/guides/security",
+            icon: Shield,
+            tone: "accent",
+          },
+        ],
+      },
+      {
+        heading: "Banking products",
+        items: [
+          {
+            title: "Mobile Money",
+            description: "MTN, Orange Money and other regional rails.",
+            to: "/mobile-money",
+            icon: Smartphone,
+            tone: "warning",
+          },
+          {
+            title: "Loans",
+            description: "Automated lending with credit scoring built in.",
+            to: "/loans",
+            icon: DollarSign,
+            tone: "success",
+          },
+          {
+            title: "Savings",
+            description: "High-yield savings with rate bonuses.",
+            to: "/savings",
+            icon: Wallet,
+            tone: "primary",
+          },
+        ],
+      },
+    ],
+    feature: {
+      eyebrow: "Featured",
+      title: "Build with our APIs",
+      description: "Production-ready endpoints for accounts, payments and KYC.",
+      to: "/for-developers",
+      cta: "Open the docs",
+      icon: BookOpen,
+    },
+  },
+  {
+    label: "Resources",
+    sections: [
+      {
+        heading: "Get started",
+        items: [
+          {
+            title: "Payment Facilitation",
+            description: "Accept payments instantly with one integration.",
+            to: "/payment-facilitation",
+            icon: CreditCard,
+            tone: "primary",
+          },
+          {
+            title: "Integration Workflow",
+            description: "Step-by-step technical onboarding guide.",
+            to: "/integration-workflow",
+            icon: Lightbulb,
+            tone: "warning",
+          },
+          {
+            title: "Pricing & Fees",
+            description: "Transparent, predictable pricing.",
+            to: "/pricing",
+            icon: DollarSign,
+            tone: "success",
+          },
+        ],
+      },
+      {
+        heading: "Help & status",
+        items: [
+          {
+            title: "Developer API",
+            description: "Quickstart, references and sandbox keys.",
+            to: "/for-developers",
+            icon: BookOpen,
+            tone: "info",
+          },
+          {
+            title: "API Status",
+            description: "Real-time uptime and incident history.",
+            to: "/status",
+            icon: Activity,
+            tone: "success",
+            badge: "Live",
+          },
+          {
+            title: "FAQ & Support",
+            description: "Common questions and contact options.",
+            to: "/faq",
+            icon: HelpCircle,
+            tone: "accent",
+          },
+        ],
+      },
+    ],
+    feature: {
+      eyebrow: "Plugin",
+      title: "WooCommerce by Kang",
+      description: "Drop-in checkout for any WooCommerce store.",
+      to: "/woo-for-kang",
+      cta: "Install the plugin",
+      icon: Package,
+    },
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mega-menu panel — multi-column with optional feature card.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MegaPanel = ({ menu }: { menu: MegaMenu }) => {
+  const hasFeature = !!menu.feature;
+  return (
+    <div
+      className={cn(
+        "grid gap-8 p-6 md:p-8 w-[760px] lg:w-[880px]",
+        hasFeature ? "grid-cols-[1fr_280px]" : "grid-cols-1",
+      )}
+    >
+      <div className="grid grid-cols-2 gap-x-6 gap-y-6">
+        {menu.sections.map((section) => (
+          <div key={section.heading} className="space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              {section.heading}
+            </p>
+            <ul className="space-y-1.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const tone = TONE_RING[item.tone ?? "primary"];
+                return (
+                  <li key={item.to}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to={item.to}
+                        className="group flex items-start gap-3 rounded-lg border border-transparent p-3 transition-all duration-200 hover:border-border hover:bg-muted/60 hover:shadow-sm"
+                      >
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-background transition-transform duration-200 group-hover:scale-105",
+                            tone,
+                          )}
+                        >
+                          <Icon className="h-5 w-5" strokeWidth={1.75} />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {item.title}
+                            </span>
+                            {item.badge && (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                {item.badge}
+                              </span>
+                            )}
+                          </span>
+                          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                            {item.description}
+                          </span>
+                        </span>
+                      </Link>
+                    </NavigationMenuLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {menu.feature && (
+        <Link
+          to={menu.feature.to}
+          className="group relative flex flex-col justify-between overflow-hidden rounded-xl border bg-muted/40 p-5 transition-all duration-200 hover:border-primary/40 hover:bg-muted/70"
+        >
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+              {menu.feature.eyebrow}
+            </span>
+            <div className="mt-4 flex h-11 w-11 items-center justify-center rounded-lg border border-primary/30 bg-background text-primary">
+              <menu.feature.icon className="h-5 w-5" strokeWidth={1.75} />
+            </div>
+            <h4 className="mt-4 text-base font-semibold text-foreground">
+              {menu.feature.title}
+            </h4>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              {menu.feature.description}
+            </p>
+          </div>
+          <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+            {menu.feature.cta}
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </span>
+        </Link>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile mega-menu — accordion sections with the same icon language.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MobileMegaItem = ({ item }: { item: MegaItem }) => {
+  const Icon = item.icon;
+  const tone = TONE_RING[item.tone ?? "primary"];
+  return (
+    <Link
+      to={item.to}
+      className="group flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted"
+    >
+      <span
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background",
+          tone,
+        )}
+      >
+        <Icon className="h-4 w-4" strokeWidth={1.75} />
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+            {item.title}
+          </span>
+          {item.badge && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              {item.badge}
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block text-xs text-muted-foreground line-clamp-1">
+          {item.description}
+        </span>
+      </span>
+    </Link>
+  );
+};
+
 export const Navigation = () => {
   const { t } = useLanguage();
-  
+
   return (
-    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src={kobLogo} alt="Kang Open Banking Logo" className="h-8 w-8" />
           <BrandName className="text-xl" />
         </Link>
-        
+
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6">
-          <Link to="/documentation" className="text-sm font-medium hover:text-primary transition-colors">
-            Documentation
-          </Link>
-          
+        <div className="hidden lg:flex items-center gap-2">
           <NavigationMenu>
-            <NavigationMenuList>
+            <NavigationMenuList className="gap-1">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm font-medium">
-                  Credit Score
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid w-[600px] gap-3 p-6">
-                    <Link 
-                      to="/crediq" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <TrendingUp className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          My Credit Score
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          View your current credit score and trends
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/credit-report" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <FileText className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Credit Report
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Access your detailed credit history
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/crediq/dashboard" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Target className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          CrediQ Dashboard
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Track goals and improvement plans
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/credit-scores-info" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <BarChart3 className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          How Credit Scores Work
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Learn about our credit scoring system
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </NavigationMenuContent>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="/documentation"
+                    className="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    Documentation
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm font-medium">
-                  Solutions
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid w-[600px] gap-3 p-6">
-                    <Link 
-                      to="/guides/aisp" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Database className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Account Information (AISP)
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Access account data, balances, and transactions securely
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/guides/pisp" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Send className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Payment Initiation (PISP)
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Enable secure payment initiation and transfers
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/mobile-money" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Smartphone className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Mobile Money
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Integrate with MTN, Orange Money and other providers
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/guides/security" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Shield className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Compliance & Security
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          PSD2, GDPR compliant with enterprise-grade security
-                        </p>
-                      </div>
-                     </Link>
-
-                    <Link
-                      to="/loans" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <DollarSign className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Loans
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Automated loan applications with credit scoring
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link 
-                      to="/savings" 
-                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
-                        <Wallet className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Savings
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          High-yield savings with interest rate bonuses
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+              {MEGA_MENUS.map((menu) => (
+                <NavigationMenuItem key={menu.label}>
+                  <NavigationMenuTrigger className="text-sm font-medium bg-transparent data-[state=open]:bg-muted hover:bg-muted">
+                    {menu.label}
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <MegaPanel menu={menu} />
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ))}
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm font-medium">
-                  Resources
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid w-[600px] grid-cols-2 gap-3 p-6">
-                    <Link 
-                      to="/payment-facilitation" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <CreditCard className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Payment Facilitation
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Accept payments instantly
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/integration-workflow" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <Lightbulb className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Integration Workflow
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Step-by-step integration guide
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/pricing" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <DollarSign className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Pricing & Fees
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Transparent pricing structure
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/for-developers" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <BookOpen className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Developer API
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Quick start, API docs & testing tools
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/status" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <Activity className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          API Status
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Real-time system status
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/faq" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <HelpCircle className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          FAQ
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Common questions answered
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/contact" 
-                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Support
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Get help from our team
-                        </p>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/woo-for-kang" 
-                      className="group flex items-start gap-3 rounded-lg border border-fi-purple/30 bg-gradient-to-br from-fi-purple/10 to-card p-4 hover:bg-accent transition-colors"
-                    >
-                      <Package className="h-5 w-5 text-fi-purple mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold mb-1 text-fi-purple group-hover:text-fi-purple/80 transition-colors">
-                          WooCommerce Plugin
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Accept payments in WooCommerce
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors inline-flex items-center justify-center px-4 py-2">
-                  Company
-                </Link>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="/about"
+                    className="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    Company
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
 
-          <LanguageSwitcher />
-          
-          <Link to="/auth">
-            <Button variant="outline" size="sm">{t('signIn')}</Button>
-          </Link>
-          <Link to="/register">
-            <Button size="sm">{t('getStarted')}</Button>
-          </Link>
+          <div className="ml-2 flex items-center gap-2">
+            <LanguageSwitcher />
+            <Link to="/auth">
+              <Button variant="outline" size="sm">
+                {t("signIn")}
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button size="sm">{t("getStarted")}</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         <Sheet>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-80">
-            <div className="flex flex-col gap-4 mt-8">
-              <Link to="/documentation" className="text-sm font-medium hover:text-primary transition-colors py-2">
+          <SheetContent className="w-[88vw] sm:w-96 p-0">
+            <SheetHeader className="border-b px-5 py-4">
+              <SheetTitle className="flex items-center gap-2">
+                <img src={kobLogo} alt="" className="h-7 w-7" />
+                <BrandName className="text-lg" />
+              </SheetTitle>
+            </SheetHeader>
+
+            <div className="flex h-[calc(100vh-130px)] flex-col overflow-y-auto px-3 py-4">
+              <Link
+                to="/documentation"
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:text-primary transition-colors"
+              >
                 Documentation
               </Link>
-              
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">CREDIT SCORE</p>
-                <div className="space-y-3 ml-2">
-                  <Link to="/crediq" className="text-sm font-medium hover:text-primary transition-colors block">
-                    My Credit Score
-                  </Link>
-                  <Link to="/credit-report" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Credit Report
-                  </Link>
-                  <Link to="/crediq/dashboard" className="text-sm font-medium hover:text-primary transition-colors block">
-                    CrediQ Dashboard
-                  </Link>
-                  <Link to="/credit-scores-info" className="text-sm font-medium hover:text-primary transition-colors block">
-                    How Credit Scores Work
-                  </Link>
+
+              <Accordion type="multiple" className="mt-1">
+                {MEGA_MENUS.map((menu) => (
+                  <AccordionItem
+                    key={menu.label}
+                    value={menu.label}
+                    className="border-b-0"
+                  >
+                    <AccordionTrigger className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-muted hover:no-underline">
+                      {menu.label}
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-2">
+                      <div className="space-y-4 pl-1">
+                        {menu.sections.map((section) => (
+                          <div key={section.heading}>
+                            <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                              {section.heading}
+                            </p>
+                            <div className="space-y-0.5">
+                              {section.items.map((item) => (
+                                <MobileMegaItem key={item.to} item={item} />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+
+              <Link
+                to="/about"
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:text-primary transition-colors"
+              >
+                Company
+              </Link>
+
+              <div className="mt-auto space-y-2 border-t pt-4">
+                <div className="px-1">
+                  <LanguageSwitcher />
                 </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">SOLUTIONS</p>
-                <div className="space-y-3 ml-2">
-                  <Link to="/guides/aisp" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Account Information (AISP)
-                  </Link>
-                  <Link to="/guides/pisp" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Payment Initiation (PISP)
-                  </Link>
-                  <Link to="/mobile-money" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Mobile Money
-                  </Link>
-                  <Link to="/guides/security" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Compliance & Security
-                  </Link>
-                  <Link to="/loans" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Loans
-                  </Link>
-                  <Link to="/savings" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Savings
-                  </Link>
-                </div>
-              </div>
-
-
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">RESOURCES</p>
-                <div className="space-y-3 ml-2">
-                  <Link to="/payment-facilitation" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Payment Facilitation
-                  </Link>
-                  <Link to="/integration-workflow" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Integration Workflow
-                  </Link>
-                  <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Pricing & Fees
-                  </Link>
-                  <Link to="/status" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
-                    <span className="h-2 w-2 bg-green-500 rounded-full"></span>
-                    API Status
-                  </Link>
-                  <Link to="/faq" className="text-sm font-medium hover:text-primary transition-colors block">
-                    FAQ
-                  </Link>
-                  <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Support
-                  </Link>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">COMPANY</p>
-                <div className="space-y-3 ml-2">
-                  <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors block">
-                    About Us
-                  </Link>
-                  <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Contact Sales
-                  </Link>
-                </div>
-              </div>
-
-              <div className="border-t pt-4 space-y-3">
-                <Link to="/auth">
-                  <Button variant="outline" size="sm" className="w-full">Sign In</Button>
+                <Link to="/auth" className="block">
+                  <Button variant="outline" size="sm" className="w-full">
+                    {t("signIn")}
+                  </Button>
                 </Link>
-                <Link to="/register">
-                  <Button size="sm" className="w-full">Get Started</Button>
+                <Link to="/register" className="block">
+                  <Button size="sm" className="w-full">
+                    {t("getStarted")}
+                  </Button>
                 </Link>
               </div>
             </div>
