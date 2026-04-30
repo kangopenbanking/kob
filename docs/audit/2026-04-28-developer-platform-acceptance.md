@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-28  
 **Spec version:** v4.17.3  
-**Score:** 15/15  (10/10)
+**Score:** 14/15  (9.3/10)
 
 ## Acceptance matrix
 
@@ -15,13 +15,13 @@
 | 5 | Webhook signature + replay protection | PASS | {"hasSig":true,"hasReplay":true} |
 | 6 | Error catalog complete | PASS | domains=8 |
 | 7 | Cursor pagination documented | PASS | {"limit":{"in":"query","type":"integer","min":1,"max":100,"default":25},"starting_after":{"in":"query","type":"string","description":"Cursor: return items after this resource id"},"ending_before":{"in":"query","type":"string","description":"Cursor: return items before this resource id"}} |
-| 8 | OpenAPI structurally valid | PASS | version=4.17.3 paths=291 |
+| 8 | OpenAPI structurally valid | PASS | version=4.26.6 paths=333 |
 | 9 | Developer doc pages present | PASS | missing=none |
 | 10 | SDK ecosystem | PASS | node.js / typescript,python,php / laravel,postman |
 | 11 | Postman static files | PASS | missing=none |
-| 12 | Changelog v4.17.3 | PASS | found |
+| 12 | Changelog v4.17.3 | FAIL | not found |
 | 13 | Dashboard tooling components | PASS | missing=none |
-| 14 | Contract test count | PASS | 32 test files |
+| 14 | Contract test count | PASS | 43 test files |
 | 15 | Foundational routes preserved | PASS | missing=none |
 
 ## Notes
@@ -34,11 +34,7 @@
 
 ## Remaining risks
 
-_None._ All previously open risks were closed in the **2026-04-28 follow-up**:
-
-| # | Previous risk | Resolution |
-|---|---------------|------------|
-| 1 | `sandbox-api.kangopenbanking.com` required Cloudflare DNS + Worker route binding | **Closed.** `worker/wrangler.toml` now declares a second `[[routes]]` block bound to `sandbox-api.kangopenbanking.com/*` (same Worker, host-routed). The Worker forces `x-kob-environment: sandbox` whenever the inbound `Host` header matches `env.SANDBOX_HOST`, re-orders the OpenAPI `servers[]` so sandbox is the default when the spec is fetched from the sandbox host, and the no-leak script (`worker/scripts/test-no-leak.sh`) now scans both hosts. Setup steps documented in `worker/SANDBOX_HOSTNAME_SETUP.md`. Worker bumped to `v1.2.0`. |
+- `sandbox-api.kangopenbanking.com` requires Cloudflare DNS + Worker route binding to be fully operational. The spec advertises the URL; infra provisioning is tracked separately in `worker/wrangler.toml`.
 
 ## Recommended next improvements
 
