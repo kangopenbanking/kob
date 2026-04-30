@@ -2842,12 +2842,16 @@
             "description": "Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be consistent with the currency field."
           },
           "pending_balance": {
-            "type": "number",
-            "example": 25000
+            "type": "string",
+            "example": "25000",
+            "pattern": "^[0-9]{1,15}$",
+            "description": "Represented as a string integer in the currency's minor unit, consistent with available_balance. Use string integers to preserve precision for zero-decimal currencies (XAF, XOF)."
           },
           "ledger_balance": {
-            "type": "number",
-            "example": 525000
+            "type": "string",
+            "example": "525000",
+            "pattern": "^[0-9]{1,15}$",
+            "description": "Represented as a string integer in the currency's minor unit, consistent with available_balance. Use string integers to preserve precision for zero-decimal currencies (XAF, XOF)."
           },
           "updated_at": {
             "type": "string",
