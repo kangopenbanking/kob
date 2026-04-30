@@ -23169,35 +23169,44 @@ export type Database = {
         Row: {
           created_at: string
           event_id: string | null
+          event_type: string | null
           id: string
           is_processed: boolean
           payload: Json
           processed_at: string | null
           processing_error: string | null
+          provider: string | null
           signature: string | null
           source: string
+          status: string
         }
         Insert: {
           created_at?: string
           event_id?: string | null
+          event_type?: string | null
           id?: string
           is_processed?: boolean
           payload: Json
           processed_at?: string | null
           processing_error?: string | null
+          provider?: string | null
           signature?: string | null
           source: string
+          status?: string
         }
         Update: {
           created_at?: string
           event_id?: string | null
+          event_type?: string | null
           id?: string
           is_processed?: boolean
           payload?: Json
           processed_at?: string | null
           processing_error?: string | null
+          provider?: string | null
           signature?: string | null
           source?: string
+          status?: string
         }
         Relationships: []
       }
