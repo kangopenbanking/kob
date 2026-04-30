@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.20.0
+  version: 4.22.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial
@@ -3484,6 +3484,18 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/health:
     get:
       tags:
@@ -3516,6 +3528,12 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -3531,15 +3549,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '503':
           description: API is unhealthy
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/ready:
     get:
       tags:
@@ -3576,6 +3597,12 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -3591,15 +3618,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '503':
           description: Not ready
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/system-health:
     get:
       tags:
@@ -4728,6 +4758,12 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -4739,6 +4775,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -4786,6 +4828,12 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -4797,6 +4845,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -7199,6 +7253,8 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Account balances
@@ -7559,6 +7615,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Beneficiaries list
@@ -7704,6 +7762,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Standing orders list
@@ -7848,6 +7908,8 @@ paths:
           schema:
             type: string
           description: Authorised AISP consent ID. Required for all account information endpoints.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Direct debits list
@@ -9611,6 +9673,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/credit/report:
     post:
       tags:
@@ -10509,6 +10574,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Repayment schedule
@@ -11283,6 +11350,12 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/SavingsAccount'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorised
           content:
@@ -11320,6 +11393,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -16852,6 +16931,12 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -16863,6 +16948,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -28517,6 +28608,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Virtual accounts list
@@ -28794,6 +28887,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Merchant wallet balances
@@ -32816,6 +32911,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       operationId: deleteSubscription
       summary: Cancel a subscription
@@ -32856,6 +32957,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GatewaySubscription'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorised
           content:
@@ -32893,6 +33000,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -34388,6 +34501,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Customer payment tokens
@@ -34822,6 +34937,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Charge event timeline
@@ -36515,6 +36632,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: API keys list
@@ -36948,6 +37067,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Settlement accounts
@@ -37253,6 +37374,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Merchant webhooks
@@ -37568,24 +37691,24 @@ paths:
               $ref: '#/components/headers/CacheControl'
             ETag:
               $ref: '#/components/headers/ETag'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Invalid or expired token
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Token missing openid scope
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           description: Too Many Requests — rate limit exceeded.
           headers:
@@ -37597,6 +37720,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -39638,6 +39767,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Withdrawal policies list
@@ -40273,6 +40404,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Staff authorizations
@@ -47239,6 +47372,8 @@ paths:
           in: query
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Available payout rails with speeds and fees
@@ -47849,6 +47984,8 @@ paths:
           schema:
             type: string
             format: date
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: SLA metric data
@@ -48834,6 +48971,8 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Webhook endpoints
@@ -49442,9 +49581,9 @@ paths:
         '400':
           description: Bad request
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           content:
@@ -49460,15 +49599,15 @@ paths:
         '404':
           description: Endpoint or delivery not found
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: '#/components/schemas/Error'
         '409':
           description: Endpoint inactive
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: '#/components/schemas/Error'
         '429':
           description: Rate limit exceeded
           content:
@@ -49507,9 +49646,9 @@ paths:
         '400':
           description: Bad request
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           content:
@@ -49525,9 +49664,9 @@ paths:
         '404':
           description: Endpoint not found
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: '#/components/schemas/Error'
         '429':
           description: Rate limit exceeded
           content:
@@ -49864,6 +50003,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/reconciliation/mismatches:
     get:
       tags:
@@ -51218,6 +51360,8 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
           description: Connector instances list
@@ -52947,6 +53091,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
   /v1/interbank/messages:
     get:
       tags:
@@ -54589,6 +54736,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       security:
         - bearerAuth: []
   /v1/webhooks/providers/stripe:
@@ -54689,6 +54842,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/webhooks/providers/flutterwave:
     post:
       tags:
@@ -54784,6 +54943,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/webhooks/providers/paypal:
     post:
       tags:
@@ -54933,6 +55098,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       parameters:
         - name: paypal-auth-algo
           in: header
@@ -55052,6 +55223,12 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/SavingsAccount'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorised
           content:
@@ -55089,6 +55266,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -55208,6 +55391,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/standards/iso20022/pacs009/generate:
     post:
       operationId: generatePacs009
@@ -55323,6 +55512,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/standards/iso20022/camt056/generate:
     post:
       operationId: generateCamt056
@@ -55434,6 +55629,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -55555,6 +55756,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/standards/iso20022/camt054/parse:
     post:
       operationId: parseISO20022Camt054
@@ -55672,6 +55879,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/sandbox/events/simulate:
     post:
       tags:
@@ -55714,6 +55927,24 @@ paths:
                     type: string
                   request_id:
                     type: string
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or credentials invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/sandbox/payments/simulate:
     post:
       tags:
@@ -55767,6 +55998,24 @@ paths:
                     type: string
                   request_id:
                     type: string
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or credentials invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/sandbox/webhooks/send-test:
     post:
       tags:
@@ -55795,6 +56044,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SandboxWebhookSendResult'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or credentials invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/sandbox/reset:
     post:
       tags:
@@ -55811,6 +56078,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SandboxResetResult'
+        '400':
+          description: Bad request — validation failed or malformed input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or credentials invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
   url: https://kangopenbanking.com/developer

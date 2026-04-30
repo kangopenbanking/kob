@@ -259,3 +259,49 @@ export interface KOBClientConfig {
   timeout?: number;
   apiKey?: string;
 }
+
+// --- Idempotency (Phase 5a) ---
+export type IdempotencyErrorCode =
+  | 'IDEMPOTENCY_KEY_INVALID'
+  | 'IDEMPOTENCY_KEY_REUSED'
+  | 'IDEMPOTENCY_KEY_IN_FLIGHT';
+
+export interface IdempotencyError {
+  error: {
+    type: 'idempotency_error' | 'invalid_request_error';
+    code: IdempotencyErrorCode;
+    message: string;
+  };
+}
+
+// --- Webhook Reliability (Phase 2) ---
+export interface WebhookReplayRequest {
+  reason?: string;
+}
+export interface WebhookReplayResult {
+  delivery_id: string;
+  replayed_from: string;
+  status: 'queued' | 'delivered' | 'failed';
+  created_at: string;
+}
+export type WebhookEndpointHealthStatus = 'healthy' | 'degraded' | 'unhealthy' | 'idle';
+export interface WebhookEndpointHealth {
+  endpoint_id: string;
+  window: '24h';
+  total_deliveries: number;
+  success_rate: number;
+  latency_ms: { p50: number; p95: number; p99: number };
+  status: WebhookEndpointHealthStatus;
+  computed_at: string;
+}
+
+// --- Reports / CSV exports (Phase 3) ---
+export type ReportFormat = 'json' | 'csv';
+export interface ReportQuery {
+  merchant_id?: string;
+  from?: string;
+  to?: string;
+  format?: ReportFormat;
+  limit?: number;
+  offset?: number;
+}
