@@ -322,7 +322,7 @@ const ApiExplorer = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"reference" | "tryit">("reference");
+  const [activeTab, setActiveTab] = useState<"reference" | "tryit" | "webhooks">("reference");
   const navRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch spec
