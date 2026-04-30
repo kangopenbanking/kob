@@ -1,9 +1,35 @@
 {
-  "apiVersion": "4.26.5",
+  "apiVersion": "4.26.6",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.6",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Phase 5 hardening — Added /developer/status POS Commerce health probe (api-health now returns services.pos by reading pos_products / pos_orders / pos_store_profiles), shipped scripts/generate-typed-sdks.mjs (npm run sdk:generate) producing TypeScript / Python / Go / Java clients via openapi-generator-cli from public/openapi.json, wired .github/workflows/sdk-generate.yml (Java 17 + Node 20) to build them on every PR and upload the kangopenbanking-typed-sdks artifact on main, and surfaced them in the existing /developer/guides/sdks hub alongside the curated SDKs.",
+      "highlights": [
+        "supabase/functions/api-health — added checkPosHealth() probing pos_products + pos_orders + pos_store_profiles; services.pos now reports operational/degraded instead of falling through to down.",
+        "scripts/generate-typed-sdks.mjs — version pinned to spec info.version, ratchet per Standing Order 6; emits sdks/generated/{typescript,python,go,java}/ with GENERATED.md guard files.",
+        ".github/workflows/sdk-generate.yml — runs on every PR touching public/openapi.json or the generator script; uploads kangopenbanking-typed-sdks artifact on main (90-day retention).",
+        "src/pages/developer/SDKsPage.tsx — new 'Generated typed clients' section with install commands per language and link to the CI artifact (positioned below the curated SDKs to preserve recommended DX path)."
+      ],
+      "additions": [],
+      "deprecations": [],
+      "fixes": [
+        "/developer/status — POS Commerce row no longer reports down; live api-health response now includes services.pos."
+      ],
+      "standard_citations": [
+        "STANDING ORDER 2 — ratchet (CI now blocks regressions on SDK generation)",
+        "STANDING ORDER 6 — version gate (generated SDK packageVersion mirrors openapi info.version)",
+        "ORDER P5 — working code rule (generated clients build cleanly from the published spec on every commit)",
+        "ORDER P6 — complete content rule (SDKs hub now documents both curated and generated clients)",
+        "ORDER P9 — multi-language rule (TypeScript + Python + Go + Java coverage)"
+      ],
+      "migration_notes": "No action required. The generated SDKs are additive and live under sdks/generated/ (gitignored, distributed via the GitHub Actions artifact)."
+    },
     {
       "version": "4.26.5",
       "date": "2026-04-30",
