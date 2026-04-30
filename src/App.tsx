@@ -510,6 +510,8 @@ const MerchantExportCenter = lazy(() => import("./pages/merchant/MerchantExportC
 const MerchantWebhookDeliveries = lazy(() => import("./pages/merchant/MerchantWebhookDeliveries"));
 const AdminKybReviewQueue = lazy(() => import("./pages/admin/AdminKybReviewQueue"));
 const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeliveries"));
+const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
+const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
@@ -899,6 +901,8 @@ function App() {
               <Route path="kyc-verification" element={<KYCVerificationReview />} />
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="kyb-review-queue" element={<AdminKybReviewQueue />} />
+              <Route path="loan-review-queue" element={<AdminLoanReviewQueue />} />
+              <Route path="savings-anomaly-queue" element={<AdminSavingsAnomalyQueue />} />
               <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />

@@ -1,9 +1,28 @@
 {
-  "apiVersion": "4.26.1",
+  "apiVersion": "4.26.2",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-04-30",
   "entries": [
+    {
+      "version": "4.26.2",
+      "date": "2026-04-30",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Phase 4.4 — Closed notification gaps in loan-ops/savings-ops/piggybank/njangi-ops with audit_logs + notifyAdmins calls. Added /admin/loan-review-queue and /admin/savings-anomaly-queue. Scaffolded authenticated Playwright suites (KYB visibility, admin inbox, webhook replay) — skipped until test users are seeded (see e2e/SEEDING.md).",
+      "highlights": [
+        "Added _shared/audit-trail.ts (non-fatal recordAuditEvent helper, service-role).",
+        "loan-ops: audit + notifyAdmins on apply/approve/disburse.",
+        "savings-ops: audit on create/withdraw + notifyAdmins on ≥500k XAF or locked-account withdrawals.",
+        "piggybank: audit on cancel (links the -5 credit penalty to a traceable event).",
+        "njangi-ops: audit on payout + notifyAdmins on overdue batch.",
+        "New admin pages: /admin/loan-review-queue, /admin/savings-anomaly-queue (read audit_logs).",
+        "Authenticated E2E specs scaffolded under e2e/authenticated/ — gated on E2E_PASSWORD env var."
+      ],
+      "additions": [],
+      "deprecations": [],
+      "fixes": []
+    },
     {
       "version": "4.26.1",
       "date": "2026-04-30",

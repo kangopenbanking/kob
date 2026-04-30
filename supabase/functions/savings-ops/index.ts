@@ -3,6 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendManagedEmail, getUserName } from '../_shared/send-managed-email.ts';
+import { notifyAdmins } from '../_shared/admin-notify.ts';
+import { recordAuditEvent } from '../_shared/audit-trail.ts';
+
+// Anomaly threshold (XAF) — withdrawals at/above this fire an admin alert.
+const SAVINGS_ANOMALY_THRESHOLD_XAF = 500_000;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -61,6 +66,14 @@ async function handleCreate(req: Request, body: any) {
 
   await supabase.from('savings_transactions').insert({ savings_account_id: savingsAccount.id, user_id: user.id, transaction_type: 'deposit', amount: opening_deposit, balance_after: opening_deposit, description: 'Opening deposit', reference: `OPEN-${Date.now()}` });
   await supabase.from('account_balances').insert({ account_id: accountData.id, balance_type: 'InterimAvailable', credit_debit_indicator: 'Credit', amount: opening_deposit, currency: 'XAF', balance_datetime: new Date().toISOString() });
+
+  await recordAuditEvent({
+    action_type: 'savings_account_created',
+    entity_type: 'savings_account',
+    entity_id: savingsAccount.id,
+    performed_by: user.id,
+    details: { account_id: accountData.id, product_id: product.id, opening_deposit, target_amount, target_date, institution_id, savings_type: product.savings_type, is_locked: isLocked },
+  });
 
   return new Response(JSON.stringify({ success: true, savings_account: savingsAccount, account: accountData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
@@ -167,6 +180,26 @@ async function handleWithdraw(req: Request, body: any) {
     institution_id: savingsAccount.institution_id || undefined,
     variables: { customer_name: wdCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), account_name: savingsAccount.account_name || 'Savings', remaining_balance: new Intl.NumberFormat('fr-CM').format(remainingBalance), reference: txRef },
   });
+
+  await recordAuditEvent({
+    action_type: 'savings_withdrawal',
+    entity_type: 'savings_account',
+    entity_id: savings_account_id,
+    performed_by: user.id,
+    details: { amount, remaining_balance: remainingBalance, transaction_ref: txRef, destination_account_id, was_locked: savingsAccount.is_locked, withdrawals_this_month: withdrawalsThisMonth + 1 },
+  });
+
+  if (amount >= SAVINGS_ANOMALY_THRESHOLD_XAF || savingsAccount.is_locked) {
+    notifyAdmins(serviceSupabase, {
+      event_type: 'savings_anomaly_withdrawal',
+      entity_type: 'savings_account',
+      entity_id: savings_account_id,
+      title: savingsAccount.is_locked ? 'Locked savings withdrawal' : 'Large savings withdrawal',
+      message: `${new Intl.NumberFormat('fr-CM').format(amount)} XAF withdrawn from savings account ${savingsAccount.account_name || savings_account_id.slice(0, 8)}.`,
+      institution_id: savingsAccount.institution_id || undefined,
+      metadata: { amount, remaining_balance: remainingBalance, transaction_ref: txRef, was_locked: savingsAccount.is_locked },
+    });
+  }
 
   return new Response(JSON.stringify({ success: true, new_balance: remainingBalance, withdrawals_remaining: (product.max_withdrawals_per_month || 999) - (withdrawalsThisMonth + 1), transaction_ref: txRef }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }

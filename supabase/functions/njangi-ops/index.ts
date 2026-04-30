@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendManagedEmail, getUserName } from '../_shared/send-managed-email.ts';
+import { notifyAdmins } from '../_shared/admin-notify.ts';
+import { recordAuditEvent } from '../_shared/audit-trail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -427,6 +429,14 @@ async function handlePayout(req: Request, body: any) {
     },
   });
 
+  await recordAuditEvent({
+    action_type: 'njangi_payout',
+    entity_type: 'njangi_group',
+    entity_id: group_id,
+    performed_by: recipient.user_id,
+    details: { cycle_number: group.current_cycle, recipient_user_id: recipient.user_id, amount: totalAmount, next_cycle: nextCycle },
+  });
+
   return json({ payout, recipient_user_id: recipient.user_id, total_amount: totalAmount, next_cycle: nextCycle });
 }
 
@@ -466,6 +476,24 @@ async function handleOverdueDetect(req: Request) {
       },
     });
     processed++;
+  }
+
+  if (processed > 0) {
+    await recordAuditEvent({
+      action_type: 'njangi_overdue_batch',
+      entity_type: 'njangi_contribution',
+      entity_id: '00000000-0000-0000-0000-000000000000',
+      performed_by: null,
+      details: { processed, run_date: today },
+    });
+    notifyAdmins(supabase, {
+      event_type: 'njangi_overdue_detected',
+      entity_type: 'njangi_contribution',
+      entity_id: '00000000-0000-0000-0000-000000000000',
+      title: 'Njangi missed contributions',
+      message: `${processed} njangi contribution(s) marked as missed today.`,
+      metadata: { processed, run_date: today },
+    });
   }
 
   return json({ processed });
