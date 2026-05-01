@@ -52,7 +52,7 @@ sb-project-ref: dkvyupzohoynkrfgojfh   ← wrong project
 The Worker delivers the branded URL today with **zero risk to the production
 runtime** and is fully reversible: when the custom-domain mapping is freed
 and rebound to project `wdzkzeahdtxlynetndqw`, run `wrangler delete
-kob-api-gateway` and the migration is complete.
+kob-gateway` and the migration is complete.
 
 ### Compliance evidence
 
@@ -99,6 +99,6 @@ kob-api-gateway` and the migration is complete.
 ### Roll-forward / roll-back
 
 - **Roll-forward:** `cd worker && npm install && npx wrangler deploy`.
-- **Roll-back:** `npx wrangler delete kob-api-gateway`. Apps and SDK
+- **Roll-back:** `npx wrangler delete kob-gateway`. Apps and SDK
   publishers calling the direct URL are unaffected; only callers of the
   branded URL break, and they fall back to direct.
