@@ -100,7 +100,7 @@ break every direct call.**
 ## Rollback
 
 ```bash
-npx wrangler delete kob-api-gateway
+npx wrangler delete kob-gateway
 ```
 
 Then update DNS to remove the `api` CNAME (or repoint it). The runtime apps
@@ -115,7 +115,7 @@ When you are ready to replace this worker with a native Supabase Custom Domain:
 2. In project `wdzkzeahdtxlynetndqw` (this project), **add**
    `api.kangopenbanking.com` under Settings → Custom Domains.
 3. Follow the CNAME + TXT verification flow shown in the dashboard.
-4. Once the domain shows **Active**, run `wrangler delete kob-api-gateway` and
+4. Once the domain shows **Active**, run `wrangler delete kob-gateway` and
    delete this folder. No code changes elsewhere are required, because the
    apps already use the direct Supabase URL and the SDKs use the branded URL —
    only the layer answering on `api.kangopenbanking.com` changes.

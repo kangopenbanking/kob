@@ -1,5 +1,5 @@
 {
-  "name": "kob-api-gateway",
+  "name": "kob-gateway",
   "version": "1.0.0",
   "private": true,
   "description": "Cloudflare Worker that fronts api.kangopenbanking.com and proxies to the Supabase Edge Functions origin.",
