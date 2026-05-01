@@ -972,6 +972,69 @@ paths['/v1/aisp/accounts/{accountId}/direct-debits'] = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// CONFIRMATION OF PAYEE (CoP) — Payee name verification (UK Pay.UK aligned, ISO 20022 acmt.024 inspired)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/confirmation-of-payee'] = {
+  post: {
+    tags: ['Payment Gateway'],
+    summary: 'Confirmation of Payee — verify beneficiary name match',
+    description: 'Verifies that the supplied beneficiary name matches the holder of the destination account before a payment is initiated. Returns a deterministic match outcome (`match` | `close_match` | `no_match` | `unavailable`) plus an optional suggested name when a close match is found. Aligned with Pay.UK Confirmation of Payee v3 and inspired by ISO 20022 acmt.023/024 (IdentificationVerificationRequest/Report).',
+    operationId: 'confirmationOfPayee',
+    security: [{ bearerAuth: [] }],
+    parameters: [idempotencyHeader],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['account_identifier', 'account_identifier_type', 'beneficiary_name', 'beneficiary_account_type'],
+            properties: {
+              account_identifier: { type: 'string', description: 'IBAN, account number, or mobile money MSISDN.', example: 'CM2110003002009876543210045' },
+              account_identifier_type: { type: 'string', enum: ['iban', 'account_number', 'msisdn'], example: 'iban' },
+              bank_code: { type: 'string', description: 'Required when `account_identifier_type` is `account_number`.', example: 'SGCM' },
+              beneficiary_name: { type: 'string', description: 'Full legal name supplied by the payer.', example: 'Jean Dupont' },
+              beneficiary_account_type: { type: 'string', enum: ['personal', 'business'], example: 'personal' },
+              secondary_reference: { type: 'string', description: 'Optional roll number or sub-account reference.' },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Match outcome',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['match_result', 'reason_code', 'request_id', 'verified_at'],
+              properties: {
+                match_result: { type: 'string', enum: ['match', 'close_match', 'no_match', 'unavailable'], description: 'Deterministic outcome.' },
+                reason_code: { type: 'string', enum: ['ANNM', 'BANM', 'NACC', 'ACNS', 'OPTO', 'AC01', 'MBAM'], description: 'ISO 20022 / Pay.UK reason code (e.g. ANNM = name match, BANM = close name match, NACC = account does not exist, ACNS = account closed, OPTO = opted out, AC01 = invalid identifier, MBAM = match for business account when personal expected).' },
+                name_suggested: { type: 'string', description: 'Returned only when `match_result = close_match`. The corrected beneficiary name on file.' },
+                account_status: { type: 'string', enum: ['active', 'closed', 'restricted', 'unknown'] },
+                request_id: { type: 'string', format: 'uuid' },
+                verified_at: { type: 'string', format: 'date-time' },
+              },
+            },
+            example: {
+              match_result: 'close_match',
+              reason_code: 'BANM',
+              name_suggested: 'Jean P. Dupont',
+              account_status: 'active',
+              request_id: '7f3a9c5e-d4b8-4a2e-9f1c-8e5d7a3b2c91',
+              verified_at: '2026-05-01T10:15:30Z',
+            },
+          },
+        },
+      },
+      ...errorResponses,
+    },
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // PISP — Payment Initiation
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/pisp/consents'] = {
