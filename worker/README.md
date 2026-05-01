@@ -53,24 +53,40 @@ and renews the TLS certificate for you.
 
 ## Verification
 
+After every deploy, run the automated post-deploy gate:
+
 ```bash
-# 1. Health check — should return JSON 200 within ~150 ms.
-curl -i https://api.kangopenbanking.com/health
+npm run verify                 # checks PROD + SANDBOX /health, /v1/health, headers
+# or, deploy-and-verify in one shot:
+npm run deploy:verified
+```
 
-# 2. OpenAPI spec — should return application/json with 339+ operations.
-curl -sS https://api.kangopenbanking.com/openapi.json | jq '.info.version'
+The script (`scripts/verify-deploy.sh`) asserts, on both
+`api.kangopenbanking.com` and `sandbox-api.kangopenbanking.com`:
 
-# 3. Public OAuth token endpoint — should return 400 (missing grant_type)
-#    rather than 404, proving the proxy reached the origin.
-curl -i -X POST https://api.kangopenbanking.com/v1/oauth/token
+- `/health`, `/healthz`, `/v1/health`, `/openapi.json` return **200**
+- `x-served-by: kob-edge-gateway` is present (proves Worker is in path)
+- `x-kob-environment` matches the hostname (`production` vs `sandbox`)
+- `sb-project-ref: wdzkzeahdtxlynetndqw` is correct
+- `/v1/accounts` (unauthenticated) returns **401** — auth gate is live
 
-# 4. Inspect the Supabase debug headers to confirm origin routing.
-curl -sI https://api.kangopenbanking.com/health | grep -E '^sb-|^x-served-by'
+A non-zero exit code blocks CI. Common failure causes are printed by the script.
+
+Manual spot-checks:
+
+```bash
+# Inspect the Supabase debug headers to confirm origin routing.
+curl -sI https://api.kangopenbanking.com/health | grep -E '^sb-|^x-served-by|^x-kob-environment'
 # Expected:
 #   sb-project-ref: wdzkzeahdtxlynetndqw
-#   sb-gateway-version: 1
 #   x-served-by: kob-edge-gateway
+#   x-kob-environment: production
 ```
+
+> **Adding a new public path?** Update `PUBLIC_PREFIXES` in
+> `worker/src/index.ts` AND add a `check_endpoint` line to
+> `scripts/verify-deploy.sh`. See the maintenance rules block above
+> `PUBLIC_PREFIXES` in source.
 
 ## Local development
 
