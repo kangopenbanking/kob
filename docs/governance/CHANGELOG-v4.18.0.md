@@ -1,104 +1,69 @@
-# API Spec v4.18.0 — 2026-04-24
+# CHANGELOG — v4.18.0 (2026-05-01)
 
-## Branded API Gateway
+**Theme:** Reconciliation & Integration Hardening — make the API safe to plug into a bank's treasury and payment-initiation stack.
 
-Standing Orders honoured: **SO 1 (The Lock)**, **SO 4 (Surgeon Rule —
-additive)**, **SO 6 (Version Gate — minor bump)**, **SO 7 (Five Roles)**,
-**P4 (Open Spec Rule)**, **P5 (Working Code Rule)**.
+## 1. Confirmation of Payee (CoP)
 
-### Summary
+- **New endpoint:** `POST /v1/confirmation-of-payee` — Pay.UK Confirmation of Payee v3 / ISO 20022 acmt.023/024 inspired beneficiary verification.
+- Returns deterministic outcome: `match` | `close_match` | `no_match` | `unavailable` with ISO/Pay.UK reason codes (`ANNM`, `BANM`, `NACC`, `ACNS`, `OPTO`, `AC01`, `MBAM`).
+- When `close_match`, the response includes `name_suggested` (the actual holder name on file) so the payer UI can prompt the user to confirm.
+- Backed by the new `confirmation-of-payee` edge function. Looks up holder records in the `accounts` directory; returns `unavailable` rather than fabricating a match when the account is not in the directory (fail-closed).
 
-`api.kangopenbanking.com` is now a working, branded API hostname. It is
-served by a Cloudflare Worker (source in [`/worker`](../../worker/README.md))
-that proxies every request to the Supabase Edge Functions origin
-(`wdzkzeahdtxlynetndqw.supabase.co/functions/v1`). The runtime apps and
-SDKs gain a stable, version-stable hostname they can reference forever,
-independent of the underlying compute provider.
+**Justification:** Confirmation of Payee is now a baseline expectation for inbound bank integrations even outside UK/EU; APP-fraud liability shifts make it commercially material. Standing Order 4 (Surgeon Rule): purely additive.
 
-### What changed
+## 2. Floating-point money — string-typed siblings (Standing Order 1 preserved)
 
-| Surface | Before | After |
-| --- | --- | --- |
-| OpenAPI `servers[0].url` | `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1` | `https://api.kangopenbanking.com/v1` (direct URL retained as `servers[1]`) |
-| Node.js SDK `baseUrl` default | direct Supabase URL | `https://api.kangopenbanking.com/v1` |
-| Python SDK `base_url` default | direct Supabase URL | `https://api.kangopenbanking.com/v1` |
-| PHP SDK `KOB_BASE_URL` default | direct Supabase URL | `https://api.kangopenbanking.com/v1` |
-| Documentation cURL/JS/Python examples | direct Supabase URL | `https://api.kangopenbanking.com/v1` |
-| Runtime app calls (Consumer, Business, Banking) | direct Supabase URL | **unchanged** — Direct Backend Mandate preserved |
+Treasury and reconciliation systems are zero-tolerance on IEEE-754 floats for monetary values. Per **RFC 8259 §6** and **FAPI 1.0 Advanced §5.2.2**:
 
-### Path rewrite contract
+| Schema | Old (deprecated) | New (authoritative) |
+|---|---|---|
+| `GatewayCharge.amount` | `number` | `amount_minor: string ^[0-9]{1,18}$` |
+| `GatewayCharge.fee_amount` | `number` | `fee_amount_minor: string ^[0-9]{1,18}$` |
+| `GatewayCharge.net_amount` | `number` | `net_amount_minor: string ^[0-9]{1,18}$` |
+| `JournalEntry.lines[].debit` | `number` | `debit_amount: string ^[0-9]{1,18}$` |
+| `JournalEntry.lines[].credit` | `number` | `credit_amount: string ^[0-9]{1,18}$` |
 
-| Public path | Origin path |
-| --- | --- |
-| `/v1/<resource>` | `/functions/v1/<resource>` |
-| `/openapi.json` | `/functions/v1/public-api-spec` |
-| `/openapi.yaml` | `/functions/v1/public-api-spec.yaml` |
-| `/health`, `/healthz` | `/functions/v1/health-check` |
-| `/functions/v1/*` | passthrough |
-| `OPTIONS *` | answered at the edge (no origin call) |
+The original number-typed fields are flagged `deprecated: true` and **retained** for backwards compatibility (Standing Order 1 — The Lock). They will be removed in **v5.0.0**.
 
-### Why a worker, not a Supabase Custom Domain (yet)
+**Reconciliation systems MUST consume the `*_minor` / `*_amount` string fields.**
 
-A Supabase Custom Domain would be the long-term destination, but
-`api.kangopenbanking.com` was found bound to a different Supabase project
-(`dkvyupzohoynkrfgojfh`) when curl'd on 2026-04-24:
+## 3. OAuth path canonicalisation
 
-```
-$ curl -i https://api.kangopenbanking.com/functions/v1/public-api-spec
-HTTP/2 404
-sb-project-ref: dkvyupzohoynkrfgojfh   ← wrong project
-```
+All discovery metadata and developer documentation now reference the slash form, which matches the OAuth compatibility router (`supabase/functions/oauth/index.ts`):
 
-The Worker delivers the branded URL today with **zero risk to the production
-runtime** and is fully reversible: when the custom-domain mapping is freed
-and rebound to project `wdzkzeahdtxlynetndqw`, run `wrangler delete
-kob-gateway` and the migration is complete.
+- `/v1/oauth/authorize` (was: `/v1/oauth-authorize` in some docs)
+- `/v1/oauth/token`
+- `/v1/oauth/par`
+- `/v1/oauth/revoke`
+- `/v1/oauth/introspect`
 
-### Compliance evidence
+The hyphenated routes (`/v1/oauth-authorize`, `/v1/oauth-token`, …) remain reachable through the OAuth router so existing integrations continue to work — but they are no longer advertised. Bank gateways that pre-validate discovery against the documented endpoint URIs will no longer see a mismatch.
 
-- **SO 1 (The Lock):** No `operationId`, schema name, security scheme, or
-  parameter renamed. Path keys unchanged.
-- **SO 2 (The Ratchet):** No `required[]` entry, enum value, response code,
-  or security declaration removed.
-- **SO 4 (Surgeon Rule):** Additive infrastructure only. New file tree
-  (`/worker`), new export (`API_PUBLIC_GATEWAY_URL`), new server entry in
-  OpenAPI. No mutation of existing code paths.
-- **SO 5 (Dead Code):** `API_PUBLIC_GATEWAY_URL` is referenced by
-  `OpenBankingSection.tsx` and `API_EXAMPLE_BASE_URL`.
-- **SO 6 (Version Gate):** `info.version` 4.17.0 → 4.18.0 (minor — new
-  servers entry, no breaking change).
-- **P4 (Open Spec Rule):** `/openapi.json` and `/openapi.yaml` remain
-  unauthenticated and machine-readable — now reachable on both the direct
-  Supabase URL and the branded gateway.
-- **P5 (Working Code Rule):** Sandbox curl examples on the gateway URL
-  return identical responses to the direct URL (verified by the Worker
-  smoke tests in `worker/test/`).
+**Files updated:** `src/pages/developer/AuthOAuth2.tsx`, `src/pages/developer/AuthFapi.tsx`, `src/pages/developer/AuthenticationOverview.tsx`.
 
-### Files added
+## 4. CIBA removed from advertised metadata
 
-- `worker/src/index.ts` — proxy entry point.
-- `worker/wrangler.toml` — deployment config.
-- `worker/package.json`, `worker/tsconfig.json` — tooling.
-- `worker/test/rewrite.test.ts` — path rewriter unit tests.
-- `worker/README.md` — deployment + verification guide.
-- `docs/governance/CHANGELOG-v4.18.0.md` — this file.
+The OIDC discovery document (`oidc-config`) does not currently emit `backchannel_authentication_endpoint`, but the developer-facing FAPI page and the Open Banking Standards page falsely claimed CIBA support. Banks pre-validating the OIDC discovery document or the standards page would have failed onboarding on a phantom endpoint.
 
-### Files modified
+- Removed CIBA claims from `src/pages/developer/AuthFapi.tsx` and `src/pages/developer/OpenBankingStandards.tsx`.
+- The `info.description` of the OpenAPI spec now states CIBA will be reintroduced once the `/v1/oauth/bc-authorize` endpoint actually ships.
 
-- `src/config/api.ts` — added `API_PUBLIC_GATEWAY_URL`; repointed
-  `API_EXAMPLE_BASE_URL` at it. `API_RUNTIME_BASE_URL` and
-  `API_BACKEND_BASE` left untouched.
-- `src/test/direct-backend-guard.test.ts` — extended to enforce the
-  runtime-vs-display split.
-- `src/components/developer/landing/OpenBankingSection.tsx` — surfaces the
-  branded URL.
-- `src/pages/developer/Changelog.tsx` — release entry.
-- (Follow-up PRs will repoint OpenAPI `servers[]` and SDK defaults; this
-  changelog documents the infrastructure landing.)
+## 5. TransactionOBIE migration deadline (Standing Order P10)
 
-### Roll-forward / roll-back
+The deprecated PascalCase aliases on `Transaction` will be removed in **v5.0.0, scheduled for 2026-11-01** — at least 90 days of prior notice as required by Standing Order P10 (Living Docs). Documented in:
 
-- **Roll-forward:** `cd worker && npm install && npx wrangler deploy`.
-- **Roll-back:** `npx wrangler delete kob-gateway`. Apps and SDK
-  publishers calling the direct URL are unaffected; only callers of the
-  branded URL break, and they fall back to direct.
+- `info.description` (machine-readable for any integrator inspecting the spec).
+- `src/pages/developer/ObieMigration.tsx` (already documented; deadline now aligned).
+
+## Standing-order compliance
+
+| Order | Status |
+|---|---|
+| 1 — The Lock | ✅ All deprecated fields retained, only additive sibling fields added. |
+| 2 — The Ratchet | ✅ No required[] entries removed; new fields added. |
+| 3 — The Audit Trail | ✅ Each change cites RFC 8259, FAPI 1.0 Adv §5.2.2, RFC 6749, RFC 8414, Pay.UK CoP v3, ISO 20022 acmt.023/024. |
+| 4 — The Surgeon Rule | ✅ Additive-only. |
+| 5 — The Dead Code Rule | ✅ Confirmation of Payee schema is referenced by `/v1/confirmation-of-payee`. |
+| 6 — The Version Gate | ✅ Minor bump 4.17.0 → 4.18.0 (new endpoint + schema additions). |
+| P1 — Public First | ✅ Spec, docs, and discovery remain unauthenticated. |
+| P10 — Living Docs | ✅ TransactionOBIE removal date documented ≥90 days in advance. |

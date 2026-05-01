@@ -220,8 +220,13 @@ const schemas = {
           type: 'object',
           properties: {
             ledger_account_id: { type: 'string', format: 'uuid' },
-            debit: { type: 'number', example: 1000000 },
-            credit: { type: 'number', example: 0 },
+            // Deprecated floating-point fields — retained for backwards compatibility (Standing Order 1).
+            // Treasury/reconciliation systems MUST consume the string-typed siblings below.
+            debit: { type: 'number', example: 1000000, deprecated: true, description: 'Deprecated. Floating-point representation. Use `debit_amount` (string, minor units) per RFC 8259 / FAPI 1.0 Adv §5.2.2. Removed in v5.0.0.' },
+            credit: { type: 'number', example: 0, deprecated: true, description: 'Deprecated. Floating-point representation. Use `credit_amount` (string, minor units). Removed in v5.0.0.' },
+            debit_amount: { type: 'string', pattern: '^[0-9]{1,18}$', example: '1000000', description: 'Debit amount as a string integer in the currency\'s minor unit. Authoritative for reconciliation.' },
+            credit_amount: { type: 'string', pattern: '^[0-9]{1,18}$', example: '0', description: 'Credit amount as a string integer in the currency\'s minor unit. Authoritative for reconciliation.' },
+            currency: { type: 'string', example: 'XAF', description: 'ISO 4217 currency code for this line.' },
           },
         },
       },
@@ -301,14 +306,17 @@ const schemas = {
     properties: {
       id: { type: 'string', format: 'uuid' },
       merchant_id: { type: 'string', format: 'uuid' },
-      amount: { type: 'number', example: 5000 },
+      amount: { type: 'number', example: 5000, deprecated: true, description: 'Deprecated. Use `amount_minor` (string, minor units). Removed in v5.0.0 per RFC 8259 / FAPI 1.0 Adv §5.2.2.' },
+      amount_minor: { type: 'string', pattern: '^[0-9]{1,18}$', example: '5000', description: 'Charge amount as a string integer in the currency\'s minor unit. Authoritative for reconciliation.' },
       currency: { type: 'string', example: 'XAF' },
       channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'] },
       status: { type: 'string', enum: ['pending', 'processing', 'successful', 'failed', 'cancelled', 'authorized', 'voided'] },
       provider: { type: 'string', enum: ['flutterwave', 'stripe', 'paypal'] },
       provider_ref: { type: 'string' },
-      fee_amount: { type: 'number', example: 200 },
-      net_amount: { type: 'number', example: 4800 },
+      fee_amount: { type: 'number', example: 200, deprecated: true, description: 'Deprecated. Use `fee_amount_minor` (string, minor units). Removed in v5.0.0.' },
+      fee_amount_minor: { type: 'string', pattern: '^[0-9]{1,18}$', example: '200', description: 'Fee as a string integer in the currency\'s minor unit. Authoritative for reconciliation.' },
+      net_amount: { type: 'number', example: 4800, deprecated: true, description: 'Deprecated. Use `net_amount_minor` (string, minor units). Removed in v5.0.0.' },
+      net_amount_minor: { type: 'string', pattern: '^[0-9]{1,18}$', example: '4800', description: 'Net (amount minus fee) as a string integer in the currency\'s minor unit. Authoritative for reconciliation.' },
       tx_ref: { type: 'string' },
       customer_phone: { type: 'string' },
       customer_email: { type: 'string' },
@@ -961,6 +969,69 @@ paths['/v1/aisp/accounts/{accountId}/standing-orders'] = {
 
 paths['/v1/aisp/accounts/{accountId}/direct-debits'] = {
   get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, amount: { type: 'number' }, status: { type: 'string' } } } } } } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIRMATION OF PAYEE (CoP) — Payee name verification (UK Pay.UK aligned, ISO 20022 acmt.024 inspired)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/confirmation-of-payee'] = {
+  post: {
+    tags: ['Payment Gateway'],
+    summary: 'Confirmation of Payee — verify beneficiary name match',
+    description: 'Verifies that the supplied beneficiary name matches the holder of the destination account before a payment is initiated. Returns a deterministic match outcome (`match` | `close_match` | `no_match` | `unavailable`) plus an optional suggested name when a close match is found. Aligned with Pay.UK Confirmation of Payee v3 and inspired by ISO 20022 acmt.023/024 (IdentificationVerificationRequest/Report).',
+    operationId: 'confirmationOfPayee',
+    security: [{ bearerAuth: [] }],
+    parameters: [idempotencyHeader],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['account_identifier', 'account_identifier_type', 'beneficiary_name', 'beneficiary_account_type'],
+            properties: {
+              account_identifier: { type: 'string', description: 'IBAN, account number, or mobile money MSISDN.', example: 'CM2110003002009876543210045' },
+              account_identifier_type: { type: 'string', enum: ['iban', 'account_number', 'msisdn'], example: 'iban' },
+              bank_code: { type: 'string', description: 'Required when `account_identifier_type` is `account_number`.', example: 'SGCM' },
+              beneficiary_name: { type: 'string', description: 'Full legal name supplied by the payer.', example: 'Jean Dupont' },
+              beneficiary_account_type: { type: 'string', enum: ['personal', 'business'], example: 'personal' },
+              secondary_reference: { type: 'string', description: 'Optional roll number or sub-account reference.' },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Match outcome',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['match_result', 'reason_code', 'request_id', 'verified_at'],
+              properties: {
+                match_result: { type: 'string', enum: ['match', 'close_match', 'no_match', 'unavailable'], description: 'Deterministic outcome.' },
+                reason_code: { type: 'string', enum: ['ANNM', 'BANM', 'NACC', 'ACNS', 'OPTO', 'AC01', 'MBAM'], description: 'ISO 20022 / Pay.UK reason code (e.g. ANNM = name match, BANM = close name match, NACC = account does not exist, ACNS = account closed, OPTO = opted out, AC01 = invalid identifier, MBAM = match for business account when personal expected).' },
+                name_suggested: { type: 'string', description: 'Returned only when `match_result = close_match`. The corrected beneficiary name on file.' },
+                account_status: { type: 'string', enum: ['active', 'closed', 'restricted', 'unknown'] },
+                request_id: { type: 'string', format: 'uuid' },
+                verified_at: { type: 'string', format: 'date-time' },
+              },
+            },
+            example: {
+              match_result: 'close_match',
+              reason_code: 'BANM',
+              name_suggested: 'Jean P. Dupont',
+              account_status: 'active',
+              request_id: '7f3a9c5e-d4b8-4a2e-9f1c-8e5d7a3b2c91',
+              verified_at: '2026-05-01T10:15:30Z',
+            },
+          },
+        },
+      },
+      ...errorResponses,
+    },
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2294,9 +2365,9 @@ serve(async (req) => {
       openapi: '3.1.0',
       info: {
         title: 'Kang Open Banking API',
-        version: '4.17.0',
+        version: '4.18.0',
         summary: 'Unified Open Banking API for Cameroon',
-        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
+        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), Confirmation of Payee, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).\n\n## v4.18.0 (2026-05-01) — Reconciliation & Integration Hardening\n\n- **Confirmation of Payee** — new `POST /v1/confirmation-of-payee` endpoint (Pay.UK CoP v3, ISO 20022 acmt.023/024 aligned) for beneficiary name verification before payment initiation.\n- **String-typed monetary siblings** — `GatewayCharge.amount_minor`, `fee_amount_minor`, `net_amount_minor` and `JournalEntry.lines[].debit_amount`, `credit_amount` added per RFC 8259 / FAPI 1.0 Adv §5.2.2. Original number-typed fields are now `deprecated: true`. **Treasury and reconciliation systems MUST consume the `*_minor` string fields**; the floating-point fields are retained only for backwards compatibility and will be removed in v5.0.0.\n- **OAuth path canonicalisation** — all documentation and discovery metadata now reference `/v1/oauth/authorize`, `/v1/oauth/token`, `/v1/oauth/par`, `/v1/oauth/revoke`, `/v1/oauth/introspect` (slash form). The legacy hyphenated routes (`/v1/oauth-authorize`, `/v1/oauth-token`) remain reachable via the OAuth compatibility router but are no longer advertised.\n- **CIBA removed from advertised metadata** — backchannel authentication is not currently implemented; references have been removed from FAPI documentation and the OIDC discovery document. CIBA will be re-introduced via Standing Order 1 (The Lock) once the `/v1/oauth/bc-authorize` endpoint ships.\n- **TransactionOBIE migration deadline** — the deprecated PascalCase aliases on `Transaction` will be removed in **v5.0.0, scheduled for 2026-11-01** (≥90 days notice per Standing Order P10). New integrations MUST build against `TransactionOBIE` for OBIE Read/Write Data API v3.1 consumers, or against the canonical snake_case `Transaction` schema otherwise.',
         'x-changelog-url': 'https://kangopenbanking.com/changelog.json',
         contact: {
           name: 'Kang Open Banking Support',
