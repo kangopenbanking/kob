@@ -14,7 +14,7 @@ const standards = [
       "Nonce required for authorization requests",
       "mTLS sender-constrained access tokens",
       "Pushed Authorization Requests (PAR) supported",
-      "CIBA backchannel authentication supported",
+      "Signed request objects (JAR) required",
     ],
   },
   {

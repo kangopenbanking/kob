@@ -37,7 +37,7 @@ const parResponse = await fetch(
 const { request_uri } = await parResponse.json();
 
 // Step 3: Redirect user to authorize
-const authorizeUrl = \`https://api.kangopenbanking.com/v1/oauth-authorize?request_uri=\${request_uri}\`;
+const authorizeUrl = \`https://api.kangopenbanking.com/v1/oauth/authorize?request_uri=\${request_uri}\`;
 // window.location.href = authorizeUrl;
 
 // Step 4: Exchange code for tokens (in your callback handler)

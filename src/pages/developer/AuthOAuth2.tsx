@@ -82,7 +82,7 @@ export default function AuthOAuth2() {
           <p className="text-muted-foreground mb-4">
             Redirect the user to the authorization endpoint with the <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code>:
           </p>
-          <CodeBlock examples={[{ code: `https://api.kangopenbanking.com/v1/oauth-authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`, language: "text" }]} title="Authorization Redirect URL" />
+          <CodeBlock examples={[{ code: `https://api.kangopenbanking.com/v1/oauth/authorize?request_uri=urn:ietf:params:oauth:request_uri:abc123&nonce=abc123def456`, language: "text" }]} title="Authorization Redirect URL" />
           <p className="text-sm text-muted-foreground mt-2">The user authenticates with their bank and approves the consent. They are redirected back to your <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">redirect_uri</code> with a <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">code</code> parameter.</p>
         </section>
 

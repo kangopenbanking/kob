@@ -60,11 +60,10 @@ export default function AuthFapi() {
 
 # Key fields:
 {
-  "issuer": "https://api.kangopenbanking.com/v1",
-  "authorization_endpoint": "https://api.kangopenbanking.com/v1/oauth-authorize",
-  "token_endpoint": "https://api.kangopenbanking.com/v1/oauth-token",
-  "pushed_authorization_request_endpoint": "https://api.kangopenbanking.com/v1/par-endpoint",
-  "backchannel_authentication_endpoint": "https://api.kangopenbanking.com/v1/oauth-bc-authorize",
+  "issuer": "https://kangopenbanking.com",
+  "authorization_endpoint": "https://api.kangopenbanking.com/v1/oauth/authorize",
+  "token_endpoint": "https://api.kangopenbanking.com/v1/oauth/token",
+  "pushed_authorization_request_endpoint": "https://api.kangopenbanking.com/v1/oauth/par",
   "jwks_uri": "https://api.kangopenbanking.com/v1/.well-known/jwks.json",
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],
