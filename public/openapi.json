@@ -260,8 +260,8 @@
         "type": "oauth2",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://api.kangopenbanking.com/v1/oauth-authorize",
-            "tokenUrl": "https://api.kangopenbanking.com/v1/oauth-token",
+            "authorizationUrl": "https://api.kangopenbanking.com/v1/oauth/authorize",
+            "tokenUrl": "https://api.kangopenbanking.com/v1/oauth/token",
             "scopes": {
               "openid": "OpenID Connect",
               "accounts": "Read account information",
@@ -273,7 +273,7 @@
               "accounts:read": "Read account information on behalf of the PSU",
               "profile": "Read basic PSU profile information"
             },
-            "refreshUrl": "https://api.kangopenbanking.com/v1/oauth-token"
+            "refreshUrl": "https://api.kangopenbanking.com/v1/oauth/token"
           }
         }
       }
@@ -622,13 +622,12 @@
           },
           "token_endpoint_auth_method": {
             "type": "string",
-            "description": "Authentication method for the token endpoint. tls_client_auth is the default for FAPI 1.0 Advanced clients (FAPI 1.0 ADV Section 5.2.2).",
+            "description": "Authentication method for the token endpoint. tls_client_auth is the default for FAPI 1.0 Advanced clients (FAPI 1.0 ADV §5.2.2). The `none` value is explicitly NOT permitted — FAPI 1.0 Advanced §5.2.2-2 forbids unauthenticated client registration. Public/native clients MUST use PKCE with `private_key_jwt` or `tls_client_auth`.",
             "enum": [
               "tls_client_auth",
               "private_key_jwt",
               "client_secret_basic",
-              "client_secret_post",
-              "none"
+              "client_secret_post"
             ],
             "default": "tls_client_auth"
           },
