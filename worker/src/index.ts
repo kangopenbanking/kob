@@ -45,6 +45,35 @@ const CORS_HEADERS: Record<string, string> = {
   "access-control-max-age": "86400",
 };
 
+/**
+ * PUBLIC_PREFIXES — paths that bypass API-key authentication.
+ * ----------------------------------------------------------------------------
+ * Governance: Standing Order P1 (Public First) + P3 (Free Sandbox) + P4 (Open Spec).
+ *
+ * MAINTENANCE RULES (read before editing):
+ *   1. Every entry is matched as: exact path OR `${prefix}/...` OR `startsWith(prefix)`.
+ *      This means `/health` also covers `/healthz` via the explicit second entry —
+ *      DO NOT rely on prefix overlap (e.g. `/health` does NOT cover `/healthz`
+ *      because matcher uses `startsWith(prefix + "/")` for sub-routes).
+ *   2. If you add a NEW unauthenticated handler above (e.g. a new top-level path
+ *      handled before `requiresApiKey`), you MUST also add it here so the
+ *      auth gate doesn't 401 it on cold-path requests.
+ *   3. If you add a NEW `/v1/...` public endpoint (OAuth, well-known, spec,
+ *      sandbox-only), append its prefix here — never widen `/v1` itself.
+ *   4. Every change must be paired with a curl assertion in
+ *      `worker/scripts/verify-deploy.sh` so the deploy gate catches regressions.
+ *   5. After editing, run `npm test` (worker/) and redeploy with
+ *      `npx wrangler deploy` — stale Worker versions are the #1 cause of
+ *      mysterious 401s on paths that look correct in source.
+ *
+ * Currently public:
+ *   /health, /healthz                    — gateway liveness (handled at edge)
+ *   /openapi(.json|.yaml)                — branded spec (P4)
+ *   /v1/openapi*, /v1/public-api-spec    — upstream spec passthroughs (P4)
+ *   /v1/oauth/*                          — token, authorize, revoke (RFC 6749)
+ *   /v1/.well-known/*                    — OIDC discovery, JWKS (RFC 8414)
+ *   /v1/sandbox/*                        — free sandbox surface (P3)
+ */
 const PUBLIC_PREFIXES = [
   "/openapi", "/health", "/healthz",
   "/v1/oauth", "/v1/.well-known", "/v1/sandbox",
