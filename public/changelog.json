@@ -1044,310 +1044,362 @@
   "schema_version": "1.1",
   "index": {
     "by_version": {
+      "4.27.2": {
+        "date": "2026-05-02",
+        "type": "patch",
+        "breaking_changes": false,
+        "summary": "Stripe-grade API documentation richness — added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples), wired x-codeSamples for cURL/Node.js/Python/PHP into every operation, expanded 280 thin operation descriptions, added 13 reusable components.examples, 5 new components.responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable), and a formal x-webhooks catalogue documenting 8 outbound events with HMAC-SHA256 signature verification and 7-attempt backoff retry policy.",
+        "entry_offset": 0
+      },
+      "4.27.1": {
+        "date": "2026-05-02",
+        "type": "patch",
+        "breaking_changes": false,
+        "summary": "Standards discoverability — closed the auditor 10-second-test gap by surfacing FAPI / OAuth2 / OIDC / DCR / mTLS / OBIE / Berlin Group / FDX / ISO 20022 / PSD2 SCA / COBAC compliance proofs from the /developer landing page. Every standard already implemented in the spec is now reachable from the developer home in one click.",
+        "entry_offset": 1
+      },
+      "4.27.0": {
+        "date": "2026-05-01",
+        "type": "minor",
+        "breaking_changes": false,
+        "summary": "International standards alignment — reaffirmed and documented FAPI 1.0 Advanced security profile (PKCE S256, PAR RFC 9126, JAR RFC 9101, PS256 signing, mTLS-bound tokens via cnf.x5t#S256), OBIE-style permission enums (ReadAccountsDetail, ReadBalances, …), Berlin Group NextGenPSD2 alignment, FDX 6.0 alignment, ISO 20022 message families (pacs / pain / camt), and the OBIE migration guide.",
+        "entry_offset": 2
+      },
+      "4.26.7": {
+        "date": "2026-04-30",
+        "type": "patch",
+        "breaking_changes": false,
+        "summary": "Phase 6 closeout — Final production-readiness run. OpenAPI quality gates G1–G5 pass on 391 operations, all three webhook receivers (Stripe / Flutterwave / PayPal) verified to reject unsigned payloads with 401 invalid_signature on production edge runtime, all five required public docs URLs return 200 on the canonical published origin, and docs/internal/final-report.md captures full evidence including DB migration scope (330 migrations clean), unit test results (431/493 pass; 56 pre-existing mock-chain failures documented), Playwright E2E scaffold readiness, and explicit remaining TODOs.",
+        "entry_offset": 3
+      },
+      "4.26.6": {
+        "date": "2026-04-30",
+        "type": "patch",
+        "breaking_changes": false,
+        "summary": "Phase 5 hardening — Added /developer/status POS Commerce health probe (api-health now returns services.pos by reading pos_products / pos_orders / pos_store_profiles), shipped scripts/generate-typed-sdks.mjs (npm run sdk:generate) producing TypeScript / Python / Go / Java clients via openapi-generator-cli from public/openapi.json, wired .github/workflows/sdk-generate.yml (Java 17 + Node 20) to build them on every PR and upload the kangopenbanking-typed-sdks artifact on main, and surfaced them in the existing /developer/guides/sdks hub alongside the curated SDKs.",
+        "entry_offset": 4
+      },
+      "4.26.5": {
+        "date": "2026-04-30",
+        "type": "patch",
+        "breaking_changes": false,
+        "summary": "Phase 5 hardening — Added newman + ajv (+ ajv-formats) as devDependencies and wired .github/workflows/api-contract-gates.yml. The workflow runs OpenAPI quality gates G1–G5 (npm run openapi:gates) on every PR/push and, when SANDBOX_API_KEY is configured, executes the Postman collection against sandbox via Newman with Ajv schema validation (npm run postman:contract). Adds a changelog/version alignment guard so info.version in openapi.json must match the changelog head.",
+        "entry_offset": 5
+      },
       "4.26.4": {
         "date": "2026-04-30",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Phase 5 follow-up — Embedded webhook simulator into /developer/api-explorer (Webhook simulator tab), shipped /developer/merchants/api-keys with create/rotate/revoke + per-permission scoping + audit log, fixed pagination snippets in docs/examples/* to use the documented page+limit / cursor contract (was offset=0), and added scripts/postman-contract-check.mjs (npm run postman:contract) that runs the published Postman collection against sandbox via Newman and validates each response against its OpenAPI schema with Ajv.",
-        "entry_offset": 0
+        "entry_offset": 6
       },
       "4.26.3": {
         "date": "2026-04-30",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Phase 5 — Developer experience hardening: new Merchants documentation hub at /developer/merchants, public Markdown changelog at /CHANGELOG.md generated from changelog.json, and an OpenAPI quality-gate CI script (scripts/openapi-quality-gates.mjs) enforcing 2xx schema, RFC 7807 errors, idempotency on financial mutations, list-endpoint pagination, and webhook signature/dedupe documentation. Baseline allow-list captured per Standing Order 2 (THE RATCHET). info.version bumped to 4.26.2 across openapi.json/yaml + sandbox specs to match the live changelog.",
-        "entry_offset": 1
+        "entry_offset": 7
       },
       "4.26.2": {
         "date": "2026-04-30",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Phase 4.4 — Closed notification gaps in loan-ops/savings-ops/piggybank/njangi-ops with audit_logs + notifyAdmins calls. Added /admin/loan-review-queue and /admin/savings-anomaly-queue. Scaffolded authenticated Playwright suites (KYB visibility, admin inbox, webhook replay) — skipped until test users are seeded (see e2e/SEEDING.md).",
-        "entry_offset": 2
+        "entry_offset": 8
       },
       "4.26.1": {
         "date": "2026-04-30",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Phase 4 — Dashboard & mobile-app E2E readiness: catalogued 700 routes across 12 dashboards into docs/internal/ui-inventory.json, scaffolded a Playwright smoke harness with one test per dashboard root, and audited Edge Functions for missing notifyAdmins/audit_logs coverage. Documentation-only; no API contract changes.",
-        "entry_offset": 3
+        "entry_offset": 9
       },
       "4.26.0": {
         "date": "2026-04-30",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 3 — Payment Gateway readiness: spec exposure for merchant API-key lifecycle (rotate/revoke/get), per-webhook lifecycle (get/update/delete/rotate-secret/deliveries/replay), admin KYB lifecycle (queue/approve/reject/suspend/reinstate), report exports (CSV/XLSX), settlement statements, reconciliation run detail, and the public inbound provider webhook URLs (Stripe, Flutterwave, PayPal). All endpoints already deployed; this release advertises them on the public OpenAPI surface.",
-        "entry_offset": 4
+        "entry_offset": 10
       },
       "4.25.0": {
         "date": "2026-04-30",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 2 — File-based Bank Connector Kit: spec exposure for SFTP/CSV ingestion, batch payment generation (CSV + ISO 20022 pain.001), status-file ingestion and reconciliation. All endpoints already deployed; this release adds them to the public OpenAPI surface so banks without APIs can integrate via documented contracts.",
-        "entry_offset": 5
+        "entry_offset": 11
       },
       "4.24.0": {
         "date": "2026-04-30",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 1 — Open Banking readiness: spec aliases for OIDC discovery, consent lifecycle completeness, AISP pagination parity.",
-        "entry_offset": 6
+        "entry_offset": 12
       },
       "4.23.0": {
         "date": "2026-04-30",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 7 — Per-phase changelog backfill, versioning policy reaffirmation, OpenAPI tag alignment.",
-        "entry_offset": 7
+        "entry_offset": 13
       },
       "4.22.0": {
         "date": "2026-04-29",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 6 — End-to-end test CI gate covering provider webhook ingestion, merchant lifecycle, outbound webhooks, contract summary, and dashboard routes.",
-        "entry_offset": 8
+        "entry_offset": 14
       },
       "4.21.0": {
         "date": "2026-04-28",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 5 — Runtime + spec hardening: idempotency runtime, pagination contract sweep, error catalog completeness, Postman/SDK regen.",
-        "entry_offset": 9
+        "entry_offset": 15
       },
       "4.20.0": {
         "date": "2026-04-27",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 4 — Idempotency hardening across all financial mutation endpoints.",
-        "entry_offset": 10
+        "entry_offset": 16
       },
       "4.19.0": {
         "date": "2026-04-26",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 3 — CSV export endpoints for settlements, transactions, and disputes.",
-        "entry_offset": 11
+        "entry_offset": 17
       },
       "4.18.0": {
         "date": "2026-04-25",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Phase 2 — Outbound webhook reliability: endpoint health probe, manual replay, exponential-backoff governance.",
-        "entry_offset": 12
+        "entry_offset": 18
       },
       "4.17.0": {
         "date": "2026-04-22",
         "type": "minor",
         "breaking_changes": false,
         "summary": "KOB Integration Layer — Stripe-style facade over the existing /v1/* API. Strictly additive: zero changes to existing endpoints, schemas, or auth flows.",
-        "entry_offset": 13
+        "entry_offset": 19
       },
       "4.16.4": {
         "date": "2026-04-21",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Security Posture Self-Verification Layer -- live /healthz endpoint, hardened /oidc-config caching, public Security & Compliance live page, and downloadable whitepaper",
-        "entry_offset": 14
+        "entry_offset": 20
       },
       "4.15.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "CEMAC Universal Bank Integration -- Wave 4: documentation, OpenAPI version bump, and architecture overview tying Waves 1-3 together",
-        "entry_offset": 15
+        "entry_offset": 21
       },
       "4.14.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "CEMAC Universal Bank Integration -- Wave 3: ledger audit fields, six-stage bank onboarding wizard, and public certification flow guide",
-        "entry_offset": 16
+        "entry_offset": 22
       },
       "4.13.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "CEMAC Universal Bank Integration -- Wave 2: scheduled bank polling engine, rule-based reconciliation with auto-flagging, every-5-minute cron sweep across all enabled bank connectors",
-        "entry_offset": 17
+        "entry_offset": 23
       },
       "4.12.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "CEMAC Universal Bank Integration -- Wave 1: unified BankConnector interface with REST, SQL, File, and SOAP adapters, new bank-data-router with priority-based failover, full attempt audit trail",
-        "entry_offset": 18
+        "entry_offset": 24
       },
       "4.11.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "BYO Phase 2 — server-side polling for direct mobile-money rails, SOAP Bank adapter for legacy core-banking systems, and multi-rail cross-bank failover with full attempt audit trail",
-        "entry_offset": 19
+        "entry_offset": 25
       },
       "4.10.0": {
         "date": "2026-04-17",
         "type": "minor",
         "breaking_changes": false,
         "summary": "BYO Mobile Money Connectors -- institutions, merchants, and developers can register their own MTN MoMo or Orange Money credentials and route charges through them while Flutterwave (KOB-managed) remains the default rail and automatic fallback",
-        "entry_offset": 20
+        "entry_offset": 26
       },
       "4.9.7": {
         "date": "2026-04-14",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Direct Backend Infrastructure Correction -- all runtime API references standardized to direct Supabase Edge Functions URL; legacy custom API domains removed from active spec, SDKs, and docs",
-        "entry_offset": 21
+        "entry_offset": 27
       },
       "4.9.6": {
         "date": "2026-04-12",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Documentation depth upgrade -- 63-error catalogue, failure/retry/reversal guides, end-to-end use-case tutorials, auth decision table, observability checklist",
-        "entry_offset": 22
+        "entry_offset": 28
       },
       "4.9.5": {
         "date": "2026-04-11",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Webhook event expansion, sandbox x-test-data metadata, event filtering documentation, split payment examples",
-        "entry_offset": 23
+        "entry_offset": 29
       },
       "4.9.4": {
         "date": "2026-04-08",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Rate limit documentation hardening, 429 response schema, X-RateLimit headers, and changelog version sync",
-        "entry_offset": 24
+        "entry_offset": 30
       },
       "4.9.3": {
         "date": "2026-04-05",
         "type": "patch",
         "breaking_changes": false,
         "summary": "Self-service Sandbox Console with API key issuance, test data seeding, webhook testing, and bank connector validation",
-        "entry_offset": 25
+        "entry_offset": 31
       },
       "4.9.2": {
         "date": "2026-04-05",
         "type": "patch",
         "breaking_changes": false,
         "summary": "DCR schema completion -- full request/response schemas for POST /v1/dcr/register",
-        "entry_offset": 26
+        "entry_offset": 32
       },
       "4.9.1": {
         "date": "2026-04-05",
         "type": "patch",
         "breaking_changes": false,
         "summary": "POS modules GA, live endpoint testing, SLA transparency, FAPI certification tracker",
-        "entry_offset": 27
+        "entry_offset": 33
       },
       "4.7.0": {
         "date": "2026-04-03",
         "type": "minor",
         "breaking_changes": false,
         "summary": "HTTP Caching, Token Lifecycle, Webhook Retry Policy, and Spec Hardening",
-        "entry_offset": 28
+        "entry_offset": 34
       },
       "4.6.0": {
         "date": "2026-03-29",
         "type": "minor",
         "breaking_changes": false,
         "summary": "FAPI 1.0 Advanced Certification + Schema Hardening",
-        "entry_offset": 29
+        "entry_offset": 35
       },
       "4.5.0": {
         "date": "2026-03-29",
         "type": "minor",
         "breaking_changes": false,
         "summary": "ISO 20022 Tag Alignment + OIDC Discovery",
-        "entry_offset": 30
+        "entry_offset": 36
       },
       "4.4.0": {
         "date": "2026-03-28",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Multi-Language Code Examples + Response Validation",
-        "entry_offset": 31
+        "entry_offset": 37
       },
       "4.3.0": {
         "date": "2026-03-27",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Standards Remediation Release",
-        "entry_offset": 32
+        "entry_offset": 38
       },
       "4.2.0": {
         "date": "2026-03-21",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Pay by Bank — Redirect-Based SCA",
-        "entry_offset": 33
+        "entry_offset": 39
       },
       "4.1.0": {
         "date": "2026-03-08",
         "type": "minor",
         "breaking_changes": false,
         "summary": "POS Commerce Suite",
-        "entry_offset": 34
+        "entry_offset": 40
       },
       "4.0.0": {
         "date": "2026-03-14",
         "type": "major",
         "breaking_changes": false,
         "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle",
-        "entry_offset": 35
+        "entry_offset": 41
       },
       "3.9.0": {
         "date": "2026-03-14",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Admin Rewards & Referral Management, 5 new banking fee types",
-        "entry_offset": 36
+        "entry_offset": 42
       },
       "3.8.0": {
         "date": "2026-03-13",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Overdraft Eligibility Engine + Credit Report Purchase",
-        "entry_offset": 37
+        "entry_offset": 43
       },
       "3.7.0": {
         "date": "2026-03-08",
         "type": "minor",
         "breaking_changes": false,
         "summary": "POS Consumer Marketplace + QR Payments",
-        "entry_offset": 38
+        "entry_offset": 44
       },
       "3.5.0": {
         "date": "2026-03-01",
         "type": "minor",
         "breaking_changes": false,
         "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT",
-        "entry_offset": 39
+        "entry_offset": 45
       },
       "3.0.0": {
         "date": "2026-02-26",
         "type": "major",
         "breaking_changes": false,
         "summary": "30+ institutional pages, regulatory compliance, fraud engine",
-        "entry_offset": 40
+        "entry_offset": 46
       },
       "2.0.0": {
         "date": "2026-02-16",
         "type": "major",
         "breaking_changes": true,
         "summary": "v1 API path standardization, RFC 7807, OAuth 2.0/DCR/mTLS, Payment Facilitation, Virtual Cards",
-        "entry_offset": 41
+        "entry_offset": 47
       },
       "1.0.0": {
         "date": "2024-11-01",
         "type": "major",
         "breaking_changes": false,
         "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
-        "entry_offset": 42
+        "entry_offset": 48
       }
     },
     "by_date": {
+      "2026-05-02": [
+        "4.27.2",
+        "4.27.1"
+      ],
+      "2026-05-01": [
+        "4.27.0"
+      ],
       "2026-04-30": [
+        "4.26.7",
+        "4.26.6",
+        "4.26.5",
         "4.26.4",
         "4.26.3",
         "4.26.2",
@@ -1444,11 +1496,11 @@
       ]
     },
     "latest": {
-      "version": "4.26.4",
-      "date": "2026-04-30",
+      "version": "4.27.2",
+      "date": "2026-05-02",
       "entry_offset": 0
     },
-    "total_entries": 43,
-    "generated_at": "2026-04-30T11:27:04.604Z"
+    "total_entries": 49,
+    "generated_at": "2026-05-02T05:56:45.062Z"
   }
 }
