@@ -402,6 +402,85 @@ txns, err := client.Accounts.ListTransactions(ctx, accounts.Data[0].ID, &kob.Tra
     To:   "2026-03-31",
 })`;
 
+const RUBY_AUTH = `require 'net/http'
+require 'json'
+require 'securerandom'
+
+# Standard library only — no gems required.
+# This is a community implementation guide; an official gem ships soon.
+SANDBOX_BASE    = 'https://sandbox-api.kangopenbanking.com/v1'
+PRODUCTION_BASE = 'https://api.kangopenbanking.com/v1'
+
+uri = URI("#{SANDBOX_BASE}/oauth/token")
+res = Net::HTTP.post_form(uri, {
+  'grant_type'    => 'client_credentials',
+  'client_id'     => ENV['KOB_CLIENT_ID'],
+  'client_secret' => ENV['KOB_CLIENT_SECRET'],
+  'scope'         => 'accounts payments'
+})
+ACCESS_TOKEN = JSON.parse(res.body)['access_token']`;
+
+const RUBY_CHARGE = `# Amount MUST be a string — '500000' not 500000.
+# A fresh SecureRandom.uuid is required on every payment POST;
+# reuse the same key to safely retry the same charge.
+uri = URI("#{SANDBOX_BASE}/gateway/charges")
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+req = Net::HTTP::Post.new(uri)
+req['Authorization']   = "Bearer #{ACCESS_TOKEN}"
+req['Content-Type']    = 'application/json'
+req['Idempotency-Key'] = SecureRandom.uuid    # REQUIRED
+req.body = {
+  amount:       '500000',
+  currency:     'XAF',
+  provider:     'mtn_momo',
+  phone_number: '+237670000000'
+}.to_json
+
+charge = JSON.parse(http.request(req).body)
+puts charge['id']`;
+
+const RUBY_WEBHOOK = `require 'openssl'
+
+# Verify X-KOB-Signature on every inbound webhook.
+# Use a constant-time comparison — never use ==.
+def verify_webhook(payload:, signature:, secret:)
+  expected = OpenSSL::HMAC.hexdigest('SHA256', secret, payload)
+  begin
+    require 'active_support/security_utils'
+    ActiveSupport::SecurityUtils.secure_compare(expected, signature)
+  rescue LoadError
+    OpenSSL.fixed_length_secure_compare(expected, signature)
+  end
+end
+
+# Rails controller example
+post '/webhooks/kob' do
+  raw = request.body.read
+  return halt 401 unless verify_webhook(
+    payload:   raw,
+    signature: request.env['HTTP_X_KOB_SIGNATURE'],
+    secret:    ENV.fetch('KOB_WEBHOOK_SECRET')
+  )
+  status 200
+end`;
+
+const RUBY_AISP = `# List accounts and pull transactions
+def kob_get(path)
+  uri  = URI("#{SANDBOX_BASE}#{path}")
+  http = Net::HTTP.new(uri.host, uri.port); http.use_ssl = true
+  req  = Net::HTTP::Get.new(uri)
+  req['Authorization'] = "Bearer #{ACCESS_TOKEN}"
+  JSON.parse(http.request(req).body)
+end
+
+accounts = kob_get('/accounts')
+accounts['data'].each do |acc|
+  bal = kob_get("/accounts/#{acc['id']}/balances")
+  puts "#{acc['account_holder_name']}  #{bal['data']['amount']} #{bal['data']['currency']}"
+end`;
+
 const OPENAPI_GEN = `# Install openapi-generator-cli
 npm install -g @openapitools/openapi-generator-cli
 
