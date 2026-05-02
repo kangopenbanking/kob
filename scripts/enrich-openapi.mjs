@@ -380,66 +380,21 @@ spec.info.version = `${maj}.${min}.${pat + 1}`;
 /* ---------- 6. Write outputs ---------- */
 fs.writeFileSync(JSON_PATH, JSON.stringify(spec, null, 2) + '\n');
 
-// Minimal JSON->YAML serializer (pure, no deps) — sufficient for OpenAPI shape.
-function toYaml(value, indent = 0) {
-  const pad = '  '.repeat(indent);
-  if (value === null) return 'null';
-  if (typeof value === 'boolean' || typeof value === 'number') return String(value);
-  if (typeof value === 'string') {
-    if (value === '') return "''";
-    if (/^[\s\-?:,\[\]\{\}#&*!|>'"%@`]/.test(value) || /[:#]\s/.test(value) || /\n/.test(value) ||
-        /^(true|false|null|yes|no|on|off|~)$/i.test(value) || /^-?\d/.test(value)) {
-      // Use block scalar for multi-line, double-quoted otherwise
-      if (value.includes('\n')) {
-        const lines = value.split('\n');
-        return '|-\n' + lines.map(l => '  '.repeat(indent + 1) + l).join('\n');
-      }
-      return JSON.stringify(value);
-    }
-    return value;
-  }
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]';
-    return '\n' + value.map(v => {
-      const rendered = toYaml(v, indent + 1);
-      if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-        // Inline first key on the dash line
-        const inner = rendered.startsWith('\n') ? rendered.slice(1) : rendered;
-        const lines = inner.split('\n');
-        return pad + '- ' + lines[0].trimStart() + (lines.length > 1 ? '\n' + lines.slice(1).join('\n') : '');
-      }
-      return pad + '- ' + (rendered.startsWith('\n') ? rendered.trim() : rendered);
-    }).join('\n');
-  }
-  if (typeof value === 'object') {
-    const keys = Object.keys(value);
-    if (keys.length === 0) return '{}';
-    return '\n' + keys.map(k => {
-      const v = value[k];
-      const key = /^[A-Za-z_][\w./:+-]*$/.test(k) ? k : JSON.stringify(k);
-      const rendered = toYaml(v, indent + 1);
-      if (typeof v === 'object' && v !== null) {
-        return pad + key + ':' + rendered;
-      }
-      return pad + key + ': ' + rendered;
-    }).join('\n');
-  }
-  return JSON.stringify(value);
-}
-
-let yaml = '# Generated from openapi.json — do not edit by hand.\n';
-yaml += `openapi: ${JSON.stringify(spec.openapi)}\n`;
-const rest = { ...spec };
-delete rest.openapi;
-for (const [k, v] of Object.entries(rest)) {
-  const rendered = toYaml(v, 1);
-  if (typeof v === 'object' && v !== null) {
-    yaml += `${k}:${rendered}\n`;
-  } else {
-    yaml += `${k}: ${rendered}\n`;
-  }
-}
-fs.writeFileSync(YAML_PATH, yaml);
+// Regenerate YAML via Python+PyYAML for round-trip safety.
+import { execSync } from 'node:child_process';
+execSync(`python3 -c "
+import json, yaml
+spec = json.load(open('${JSON_PATH}'))
+class D(yaml.SafeDumper):
+    def ignore_aliases(self, data): return True
+def s(d, x):
+    if '\\n' in x: return d.represent_scalar('tag:yaml.org,2002:str', x, style='|')
+    return d.represent_scalar('tag:yaml.org,2002:str', x)
+D.add_representer(str, s)
+with open('${YAML_PATH}','w') as f:
+    f.write('# Generated from openapi.json — do not edit by hand.\\n')
+    yaml.dump(spec, f, Dumper=D, sort_keys=False, default_flow_style=False, allow_unicode=True, width=120)
+"`, { stdio: 'inherit' });
 
 console.log(JSON.stringify({
   newVersion: spec.info.version,
