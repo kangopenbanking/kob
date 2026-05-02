@@ -47,10 +47,11 @@ export default function SandboxOverview() {
               </thead>
               <tbody>
                 {[
-                  ["Base URL", "https://api.kangopenbanking.com/v1"],
+                  ["Sandbox Base URL", "https://sandbox-api.kangopenbanking.com/v1"],
+                  ["Production Base URL", "https://api.kangopenbanking.com/v1"],
                   ["Free Tier", "1,000 requests/day, no credit card"],
                   ["Data Resets", "Every 24 hours (or on demand via API)"],
-                  ["API Version", "Same as production (v4.6.0)"],
+                  ["API Version", "Same as production (v4.27.2)"],
                   ["Rate Limits", "60 requests/minute"],
                 ].map(([prop, val]) => (
                   <tr key={prop} className="border-t border-border">
