@@ -142,6 +142,6 @@ describe('Mega Prompt v5 — Changelog inlines version history', () => {
     expect(changelog).toContain('"version": "4.2.0"');
   });
   it('still exposes the machine-readable JSON feed', () => {
-    expect(cl).toContain('/changelog.json');
+    expect(PRERENDER).toContain('/changelog.json');
   });
 });
