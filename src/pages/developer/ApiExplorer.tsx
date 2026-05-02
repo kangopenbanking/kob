@@ -476,6 +476,11 @@ const ApiExplorer = () => {
                 <Button size="sm" variant="outline" onClick={() => handleDownload("yaml")} disabled={!spec}>
                   <Download className="mr-1.5 h-4 w-4" /> YAML
                 </Button>
+                <Button size="sm" variant="outline" asChild title="Versioned Postman v2.1 collection — auto-generated from the live OpenAPI spec">
+                  <a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" download>
+                    <Download className="mr-1.5 h-4 w-4" /> Postman
+                  </a>
+                </Button>
                 <Button size="sm" variant="outline" asChild>
                   <Link to="/developer/changelog">
                     <Sparkles className="mr-1.5 h-4 w-4" /> Changelog
@@ -820,6 +825,7 @@ const ApiExplorer = () => {
               <ul className="list-disc list-inside space-y-2">
                 <li><a href="/openapi.json" className="text-primary underline">OpenAPI JSON</a></li>
                 <li><a href="/openapi.yaml" className="text-primary underline">OpenAPI YAML</a></li>
+                <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" className="text-primary underline">Postman collection (latest)</a></li>
                 <li><a href="/developer/api-explorer-static" className="text-primary underline">Static API reference</a></li>
                 <li><a href="/developer/redoc" className="text-primary underline">Redoc documentation</a></li>
               </ul>

@@ -151,18 +151,19 @@ const items = [...folders.entries()]
     item: requests.sort((a, b) => a.name.localeCompare(b.name)),
   }));
 
+const apiVersion = spec.info.version;
 const collection = {
   info: {
-    _postman_id: 'kob-api-v1',
-    name: 'Kang Open Banking API v1',
+    _postman_id: `kob-api-v${apiVersion}`,
+    name: `Kang Open Banking API v${apiVersion}`,
     description:
-      `Auto-generated from OpenAPI ${spec.info.version}.\n\n` +
+      `Auto-generated from OpenAPI ${apiVersion}.\n\n` +
       'Base URLs:\n' +
       '  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n' +
       '  - Production: https://api.kangopenbanking.com/v1\n\n' +
       'Set `base_url` and `access_token` (or `api_key`) in the environment.',
     schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
-    version: spec.info.version,
+    version: apiVersion,
   },
   item: items,
   variable: [
@@ -171,9 +172,37 @@ const collection = {
   ],
 };
 
-const outPath = path.join(root, 'public/postman/Kang_Open_Banking_API_v1.postman_collection.json');
-fs.writeFileSync(outPath, JSON.stringify(collection, null, 2) + '\n');
+const outDir = path.join(root, 'public/postman');
+fs.mkdirSync(outDir, { recursive: true });
+const body = JSON.stringify(collection, null, 2) + '\n';
+
+// Versioned filename (immutable per release) + stable aliases.
+const versionedPath = path.join(outDir, `Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`);
+const latestPath = path.join(outDir, 'Kang_Open_Banking_API_latest.postman_collection.json');
+const legacyPath = path.join(outDir, 'Kang_Open_Banking_API_v1.postman_collection.json');
+for (const p of [versionedPath, latestPath, legacyPath]) {
+  fs.writeFileSync(p, body);
+}
+
+// Manifest so the developer portal can surface the current version + download URL.
+const manifest = {
+  apiVersion,
+  generatedAt: new Date().toISOString(),
+  collection: {
+    versioned: `/postman/Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`,
+    latest: '/postman/Kang_Open_Banking_API_latest.postman_collection.json',
+    legacy: '/postman/Kang_Open_Banking_API_v1.postman_collection.json',
+  },
+  environments: {
+    sandbox: '/postman/Kang_Open_Banking_Sandbox.postman_environment.json',
+    production: '/postman/Kang_Open_Banking_Production.postman_environment.json',
+  },
+};
+fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
 const total = items.reduce((n, f) => n + f.item.length, 0);
-console.log(`Postman collection regenerated: ${items.length} folders, ${total} requests`);
-console.log(`Wrote: ${outPath}`);
+console.log(`Postman collection regenerated for v${apiVersion}: ${items.length} folders, ${total} requests`);
+console.log(`Wrote: ${versionedPath}`);
+console.log(`Wrote: ${latestPath} (alias)`);
+console.log(`Wrote: ${legacyPath} (legacy alias)`);
+
