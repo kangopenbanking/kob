@@ -216,6 +216,64 @@ const isValid = signature === receivedSignature;</code></pre>
 <p>All official SDKs support both sandbox and production environments with automatic retries, idempotency-key handling, and HMAC webhook signature verification.</p>`
   },
   {
+    path: '/developer/authentication/dcr',
+    title: 'Dynamic Client Registration (RFC 7591) | Kang Open Banking Developer Docs',
+    description: 'Register OAuth 2.0 / OIDC clients programmatically with Kang Open Banking using RFC 7591 Dynamic Client Registration. Signed Software Statement Assertion (SSA), FAPI 1.0 Advanced extensions, mTLS binding, rotation and revocation.',
+    h1: 'Dynamic Client Registration (DCR)',
+    content: `<h2>Programmatic OAuth 2.0 / OIDC Client Registration</h2>
+<p>Kang Open Banking implements RFC 7591 Dynamic Client Registration with the FAPI 1.0 Advanced extensions required by UK Open Banking, Berlin Group NextGenPSD2, and FDX. One signed Software Statement Assertion (SSA) authorises a Third-Party Provider (TPP) against every connected bank in the directory.</p>
+<h3>Endpoint</h3>
+<pre><code>POST https://api.kangopenbanking.com/v1/dcr/register
+Content-Type: application/json
+
+{
+  "software_statement": "eyJhbGciOiJQUzI1NiJ9...",
+  "redirect_uris": ["https://yourapp.com/callback"],
+  "grant_types": ["authorization_code", "refresh_token", "client_credentials"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "tls_client_auth",
+  "scope": "openid accounts balances transactions payments offline_access"
+}</code></pre>
+<h3>Required SSA claims</h3>
+<ul>
+  <li><code>software_id</code> — stable identifier for the TPP application</li>
+  <li><code>software_client_name</code> — human-readable name shown on consent screens</li>
+  <li><code>software_roles</code> — AISP, PISP, CBPII or any combination</li>
+  <li><code>software_jwks_uri</code> — public JWKS for request signing</li>
+  <li><code>org_id</code> — verified organisation identifier from the KOB Directory</li>
+</ul>
+<h3>Lifecycle (RFC 7592)</h3>
+<ul>
+  <li><code>GET /v1/dcr/clients/{client_id}</code> — read the live registration</li>
+  <li><code>PUT /v1/dcr/clients/{client_id}</code> — rotate metadata or secret</li>
+  <li><code>DELETE /v1/dcr/clients/{client_id}</code> — revoke the client and all issued tokens</li>
+</ul>
+<p>Standards: RFC 7591, RFC 7592, RFC 8705 mTLS, FAPI 1.0 Advanced § 5.2.2.</p>`
+  },
+  {
+    path: '/developer/open-banking/standards',
+    title: 'Standards & Compliance Index | Kang Open Banking Developer Docs',
+    description: 'Kang Open Banking complies with FAPI 1.0 Advanced, OAuth 2.0 / OIDC, RFC 7591 DCR, RFC 8705 mTLS, RFC 7807 errors, ISO 20022, UK OBIE, Berlin Group NextGenPSD2, FDX 6.0, PSD2 SCA, and COBAC.',
+    h1: 'Standards & Compliance Index',
+    content: `<h2>Internationally recognised standards</h2>
+<p>Every standard below has a published proof page on the developer portal, with live implementation, code samples and specification references.</p>
+<table>
+  <tr><th>Standard</th><th>Status</th><th>Authority</th></tr>
+  <tr><td>FAPI 1.0 Advanced</td><td>Compliant</td><td>OpenID Foundation</td></tr>
+  <tr><td>OAuth 2.0 / OIDC Core</td><td>Compliant</td><td>IETF / OpenID Foundation</td></tr>
+  <tr><td>RFC 7591 Dynamic Client Registration</td><td>Compliant</td><td>IETF</td></tr>
+  <tr><td>RFC 8705 mTLS</td><td>Compliant</td><td>IETF</td></tr>
+  <tr><td>UK Open Banking (OBIE)</td><td>Compatible</td><td>Open Banking Implementation Entity</td></tr>
+  <tr><td>Berlin Group NextGenPSD2</td><td>Compatible</td><td>Berlin Group</td></tr>
+  <tr><td>FDX 6.0 (US)</td><td>Compatible</td><td>Financial Data Exchange</td></tr>
+  <tr><td>PSD2 / Strong Customer Authentication</td><td>Aligned</td><td>European Banking Authority</td></tr>
+  <tr><td>ISO 20022</td><td>Supported</td><td>ISO / SWIFT</td></tr>
+  <tr><td>RFC 7807 Problem Details</td><td>Compliant</td><td>IETF</td></tr>
+  <tr><td>COBAC Regulatory Framework</td><td>Compliant</td><td>Commission Bancaire de l'Afrique Centrale</td></tr>
+</table>
+<p>Proof pages: <a href="/developer/authentication/fapi">FAPI</a> · <a href="/developer/authentication/oauth2">OAuth 2.0</a> · <a href="/developer/authentication/dcr">DCR</a> · <a href="/developer/authentication/mtls">mTLS</a> · <a href="/developer/open-banking/consents">Consents &amp; SCA</a> · <a href="/developer/iso20022/messages">ISO 20022</a> · <a href="/developer/api-reference/obie-migration">OBIE Migration</a></p>`
+  },
+  {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
     description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments.',
@@ -230,6 +288,8 @@ const isValid = signature === receivedSignature;</code></pre>
   <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
   <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
   <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
+  <li><a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a> — FAPI, OBIE, Berlin Group, FDX, ISO 20022, PSD2</li>
+  <li><a href="/developer/authentication/dcr">Dynamic Client Registration</a> — RFC 7591 ecosystem onboarding</li>
 </ul>`
   },
 ];

@@ -36,6 +36,8 @@ jobs:
             "/developer/guides/sdks"
             "/developer/examples/real-world"
             "/developer/changelog"
+            "/developer/authentication/dcr"
+            "/developer/open-banking/standards"
             "/openapi.json"
             "/openapi.yaml"
             "/.well-known/openid-configuration"

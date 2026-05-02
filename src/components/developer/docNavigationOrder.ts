@@ -31,6 +31,8 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "OAuth 2.0 / PKCE", path: "/developer/authentication/oauth2" },
   { title: "FAPI 1.0 Advanced", path: "/developer/authentication/fapi" },
   { title: "mTLS", path: "/developer/authentication/mtls" },
+  { title: "Dynamic Client Registration (RFC 7591)", path: "/developer/authentication/dcr" },
+  { title: "Standards & Compliance Index", path: "/developer/open-banking/standards" },
 
   // ── 3. Sandbox ──
   { title: "Sandbox Overview", path: "/developer/sandbox/overview" },
