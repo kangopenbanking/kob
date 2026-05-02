@@ -194,27 +194,64 @@ Content-Type: application/problem+json
   {
     path: '/developer/gateway/webhooks',
     title: 'Webhook Verification Guide | Kang Open Banking Gateway',
-    description: 'Verify Kang Open Banking webhook signatures using HMAC-SHA256. Event types, retry policy, and idempotent handling for payment notifications.',
+    description: 'Verify Kang Open Banking webhook signatures using HMAC-SHA256. Full list of 52 event types, exponential backoff retry policy, and idempotent handling for payment notifications.',
     h1: 'Webhook Verification Guide',
     content: `<h2>Webhook Integration</h2>
-<p>Receive real-time payment notifications via HTTPS webhooks with cryptographic signature verification.</p>
-<h3>Signature Verification</h3>
-<p>All webhooks are signed using HMAC-SHA256. Verify the <code>X-KOB-Signature</code> header against the raw request body.</p>
+<p>Receive real-time payment, account and lifecycle notifications via HTTPS webhooks with cryptographic signature verification. Every event includes a stable <code>event_id</code> for safe idempotent handling on the receiver side.</p>
+<h3>Signature Verification (HMAC-SHA256)</h3>
+<p>All webhooks are signed using HMAC-SHA256. Verify the <code>X-KOB-Signature</code> header against the raw, unparsed request body using the shared secret you configured for the endpoint.</p>
+<h4>Node.js</h4>
 <pre><code>const crypto = require('crypto');
-const signature = crypto.createHmac('sha256', webhookSecret)
-  .update(rawBody).digest('hex');
-const isValid = signature === receivedSignature;</code></pre>
-<h3>Event Types</h3>
-<ul>
-  <li><code>payment.completed</code> — Payment successfully processed</li>
-  <li><code>payment.failed</code> — Payment attempt failed</li>
-  <li><code>payment.refunded</code> — Refund completed</li>
-  <li><code>transfer.completed</code> — Bank transfer settled</li>
-  <li><code>payout.sent</code> — Payout dispatched</li>
-  <li><code>webhook.test</code> — Test ping event</li>
-</ul>
+function verify(rawBody, signature, secret) {
+  const expected = crypto.createHmac('sha256', secret)
+    .update(rawBody, 'utf8').digest('hex');
+  // Constant-time comparison
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, 'hex'),
+    Buffer.from(signature, 'hex')
+  );
+}</code></pre>
+<h4>Python</h4>
+<pre><code>import hmac, hashlib
+def verify(raw_body: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)</code></pre>
+<h4>PHP</h4>
+<pre><code>function verify(string $rawBody, string $signature, string $secret): bool {
+    $expected = hash_hmac('sha256', $rawBody, $secret);
+    return hash_equals($expected, $signature);
+}</code></pre>
+<h3>Event Types (52 events)</h3>
+<p>Grouped by domain. Subscribe to only the events you need.</p>
+<table>
+  <tr><th>Domain</th><th>Events</th></tr>
+  <tr><td>Charges</td><td><code>charge.created</code>, <code>charge.pending</code>, <code>charge.succeeded</code>, <code>charge.failed</code>, <code>charge.cancelled</code>, <code>charge.refunded</code>, <code>charge.partially_refunded</code></td></tr>
+  <tr><td>Refunds</td><td><code>refund.created</code>, <code>refund.succeeded</code>, <code>refund.failed</code></td></tr>
+  <tr><td>Payouts</td><td><code>payout.created</code>, <code>payout.pending</code>, <code>payout.sent</code>, <code>payout.succeeded</code>, <code>payout.failed</code>, <code>payout.cancelled</code></td></tr>
+  <tr><td>Transfers</td><td><code>transfer.initiated</code>, <code>transfer.completed</code>, <code>transfer.failed</code>, <code>transfer.reversed</code></td></tr>
+  <tr><td>Disputes</td><td><code>dispute.opened</code>, <code>dispute.evidence_required</code>, <code>dispute.won</code>, <code>dispute.lost</code>, <code>dispute.closed</code></td></tr>
+  <tr><td>Settlements</td><td><code>settlement.created</code>, <code>settlement.completed</code>, <code>settlement.failed</code></td></tr>
+  <tr><td>Subscriptions</td><td><code>subscription.created</code>, <code>subscription.renewed</code>, <code>subscription.cancelled</code>, <code>subscription.payment_failed</code></td></tr>
+  <tr><td>Accounts (AISP)</td><td><code>consent.authorised</code>, <code>consent.revoked</code>, <code>consent.expired</code>, <code>account.linked</code>, <code>account.unlinked</code></td></tr>
+  <tr><td>Payments (PISP)</td><td><code>payment.initiated</code>, <code>payment.authorised</code>, <code>payment.completed</code>, <code>payment.rejected</code>, <code>payment.cancelled</code></td></tr>
+  <tr><td>KYC / Compliance</td><td><code>kyc.submitted</code>, <code>kyc.approved</code>, <code>kyc.rejected</code>, <code>compliance.flagged</code>, <code>sar.filed</code></td></tr>
+  <tr><td>Loans / Savings</td><td><code>loan.disbursed</code>, <code>loan.repaid</code>, <code>loan.overdue</code>, <code>savings.deposit</code>, <code>savings.withdrawal</code></td></tr>
+  <tr><td>System</td><td><code>webhook.test</code></td></tr>
+</table>
 <h3>Retry Policy</h3>
-<p>Failed deliveries are retried with exponential backoff: 1min, 5min, 30min, 2hr, 12hr, 24hr (6 attempts total). Return HTTP 2xx to acknowledge.</p>`
+<p>Failed deliveries (any non-2xx response or timeout) are retried with exponential backoff over 7 attempts:</p>
+<table>
+  <tr><th>Attempt</th><th>Delay</th></tr>
+  <tr><td>1</td><td>Immediate</td></tr>
+  <tr><td>2</td><td>+1 minute</td></tr>
+  <tr><td>3</td><td>+5 minutes</td></tr>
+  <tr><td>4</td><td>+30 minutes</td></tr>
+  <tr><td>5</td><td>+2 hours</td></tr>
+  <tr><td>6</td><td>+8 hours</td></tr>
+  <tr><td>7</td><td>+24 hours</td></tr>
+</table>
+<p>After the 7th failure the event is moved to the dead-letter queue and retained for 30 days. You can replay events from the Developer Console or the <code>POST /v1/webhooks/{id}/replay</code> API.</p>
+<p><strong>Per-attempt timeout:</strong> 10 seconds. Return any 2xx within that window to acknowledge.</p>`
   },
   {
     path: '/developer/sandbox/overview',
