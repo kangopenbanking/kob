@@ -22,6 +22,50 @@ interface DocRoute {
   serveAsExtensionlessFile?: boolean;
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderChangelogContent(): string {
+  try {
+    const changelogPath = path.resolve(process.cwd(), 'public/changelog.json');
+    const changelog = JSON.parse(fs.readFileSync(changelogPath, 'utf-8'));
+    const entries = Array.isArray(changelog.entries) ? changelog.entries : [];
+    const renderedEntries = entries.map((entry: any) => {
+      const version = escapeHtml(entry.version ?? '(unversioned)');
+      const date = escapeHtml(entry.date ?? 'unreleased');
+      const type = escapeHtml(entry.type ?? 'release');
+      const breaking = entry.breaking_changes ? 'yes' : 'no';
+      const bullets = [
+        ...(Array.isArray(entry.highlights) ? entry.highlights : []),
+        ...(Array.isArray(entry.fixes) ? entry.fixes : []),
+        ...(Array.isArray(entry.additions) ? entry.additions : []),
+      ].slice(0, 4);
+      return `<h3>v${version} — ${date}</h3>
+<p><strong>Type:</strong> ${type} · <strong>Breaking:</strong> ${breaking}</p>
+<p>${escapeHtml(entry.summary ?? '')}</p>
+${bullets.length ? `<ul>${bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}`;
+    }).join('\n\n');
+
+    return `<h2>Version History</h2>
+<p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7. Newest first. Breaking changes are flagged. Subscribe via <a href="mailto:developers@kangopenbanking.com">developers@kangopenbanking.com</a>.</p>
+${renderedEntries}
+<h3>Machine-readable feeds</h3>
+<ul>
+  <li><a href="/changelog.json">changelog.json</a> — JSON, every entry with standards citations and migration notes</li>
+  <li><a href="/developer/changelog.xml">RSS feed</a></li>
+</ul>`;
+  } catch {
+    return `<h2>Version History</h2>
+<p>All API changes are documented here within 48 hours of deployment. The machine-readable feed is available at <a href="/changelog.json">/changelog.json</a>.</p>`;
+  }
+}
+
 const DOC_ROUTES: DocRoute[] = [
   {
     path: '/developer/getting-started',
@@ -100,6 +144,7 @@ Content-Type: application/problem+json
     title: 'API Explorer | Kang Open Banking Interactive Swagger UI',
     description: 'Interactive API Explorer powered by Swagger UI. Try all Kang Open Banking endpoints live — payments, accounts, transfers, webhooks. OpenAPI 3.1 spec included.',
     h1: 'API Explorer — Interactive Swagger UI',
+    serveAsExtensionlessFile: true,
     content: `<h2>Interactive API Reference</h2>
 <p>Explore all Kang Open Banking API endpoints interactively using Swagger UI. The full OpenAPI 3.1 specification is loaded with try-it-out capability.</p>
 <h3>Available Endpoint Groups</h3>
@@ -190,7 +235,7 @@ Content-Type: application/problem+json
     "amount": "250000",
     "currency": "XAF",
     "channel": "mobile_money",
-    "customer_phone": "+237650000000",
+    "customer_phone": "+237650000000"
   }'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
