@@ -594,9 +594,9 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
 
 <h3>What's new</h3>
 <ul>
-  <li><strong>v4.27.3 — May 2026:</strong> 2,863 response examples and multi-language code samples on every operation. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.27.3 — May 2026:</strong> Coverage ratchet on the v4.27.2 additions — every operation now declares <code>429</code>, every non-public operation declares <code>401</code>, and every 200/201 response carries <code>x-fapi-interaction-id</code>. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.27.2 — May 2026:</strong> 2,863 response examples and multi-language code samples (cURL, Node.js, Python, PHP) on every operation; formal <code>x-webhooks</code> catalogue.</li>
   <li><strong>v4.27.1 — May 2026:</strong> Standards &amp; Compliance Index and Dynamic Client Registration reference page published.</li>
-  <li><strong>v4.27.0 — May 2026:</strong> Subscription trial periods, 9 ISO 20022 messages, FAPI 1.0 Advanced certification gates closed.</li>
 </ul>
 
 <h3>Quick links</h3>
