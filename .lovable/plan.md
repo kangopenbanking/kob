@@ -1,74 +1,73 @@
-## Audit response: critical gaps already implemented — fix discoverability
+## Context
 
-A line-by-line check of the codebase against the auditor's "critical gaps" shows that **every item they flagged is already implemented**. The real defect is **discoverability** — a third party landing on the developer portal cannot find these compliance proofs in under 10 seconds, so the audit concluded they were missing. This plan closes that gap without touching the API contract.
+Claude's audit of v4.27.2 found three spec regressions, four coverage gaps on newly added operations, and six portal pages still rendering as stubs in the prerendered HTML. We will fix all of them, ratchet richness tests, and bump the spec to **v4.27.3** per Standing Order 6 (Version Gate). All spec edits are additive except the deletion of three duplicate legacy webhook paths, which is a bugfix removing accidental reintroduction.
 
-### Audit claim vs. reality
+---
 
-| Audit claim ("missing") | Actual status | Evidence |
-|---|---|---|
-| No FAPI / OAuth profile | Implemented + page exists | `src/pages/developer/AuthFapi.tsx` (PKCE S256, PAR, JAR, mTLS, PS256), `ComplianceFapi.tsx`, route `/developer/authentication/fapi`, `StandardsMatrix` lists FAPI 1.0 Advanced |
-| No mTLS / signed requests | Implemented | `AuthMtls.tsx`, RFC 8705 cert-bound tokens, OpenAPI `cnf.x5t#S256` |
-| No consent / SCA / lifecycle | Implemented | `OpenBankingConsents.tsx` documents create / authorize / revoke + 90-day expiration; PSD2 SCA in `StandardsMatrix` |
-| No DCR / TPP directory / cert trust | Implemented in spec + edge function | `POST /v1/dcr/register` (RFC 7591) in `public/openapi.json`, `dcr-register` edge function, `docs/portal/authentication.md` covers DCR — but **no dedicated public page in `/developer`** |
-| Not aligned to OBIE / Berlin Group / FDX | Partially documented | `ObieMigration.tsx` exists; Berlin Group + FDX are not explicitly mapped on a public page |
-| No standardized data model | Implemented | OpenAPI uses OBIE-style `permissions` enums (`ReadAccountsDetail`, `ReadBalances`, …) and ISO 20022 message families |
+## Track A — OpenAPI spec fixes (`public/openapi.json` + `public/openapi.yaml`)
 
-### What changes (additive only — Standing Order 4)
+1. **Remove legacy provider webhook paths** (regression fix)
+   - Delete `/webhooks/stripe`, `/webhooks/flutterwave`, `/webhooks/paypal` (operationIds `inboundWebhookStripe/Flutterwave/PayPal`).
+   - Keep canonical `/v1/webhooks/providers/{stripe|flutterwave|paypal}` (operationIds `receiveStripeWebhook/Flutterwave/Paypal`).
+2. **Declare `BankConnectors` tag** in global `tags[]` with description and `externalDocs` link to `/developer/banks/connector-runbook`.
+3. **Add `429 Too Many Requests`** (`$ref: '#/components/responses/TooManyRequests'`) to the 23 ops missing it (new connector, admin, gateway export, healthz, sandbox, auth ops).
+4. **Add `401 Unauthorized`** to the 6 flagged ops: `getJwksWellKnown` (skip — public), `connectorImportGet`, `connectorBatchGet`, `connectorBatchDownload`, `merchantWebhookRotateSecret`, `gatewayStatementDownload`. (For `getJwksWellKnown`, document the public exemption with `x-public-endpoint: true` instead.)
+5. **Add `400 Bad Request`** to the 6 POST/PUT/PATCH ops listed (`extendConsent`, `merchantApiKeyRotate`, `merchantWebhookRotateSecret`, plus the v1 receive* webhook ops that replace the deleted legacy ones).
+6. **Add `x-fapi-interaction-id` header** to 200/201 responses on the 50 new ops missing it (use a shared `$ref: '#/components/headers/XFapiInteractionId'`, creating the header component if absent).
+7. **Add `required[]` arrays** to schemas `WebhookReplayRequest`, `DcrRegistrationRequest`, `WebhookEventType`.
+8. **Bump `info.version`** to `4.27.3` and add changelog `docs/governance/CHANGELOG-v4.27.3.md` citing standards (FAPI 1.0 §6.2.1.13 for x-fapi-interaction-id, RFC 6585 for 429, RFC 7235 for 401, RFC 7807 for problem responses, OpenAPI 3.0.3 §4.7.19 for tag declarations).
+9. **Regenerate** `public/openapi.yaml` and `public/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json` (+ update `public/postman/manifest.json` and the `_latest` alias).
 
-1. **New page `src/pages/developer/DynamicClientRegistration.tsx`** at route `/developer/authentication/dcr`
-   - Public, prerendered, follows existing `GuidePageShell` pattern
-   - Documents RFC 7591 DCR: SSA JWT structure, `POST /v1/dcr/register` request/response, rotation, revocation, link to TPP directory
-   - Multi-language snippets (cURL / Node / Python) per Order P9
+## Track B — Portal prerendered HTML fixes (`vite-plugin-prerender-docs.ts`)
 
-2. **Rewrite `src/pages/developer/OpenBankingStandards.tsx`** to be the explicit "Standards & Compliance" landing page the audit was looking for. Add to the existing `standards` array:
-   - **OBIE / UK Open Banking** — link to `ObieMigration.tsx`, list compatible read/write endpoints
-   - **Berlin Group NextGenPSD2** — document the consent + SCA mapping (XS2A → KOB equivalents)
-   - **FDX 6.0 (US)** — list the canonical resource mapping (`accounts`, `balances`, `transactions`)
-   - **RFC 7591 DCR**, **RFC 9126 PAR**, **RFC 9101 JAR**, **RFC 8705 mTLS**, **RFC 7807 errors**, **RFC 7636 PKCE** with deep links to the proof pages
-   - Each entry gets a "View proof" link (to the existing `AuthFapi`, `AuthMtls`, `OpenBankingConsents`, `Iso20022Overview`, new `DynamicClientRegistration` pages)
+1. **Getting Started** — strip every `"provider": "mtn_momo"` line from the embedded code blocks (canonical body uses `channel`+`customer_phone` only, matching the React component and the spec).
+2. **Replace stub HTML** for the six pages flagged as generic stubs in the live crawl, mirroring the React content already shipped:
+   - `/developer/authentication` → full OAuth 2.0 + API key guide (token exchange, scopes, mTLS pointer, key rotation).
+   - `/developer/api-explorer` → server-rendered Redoc `<redoc spec-url="/openapi.json">` block + Swagger UI deep-link + Postman/SDK download list (already partially present — extend with H1, intro, and field tables so it satisfies CFT/UTT and Order P6).
+   - `/developer/gateway/quickstart` → 5-step tutorial (auth → charge → poll → webhook handler → payout) using canonical fields.
+   - `/developer/gateway/webhooks` → event catalogue table for the 8 documented `x-webhooks` plus HMAC verification example (Node + Python + PHP).
+   - `/developer/guides/sdks` → install instructions for `@kangopenbanking/sdk` (npm), `kangopenbanking` (pip), `kangopenbanking/sdk-php` (composer), with quickstart per language.
+   - `/developer/examples/real-world` → three end-to-end scenarios (e-commerce checkout, payroll bulk payout, AISP account aggregation) each with a code sample and a sequence diagram in ASCII.
+3. Each rebuilt page must satisfy the existing Mega-v5 guards: unique `<title>`, unique `<h1>`, no legacy field names, no `*.supabase.co` host, ≥80-char description, multi-language code samples per Order P9.
 
-3. **Add 3 nav entries** to `src/components/developer/docNavigationOrder.ts`:
-   - "Dynamic Client Registration (RFC 7591)" → `/developer/authentication/dcr`
-   - "Standards & Compliance Index" already exists at `/developer/open-banking/standards` — promote it into the top "Authentication & Security" section (currently buried under Open Banking)
-   - Keep `ObieMigration` reachable
+## Track C — Tests (ratchet upward, never down)
 
-4. **Surface a "Standards Compliance" hero card on `DeveloperHome.tsx`** — one row of badges (FAPI 1.0 Adv · OIDC · OAuth 2.1 · RFC 7591 DCR · RFC 8705 mTLS · ISO 20022 · OBIE Compatible · PSD2 SCA · Berlin Group · FDX) each linking to its proof page. This is what an auditor needs to see in 10 seconds.
+Add/extend Vitest specs:
 
-5. **Add the new public routes** to:
-   - `src/App.tsx` (lazy import + route under the public developer layout)
-   - `vite-plugin-prerender-docs.ts` (so `/developer/authentication/dcr` is in the SSR list — required by Order P2 zero-404 and existing prerender governance)
-   - `.github/workflows/developer-portal-uptime.yml` URL list
-   - `src/test/developer-portal-content.test.ts` (regression coverage)
+1. **`src/test/openapi-v4-27-3-regressions.test.ts`** (new):
+   - Asserts `/webhooks/stripe|flutterwave|paypal` paths are absent.
+   - Asserts every tag used by an operation appears in global `tags[]`.
+   - Asserts each named op above carries 401 / 400 / 429 as required.
+   - Asserts every 200/201 response on every operation declares the `x-fapi-interaction-id` header.
+   - Asserts the three schemas declare `required[]`.
+   - Asserts `info.version === '4.27.3'` and changelog file exists.
+2. **Extend `src/test/openapi-richness.test.ts`** thresholds: response examples and code-samples coverage stays at 391/391; add new floor `xFapiCoverage = ops.length`.
+3. **Extend `src/test/developer-portal-mega-v5-guards.test.ts`**: add CFT/UTT/CAT entries for the six rebuilt pages and a hard-fail check for the legacy `"provider":` substring across all prerendered HTML.
+4. **Extend `src/test/postman-collection-publishing.test.ts`**: bump expected version to 4.27.3 and verify manifest sync.
 
-6. **Add a public alias** for the international standards page: `/developer/standards` (already wired) and `/developer/compliance` (new redirect → `/developer/open-banking/standards`) per Order P2 (no broken links).
+Run all four suites + the existing portal/charge-fields/postman suites; do not ship until 100% green.
 
-7. **Changelog** `docs/governance/CHANGELOG-v4.18.3.md` — patch bump (additive only, no spec changes), citing the standards added to the docs surface. OpenAPI `info.version` bumps `4.18.2 → 4.18.3` to satisfy Standing Order 6.
+## Technical details
 
-### Files to create
+- Heavy spec edits are scripted: a one-shot Node script (`scripts/apply-v4.27.3-fixes.mjs`, run once and kept under `scripts/` for audit history) loads `openapi.json`, applies the seven changes deterministically, then writes JSON + emits YAML via `js-yaml`. This keeps Standing Order 4 (Surgeon Rule) clean — no hand-edits across 391 ops.
+- The `XFapiInteractionId` header component will be defined once under `components.headers` with `schema: { type: string, format: uuid }` and `description` citing FAPI 1.0 §6.2.1.13.
+- Postman regeneration reuses `scripts/regen-postman.mjs`; we only invoke it after the spec lands.
+- No DB migrations, no edge functions, no new dependencies.
 
-- `src/pages/developer/DynamicClientRegistration.tsx`
-- `docs/governance/CHANGELOG-v4.18.3.md`
-- `mem://standards/developer-portal-standards-discoverability` (record the discoverability rule so it isn't reverted)
+## Files touched
 
-### Files to edit
+- `public/openapi.json`, `public/openapi.yaml` (regenerated)
+- `public/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json` (new), `_latest` alias, `manifest.json`
+- `vite-plugin-prerender-docs.ts` (six page HTML rewrites + Getting Started field cleanup)
+- `docs/governance/CHANGELOG-v4.27.3.md` (new)
+- `scripts/apply-v4.27.3-fixes.mjs` (new, idempotent)
+- `src/test/openapi-v4-27-3-regressions.test.ts` (new)
+- `src/test/openapi-richness.test.ts`, `src/test/developer-portal-mega-v5-guards.test.ts`, `src/test/postman-collection-publishing.test.ts` (extended)
 
-- `src/pages/developer/OpenBankingStandards.tsx` — expand standards array with OBIE / Berlin Group / FDX / RFC pointers + "View proof" links
-- `src/pages/developer/DeveloperHome.tsx` — add Standards Compliance badge row
-- `src/components/developer/docNavigationOrder.ts` — add DCR entry, promote standards index
-- `src/App.tsx` — register `/developer/authentication/dcr` and `/developer/compliance` redirect
-- `vite-plugin-prerender-docs.ts` — add new URLs to prerender list
-- `.github/workflows/developer-portal-uptime.yml` — add new URLs to uptime probe
-- `src/test/developer-portal-content.test.ts` — assert the new page renders without forbidden placeholders
-- `public/openapi.json` and `public/openapi.yaml` — `info.version` bump only (no contract changes)
+## Done criteria
 
-### Files NOT touched
-
-- `worker/*` (per standing instruction)
-- Any operationId, schema, security scheme, response code in OpenAPI (Standing Orders 1, 2, 4)
-- `src/integrations/supabase/*`
-
-### Verification after implementation
-
-1. `bunx vitest run src/test/developer-portal-content.test.ts` passes
-2. Curl all new public URLs and confirm `200` + no `<div id="ssr-fallback">` leak + no `YOUR_PROJECT` / `supabase.co/functions/v1` in HTML
-3. Confirm `/developer/authentication/dcr` and the upgraded `/developer/open-banking/standards` render the OBIE / Berlin Group / FDX / RFC 7591 / RFC 9126 / RFC 9101 / RFC 8705 entries — exactly the items the auditor said were missing
+- All seven flagged spec issues resolved; `info.version = 4.27.3`.
+- Six portal pages render full content in prerendered HTML (no stubs).
+- Getting Started prerender contains zero `"provider":` lines.
+- All Vitest suites listed above pass; existing 32 passing tests still pass.
+- New CHANGELOG cites every standard per Standing Order 3.
