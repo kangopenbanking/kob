@@ -315,7 +315,6 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
     title: 'Sandbox Environment | Kang Open Banking Developer Sandbox',
     description: 'Free sandbox environment for testing Kang Open Banking API. Test credentials, simulated payments, mobile money test numbers, and card test data.',
     h1: 'Sandbox Environment Overview',
-    serveAsExtensionlessFile: true,
     content: `<h2>Free Developer Sandbox</h2>
 <p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
 <h3>Sandbox Base URL</h3>
