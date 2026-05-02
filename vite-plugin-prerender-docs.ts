@@ -564,25 +564,41 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
     description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.2.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
-<p><strong>Current API version: v4.27.2</strong> — Stable, FAPI 1.0 Advanced compliant, 339 operations, OpenAPI 3.1 spec.</p>
+<p><strong>Kang Open Banking API v4.27.2 · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
-<h3>Quick Links</h3>
+
+<h3>Start building — pick your path</h3>
 <ul>
-  <li><a href="/developer/getting-started">Getting Started Guide</a> — First API call in 5 minutes</li>
+  <li><strong>I'm a developer</strong> → <a href="/developer/getting-started">Getting Started</a> — first API call in 5 minutes</li>
+  <li><strong>I'm integrating a bank</strong> → <a href="/developer/authentication">Authentication &amp; FAPI</a> — OAuth 2.0 + PKCE, mTLS, DCR</li>
+  <li><strong>I'm an e-commerce business</strong> → <a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — accept payments in 10 minutes</li>
+</ul>
+
+<h3>What's new</h3>
+<ul>
+  <li><strong>v4.27.2 — May 2026:</strong> 2,863 response examples and multi-language code samples on every operation. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.27.1 — May 2026:</strong> Standards &amp; Compliance Index and Dynamic Client Registration reference page published.</li>
+  <li><strong>v4.27.0 — May 2026:</strong> Subscription trial periods, 9 ISO 20022 messages, FAPI 1.0 Advanced certification gates closed.</li>
+</ul>
+
+<h3>Quick links</h3>
+<ul>
+  <li><a href="/developer/getting-started">Getting Started Guide</a> — first API call in 5 minutes</li>
   <li><a href="/developer/authentication">Authentication</a> — API keys, OAuth 2.0 + PKCE, scopes table</li>
-  <li><a href="/developer/api-explorer">API Explorer</a> — Interactive Swagger UI</li>
-  <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — Accept payments in 10 minutes</li>
+  <li><a href="/developer/api-explorer">API Explorer</a> — interactive Swagger UI</li>
+  <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — accept payments in 10 minutes</li>
   <li><a href="/developer/gateway/webhooks">Webhook Verification Guide</a> — HMAC-SHA256, 52 event types, retry policy</li>
-  <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
-  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
-  <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
+  <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — free testing with test credentials</li>
+  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides)</li>
+  <li><a href="/developer/examples/real-world">Real-World Examples</a> — production-ready integration patterns</li>
   <li><a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a> — FAPI, OBIE, Berlin Group, FDX, ISO 20022, PSD2</li>
   <li><a href="/developer/authentication/dcr">Dynamic Client Registration</a> — RFC 7591 ecosystem onboarding</li>
-  <li><a href="/developer/changelog">Changelog</a> — All API changes within 48 hours of deployment</li>
+  <li><a href="/developer/changelog">Changelog</a> — every API change within 48 hours of deployment</li>
 </ul>
+
 <h3>Specifications</h3>
 <ul>
-  <li><a href="/openapi.json">OpenAPI 3.1 (JSON)</a> — Machine-readable, downloadable, no auth</li>
+  <li><a href="/openapi.json">OpenAPI 3.1 (JSON)</a> — machine-readable, downloadable, no auth</li>
   <li><a href="/openapi.yaml">OpenAPI 3.1 (YAML)</a></li>
   <li><a href="/openapi-sandbox.json">Sandbox OpenAPI 3.1 (JSON)</a></li>
 </ul>`
