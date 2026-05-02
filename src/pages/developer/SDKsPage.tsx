@@ -893,6 +893,17 @@ export default function SDKsPage() {
           </a>
         </div>
 
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            <strong>Officially published SDKs:</strong> Node.js, Python, PHP — installable today
+            from npm, PyPI, and Packagist.{" "}
+            <strong>Community implementation guides:</strong> Java, Go, Ruby — drop-in client
+            classes shown below using each language's standard HTTP libraries. Published packages
+            for these three languages ship in a future release.
+          </AlertDescription>
+        </Alert>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {sdks.map((s) => {
             const Logo = s.Logo;
