@@ -326,28 +326,12 @@ export function prerenderDocsPlugin(): Plugin {
     </noscript>`
           );
 
-          // Add a visible server-rendered content block that the React app will replace
-          // This ensures crawlers see content even without JS
-          const serverContent = `
-    <!-- Server-rendered content for SEO crawlers — React app replaces this on hydration -->
-    <div id="ssr-fallback" style="max-width:960px;margin:0 auto;padding:2rem;font-family:system-ui,-apple-system,sans-serif;color:#1a1a2e">
-      <h1>${route.h1}</h1>
-      <p>${route.description}</p>
-      ${route.content}
-      <hr style="margin:2rem 0;border:none;border-top:1px solid #e2e8f0"/>
-      <nav>
-        <a href="/developer">Portal Home</a> |
-        <a href="/developer/getting-started">Getting Started</a> |
-        <a href="/developer/api-explorer">API Explorer</a> |
-        <a href="/openapi.json">OpenAPI Spec</a>
-      </nav>
-    </div>`;
-
-          // Insert the server content before the React root div
-          html = html.replace(
-            '<div id="root"></div>',
-            `<div id="root"></div>${serverContent}`
-          );
+          // NOTE: We intentionally do NOT inject a visible #ssr-fallback div here.
+          // Doing so caused duplicate content rendering: the static block stayed
+          // briefly visible alongside the React-rendered page on hydration, and
+          // some crawlers indexed the page body twice. The <noscript> block above
+          // is sufficient for SEO and for non-JS crawlers; React owns the visible
+          // DOM exclusively. (Audit fix — Developer Portal duplicate content bug.)
 
           fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           generated++;
