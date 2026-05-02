@@ -121,17 +121,30 @@ export default function InstitutionApiClients() {
             </DialogContent>
           </Dialog>
           <Dialog open={secretDialogOpen} onOpenChange={setSecretDialogOpen}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-2xl">
               <DialogHeader><DialogTitle>API Client Created</DialogTitle><DialogDescription>Save these credentials securely. The secret will not be shown again.</DialogDescription></DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><p className="text-xs text-destructive">⚠️ Store your client secret in a secure location. You will not be able to view it again.</p></div>
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                  <p className="text-xs text-destructive">Store your client secret in a secure location. You will not be able to view it again.</p>
+                </div>
                 {[{ label: "Client ID", value: newClientId }, { label: "Client Secret", value: newClientSecret }].map(item => (
                   <div key={item.label} className="space-y-1.5">
                     <Label className="text-xs font-semibold">{item.label}</Label>
                     <div className="flex gap-2"><Input value={item.value} readOnly className="font-mono text-xs h-10" /><Button variant="outline" size="sm" onClick={() => copyToClipboard(item.value, item.label)}><Copy className="h-3.5 w-3.5" /></Button></div>
                   </div>
                 ))}
-                <Button className="w-full" onClick={() => { setSecretDialogOpen(false); setNewClientId(""); setNewClientSecret(""); }}>I've Saved My Credentials</Button>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold">Exchange for an access token (client_credentials)</Label>
+                  <pre className="text-[11px] font-mono bg-muted rounded-md p-3 overflow-x-auto whitespace-pre-wrap">{`curl -X POST https://api.kangopenbanking.com/v1/oauth/token \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "grant_type=client_credentials" \\
+  -d "client_id=${newClientId}" \\
+  -d "client_secret=YOUR_CLIENT_SECRET" \\
+  -d "scope=accounts transactions payments"`}</pre>
+                  <p className="text-[11px] text-muted-foreground">RFC 6749 §4.4 — Client Credentials Grant. Tokens expire after 3600s.</p>
+                </div>
+                <Button className="w-full" onClick={() => { setSecretDialogOpen(false); setNewClientId(""); setNewClientSecret(""); }}>I've saved my credentials</Button>
               </div>
             </DialogContent>
           </Dialog>
