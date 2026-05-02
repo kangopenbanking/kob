@@ -754,7 +754,6 @@ export function prerenderDocsPlugin(): Plugin {
             // SPA fallback. Publish a same-name HTML resource as a defensive
             // no-redirect target for permanent public docs routes (P1/P2).
             fs.writeFileSync(path.join(distDir, `${route.path}.html`), html, 'utf-8');
-            fs.writeFileSync(path.join(distDir, route.path), html, 'utf-8');
           }
           generated++;
         }
