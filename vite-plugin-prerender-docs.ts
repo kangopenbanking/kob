@@ -85,7 +85,16 @@ Content-Type: application/problem+json
   <li>PHP — <code>composer require kang/openbanking-php</code></li>
   <li>Java, Go, Ruby — community implementation guides available on the SDKs page; official packages targeted Q3 2026.</li>
 </ul>
-<p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>`
+<p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>
+<h3>Postman Collection</h3>
+<p>A versioned Postman v2.1 collection is auto-generated from the live OpenAPI spec on every release (391 requests, 45 folders).</p>
+<ul>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Latest collection</a> (currently v4.27.2)</li>
+  <li><a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json">v4.27.2 (immutable, pinned)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_Sandbox.postman_environment.json">Sandbox environment</a></li>
+  <li><a href="/postman/Kang_Open_Banking_Production.postman_environment.json">Production environment</a></li>
+  <li><a href="/postman/manifest.json">manifest.json</a> — current version + download URLs (machine-readable)</li>
+</ul>`
   },
   {
     path: '/developer/api-explorer',
@@ -109,6 +118,9 @@ Content-Type: application/problem+json
   <li><a href="/openapi.json">OpenAPI Specification (JSON)</a></li>
   <li><a href="/openapi.yaml">OpenAPI Specification (YAML)</a></li>
   <li><a href="/openapi-sandbox.json">Sandbox Specification (JSON)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Postman Collection (v4.27.2 — latest)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json">Postman Collection v4.27.2 (immutable)</a></li>
+  <li><a href="/postman/manifest.json">Postman manifest (current version + URLs)</a></li>
 </ul>
 <p>Authentication: Bearer token or OAuth 2.0. Sandbox key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>`
   },
