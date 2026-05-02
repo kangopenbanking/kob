@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Upload, FileSearch, RotateCcw, GitCompare, ShieldCheck, Activity } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { ConnectorSandboxSimulator } from "@/components/developer/ConnectorSandboxSimulator";
 
 const STATUSES = [
   { code: "queued", meaning: "File received, SHA-256 hash computed, awaiting validation worker" },
