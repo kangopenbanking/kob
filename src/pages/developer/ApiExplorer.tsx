@@ -825,6 +825,7 @@ const ApiExplorer = () => {
               <ul className="list-disc list-inside space-y-2">
                 <li><a href="/openapi.json" className="text-primary underline">OpenAPI JSON</a></li>
                 <li><a href="/openapi.yaml" className="text-primary underline">OpenAPI YAML</a></li>
+                <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" className="text-primary underline">Postman collection (latest)</a></li>
                 <li><a href="/developer/api-explorer-static" className="text-primary underline">Static API reference</a></li>
                 <li><a href="/developer/redoc" className="text-primary underline">Redoc documentation</a></li>
               </ul>
