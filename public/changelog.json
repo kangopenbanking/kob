@@ -1,9 +1,37 @@
 {
-  "apiVersion": "4.28.1",
+  "apiVersion": "4.28.2",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-02",
   "entries": [
+    {
+      "version": "4.28.2",
+      "date": "2026-05-02",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Documentation-only alignment of webhook signature and replay-protection header names. Adds an explicit 'Webhook Signature & Replay Headers (canonical)' table to info.description in both openapi.yaml and openapi.json. Runtime middleware already accepts all canonical headers and aliases — this release makes the integration contract explicit.",
+      "highlights": [
+        "Canonical X-KOB-Signature with v1=<hex> versioning prefix (Stripe convention).",
+        "Aliases X-Kang-Signature and X-Webhook-Signature accepted for backward compatibility.",
+        "X-Webhook-ID dedup window (24h), X-Webhook-Timestamp replay window (5min) formalised.",
+        "X-Webhook-Event and X-Webhook-Attempt receiver-side telemetry headers documented."
+      ],
+      "additions": [
+        "info.description — Webhook Signature & Replay Headers table (5 canonical headers)."
+      ],
+      "deprecations": [],
+      "fixes": [
+        "Resolves cross-document inconsistency between AsyncAPI section, event docs, and project memory on webhook header naming."
+      ],
+      "standard_citations": [
+        "RFC 7230 §3.2 (HTTP header field case-insensitivity)",
+        "RFC 7807 (Problem Details for HTTP APIs — error envelope)",
+        "Standing Order 1 (The Lock — no renames)",
+        "Standing Order 2 (The Ratchet — additive only)",
+        "Standing Order 4 (Surgeon Rule — additive only)",
+        "Standing Order 6 (Version Gate — patch bump 4.28.1 → 4.28.2)"
+      ]
+    },
     {
       "version": "4.28.1",
       "date": "2026-05-02",
