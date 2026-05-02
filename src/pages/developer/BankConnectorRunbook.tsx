@@ -111,6 +111,15 @@ export default function BankConnectorRunbook() {
           })}
         </section>
 
+        <section className="space-y-3" id="simulator">
+          <h2 className="text-xl font-bold">Run a sandbox simulation</h2>
+          <p className="text-sm text-muted-foreground">
+            Walk through the connector pipeline without uploading a real file. Pick a phase, choose a
+            fixture, and watch the status timeline render — same vocabulary your live dashboards use.
+          </p>
+          <ConnectorSandboxSimulator />
+        </section>
+
         <section className="space-y-3">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" /> Operational status codes
