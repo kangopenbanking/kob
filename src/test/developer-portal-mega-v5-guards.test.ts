@@ -97,8 +97,8 @@ describe('Mega Prompt v5 — Code Accuracy Test (CAT)', () => {
 
 describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
   const home = block('/developer');
-  it('advertises the current API version v4.27.2', () => {
-    expect(home).toMatch(/v4\.27\.2/);
+  it('advertises the current API version v4.27.3', () => {
+    expect(home).toMatch(/v4\.27\.3/);
   });
   it('has the "Start building — pick your path" audience cards', () => {
     expect(home).toContain("Start building");
@@ -108,15 +108,16 @@ describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
   });
   it("has a What's new strip with the 3 most recent versions", () => {
     expect(home).toContain("What's new");
+    expect(home).toContain('v4.27.3');
     expect(home).toContain('v4.27.2');
     expect(home).toContain('v4.27.1');
-    expect(home).toContain('v4.27.0');
   });
 });
 
 describe('Mega Prompt v5 — Changelog inlines version history', () => {
   const cl = block('/developer/changelog');
-  it('lists v4.27.2, v4.27.1, v4.27.0 and the 4.x baseline inline', () => {
+  it('lists v4.27.3 → v4.27.0 and the 4.x baseline inline', () => {
+    expect(cl).toContain('v4.27.3');
     expect(cl).toContain('v4.27.2');
     expect(cl).toContain('v4.27.1');
     expect(cl).toContain('v4.27.0');
