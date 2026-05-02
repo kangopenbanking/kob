@@ -32,23 +32,21 @@ const DOC_ROUTES: DocRoute[] = [
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
-<pre><code>curl -X GET https://YOUR_PROJECT.supabase.co/functions/v1/api-health \\
-  -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024"</code></pre>
-<h3>Step 3: Try a Payment</h3>
-<pre><code>curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/gateway-charges-router \\
+<pre><code>curl -i https://api.kangopenbanking.com/v1/health</code></pre>
+<h3>Step 3: Try a Payment (Sandbox)</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":5000,"currency":"XAF","method":"momo","phone":"+237670000000"}'</code></pre>
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{"amount":"5000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
 <h3>Available SDKs</h3>
 <ul>
-  <li>Node.js / TypeScript</li>
-  <li>Python</li>
-  <li>PHP</li>
-  <li>Java</li>
-  <li>Go</li>
-  <li>Ruby</li>
+  <li>Node.js / TypeScript — <code>npm install @kangopenbanking/sdk</code></li>
+  <li>Python — <code>pip install kang-openbanking</code></li>
+  <li>PHP — <code>composer require kang/openbanking-php</code></li>
+  <li>Java, Go, Ruby — coming soon. Implementation guides available on the SDKs page.</li>
 </ul>
-<p>Base URL: <code>https://YOUR_PROJECT.supabase.co/functions/v1</code></p>`
+<p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>`
   },
   {
     path: '/developer/api-explorer',
@@ -100,16 +98,24 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     content: `<h2>10-Minute Integration Guide</h2>
-<p>Start accepting payments in Cameroon and the CEMAC region with minimal code.</p>
-<h3>Step 1: Create a Payment Intent</h3>
-<pre><code>curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/gateway-charges-router \\
-  -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
+<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request.</p>
+<h3>Step 1: Create a Charge (Mobile Money)</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":10000,"currency":"XAF","description":"Test charge"}'</code></pre>
-<h3>Step 2: Handle the Payment Method</h3>
-<p>Support mobile money (MTN MoMo, Orange Money), Visa/Mastercard with 3D-Secure, and direct bank transfers.</p>
-<h3>Step 3: Verify via Webhook</h3>
-<p>Configure your webhook endpoint and verify signatures using HMAC-SHA256.</p>
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{"amount":"500000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000","description":"Test payment"}'</code></pre>
+<h3>Step 2: Check Charge Status</h3>
+<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/CHARGE_ID \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</code></pre>
+<h3>Step 3: Verify Webhooks</h3>
+<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header.</p>
+<h3>Step 4: Issue a Payout</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/payouts \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -H "Content-Type: application/json" \\
+  -d '{"amount":"250000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
   <tr><th>Method</th><th>Min Amount (XAF)</th><th>Max Amount (XAF)</th><th>Settlement</th></tr>
@@ -117,7 +123,8 @@ const DOC_ROUTES: DocRoute[] = [
   <tr><td>Orange Money</td><td>100</td><td>3,000,000</td><td>T+1</td></tr>
   <tr><td>Visa/Mastercard</td><td>500</td><td>10,000,000</td><td>T+2</td></tr>
   <tr><td>Bank Transfer</td><td>1,000</td><td>50,000,000</td><td>T+1</td></tr>
-</table>`
+</table>
+<p>Amounts are string integers in minor units. XAF has no subunits, so <code>"500000"</code> = 500,000 XAF.</p>`
   },
   {
     path: '/developer/gateway/webhooks',
@@ -152,7 +159,14 @@ const isValid = signature === receivedSignature;</code></pre>
     content: `<h2>Free Developer Sandbox</h2>
 <p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
 <h3>Sandbox Base URL</h3>
-<p><code>https://YOUR_PROJECT.supabase.co/functions/v1</code></p>
+<p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
+<h3>Production Base URL</h3>
+<p><code>https://api.kangopenbanking.com/v1</code></p>
+<h3>Sandbox-only endpoints</h3>
+<ul>
+  <li><code>POST /v1/sandbox/reset</code> — Reset all your sandbox data</li>
+  <li><code>POST /v1/sandbox/webhooks/send-test</code> — Trigger a test webhook delivery</li>
+</ul>
 <h3>Default Test Credentials</h3>
 <p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Test Phone Numbers (Mobile Money)</h3>
@@ -190,17 +204,16 @@ const isValid = signature === receivedSignature;</code></pre>
     h1: 'SDKs and Client Libraries',
     content: `<h2>Official SDKs</h2>
 <p>Install an official SDK to integrate Kang Open Banking API in your preferred language.</p>
-<h3>Available SDKs</h3>
+<h3>Officially Published SDKs</h3>
 <table>
   <tr><th>Language</th><th>Package</th><th>Install</th></tr>
-  <tr><td>Node.js</td><td>@kangob/node</td><td><code>npm install @kangob/node</code></td></tr>
-  <tr><td>Python</td><td>kangob</td><td><code>pip install kangob</code></td></tr>
-  <tr><td>PHP</td><td>kangob/kangob-php</td><td><code>composer require kangob/kangob-php</code></td></tr>
-  <tr><td>Java</td><td>com.kangob:kangob-java</td><td>Maven/Gradle</td></tr>
-  <tr><td>Go</td><td>github.com/kangob/kangob-go</td><td><code>go get github.com/kangob/kangob-go</code></td></tr>
-  <tr><td>Ruby</td><td>kangob</td><td><code>gem install kangob</code></td></tr>
+  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td></tr>
+  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td></tr>
+  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td></tr>
 </table>
-<p>All SDKs support both sandbox and production environments with automatic retries and idempotency.</p>`
+<h3>Community &amp; Self-Hosted Implementation Guides</h3>
+<p>Java, Go, and Ruby SDKs are coming soon. Drop-in HTTP client implementation guides (OkHttp, net/http, Net::HTTP) are published on the SDKs page.</p>
+<p>All official SDKs support both sandbox and production environments with automatic retries, idempotency-key handling, and HMAC webhook signature verification.</p>`
   },
   {
     path: '/developer',
@@ -215,7 +228,7 @@ const isValid = signature === receivedSignature;</code></pre>
   <li><a href="/developer/api-explorer">API Explorer</a> — Interactive Swagger UI</li>
   <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — Accept payments in 10 minutes</li>
   <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
-  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP, Java, Go, Ruby</li>
+  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
   <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
 </ul>`
   },
@@ -313,28 +326,12 @@ export function prerenderDocsPlugin(): Plugin {
     </noscript>`
           );
 
-          // Add a visible server-rendered content block that the React app will replace
-          // This ensures crawlers see content even without JS
-          const serverContent = `
-    <!-- Server-rendered content for SEO crawlers — React app replaces this on hydration -->
-    <div id="ssr-fallback" style="max-width:960px;margin:0 auto;padding:2rem;font-family:system-ui,-apple-system,sans-serif;color:#1a1a2e">
-      <h1>${route.h1}</h1>
-      <p>${route.description}</p>
-      ${route.content}
-      <hr style="margin:2rem 0;border:none;border-top:1px solid #e2e8f0"/>
-      <nav>
-        <a href="/developer">Portal Home</a> |
-        <a href="/developer/getting-started">Getting Started</a> |
-        <a href="/developer/api-explorer">API Explorer</a> |
-        <a href="/openapi.json">OpenAPI Spec</a>
-      </nav>
-    </div>`;
-
-          // Insert the server content before the React root div
-          html = html.replace(
-            '<div id="root"></div>',
-            `<div id="root"></div>${serverContent}`
-          );
+          // NOTE: We intentionally do NOT inject a visible #ssr-fallback div here.
+          // Doing so caused duplicate content rendering: the static block stayed
+          // briefly visible alongside the React-rendered page on hydration, and
+          // some crawlers indexed the page body twice. The <noscript> block above
+          // is sufficient for SEO and for non-JS crawlers; React owns the visible
+          // DOM exclusively. (Audit fix — Developer Portal duplicate content bug.)
 
           fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           generated++;
