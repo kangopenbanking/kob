@@ -671,14 +671,16 @@ export function prerenderDocsPlugin(): Plugin {
           // Build the directory path: /developer/getting-started -> dist/developer/getting-started/
           const routeDir = path.join(distDir, route.path);
           const routeHtmlPath = path.join(routeDir, 'index.html');
+          const extensionlessRoutePath = path.join(distDir, route.path);
 
           // Skip if file already exists (e.g., the root /developer might conflict)
           if (fs.existsSync(routeHtmlPath)) {
             // Still replace content for existing files
           }
 
-          // Create directory
-          fs.mkdirSync(routeDir, { recursive: true });
+          // Create directory. For selected no-slash docs URLs, create the parent
+          // only so the URL itself can be served as an exact extensionless file.
+          fs.mkdirSync(route.serveAsExtensionlessFile ? path.dirname(extensionlessRoutePath) : routeDir, { recursive: true });
 
           // Modify the HTML for this specific route
           let html = baseHtml;
@@ -748,12 +750,14 @@ export function prerenderDocsPlugin(): Plugin {
           // is sufficient for SEO and for non-JS crawlers; React owns the visible
           // DOM exclusively. (Audit fix — Developer Portal duplicate content bug.)
 
-          fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           if (route.serveAsExtensionlessFile) {
-            // Some production edges resolve extensionless deep links before the
-            // SPA fallback. Publish a same-name HTML resource as a defensive
-            // no-redirect target for permanent public docs routes (P1/P2).
+            // Some production edges resolve extensionless deep links before
+            // checking directory indexes. Publish the canonical no-slash URL as
+            // an exact static HTML file, not only /index.html (P1/P2).
+            fs.writeFileSync(extensionlessRoutePath, html, 'utf-8');
             fs.writeFileSync(path.join(distDir, `${route.path}.html`), html, 'utf-8');
+          } else {
+            fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           }
           generated++;
         }
