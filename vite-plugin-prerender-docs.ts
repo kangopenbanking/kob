@@ -32,23 +32,21 @@ const DOC_ROUTES: DocRoute[] = [
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
-<pre><code>curl -X GET https://YOUR_PROJECT.supabase.co/functions/v1/api-health \\
-  -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024"</code></pre>
-<h3>Step 3: Try a Payment</h3>
-<pre><code>curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/gateway-charges-router \\
+<pre><code>curl -i https://api.kangopenbanking.com/v1/health</code></pre>
+<h3>Step 3: Try a Payment (Sandbox)</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":5000,"currency":"XAF","method":"momo","phone":"+237670000000"}'</code></pre>
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{"amount":"5000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
 <h3>Available SDKs</h3>
 <ul>
-  <li>Node.js / TypeScript</li>
-  <li>Python</li>
-  <li>PHP</li>
-  <li>Java</li>
-  <li>Go</li>
-  <li>Ruby</li>
+  <li>Node.js / TypeScript — <code>npm install @kangopenbanking/sdk</code></li>
+  <li>Python — <code>pip install kang-openbanking</code></li>
+  <li>PHP — <code>composer require kang/openbanking-php</code></li>
+  <li>Java, Go, Ruby — coming soon. Implementation guides available on the SDKs page.</li>
 </ul>
-<p>Base URL: <code>https://YOUR_PROJECT.supabase.co/functions/v1</code></p>`
+<p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>`
   },
   {
     path: '/developer/api-explorer',
