@@ -128,6 +128,58 @@ export default function ApiReferenceVersioning() {
         </section>
 
         <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="deprecated-fields">
+            Deprecated Fields &amp; Migration Map
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            The following fields are marked <code className="text-xs px-1 py-0.5 rounded bg-muted">deprecated: true</code> in the
+            current OpenAPI specification (v4.28.0). They remain functional under our backward-compatibility
+            promise and will only be removed in <strong>v5.0.0</strong>. Integrators should migrate to the
+            replacement fields now to avoid a future breaking change. All replacement amount fields use
+            <strong> minor-unit strings</strong> (e.g. <code className="text-xs px-1 py-0.5 rounded bg-muted">"500000"</code>
+            = 5,000.00 XAF) to preserve precision per ISO 20022 guidance.
+          </p>
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full text-sm border border-border rounded-lg">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-3 font-medium text-foreground">Schema</th>
+                  <th className="text-left p-3 font-medium text-foreground">Deprecated field</th>
+                  <th className="text-left p-3 font-medium text-foreground">Replacement</th>
+                  <th className="text-left p-3 font-medium text-foreground">Removed in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["LoanScheduleItem", "principal (number)", "principal_amount (string, minor units)", "v5.0.0"],
+                  ["LoanScheduleItem", "interest (number)", "interest_amount (string, minor units)", "v5.0.0"],
+                  ["LoanScheduleItem", "fees (number)", "fees_amount (string, minor units)", "v5.0.0"],
+                  ["LoanScheduleItem", "total_due (number)", "total_due_amount (string, minor units)", "v5.0.0"],
+                  ["VirtualCard", "balance_usd (number)", "balance (string) + currency (ISO 4217)", "v5.0.0"],
+                  ["Transaction", "AccountId (OBIE alias)", "account_id — or use TransactionOBIE schema", "v5.0.0"],
+                  ["Transaction", "TransactionId (OBIE alias)", "transaction_id — or use TransactionOBIE", "v5.0.0"],
+                  ["Transaction", "Amount / Currency (OBIE)", "amount / currency — or TransactionOBIE", "v5.0.0"],
+                  ["Transaction", "CreditDebitIndicator (OBIE)", "type — or TransactionOBIE", "v5.0.0"],
+                  ["Transaction", "BookingDateTime / ValueDateTime", "booking_date / value_date — or TransactionOBIE", "v5.0.0"],
+                  ["Transaction", "TransactionInformation / Status (OBIE)", "description / status — or TransactionOBIE", "v5.0.0"],
+                ].map(([schema, oldField, newField, removed]) => (
+                  <tr key={`${schema}-${oldField}`} className="border-t border-border">
+                    <td className="p-3 font-mono text-xs text-foreground">{schema}</td>
+                    <td className="p-3 font-mono text-xs text-muted-foreground line-through">{oldField}</td>
+                    <td className="p-3 font-mono text-xs text-foreground">{newField}</td>
+                    <td className="p-3 text-xs text-foreground">{removed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            OBIE consumers should adopt the dedicated <code className="text-xs px-1 py-0.5 rounded bg-muted">TransactionOBIE</code>
+            {" "}schema, which preserves the Open Banking UK PascalCase contract without the deprecation warnings.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="sdks">SDK Versions</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border border-border rounded-lg">
