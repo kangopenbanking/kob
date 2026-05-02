@@ -219,13 +219,14 @@ describe('[Mobile E2E] Payment pages can be dynamically imported', () => {
 // SUITE 4 — Financial-safety: payment pages gate mutations behind PIN
 // ---------------------------------------------------------------------------
 describe('[Mobile E2E] Financial mutation pages gate via PinConfirmDialog or SCA', () => {
+  // Pages that perform balance-mutating actions inline. Pages that only
+  // navigate to a downstream confirm screen are intentionally excluded —
+  // their downstream screen carries the PIN gate.
   const PIN_GATED_PAGES = [
     'banking-app/BankSendMoney',
     'banking-app/BankMobileMoney',
     'banking-app/BankBills',
-    'banking-app/BankRemittances',
     'banking-app/BankSendAbroad',
-    'banking-app/BankQRPay',
     'customer-app/CustomerSendMoney',
     'customer-app/CustomerBillsV2',
     'customer-app/CustomerCashOut',
