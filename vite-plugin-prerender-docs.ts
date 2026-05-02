@@ -22,6 +22,50 @@ interface DocRoute {
   serveAsExtensionlessFile?: boolean;
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderChangelogContent(): string {
+  try {
+    const changelogPath = path.resolve(process.cwd(), 'public/changelog.json');
+    const changelog = JSON.parse(fs.readFileSync(changelogPath, 'utf-8'));
+    const entries = Array.isArray(changelog.entries) ? changelog.entries : [];
+    const renderedEntries = entries.map((entry: any) => {
+      const version = escapeHtml(entry.version ?? '(unversioned)');
+      const date = escapeHtml(entry.date ?? 'unreleased');
+      const type = escapeHtml(entry.type ?? 'release');
+      const breaking = entry.breaking_changes ? 'yes' : 'no';
+      const bullets = [
+        ...(Array.isArray(entry.highlights) ? entry.highlights : []),
+        ...(Array.isArray(entry.fixes) ? entry.fixes : []),
+        ...(Array.isArray(entry.additions) ? entry.additions : []),
+      ].slice(0, 4);
+      return `<h3>v${version} — ${date}</h3>
+<p><strong>Type:</strong> ${type} · <strong>Breaking:</strong> ${breaking}</p>
+<p>${escapeHtml(entry.summary ?? '')}</p>
+${bullets.length ? `<ul>${bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}`;
+    }).join('\n\n');
+
+    return `<h2>Version History</h2>
+<p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7. Newest first. Breaking changes are flagged. Subscribe via <a href="mailto:developers@kangopenbanking.com">developers@kangopenbanking.com</a>.</p>
+${renderedEntries}
+<h3>Machine-readable feeds</h3>
+<ul>
+  <li><a href="/changelog.json">changelog.json</a> — JSON, every entry with standards citations and migration notes</li>
+  <li><a href="/developer/changelog.xml">RSS feed</a></li>
+</ul>`;
+  } catch {
+    return `<h2>Version History</h2>
+<p>All API changes are documented here within 48 hours of deployment. The machine-readable feed is available at <a href="/changelog.json">/changelog.json</a>.</p>`;
+  }
+}
+
 const DOC_ROUTES: DocRoute[] = [
   {
     path: '/developer/getting-started',
@@ -100,6 +144,7 @@ Content-Type: application/problem+json
     title: 'API Explorer | Kang Open Banking Interactive Swagger UI',
     description: 'Interactive API Explorer powered by Swagger UI. Try all Kang Open Banking endpoints live — payments, accounts, transfers, webhooks. OpenAPI 3.1 spec included.',
     h1: 'API Explorer — Interactive Swagger UI',
+    serveAsExtensionlessFile: true,
     content: `<h2>Interactive API Reference</h2>
 <p>Explore all Kang Open Banking API endpoints interactively using Swagger UI. The full OpenAPI 3.1 specification is loaded with try-it-out capability.</p>
 <h3>Available Endpoint Groups</h3>
@@ -190,7 +235,7 @@ Content-Type: application/problem+json
     "amount": "250000",
     "currency": "XAF",
     "channel": "mobile_money",
-    "customer_phone": "+237650000000",
+    "customer_phone": "+237650000000"
   }'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
@@ -266,6 +311,27 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <p><strong>Per-attempt timeout:</strong> 10 seconds. Return any 2xx within that window to acknowledge.</p>`
   },
   {
+    path: '/developer/sandbox',
+    title: 'Sandbox Environment | Kang Open Banking Developer Sandbox',
+    description: 'Free sandbox environment for testing Kang Open Banking API. Test credentials, simulated payments, mobile money test numbers, and card test data.',
+    h1: 'Sandbox Environment Overview',
+    serveAsExtensionlessFile: true,
+    content: `<h2>Free Developer Sandbox</h2>
+<p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
+<h3>Sandbox Base URL</h3>
+<p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
+<h3>Default Test Credentials</h3>
+<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<h3>Test Coverage</h3>
+<table>
+  <tr><th>Area</th><th>Supported</th></tr>
+  <tr><td>Mobile Money</td><td>MTN MoMo and Orange Money success, failure and timeout simulations</td></tr>
+  <tr><td>Cards</td><td>Success, declined and 3-D Secure-required test numbers</td></tr>
+  <tr><td>Webhooks</td><td>Signed test delivery with retry and deduplication headers</td></tr>
+</table>
+<p>For the full sandbox reference, continue to <a href="/developer/sandbox/overview">Sandbox Overview</a>.</p>`
+  },
+  {
     path: '/developer/sandbox/overview',
     title: 'Sandbox Environment | Kang Open Banking Developer Sandbox',
     description: 'Free sandbox environment for testing Kang Open Banking API. Test credentials, simulated payments, mobile money test numbers, and card test data.',
@@ -304,85 +370,8 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
     title: 'API Changelog | Kang Open Banking Version History',
     description: 'Complete changelog for Kang Open Banking API. Track new endpoints, breaking changes, deprecations, and version history.',
     h1: 'API Changelog',
-    content: `<h2>Version History</h2>
-<p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7. Newest first. Breaking changes are flagged. Subscribe via <a href="mailto:developers@kangopenbanking.com">developers@kangopenbanking.com</a>.</p>
-
-<h3>v4.27.3 — May 2026 (current)</h3>
-<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
-<ul>
-  <li>Removed three duplicate provider webhook paths (<code>/webhooks/stripe|flutterwave|paypal</code>) accidentally reintroduced in v4.27.2; canonical receivers remain at <code>POST /v1/webhooks/providers/{stripe|flutterwave|paypal}</code>.</li>
-  <li>Declared the missing <code>BankConnectors</code> tag in the global <code>tags[]</code> array (referenced by 13 connector operations introduced in v4.27.2; OpenAPI 3.0.3 §4.7.19).</li>
-  <li>Ratcheted coverage on the 52 operations added in v4.27.2: every operation now declares <code>429 Too Many Requests</code> (RFC 6585), every non-public operation declares <code>401 Unauthorized</code> (RFC 7235), and every non-public POST/PUT/PATCH declares <code>400 Bad Request</code>.</li>
-  <li>Every 200/201 inline response now carries the <code>x-fapi-interaction-id</code> response header via a reusable component (FAPI 1.0 §6.2.1.13).</li>
-  <li><code>WebhookReplayRequest</code>, <code>DcrRegistrationRequest</code> and <code>WebhookEventType</code> schemas now declare <code>required[]</code> arrays.</li>
-</ul>
-
-<h3>v4.27.2 — May 2026</h3>
-<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
-<ul>
-  <li>Added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples).</li>
-  <li>Wired <code>x-codeSamples</code> for cURL, Node.js, Python and PHP into every operation.</li>
-  <li>Expanded 280 thin operation descriptions to ≥80 characters.</li>
-  <li>Added 13 reusable <code>components.examples</code> and 5 standard error responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable).</li>
-  <li>Formal <code>x-webhooks</code> catalogue documenting 8 outbound events with HMAC-SHA256 signature verification and a 7-attempt exponential backoff policy.</li>
-</ul>
-
-<h3>v4.27.1 — May 2026</h3>
-<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
-<ul>
-  <li>Standards discoverability — FAPI / OAuth2 / OIDC / DCR / mTLS / OBIE / Berlin Group / FDX / ISO 20022 / PSD2 SCA / COBAC compliance proofs are now reachable from the developer home in one click.</li>
-  <li>New public reference page: <a href="/developer/authentication/dcr">Dynamic Client Registration (RFC 7591 + RFC 7592)</a>.</li>
-  <li>New <a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a>.</li>
-</ul>
-
-<h3>v4.27.0 — May 2026</h3>
-<p><strong>Type:</strong> minor · <strong>Breaking:</strong> no</p>
-<ul>
-  <li><code>GatewaySubscription</code>: <code>cancel_at_period_end</code>, <code>trial_end</code>, <code>trial_start</code>, <code>billing_cycle_anchor</code>, <code>metadata</code> added (Stripe parity).</li>
-  <li>OIDC discovery: <code>pushed_authorization_request_endpoint</code> and <code>backchannel_authentication_endpoint</code> added (19 fields total).</li>
-  <li>ISO 20022: pacs.004.001.11, pacs.009.001.10, camt.052.001.08, camt.054.001.08, camt.056.001.10 added (9 message types total).</li>
-  <li>Fixed: <code>code_challenge</code> and <code>code_challenge_method</code> now correctly required on <code>/v1/oauth/authorize</code> (FAPI 1.0 Advanced § 5.2.2).</li>
-</ul>
-
-<h3>v4.6.0 — March 2026</h3>
-<ul>
-  <li><code>application/problem+json</code> (RFC 7807) added to all 330 error responses.</li>
-  <li><code>required[]</code> arrays added to all 49 resource schemas.</li>
-  <li><code>Idempotency-Key</code> required on all payment-related POST endpoints.</li>
-  <li><code>StandardResponse</code> envelope on all 22 single-resource GET endpoints; <code>PaginatedResponse</code> on all 73 list endpoints.</li>
-</ul>
-
-<h3>v4.5.0 — February 2026</h3>
-<ul>
-  <li><code>nonce</code> required on <code>/v1/oauth/authorize</code> (FAPI 5.2.2-14).</li>
-  <li>Token endpoint accepts both public PKCE clients and mTLS confidential clients.</li>
-  <li><code>error_id</code> and <code>timestamp</code> added to <code>ProblemDetails</code> (RFC 7807).</li>
-</ul>
-
-<h3>v4.4.0 — January 2026</h3>
-<ul>
-  <li>Transaction schema: 6 OBIE PascalCase aliases (TransactionId, BookingDateTime, ValueDateTime, CreditDebitIndicator, Status).</li>
-  <li>Account <code>required[]</code> extended to 7 fields.</li>
-  <li>Standards — ISO 20022 tag declared in global tags array.</li>
-</ul>
-
-<h3>v4.3.0 — December 2025</h3>
-<ul>
-  <li>PISP domestic payment: <code>creditor_account</code>, <code>debtor_account</code>, <code>reference</code> now required.</li>
-  <li>Sandbox server URL corrected to <code>/v1</code> prefix.</li>
-  <li>All amount fields changed from number to string for precision safety.</li>
-  <li>Currency fields constrained by ISO 4217 enum.</li>
-  <li>52 webhook event types enumerated with payload schemas.</li>
-</ul>
-
-<h3>v4.2.0 — November 2025 (baseline)</h3>
-<p>Initial public release. 280 paths, 330 operations. FAPI 1.0 foundation. COBAC &amp; BEAC compliant. XAF native. OpenAPI 3.1.0.</p>
-
-<h3>Machine-readable feeds</h3>
-<ul>
-  <li><a href="/changelog.json">changelog.json</a> — JSON, every entry with standards citations and migration notes</li>
-  <li><a href="/developer/changelog.xml">RSS feed</a></li>
-</ul>`
+    serveAsExtensionlessFile: true,
+    content: renderChangelogContent()
   },
   {
     path: '/developer/guides/sdks',

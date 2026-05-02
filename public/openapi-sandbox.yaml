@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.27.3
+  version: 4.28.2
   summary: Unified Open Banking API for Cameroon
-  description: >
+  description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
     Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance
     Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and
@@ -80,6 +80,33 @@ info:
     | Dead letter | Failed events retained for 30 days; manual replay available via API |
 
 
+    ### Webhook Signature & Replay Headers (canonical)
+
+
+    All outbound webhook deliveries include the following headers. Header names are case-insensitive per RFC 7230 §3.2.
+    Aliases are accepted by verification middleware for backward compatibility but new integrations MUST use the
+    canonical names below.
+
+
+    | Canonical Header | Purpose | Accepted Aliases |
+
+    |---|---|---|
+
+    | `X-KOB-Signature` | HMAC-SHA256 hex digest of the raw request body using the endpoint secret. Format: `v1=<hex>`
+    (signature versioning per Stripe convention). | `X-Kang-Signature`, `X-Webhook-Signature` |
+
+    | `X-Webhook-ID` | Unique event identifier (UUID v4). Receivers MUST deduplicate on this value within a 24-hour
+    window. | `Kang-Webhook-ID` |
+
+    | `X-Webhook-Timestamp` | RFC 3339 / ISO 8601 timestamp of event emission. Receivers SHOULD reject events older than
+    5 minutes (replay protection). | — |
+
+    | `X-Webhook-Event` | Event type (e.g. `payment.completed`). Mirrors the `type` field in the body. | — |
+
+    | `X-Webhook-Attempt` | 1-based delivery attempt counter (1–7). Useful for receiver-side retry telemetry. | — |
+
+
+
     ## HTTP Caching
 
 
@@ -146,6 +173,7 @@ info:
 
     Planned maintenance windows are announced at least 72 hours in advance via the status page and registered developer
     email addresses. Current API status: https://status.kangopenbanking.com
+     | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained.
   x-changelog-url: https://kangopenbanking.com/changelog.json
   contact:
     name: Kang Open Banking Support
@@ -171,14 +199,40 @@ info:
       name: '@kang/openbanking-node'
       version: 1.1.0
       repository: https://github.com/kangfinance/openbanking-node
+      package_manager: https://www.npmjs.com/package/@kang/openbanking-node
     python:
       name: kang-openbanking
       version: 1.1.0
       repository: https://github.com/kangfinance/openbanking-python
+      package_manager: https://pypi.org/project/kang-openbanking/
     php:
       name: kang/openbanking-php
       version: 1.1.0
       repository: https://github.com/kangfinance/openbanking-php
+      package_manager: https://packagist.org/packages/kang/openbanking-php
+    java:
+      name: com.kangopenbanking:kangopenbanking-sdk-typed
+      version: 4.28.1
+      status: generated
+      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
+      package_manager: https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml
+      generator: openapi-generator-cli (java, okhttp-gson)
+      docs: https://kangopenbanking.com/developer/guides/sdks#java
+    go:
+      name: github.com/kangopenbanking/sdk-go
+      version: v1.5.0
+      status: available
+      repository: https://github.com/kangopenbanking/sdk-go
+      package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
+      docs: https://kangopenbanking.com/developer/guides/sdks#go
+    ruby:
+      name: kangopenbanking
+      version: 1.0.0
+      status: community-guide
+      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
+      package_manager: https://rubygems.org/
+      generator: openapi-generator-cli (ruby)
+      docs: https://kangopenbanking.com/developer/guides/sdks#ruby
   x-postman-collection: https://www.postman.com/kangfinance/kang-open-banking-api
   x-sandbox: true
   x-test-data:

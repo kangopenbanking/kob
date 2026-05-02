@@ -38,6 +38,10 @@ const UTT: Record<string, string> = {
   '/developer': 'Developer Portal | Kang Open Banking API Documentation',
   '/developer/getting-started':
     'Getting Started | Kang Open Banking Developer Docs',
+  '/developer/api-explorer':
+    'API Explorer | Kang Open Banking Interactive Swagger UI',
+  '/developer/sandbox':
+    'Sandbox Environment | Kang Open Banking Developer Sandbox',
   '/developer/sandbox/overview':
     'Sandbox Environment | Kang Open Banking Developer Sandbox',
   '/developer/authentication':
@@ -80,7 +84,7 @@ describe('Mega Prompt v5 — Content Fingerprint Test (CFT)', () => {
 });
 
 describe('Mega Prompt v5 — G5 extensionless docs route guard', () => {
-  for (const route of ['/developer/examples/real-world', '/developer/gateway/quickstart', '/developer/gateway/webhooks']) {
+  for (const route of ['/developer/api-explorer', '/developer/sandbox', '/developer/examples/real-world', '/developer/gateway/quickstart', '/developer/gateway/webhooks', '/developer/changelog']) {
     it(`${route} is emitted as an exact extensionless static HTML file`, () => {
       expect(block(route)).toContain('serveAsExtensionlessFile: true');
     });
@@ -124,15 +128,20 @@ describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
 
 describe('Mega Prompt v5 — Changelog inlines version history', () => {
   const cl = block('/developer/changelog');
-  it('lists v4.27.3 → v4.27.0 and the 4.x baseline inline', () => {
-    expect(cl).toContain('v4.27.3');
-    expect(cl).toContain('v4.27.2');
-    expect(cl).toContain('v4.27.1');
-    expect(cl).toContain('v4.27.0');
-    expect(cl).toContain('v4.6.0');
-    expect(cl).toContain('v4.2.0');
+  it('lists v4.28.2 → v4.17.0 and the 4.x baseline inline', () => {
+    const changelog = fs.readFileSync(path.join(root, 'public/changelog.json'), 'utf-8');
+    expect(cl).toContain('renderChangelogContent()');
+    expect(PRERENDER).toContain('public/changelog.json');
+    expect(changelog).toContain('"version": "4.28.2"');
+    expect(changelog).toContain('"version": "4.28.1"');
+    expect(changelog).toContain('"version": "4.27.3"');
+    expect(changelog).toContain('"version": "4.27.0"');
+    expect(changelog).toContain('"version": "4.18.0"');
+    expect(changelog).toContain('"version": "4.17.0"');
+    expect(changelog).toContain('"version": "4.6.0"');
+    expect(changelog).toContain('"version": "4.2.0"');
   });
   it('still exposes the machine-readable JSON feed', () => {
-    expect(cl).toContain('/changelog.json');
+    expect(PRERENDER).toContain('/changelog.json');
   });
 });
