@@ -254,7 +254,7 @@ describe('[Mobile E2E] Route prefixes for the 4 mobile apps exist in router', ()
 
   it.each([
     ['banking', /path="\/bank/],
-    ['customer', /path="\/customer|path="\/c\//],
+    ['customer', /path="\/app"|path="\/customer/],
     ['business', /path="\/biz|path="\/business/],
     ['merchant', /path="\/m\/|path="\/merchant/],
   ])('%s app routes are registered', (_label, re) => {
