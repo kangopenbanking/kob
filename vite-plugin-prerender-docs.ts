@@ -293,11 +293,74 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
     description: 'Complete changelog for Kang Open Banking API. Track new endpoints, breaking changes, deprecations, and version history.',
     h1: 'API Changelog',
     content: `<h2>Version History</h2>
-<p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7.</p>
-<h3>Recent Changes</h3>
-<p>View the full changelog with version numbers, dates, and categorized entries (Added, Changed, Deprecated, Fixed, Security).</p>
-<p><a href="/changelog.json">Machine-readable changelog (JSON)</a></p>
-<p><a href="/developer/changelog.xml">RSS Feed</a></p>`
+<p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7. Newest first. Breaking changes are flagged. Subscribe via <a href="mailto:developers@kangopenbanking.com">developers@kangopenbanking.com</a>.</p>
+
+<h3>v4.27.2 — May 2026 (current)</h3>
+<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
+<ul>
+  <li>Added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples).</li>
+  <li>Wired <code>x-codeSamples</code> for cURL, Node.js, Python and PHP into every operation.</li>
+  <li>Expanded 280 thin operation descriptions to ≥80 characters.</li>
+  <li>Added 13 reusable <code>components.examples</code> and 5 standard error responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable).</li>
+  <li>Formal <code>x-webhooks</code> catalogue documenting 8 outbound events with HMAC-SHA256 signature verification and a 7-attempt exponential backoff policy.</li>
+</ul>
+
+<h3>v4.27.1 — May 2026</h3>
+<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
+<ul>
+  <li>Standards discoverability — FAPI / OAuth2 / OIDC / DCR / mTLS / OBIE / Berlin Group / FDX / ISO 20022 / PSD2 SCA / COBAC compliance proofs are now reachable from the developer home in one click.</li>
+  <li>New public reference page: <a href="/developer/authentication/dcr">Dynamic Client Registration (RFC 7591 + RFC 7592)</a>.</li>
+  <li>New <a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a>.</li>
+</ul>
+
+<h3>v4.27.0 — May 2026</h3>
+<p><strong>Type:</strong> minor · <strong>Breaking:</strong> no</p>
+<ul>
+  <li><code>GatewaySubscription</code>: <code>cancel_at_period_end</code>, <code>trial_end</code>, <code>trial_start</code>, <code>billing_cycle_anchor</code>, <code>metadata</code> added (Stripe parity).</li>
+  <li>OIDC discovery: <code>pushed_authorization_request_endpoint</code> and <code>backchannel_authentication_endpoint</code> added (19 fields total).</li>
+  <li>ISO 20022: pacs.004.001.11, pacs.009.001.10, camt.052.001.08, camt.054.001.08, camt.056.001.10 added (9 message types total).</li>
+  <li>Fixed: <code>code_challenge</code> and <code>code_challenge_method</code> now correctly required on <code>/v1/oauth/authorize</code> (FAPI 1.0 Advanced § 5.2.2).</li>
+</ul>
+
+<h3>v4.6.0 — March 2026</h3>
+<ul>
+  <li><code>application/problem+json</code> (RFC 7807) added to all 330 error responses.</li>
+  <li><code>required[]</code> arrays added to all 49 resource schemas.</li>
+  <li><code>Idempotency-Key</code> required on all payment-related POST endpoints.</li>
+  <li><code>StandardResponse</code> envelope on all 22 single-resource GET endpoints; <code>PaginatedResponse</code> on all 73 list endpoints.</li>
+</ul>
+
+<h3>v4.5.0 — February 2026</h3>
+<ul>
+  <li><code>nonce</code> required on <code>/v1/oauth/authorize</code> (FAPI 5.2.2-14).</li>
+  <li>Token endpoint accepts both public PKCE clients and mTLS confidential clients.</li>
+  <li><code>error_id</code> and <code>timestamp</code> added to <code>ProblemDetails</code> (RFC 7807).</li>
+</ul>
+
+<h3>v4.4.0 — January 2026</h3>
+<ul>
+  <li>Transaction schema: 6 OBIE PascalCase aliases (TransactionId, BookingDateTime, ValueDateTime, CreditDebitIndicator, Status).</li>
+  <li>Account <code>required[]</code> extended to 7 fields.</li>
+  <li>Standards — ISO 20022 tag declared in global tags array.</li>
+</ul>
+
+<h3>v4.3.0 — December 2025</h3>
+<ul>
+  <li>PISP domestic payment: <code>creditor_account</code>, <code>debtor_account</code>, <code>reference</code> now required.</li>
+  <li>Sandbox server URL corrected to <code>/v1</code> prefix.</li>
+  <li>All amount fields changed from number to string for precision safety.</li>
+  <li>Currency fields constrained by ISO 4217 enum.</li>
+  <li>52 webhook event types enumerated with payload schemas.</li>
+</ul>
+
+<h3>v4.2.0 — November 2025 (baseline)</h3>
+<p>Initial public release. 280 paths, 330 operations. FAPI 1.0 foundation. COBAC &amp; BEAC compliant. XAF native. OpenAPI 3.1.0.</p>
+
+<h3>Machine-readable feeds</h3>
+<ul>
+  <li><a href="/changelog.json">changelog.json</a> — JSON, every entry with standards citations and migration notes</li>
+  <li><a href="/developer/changelog.xml">RSS feed</a></li>
+</ul>`
   },
   {
     path: '/developer/guides/sdks',
@@ -501,25 +564,41 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
     description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.2.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
-<p><strong>Current API version: v4.27.2</strong> — Stable, FAPI 1.0 Advanced compliant, 339 operations, OpenAPI 3.1 spec.</p>
+<p><strong>Kang Open Banking API v4.27.2 · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
-<h3>Quick Links</h3>
+
+<h3>Start building — pick your path</h3>
 <ul>
-  <li><a href="/developer/getting-started">Getting Started Guide</a> — First API call in 5 minutes</li>
+  <li><strong>I'm a developer</strong> → <a href="/developer/getting-started">Getting Started</a> — first API call in 5 minutes</li>
+  <li><strong>I'm integrating a bank</strong> → <a href="/developer/authentication">Authentication &amp; FAPI</a> — OAuth 2.0 + PKCE, mTLS, DCR</li>
+  <li><strong>I'm an e-commerce business</strong> → <a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — accept payments in 10 minutes</li>
+</ul>
+
+<h3>What's new</h3>
+<ul>
+  <li><strong>v4.27.2 — May 2026:</strong> 2,863 response examples and multi-language code samples on every operation. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.27.1 — May 2026:</strong> Standards &amp; Compliance Index and Dynamic Client Registration reference page published.</li>
+  <li><strong>v4.27.0 — May 2026:</strong> Subscription trial periods, 9 ISO 20022 messages, FAPI 1.0 Advanced certification gates closed.</li>
+</ul>
+
+<h3>Quick links</h3>
+<ul>
+  <li><a href="/developer/getting-started">Getting Started Guide</a> — first API call in 5 minutes</li>
   <li><a href="/developer/authentication">Authentication</a> — API keys, OAuth 2.0 + PKCE, scopes table</li>
-  <li><a href="/developer/api-explorer">API Explorer</a> — Interactive Swagger UI</li>
-  <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — Accept payments in 10 minutes</li>
+  <li><a href="/developer/api-explorer">API Explorer</a> — interactive Swagger UI</li>
+  <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — accept payments in 10 minutes</li>
   <li><a href="/developer/gateway/webhooks">Webhook Verification Guide</a> — HMAC-SHA256, 52 event types, retry policy</li>
-  <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
-  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
-  <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
+  <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — free testing with test credentials</li>
+  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides)</li>
+  <li><a href="/developer/examples/real-world">Real-World Examples</a> — production-ready integration patterns</li>
   <li><a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a> — FAPI, OBIE, Berlin Group, FDX, ISO 20022, PSD2</li>
   <li><a href="/developer/authentication/dcr">Dynamic Client Registration</a> — RFC 7591 ecosystem onboarding</li>
-  <li><a href="/developer/changelog">Changelog</a> — All API changes within 48 hours of deployment</li>
+  <li><a href="/developer/changelog">Changelog</a> — every API change within 48 hours of deployment</li>
 </ul>
+
 <h3>Specifications</h3>
 <ul>
-  <li><a href="/openapi.json">OpenAPI 3.1 (JSON)</a> — Machine-readable, downloadable, no auth</li>
+  <li><a href="/openapi.json">OpenAPI 3.1 (JSON)</a> — machine-readable, downloadable, no auth</li>
   <li><a href="/openapi.yaml">OpenAPI 3.1 (YAML)</a></li>
   <li><a href="/openapi-sandbox.json">Sandbox OpenAPI 3.1 (JSON)</a></li>
 </ul>`
