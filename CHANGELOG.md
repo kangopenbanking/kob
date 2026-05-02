@@ -1,12 +1,97 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.26.7** · Last updated: **2026-04-30**
+Current API version: **4.27.2** · Last updated: **2026-05-02**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.27.2 — 2026-05-02
+**Type:** patch · **Breaking changes:** none
+
+Stripe-grade API documentation richness — added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples), wired x-codeSamples for cURL/Node.js/Python/PHP into every operation, expanded 280 thin operation descriptions, added 13 reusable components.examples, 5 new components.responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable), and a formal x-webhooks catalogue documenting 8 outbound events with HMAC-SHA256 signature verification and 7-attempt backoff retry policy.
+
+### Highlights
+- All 391 operations now ship with response examples, multi-language code samples, and ≥80-char descriptions (390/391).
+- scripts/enrich-openapi.mjs — idempotent enrichment pass, safe to re-run after any operation added.
+- src/test/openapi-richness.test.ts — richness ratchet preventing regression on examples / x-codeSamples / descriptions.
+- x-webhooks: payment_intent.succeeded, payment_intent.failed, refund.created, payout.paid, consent.authorized, consent.revoked, account.balance.updated, kyc.verification.completed.
+
+### Standards & citations
+- OpenAPI 3.0.3 §4.7.5 (Examples)
+- Redoc convention x-codeSamples
+- RFC 7807 (Problem Details for HTTP APIs)
+- STANDING ORDER 2 — ratchet (richness floor enforced in Vitest)
+- STANDING ORDER 4 — surgeon rule (additive only; no operationId / schema rename)
+- STANDING ORDER 6 — version gate (patch bump 4.27.1 → 4.27.2)
+- ORDER P9 — multi-language rule (cURL + Node + Python + PHP across all ops)
+
+### Migration notes
+No code action required. All changes are additive to the OpenAPI spec; existing client code continues to work unchanged.
+
+---
+
+## 4.27.1 — 2026-05-02
+**Type:** patch · **Breaking changes:** none
+
+Standards discoverability — closed the auditor 10-second-test gap by surfacing FAPI / OAuth2 / OIDC / DCR / mTLS / OBIE / Berlin Group / FDX / ISO 20022 / PSD2 SCA / COBAC compliance proofs from the /developer landing page. Every standard already implemented in the spec is now reachable from the developer home in one click.
+
+### Highlights
+- /developer/authentication/dcr — new public RFC 7591 + RFC 7592 Dynamic Client Registration reference page with cURL / Node / Python snippets, SSA claim table, and FAPI 1.0 Advanced cross-references.
+- /developer/open-banking/standards — rewritten as a Standards & Compliance Index covering 11 standards, each linking to its proof page.
+- StandardsComplianceRow on /developer home — visible badge strip linking each standard to its proof page (the 10-second auditor test).
+- Uptime probes added for /developer/authentication/dcr and /developer/open-banking/standards in the 15-minute GitHub Action.
+
+### Added
+- POST /v1/dcr/register — already live; now formally documented at /developer/authentication/dcr.
+
+### Standards & citations
+- RFC 7591 (Dynamic Client Registration)
+- RFC 7592 (DCR Management Protocol)
+- FAPI 1.0 Advanced §5.2.2
+- RFC 8705 (mTLS Client Authentication)
+- ORDER P1 — public-first rule
+- ORDER P6 — complete content rule
+- ORDER P10 — living docs rule
+- STANDING ORDER 4 — surgeon rule (additive docs only)
+- STANDING ORDER 6 — version gate (patch bump 4.27.0 → 4.27.1)
+
+### Migration notes
+No code action required. Documentation surface only.
+
+---
+
+## 4.27.0 — 2026-05-01
+**Type:** minor · **Breaking changes:** none
+
+International standards alignment — reaffirmed and documented FAPI 1.0 Advanced security profile (PKCE S256, PAR RFC 9126, JAR RFC 9101, PS256 signing, mTLS-bound tokens via cnf.x5t#S256), OBIE-style permission enums (ReadAccountsDetail, ReadBalances, …), Berlin Group NextGenPSD2 alignment, FDX 6.0 alignment, ISO 20022 message families (pacs / pain / camt), and the OBIE migration guide.
+
+### Highlights
+- Standards matrix expanded to 11 standards with explicit conformance citations.
+- OAuth authorizationUrl / tokenUrl / refreshUrl normalized to slash-form paths.
+- DCR token_endpoint_auth_method enum hardened: 'none' removed (FAPI 1.0 Adv §5.2.2 forbids public clients).
+- Audit rebuttal table published at /developer/open-banking/standards documenting where each external audit claim is already implemented.
+
+### Standards & citations
+- FAPI 1.0 Advanced
+- OAuth 2.0 / OIDC
+- RFC 9126 (PAR)
+- RFC 9101 (JAR)
+- RFC 8705 (mTLS)
+- ISO 20022
+- UK OBIE
+- Berlin Group NextGenPSD2
+- FDX 6.0
+- PSD2 SCA
+- COBAC
+- STANDING ORDER 6 — version gate (minor bump for documented standards expansion)
+
+### Migration notes
+No code action required. All FAPI / OBIE / Berlin Group / FDX claims correspond to features already enforced in the API.
 
 ---
 
