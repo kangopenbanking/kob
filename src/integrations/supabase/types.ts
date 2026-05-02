@@ -7522,6 +7522,36 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_portal_health: {
+        Row: {
+          checked_at: string
+          content_check: string
+          id: string
+          ok: boolean
+          response_ms: number
+          status: number
+          url: string
+        }
+        Insert: {
+          checked_at?: string
+          content_check: string
+          id?: string
+          ok: boolean
+          response_ms: number
+          status: number
+          url: string
+        }
+        Update: {
+          checked_at?: string
+          content_check?: string
+          id?: string
+          ok?: boolean
+          response_ms?: number
+          status?: number
+          url?: string
+        }
+        Relationships: []
+      }
       developer_resources: {
         Row: {
           created_at: string | null
