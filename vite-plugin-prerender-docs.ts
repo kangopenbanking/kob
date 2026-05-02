@@ -302,20 +302,72 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
   {
     path: '/developer/guides/sdks',
     title: 'SDKs and Libraries | Kang Open Banking Developer Tools',
-    description: 'Official SDKs for Kang Open Banking API. Node.js, Python, PHP, Java, Go, and Ruby client libraries with installation guides and examples.',
+    description: 'Official SDKs for Kang Open Banking API. Node.js, Python, PHP, Java, Go, and Ruby client libraries with installation guides and complete working examples.',
     h1: 'SDKs and Client Libraries',
     content: `<h2>Official SDKs</h2>
-<p>Install an official SDK to integrate Kang Open Banking API in your preferred language.</p>
+<p>Install an official SDK to integrate Kang Open Banking API in your preferred language. All official SDKs handle authentication, automatic retries, idempotency-key generation and HMAC webhook signature verification.</p>
 <h3>Officially Published SDKs</h3>
 <table>
-  <tr><th>Language</th><th>Package</th><th>Install</th></tr>
-  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td></tr>
-  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td></tr>
-  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td></tr>
+  <tr><th>Language</th><th>Package</th><th>Install</th><th>Min Runtime</th></tr>
+  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td><td>Node 18+</td></tr>
+  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td><td>Python 3.9+</td></tr>
+  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td><td>PHP 8.1+</td></tr>
 </table>
-<h3>Community &amp; Self-Hosted Implementation Guides</h3>
-<p>Java, Go, and Ruby SDKs are coming soon. Drop-in HTTP client implementation guides (OkHttp, net/http, Net::HTTP) are published on the SDKs page.</p>
-<p>All official SDKs support both sandbox and production environments with automatic retries, idempotency-key handling, and HMAC webhook signature verification.</p>`
+<h3>Node.js — Create a Mobile Money Charge</h3>
+<pre><code>import { KangOpenBanking } from '@kangopenbanking/sdk';
+
+const kob = new KangOpenBanking({
+  apiKey: process.env.KOB_API_KEY!, // sk_test_... or sk_live_...
+  environment: 'sandbox',           // 'sandbox' | 'production'
+});
+
+const charge = await kob.gateway.charges.create({
+  amount: '5000',
+  currency: 'XAF',
+  channel: 'mobile_money',
+  customer_phone: '+237650000000',
+  provider: 'mtn_momo',
+  description: 'Order #1234',
+}); // Idempotency-Key auto-generated
+
+console.log(charge.id, charge.status);</code></pre>
+<h3>Python — Create a Mobile Money Charge</h3>
+<pre><code>from kang_openbanking import KangOpenBanking
+
+kob = KangOpenBanking(
+    api_key=os.environ["KOB_API_KEY"],
+    environment="sandbox",
+)
+
+charge = kob.gateway.charges.create(
+    amount="5000",
+    currency="XAF",
+    channel="mobile_money",
+    customer_phone="+237650000000",
+    provider="mtn_momo",
+    description="Order #1234",
+)
+print(charge.id, charge.status)</code></pre>
+<h3>PHP — Create a Mobile Money Charge</h3>
+<pre><code>use Kang\\OpenBanking\\Client;
+
+$kob = new Client([
+    'api_key' => getenv('KOB_API_KEY'),
+    'environment' => 'sandbox',
+]);
+
+$charge = $kob->gateway->charges->create([
+    'amount' => '5000',
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '+237650000000',
+    'provider' => 'mtn_momo',
+    'description' => 'Order #1234',
+]);
+
+echo $charge->id, ' ', $charge->status;</code></pre>
+<h3>Self-Hosted Implementation Guides</h3>
+<p>Java (OkHttp), Go (net/http), and Ruby (Net::HTTP) drop-in client guides are published; official packages are targeted for Q3 2026. Each guide includes auth header construction, idempotency key generation (UUID v4), HMAC-SHA256 webhook signature verification, and exponential backoff retry policy.</p>`
   },
   {
     path: '/developer/authentication/dcr',
