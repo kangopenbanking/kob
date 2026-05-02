@@ -154,7 +154,7 @@ export default function BankConnectorRunbook() {
                 label: "cURL — file upload",
                 code: `# Upload a transactions CSV to the connector ingest endpoint.
 # The institution must already be approved and have an active mTLS cert.
-curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-connector-file-ingest \\
+curl -X POST https://api.kangopenbanking.com/v1/bank-connector-file-ingest \\
   -H "Authorization: Bearer $INSTITUTION_TOKEN" \\
   -H "X-File-Type: transactions" \\
   -H "X-Correlation-ID: $(uuidgen)" \\
@@ -163,7 +163,7 @@ curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-connecto
               {
                 language: "bash",
                 label: "cURL — poll status",
-                code: `curl https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/bank-connector-file-status?file_id=$FILE_ID \\
+                code: `curl https://api.kangopenbanking.com/v1/bank-connector-file-status?file_id=$FILE_ID \\
   -H "Authorization: Bearer $INSTITUTION_TOKEN"
 
 # 200 OK

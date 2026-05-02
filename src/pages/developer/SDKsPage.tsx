@@ -28,6 +28,7 @@ import {
   PhpLogo,
   JavaLogo,
   GoLogo,
+  RubyLogo,
 } from "@/components/developer/ClientLibraryLogos";
 
 const copyToClipboard = (text: string) => {
@@ -401,6 +402,85 @@ txns, err := client.Accounts.ListTransactions(ctx, accounts.Data[0].ID, &kob.Tra
     To:   "2026-03-31",
 })`;
 
+const RUBY_AUTH = `require 'net/http'
+require 'json'
+require 'securerandom'
+
+# Standard library only — no gems required.
+# This is a community implementation guide; an official gem ships soon.
+SANDBOX_BASE    = 'https://sandbox-api.kangopenbanking.com/v1'
+PRODUCTION_BASE = 'https://api.kangopenbanking.com/v1'
+
+uri = URI("#{SANDBOX_BASE}/oauth/token")
+res = Net::HTTP.post_form(uri, {
+  'grant_type'    => 'client_credentials',
+  'client_id'     => ENV['KOB_CLIENT_ID'],
+  'client_secret' => ENV['KOB_CLIENT_SECRET'],
+  'scope'         => 'accounts payments'
+})
+ACCESS_TOKEN = JSON.parse(res.body)['access_token']`;
+
+const RUBY_CHARGE = `# Amount MUST be a string — '500000' not 500000.
+# A fresh SecureRandom.uuid is required on every payment POST;
+# reuse the same key to safely retry the same charge.
+uri = URI("#{SANDBOX_BASE}/gateway/charges")
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+req = Net::HTTP::Post.new(uri)
+req['Authorization']   = "Bearer #{ACCESS_TOKEN}"
+req['Content-Type']    = 'application/json'
+req['Idempotency-Key'] = SecureRandom.uuid    # REQUIRED
+req.body = {
+  amount:       '500000',
+  currency:     'XAF',
+  provider:     'mtn_momo',
+  phone_number: '+237670000000'
+}.to_json
+
+charge = JSON.parse(http.request(req).body)
+puts charge['id']`;
+
+const RUBY_WEBHOOK = `require 'openssl'
+
+# Verify X-KOB-Signature on every inbound webhook.
+# Use a constant-time comparison — never use ==.
+def verify_webhook(payload:, signature:, secret:)
+  expected = OpenSSL::HMAC.hexdigest('SHA256', secret, payload)
+  begin
+    require 'active_support/security_utils'
+    ActiveSupport::SecurityUtils.secure_compare(expected, signature)
+  rescue LoadError
+    OpenSSL.fixed_length_secure_compare(expected, signature)
+  end
+end
+
+# Rails controller example
+post '/webhooks/kob' do
+  raw = request.body.read
+  return halt 401 unless verify_webhook(
+    payload:   raw,
+    signature: request.env['HTTP_X_KOB_SIGNATURE'],
+    secret:    ENV.fetch('KOB_WEBHOOK_SECRET')
+  )
+  status 200
+end`;
+
+const RUBY_AISP = `# List accounts and pull transactions
+def kob_get(path)
+  uri  = URI("#{SANDBOX_BASE}#{path}")
+  http = Net::HTTP.new(uri.host, uri.port); http.use_ssl = true
+  req  = Net::HTTP::Get.new(uri)
+  req['Authorization'] = "Bearer #{ACCESS_TOKEN}"
+  JSON.parse(http.request(req).body)
+end
+
+accounts = kob_get('/accounts')
+accounts['data'].each do |acc|
+  bal = kob_get("/accounts/#{acc['id']}/balances")
+  puts "#{acc['account_holder_name']}  #{bal['data']['amount']} #{bal['data']['currency']}"
+end`;
+
 const OPENAPI_GEN = `# Install openapi-generator-cli
 npm install -g @openapitools/openapi-generator-cli
 
@@ -438,6 +518,7 @@ type SDKDef = {
   charge: string;
   webhook: string;
   aisp: string;
+  community?: boolean;
 };
 
 const sdks: SDKDef[] = [
@@ -523,53 +604,82 @@ const sdks: SDKDef[] = [
     key: "java",
     title: "Java",
     language: "java",
-    desc: "Strongly typed models with CompletableFuture async support. Maven and Gradle compatible.",
-    install: "com.kangopenbanking:sdk:1.1.0",
-    installLabel: "Maven",
-    badge: "v1.1.0",
+    desc: "Reference implementation guide using OkHttp + Gson. Drop-in client class with OAuth2, idempotency-key handling, and HMAC-SHA256 webhook verification.",
+    install: "// Implementation guide — see code samples below",
+    installLabel: "Guide",
+    badge: "Community guide",
     repo: "https://github.com/kangopenbanking/sdk-java",
-    registry: "https://central.sonatype.com/artifact/com.kangopenbanking/sdk",
-    registryLabel: "Maven Central",
-    runtime: "Java 11+",
+    registry: "https://github.com/kangopenbanking/sdk-java",
+    registryLabel: "GitHub",
+    runtime: "Java 11+ · OkHttp 4 · Gson 2.10",
     features: [
-      "Java 11+ compatible",
-      "CompletableFuture async support",
-      "Maven and Gradle builds",
-      "Typed request/response models",
-      "Webhook HMAC-SHA256 verification",
-      "Retry with exponential backoff",
+      "Java 11+ compatible (OkHttp + Gson)",
+      "Drop-in KangOpenBankingClient class",
+      "OAuth2 client_credentials flow",
+      "Idempotency-Key on every payment POST",
+      "Webhook HMAC-SHA256 verification (constant-time)",
+      "Coming soon as published Maven artifact",
     ],
     Logo: JavaLogo,
     auth: JAVA_AUTH,
     charge: JAVA_CHARGE,
     webhook: JAVA_WEBHOOK,
     aisp: JAVA_AISP,
+    community: true,
   },
   {
     key: "go",
     title: "Go",
     language: "go",
-    desc: "Idiomatic Go with context support, structured errors, and functional options pattern.",
-    install: "go get github.com/kangopenbanking/sdk-go",
-    installLabel: "go get",
-    badge: "v1.1.0",
+    desc: "Reference implementation using net/http + crypto/hmac. Idiomatic Go with constant-time signature comparison and string-typed amounts for XAF/XOF.",
+    install: "// Implementation guide — see code samples below",
+    installLabel: "Guide",
+    badge: "Community guide",
     repo: "https://github.com/kangopenbanking/sdk-go",
-    registry: "https://pkg.go.dev/github.com/kangopenbanking/sdk-go",
-    registryLabel: "pkg.go.dev",
-    runtime: "Go 1.21+",
+    registry: "https://github.com/kangopenbanking/sdk-go",
+    registryLabel: "GitHub",
+    runtime: "Go 1.21+ · net/http",
     features: [
-      "Go 1.21+ with generics",
-      "Context-aware API calls",
-      "Structured error types",
-      "Webhook HMAC-SHA256 verification",
-      "Retry with exponential backoff",
-      "Idempotency key auto-generation",
+      "Go 1.21+ idiomatic patterns",
+      "Drop-in Client struct (no external deps)",
+      "OAuth2 client_credentials flow",
+      "Idempotency-Key on every payment POST",
+      "hmac.Equal constant-time signature check",
+      "Coming soon as a tagged Go module",
     ],
     Logo: GoLogo,
     auth: GO_AUTH,
     charge: GO_CHARGE,
     webhook: GO_WEBHOOK,
     aisp: GO_AISP,
+    community: true,
+  },
+  {
+    key: "ruby",
+    title: "Ruby",
+    language: "ruby",
+    desc: "Reference implementation using Ruby standard library (Net::HTTP + OpenSSL). String-typed amounts and constant-time HMAC verification.",
+    install: "# Implementation guide — see code samples below",
+    installLabel: "Guide",
+    badge: "Community guide",
+    repo: "https://github.com/kangopenbanking/sdk-ruby",
+    registry: "https://github.com/kangopenbanking/sdk-ruby",
+    registryLabel: "GitHub",
+    runtime: "Ruby 3.0+ · stdlib only",
+    features: [
+      "Ruby 3.0+ (no external gems required)",
+      "Drop-in client class for Rails or Sinatra",
+      "OAuth2 client_credentials flow",
+      "SecureRandom.uuid Idempotency-Key on payments",
+      "ActiveSupport::SecurityUtils.secure_compare for HMAC",
+      "Coming soon as a published RubyGem",
+    ],
+    Logo: RubyLogo,
+    auth: RUBY_AUTH,
+    charge: RUBY_CHARGE,
+    webhook: RUBY_WEBHOOK,
+    aisp: RUBY_AISP,
+    community: true,
   },
 ];
 
@@ -782,6 +892,17 @@ export default function SDKsPage() {
             Browse the OpenAPI spec <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
+
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            <strong>Officially published SDKs:</strong> Node.js, Python, PHP — installable today
+            from npm, PyPI, and Packagist.{" "}
+            <strong>Community implementation guides:</strong> Java, Go, Ruby — drop-in client
+            classes shown below using each language's standard HTTP libraries. Published packages
+            for these three languages ship in a future release.
+          </AlertDescription>
+        </Alert>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {sdks.map((s) => {

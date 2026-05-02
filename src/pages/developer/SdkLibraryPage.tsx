@@ -129,7 +129,7 @@ const kob = new KangOpenBanking({
   clientSecret: 'your_client_secret', // production
   apiKey: 'sbx_xxx',                   // sandbox
   environment: 'sandbox',              // 'sandbox' | 'production'
-  baseUrl: 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1',
+  baseUrl: 'https://api.kangopenbanking.com/v1',
   timeoutMs: 30000,
   maxRetries: 3,
 });`,
@@ -241,7 +241,7 @@ kob = KangOpenBanking(
     client_secret="your_client_secret",  # production
     api_key="sbx_xxx",                    # sandbox
     environment="sandbox",
-    base_url="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1",
+    base_url="https://api.kangopenbanking.com/v1",
     timeout=30,
     max_retries=3,
 )`,
@@ -356,7 +356,7 @@ $kob = new KangOpenBanking([
     'client_secret' => 'your_client_secret',
     'api_key'       => 'sbx_xxx',
     'environment'   => 'sandbox',
-    'base_url'      => 'https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1',
+    'base_url'      => 'https://api.kangopenbanking.com/v1',
     'timeout'       => 30,
 ]);`,
     chargeSnippet: `$charge = $kob->charges->create([
@@ -455,7 +455,7 @@ KangOpenBanking kob = new KangOpenBanking(KOBConfig.builder()
     .clientSecret("your_client_secret")
     .apiKey("sbx_xxx")
     .environment("sandbox")
-    .baseUrl("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1")
+    .baseUrl("https://api.kangopenbanking.com/v1")
     .timeoutMs(30000)
     .maxRetries(3)
     .build();`,
@@ -551,7 +551,7 @@ if err != nil { log.Fatal(err) }`,
     kob.WithClientSecret("your_client_secret"),
     kob.WithAPIKey("sbx_xxx"),
     kob.WithEnvironment(kob.Sandbox),
-    kob.WithBaseURL("https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"),
+    kob.WithBaseURL("https://api.kangopenbanking.com/v1"),
     kob.WithTimeout(30 * time.Second),
     kob.WithMaxRetries(3),
 )`,
@@ -615,7 +615,7 @@ client.Charges.Create(ctx, req, kob.WithMaxRetries(5))`,
     released: "2026-04-30",
     status: "stable",
     installLabel: "shell",
-    install: "curl -sSf https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/health",
+    install: "curl -sSf https://api.kangopenbanking.com/v1/health",
     Logo: CurlLogo,
     tagline: "Use the API directly with cURL or any HTTP client. No SDK required.",
     description:
@@ -629,10 +629,10 @@ client.Charges.Create(ctx, req, kob.WithMaxRetries(5))`,
       "Rate-limit headers on every response",
     ],
     initSnippet: `# Health check (sandbox, no auth required)
-curl -sSf https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/health`,
+curl -sSf https://api.kangopenbanking.com/v1/health`,
     configSnippet: `# Use sandbox API key
 export KOB_API_KEY="sbx_your_sandbox_key"
-export KOB_BASE="https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"`,
+export KOB_BASE="https://api.kangopenbanking.com/v1"`,
     chargeSnippet: `curl -X POST "$KOB_BASE/v1/charges" \\
   -H "Authorization: Bearer $KOB_API_KEY" \\
   -H "Content-Type: application/json" \\
