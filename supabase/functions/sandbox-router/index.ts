@@ -33,6 +33,9 @@ const ROUTES: Record<string, { fn: string; defaultBody?: Record<string, unknown>
   "POST /v1/sandbox/reset":               { fn: "sandbox", defaultBody: { action: "reset" } },
 };
 
+// Dynamic providers route: POST /v1/sandbox/providers/{provider}/simulate
+const PROVIDERS_PATTERN = /^POST \/v1\/sandbox\/providers\/(stripe|flutterwave|paypal)\/simulate$/;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -43,6 +46,24 @@ Deno.serve(async (req) => {
     if (!path.startsWith("/v1/")) path = `/v1/sandbox${path.startsWith("/") ? path : `/${path}`}`.replace("/v1/sandbox/v1/sandbox", "/v1/sandbox");
 
     const key = `${req.method} ${path}`;
+
+    // Dynamic match for provider simulator
+    const providerMatch = key.match(PROVIDERS_PATTERN);
+    if (providerMatch) {
+      let body: Record<string, unknown> = {};
+      try { body = await req.json(); } catch { /* empty body ok */ }
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const merged = { provider: providerMatch[1], ...body };
+      const headers: Record<string, string> = {};
+      const auth = req.headers.get("Authorization");
+      if (auth) headers.Authorization = auth;
+      const { data, error: fnError } = await supabase.functions.invoke("sandbox-provider-simulator", { body: merged, headers });
+      if (fnError) {
+        return error("api_error", "downstream_failure", (fnError as Error).message ?? "downstream_failure", 502);
+      }
+      return json(data ?? { object: "sandbox_provider_simulation", livemode: false });
+    }
+
     const route = ROUTES[key];
     if (!route) {
       return error("invalid_request_error", "route_not_found", `No sandbox route for ${key}`, 404);
