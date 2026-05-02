@@ -14,6 +14,7 @@ import {
   Send, Globe, ArrowRight, Banknote, Clock, CheckCircle2, ChevronLeft,
   Loader2, AlertTriangle, Search, ShieldCheck, Zap, TrendingUp, Eye,
 } from 'lucide-react';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   created: { label: 'Submitted', color: 'bg-muted text-muted-foreground' },
