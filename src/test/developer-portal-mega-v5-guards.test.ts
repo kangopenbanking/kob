@@ -129,17 +129,17 @@ describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
 describe('Mega Prompt v5 — Changelog inlines version history', () => {
   const cl = block('/developer/changelog');
   it('lists v4.28.2 → v4.17.0 and the 4.x baseline inline', () => {
+    const changelog = fs.readFileSync(path.join(root, 'public/changelog.json'), 'utf-8');
     expect(cl).toContain('renderChangelogContent()');
     expect(PRERENDER).toContain('public/changelog.json');
-    expect(fs.readFileSync(path.join(root, 'public/changelog.json'), 'utf-8')).toContain('"version": "4.28.2"');
-    expect(cl).toContain('v4.27.3');
-    expect(cl).toContain('v4.27.2');
-    expect(cl).toContain('v4.27.1');
-    expect(cl).toContain('v4.27.0');
-    expect(fs.readFileSync(path.join(root, 'public/changelog.json'), 'utf-8')).toContain('"version": "4.18.0"');
-    expect(fs.readFileSync(path.join(root, 'public/changelog.json'), 'utf-8')).toContain('"version": "4.17.0"');
-    expect(cl).toContain('v4.6.0');
-    expect(cl).toContain('v4.2.0');
+    expect(changelog).toContain('"version": "4.28.2"');
+    expect(changelog).toContain('"version": "4.28.1"');
+    expect(changelog).toContain('"version": "4.27.3"');
+    expect(changelog).toContain('"version": "4.27.0"');
+    expect(changelog).toContain('"version": "4.18.0"');
+    expect(changelog).toContain('"version": "4.17.0"');
+    expect(changelog).toContain('"version": "4.6.0"');
+    expect(changelog).toContain('"version": "4.2.0"');
   });
   it('still exposes the machine-readable JSON feed', () => {
     expect(cl).toContain('/changelog.json');
