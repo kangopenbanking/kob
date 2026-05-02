@@ -1,12 +1,39 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.28.1** · Last updated: **2026-05-02**
+Current API version: **4.28.2** · Last updated: **2026-05-02**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.28.2 — 2026-05-02
+**Type:** patch · **Breaking changes:** none
+
+Documentation-only alignment of webhook signature and replay-protection header names. Adds an explicit 'Webhook Signature & Replay Headers (canonical)' table to info.description in both openapi.yaml and openapi.json. Runtime middleware already accepts all canonical headers and aliases — this release makes the integration contract explicit.
+
+### Highlights
+- Canonical X-KOB-Signature with v1=<hex> versioning prefix (Stripe convention).
+- Aliases X-Kang-Signature and X-Webhook-Signature accepted for backward compatibility.
+- X-Webhook-ID dedup window (24h), X-Webhook-Timestamp replay window (5min) formalised.
+- X-Webhook-Event and X-Webhook-Attempt receiver-side telemetry headers documented.
+
+### Added
+- info.description — Webhook Signature & Replay Headers table (5 canonical headers).
+
+### Fixed
+- Resolves cross-document inconsistency between AsyncAPI section, event docs, and project memory on webhook header naming.
+
+### Standards & citations
+- RFC 7230 §3.2 (HTTP header field case-insensitivity)
+- RFC 7807 (Problem Details for HTTP APIs — error envelope)
+- Standing Order 1 (The Lock — no renames)
+- Standing Order 2 (The Ratchet — additive only)
+- Standing Order 4 (Surgeon Rule — additive only)
+- Standing Order 6 (Version Gate — patch bump 4.28.1 → 4.28.2)
 
 ---
 
