@@ -190,6 +190,10 @@ export default function AdminWebhookReplay() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="ml-2">Refresh</span>
             </Button>
+            <Button variant="outline" onClick={bulkReplayFailed} disabled={bulkRunning}>
+              {bulkRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Repeat className="h-4 w-4" />}
+              <span className="ml-2">Replay all failed</span>
+            </Button>
           </div>
 
           <div className="border rounded-lg overflow-hidden">
