@@ -53,7 +53,9 @@ export default function AdminWebhookReplay() {
   const [provider, setProvider] = useState<(typeof PROVIDERS)[number]>("all");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<InboxRow[]>([]);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [bulkRunning, setBulkRunning] = useState(false);
   const [replayingId, setReplayingId] = useState<string | null>(null);
   const [result, setResult] = useState<{ id: string; data: ReplayResult } | null>(null);
 
@@ -72,7 +74,19 @@ export default function AdminWebhookReplay() {
     setLoading(false);
   }
 
-  useEffect(() => { loadRows(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [provider]);
+  async function loadAudit() {
+    let q = supabase
+      .from("webhook_replay_audit")
+      .select("id, inbox_id, provider, event_id, replayed_by, signature_valid, idempotent_skip, result_status, result_code, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (provider !== "all") q = q.eq("provider", provider);
+    const { data, error } = await q;
+    if (error) toast.error(error.message);
+    else setAudit((data as AuditRow[]) ?? []);
+  }
+
+  useEffect(() => { loadRows(); loadAudit(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [provider]);
 
   async function replay(row: InboxRow) {
     setReplayingId(row.id);
@@ -85,12 +99,29 @@ export default function AdminWebhookReplay() {
       const r: ReplayResult = data?.result;
       setResult({ id: row.id, data: r });
       toast.success(`Replay finished: ${r.status} ${r.code ?? ""}`.trim());
-      await loadRows();
+      await Promise.all([loadRows(), loadAudit()]);
     } catch (err: any) {
       toast.error(err?.message ?? "Replay failed");
     } finally {
       setReplayingId(null);
     }
+  }
+
+  async function bulkReplayFailed() {
+    const targets = rows.filter((r) => r.processing_error && r.signature);
+    if (!targets.length) { toast.info("No failed events with stored signatures to replay."); return; }
+    if (!window.confirm(`Replay ${targets.length} failed event(s) sequentially? Idempotency is preserved.`)) return;
+    setBulkRunning(true);
+    let ok = 0;
+    for (const row of targets) {
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-webhook-replay", { body: { inbox_id: row.id } });
+        if (!error && (data?.result?.status ?? 500) < 400) ok += 1;
+      } catch { /* continue */ }
+    }
+    setBulkRunning(false);
+    toast.success(`Bulk replay complete: ${ok}/${targets.length} succeeded.`);
+    await Promise.all([loadRows(), loadAudit()]);
   }
 
   const noSignatureCount = useMemo(
