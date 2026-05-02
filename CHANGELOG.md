@@ -1,12 +1,68 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.27.2** · Last updated: **2026-05-02**
+Current API version: **4.28.0** · Last updated: **2026-05-02**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.28.0 — 2026-05-02
+**Type:** minor · **Breaking changes:** none
+
+Spec versioning + diff endpoints, end-to-end provider sandbox simulators (Stripe, Flutterwave, PayPal), Connector Runbook interactive simulator, Institution API Client registration with pre-filled client_credentials snippet, and Admin Webhook Replay history + bulk replay-all-failed action.
+
+### Highlights
+- GET /v1/spec/versions and GET /v1/spec/diff?from=&to= — structured OpenAPI version diff (RFC 6902 intent), flags breaking changes per Standing Order 1.
+- POST /v1/sandbox/providers/{provider}/simulate — signs realistic Stripe/Flutterwave/PayPal payloads with provider test secrets and forwards through the canonical Kang receiver.
+- /developer/spec-diff — public interactive diff UI between any two published spec versions.
+- ConnectorSandboxSimulator embedded in /developer/connectors/bank-connector-runbook (file ingestion + reconciliation phases).
+- AdminWebhookReplay: Replay history tab (webhook_replay_audit) + sequential Replay all failed bulk action.
+- Institution API Clients: post-create modal shows the client_credentials token-exchange curl snippet with the new client_id pre-filled.
+- Snapshot of v4.27.3 stored at public/openapi-history/openapi-4.27.3.json so future diffs work.
+
+### Added
+- Tag: Specification (referenced by both new spec ops — Standing Order 5).
+- Postman collection Kang_Open_Banking_API_v4.28.0.postman_collection.json published.
+
+### Standards & citations
+- RFC 6902 (JSON Patch — diff intent)
+- RFC 6749 §4.4 (OAuth 2.0 Client Credentials Grant)
+- FAPI 1.0 Advanced §6.2.1.13
+- STANDING ORDER 1 — Lock (no rename / removal)
+- STANDING ORDER 6 — Version Gate (minor bump 4.27.3 → 4.28.0)
+
+### Migration notes
+Fully additive. Existing clients unchanged. New spec, sandbox-simulator, and admin endpoints are opt-in.
+
+---
+
+## 4.27.3 — 2026-05-02
+**Type:** patch · **Breaking changes:** none
+
+Audit-driven hardening — restored /v1/webhooks/providers/* canonical paths, declared the missing BankConnectors tag, injected 429 / 401 / 400 responses across ~50 operations, added the reusable XFapiInteractionId response header to all 200/201 responses, and tightened required[] arrays on WebhookReplayRequest, DcrRegistrationRequest, and WebhookEventType.
+
+### Highlights
+- Removed legacy duplicate webhook paths (/webhooks/stripe etc.) — single canonical route under /v1/webhooks/providers/{provider}.
+- Reusable XFapiInteractionId header component referenced by every 200/201 response (FAPI 1.0 §6.2.1.13).
+- Coverage floors enforced via src/test/openapi-v4-27-3-regressions.test.ts (11 tests).
+
+### Fixed
+- Provider webhook paths regressed to /webhooks/* in v4.27.2 — restored to /v1/webhooks/providers/{stripe|flutterwave|paypal}.
+- Orphan BankConnectors tag now declared in tags[] (Standing Order 5).
+
+### Standards & citations
+- FAPI 1.0 Advanced §6.2.1.13 (x-fapi-interaction-id)
+- RFC 6585 §4 (429 Too Many Requests)
+- RFC 7235 §3.1 (401 Unauthorized)
+- STANDING ORDER 2 — Ratchet (429/401/400/x-fapi floors)
+- STANDING ORDER 6 — Version Gate (patch bump 4.27.2 → 4.27.3)
+
+### Migration notes
+No code action required. Provider webhook receivers continue to be served at /v1/webhooks/providers/*.
 
 ---
 
