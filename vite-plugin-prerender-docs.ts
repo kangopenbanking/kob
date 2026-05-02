@@ -28,23 +28,62 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Make your first API call to the Kang Open Banking API in under 5 minutes. Free sandbox, no signup required. cURL, Node.js, Python, PHP, Go, and Java examples.',
     h1: 'Getting Started with Kang Open Banking API',
     content: `<h2>Quick Start Guide</h2>
-<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required.</p>
+<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v4.27.0+): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
 <pre><code>curl -i https://api.kangopenbanking.com/v1/health</code></pre>
-<h3>Step 3: Try a Payment (Sandbox)</h3>
+<h3>Step 3: Create a Mobile Money Charge (Sandbox)</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{"amount":"5000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
+  -d '{
+    "amount": "5000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "description": "Order #1234"
+  }'</code></pre>
+<h3>Step 4: Successful Response (HTTP 201)</h3>
+<pre><code>{
+  "data": {
+    "id": "ch_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+    "object": "charge",
+    "status": "pending",
+    "amount": "5000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "provider_ref": "MP240501.1234.A12345",
+    "tx_ref": "kob_tx_8f3e1c92a7b4",
+    "description": "Order #1234",
+    "created_at": "2026-05-01T14:32:11Z"
+  },
+  "request_id": "req_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+  "links": { "self": "/v1/gateway/charges/ch_01HZX9K7P3M2N4Q5R6S7T8V9W0" }
+}</code></pre>
+<h3>Step 5: Error Response (RFC 7807)</h3>
+<p>All 4xx/5xx errors use <code>application/problem+json</code> with a stable <code>error_id</code>:</p>
+<pre><code>HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+
+{
+  "type": "https://docs.kangopenbanking.com/errors/validation_error",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "customer_phone is required when channel is mobile_money",
+  "error_id": "err_01HZX9KAB12CDEF34GHJKMNPQR",
+  "timestamp": "2026-05-01T14:32:11Z"
+}</code></pre>
 <h3>Available SDKs</h3>
 <ul>
   <li>Node.js / TypeScript — <code>npm install @kangopenbanking/sdk</code></li>
   <li>Python — <code>pip install kang-openbanking</code></li>
   <li>PHP — <code>composer require kang/openbanking-php</code></li>
-  <li>Java, Go, Ruby — coming soon. Implementation guides available on the SDKs page.</li>
+  <li>Java, Go, Ruby — community implementation guides available on the SDKs page; official packages targeted Q3 2026.</li>
 </ul>
 <p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>`
   },
