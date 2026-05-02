@@ -204,17 +204,16 @@ const isValid = signature === receivedSignature;</code></pre>
     h1: 'SDKs and Client Libraries',
     content: `<h2>Official SDKs</h2>
 <p>Install an official SDK to integrate Kang Open Banking API in your preferred language.</p>
-<h3>Available SDKs</h3>
+<h3>Officially Published SDKs</h3>
 <table>
   <tr><th>Language</th><th>Package</th><th>Install</th></tr>
-  <tr><td>Node.js</td><td>@kangob/node</td><td><code>npm install @kangob/node</code></td></tr>
-  <tr><td>Python</td><td>kangob</td><td><code>pip install kangob</code></td></tr>
-  <tr><td>PHP</td><td>kangob/kangob-php</td><td><code>composer require kangob/kangob-php</code></td></tr>
-  <tr><td>Java</td><td>com.kangob:kangob-java</td><td>Maven/Gradle</td></tr>
-  <tr><td>Go</td><td>github.com/kangob/kangob-go</td><td><code>go get github.com/kangob/kangob-go</code></td></tr>
-  <tr><td>Ruby</td><td>kangob</td><td><code>gem install kangob</code></td></tr>
+  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td></tr>
+  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td></tr>
+  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td></tr>
 </table>
-<p>All SDKs support both sandbox and production environments with automatic retries and idempotency.</p>`
+<h3>Community &amp; Self-Hosted Implementation Guides</h3>
+<p>Java, Go, and Ruby SDKs are coming soon. Drop-in HTTP client implementation guides (OkHttp, net/http, Net::HTTP) are published on the SDKs page.</p>
+<p>All official SDKs support both sandbox and production environments with automatic retries, idempotency-key handling, and HMAC webhook signature verification.</p>`
   },
   {
     path: '/developer',
