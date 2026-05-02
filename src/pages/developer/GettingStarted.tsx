@@ -257,13 +257,13 @@ export default function GettingStarted() {
               <Button variant="outline" asChild>
                 <a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" download>
                   <Download className="h-4 w-4 mr-2" />
-                  Latest collection (v4.27.2)
+                  Latest collection (v4.27.3)
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json" download>
+                <a href="/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json" download>
                   <Download className="h-4 w-4 mr-2" />
-                  v4.27.2 (immutable)
+                  v4.27.3 (immutable)
                 </a>
               </Button>
               <Button variant="outline" asChild>
