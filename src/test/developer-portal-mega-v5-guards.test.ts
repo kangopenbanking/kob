@@ -81,7 +81,7 @@ describe('Mega Prompt v5 — Content Fingerprint Test (CFT)', () => {
 
 describe('Mega Prompt v5 — G5 extensionless docs route guard', () => {
   for (const route of ['/developer/examples/real-world', '/developer/gateway/quickstart', '/developer/gateway/webhooks']) {
-    it(`${route} is emitted as an extensionless static file as well as /index.html`, () => {
+    it(`${route} is emitted as an exact extensionless static HTML file`, () => {
       expect(block(route)).toContain('serveAsExtensionlessFile: true');
     });
   }
