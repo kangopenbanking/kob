@@ -1,8 +1,8 @@
 {
-  "apiVersion": "4.27.3",
-  "generatedAt": "2026-05-02T13:57:14.164Z",
+  "apiVersion": "4.28.0",
+  "generatedAt": "2026-05-02T14:15:05.070Z",
   "collection": {
-    "versioned": "/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json",
+    "versioned": "/postman/Kang_Open_Banking_API_v4.28.0.postman_collection.json",
     "latest": "/postman/Kang_Open_Banking_API_latest.postman_collection.json",
     "legacy": "/postman/Kang_Open_Banking_API_v1.postman_collection.json"
   },
