@@ -155,6 +155,17 @@ export default function SandboxSimulateWebhooks() {
         </div>
 
         <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="provider-simulator">End-to-end provider simulator</h2>
+          <p className="text-muted-foreground mb-4">
+            Pick a provider and a scenario. The simulator builds a realistic provider event, signs it
+            with the matching webhook secret, and forwards it through Kang's canonical receiver — so the
+            inbox row, charge update, and outbound merchant webhook all fire exactly as they would in
+            production.
+          </p>
+          <ProviderSimulatorPanel />
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="trigger">Trigger a Test Event</h2>
           <CodeBlock examples={[{ code: triggerExample, language: "bash", label: "cURL" }]} />
         </section>
