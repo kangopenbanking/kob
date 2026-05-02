@@ -155,11 +155,15 @@ describe('[Mobile E2E] Payment edge functions expose a serve() handler with CORS
     const file = path.join(FUNCTIONS_DIR, fn, 'index.ts');
     expect(fs.existsSync(file), `Missing index.ts: ${fn}`).toBe(true);
     const src = fs.readFileSync(file, 'utf8');
-    expect(src, `${fn} should call serve()`).toMatch(/serve\s*\(/);
+    // Accepts std/http `serve(` or Deno-native `Deno.serve(`
+    expect(src, `${fn} should call serve() or Deno.serve()`).toMatch(/(?:^|[^.\w])(?:Deno\.)?serve\s*\(/m);
     expect(src, `${fn} should handle OPTIONS for CORS`).toMatch(/OPTIONS/);
-    expect(src, `${fn} should authenticate via getUser() (no anonymous payments)`).toMatch(
-      /auth\.getUser\(/,
-    );
+    // Accepts `auth.getUser(` (JWT) OR `resolveAuth(` (API-key + JWT helper).
+    // Both are mandated by the Direct Backend Mandate for financial endpoints.
+    expect(
+      src,
+      `${fn} should authenticate via auth.getUser() or resolveAuth() (no anonymous payments)`,
+    ).toMatch(/(auth\.getUser\(|resolveAuth\()/);
   });
 });
 
