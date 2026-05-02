@@ -364,6 +364,14 @@ const BankSendAbroad: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={setShowPin}
+        onConfirmed={() => sendMutation.mutate()}
+        title="Authorize International Transfer"
+        description="Enter your 6-digit PIN to confirm this remittance"
+      />
     </div>
   );
 };
