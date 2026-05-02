@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ArrowRight, Key, Zap } from "lucide-react";
+import { CheckCircle2, ArrowRight, Key, Zap, Download, ExternalLink } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
@@ -233,7 +233,61 @@ export default function GettingStarted() {
           </CardContent>
         </Card>
 
-        {/* Step 3: Make First Call */}
+        {/* Postman collection — versioned, in sync with current OpenAPI release */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                <Download className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Import the Postman Collection</CardTitle>
+                <CardDescription>
+                  Versioned collection auto-generated from the live OpenAPI spec — 391 requests across 45 folders.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Each release publishes an immutable, versioned Postman v2.1 collection alongside Sandbox and Production environments.
+              Import the collection, pick an environment, and set your <code className="bg-muted px-1 rounded text-xs">access_token</code>.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button variant="outline" asChild>
+                <a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" download>
+                  <Download className="h-4 w-4 mr-2" />
+                  Latest collection (v4.27.2)
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json" download>
+                  <Download className="h-4 w-4 mr-2" />
+                  v4.27.2 (immutable)
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/postman/Kang_Open_Banking_Sandbox.postman_environment.json" download>
+                  <Download className="h-4 w-4 mr-2" />
+                  Sandbox environment
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/postman/Kang_Open_Banking_Production.postman_environment.json" download>
+                  <Download className="h-4 w-4 mr-2" />
+                  Production environment
+                </a>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Manifest with current version + URLs:{" "}
+              <a href="/postman/manifest.json" className="text-primary hover:underline inline-flex items-center gap-1">
+                /postman/manifest.json <ExternalLink className="h-3 w-3" />
+              </a>
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
