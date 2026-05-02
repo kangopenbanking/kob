@@ -1,73 +1,112 @@
-## Context
+## What already exists (verified, do not rebuild)
 
-Claude's audit of v4.27.2 found three spec regressions, four coverage gaps on newly added operations, and six portal pages still rendering as stubs in the prerendered HTML. We will fix all of them, ratchet richness tests, and bump the spec to **v4.27.3** per Standing Order 6 (Version Gate). All spec edits are additive except the deletion of three duplicate legacy webhook paths, which is a bugfix removing accidental reintroduction.
+| Requested feature | Existing implementation | Gap |
+|---|---|---|
+| Webhook event replay + admin UI | `supabase/functions/admin-webhook-replay`, `admin-webhook-dlq-replay`, `gateway-webhook-replay-delivery`; `src/pages/admin/AdminWebhookReplay.tsx` (254 lines, status badges, audit table) | **Mostly done** — only needs a "Replay history" tab and bulk replay |
+| OAuth client credentials flow | `oauth-token` (`grant_type=client_credentials` since v3), `oauth-authorize`, `oauth-introspect`, `oauth-revoke`, `dcr-register` (RFC 7591), `api_clients` table, `InstitutionApiClients.tsx`, admin `ApiClientManagement.tsx` | **Done at the API layer**. Needs a polished, branded *application registration* page for non-technical institution users that doesn't require crafting a signed SSA |
+| Bank connector runbook | `src/pages/developer/BankConnectorRunbook.tsx` (227 lines, 4 phases, 9 statuses) | Needs an interactive **sandbox simulator** widget |
+| Sandbox payment flows | `sandbox`, `sandbox-router`, `sandbox-trigger-webhook`, `POST /v1/sandbox/payments/simulate` | Existing simulator is generic. Needs **per-provider (Stripe/Flutterwave/PayPal) end-to-end** simulators that fan signed webhooks back into the canonical receivers |
+| OpenAPI version diff | None | **Net new** |
+
+The plan below builds only the missing parts and leaves all existing behaviour intact (Standing Order 4 — Surgeon Rule).
 
 ---
 
-## Track A — OpenAPI spec fixes (`public/openapi.json` + `public/openapi.yaml`)
+## Track 1 — OpenAPI version diff (net new)
 
-1. **Remove legacy provider webhook paths** (regression fix)
-   - Delete `/webhooks/stripe`, `/webhooks/flutterwave`, `/webhooks/paypal` (operationIds `inboundWebhookStripe/Flutterwave/PayPal`).
-   - Keep canonical `/v1/webhooks/providers/{stripe|flutterwave|paypal}` (operationIds `receiveStripeWebhook/Flutterwave/Paypal`).
-2. **Declare `BankConnectors` tag** in global `tags[]` with description and `externalDocs` link to `/developer/banks/connector-runbook`.
-3. **Add `429 Too Many Requests`** (`$ref: '#/components/responses/TooManyRequests'`) to the 23 ops missing it (new connector, admin, gateway export, healthz, sandbox, auth ops).
-4. **Add `401 Unauthorized`** to the 6 flagged ops: `getJwksWellKnown` (skip — public), `connectorImportGet`, `connectorBatchGet`, `connectorBatchDownload`, `merchantWebhookRotateSecret`, `gatewayStatementDownload`. (For `getJwksWellKnown`, document the public exemption with `x-public-endpoint: true` instead.)
-5. **Add `400 Bad Request`** to the 6 POST/PUT/PATCH ops listed (`extendConsent`, `merchantApiKeyRotate`, `merchantWebhookRotateSecret`, plus the v1 receive* webhook ops that replace the deleted legacy ones).
-6. **Add `x-fapi-interaction-id` header** to 200/201 responses on the 50 new ops missing it (use a shared `$ref: '#/components/headers/XFapiInteractionId'`, creating the header component if absent).
-7. **Add `required[]` arrays** to schemas `WebhookReplayRequest`, `DcrRegistrationRequest`, `WebhookEventType`.
-8. **Bump `info.version`** to `4.27.3` and add changelog `docs/governance/CHANGELOG-v4.27.3.md` citing standards (FAPI 1.0 §6.2.1.13 for x-fapi-interaction-id, RFC 6585 for 429, RFC 7235 for 401, RFC 7807 for problem responses, OpenAPI 3.0.3 §4.7.19 for tag declarations).
-9. **Regenerate** `public/openapi.yaml` and `public/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json` (+ update `public/postman/manifest.json` and the `_latest` alias).
+### Backend
+- New edge function `openapi-spec-diff` (`supabase/functions/openapi-spec-diff/index.ts`).
+  - `GET /v1/spec/diff?from=4.27.2&to=4.27.3`
+  - Loads two specs from a new public folder `public/openapi-history/` (snapshots committed when version bumps); falls back to the live `public/openapi.json` for `to=current`.
+  - Returns RFC 6902-style structured diff: `{ added_paths[], removed_paths[], changed_paths[], added_schemas[], removed_schemas[], required_field_changes[], breaking, summary }`.
+  - Uses a small in-house comparator (no new deps) — three passes over `paths`, `components.schemas`, and `info.version`.
+  - Public, unauthenticated, cached `Cache-Control: public, max-age=300`.
+- Snapshot `public/openapi.json` → `public/openapi-history/openapi-4.27.3.json` and seed prior versions present in changelog (`4.27.2`, `4.27.1`, `4.27.0`, `4.6.0`, `4.5.0`, `4.4.0`, `4.3.0`, `4.2.0`) by hand-curated synthetic prior snapshots only where the live JSON differs — for older versions we ship a **manifest entry** marking them as "manifest-only" so the diff tool surfaces changelog text rather than full JSON. This avoids fabricating spec history.
+- Register the route in `sandbox-router` AND in the public router so the production gateway exposes `/v1/spec/diff`.
 
-## Track B — Portal prerendered HTML fixes (`vite-plugin-prerender-docs.ts`)
+### Frontend
+- New developer page `src/pages/developer/SpecDiff.tsx` at `/developer/spec-diff` (PERMANENT PUBLIC ROUTE).
+  - Two `<Select>` controls (from / to) populated from a new `/spec/versions` listing endpoint.
+  - Shows three sections: **Added**, **Removed**, **Changed** (with a "Breaking change" red badge for any required-field removal, status-code removal, or path/operationId removal).
+  - Uses `react-diff-viewer-continued` if already present; otherwise plain side-by-side `<pre>` blocks (no new dep).
+  - Prerendered HTML snippet so the page is crawlable per Order P6.
+- Link added to `/developer/changelog` ("Compare versions side-by-side →") and to `/developer` Quick Links.
 
-1. **Getting Started** — strip every `"provider": "mtn_momo"` line from the embedded code blocks (canonical body uses `channel`+`customer_phone` only, matching the React component and the spec).
-2. **Replace stub HTML** for the six pages flagged as generic stubs in the live crawl, mirroring the React content already shipped:
-   - `/developer/authentication` → full OAuth 2.0 + API key guide (token exchange, scopes, mTLS pointer, key rotation).
-   - `/developer/api-explorer` → server-rendered Redoc `<redoc spec-url="/openapi.json">` block + Swagger UI deep-link + Postman/SDK download list (already partially present — extend with H1, intro, and field tables so it satisfies CFT/UTT and Order P6).
-   - `/developer/gateway/quickstart` → 5-step tutorial (auth → charge → poll → webhook handler → payout) using canonical fields.
-   - `/developer/gateway/webhooks` → event catalogue table for the 8 documented `x-webhooks` plus HMAC verification example (Node + Python + PHP).
-   - `/developer/guides/sdks` → install instructions for `@kangopenbanking/sdk` (npm), `kangopenbanking` (pip), `kangopenbanking/sdk-php` (composer), with quickstart per language.
-   - `/developer/examples/real-world` → three end-to-end scenarios (e-commerce checkout, payroll bulk payout, AISP account aggregation) each with a code sample and a sequence diagram in ASCII.
-3. Each rebuilt page must satisfy the existing Mega-v5 guards: unique `<title>`, unique `<h1>`, no legacy field names, no `*.supabase.co` host, ≥80-char description, multi-language code samples per Order P9.
+## Track 2 — Provider-payment sandbox simulators (extends existing sandbox)
 
-## Track C — Tests (ratchet upward, never down)
+Net intent: hitting one endpoint should mint a fake provider charge, store it via the canonical receiver, persist a `webhook_inbox` row with a valid HMAC signature, and update the gateway charge — exactly as a real provider would.
 
-Add/extend Vitest specs:
+### Backend
+- New edge function `sandbox-provider-simulator` (`supabase/functions/sandbox-provider-simulator/index.ts`):
+  - `POST /v1/sandbox/providers/{stripe|flutterwave|paypal}/simulate`
+  - Body: `{ scenario: "success" | "declined" | "timeout" | "dispute_opened" | "refund", amount, currency, customer? }`
+  - Builds a realistic provider payload, signs it with the matching secret (`STRIPE_WEBSECRET_KEY`, `FLUTTERWAVE_ENCRYPTION_KEY`, `PAYPAL_WEBHOOK_ID`), and `fetch`-POSTs it to the in-process receiver function URL (`gateway-webhook-stripe` / `flutterwave` / `paypal`).
+  - Returns the receiver's response, the synthetic `event_id`, and a links object so the developer can poll `/v1/gateway/charges/{id}` and `/v1/webhooks/{id}/deliveries`.
+- Wire the new route into `sandbox-router` so it's reachable behind the public `/v1/sandbox/...` namespace.
 
-1. **`src/test/openapi-v4-27-3-regressions.test.ts`** (new):
-   - Asserts `/webhooks/stripe|flutterwave|paypal` paths are absent.
-   - Asserts every tag used by an operation appears in global `tags[]`.
-   - Asserts each named op above carries 401 / 400 / 429 as required.
-   - Asserts every 200/201 response on every operation declares the `x-fapi-interaction-id` header.
-   - Asserts the three schemas declare `required[]`.
-   - Asserts `info.version === '4.27.3'` and changelog file exists.
-2. **Extend `src/test/openapi-richness.test.ts`** thresholds: response examples and code-samples coverage stays at 391/391; add new floor `xFapiCoverage = ops.length`.
-3. **Extend `src/test/developer-portal-mega-v5-guards.test.ts`**: add CFT/UTT/CAT entries for the six rebuilt pages and a hard-fail check for the legacy `"provider":` substring across all prerendered HTML.
-4. **Extend `src/test/postman-collection-publishing.test.ts`**: bump expected version to 4.27.3 and verify manifest sync.
+### Frontend (developer-facing)
+- Extend `src/pages/developer/SandboxSimulateWebhooks.tsx` (existing) with a **per-provider tab** (Stripe / Flutterwave / PayPal) and a 5-step progress strip showing: simulate → receiver verifies → inbox row → charge updated → outbound webhook delivered.
+- No new admin page needed — the receiver feeds the existing AdminWebhookReplay table automatically.
 
-Run all four suites + the existing portal/charge-fields/postman suites; do not ship until 100% green.
+## Track 3 — Application registration UX (institution-facing wrapper for existing client_credentials flow)
 
-## Technical details
+The API already issues client_credentials tokens via `oauth-token` and `dcr-register`. The gap is that institutions currently need to craft a signed Software Statement Assertion. We add a guided UI that does it for them.
 
-- Heavy spec edits are scripted: a one-shot Node script (`scripts/apply-v4.27.3-fixes.mjs`, run once and kept under `scripts/` for audit history) loads `openapi.json`, applies the seven changes deterministically, then writes JSON + emits YAML via `js-yaml`. This keeps Standing Order 4 (Surgeon Rule) clean — no hand-edits across 391 ops.
-- The `XFapiInteractionId` header component will be defined once under `components.headers` with `schema: { type: string, format: uuid }` and `description` citing FAPI 1.0 §6.2.1.13.
-- Postman regeneration reuses `scripts/regen-postman.mjs`; we only invoke it after the spec lands.
-- No DB migrations, no edge functions, no new dependencies.
+### Frontend
+- Extend `src/pages/institution/InstitutionApiClients.tsx`:
+  - "Register new application" wizard (3 steps: app metadata → grant types & scopes → confirmation with downloadable `client_id` + `client_secret`, one-time view per existing API Key Governance memory).
+  - Shows the test cURL/Node/Python snippets for `client_credentials` token exchange, with the institution's actual `client_id` filled in.
+  - Lists active applications with rotate-secret and revoke actions (already supported by `oauth-revoke`).
 
-## Files touched
+### Backend
+- Add a thin edge function `institution-register-app` that wraps `dcr-register`: accepts plain-form metadata, generates the SSA server-side using the institution's already-trusted JWKS, then calls `dcr-register`. Returns the registration result.
+- No schema changes required — `api_clients` table already supports the flow.
 
-- `public/openapi.json`, `public/openapi.yaml` (regenerated)
-- `public/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json` (new), `_latest` alias, `manifest.json`
-- `vite-plugin-prerender-docs.ts` (six page HTML rewrites + Getting Started field cleanup)
-- `docs/governance/CHANGELOG-v4.27.3.md` (new)
-- `scripts/apply-v4.27.3-fixes.mjs` (new, idempotent)
-- `src/test/openapi-v4-27-3-regressions.test.ts` (new)
-- `src/test/openapi-richness.test.ts`, `src/test/developer-portal-mega-v5-guards.test.ts`, `src/test/postman-collection-publishing.test.ts` (extended)
+## Track 4 — Connector runbook sandbox simulator widget (extends existing runbook)
+
+### Frontend
+- New component `src/components/developer/ConnectorSandboxSimulator.tsx` embedded into `BankConnectorRunbook.tsx`:
+  - "Try it" panel where developers pick a phase (Ingest / Validate / Reconcile) and a fixture (`good.csv`, `partial.csv`, `bad-headers.csv`, `pain-001-sample.xml`).
+  - Calls existing `bank-file-connector` in sandbox mode (`x-sandbox: true` header) and renders the resulting status timeline using the same status badges shown elsewhere on the page.
+  - No backend changes — `bank-file-connector` already accepts the sandbox header.
+
+## Track 5 — Webhook replay polish (existing UI tightening)
+
+- Add a **"Replay history"** subtab to `AdminWebhookReplay.tsx` that reads from `webhook_replay_audit` and shows actor / timestamp / outcome.
+- Add bulk replay: checkbox selection + "Replay selected" with a confirmation dialog, dispatched serially to keep idempotency clean.
+- No new endpoint — existing `admin-webhook-replay` is invoked once per row.
+
+---
+
+## Spec & docs governance (Standing Orders)
+
+- New spec ops added (do not affect counts): `GET /v1/spec/versions`, `GET /v1/spec/diff`, `POST /v1/sandbox/providers/{provider}/simulate`. All include `429`, `401` (only `spec/*` are `x-public-endpoint: true`), `400` on POST, `x-fapi-interaction-id` on 200.
+- Bump `info.version` → **4.28.0** (minor — net-new endpoints, additive only).
+- New changelog `docs/governance/CHANGELOG-v4.28.0.md` citing OAuth 2.0 RFC 6749 §4.4 (client credentials), RFC 7592 (DCR management), RFC 6902 (JSON patch — diff format), FAPI 1.0 §6.2.1.13.
+- Regenerate `public/openapi.yaml` and Postman collection `Kang_Open_Banking_API_v4.28.0.postman_collection.json` via the existing `apply-…` + `regen-postman.mjs` scripts.
+
+## Tests
+
+1. `src/test/openapi-v4-28-0-additions.test.ts` — asserts the three new ops exist with full coverage envelope (and that v4.27.3 floors still hold).
+2. `src/test/spec-diff.test.ts` — calls the diff edge function locally with two fixture specs and asserts breaking-change detection logic (path removal, required-field removal, status-code removal).
+3. Vitest for `SpecDiff.tsx` — happy path with mocked fetch.
+4. Extend `developer-portal-mega-v5-guards.test.ts` with `/developer/spec-diff` UTT/CFT/CAT entries.
+5. Extend `postman-collection-publishing.test.ts` to expect v4.28.0.
+6. Extend `openapi-richness.test.ts` floor to 391 ops (388 + 3 new).
+
+## Files touched (high level)
+
+- New edge functions: `openapi-spec-diff`, `sandbox-provider-simulator`, `institution-register-app`
+- New folder: `public/openapi-history/` with `manifest.json` + `openapi-4.27.3.json`
+- New pages/components: `src/pages/developer/SpecDiff.tsx`, `src/components/developer/ConnectorSandboxSimulator.tsx`
+- Extended: `InstitutionApiClients.tsx`, `BankConnectorRunbook.tsx`, `SandboxSimulateWebhooks.tsx`, `AdminWebhookReplay.tsx`, `App.tsx` (new route), `sandbox-router`, prerender plugin (new page entry + spec-diff link), changelog
+- Spec: `public/openapi.json`, `public/openapi.yaml`, sandbox variants, Postman collection (regenerated)
+- Tests: 5 new/extended Vitest files
 
 ## Done criteria
 
-- All seven flagged spec issues resolved; `info.version = 4.27.3`.
-- Six portal pages render full content in prerendered HTML (no stubs).
-- Getting Started prerender contains zero `"provider":` lines.
-- All Vitest suites listed above pass; existing 32 passing tests still pass.
-- New CHANGELOG cites every standard per Standing Order 3.
+- `/developer/spec-diff` renders and successfully diffs `4.27.2` ↔ `4.27.3`, flagging zero breaking changes.
+- `POST /v1/sandbox/providers/stripe/simulate` with `scenario:"success"` produces a verified `webhook_inbox` row, updates the charge, and triggers the outbound merchant webhook in <2s.
+- An institution user can complete application registration in under 60 seconds and immediately mint a token via `client_credentials`.
+- The runbook page's "Try it" panel completes a sandbox CSV ingest cycle without leaving the page.
+- All Vitest suites green; spec at v4.28.0 with new changelog and Postman files.

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Upload, FileSearch, RotateCcw, GitCompare, ShieldCheck, Activity } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { ConnectorSandboxSimulator } from "@/components/developer/ConnectorSandboxSimulator";
 
 const STATUSES = [
   { code: "queued", meaning: "File received, SHA-256 hash computed, awaiting validation worker" },
@@ -108,6 +109,15 @@ export default function BankConnectorRunbook() {
               </Card>
             );
           })}
+        </section>
+
+        <section className="space-y-3" id="simulator">
+          <h2 className="text-xl font-bold">Run a sandbox simulation</h2>
+          <p className="text-sm text-muted-foreground">
+            Walk through the connector pipeline without uploading a real file. Pick a phase, choose a
+            fixture, and watch the status timeline render — same vocabulary your live dashboards use.
+          </p>
+          <ConnectorSandboxSimulator />
         </section>
 
         <section className="space-y-3">

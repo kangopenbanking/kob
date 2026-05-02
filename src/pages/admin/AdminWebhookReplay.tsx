@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Play, RefreshCw, ShieldCheck, ShieldAlert, Repeat } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Play, RefreshCw, ShieldCheck, ShieldAlert, Repeat, History } from "lucide-react";
 import { toast } from "sonner";
 
 type InboxRow = {
@@ -33,13 +34,28 @@ type ReplayResult = {
   body: unknown;
 };
 
+type AuditRow = {
+  id: string;
+  inbox_id: string;
+  provider: string;
+  event_id: string | null;
+  replayed_by: string | null;
+  signature_valid: boolean | null;
+  idempotent_skip: boolean | null;
+  result_status: number | null;
+  result_code: string | null;
+  created_at: string;
+};
+
 const PROVIDERS = ["all", "stripe", "flutterwave", "paypal"] as const;
 
 export default function AdminWebhookReplay() {
   const [provider, setProvider] = useState<(typeof PROVIDERS)[number]>("all");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<InboxRow[]>([]);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [bulkRunning, setBulkRunning] = useState(false);
   const [replayingId, setReplayingId] = useState<string | null>(null);
   const [result, setResult] = useState<{ id: string; data: ReplayResult } | null>(null);
 
@@ -58,7 +74,19 @@ export default function AdminWebhookReplay() {
     setLoading(false);
   }
 
-  useEffect(() => { loadRows(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [provider]);
+  async function loadAudit() {
+    let q = supabase
+      .from("webhook_replay_audit")
+      .select("id, inbox_id, provider, event_id, replayed_by, signature_valid, idempotent_skip, result_status, result_code, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (provider !== "all") q = q.eq("provider", provider);
+    const { data, error } = await q;
+    if (error) toast.error(error.message);
+    else setAudit((data as AuditRow[]) ?? []);
+  }
+
+  useEffect(() => { loadRows(); loadAudit(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [provider]);
 
   async function replay(row: InboxRow) {
     setReplayingId(row.id);
@@ -71,12 +99,29 @@ export default function AdminWebhookReplay() {
       const r: ReplayResult = data?.result;
       setResult({ id: row.id, data: r });
       toast.success(`Replay finished: ${r.status} ${r.code ?? ""}`.trim());
-      await loadRows();
+      await Promise.all([loadRows(), loadAudit()]);
     } catch (err: any) {
       toast.error(err?.message ?? "Replay failed");
     } finally {
       setReplayingId(null);
     }
+  }
+
+  async function bulkReplayFailed() {
+    const targets = rows.filter((r) => r.processing_error && r.signature);
+    if (!targets.length) { toast.info("No failed events with stored signatures to replay."); return; }
+    if (!window.confirm(`Replay ${targets.length} failed event(s) sequentially? Idempotency is preserved.`)) return;
+    setBulkRunning(true);
+    let ok = 0;
+    for (const row of targets) {
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-webhook-replay", { body: { inbox_id: row.id } });
+        if (!error && (data?.result?.status ?? 500) < 400) ok += 1;
+      } catch { /* continue */ }
+    }
+    setBulkRunning(false);
+    toast.success(`Bulk replay complete: ${ok}/${targets.length} succeeded.`);
+    await Promise.all([loadRows(), loadAudit()]);
   }
 
   const noSignatureCount = useMemo(
@@ -113,6 +158,12 @@ export default function AdminWebhookReplay() {
         </Alert>
       )}
 
+      <Tabs defaultValue="recent">
+        <TabsList>
+          <TabsTrigger value="recent"><Repeat className="h-3.5 w-3.5 mr-1.5" />Recent inbox</TabsTrigger>
+          <TabsTrigger value="history"><History className="h-3.5 w-3.5 mr-1.5" />Replay history</TabsTrigger>
+        </TabsList>
+        <TabsContent value="recent">
       <Card>
         <CardHeader>
           <CardTitle>Recent inbox events</CardTitle>
@@ -138,6 +189,10 @@ export default function AdminWebhookReplay() {
             <Button variant="outline" onClick={loadRows} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="ml-2">Refresh</span>
+            </Button>
+            <Button variant="outline" onClick={bulkReplayFailed} disabled={bulkRunning}>
+              {bulkRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Repeat className="h-4 w-4" />}
+              <span className="ml-2">Replay all failed</span>
             </Button>
           </div>
 
@@ -208,6 +263,53 @@ export default function AdminWebhookReplay() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+        <TabsContent value="history">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Replay history</CardTitle>
+                  <CardDescription>Last 50 replay attempts (most recent first). Filtered by selected provider.</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={loadAudit}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Refresh</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Provider</TableHead>
+                      <TableHead>Event ID</TableHead>
+                      <TableHead>When</TableHead>
+                      <TableHead>HTTP</TableHead>
+                      <TableHead>Signature</TableHead>
+                      <TableHead>Idempotent</TableHead>
+                      <TableHead>Replayed by</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {audit.length === 0 ? (
+                      <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">No replay attempts recorded.</TableCell></TableRow>
+                    ) : audit.map((a) => (
+                      <TableRow key={a.id}>
+                        <TableCell><Badge variant="secondary">{a.provider}</Badge></TableCell>
+                        <TableCell className="font-mono text-xs break-all">{a.event_id ?? "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString()}</TableCell>
+                        <TableCell><Badge variant={a.result_status && a.result_status < 400 ? "default" : "destructive"}>{a.result_status ?? "—"} {a.result_code ?? ""}</Badge></TableCell>
+                        <TableCell><Badge variant={a.signature_valid ? "default" : "destructive"}>{String(a.signature_valid)}</Badge></TableCell>
+                        <TableCell><Badge variant={a.idempotent_skip ? "default" : "outline"}>{String(a.idempotent_skip)}</Badge></TableCell>
+                        <TableCell className="font-mono text-xs">{a.replayed_by?.slice(0, 8) ?? "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {result && (
         <Card>

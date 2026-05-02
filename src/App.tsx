@@ -334,6 +334,7 @@ const PaginationExamples = lazy(() => import("./pages/developer/PaginationExampl
 const WebhookEventSimulator = lazy(() => import("./pages/developer/WebhookEventSimulator"));
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6)
 const BankConnectorRunbook = lazy(() => import("./pages/developer/BankConnectorRunbook"));
+const SpecDiff = lazy(() => import("./pages/developer/SpecDiff"));
 const IdempotencyPlayground = lazy(() => import("./pages/developer/IdempotencyPlayground"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
@@ -1145,6 +1146,8 @@ function App() {
               <Route path="connectors/cemac-bank-catalog" element={<CemacBankCatalog />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6) */}
               <Route path="connectors/bank-connector-runbook" element={<BankConnectorRunbook />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6) */}
+              <Route path="spec-diff" element={<SpecDiff />} />
               <Route path="compliance/kyc" element={<ComplianceKyc />} />
               <Route path="compliance/aml" element={<ComplianceAml />} />
               <Route path="compliance/fapi" element={<ComplianceFapi />} />

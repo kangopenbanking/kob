@@ -1,0 +1,11 @@
+{
+  "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
+  "current": "4.27.3",
+  "versions": [
+    { "version": "4.27.3", "released_at": "2026-04-30T00:00:00Z", "type": "snapshot", "file": "openapi-4.27.3.json", "notes": "Baseline snapshot. Adds 429/401/400 floors and X-Fapi-Interaction-Id." },
+    { "version": "4.27.2", "released_at": "2026-04-26T00:00:00Z", "type": "changelog_only", "changelog": "/developer/changelog#v4-27-2", "notes": "Postman v4.27.2 published; provider webhook paths consolidated under /v1/webhooks/providers/*." },
+    { "version": "4.6.0",  "released_at": "2026-03-15T00:00:00Z", "type": "changelog_only", "changelog": "/developer/changelog#v4-6-0",  "notes": "Marketplace splits, idempotency-keys table." },
+    { "version": "4.3.0",  "released_at": "2026-02-10T00:00:00Z", "type": "changelog_only", "changelog": "/developer/changelog#v4-3-0",  "notes": "Provider webhooks moved to /v1/webhooks/providers/*." },
+    { "version": "4.0.0",  "released_at": "2025-12-01T00:00:00Z", "type": "changelog_only", "changelog": "/developer/changelog#v4-0-0",  "notes": "v4 baseline release." }
+  ]
+}

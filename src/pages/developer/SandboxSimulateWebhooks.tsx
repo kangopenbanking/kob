@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { ProviderSimulatorPanel } from "@/components/developer/ProviderSimulatorPanel";
 
 const triggerExample = `# Trigger a test webhook event
 curl -X POST https://api.kangopenbanking.com/v1/sandbox/webhooks/trigger \\
@@ -152,6 +153,17 @@ export default function SandboxSimulateWebhooks() {
             Trigger any of the 52 webhook event types on demand. Test your handlers, verify signatures, and debug integrations without creating real transactions.
           </p>
         </div>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="provider-simulator">End-to-end provider simulator</h2>
+          <p className="text-muted-foreground mb-4">
+            Pick a provider and a scenario. The simulator builds a realistic provider event, signs it
+            with the matching webhook secret, and forwards it through Kang's canonical receiver — so the
+            inbox row, charge update, and outbound merchant webhook all fire exactly as they would in
+            production.
+          </p>
+          <ProviderSimulatorPanel />
+        </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="trigger">Trigger a Test Event</h2>
