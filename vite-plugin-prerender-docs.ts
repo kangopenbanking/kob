@@ -159,7 +159,14 @@ const isValid = signature === receivedSignature;</code></pre>
     content: `<h2>Free Developer Sandbox</h2>
 <p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
 <h3>Sandbox Base URL</h3>
-<p><code>https://YOUR_PROJECT.supabase.co/functions/v1</code></p>
+<p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
+<h3>Production Base URL</h3>
+<p><code>https://api.kangopenbanking.com/v1</code></p>
+<h3>Sandbox-only endpoints</h3>
+<ul>
+  <li><code>POST /v1/sandbox/reset</code> — Reset all your sandbox data</li>
+  <li><code>POST /v1/sandbox/webhooks/send-test</code> — Trigger a test webhook delivery</li>
+</ul>
 <h3>Default Test Credentials</h3>
 <p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Test Phone Numbers (Mobile Money)</h3>
