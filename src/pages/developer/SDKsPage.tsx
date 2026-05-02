@@ -654,6 +654,33 @@ const sdks: SDKDef[] = [
     aisp: GO_AISP,
     community: true,
   },
+  {
+    key: "ruby",
+    title: "Ruby",
+    language: "ruby",
+    desc: "Reference implementation using Ruby standard library (Net::HTTP + OpenSSL). String-typed amounts and constant-time HMAC verification.",
+    install: "# Implementation guide — see code samples below",
+    installLabel: "Guide",
+    badge: "Community guide",
+    repo: "https://github.com/kangopenbanking/sdk-ruby",
+    registry: "https://github.com/kangopenbanking/sdk-ruby",
+    registryLabel: "GitHub",
+    runtime: "Ruby 3.0+ · stdlib only",
+    features: [
+      "Ruby 3.0+ (no external gems required)",
+      "Drop-in client class for Rails or Sinatra",
+      "OAuth2 client_credentials flow",
+      "SecureRandom.uuid Idempotency-Key on payments",
+      "ActiveSupport::SecurityUtils.secure_compare for HMAC",
+      "Coming soon as a published RubyGem",
+    ],
+    Logo: RubyLogo,
+    auth: RUBY_AUTH,
+    charge: RUBY_CHARGE,
+    webhook: RUBY_WEBHOOK,
+    aisp: RUBY_AISP,
+    community: true,
+  },
 ];
 
 const EXAMPLE_TABS = [
