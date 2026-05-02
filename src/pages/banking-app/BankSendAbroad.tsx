@@ -14,6 +14,7 @@ import {
   Send, Globe, ArrowRight, Banknote, Clock, CheckCircle2, ChevronLeft,
   Loader2, AlertTriangle, Search, ShieldCheck, Zap, TrendingUp, Eye,
 } from 'lucide-react';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   created: { label: 'Submitted', color: 'bg-muted text-muted-foreground' },
@@ -43,6 +44,7 @@ const BankSendAbroad: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
   const [countryFilter, setCountryFilter] = useState('');
+  const [showPin, setShowPin] = useState(false);
 
   const { data: corridors, isLoading: loadingCorridors, error: corridorsError } = useQuery({
     queryKey: ['bank-outbound-corridors'],
@@ -327,7 +329,7 @@ const BankSendAbroad: React.FC = () => {
                   <span className="font-semibold flex items-center gap-1"><Clock className="h-3 w-3" /> ~{Math.round((quote.delivery_estimate_seconds || 3600) / 60)} min</span>
                 </div>
 
-                <Button onClick={() => sendMutation.mutate()} disabled={sendMutation.isPending}
+                <Button onClick={() => setShowPin(true)} disabled={sendMutation.isPending}
                   className="w-full h-12 rounded-2xl text-base font-bold gap-2">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Confirm & Send
@@ -362,6 +364,14 @@ const BankSendAbroad: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={setShowPin}
+        onConfirmed={() => sendMutation.mutate()}
+        title="Authorize International Transfer"
+        description="Enter your 6-digit PIN to confirm this remittance"
+      />
     </div>
   );
 };

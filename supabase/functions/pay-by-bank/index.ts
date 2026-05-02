@@ -135,9 +135,24 @@ Deno.serve(async (req) => {
 
     // ─── authorize ────────────────────────────────────────────
     if (action === 'authorize') {
-      const { intent_id, user_id, debtor_account } = body;
-      if (!intent_id || !user_id) {
-        return new Response(JSON.stringify({ error: 'intent_id and user_id required' }), {
+      // Require authenticated user for state-changing payment authorization
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.replace('Bearer ', '');
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${jwt}` } },
+      });
+      const { data: authData, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !authData?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const authedUserId = authData.user.id;
+
+      const { intent_id, debtor_account } = body;
+      const user_id = authedUserId; // Always use authenticated user, never trust body
+      if (!intent_id) {
+        return new Response(JSON.stringify({ error: 'intent_id required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
@@ -249,7 +264,21 @@ Deno.serve(async (req) => {
 
     // ─── reject ───────────────────────────────────────────────
     if (action === 'reject') {
-      const { intent_id, user_id } = body;
+      // Require authenticated user for state-changing payment rejection
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.replace('Bearer ', '');
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${jwt}` } },
+      });
+      const { data: authData, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !authData?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const user_id = authData.user.id;
+
+      const { intent_id } = body;
       if (!intent_id) {
         return new Response(JSON.stringify({ error: 'intent_id required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }

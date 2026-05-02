@@ -22,25 +22,23 @@ The suite asserts production guarantees across the four mobile/PWA surfaces:
 ## Run Result
 
 ```
-Tests       74 passed | 2 failed (76)
-Test Files  1 failed (1)
+Tests       76 passed (76)
+Test Files  1 passed (1)
 ```
 
-The 2 failures are **real gaps surfaced by the suite** (not test bugs):
+All gaps surfaced by the previous run have been remediated:
 
-### Gap 1 — `pay-by-bank` edge function lacks authentication
-`supabase/functions/pay-by-bank/index.ts` does not call `auth.getUser()` or
-`resolveAuth()`. This violates the **Direct Backend Mandate / Financial
-Operation Gates** memory rule (state-changing financial mutations must be
-authenticated). Recommended fix: add `resolveAuth(req, supabase)` at handler
-entry, mirroring `gateway-create-charge`.
+### Gap 1 — `pay-by-bank` edge function authentication — **FIXED**
+`supabase/functions/pay-by-bank/index.ts` now calls `auth.getUser()` on the
+state-changing user actions (`authorize`, `reject`). Unauthenticated callers
+receive `401 Unauthorized`. The authenticated user id is used server-side
+instead of trusting the request body, removing an impersonation vector.
 
-### Gap 2 — `BankSendAbroad` (international remittance) lacks PIN gate
-`src/pages/banking-app/BankSendAbroad.tsx` calls `sendMutation.mutate()`
-directly from the **Send** button without `<PinConfirmDialog>`. International
-remittance is a high-risk mutation and the **Step-Up Authentication and MFA
-Policy** memory mandates a PIN step. Recommended fix: mirror the
-`BankMobileMoney.tsx` pattern (`showPin` state + `executeSend()` callback).
+### Gap 2 — `BankSendAbroad` PIN gate — **FIXED**
+`src/pages/banking-app/BankSendAbroad.tsx` now wires `<PinConfirmDialog>`.
+The **Confirm & Send** button opens the PIN dialog, and `sendMutation.mutate()`
+only fires after `pin-code-verify` succeeds, matching the
+`BankMobileMoney.tsx` pattern and the Step-Up Authentication memory rule.
 
 ## CI Wiring
 
