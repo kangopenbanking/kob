@@ -509,7 +509,27 @@ Content-Type: application/json
 <p>Proof pages: <a href="/developer/authentication/fapi">FAPI</a> · <a href="/developer/authentication/oauth2">OAuth 2.0</a> · <a href="/developer/authentication/dcr">DCR</a> · <a href="/developer/authentication/mtls">mTLS</a> · <a href="/developer/open-banking/consents">Consents &amp; SCA</a> · <a href="/developer/iso20022/messages">ISO 20022</a> · <a href="/developer/api-reference/obie-migration">OBIE Migration</a></p>`
   },
   {
-    path: '/developer/authentication',
+    path: '/developer/spec-diff',
+    title: 'OpenAPI Version Diff | Kang Open Banking',
+    description: 'Compare any two published Kang Open Banking OpenAPI versions side-by-side. Surfaces added paths, removed paths, schema changes, and breaking changes for institutional review.',
+    h1: 'OpenAPI Version Diff',
+    content: `<h2>Compare two API versions</h2>
+<p>Use this tool before upgrading clients. Pick a "from" and "to" version; the page calls <code>GET /v1/spec/diff</code> and renders added paths, removed paths, schema changes, response-code changes, and required-field changes. Breaking changes are flagged in red.</p>
+<h3>Endpoints</h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/v1/spec/versions</code></td><td>Lists every published OpenAPI version with release date and snapshot availability.</td></tr>
+  <tr><td>GET</td><td><code>/v1/spec/diff?from=4.27.2&amp;to=4.27.3</code></td><td>Returns a structured JSON diff of two versions.</td></tr>
+</table>
+<h3>Classification</h3>
+<ul>
+  <li><strong>Additive</strong> (safe): new paths, new response codes, new optional schema fields.</li>
+  <li><strong>Breaking</strong> (red): removed paths, removed response codes, renamed operationIds, removed required fields, removed schemas. Per Standing Order 1 (The Lock), breaking changes require an API major-version increment.</li>
+</ul>
+<h3>cURL</h3>
+<pre><code>curl https://api.kangopenbanking.com/v1/spec/diff?from=4.27.2&amp;to=4.27.3</code></pre>
+<p>Standards cited: RFC 6902 (JSON Patch), Standing Order 1 (The Lock), Standing Order 4 (Surgeon Rule).</p>`
+  },
     title: 'Authentication | Kang Open Banking Developer Docs',
     description: 'Authenticate with the Kang Open Banking API using API keys (Bearer tokens) or OAuth 2.0 with PKCE. Full scopes table, FAPI 1.0 Advanced posture, mTLS, and worked examples.',
     h1: 'Authentication',
