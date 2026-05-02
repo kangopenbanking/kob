@@ -32,4 +32,10 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ['react', 'react-dom'],
   },
+  // Pre-bundle heavy deps used by /developer/api-explorer so the dev server
+  // doesn't 504 while optimizing them on first navigation (swagger-ui-react
+  // is ~2MB and previously timed out, breaking the lazy import for the page).
+  optimizeDeps: {
+    include: ['swagger-ui-react', 'js-yaml'],
+  },
 }));
