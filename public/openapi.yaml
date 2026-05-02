@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.28.0
+  version: 4.28.1
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -183,6 +183,29 @@ info:
       version: 1.1.0
       repository: https://github.com/kangfinance/openbanking-php
       package_manager: https://packagist.org/packages/kang/openbanking-php
+    java:
+      name: com.kangopenbanking:kangopenbanking-sdk-typed
+      version: 4.28.1
+      status: generated
+      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
+      package_manager: https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml
+      generator: openapi-generator-cli (java, okhttp-gson)
+      docs: https://kangopenbanking.com/developer/guides/sdks#java
+    go:
+      name: github.com/kangopenbanking/sdk-go
+      version: v1.5.0
+      status: available
+      repository: https://github.com/kangopenbanking/sdk-go
+      package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
+      docs: https://kangopenbanking.com/developer/guides/sdks#go
+    ruby:
+      name: kangopenbanking
+      version: 1.0.0
+      status: community-guide
+      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
+      package_manager: https://rubygems.org/
+      generator: openapi-generator-cli (ruby)
+      docs: https://kangopenbanking.com/developer/guides/sdks#ruby
   x-postman-collection: https://www.postman.com/kangfinance/kang-open-banking-api
 servers:
   - url: https://api.kangopenbanking.com/v1
