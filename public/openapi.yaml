@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.28.1
+  version: 4.28.2
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -78,6 +78,29 @@ info:
     | Signature | HMAC-SHA256 via `X-KOB-Signature` header |
 
     | Dead letter | Failed events retained for 30 days; manual replay available via API |
+
+
+    ### Webhook Signature & Replay Headers (canonical)
+
+
+    All outbound webhook deliveries include the following headers. Header names are case-insensitive per RFC 7230 §3.2.
+    Aliases are accepted by verification middleware for backward compatibility but new integrations MUST use the canonical
+    names below.
+
+
+    | Canonical Header | Purpose | Accepted Aliases |
+
+    |---|---|---|
+
+    | `X-KOB-Signature` | HMAC-SHA256 hex digest of the raw request body using the endpoint secret. Format: `v1=<hex>` (signature versioning per Stripe convention). | `X-Kang-Signature`, `X-Webhook-Signature` |
+
+    | `X-Webhook-ID` | Unique event identifier (UUID v4). Receivers MUST deduplicate on this value within a 24-hour window. | `Kang-Webhook-ID` |
+
+    | `X-Webhook-Timestamp` | RFC 3339 / ISO 8601 timestamp of event emission. Receivers SHOULD reject events older than 5 minutes (replay protection). | — |
+
+    | `X-Webhook-Event` | Event type (e.g. `payment.completed`). Mirrors the `type` field in the body. | — |
+
+    | `X-Webhook-Attempt` | 1-based delivery attempt counter (1–7). Useful for receiver-side retry telemetry. | — |
 
 
     ## HTTP Caching
