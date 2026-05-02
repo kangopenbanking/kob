@@ -9,5 +9,13 @@
   "environments": {
     "sandbox": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json",
     "production": "/postman/Kang_Open_Banking_Production.postman_environment.json"
-  }
+  },
+  "current": "4.28.0",
+  "versions": [
+    {
+      "version": "4.28.0",
+      "file": "Kang_Open_Banking_API_v4.28.0.postman_collection.json",
+      "released_at": "2026-05-02T14:15:14.031Z"
+    }
+  ]
 }
