@@ -98,16 +98,24 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     content: `<h2>10-Minute Integration Guide</h2>
-<p>Start accepting payments in Cameroon and the CEMAC region with minimal code.</p>
-<h3>Step 1: Create a Payment Intent</h3>
-<pre><code>curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/gateway-charges-router \\
-  -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
+<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request.</p>
+<h3>Step 1: Create a Charge (Mobile Money)</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":10000,"currency":"XAF","description":"Test charge"}'</code></pre>
-<h3>Step 2: Handle the Payment Method</h3>
-<p>Support mobile money (MTN MoMo, Orange Money), Visa/Mastercard with 3D-Secure, and direct bank transfers.</p>
-<h3>Step 3: Verify via Webhook</h3>
-<p>Configure your webhook endpoint and verify signatures using HMAC-SHA256.</p>
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{"amount":"500000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000","description":"Test payment"}'</code></pre>
+<h3>Step 2: Check Charge Status</h3>
+<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/CHARGE_ID \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</code></pre>
+<h3>Step 3: Verify Webhooks</h3>
+<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header.</p>
+<h3>Step 4: Issue a Payout</h3>
+<pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/payouts \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -H "Content-Type: application/json" \\
+  -d '{"amount":"250000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
   <tr><th>Method</th><th>Min Amount (XAF)</th><th>Max Amount (XAF)</th><th>Settlement</th></tr>
@@ -115,7 +123,8 @@ const DOC_ROUTES: DocRoute[] = [
   <tr><td>Orange Money</td><td>100</td><td>3,000,000</td><td>T+1</td></tr>
   <tr><td>Visa/Mastercard</td><td>500</td><td>10,000,000</td><td>T+2</td></tr>
   <tr><td>Bank Transfer</td><td>1,000</td><td>50,000,000</td><td>T+1</td></tr>
-</table>`
+</table>
+<p>Amounts are string integers in minor units. XAF has no subunits, so <code>"500000"</code> = 500,000 XAF.</p>`
   },
   {
     path: '/developer/gateway/webhooks',
