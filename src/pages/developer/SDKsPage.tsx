@@ -28,6 +28,7 @@ import {
   PhpLogo,
   JavaLogo,
   GoLogo,
+  RubyLogo,
 } from "@/components/developer/ClientLibraryLogos";
 
 const copyToClipboard = (text: string) => {
