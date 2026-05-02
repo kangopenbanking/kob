@@ -79,6 +79,14 @@ describe('Mega Prompt v5 — Content Fingerprint Test (CFT)', () => {
   }
 });
 
+describe('Mega Prompt v5 — G5 extensionless docs route guard', () => {
+  for (const route of ['/developer/examples/real-world', '/developer/gateway/quickstart', '/developer/gateway/webhooks']) {
+    it(`${route} is emitted as an extensionless static file as well as /index.html`, () => {
+      expect(block(route)).toContain('serveAsExtensionlessFile: true');
+    });
+  }
+});
+
 describe('Mega Prompt v5 — Code Accuracy Test (CAT)', () => {
   it('no prerendered code example uses the legacy phone_number body field', () => {
     // Legacy body field is `phone_number:` (followed by a value); the word
