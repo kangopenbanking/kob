@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Play, RefreshCw, ShieldCheck, ShieldAlert, Repeat } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Play, RefreshCw, ShieldCheck, ShieldAlert, Repeat, History } from "lucide-react";
 import { toast } from "sonner";
 
 type InboxRow = {
@@ -31,6 +32,19 @@ type ReplayResult = {
   signature_valid: boolean;
   idempotent_skip: boolean;
   body: unknown;
+};
+
+type AuditRow = {
+  id: string;
+  inbox_id: string;
+  provider: string;
+  event_id: string | null;
+  replayed_by: string | null;
+  signature_valid: boolean | null;
+  idempotent_skip: boolean | null;
+  result_status: number | null;
+  result_code: string | null;
+  created_at: string;
 };
 
 const PROVIDERS = ["all", "stripe", "flutterwave", "paypal"] as const;
