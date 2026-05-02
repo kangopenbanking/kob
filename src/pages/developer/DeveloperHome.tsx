@@ -8,6 +8,7 @@ import { SDKSection } from "@/components/developer/landing/SDKSection";
 import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSection";
 import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
+import { StandardsComplianceRow } from "@/components/developer/landing/StandardsComplianceRow";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
 import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
@@ -134,6 +135,9 @@ export default function DeveloperHome() {
 
       <div className="space-y-16 pb-8">
         <HeroSection />
+
+        {/* Auditor 10-second test: visible standards compliance row */}
+        <StandardsComplianceRow />
 
         {/* Instant sandbox credentials -- public, no auth */}
         <section id="instant-keys" aria-label="Instant API Key Generation">
