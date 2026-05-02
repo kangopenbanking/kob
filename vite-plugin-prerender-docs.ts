@@ -311,6 +311,26 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <p><strong>Per-attempt timeout:</strong> 10 seconds. Return any 2xx within that window to acknowledge.</p>`
   },
   {
+    path: '/developer/sandbox',
+    title: 'Sandbox Environment | Kang Open Banking Developer Sandbox',
+    description: 'Free sandbox environment for testing Kang Open Banking API. Test credentials, simulated payments, mobile money test numbers, and card test data.',
+    h1: 'Sandbox Environment Overview',
+    content: `<h2>Free Developer Sandbox</h2>
+<p>A fully functional test environment mirroring production. No signup required — use the default sandbox key to start immediately.</p>
+<h3>Sandbox Base URL</h3>
+<p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
+<h3>Default Test Credentials</h3>
+<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<h3>Test Coverage</h3>
+<table>
+  <tr><th>Area</th><th>Supported</th></tr>
+  <tr><td>Mobile Money</td><td>MTN MoMo and Orange Money success, failure and timeout simulations</td></tr>
+  <tr><td>Cards</td><td>Success, declined and 3-D Secure-required test numbers</td></tr>
+  <tr><td>Webhooks</td><td>Signed test delivery with retry and deduplication headers</td></tr>
+</table>
+<p>For the full sandbox reference, continue to <a href="/developer/sandbox/overview">Sandbox Overview</a>.</p>`
+  },
+  {
     path: '/developer/sandbox/overview',
     title: 'Sandbox Environment | Kang Open Banking Developer Sandbox',
     description: 'Free sandbox environment for testing Kang Open Banking API. Test credentials, simulated payments, mobile money test numbers, and card test data.',
