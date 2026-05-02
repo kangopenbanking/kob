@@ -476,6 +476,11 @@ const ApiExplorer = () => {
                 <Button size="sm" variant="outline" onClick={() => handleDownload("yaml")} disabled={!spec}>
                   <Download className="mr-1.5 h-4 w-4" /> YAML
                 </Button>
+                <Button size="sm" variant="outline" asChild title="Versioned Postman v2.1 collection — auto-generated from the live OpenAPI spec">
+                  <a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" download>
+                    <Download className="mr-1.5 h-4 w-4" /> Postman
+                  </a>
+                </Button>
                 <Button size="sm" variant="outline" asChild>
                   <Link to="/developer/changelog">
                     <Sparkles className="mr-1.5 h-4 w-4" /> Changelog
