@@ -530,6 +530,8 @@ Content-Type: application/json
 <pre><code>curl https://api.kangopenbanking.com/v1/spec/diff?from=4.27.2&amp;to=4.27.3</code></pre>
 <p>Standards cited: RFC 6902 (JSON Patch), Standing Order 1 (The Lock), Standing Order 4 (Surgeon Rule).</p>`
   },
+  {
+    path: '/developer/authentication',
     title: 'Authentication | Kang Open Banking Developer Docs',
     description: 'Authenticate with the Kang Open Banking API using API keys (Bearer tokens) or OAuth 2.0 with PKCE. Full scopes table, FAPI 1.0 Advanced posture, mTLS, and worked examples.',
     h1: 'Authentication',
