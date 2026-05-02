@@ -266,6 +266,7 @@ const AuthApiKeys = lazy(() => import("./pages/developer/AuthApiKeys"));
 const AuthOAuth2 = lazy(() => import("./pages/developer/AuthOAuth2"));
 const AuthFapi = lazy(() => import("./pages/developer/AuthFapi"));
 const AuthMtls = lazy(() => import("./pages/developer/AuthMtls"));
+const DynamicClientRegistration = lazy(() => import("./pages/developer/DynamicClientRegistration"));
 const SandboxOverview = lazy(() => import("./pages/developer/SandboxOverview"));
 const ApiReferenceOverview = lazy(() => import("./pages/developer/ApiReferenceOverview"));
 const OpenBankingOverview = lazy(() => import("./pages/developer/OpenBankingOverview"));
@@ -1088,6 +1089,8 @@ function App() {
               <Route path="authentication/oauth2" element={<AuthOAuth2 />} />
               <Route path="authentication/fapi" element={<AuthFapi />} />
               <Route path="authentication/mtls" element={<AuthMtls />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (RFC 7591 DCR proof page) */}
+              <Route path="authentication/dcr" element={<DynamicClientRegistration />} />
               <Route path="sdks" element={<Navigate to="/developer/guides/sdks" replace />} />
               <Route path="downloads" element={<Navigate to="/developer/guides/sdks" replace />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (ORDER P1, P4, P9) */}
