@@ -11,7 +11,7 @@
  * Standing Order 4 (Surgeon Rule): additive only, no destructive ops.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { corsHeaders } from '@supabase/supabase-js/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 
 type SeedRole = 'admin' | 'merchant' | 'institution' | 'personal';
 
