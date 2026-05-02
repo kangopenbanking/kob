@@ -4,13 +4,13 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 
 const seedData = `# Generate a full set of test accounts, transactions, and merchants
-curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
+curl -X POST https://sandbox-api.kangopenbanking.com/v1/sandbox/data/generate \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{"scenario": "full_merchant", "reset": true}'`;
 
 const simulateWebhook = `# Trigger a test webhook event
-curl -X POST https://api.kangopenbanking.com/v1/sandbox/webhooks \\
+curl -X POST https://sandbox-api.kangopenbanking.com/v1/sandbox/webhooks \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
   -H "Content-Type: application/json" \\
   -d '{
