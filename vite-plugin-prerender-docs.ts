@@ -134,27 +134,53 @@ Content-Type: application/problem+json
   {
     path: '/developer/gateway/quickstart',
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
-    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC.',
+    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.27.0.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     content: `<h2>10-Minute Integration Guide</h2>
-<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request.</p>
+<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request. The GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code> per the OpenAPI 3.1 spec.</p>
 <h3>Step 1: Create a Charge (Mobile Money)</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{"amount":"500000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000","description":"Test payment"}'</code></pre>
-<h3>Step 2: Check Charge Status</h3>
-<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/CHARGE_ID \\
+  -d '{
+    "amount": "500000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "description": "Test payment"
+  }'</code></pre>
+<h3>Step 2: Successful Response</h3>
+<pre><code>{
+  "data": {
+    "id": "ch_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+    "status": "pending",
+    "amount": "500000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "tx_ref": "kob_tx_8f3e1c92a7b4",
+    "created_at": "2026-05-01T14:32:11Z"
+  }
+}</code></pre>
+<h3>Step 3: Check Charge Status</h3>
+<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/ch_01HZX9K7P3M2N4Q5R6S7T8V9W0 \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</code></pre>
-<h3>Step 3: Verify Webhooks</h3>
-<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header.</p>
-<h3>Step 4: Issue a Payout</h3>
+<h3>Step 4: Verify Webhooks</h3>
+<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header. See the <a href="/developer/gateway/webhooks">Webhook Verification Guide</a>.</p>
+<h3>Step 5: Issue a Payout</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/payouts \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":"250000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
+  -d '{
+    "amount": "250000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo"
+  }'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
   <tr><th>Method</th><th>Min Amount (XAF)</th><th>Max Amount (XAF)</th><th>Settlement</th></tr>
