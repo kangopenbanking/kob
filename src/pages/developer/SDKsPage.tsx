@@ -438,6 +438,7 @@ type SDKDef = {
   charge: string;
   webhook: string;
   aisp: string;
+  community?: boolean;
 };
 
 const sdks: SDKDef[] = [
