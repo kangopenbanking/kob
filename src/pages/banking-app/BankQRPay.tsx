@@ -138,7 +138,7 @@ const BankQRPay: React.FC = () => {
       return;
     }
 
-    navigate(`/bank/${institutionId}/transfer`, {
+    navigate(`/bank/${institutionId}/payments/send`, {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
   };
