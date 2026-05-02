@@ -228,7 +228,7 @@ const isValid = signature === receivedSignature;</code></pre>
   <li><a href="/developer/api-explorer">API Explorer</a> — Interactive Swagger UI</li>
   <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — Accept payments in 10 minutes</li>
   <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
-  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP, Java, Go, Ruby</li>
+  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
   <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
 </ul>`
   },
