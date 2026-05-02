@@ -44,6 +44,7 @@ const BankSendAbroad: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
   const [countryFilter, setCountryFilter] = useState('');
+  const [showPin, setShowPin] = useState(false);
 
   const { data: corridors, isLoading: loadingCorridors, error: corridorsError } = useQuery({
     queryKey: ['bank-outbound-corridors'],
