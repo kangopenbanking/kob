@@ -19,6 +19,7 @@ interface DocRoute {
   description: string;
   h1: string;
   content: string;
+  serveAsExtensionlessFile?: boolean;
 }
 
 const DOC_ROUTES: DocRoute[] = [
@@ -127,6 +128,7 @@ Content-Type: application/problem+json
     title: 'Real-World Integration Examples | Kang Open Banking',
     description: 'Production-tested integration examples for Kang Open Banking API. E-commerce checkout, subscription billing, marketplace payouts, and mobile money collection flows.',
     h1: 'Real-World Integration Examples',
+    serveAsExtensionlessFile: true,
     content: `<h2>Production-Ready Code Examples</h2>
 <p>Complete, tested integration patterns for common use cases in the CEMAC region.</p>
 <h3>E-Commerce Checkout</h3>
@@ -146,6 +148,7 @@ Content-Type: application/problem+json
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
     description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.27.0.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
+    serveAsExtensionlessFile: true,
     content: `<h2>10-Minute Integration Guide</h2>
 <p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request. The GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code> per the OpenAPI 3.1 spec.</p>
 <h3>Step 1: Create a Charge (Mobile Money)</h3>
@@ -204,6 +207,7 @@ Content-Type: application/problem+json
     title: 'Webhook Verification Guide | Kang Open Banking Gateway',
     description: 'Verify Kang Open Banking webhook signatures using HMAC-SHA256. Full list of 52 event types, exponential backoff retry policy, and idempotent handling for payment notifications.',
     h1: 'Webhook Verification Guide',
+    serveAsExtensionlessFile: true,
     content: `<h2>Webhook Integration</h2>
 <p>Receive real-time payment, account and lifecycle notifications via HTTPS webhooks with cryptographic signature verification. Every event includes a stable <code>event_id</code> for safe idempotent handling on the receiver side.</p>
 <h3>Signature Verification (HMAC-SHA256)</h3>
