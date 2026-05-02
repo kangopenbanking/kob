@@ -74,7 +74,7 @@ export default function SandboxOverview() {
               ["Sandbox Secret Key", "sk_test_sandbox_KangOB2026Demo"],
               ["Sandbox Publishable Key", "pk_test_sandbox_KangOB2026Demo"],
               ["Test Merchant ID", "merch_test_001"],
-              ["Sandbox Base URL", "https://api.kangopenbanking.com/v1"],
+              ["Sandbox Base URL", "https://sandbox-api.kangopenbanking.com/v1"],
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-foreground min-w-[200px]">{label}:</span>
