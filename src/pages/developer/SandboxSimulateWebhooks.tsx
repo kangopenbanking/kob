@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { ProviderSimulatorPanel } from "@/components/developer/ProviderSimulatorPanel";
 
 const triggerExample = `# Trigger a test webhook event
 curl -X POST https://api.kangopenbanking.com/v1/sandbox/webhooks/trigger \\
