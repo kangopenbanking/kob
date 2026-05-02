@@ -43,7 +43,6 @@ const DOC_ROUTES: DocRoute[] = [
     "currency": "XAF",
     "channel": "mobile_money",
     "customer_phone": "+237650000000",
-    "provider": "mtn_momo",
     "description": "Order #1234"
   }'</code></pre>
 <h3>Step 4: Successful Response (HTTP 201)</h3>
@@ -56,7 +55,6 @@ const DOC_ROUTES: DocRoute[] = [
     "currency": "XAF",
     "channel": "mobile_money",
     "customer_phone": "+237650000000",
-    "provider": "mtn_momo",
     "provider_ref": "MP240501.1234.A12345",
     "tx_ref": "kob_tx_8f3e1c92a7b4",
     "description": "Order #1234",
@@ -87,10 +85,10 @@ Content-Type: application/problem+json
 </ul>
 <p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>
 <h3>Postman Collection</h3>
-<p>A versioned Postman v2.1 collection is auto-generated from the live OpenAPI spec on every release (391 requests, 45 folders).</p>
+<p>A versioned Postman v2.1 collection is auto-generated from the live OpenAPI spec on every release (388 requests, 45 folders).</p>
 <ul>
-  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Latest collection</a> (currently v4.27.2)</li>
-  <li><a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json">v4.27.2 (immutable, pinned)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Latest collection</a> (currently v4.27.3)</li>
+  <li><a href="/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json">v4.27.3 (immutable, pinned)</a></li>
   <li><a href="/postman/Kang_Open_Banking_Sandbox.postman_environment.json">Sandbox environment</a></li>
   <li><a href="/postman/Kang_Open_Banking_Production.postman_environment.json">Production environment</a></li>
   <li><a href="/postman/manifest.json">manifest.json</a> — current version + download URLs (machine-readable)</li>
@@ -118,8 +116,8 @@ Content-Type: application/problem+json
   <li><a href="/openapi.json">OpenAPI Specification (JSON)</a></li>
   <li><a href="/openapi.yaml">OpenAPI Specification (YAML)</a></li>
   <li><a href="/openapi-sandbox.json">Sandbox Specification (JSON)</a></li>
-  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Postman Collection (v4.27.2 — latest)</a></li>
-  <li><a href="/postman/Kang_Open_Banking_API_v4.27.2.postman_collection.json">Postman Collection v4.27.2 (immutable)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Postman Collection (v4.27.3 — latest)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_v4.27.3.postman_collection.json">Postman Collection v4.27.3 (immutable)</a></li>
   <li><a href="/postman/manifest.json">Postman manifest (current version + URLs)</a></li>
 </ul>
 <p>Authentication: Bearer token or OAuth 2.0. Sandbox key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>`
@@ -160,7 +158,6 @@ Content-Type: application/problem+json
     "currency": "XAF",
     "channel": "mobile_money",
     "customer_phone": "+237650000000",
-    "provider": "mtn_momo",
     "description": "Test payment"
   }'</code></pre>
 <h3>Step 2: Successful Response</h3>
@@ -191,7 +188,6 @@ Content-Type: application/problem+json
     "currency": "XAF",
     "channel": "mobile_money",
     "customer_phone": "+237650000000",
-    "provider": "mtn_momo"
   }'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
@@ -307,10 +303,10 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
     content: `<h2>Version History</h2>
 <p>All API changes are documented here within 48 hours of deployment, as required by ORDER P7. Newest first. Breaking changes are flagged. Subscribe via <a href="mailto:developers@kangopenbanking.com">developers@kangopenbanking.com</a>.</p>
 
-<h3>v4.27.2 — May 2026 (current)</h3>
+<h3>v4.27.3 — May 2026 (current)</h3>
 <p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
 <ul>
-  <li>Added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples).</li>
+  <li>Added 2,863 response examples across all 388 operations (392 success + 2,473 RFC 7807 error examples).</li>
   <li>Wired <code>x-codeSamples</code> for cURL, Node.js, Python and PHP into every operation.</li>
   <li>Expanded 280 thin operation descriptions to ≥80 characters.</li>
   <li>Added 13 reusable <code>components.examples</code> and 5 standard error responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable).</li>
@@ -573,10 +569,10 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
   {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
-    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.2.',
+    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.3.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
-<p><strong>Kang Open Banking API v4.27.2 · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
+<p><strong>Kang Open Banking API v4.27.3 · OpenAPI 3.1.0 · 388 operations · FAPI 1.0 Advanced</strong></p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
 
 <h3>Start building — pick your path</h3>
@@ -588,7 +584,7 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
 
 <h3>What's new</h3>
 <ul>
-  <li><strong>v4.27.2 — May 2026:</strong> 2,863 response examples and multi-language code samples on every operation. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.27.3 — May 2026:</strong> 2,863 response examples and multi-language code samples on every operation. <a href="/developer/changelog">Full changelog →</a></li>
   <li><strong>v4.27.1 — May 2026:</strong> Standards &amp; Compliance Index and Dynamic Client Registration reference page published.</li>
   <li><strong>v4.27.0 — May 2026:</strong> Subscription trial periods, 9 ISO 20022 messages, FAPI 1.0 Advanced certification gates closed.</li>
 </ul>
