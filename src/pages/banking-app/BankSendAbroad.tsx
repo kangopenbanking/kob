@@ -329,7 +329,7 @@ const BankSendAbroad: React.FC = () => {
                   <span className="font-semibold flex items-center gap-1"><Clock className="h-3 w-3" /> ~{Math.round((quote.delivery_estimate_seconds || 3600) / 60)} min</span>
                 </div>
 
-                <Button onClick={() => sendMutation.mutate()} disabled={sendMutation.isPending}
+                <Button onClick={() => setShowPin(true)} disabled={sendMutation.isPending}
                   className="w-full h-12 rounded-2xl text-base font-bold gap-2">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Confirm & Send
