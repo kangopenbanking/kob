@@ -28,23 +28,62 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Make your first API call to the Kang Open Banking API in under 5 minutes. Free sandbox, no signup required. cURL, Node.js, Python, PHP, Go, and Java examples.',
     h1: 'Getting Started with Kang Open Banking API',
     content: `<h2>Quick Start Guide</h2>
-<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required.</p>
+<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v4.27.0+): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
 <pre><code>curl -i https://api.kangopenbanking.com/v1/health</code></pre>
-<h3>Step 3: Try a Payment (Sandbox)</h3>
+<h3>Step 3: Create a Mobile Money Charge (Sandbox)</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{"amount":"5000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
+  -d '{
+    "amount": "5000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "description": "Order #1234"
+  }'</code></pre>
+<h3>Step 4: Successful Response (HTTP 201)</h3>
+<pre><code>{
+  "data": {
+    "id": "ch_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+    "object": "charge",
+    "status": "pending",
+    "amount": "5000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "provider_ref": "MP240501.1234.A12345",
+    "tx_ref": "kob_tx_8f3e1c92a7b4",
+    "description": "Order #1234",
+    "created_at": "2026-05-01T14:32:11Z"
+  },
+  "request_id": "req_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+  "links": { "self": "/v1/gateway/charges/ch_01HZX9K7P3M2N4Q5R6S7T8V9W0" }
+}</code></pre>
+<h3>Step 5: Error Response (RFC 7807)</h3>
+<p>All 4xx/5xx errors use <code>application/problem+json</code> with a stable <code>error_id</code>:</p>
+<pre><code>HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+
+{
+  "type": "https://docs.kangopenbanking.com/errors/validation_error",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "customer_phone is required when channel is mobile_money",
+  "error_id": "err_01HZX9KAB12CDEF34GHJKMNPQR",
+  "timestamp": "2026-05-01T14:32:11Z"
+}</code></pre>
 <h3>Available SDKs</h3>
 <ul>
   <li>Node.js / TypeScript — <code>npm install @kangopenbanking/sdk</code></li>
   <li>Python — <code>pip install kang-openbanking</code></li>
   <li>PHP — <code>composer require kang/openbanking-php</code></li>
-  <li>Java, Go, Ruby — coming soon. Implementation guides available on the SDKs page.</li>
+  <li>Java, Go, Ruby — community implementation guides available on the SDKs page; official packages targeted Q3 2026.</li>
 </ul>
 <p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>`
   },
@@ -95,27 +134,53 @@ const DOC_ROUTES: DocRoute[] = [
   {
     path: '/developer/gateway/quickstart',
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
-    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC.',
+    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.27.0.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     content: `<h2>10-Minute Integration Guide</h2>
-<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request.</p>
+<p>Start accepting payments in Cameroon and the CEMAC region with minimal code. Always include an <code>Idempotency-Key</code> header on every payment POST request. The GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code> per the OpenAPI 3.1 spec.</p>
 <h3>Step 1: Create a Charge (Mobile Money)</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{"amount":"500000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000","description":"Test payment"}'</code></pre>
-<h3>Step 2: Check Charge Status</h3>
-<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/CHARGE_ID \\
+  -d '{
+    "amount": "500000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo",
+    "description": "Test payment"
+  }'</code></pre>
+<h3>Step 2: Successful Response</h3>
+<pre><code>{
+  "data": {
+    "id": "ch_01HZX9K7P3M2N4Q5R6S7T8V9W0",
+    "status": "pending",
+    "amount": "500000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "tx_ref": "kob_tx_8f3e1c92a7b4",
+    "created_at": "2026-05-01T14:32:11Z"
+  }
+}</code></pre>
+<h3>Step 3: Check Charge Status</h3>
+<pre><code>curl https://sandbox-api.kangopenbanking.com/v1/gateway/charges/ch_01HZX9K7P3M2N4Q5R6S7T8V9W0 \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</code></pre>
-<h3>Step 3: Verify Webhooks</h3>
-<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header.</p>
-<h3>Step 4: Issue a Payout</h3>
+<h3>Step 4: Verify Webhooks</h3>
+<p>Configure your webhook endpoint and verify HMAC-SHA256 signatures on every incoming event using the <code>X-KOB-Signature</code> header. See the <a href="/developer/gateway/webhooks">Webhook Verification Guide</a>.</p>
+<h3>Step 5: Issue a Payout</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/payouts \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -H "Content-Type: application/json" \\
-  -d '{"amount":"250000","currency":"XAF","provider":"mtn_momo","phone_number":"+237670000000"}'</code></pre>
+  -d '{
+    "amount": "250000",
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "+237650000000",
+    "provider": "mtn_momo"
+  }'</code></pre>
 <h3>Supported Payment Methods</h3>
 <table>
   <tr><th>Method</th><th>Min Amount (XAF)</th><th>Max Amount (XAF)</th><th>Settlement</th></tr>
@@ -129,27 +194,64 @@ const DOC_ROUTES: DocRoute[] = [
   {
     path: '/developer/gateway/webhooks',
     title: 'Webhook Verification Guide | Kang Open Banking Gateway',
-    description: 'Verify Kang Open Banking webhook signatures using HMAC-SHA256. Event types, retry policy, and idempotent handling for payment notifications.',
+    description: 'Verify Kang Open Banking webhook signatures using HMAC-SHA256. Full list of 52 event types, exponential backoff retry policy, and idempotent handling for payment notifications.',
     h1: 'Webhook Verification Guide',
     content: `<h2>Webhook Integration</h2>
-<p>Receive real-time payment notifications via HTTPS webhooks with cryptographic signature verification.</p>
-<h3>Signature Verification</h3>
-<p>All webhooks are signed using HMAC-SHA256. Verify the <code>X-KOB-Signature</code> header against the raw request body.</p>
+<p>Receive real-time payment, account and lifecycle notifications via HTTPS webhooks with cryptographic signature verification. Every event includes a stable <code>event_id</code> for safe idempotent handling on the receiver side.</p>
+<h3>Signature Verification (HMAC-SHA256)</h3>
+<p>All webhooks are signed using HMAC-SHA256. Verify the <code>X-KOB-Signature</code> header against the raw, unparsed request body using the shared secret you configured for the endpoint.</p>
+<h4>Node.js</h4>
 <pre><code>const crypto = require('crypto');
-const signature = crypto.createHmac('sha256', webhookSecret)
-  .update(rawBody).digest('hex');
-const isValid = signature === receivedSignature;</code></pre>
-<h3>Event Types</h3>
-<ul>
-  <li><code>payment.completed</code> — Payment successfully processed</li>
-  <li><code>payment.failed</code> — Payment attempt failed</li>
-  <li><code>payment.refunded</code> — Refund completed</li>
-  <li><code>transfer.completed</code> — Bank transfer settled</li>
-  <li><code>payout.sent</code> — Payout dispatched</li>
-  <li><code>webhook.test</code> — Test ping event</li>
-</ul>
+function verify(rawBody, signature, secret) {
+  const expected = crypto.createHmac('sha256', secret)
+    .update(rawBody, 'utf8').digest('hex');
+  // Constant-time comparison
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, 'hex'),
+    Buffer.from(signature, 'hex')
+  );
+}</code></pre>
+<h4>Python</h4>
+<pre><code>import hmac, hashlib
+def verify(raw_body: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)</code></pre>
+<h4>PHP</h4>
+<pre><code>function verify(string $rawBody, string $signature, string $secret): bool {
+    $expected = hash_hmac('sha256', $rawBody, $secret);
+    return hash_equals($expected, $signature);
+}</code></pre>
+<h3>Event Types (52 events)</h3>
+<p>Grouped by domain. Subscribe to only the events you need.</p>
+<table>
+  <tr><th>Domain</th><th>Events</th></tr>
+  <tr><td>Charges</td><td><code>charge.created</code>, <code>charge.pending</code>, <code>charge.succeeded</code>, <code>charge.failed</code>, <code>charge.cancelled</code>, <code>charge.refunded</code>, <code>charge.partially_refunded</code></td></tr>
+  <tr><td>Refunds</td><td><code>refund.created</code>, <code>refund.succeeded</code>, <code>refund.failed</code></td></tr>
+  <tr><td>Payouts</td><td><code>payout.created</code>, <code>payout.pending</code>, <code>payout.sent</code>, <code>payout.succeeded</code>, <code>payout.failed</code>, <code>payout.cancelled</code></td></tr>
+  <tr><td>Transfers</td><td><code>transfer.initiated</code>, <code>transfer.completed</code>, <code>transfer.failed</code>, <code>transfer.reversed</code></td></tr>
+  <tr><td>Disputes</td><td><code>dispute.opened</code>, <code>dispute.evidence_required</code>, <code>dispute.won</code>, <code>dispute.lost</code>, <code>dispute.closed</code></td></tr>
+  <tr><td>Settlements</td><td><code>settlement.created</code>, <code>settlement.completed</code>, <code>settlement.failed</code></td></tr>
+  <tr><td>Subscriptions</td><td><code>subscription.created</code>, <code>subscription.renewed</code>, <code>subscription.cancelled</code>, <code>subscription.payment_failed</code></td></tr>
+  <tr><td>Accounts (AISP)</td><td><code>consent.authorised</code>, <code>consent.revoked</code>, <code>consent.expired</code>, <code>account.linked</code>, <code>account.unlinked</code></td></tr>
+  <tr><td>Payments (PISP)</td><td><code>payment.initiated</code>, <code>payment.authorised</code>, <code>payment.completed</code>, <code>payment.rejected</code>, <code>payment.cancelled</code></td></tr>
+  <tr><td>KYC / Compliance</td><td><code>kyc.submitted</code>, <code>kyc.approved</code>, <code>kyc.rejected</code>, <code>compliance.flagged</code>, <code>sar.filed</code></td></tr>
+  <tr><td>Loans / Savings</td><td><code>loan.disbursed</code>, <code>loan.repaid</code>, <code>loan.overdue</code>, <code>savings.deposit</code>, <code>savings.withdrawal</code></td></tr>
+  <tr><td>System</td><td><code>webhook.test</code></td></tr>
+</table>
 <h3>Retry Policy</h3>
-<p>Failed deliveries are retried with exponential backoff: 1min, 5min, 30min, 2hr, 12hr, 24hr (6 attempts total). Return HTTP 2xx to acknowledge.</p>`
+<p>Failed deliveries (any non-2xx response or timeout) are retried with exponential backoff over 7 attempts:</p>
+<table>
+  <tr><th>Attempt</th><th>Delay</th></tr>
+  <tr><td>1</td><td>Immediate</td></tr>
+  <tr><td>2</td><td>+1 minute</td></tr>
+  <tr><td>3</td><td>+5 minutes</td></tr>
+  <tr><td>4</td><td>+30 minutes</td></tr>
+  <tr><td>5</td><td>+2 hours</td></tr>
+  <tr><td>6</td><td>+8 hours</td></tr>
+  <tr><td>7</td><td>+24 hours</td></tr>
+</table>
+<p>After the 7th failure the event is moved to the dead-letter queue and retained for 30 days. You can replay events from the Developer Console or the <code>POST /v1/webhooks/{id}/replay</code> API.</p>
+<p><strong>Per-attempt timeout:</strong> 10 seconds. Return any 2xx within that window to acknowledge.</p>`
   },
   {
     path: '/developer/sandbox/overview',
@@ -200,20 +302,72 @@ const isValid = signature === receivedSignature;</code></pre>
   {
     path: '/developer/guides/sdks',
     title: 'SDKs and Libraries | Kang Open Banking Developer Tools',
-    description: 'Official SDKs for Kang Open Banking API. Node.js, Python, PHP, Java, Go, and Ruby client libraries with installation guides and examples.',
+    description: 'Official SDKs for Kang Open Banking API. Node.js, Python, PHP, Java, Go, and Ruby client libraries with installation guides and complete working examples.',
     h1: 'SDKs and Client Libraries',
     content: `<h2>Official SDKs</h2>
-<p>Install an official SDK to integrate Kang Open Banking API in your preferred language.</p>
+<p>Install an official SDK to integrate Kang Open Banking API in your preferred language. All official SDKs handle authentication, automatic retries, idempotency-key generation and HMAC webhook signature verification.</p>
 <h3>Officially Published SDKs</h3>
 <table>
-  <tr><th>Language</th><th>Package</th><th>Install</th></tr>
-  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td></tr>
-  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td></tr>
-  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td></tr>
+  <tr><th>Language</th><th>Package</th><th>Install</th><th>Min Runtime</th></tr>
+  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td><td>Node 18+</td></tr>
+  <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td><td>Python 3.9+</td></tr>
+  <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td><td>PHP 8.1+</td></tr>
 </table>
-<h3>Community &amp; Self-Hosted Implementation Guides</h3>
-<p>Java, Go, and Ruby SDKs are coming soon. Drop-in HTTP client implementation guides (OkHttp, net/http, Net::HTTP) are published on the SDKs page.</p>
-<p>All official SDKs support both sandbox and production environments with automatic retries, idempotency-key handling, and HMAC webhook signature verification.</p>`
+<h3>Node.js — Create a Mobile Money Charge</h3>
+<pre><code>import { KangOpenBanking } from '@kangopenbanking/sdk';
+
+const kob = new KangOpenBanking({
+  apiKey: process.env.KOB_API_KEY!, // sk_test_... or sk_live_...
+  environment: 'sandbox',           // 'sandbox' | 'production'
+});
+
+const charge = await kob.gateway.charges.create({
+  amount: '5000',
+  currency: 'XAF',
+  channel: 'mobile_money',
+  customer_phone: '+237650000000',
+  provider: 'mtn_momo',
+  description: 'Order #1234',
+}); // Idempotency-Key auto-generated
+
+console.log(charge.id, charge.status);</code></pre>
+<h3>Python — Create a Mobile Money Charge</h3>
+<pre><code>from kang_openbanking import KangOpenBanking
+
+kob = KangOpenBanking(
+    api_key=os.environ["KOB_API_KEY"],
+    environment="sandbox",
+)
+
+charge = kob.gateway.charges.create(
+    amount="5000",
+    currency="XAF",
+    channel="mobile_money",
+    customer_phone="+237650000000",
+    provider="mtn_momo",
+    description="Order #1234",
+)
+print(charge.id, charge.status)</code></pre>
+<h3>PHP — Create a Mobile Money Charge</h3>
+<pre><code>use Kang\\OpenBanking\\Client;
+
+$kob = new Client([
+    'api_key' => getenv('KOB_API_KEY'),
+    'environment' => 'sandbox',
+]);
+
+$charge = $kob->gateway->charges->create([
+    'amount' => '5000',
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '+237650000000',
+    'provider' => 'mtn_momo',
+    'description' => 'Order #1234',
+]);
+
+echo $charge->id, ' ', $charge->status;</code></pre>
+<h3>Self-Hosted Implementation Guides</h3>
+<p>Java (OkHttp), Go (net/http), and Ruby (Net::HTTP) drop-in client guides are published; official packages are targeted for Q3 2026. Each guide includes auth header construction, idempotency key generation (UUID v4), HMAC-SHA256 webhook signature verification, and exponential backoff retry policy.</p>`
   },
   {
     path: '/developer/authentication/dcr',
@@ -274,22 +428,100 @@ Content-Type: application/json
 <p>Proof pages: <a href="/developer/authentication/fapi">FAPI</a> · <a href="/developer/authentication/oauth2">OAuth 2.0</a> · <a href="/developer/authentication/dcr">DCR</a> · <a href="/developer/authentication/mtls">mTLS</a> · <a href="/developer/open-banking/consents">Consents &amp; SCA</a> · <a href="/developer/iso20022/messages">ISO 20022</a> · <a href="/developer/api-reference/obie-migration">OBIE Migration</a></p>`
   },
   {
+    path: '/developer/authentication',
+    title: 'Authentication | Kang Open Banking Developer Docs',
+    description: 'Authenticate with the Kang Open Banking API using API keys (Bearer tokens) or OAuth 2.0 with PKCE. Full scopes table, FAPI 1.0 Advanced posture, mTLS, and worked examples.',
+    h1: 'Authentication',
+    content: `<h2>Authentication Methods</h2>
+<p>Kang Open Banking supports two complementary authentication methods. Use API keys for server-to-server merchant integrations, and OAuth 2.0 with PKCE for third-party Open Banking apps acting on behalf of an end user.</p>
+<h3>1. API Keys (Bearer tokens) — Merchant integrations</h3>
+<p>Send your secret key as a Bearer token on every request. Sandbox keys start with <code>sk_test_</code>; live keys start with <code>sk_live_</code>. Never expose secret keys in client-side code.</p>
+<pre><code>curl https://api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer sk_live_xxxxxxxxxxxxxxxxxxxxxxxx" \\
+  -H "Idempotency-Key: $(uuidgen)"</code></pre>
+<h3>2. OAuth 2.0 + PKCE — Third-party Open Banking apps</h3>
+<p>OAuth 2.0 Authorization Code flow with PKCE (S256) is mandatory for all interactive flows per FAPI 1.0 Advanced § 5.2.2. Public clients (mobile, SPA) MUST use PKCE; confidential clients SHOULD use PKCE.</p>
+<h4>Step 1 — Generate PKCE pair</h4>
+<pre><code>// Node.js
+const crypto = require('crypto');
+const verifier = crypto.randomBytes(32).toString('base64url');
+const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');</code></pre>
+<h4>Step 2 — Redirect user to /authorize</h4>
+<pre><code>https://api.kangopenbanking.com/v1/oauth/authorize
+  ?response_type=code
+  &client_id=YOUR_CLIENT_ID
+  &redirect_uri=https://yourapp.com/callback
+  &scope=openid+accounts+balances+transactions+offline_access
+  &state=RANDOM_STATE
+  &nonce=RANDOM_NONCE
+  &code_challenge=CHALLENGE
+  &code_challenge_method=S256</code></pre>
+<h4>Step 3 — Exchange code for tokens</h4>
+<pre><code>curl -X POST https://api.kangopenbanking.com/v1/oauth/token \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "grant_type=authorization_code" \\
+  -d "code=AUTH_CODE" \\
+  -d "client_id=YOUR_CLIENT_ID" \\
+  -d "redirect_uri=https://yourapp.com/callback" \\
+  -d "code_verifier=VERIFIER"</code></pre>
+<h3>OAuth Scopes</h3>
+<table>
+  <tr><th>Scope</th><th>Grants</th><th>Required For</th></tr>
+  <tr><td><code>openid</code></td><td>OIDC ID token</td><td>All OIDC flows</td></tr>
+  <tr><td><code>profile</code></td><td>User profile claims</td><td>Display user name/email</td></tr>
+  <tr><td><code>offline_access</code></td><td>Refresh token</td><td>Long-lived access</td></tr>
+  <tr><td><code>accounts</code></td><td>Read account list (AISP)</td><td>GET /v1/aisp/accounts</td></tr>
+  <tr><td><code>balances</code></td><td>Read account balances</td><td>GET /v1/aisp/accounts/*/balances</td></tr>
+  <tr><td><code>transactions</code></td><td>Read transaction history</td><td>GET /v1/aisp/accounts/*/transactions</td></tr>
+  <tr><td><code>beneficiaries</code></td><td>Read saved beneficiaries</td><td>GET /v1/aisp/accounts/*/beneficiaries</td></tr>
+  <tr><td><code>payments</code></td><td>Initiate payments (PISP)</td><td>POST /v1/pisp/payments</td></tr>
+  <tr><td><code>gateway:read</code></td><td>Read charges, payouts, refunds</td><td>Merchant read access</td></tr>
+  <tr><td><code>gateway:write</code></td><td>Create charges, payouts, refunds</td><td>Merchant write access</td></tr>
+</table>
+<h3>Token Lifetimes</h3>
+<table>
+  <tr><th>Token Type</th><th>Lifetime</th><th>Rotation</th></tr>
+  <tr><td>Access Token</td><td>15 minutes</td><td>Non-rotating; request a new one via refresh</td></tr>
+  <tr><td>Refresh Token</td><td>30 days</td><td>Rotating — each use issues a new refresh token; reuse triggers session-wide revocation (OAuth 2.1 § 6.1)</td></tr>
+  <tr><td>Authorization Code</td><td>60 seconds</td><td>Single-use</td></tr>
+</table>
+<h3>FAPI 1.0 Advanced Posture</h3>
+<ul>
+  <li>PKCE S256 mandatory on all <code>/authorize</code> requests</li>
+  <li><code>nonce</code> required on OIDC requests</li>
+  <li>Pushed Authorization Requests (PAR) supported at <code>POST /v1/oauth/par</code></li>
+  <li>mTLS bound access tokens via <code>tls_client_auth</code> (RFC 8705)</li>
+  <li>Request object signing supported (PS256, ES256)</li>
+</ul>
+<p>See also: <a href="/developer/authentication/oauth2">OAuth 2.0 reference</a> · <a href="/developer/authentication/fapi">FAPI</a> · <a href="/developer/authentication/mtls">mTLS</a> · <a href="/developer/authentication/dcr">Dynamic Client Registration</a></p>`
+  },
+  {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
-    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments.',
+    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.2.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
+<p><strong>Current API version: v4.27.2</strong> — Stable, FAPI 1.0 Advanced compliant, 339 operations, OpenAPI 3.1 spec.</p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
 <h3>Quick Links</h3>
 <ul>
   <li><a href="/developer/getting-started">Getting Started Guide</a> — First API call in 5 minutes</li>
+  <li><a href="/developer/authentication">Authentication</a> — API keys, OAuth 2.0 + PKCE, scopes table</li>
   <li><a href="/developer/api-explorer">API Explorer</a> — Interactive Swagger UI</li>
   <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — Accept payments in 10 minutes</li>
+  <li><a href="/developer/gateway/webhooks">Webhook Verification Guide</a> — HMAC-SHA256, 52 event types, retry policy</li>
   <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — Free testing with test credentials</li>
   <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides available)</li>
   <li><a href="/developer/examples/real-world">Real-World Examples</a> — Production-ready integration patterns</li>
   <li><a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a> — FAPI, OBIE, Berlin Group, FDX, ISO 20022, PSD2</li>
   <li><a href="/developer/authentication/dcr">Dynamic Client Registration</a> — RFC 7591 ecosystem onboarding</li>
+  <li><a href="/developer/changelog">Changelog</a> — All API changes within 48 hours of deployment</li>
+</ul>
+<h3>Specifications</h3>
+<ul>
+  <li><a href="/openapi.json">OpenAPI 3.1 (JSON)</a> — Machine-readable, downloadable, no auth</li>
+  <li><a href="/openapi.yaml">OpenAPI 3.1 (YAML)</a></li>
+  <li><a href="/openapi-sandbox.json">Sandbox OpenAPI 3.1 (JSON)</a></li>
 </ul>`
   },
 ];
