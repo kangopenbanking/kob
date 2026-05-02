@@ -306,7 +306,17 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <h3>v4.27.3 — May 2026 (current)</h3>
 <p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
 <ul>
-  <li>Added 2,863 response examples across all 388 operations (392 success + 2,473 RFC 7807 error examples).</li>
+  <li>Removed three duplicate provider webhook paths (<code>/webhooks/stripe|flutterwave|paypal</code>) accidentally reintroduced in v4.27.2; canonical receivers remain at <code>POST /v1/webhooks/providers/{stripe|flutterwave|paypal}</code>.</li>
+  <li>Declared the missing <code>BankConnectors</code> tag in the global <code>tags[]</code> array (referenced by 13 connector operations introduced in v4.27.2; OpenAPI 3.0.3 §4.7.19).</li>
+  <li>Ratcheted coverage on the 52 operations added in v4.27.2: every operation now declares <code>429 Too Many Requests</code> (RFC 6585), every non-public operation declares <code>401 Unauthorized</code> (RFC 7235), and every non-public POST/PUT/PATCH declares <code>400 Bad Request</code>.</li>
+  <li>Every 200/201 inline response now carries the <code>x-fapi-interaction-id</code> response header via a reusable component (FAPI 1.0 §6.2.1.13).</li>
+  <li><code>WebhookReplayRequest</code>, <code>DcrRegistrationRequest</code> and <code>WebhookEventType</code> schemas now declare <code>required[]</code> arrays.</li>
+</ul>
+
+<h3>v4.27.2 — May 2026</h3>
+<p><strong>Type:</strong> patch · <strong>Breaking:</strong> no</p>
+<ul>
+  <li>Added 2,863 response examples across all 391 operations (392 success + 2,473 RFC 7807 error examples).</li>
   <li>Wired <code>x-codeSamples</code> for cURL, Node.js, Python and PHP into every operation.</li>
   <li>Expanded 280 thin operation descriptions to ≥80 characters.</li>
   <li>Added 13 reusable <code>components.examples</code> and 5 standard error responses (BadRequest, NotFound, UnprocessableEntity, InternalServerError, ServiceUnavailable).</li>
