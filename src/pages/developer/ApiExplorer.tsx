@@ -326,6 +326,8 @@ const ApiExplorer = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [sourceUsed, setSourceUsed] = useState<string | null>(null);
+  const [sourceStatuses, setSourceStatuses] = useState<Array<{ label: string; url: string; status: "pending" | "ok" | "fail"; detail?: string }>>([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"reference" | "tryit" | "webhooks">("reference");
@@ -334,16 +336,21 @@ const ApiExplorer = () => {
   // Fetch spec
   useEffect(() => {
     let cancelled = false;
-    const sources = [
-      { url: `${window.location.origin}/openapi.json`, timeout: 30000 },
-      { url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 20000 },
+    const sources: Array<{ label: string; url: string; timeout: number }> = [
+      { label: "Static spec (public/openapi.json)", url: `${window.location.origin}/openapi.json`, timeout: 15000 },
+      { label: "Sandbox static spec", url: `${window.location.origin}/openapi-sandbox.json`, timeout: 15000 },
+      { label: "Live edge function (public-api-spec)", url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 20000 },
+      { label: "Live edge function (openapi-json)", url: `${API_CONFIG.BASE_URL}/openapi-json`, timeout: 20000 },
+      { label: "CDN mirror (jsDelivr)", url: `https://cdn.jsdelivr.net/gh/kang-open-banking/openapi@latest/openapi.json`, timeout: 20000 },
     ];
+    const initial = sources.map((s) => ({ label: s.label, url: s.url, status: "pending" as const }));
+    setSourceStatuses(initial);
     const fetchOne = async (url: string, ms: number) => {
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), ms);
       try {
         const r = await fetch(url, { signal: controller.signal });
-        if (!r.ok) throw new Error(String(r.status));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       } finally {
         clearTimeout(t);
@@ -352,23 +359,30 @@ const ApiExplorer = () => {
     (async () => {
       setLoading(true);
       setFetchError(null);
-      for (const { url, timeout } of sources) {
+      setSourceUsed(null);
+      for (let i = 0; i < sources.length; i++) {
+        const { label, url, timeout } = sources[i];
         if (cancelled) return;
         try {
           const data = await fetchOne(url, timeout);
           if (data?.openapi || data?.info) {
             if (!cancelled) {
+              setSourceStatuses((prev) => prev.map((s, idx) => (idx === i ? { ...s, status: "ok", detail: `v${data?.info?.version ?? "?"}` } : s)));
               setSpec(data);
+              setSourceUsed(label);
               setLoading(false);
             }
             return;
           }
-        } catch {
-          /* try next */
+          throw new Error("Invalid spec payload");
+        } catch (err: any) {
+          if (!cancelled) {
+            setSourceStatuses((prev) => prev.map((s, idx) => (idx === i ? { ...s, status: "fail", detail: err?.message ?? "error" } : s)));
+          }
         }
       }
       if (!cancelled) {
-        setFetchError("Failed to load API specification.");
+        setFetchError("All spec sources failed. Please retry or use the static reference.");
         setLoading(false);
       }
     })();
@@ -535,6 +549,23 @@ const ApiExplorer = () => {
                         {fetchError} The interactive reference is temporarily unavailable. You can retry, or download the latest OpenAPI spec directly.
                       </p>
                     </div>
+                    {sourceStatuses.length > 0 && (
+                      <div className="w-full max-w-md text-left rounded-lg border bg-muted/30 p-3 space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fallback chain</p>
+                        {sourceStatuses.map((s) => (
+                          <div key={s.url} className="flex items-center justify-between gap-2 text-xs">
+                            <span className="truncate" title={s.url}>{s.label}</span>
+                            <Badge variant="outline" className={
+                              s.status === "ok" ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400" :
+                              s.status === "fail" ? "border-destructive/40 text-destructive" :
+                              "text-muted-foreground"
+                            }>
+                              {s.status === "ok" ? `OK ${s.detail ?? ""}` : s.status === "fail" ? `Failed (${s.detail ?? "error"})` : "Pending"}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <Button onClick={() => setRetryCount((c) => c + 1)}>Retry</Button>
                       <Button variant="outline" asChild>
@@ -545,6 +576,11 @@ const ApiExplorer = () => {
                       <Button variant="outline" asChild>
                         <Link to="/developer/api-explorer-static">
                           Static API reference
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/developer/redoc">
+                          Redoc reference
                         </Link>
                       </Button>
                     </div>
@@ -558,6 +594,13 @@ const ApiExplorer = () => {
                     <Button size="sm" variant="outline" onClick={() => setRetryCount((c) => c + 1)}>
                       Retry
                     </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : sourceUsed && sourceStatuses.some((s) => s.status === "fail") ? (
+                <Alert className="mb-6 border-amber-500/40">
+                  <ShieldCheck className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    Loaded from fallback source: <strong>{sourceUsed}</strong>. Primary spec source was unavailable.
                   </AlertDescription>
                 </Alert>
               ) : null}
