@@ -13,15 +13,15 @@ beforeAll(() => {
   sbx = JSON.parse(fs.readFileSync(path.resolve('public/openapi-sandbox.json'), 'utf8'));
 });
 
-describe('v4.29.0 — audit remediation', () => {
-  it('Pre-flight: version is 4.29.0 across SSOT, JSON, sandbox, changelog', () => {
+describe('v4.29.1 — critical audit remediation', () => {
+  it('Pre-flight: version is 4.29.1 across SSOT, JSON, sandbox, changelog', () => {
     const ssot = fs.readFileSync(path.resolve('src/config/version.ts'), 'utf8');
-    expect(ssot).toMatch(/KOB_API_VERSION\s*=\s*"4\.29\.0"/);
-    expect(spec.info.version).toBe('4.29.0');
-    expect(sbx.info.version).toBe('4.29.0');
+    expect(ssot).toMatch(/KOB_API_VERSION\s*=\s*"4\.29\.1"/);
+    expect(spec.info.version).toBe('4.29.1');
+    expect(sbx.info.version).toBe('4.29.1');
     const cl = JSON.parse(fs.readFileSync(path.resolve('public/changelog.json'), 'utf8'));
-    expect(cl.apiVersion).toBe('4.29.0');
-    expect(cl.entries.some((e: any) => e.version === '4.29.0')).toBe(true);
+    expect(cl.apiVersion).toBe('4.29.1');
+    expect(cl.entries.some((e: any) => e.version === '4.29.1')).toBe(true);
   });
 
   it('P1.1: DCR /v1/dcr/register references DcrRegistrationRequest via $ref', () => {
@@ -61,6 +61,7 @@ describe('v4.29.0 — audit remediation', () => {
       expect(op['x-successor']).toBeTruthy();
       expect(op.responses['410']).toBeDefined();
       expect(op.responses['410'].headers?.Sunset).toBeDefined();
+      expect(op.responses['200']).toBeUndefined();
     }
   });
 
@@ -118,6 +119,7 @@ describe('v4.29.0 — audit remediation', () => {
       for (const m of ['get', 'post', 'put', 'patch', 'delete']) {
         const op = item[m];
         if (!op?.responses) continue;
+        if (op['x-retired'] === true) continue;
         const has5 = Object.keys(op.responses).some((c) => /^5/.test(c) || c === 'default');
         if (!has5) offenders.push(`${m.toUpperCase()} ${p}`);
       }
@@ -153,6 +155,6 @@ describe('v4.29.0 — audit remediation', () => {
   });
 
   it('Sandbox spec mirrors the same version', () => {
-    expect(sbx.info.version).toBe('4.29.0');
+    expect(sbx.info.version).toBe('4.29.1');
   });
 });

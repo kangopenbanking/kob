@@ -16,7 +16,7 @@ const ROOT = process.cwd();
 const JSON_PATH = path.join(ROOT, 'public/openapi.json');
 const YAML_PATH = path.join(ROOT, 'public/openapi.yaml');
 const SBX_PATH = path.join(ROOT, 'public/openapi-sandbox.json');
-const VERSION = '4.29.0';
+const VERSION = '4.29.1';
 
 const spec = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const sbx = JSON.parse(fs.readFileSync(SBX_PATH, 'utf8'));
@@ -126,6 +126,7 @@ for (const r of RETIRED) {
   op['x-successor'] = r.successor;
   op.description = `**RETIRED on ${op['x-sunset-date']}.** This endpoint returns HTTP 410 Gone. Use \`${r.successor}\` instead.\n\n${op.description || ''}`;
   op.responses = op.responses || {};
+  delete op.responses['200'];
   op.responses['410'] = {
     description: 'Gone — endpoint retired. See `x-successor` for replacement.',
     headers: {
