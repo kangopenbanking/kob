@@ -16,6 +16,7 @@
 import { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+// @ts-ignore - .mjs SSOT loader without types
 import { readExpectedVersion } from './scripts/lib/read-expected-version.mjs';
 
 // Single source of truth — never hardcode the version string in the
