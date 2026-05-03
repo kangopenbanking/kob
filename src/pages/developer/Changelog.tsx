@@ -46,7 +46,7 @@ interface ChangelogFile {
 }
 
 const FALLBACK: ChangelogFile = {
-  apiVersion: "4.28.2",
+  apiVersion: KOB_API_VERSION,
   lastUpdated: "2026-05-02",
   entries: [
     {
