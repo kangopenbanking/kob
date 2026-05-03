@@ -286,11 +286,47 @@ Deno.serve(async (req) => {
       );
     }
 
+    // --- Persist OBIE Payment Submission record ---
+    const submissionId = `pmt-sub-${crypto.randomUUID()}`;
+    const nowIso = new Date().toISOString();
+    const { data: submission, error: submissionError } = await supabase
+      .from('pisp_payment_submissions')
+      .insert({
+        submission_id: submissionId,
+        payment_id: updatedPayment.payment_id,
+        consent_id: updatedPayment.consent_id,
+        user_id: user.id,
+        client_id: updatedPayment.client_id,
+        idempotency_key: idempotencyKey,
+        instructed_amount: body.instructed_amount,
+        creditor_account: body.creditor_account,
+        debtor_account: body.debtor_account ?? updatedPayment.debtor_account ?? null,
+        remittance_information: body.remittance_information ?? null,
+        risk: body.risk,
+        status: 'AcceptedSettlementInProgress',
+        status_update_datetime: nowIso,
+        expected_execution_date: expectedExecution,
+        expected_settlement_date: expectedSettlement,
+      })
+      .select()
+      .single();
+
+    if (submissionError) {
+      console.error('Failed to persist payment submission:', submissionError);
+      return problem(
+        500,
+        'Submission Persist Failure',
+        'PISP_008',
+        'Could not persist OBIE payment submission record.'
+      );
+    }
+
     // --- Track payment_events ---
     await supabase.from('payment_events').insert({
       payment_id: updatedPayment.id,
-      event_type: 'status_change',
+      event_type: 'submission_created',
       metadata: {
+        submission_id: submissionId,
         from_status: 'Pending',
         to_status: 'AcceptedSettlementInProgress',
         idempotency_key: idempotencyKey,
@@ -308,7 +344,7 @@ Deno.serve(async (req) => {
       _event_type: 'payment_submitted',
       _user_id: user.id,
       _client_id: payment.client_id,
-      _metadata: { payment_id }
+      _metadata: { payment_id, submission_id: submissionId }
     });
 
     // Record transaction fee
@@ -328,7 +364,8 @@ Deno.serve(async (req) => {
           _transaction_id: updatedPayment.id,
           _metadata: {
             payment_id: updatedPayment.payment_id,
-            consent_id: updatedPayment.consent_id
+            consent_id: updatedPayment.consent_id,
+            submission_id: submissionId
           }
         });
       }
@@ -336,31 +373,40 @@ Deno.serve(async (req) => {
       console.error('Error recording transaction fee:', feeError);
     }
 
-    // Build response
+    // Build response (OBIE Read/Write 4.0 §5.4 shape)
     const responseBody = {
       Data: {
         DomesticPaymentId: updatedPayment.payment_id,
+        DomesticPaymentSubmissionId: submissionId,
         ConsentId: updatedPayment.consent_id,
-        Status: updatedPayment.status,
-        CreationDateTime: updatedPayment.created_at,
-        StatusUpdateDateTime: updatedPayment.updated_at,
+        Status: submission.status,
+        CreationDateTime: submission.created_at,
+        StatusUpdateDateTime: submission.status_update_datetime,
         ExpectedExecutionDateTime: updatedPayment.expected_execution_date,
         ExpectedSettlementDateTime: updatedPayment.expected_settlement_date,
         Initiation: {
-          InstructedAmount: updatedPayment.instructed_amount,
-          CreditorAccount: updatedPayment.creditor_account,
-          DebtorAccount: updatedPayment.debtor_account,
-          RemittanceInformation: {
+          InstructedAmount: body.instructed_amount,
+          CreditorAccount: body.creditor_account,
+          DebtorAccount: body.debtor_account ?? updatedPayment.debtor_account,
+          RemittanceInformation: body.remittance_information ?? {
             Unstructured: updatedPayment.remittance_information
           },
           EndToEndIdentification: updatedPayment.reference
-        }
+        },
+        Risk: body.risk
       },
       Links: {
-        Self: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/pisp/domestic-payment-submissions/${updatedPayment.payment_id}`
+        Self: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/pisp/domestic-payment-submissions/${submissionId}`
       },
       Meta: {}
     };
+
+    // Persist response payload on submission row for idempotent replay/audit
+    await supabase
+      .from('pisp_payment_submissions')
+      .update({ response_payload: responseBody })
+      .eq('submission_id', submissionId);
+
 
     // --- Store idempotency result ---
     await supabase
