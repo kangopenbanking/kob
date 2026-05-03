@@ -31,7 +31,7 @@ export function HeroSection() {
           </Link>
           <Link to="/developer/gateway/webhooks">
             <Button size="lg" variant="outline" className="text-base px-6">
-              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide (v4.28.2)
+              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide ({KOB_API_VERSION_LABEL})
             </Button>
           </Link>
         </div>
