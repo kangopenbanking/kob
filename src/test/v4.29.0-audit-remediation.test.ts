@@ -78,10 +78,10 @@ describe('v4.29.0 — audit remediation', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('P2.2: webhook signature header canonical = X-KOB-Signature with X-Webhook-Signature alias', () => {
+  it('P2.2: webhook signature header canonical = X-Webhook-Signature with X-KOB-Signature alias', () => {
     const w = spec['x-webhook-policy'];
-    expect(w.signature_header).toBe('X-KOB-Signature');
-    expect(w.signature_header_aliases).toContain('X-Webhook-Signature');
+    expect(w.signature_header).toBe('X-Webhook-Signature');
+    expect(w.signature_header_aliases).toContain('X-KOB-Signature');
     expect(w['x-canonical-headers']).toBeDefined();
   });
 
