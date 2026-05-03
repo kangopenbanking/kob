@@ -220,6 +220,15 @@ for (const p of [versionedPath, latestPath, legacyPath]) {
 }
 
 // Manifest so the developer portal can surface the current version + download URL.
+const manifestPath = path.join(outDir, 'manifest.json');
+let prior = {};
+try { prior = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')); } catch { /* first run */ }
+const versions = Array.isArray(prior.versions) ? prior.versions.filter((v) => v.version !== apiVersion) : [];
+versions.unshift({
+  version: apiVersion,
+  file: `Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`,
+  released_at: new Date().toISOString(),
+});
 const manifest = {
   apiVersion,
   generatedAt: new Date().toISOString(),
@@ -232,8 +241,10 @@ const manifest = {
     sandbox: '/postman/Kang_Open_Banking_Sandbox.postman_environment.json',
     production: '/postman/Kang_Open_Banking_Production.postman_environment.json',
   },
+  current: apiVersion,
+  versions,
 };
-fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
 const total = items.reduce((n, f) => n + f.item.length, 0);
 console.log(`Postman collection regenerated for v${apiVersion}: ${items.length} folders, ${total} requests`);
