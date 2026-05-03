@@ -82,7 +82,7 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Make your first API call to the Kang Open Banking API in under 5 minutes. Free sandbox, no signup required. cURL, Node.js, Python, PHP, Go, and Java examples.',
     h1: 'Getting Started with Kang Open Banking API',
     content: `<h2>Quick Start Guide</h2>
-<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v4.28.2): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
+<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v${KOB_API_VERSION}): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
@@ -141,8 +141,8 @@ Content-Type: application/problem+json
 <h3>Postman Collection</h3>
 <p>A versioned Postman v2.1 collection is auto-generated from the live OpenAPI spec on every release (388 requests, 45 folders).</p>
 <ul>
-  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Latest collection</a> (currently v4.28.0)</li>
-  <li><a href="/postman/Kang_Open_Banking_API_v4.28.0.postman_collection.json">v4.28.0 (immutable, pinned)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Latest collection</a> (currently v${KOB_API_VERSION})</li>
+  <li><a href="/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json">v${KOB_API_VERSION} (immutable, pinned)</a></li>
   <li><a href="/postman/Kang_Open_Banking_Sandbox.postman_environment.json">Sandbox environment</a></li>
   <li><a href="/postman/Kang_Open_Banking_Production.postman_environment.json">Production environment</a></li>
   <li><a href="/postman/manifest.json">manifest.json</a> — current version + download URLs (machine-readable)</li>
@@ -171,8 +171,8 @@ Content-Type: application/problem+json
   <li><a href="/openapi.json">OpenAPI Specification (JSON)</a></li>
   <li><a href="/openapi.yaml">OpenAPI Specification (YAML)</a></li>
   <li><a href="/openapi-sandbox.json">Sandbox Specification (JSON)</a></li>
-  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Postman Collection (v4.28.0 — latest)</a></li>
-  <li><a href="/postman/Kang_Open_Banking_API_v4.28.0.postman_collection.json">Postman Collection v4.28.0 (immutable)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json">Postman Collection (v${KOB_API_VERSION} — latest)</a></li>
+  <li><a href="/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json">Postman Collection v${KOB_API_VERSION} (immutable)</a></li>
   <li><a href="/postman/manifest.json">Postman manifest (current version + URLs)</a></li>
 </ul>
 <p>Authentication: Bearer token or OAuth 2.0. Sandbox key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>`
@@ -219,7 +219,7 @@ Content-Type: application/problem+json
   {
     path: '/developer/gateway/quickstart',
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
-    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.28.2.',
+    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v${KOB_API_VERSION}.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     serveAsExtensionlessFile: true,
     content: `<h2>10-Minute Integration Guide</h2>
@@ -621,10 +621,10 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
   {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
-    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.28.2.',
+    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v${KOB_API_VERSION}.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
-<p><strong>Kang Open Banking API v4.28.2 · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
+<p><strong>Kang Open Banking API v${KOB_API_VERSION} · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
 
 <h3>Start building — pick your path</h3>
@@ -636,9 +636,9 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
 
 <h3>What's new</h3>
 <ul>
-  <li><strong>v4.28.2 — May 2026:</strong> Webhook signature and replay-protection header names aligned across the public OpenAPI spec and docs. <a href="/developer/changelog">Full changelog →</a></li>
-  <li><strong>v4.28.1 — May 2026:</strong> SDK coverage metadata extended for Java, Go, and Ruby.</li>
-  <li><strong>v4.28.0 — May 2026:</strong> Spec versioning, diff endpoints, provider sandbox simulators, and webhook replay tooling published.</li>
+  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> Webhook signature and replay-protection header names aligned across the public OpenAPI spec and docs. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> SDK coverage metadata extended for Java, Go, and Ruby.</li>
+  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> Spec versioning, diff endpoints, provider sandbox simulators, and webhook replay tooling published.</li>
 </ul>
 
 <h3>Quick links</h3>
