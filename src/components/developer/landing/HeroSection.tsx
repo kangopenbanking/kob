@@ -28,6 +28,11 @@ export function HeroSection() {
               <Play className="mr-2 h-4 w-4" /> Try the Console
             </Button>
           </Link>
+          <Link to="/developer/gateway/webhooks">
+            <Button size="lg" variant="outline" className="text-base px-6">
+              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide (v4.28.2)
+            </Button>
+          </Link>
         </div>
         <p className="text-xs text-muted-foreground pt-2">
           Free sandbox · OpenAPI 3.1 · SDKs in 6 languages · 99.9% uptime SLA
