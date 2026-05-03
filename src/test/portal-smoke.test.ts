@@ -17,7 +17,7 @@ const BASE = (process.env.SMOKE_BASE_URL || 'https://kangopenbanking.com').repla
 const ROUTES: Array<{ path: string; mustInclude: string[]; mustNotInclude?: string[] }> = [
   {
     path: '/developer',
-    mustInclude: ['Developer Platform', 'Kang Open Banking'],
+    mustInclude: ['Developer Portal', 'Kang Open Banking'],
   },
   {
     path: '/developer/api-explorer',
