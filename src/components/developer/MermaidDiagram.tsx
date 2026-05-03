@@ -73,7 +73,7 @@ export function MermaidDiagram({ chart }: { chart: string }) {
   return (
     <div
       ref={containerRef}
-      className="my-6 p-6 bg-card border border-border/60 rounded-xl overflow-x-auto shadow-sm"
+      className="my-6 p-6 bg-white border border-border/60 rounded-xl overflow-x-auto shadow-sm [&_svg]:bg-white"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
