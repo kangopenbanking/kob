@@ -160,15 +160,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    const body = await req.json();
-    const { payment_id } = body;
-
-    if (!payment_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing payment_id', error_code: 'PISP_003' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // --- Validate request body against OBIE 4.0 §5.4 schema ---
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return problem(400, 'Malformed JSON body', 'PISP_VAL_001', 'Request body is not valid JSON.');
+    }
+    const parsed = SubmissionBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((i) => ({
+        field: i.path.join('.') || '(root)',
+        message: i.message,
+        code: i.code,
+      }));
+      return problem(
+        400,
+        'Validation Error',
+        'PISP_VAL_002',
+        'Request body failed schema validation against OBIE Read/Write 4.0 §5.4.',
+        errors
       );
     }
+    const body: SubmissionBody = parsed.data;
+    const { payment_id } = body;
 
     // Fetch payment
     const { data: payment, error: paymentError } = await supabase
@@ -179,20 +194,16 @@ Deno.serve(async (req) => {
       .single();
 
     if (paymentError || !payment) {
-      return new Response(
-        JSON.stringify({ error: 'Payment not found', error_code: 'PISP_004' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return problem(404, 'Payment Not Found', 'PISP_004', `Payment ${payment_id} not found for current user.`);
     }
 
     // Verify payment is in Pending status
     if (payment.status !== 'Pending') {
-      return new Response(
-        JSON.stringify({
-          error: `Payment cannot be submitted. Current status: ${payment.status}`,
-          error_code: 'PISP_005'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return problem(
+        400,
+        'Invalid Payment Status',
+        'PISP_005',
+        `Payment cannot be submitted. Current status: ${payment.status}`
       );
     }
 
@@ -206,9 +217,49 @@ Deno.serve(async (req) => {
       .single();
 
     if (consentError || !consent) {
-      return new Response(
-        JSON.stringify({ error: 'Valid consent not found for this payment', error_code: 'PISP_006' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return problem(403, 'Consent Invalid', 'PISP_006', 'Valid consent not found for this payment.');
+    }
+
+    // --- OBIE 4.0 §5.4: submission MUST mirror the consent ---
+    const mismatches: Array<{ field: string; message: string; code: string }> = [];
+    const consentAmount = String(
+      (consent as any).amount ?? payment.instructed_amount?.amount ?? ''
+    );
+    const consentCurrency = String(
+      (consent as any).currency ?? payment.instructed_amount?.currency ?? ''
+    );
+    if (consentAmount && body.instructed_amount.amount !== consentAmount) {
+      mismatches.push({
+        field: 'instructed_amount.amount',
+        message: `must mirror consent amount (${consentAmount})`,
+        code: 'CONSENT_MISMATCH',
+      });
+    }
+    if (consentCurrency && body.instructed_amount.currency !== consentCurrency) {
+      mismatches.push({
+        field: 'instructed_amount.currency',
+        message: `must mirror consent currency (${consentCurrency})`,
+        code: 'CONSENT_MISMATCH',
+      });
+    }
+    const consentCreditorId =
+      (consent as any).creditor_account?.identification ??
+      payment.creditor_account?.identification ??
+      '';
+    if (consentCreditorId && body.creditor_account.identification !== consentCreditorId) {
+      mismatches.push({
+        field: 'creditor_account.identification',
+        message: 'must mirror creditor_account.identification from the consent',
+        code: 'CONSENT_MISMATCH',
+      });
+    }
+    if (mismatches.length) {
+      return problem(
+        422,
+        'Submission Does Not Mirror Consent',
+        'PISP_VAL_003',
+        'OBIE Read/Write 4.0 §5.4 requires the submission body to mirror the authorised consent.',
+        mismatches
       );
     }
 
