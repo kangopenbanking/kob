@@ -1,5 +1,9 @@
 /**
  * Vite Plugin: Static HTML Pre-rendering for Documentation Routes
+ *
+ * PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT
+ * /developer, all /developer/* documentation routes, /openapi.json,
+ * /openapi.yaml, SDK docs, and changelog feeds must remain public.
  * 
  * Generates unique index.html files for each documentation route at build time.
  * This ensures crawlers and audit tools see unique content per route,
@@ -73,7 +77,7 @@ const DOC_ROUTES: DocRoute[] = [
     description: 'Make your first API call to the Kang Open Banking API in under 5 minutes. Free sandbox, no signup required. cURL, Node.js, Python, PHP, Go, and Java examples.',
     h1: 'Getting Started with Kang Open Banking API',
     content: `<h2>Quick Start Guide</h2>
-<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v4.27.0+): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
+<p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v4.28.2): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
 <h3>Step 1: Get Your Sandbox Key</h3>
 <p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
 <h3>Step 2: Make Your First API Call</h3>
@@ -191,7 +195,7 @@ Content-Type: application/problem+json
   {
     path: '/developer/gateway/quickstart',
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
-    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.27.0.',
+    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v4.28.2.',
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     serveAsExtensionlessFile: true,
     content: `<h2>10-Minute Integration Guide</h2>
@@ -593,10 +597,10 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
   {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
-    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.27.3.',
+    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v4.28.2.',
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
-<p><strong>Kang Open Banking API v4.27.3 · OpenAPI 3.1.0 · 388 operations · FAPI 1.0 Advanced</strong></p>
+<p><strong>Kang Open Banking API v4.28.2 · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
 <p>Everything you need to integrate payments, banking, and financial services for Cameroon and the CEMAC region.</p>
 
 <h3>Start building — pick your path</h3>
@@ -608,9 +612,9 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
 
 <h3>What's new</h3>
 <ul>
-  <li><strong>v4.27.3 — May 2026:</strong> Coverage ratchet on the v4.27.2 additions — every operation now declares <code>429</code>, every non-public operation declares <code>401</code>, and every 200/201 response carries <code>x-fapi-interaction-id</code>. <a href="/developer/changelog">Full changelog →</a></li>
-  <li><strong>v4.27.2 — May 2026:</strong> 2,863 response examples and multi-language code samples (cURL, Node.js, Python, PHP) on every operation; formal <code>x-webhooks</code> catalogue.</li>
-  <li><strong>v4.27.1 — May 2026:</strong> Standards &amp; Compliance Index and Dynamic Client Registration reference page published.</li>
+  <li><strong>v4.28.2 — May 2026:</strong> Webhook signature and replay-protection header names aligned across the public OpenAPI spec and docs. <a href="/developer/changelog">Full changelog →</a></li>
+  <li><strong>v4.28.1 — May 2026:</strong> SDK coverage metadata extended for Java, Go, and Ruby.</li>
+  <li><strong>v4.28.0 — May 2026:</strong> Spec versioning, diff endpoints, provider sandbox simulators, and webhook replay tooling published.</li>
 </ul>
 
 <h3>Quick links</h3>

@@ -38,4 +38,19 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['swagger-ui-react', 'js-yaml'],
   },
+  build: {
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('swagger-ui-react') || id.includes('swagger-ui-dist')) {
+            return 'swagger-ui';
+          }
+          if (id.includes('js-yaml')) {
+            return 'openapi-tools';
+          }
+        },
+      },
+    },
+  },
 }));
