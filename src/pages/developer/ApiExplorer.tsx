@@ -523,7 +523,34 @@ const ApiExplorer = () => {
             </TabsList>
 
             <TabsContent value="reference" className="m-0">
-              {fetchError && (
+              {fetchError && !spec ? (
+                <Card className="border-destructive/40">
+                  <CardContent className="flex flex-col items-center justify-center text-center gap-4 py-16 px-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                      <AlertCircle className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1.5 max-w-md">
+                      <h2 className="text-lg font-semibold">Could not load the API specification</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {fetchError} The interactive reference is temporarily unavailable. You can retry, or download the latest OpenAPI spec directly.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Button onClick={() => setRetryCount((c) => c + 1)}>Retry</Button>
+                      <Button variant="outline" asChild>
+                        <a href="/openapi.json" target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-2" /> openapi.json
+                        </a>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/developer/api-explorer-static">
+                          Static API reference
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : fetchError ? (
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="flex items-center justify-between gap-3">
@@ -533,15 +560,15 @@ const ApiExplorer = () => {
                     </Button>
                   </AlertDescription>
                 </Alert>
-              )}
+              ) : null}
 
-              {loading ? (
+              {!fetchError && loading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_360px] gap-6">
                   <Skeleton className="h-[600px] rounded-xl" />
                   <Skeleton className="h-[600px] rounded-xl" />
                   <Skeleton className="h-[600px] rounded-xl" />
                 </div>
-              ) : (
+              ) : !fetchError ? (
                 <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_400px] gap-6">
                   {/* Left: Endpoint navigator */}
                   <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)]">
