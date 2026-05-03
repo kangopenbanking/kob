@@ -39,7 +39,7 @@ const sdks = [
     badge: "Universal",
     status: "available",
     github: null,
-    features: ["339 endpoints", "OpenAPI 3.1 spec", "JSON request/response"],
+    features: ["391 operations", "OpenAPI 3.1 spec", "JSON request/response"],
     license: null,
   },
 ];
@@ -146,7 +146,7 @@ export function SDKSection() {
               <div>
                 <h3 className="font-semibold text-sm">OpenAPI Specification</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Download the full OpenAPI 3.1 spec (v4.9.4) in JSON or YAML. Import into any tool.
+                  Download the full OpenAPI 3.1 spec (v4.28.2) in JSON or YAML. Import into any tool.
                 </p>
               </div>
             </div>
