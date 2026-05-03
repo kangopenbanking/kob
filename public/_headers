@@ -1,41 +1,64 @@
 /openapi.json
+  content-type: application/json; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /openapi.yaml
+  content-type: application/yaml; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /openapi-sandbox.json
+  content-type: application/json; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /openapi-sandbox.yaml
+  content-type: application/yaml; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /apis.json
+  content-type: application/json; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /apis-sandbox.json
+  content-type: application/json; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
 
 /changelog.json
+  content-type: application/json; charset=utf-8
   cache-control: public, max-age=300, stale-while-revalidate=86400
   access-control-allow-origin: *
   access-control-allow-methods: GET, HEAD, OPTIONS
   access-control-allow-headers: *
+  x-robots-tag: all
+
+/developer/*
+  x-robots-tag: all
+  cache-control: public, max-age=60, stale-while-revalidate=600
+
+/.well-known/ai-plugin.json
+  content-type: application/json; charset=utf-8
+  access-control-allow-origin: *
+  x-robots-tag: all
