@@ -336,16 +336,21 @@ const ApiExplorer = () => {
   // Fetch spec
   useEffect(() => {
     let cancelled = false;
-    const sources = [
-      { url: `${window.location.origin}/openapi.json`, timeout: 30000 },
-      { url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 20000 },
+    const sources: Array<{ label: string; url: string; timeout: number }> = [
+      { label: "Static spec (public/openapi.json)", url: `${window.location.origin}/openapi.json`, timeout: 15000 },
+      { label: "Sandbox static spec", url: `${window.location.origin}/openapi-sandbox.json`, timeout: 15000 },
+      { label: "Live edge function (public-api-spec)", url: `${API_CONFIG.BASE_URL}/public-api-spec`, timeout: 20000 },
+      { label: "Live edge function (openapi-json)", url: `${API_CONFIG.BASE_URL}/openapi-json`, timeout: 20000 },
+      { label: "CDN mirror (jsDelivr)", url: `https://cdn.jsdelivr.net/gh/kang-open-banking/openapi@latest/openapi.json`, timeout: 20000 },
     ];
+    const initial = sources.map((s) => ({ label: s.label, url: s.url, status: "pending" as const }));
+    setSourceStatuses(initial);
     const fetchOne = async (url: string, ms: number) => {
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), ms);
       try {
         const r = await fetch(url, { signal: controller.signal });
-        if (!r.ok) throw new Error(String(r.status));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       } finally {
         clearTimeout(t);
@@ -354,23 +359,30 @@ const ApiExplorer = () => {
     (async () => {
       setLoading(true);
       setFetchError(null);
-      for (const { url, timeout } of sources) {
+      setSourceUsed(null);
+      for (let i = 0; i < sources.length; i++) {
+        const { label, url, timeout } = sources[i];
         if (cancelled) return;
         try {
           const data = await fetchOne(url, timeout);
           if (data?.openapi || data?.info) {
             if (!cancelled) {
+              setSourceStatuses((prev) => prev.map((s, idx) => (idx === i ? { ...s, status: "ok", detail: `v${data?.info?.version ?? "?"}` } : s)));
               setSpec(data);
+              setSourceUsed(label);
               setLoading(false);
             }
             return;
           }
-        } catch {
-          /* try next */
+          throw new Error("Invalid spec payload");
+        } catch (err: any) {
+          if (!cancelled) {
+            setSourceStatuses((prev) => prev.map((s, idx) => (idx === i ? { ...s, status: "fail", detail: err?.message ?? "error" } : s)));
+          }
         }
       }
       if (!cancelled) {
-        setFetchError("Failed to load API specification.");
+        setFetchError("All spec sources failed. Please retry or use the static reference.");
         setLoading(false);
       }
     })();
