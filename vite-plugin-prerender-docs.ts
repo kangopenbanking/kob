@@ -636,9 +636,7 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
 
 <h3>What's new</h3>
 <ul>
-  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> Webhook signature and replay-protection header names aligned across the public OpenAPI spec and docs. <a href="/developer/changelog">Full changelog →</a></li>
-  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> SDK coverage metadata extended for Java, Go, and Ruby.</li>
-  <li><strong>v${KOB_API_VERSION} — May 2026:</strong> Spec versioning, diff endpoints, provider sandbox simulators, and webhook replay tooling published.</li>
+  <li><strong>v${KOB_API_VERSION} — current release:</strong> See the <a href="/developer/changelog">full changelog</a> for every additive change, fix, and improvement, published within 48 hours of deployment per ORDER P7.</li>
 </ul>
 
 <h3>Quick links</h3>
