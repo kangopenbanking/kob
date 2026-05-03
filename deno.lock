@@ -197,13 +197,15 @@
     "https://esm.sh/whatwg-url@5.0.0?target=denonext": "f001a2cadf81312d214ca330033f474e74d81a003e21e8c5d70a1f46dc97b02d",
     "https://esm.sh/ws@8.20.0/denonext/ws.mjs": "8f99f7c486b2200e4fcf9449bdc4f2cd612edb2db751b7e8e7ebb5c0a2338d31",
     "https://esm.sh/ws@8.20.0?target=denonext": "effaa9bb90113d428c29c9b80d5783c9d0717da4ade0a31590a439fd2dac4509",
-    "https://esm.sh/zod@3.23.8": "15e60c792ac21d4818f181671c7c74bf33bf7526d487dc524911e42785d8b5c2"
+    "https://esm.sh/zod@3.23.8": "15e60c792ac21d4818f181671c7c74bf33bf7526d487dc524911e42785d8b5c2",
+    "https://esm.sh/zod@3.23.8/denonext/zod.mjs": "6ee0474ec5a765b112eca12525d7e30c8e77eedbe2f2ac5e19f2af468b759517"
   },
   "workspace": {
     "packageJson": {
       "dependencies": [
         "npm:@eslint/js@^9.32.0",
         "npm:@hookform/resolvers@^3.10.0",
+        "npm:@playwright/test@^1.59.1",
         "npm:@radix-ui/react-accordion@^1.2.11",
         "npm:@radix-ui/react-alert-dialog@^1.1.14",
         "npm:@radix-ui/react-aspect-ratio@^1.1.7",
@@ -244,6 +246,8 @@
         "npm:@types/react-dom@^18.3.7",
         "npm:@types/react@^18.3.23",
         "npm:@vitejs/plugin-react-swc@^3.11.0",
+        "npm:ajv-formats@^3.0.1",
+        "npm:ajv@^8.20.0",
         "npm:autoprefixer@^10.4.21",
         "npm:bcryptjs@^3.0.2",
         "npm:class-variance-authority@~0.7.1",
@@ -268,6 +272,7 @@
         "npm:lovable-tagger@^1.1.11",
         "npm:lucide-react@0.462",
         "npm:mermaid@^11.4.0",
+        "npm:newman@^6.2.2",
         "npm:next-themes@0.3",
         "npm:postcss@^8.5.6",
         "npm:pusher-js@^8.4.0",
