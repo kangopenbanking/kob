@@ -774,7 +774,7 @@ const ApiExplorer = () => {
                     )}
                   </aside>
                 </div>
-              )}
+              ) : null}
             </TabsContent>
 
             <TabsContent value="tryit" className="m-0">
