@@ -11,6 +11,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "openapi:gates": "node scripts/openapi-quality-gates.mjs",
+    "openapi:check-version": "node scripts/check-openapi-version.mjs",
+    "audit:public": "node scripts/audit-public-access.mjs",
+    "predeploy": "node scripts/predeploy.mjs",
+    "predeploy:offline": "node scripts/predeploy.mjs --offline",
+    "smoke:portal": "vitest run src/test/portal-smoke.test.ts",
     "changelog:md": "node scripts/build-changelog-md.mjs",
     "postman:contract": "node scripts/postman-contract-check.mjs",
     "sdk:generate": "node scripts/generate-typed-sdks.mjs"
