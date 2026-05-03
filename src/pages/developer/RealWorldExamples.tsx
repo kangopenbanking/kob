@@ -110,7 +110,7 @@ function GuideCard({ ex, index }: { ex: typeof examples[0]; index: number }) {
           <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{ex.desc}</p>
           <div className="flex items-center gap-2">
             {ex.tags.map(t => (
-              <span key={t} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t}</span>
+              <span key={t} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 dark:bg-slate-300 dark:text-slate-900">{t}</span>
             ))}
             <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
               <Clock className="h-3 w-3" /> {ex.time}
