@@ -88,3 +88,17 @@ curl -s https://kangopenbanking.com/developer | \
 - Portal content: Developer Experience
 - Worker / Cloudflare: Platform
 - This checklist: Developer Experience (review every quarter)
+
+## CI / Deploy secrets
+
+The developer-portal CI pipeline expects these GitHub repo secrets:
+
+| Secret                | Purpose                                                      |
+|-----------------------|--------------------------------------------------------------|
+| `NETLIFY_SITE_ID`     | PR job waits for the matching Deploy Preview to go ready.    |
+| `NETLIFY_AUTH_TOKEN`  | Netlify personal access token (read-only on the site).       |
+| `SLACK_WEBHOOK_URL`   | Slack incoming webhook for predeploy + workflow failures.    |
+| `SMTP_HOST` (+ PORT/USER/PASS/TO) | Optional email fallback if Slack is unset.       |
+
+The expected API version is read from `src/config/version.ts` (SSOT) — never
+hardcode it in `netlify.toml` or workflow YAML.
