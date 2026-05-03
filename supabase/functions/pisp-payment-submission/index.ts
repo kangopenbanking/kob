@@ -264,12 +264,14 @@ Deno.serve(async (req) => {
     }
 
     // Update payment status
+    const expectedExecution = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const expectedSettlement = new Date(Date.now() + 172800000).toISOString().split('T')[0];
     const { data: updatedPayment, error: updateError } = await supabase
       .from('payments')
       .update({
         status: 'AcceptedSettlementInProgress',
-        expected_execution_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        expected_settlement_date: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+        expected_execution_date: expectedExecution,
+        expected_settlement_date: expectedSettlement,
         updated_at: new Date().toISOString()
       })
       .eq('payment_id', payment_id)
