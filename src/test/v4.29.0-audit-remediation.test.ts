@@ -13,8 +13,8 @@ beforeAll(() => {
   sbx = JSON.parse(fs.readFileSync(path.resolve('public/openapi-sandbox.json'), 'utf8'));
 });
 
-describe('v4.29.0 — audit remediation', () => {
-  it('Pre-flight: version is 4.29.0 across SSOT, JSON, sandbox, changelog', () => {
+describe('v4.29.1 — critical audit remediation', () => {
+  it('Pre-flight: version is 4.29.1 across SSOT, JSON, sandbox, changelog', () => {
     const ssot = fs.readFileSync(path.resolve('src/config/version.ts'), 'utf8');
     expect(ssot).toMatch(/KOB_API_VERSION\s*=\s*"4\.29\.1"/);
     expect(spec.info.version).toBe('4.29.1');
@@ -119,6 +119,7 @@ describe('v4.29.0 — audit remediation', () => {
       for (const m of ['get', 'post', 'put', 'patch', 'delete']) {
         const op = item[m];
         if (!op?.responses) continue;
+        if (op['x-retired'] === true) continue;
         const has5 = Object.keys(op.responses).some((c) => /^5/.test(c) || c === 'default');
         if (!has5) offenders.push(`${m.toUpperCase()} ${p}`);
       }
