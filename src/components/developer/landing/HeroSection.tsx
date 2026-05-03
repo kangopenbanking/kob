@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Webhook } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -26,6 +26,11 @@ export function HeroSection() {
           <Link to="/developer/console">
             <Button size="lg" variant="outline" className="text-base px-6">
               <Play className="mr-2 h-4 w-4" /> Try the Console
+            </Button>
+          </Link>
+          <Link to="/developer/gateway/webhooks">
+            <Button size="lg" variant="outline" className="text-base px-6">
+              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide (v4.28.2)
             </Button>
           </Link>
         </div>

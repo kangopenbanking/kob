@@ -45,6 +45,11 @@ jobs:
           test -s public/openapi.yaml || { echo "::error::public/openapi.yaml missing or empty"; exit 1; }
           echo "Both spec files present."
 
+      - name: Verify OpenAPI version metadata (v4.28.2 baseline)
+        env:
+          EXPECTED_OPENAPI_VERSION: "4.28.2"
+        run: node scripts/check-openapi-version.mjs
+
       - name: Validate OpenAPI JSON with Redocly
         run: |
           npx --yes @redocly/cli@latest lint public/openapi.json \
