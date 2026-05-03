@@ -689,9 +689,14 @@ export function prerenderDocsPlugin(): Plugin {
             // Still replace content for existing files
           }
 
-          // Create directory. For selected no-slash docs URLs, create the parent
-          // only so the URL itself can be served as an exact extensionless file.
-          fs.mkdirSync(route.serveAsExtensionlessFile ? path.dirname(extensionlessRoutePath) : routeDir, { recursive: true });
+          // Always create both the parent directory (for the extensionless
+          // sibling file and the .html mirror) and the route directory itself
+          // (for the directory-index variant). Netlify resolves directory
+          // indexes before applying SPA rewrites — without this, requests to
+          // `/developer/changelog` and `/developer/examples/real-world` fell
+          // through to the SPA shell and returned the homepage.
+          fs.mkdirSync(path.dirname(extensionlessRoutePath), { recursive: true });
+          fs.mkdirSync(routeDir, { recursive: true });
 
           // Modify the HTML for this specific route
           let html = baseHtml;
