@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "kob-api-v4.28.0",
-    "name": "Kang Open Banking API v4.28.0",
-    "description": "Auto-generated from OpenAPI 4.28.0.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.",
+    "_postman_id": "kob-api-v4.29.1",
+    "name": "Kang Open Banking API v4.29.1",
+    "description": "Auto-generated from OpenAPI 4.29.1.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "4.28.0"
+    "version": "4.29.1"
   },
   "item": [
     {
@@ -9242,7 +9242,7 @@
       "name": "Mobile Money",
       "item": [
         {
-          "name": "mobileMoneyCharge",
+          "name": "[RETIRED] mobileMoneyCharge",
           "request": {
             "method": "POST",
             "header": [
@@ -9282,7 +9282,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Charge mobile money",
+            "description": "Charge mobile money\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phone_number\": \"237650000000\",\n  \"amount\": 5000,\n  \"currency\": \"XAF\",\n  \"provider\": \"MTN\"\n}",
@@ -9293,10 +9293,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/mobile-money/charge",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "mobile-money",
+                    "charge"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/mobile-money/charge has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "mobileMoneyToBank",
+          "name": "[RETIRED] mobileMoneyToBank",
           "request": {
             "method": "POST",
             "header": [
@@ -9336,7 +9400,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Mobile money to bank transfer",
+            "description": "Mobile money to bank transfer\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phone_number\": \"string\",\n  \"amount\": \"string\",\n  \"bank_account\": \"string\",\n  \"bank_code\": \"string\"\n}",
@@ -9347,10 +9411,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/mobile-money/to-bank",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "mobile-money",
+                    "to-bank"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/mobile-money/to-bank has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "mobileMoneyTransfer",
+          "name": "[RETIRED] mobileMoneyTransfer",
           "request": {
             "method": "POST",
             "header": [
@@ -9390,7 +9518,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Transfer to mobile money",
+            "description": "Transfer to mobile money\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phone_number\": \"string\",\n  \"amount\": \"10000\",\n  \"currency\": \"XAF\"\n}",
@@ -9401,10 +9529,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/mobile-money/transfer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "mobile-money",
+                    "transfer"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/mobile-money/transfer has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "mobileMoneyVerify",
+          "name": "[RETIRED] mobileMoneyVerify",
           "request": {
             "method": "POST",
             "header": [
@@ -9444,7 +9636,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Verify mobile money transaction",
+            "description": "Verify mobile money transaction\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"transaction_ref\": \"string\"\n}",
@@ -9455,7 +9647,71 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12",
+                    "type": "text",
+                    "description": "Client-generated UUID for idempotent request deduplication. If the same key is submitted twice, the server returns the original response without re-processing.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/mobile-money/verify",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "mobile-money",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/mobile-money/verify has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -17188,7 +17444,7 @@
       "name": "Payments",
       "item": [
         {
-          "name": "flutterwaveBankTransfer",
+          "name": "[RETIRED] flutterwaveBankTransfer",
           "request": {
             "method": "POST",
             "header": [
@@ -17228,7 +17484,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Initiate bank transfer via Flutterwave",
+            "description": "Initiate bank transfer via Flutterwave\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"account_number\": \"string\",\n  \"bank_code\": \"string\",\n  \"amount\": \"100000\",\n  \"currency\": \"XAF\",\n  \"narration\": \"string\"\n}",
@@ -17239,10 +17495,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/flutterwave/bank-transfer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "flutterwave",
+                    "bank-transfer"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/flutterwave/bank-transfer has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "flutterwaveListBanks",
+          "name": "[RETIRED] flutterwaveListBanks",
           "request": {
             "method": "GET",
             "header": [
@@ -17295,12 +17615,64 @@
               ],
               "variable": []
             },
-            "description": "List supported banks"
+            "description": "List supported banks\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload."
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/flutterwave/banks",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "flutterwave",
+                    "banks"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"GET /v1/flutterwave/banks has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "flutterwaveVerifyBank",
+          "name": "[RETIRED] flutterwaveVerifyBank",
           "request": {
             "method": "POST",
             "header": [
@@ -17340,7 +17712,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Verify bank account",
+            "description": "Verify bank account\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"account_number\": \"string\",\n  \"bank_code\": \"string\"\n}",
@@ -17351,10 +17723,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original response. See Idempotency guide.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/flutterwave/verify-bank",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "flutterwave",
+                    "verify-bank"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/flutterwave/verify-bank has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "stripeConfirmPayment",
+          "name": "[RETIRED] stripeConfirmPayment",
           "request": {
             "method": "POST",
             "header": [
@@ -17394,7 +17830,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Confirm Stripe payment",
+            "description": "Confirm Stripe payment\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"payment_intent_id\": \"string\"\n}",
@@ -17405,10 +17841,74 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/stripe/confirm-payment",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "stripe",
+                    "confirm-payment"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/stripe/confirm-payment has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         },
         {
-          "name": "stripePaymentIntent",
+          "name": "[RETIRED] stripePaymentIntent",
           "request": {
             "method": "POST",
             "header": [
@@ -17448,7 +17948,7 @@
               "query": [],
               "variable": []
             },
-            "description": "Create Stripe payment intent",
+            "description": "Create Stripe payment intent\n\n[RETIRED] This endpoint has reached its sunset date (2026-01-01) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"amount\": \"string\",\n  \"currency\": \"XAF\"\n}",
@@ -17459,7 +17959,71 @@
               }
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/stripe/payment-intent",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "stripe",
+                    "payment-intent"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/stripe/payment-intent has been retired as of 2026-01-01 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -17720,7 +18284,7 @@
             "description": "Confirm payment submission",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"payment_id\": \"string\"\n}",
+              "raw": "{\n  \"payment_id\": \"pmt_01HFG...\",\n  \"instructed_amount\": {\n    \"amount\": \"50000\",\n    \"currency\": \"XAF\"\n  },\n  \"creditor_account\": {\n    \"scheme\": \"RIB\",\n    \"identification\": \"10005-00001-12345678901-23\",\n    \"name\": \"Acme Ltd\"\n  },\n  \"debtor_account\": {\n    \"scheme\": \"RIB\",\n    \"identification\": \"10005-00001-09876543210-45\"\n  },\n  \"remittance_information\": {\n    \"unstructured\": \"Invoice #INV-001\",\n    \"reference\": \"INV-001\"\n  },\n  \"risk\": {\n    \"payment_context_code\": \"EcommerceGoods\",\n    \"merchant_category_code\": \"5411\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -19303,6 +19867,306 @@
       "name": "Standards",
       "item": [
         {
+          "name": "[RETIRED] swiftMt103Generator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "type": "text",
+                "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt103/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt103",
+                "generate"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Generate MT103\n\n[RETIRED] This endpoint has reached its sunset date (2025-11-22) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "",
+                    "type": "text",
+                    "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/standards/swift/mt103/generate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "standards",
+                    "swift",
+                    "mt103",
+                    "generate"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2025-11-22"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/standards/swift/mt103/generate has been retired as of 2025-11-22 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "[RETIRED] swiftMt103Parser",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt103/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt103",
+                "parse"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Parse MT103\n\n[RETIRED] This endpoint has reached its sunset date (2025-11-22) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload."
+          },
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/standards/swift/mt103/parse",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "standards",
+                    "swift",
+                    "mt103",
+                    "parse"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2025-11-22"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/standards/swift/mt103/parse has been retired as of 2025-11-22 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "[RETIRED] swiftMt940Parser",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/standards/swift/mt940/parse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "standards",
+                "swift",
+                "mt940",
+                "parse"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Parse MT940\n\n[RETIRED] This endpoint has reached its sunset date (2025-11-22) and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload."
+          },
+          "response": [
+            {
+              "name": "410 Gone (Retired)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/standards/swift/mt940/parse",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "standards",
+                    "swift",
+                    "mt940",
+                    "parse"
+                  ]
+                }
+              },
+              "status": "Gone",
+              "code": 410,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Sunset",
+                  "value": "2025-11-22"
+                },
+                {
+                  "key": "Deprecation",
+                  "value": "true"
+                },
+                {
+                  "key": "Link",
+                  "value": "<https://kangopenbanking.com/developer/changelog>; rel=\"deprecation\""
+                }
+              ],
+              "body": "{\n  \"type\": \"https://api.kangopenbanking.com/v1/errors/endpoint_retired\",\n  \"title\": \"Endpoint Retired\",\n  \"status\": 410,\n  \"detail\": \"POST /v1/standards/swift/mt940/parse has been retired as of 2025-11-22 per the Kang Open Banking sunset policy.\",\n  \"error_code\": \"ENDPOINT_RETIRED\"\n}"
+            }
+          ]
+        },
+        {
           "name": "iso20022Camt053Parser",
           "request": {
             "method": "POST",
@@ -19481,132 +20345,6 @@
               "variable": []
             },
             "description": "Parse pain.001"
-          },
-          "response": []
-        },
-        {
-          "name": "swiftMt103Generator",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "",
-                "type": "text",
-                "description": "Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.",
-                "disabled": false
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/standards/swift/mt103/generate",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "v1",
-                "standards",
-                "swift",
-                "mt103",
-                "generate"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "description": "Generate MT103",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "swiftMt103Parser",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/standards/swift/mt103/parse",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "v1",
-                "standards",
-                "swift",
-                "mt103",
-                "parse"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "description": "Parse MT103"
-          },
-          "response": []
-        },
-        {
-          "name": "swiftMt940Parser",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/standards/swift/mt940/parse",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "v1",
-                "standards",
-                "swift",
-                "mt940",
-                "parse"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "description": "Parse MT940"
           },
           "response": []
         },

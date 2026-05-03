@@ -112,8 +112,43 @@ function makeRequest(p, method, op, pathItem) {
     }
   }
 
+  const isRetired = op['x-retired'] === true;
+  const sunset = op['x-sunset-date'] || op['x-sunset'] || '';
+  const retiredNote = isRetired
+    ? `\n\n[RETIRED] This endpoint has reached its sunset date${sunset ? ` (${sunset})` : ''} and now returns HTTP 410 Gone (RFC 8594). See response example below for the canonical Problem Details payload.`
+    : '';
+
+  const sampleResponses = [];
+  if (isRetired) {
+    const goneBody = {
+      type: 'https://api.kangopenbanking.com/v1/errors/endpoint_retired',
+      title: 'Endpoint Retired',
+      status: 410,
+      detail: `${method.toUpperCase()} ${p} has been retired${sunset ? ` as of ${sunset}` : ''} per the Kang Open Banking sunset policy.`,
+      error_code: 'ENDPOINT_RETIRED',
+    };
+    sampleResponses.push({
+      name: '410 Gone (Retired)',
+      originalRequest: {
+        method: method.toUpperCase(),
+        header: headers,
+        url: { raw: pathToUrl(p), host: [BASE_URL], path: p.split('/').filter(Boolean) },
+      },
+      status: 'Gone',
+      code: 410,
+      _postman_previewlanguage: 'json',
+      header: [
+        { key: 'Content-Type', value: 'application/problem+json' },
+        { key: 'Sunset', value: sunset || 'Wed, 01 Jan 2025 00:00:00 GMT' },
+        { key: 'Deprecation', value: 'true' },
+        { key: 'Link', value: '<https://kangopenbanking.com/developer/changelog>; rel="deprecation"' },
+      ],
+      body: JSON.stringify(goneBody, null, 2),
+    });
+  }
+
   return {
-    name: op.operationId || `${method.toUpperCase()} ${p}`,
+    name: (isRetired ? '[RETIRED] ' : '') + (op.operationId || `${method.toUpperCase()} ${p}`),
     request: {
       method: method.toUpperCase(),
       header: headers,
@@ -124,10 +159,10 @@ function makeRequest(p, method, op, pathItem) {
         query: queryParams,
         variable: pathVariables(p),
       },
-      description: op.summary || op.description || '',
+      description: (op.summary || op.description || '') + retiredNote,
       ...(body ? { body } : {}),
     },
-    response: [],
+    response: sampleResponses,
   };
 }
 
@@ -185,6 +220,15 @@ for (const p of [versionedPath, latestPath, legacyPath]) {
 }
 
 // Manifest so the developer portal can surface the current version + download URL.
+const manifestPath = path.join(outDir, 'manifest.json');
+let prior = {};
+try { prior = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')); } catch { /* first run */ }
+const versions = Array.isArray(prior.versions) ? prior.versions.filter((v) => v.version !== apiVersion) : [];
+versions.unshift({
+  version: apiVersion,
+  file: `Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`,
+  released_at: new Date().toISOString(),
+});
 const manifest = {
   apiVersion,
   generatedAt: new Date().toISOString(),
@@ -197,8 +241,10 @@ const manifest = {
     sandbox: '/postman/Kang_Open_Banking_Sandbox.postman_environment.json',
     production: '/postman/Kang_Open_Banking_Production.postman_environment.json',
   },
+  current: apiVersion,
+  versions,
 };
-fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
 const total = items.reduce((n, f) => n + f.item.length, 0);
 console.log(`Postman collection regenerated for v${apiVersion}: ${items.length} folders, ${total} requests`);
