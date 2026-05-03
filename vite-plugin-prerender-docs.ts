@@ -765,25 +765,18 @@ export function prerenderDocsPlugin(): Plugin {
           // DOM exclusively. (Audit fix — Developer Portal duplicate content bug.)
 
           if (route.serveAsExtensionlessFile) {
-            // Some production edges resolve extensionless deep links before
-            // checking directory indexes. Publish the canonical no-slash URL
-            // as an exact static HTML file AND the .html mirror AND the
-            // directory-index variant so every edge resolution path wins
-            // before the SPA catch-all redirect kicks in (P1/P2).
-            fs.writeFileSync(extensionlessRoutePath, html, 'utf-8');
-            fs.writeFileSync(path.join(distDir, `${route.path}.html`), html, 'utf-8');
+            // Publish the directory-index variant (Netlify's first lookup
+            // for `/foo`) AND the `.html` mirror so every edge resolution
+            // path wins before the SPA catch-all redirect kicks in (P1/P2).
+            // We can no longer write the extensionless sibling file because
+            // it collides with the directory at the same path.
             fs.writeFileSync(routeHtmlPath, html, 'utf-8');
+            fs.writeFileSync(path.join(distDir, `${route.path}.html`), html, 'utf-8');
           } else {
             fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           }
           generated++;
         }
-
-        console.log(`[prerender-docs] Generated ${generated} static HTML files for documentation routes.`);
-      }
-    }
-  };
-}
 
         console.log(`[prerender-docs] Generated ${generated} static HTML files for documentation routes.`);
       }
