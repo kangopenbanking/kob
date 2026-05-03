@@ -45,18 +45,18 @@ interface ChangelogFile {
 }
 
 const FALLBACK: ChangelogFile = {
-  apiVersion: "4.23.0",
-  lastUpdated: "2026-04-30",
+  apiVersion: "4.28.2",
+  lastUpdated: "2026-05-02",
   entries: [
     {
-      version: "4.23.0",
-      date: "2026-04-30",
-      type: "minor",
-      summary: "Per-phase changelog backfill, versioning policy reaffirmation, OpenAPI tag alignment.",
+      version: "4.28.2",
+      date: "2026-05-02",
+      type: "patch",
+      summary: "Webhook signature and replay-protection header names aligned across the public OpenAPI spec and developer docs.",
       highlights: [
-        "Backfilled per-phase changelog entries for Phases 2–6",
-        "OpenAPI info.version bumped 4.22.0 → 4.23.0",
-        "Versioning policy pages verified public and SSR-readable",
+        "Canonical X-KOB-Signature header with v1=<hex> signature versioning",
+        "X-Webhook-ID deduplication and X-Webhook-Timestamp replay windows documented",
+        "Public changelog feed remains available at /changelog.json",
       ],
     },
   ],
