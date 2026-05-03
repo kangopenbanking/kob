@@ -9,7 +9,7 @@ export function HeroSection() {
       <div className="relative z-10 max-w-3xl space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          Developer Platform · v4.16.3
+          Developer Platform · v4.28.2
         </div>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
           Build the future of finance in <span className="text-primary">Cameroon</span>
