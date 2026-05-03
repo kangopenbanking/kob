@@ -11,6 +11,7 @@ import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { DeveloperAIAssistant } from "@/components/developer/DeveloperAIAssistant";
 import { DeveloperCanonical } from "@/components/developer/DeveloperCanonical";
+import { KOB_API_VERSION_LABEL, KOB_STATUS_PAGE_URL } from "@/config/version";
 import kangAgentLogo from "@/assets/kang-agent-logo.png";
 import {
   ArrowLeft,
