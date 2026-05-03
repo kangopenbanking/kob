@@ -2,6 +2,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
 
+const API_VERSION = '4.29.1';
+
 // ─── Reusable Schema Components ────────────────────────────────────────────
 const schemas = {
   Error: {
@@ -13,6 +15,19 @@ const schemas = {
       message: { type: 'string', description: 'Human-readable description', example: 'The request is missing a required parameter.' },
       details: { type: 'object', description: 'Additional context', additionalProperties: true },
       error_id: { type: 'string', description: 'Unique error trace ID', example: 'err_a1b2c3d4' },
+      timestamp: { type: 'string', format: 'date-time' },
+    },
+  },
+  ProblemDetails: {
+    type: 'object',
+    required: ['type', 'title', 'status', 'detail', 'error_code', 'error_id', 'timestamp'],
+    properties: {
+      type: { type: 'string', format: 'uri', example: 'https://api.kangopenbanking.com/v1/errors/endpoint-retired' },
+      title: { type: 'string', example: 'Endpoint Retired' },
+      status: { type: 'integer', example: 410 },
+      detail: { type: 'string', example: 'This endpoint has been retired. Use the replacement endpoint.' },
+      error_code: { type: 'string', example: 'DEPRECATED_ENDPOINT_RETIRED' },
+      error_id: { type: 'string', example: 'err_01HXKOB000000000' },
       timestamp: { type: 'string', format: 'date-time' },
     },
   },
