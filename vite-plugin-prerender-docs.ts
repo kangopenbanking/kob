@@ -16,6 +16,11 @@
 import { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import { readExpectedVersion } from './scripts/lib/read-expected-version.mjs';
+
+// Single source of truth — never hardcode the version string in the
+// prerendered docs. Falls back to the SSOT when the env var is unset.
+const KOB_API_VERSION = process.env.EXPECTED_OPENAPI_VERSION || readExpectedVersion();
 
 interface DocRoute {
   path: string;
