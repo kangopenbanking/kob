@@ -1,9 +1,20 @@
 {
-  "apiVersion": "4.29.0",
+  "apiVersion": "4.29.1",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-02",
   "entries": [
+    {
+      "version": "4.29.1",
+      "date": "2026-05-03",
+      "type": "patch",
+      "summary": "Critical live-spec remediation: /v1/pisp/payment-submission now advertises the expanded OBIE 4.0 §5.4 request body, and the 12 past-sunset endpoints now expose only HTTP 410 Gone with RFC 8594 successor metadata.",
+      "changes": [
+        "critical-pisp-payment-submission-schema",
+        "critical-retired-endpoints-410-only"
+      ],
+      "breaking": false
+    },
     {
       "version": "4.29.0",
       "date": "2026-05-03",
