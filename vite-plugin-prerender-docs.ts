@@ -768,15 +768,24 @@ export function prerenderDocsPlugin(): Plugin {
 
           if (route.serveAsExtensionlessFile) {
             // Some production edges resolve extensionless deep links before
-            // checking directory indexes. Publish the canonical no-slash URL as
-            // an exact static HTML file, not only /index.html (P1/P2).
+            // checking directory indexes. Publish the canonical no-slash URL
+            // as an exact static HTML file AND the .html mirror AND the
+            // directory-index variant so every edge resolution path wins
+            // before the SPA catch-all redirect kicks in (P1/P2).
             fs.writeFileSync(extensionlessRoutePath, html, 'utf-8');
             fs.writeFileSync(path.join(distDir, `${route.path}.html`), html, 'utf-8');
+            fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           } else {
             fs.writeFileSync(routeHtmlPath, html, 'utf-8');
           }
           generated++;
         }
+
+        console.log(`[prerender-docs] Generated ${generated} static HTML files for documentation routes.`);
+      }
+    }
+  };
+}
 
         console.log(`[prerender-docs] Generated ${generated} static HTML files for documentation routes.`);
       }
