@@ -1,6 +1,76 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 import { corsHeaders } from "../_shared/cors.ts";
+
+// ---------------------------------------------------------------------------
+// OBIE Read/Write 4.0 §5.4 — Domestic Payment Submission body schema.
+// Mirrors public/openapi.json #/paths/~1v1~1pisp~1payment-submission/post.
+// ---------------------------------------------------------------------------
+const AMOUNT_PATTERN = /^[0-9]{1,15}$/;
+const MCC_PATTERN = /^[0-9]{4}$/;
+const CURRENCIES = ['XAF', 'XOF', 'EUR', 'USD'] as const;
+const ACCOUNT_SCHEMES = ['IBAN', 'RIB', 'ACCOUNT_NUMBER'] as const;
+const PAYMENT_CONTEXT_CODES = [
+  'BillPayment',
+  'EcommerceGoods',
+  'EcommerceServices',
+  'Other',
+] as const;
+
+const AccountSchema = z.object({
+  scheme: z.enum(ACCOUNT_SCHEMES),
+  identification: z.string().trim().min(1).max(64),
+  name: z.string().trim().max(140).optional(),
+});
+
+const SubmissionBodySchema = z.object({
+  payment_id: z.string().trim().min(1).max(128),
+  instructed_amount: z.object({
+    amount: z.string().regex(AMOUNT_PATTERN, 'amount must be a positive integer string in minor units'),
+    currency: z.enum(CURRENCIES),
+  }),
+  creditor_account: AccountSchema,
+  debtor_account: AccountSchema.optional(),
+  remittance_information: z
+    .object({
+      unstructured: z.string().max(140).optional(),
+      reference: z.string().max(35).optional(),
+    })
+    .optional(),
+  risk: z.object({
+    payment_context_code: z.enum(PAYMENT_CONTEXT_CODES),
+    merchant_category_code: z.string().regex(MCC_PATTERN, 'MCC must be 4 digits').optional(),
+    merchant_customer_identification: z.string().max(70).optional(),
+  }),
+});
+
+type SubmissionBody = z.infer<typeof SubmissionBodySchema>;
+
+function problem(
+  status: number,
+  title: string,
+  errorCode: string,
+  detail: string,
+  errors?: Array<{ field: string; message: string; code?: string }>
+) {
+  return new Response(
+    JSON.stringify({
+      type: `https://api.kangopenbanking.com/v1/errors/${errorCode.toLowerCase()}`,
+      title,
+      status,
+      detail,
+      error_code: errorCode,
+      error_id: `err_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`,
+      timestamp: new Date().toISOString(),
+      ...(errors ? { errors } : {}),
+    }),
+    {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+    }
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
