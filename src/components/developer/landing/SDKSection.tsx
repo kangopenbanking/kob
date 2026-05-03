@@ -147,7 +147,7 @@ export function SDKSection() {
               <div>
                 <h3 className="font-semibold text-sm">OpenAPI Specification</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Download the full OpenAPI 3.1 spec (v4.28.2) in JSON or YAML. Import into any tool.
+                  Download the full OpenAPI 3.1 spec ({KOB_API_VERSION_LABEL}) in JSON or YAML. Import into any tool.
                 </p>
               </div>
             </div>
