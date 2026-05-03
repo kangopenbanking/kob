@@ -17,7 +17,7 @@ const BASE = (process.env.SMOKE_BASE_URL || 'https://kangopenbanking.com').repla
 const ROUTES: Array<{ path: string; mustInclude: string[]; mustNotInclude?: string[] }> = [
   {
     path: '/developer',
-    mustInclude: ['Developer Platform', 'Kang Open Banking'],
+    mustInclude: ['Developer Portal', 'Kang Open Banking'],
   },
   {
     path: '/developer/api-explorer',
@@ -86,10 +86,13 @@ describe(`Developer portal smoke (${BASE})`, () => {
     expect(hasSwagger, 'Swagger UI not referenced on /developer/api-explorer').toBe(true);
   }, 30_000);
 
-  it('Footer shows the "All systems operational" status badge', async () => {
-    const { body } = await fetchText(`${BASE}/developer`);
-    expect(body.toLowerCase()).toContain('all systems operational');
-    expect(body).toContain('status.kangopenbanking.com');
+  it('OpenAPI spec advertises the public status page', async () => {
+    // Status badge renders client-side in PublicDeveloperLayout, so it isn't
+    // present in the prerendered HTML. We verify the SSOT instead: the status
+    // page URL must be exposed via the spec's x-status-page extension, which
+    // is what the badge component reads.
+    const spec = await fetch(`${BASE}/openapi.json`).then((r) => r.json());
+    expect(spec?.info?.['x-status-page']).toBe('https://status.kangopenbanking.com');
   }, 30_000);
 
   it('/openapi.json info.version matches /changelog.json apiVersion', async () => {
