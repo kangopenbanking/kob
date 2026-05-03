@@ -1,9 +1,29 @@
 {
-  "apiVersion": "4.28.2",
+  "apiVersion": "4.29.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-02",
   "entries": [
+    {
+      "version": "4.29.0",
+      "date": "2026-05-03",
+      "type": "minor",
+      "summary": "Audit remediation: PISP submission body expanded (OBIE 4.0 §5.4); 12 past-sunset endpoints retired with HTTP 410 + RFC 8594 Sunset/Link; 19 monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2; webhook signature header canonicalized (X-KOB-Signature with X-Webhook-Signature alias); Webhook v1 endpoints deprecated → /v1/webhooks/v2/endpoints (sunset 2026-12-31); 2144 application/problem+json refs corrected to ProblemDetails (RFC 7807); rate-limit window unit declared per_minute; 45 ops gained default 5XX; SDK metadata unified (Java + Go added to x-sdks); currency required on POST /v1/interbank/payments per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor.",
+      "changes": [
+        "p1.2",
+        "p1.3",
+        "p2.1",
+        "p2.2",
+        "p2.3",
+        "p2.4",
+        "p2.5",
+        "p3.1",
+        "p3.2",
+        "p3.3",
+        "p3.4"
+      ],
+      "breaking": false
+    },
     {
       "version": "4.28.2",
       "date": "2026-05-02",
