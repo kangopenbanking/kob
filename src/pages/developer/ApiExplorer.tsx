@@ -326,6 +326,8 @@ const ApiExplorer = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [sourceUsed, setSourceUsed] = useState<string | null>(null);
+  const [sourceStatuses, setSourceStatuses] = useState<Array<{ label: string; url: string; status: "pending" | "ok" | "fail"; detail?: string }>>([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"reference" | "tryit" | "webhooks">("reference");
