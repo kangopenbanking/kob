@@ -13,8 +13,10 @@
  * Usage: node scripts/audit-public-access.mjs [https://host]
  * CI:    fails (exit 1) on any failure.
  */
+import { resolveExpectedVersion } from './lib/read-expected-version.mjs';
+
 const BASE = process.argv[2] || process.env.AUDIT_BASE || 'https://kangopenbanking.com';
-const EXPECTED_VERSION = process.env.EXPECTED_OPENAPI_VERSION || '4.28.2';
+const EXPECTED_VERSION = resolveExpectedVersion();
 
 const URLS = [
   '/developer',
