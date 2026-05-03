@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { useToast } from "@/hooks/use-toast";
+import { KOB_API_VERSION } from "@/config/version";
 
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT
 // This page MUST remain publicly accessible (no auth, no gate). ORDER P1, P7.
@@ -45,7 +46,7 @@ interface ChangelogFile {
 }
 
 const FALLBACK: ChangelogFile = {
-  apiVersion: "4.28.2",
+  apiVersion: KOB_API_VERSION,
   lastUpdated: "2026-05-02",
   entries: [
     {

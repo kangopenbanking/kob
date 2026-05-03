@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Webhook } from "lucide-react";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 export function HeroSection() {
   return (
@@ -9,7 +10,7 @@ export function HeroSection() {
       <div className="relative z-10 max-w-3xl space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          Developer Platform · v4.28.2
+          Developer Platform · {KOB_API_VERSION_LABEL}
         </div>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
           Build the future of finance in <span className="text-primary">Cameroon</span>
@@ -30,7 +31,7 @@ export function HeroSection() {
           </Link>
           <Link to="/developer/gateway/webhooks">
             <Button size="lg" variant="outline" className="text-base px-6">
-              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide (v4.28.2)
+              <Webhook className="mr-2 h-4 w-4" /> Webhook Guide ({KOB_API_VERSION_LABEL})
             </Button>
           </Link>
         </div>
