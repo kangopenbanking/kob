@@ -178,19 +178,38 @@ Content-Type: application/problem+json
     description: 'Production-tested integration examples for Kang Open Banking API. E-commerce checkout, subscription billing, marketplace payouts, and mobile money collection flows.',
     h1: 'Real-World Integration Examples',
     serveAsExtensionlessFile: true,
-    content: `<h2>Production-Ready Code Examples</h2>
-<p>Complete, tested integration patterns for common use cases in the CEMAC region.</p>
-<h3>E-Commerce Checkout</h3>
-<p>Accept MTN MoMo, Orange Money, and card payments in a single checkout flow. Includes webhook verification and order fulfillment.</p>
-<h3>Subscription Billing</h3>
-<p>Recurring payments with automatic retry, dunning management, and prorated refunds for XAF-denominated subscriptions.</p>
-<h3>Marketplace Payouts</h3>
-<p>Split payments between marketplace operators and sellers. Supports escrow holds, commission deduction, and instant payouts.</p>
-<h3>Mobile Money Collection</h3>
-<p>Bulk collection from MTN MoMo and Orange Money accounts. Batch processing with reconciliation reports.</p>
-<h3>Bank-to-Bank Transfers</h3>
-<p>Domestic CEMAC transfers via SYSTAC/SYGMA rails. Real-time status tracking and settlement notifications.</p>
-<p>All examples include cURL, Node.js, and Python implementations with error handling.</p>`
+    content: `<h2>12 Production-Ready Integration Guides</h2>
+<p>Every guide is copy-paste-ready, includes a sequence diagram, cURL examples, JSON request/response samples, and notes on idempotency, retries, and webhook handling. All examples target the public sandbox at <code>https://sandbox-api.kangopenbanking.com/v1</code> and work with the published test credentials.</p>
+
+<h3>Payment Gateway</h3>
+<ul>
+  <li><a href="/developer/examples/01-merchant-onboarding-kyb-api-keys">1. Merchant Onboarding, KYB &amp; API Keys</a> — register a merchant, submit KYB documents, generate API keys (8 min)</li>
+  <li><a href="/developer/examples/02-accept-payments-create-charge">2. Accept Payments — Create a Charge</a> — Mobile Money, Card, and PayPal with full webhook lifecycle (10 min)</li>
+  <li><a href="/developer/examples/03-add-money-account-funding">3. Add Money — Account Funding</a> — fund wallets via Mobile Money, card, or bank transfer (7 min)</li>
+  <li><a href="/developer/examples/04-refunds">4. Refunds</a> — full and partial refunds with idempotency (5 min)</li>
+  <li><a href="/developer/examples/05-payouts-single-bulk-paypal">5. Payouts — Single, Bulk &amp; PayPal</a> — disburse to bank accounts, MoMo wallets, or PayPal (12 min)</li>
+  <li><a href="/developer/examples/07-settlements-reporting-exports-reconciliation">7. Settlements, Reporting &amp; Reconciliation</a> — settlement cycles, CSV/PDF exports, reconciliation (8 min)</li>
+  <li><a href="/developer/examples/08-disputes-chargebacks-evidence">8. Disputes &amp; Chargebacks</a> — handle disputes and submit evidence within deadlines (7 min)</li>
+</ul>
+
+<h3>Webhooks &amp; Events</h3>
+<ul>
+  <li><a href="/developer/examples/06-webhooks-merchant-outbound-deliveries-rotation">6. Webhooks — Setup, Deliveries &amp; Rotation</a> — endpoints, HMAC-SHA256 verification, retries, secret rotation (10 min)</li>
+</ul>
+
+<h3>Open Banking</h3>
+<ul>
+  <li><a href="/developer/examples/09-open-banking-aisp-consent-accounts-transactions">9. Open Banking AISP — Accounts &amp; Transactions</a> — consent, redirect authorization, account data retrieval (12 min)</li>
+  <li><a href="/developer/examples/10-open-banking-pisp-consent-domestic-payment">10. Open Banking PISP — Domestic Payment</a> — consent and authorization for a domestic payment (10 min)</li>
+</ul>
+
+<h3>End-to-End "Build X" Use Cases</h3>
+<ul>
+  <li><a href="/developer/examples/11-build-marketplace-checkout">11. Build a Marketplace Checkout</a> — charge buyers, calculate commission, disburse to sellers, reconcile (15 min)</li>
+  <li><a href="/developer/examples/12-build-bank-data-aggregator">12. Build a Bank Data Aggregator</a> — AISP consent, account sync, transaction history, token management (15 min)</li>
+</ul>
+
+<p>Every example covers happy-path requests, error responses (RFC 7807 Problem Details), and the matching webhook payload where applicable. Languages: cURL, Node.js, and Python in every guide; PHP, Java, and Go on the quickstart and go-live guides.</p>`
   },
   {
     path: '/developer/gateway/quickstart',
