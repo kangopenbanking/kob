@@ -549,6 +549,23 @@ const ApiExplorer = () => {
                         {fetchError} The interactive reference is temporarily unavailable. You can retry, or download the latest OpenAPI spec directly.
                       </p>
                     </div>
+                    {sourceStatuses.length > 0 && (
+                      <div className="w-full max-w-md text-left rounded-lg border bg-muted/30 p-3 space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fallback chain</p>
+                        {sourceStatuses.map((s) => (
+                          <div key={s.url} className="flex items-center justify-between gap-2 text-xs">
+                            <span className="truncate" title={s.url}>{s.label}</span>
+                            <Badge variant="outline" className={
+                              s.status === "ok" ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400" :
+                              s.status === "fail" ? "border-destructive/40 text-destructive" :
+                              "text-muted-foreground"
+                            }>
+                              {s.status === "ok" ? `OK ${s.detail ?? ""}` : s.status === "fail" ? `Failed (${s.detail ?? "error"})` : "Pending"}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <Button onClick={() => setRetryCount((c) => c + 1)}>Retry</Button>
                       <Button variant="outline" asChild>
@@ -559,6 +576,11 @@ const ApiExplorer = () => {
                       <Button variant="outline" asChild>
                         <Link to="/developer/api-explorer-static">
                           Static API reference
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/developer/redoc">
+                          Redoc reference
                         </Link>
                       </Button>
                     </div>
@@ -572,6 +594,13 @@ const ApiExplorer = () => {
                     <Button size="sm" variant="outline" onClick={() => setRetryCount((c) => c + 1)}>
                       Retry
                     </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : sourceUsed && sourceStatuses.some((s) => s.status === "fail") ? (
+                <Alert className="mb-6 border-amber-500/40">
+                  <ShieldCheck className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    Loaded from fallback source: <strong>{sourceUsed}</strong>. Primary spec source was unavailable.
                   </AlertDescription>
                 </Alert>
               ) : null}
