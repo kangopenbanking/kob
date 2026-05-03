@@ -689,13 +689,11 @@ export function prerenderDocsPlugin(): Plugin {
             // Still replace content for existing files
           }
 
-          // Always create both the parent directory (for the extensionless
-          // sibling file and the .html mirror) and the route directory itself
-          // (for the directory-index variant). Netlify resolves directory
-          // indexes before applying SPA rewrites — without this, requests to
+          // Always write the directory-index variant. Netlify (and most
+          // static hosts) resolve `/foo/index.html` for `/foo` requests
+          // before applying SPA catch-all rewrites — without this,
           // `/developer/changelog` and `/developer/examples/real-world` fell
-          // through to the SPA shell and returned the homepage.
-          fs.mkdirSync(path.dirname(extensionlessRoutePath), { recursive: true });
+          // through to the SPA shell and returned the homepage shell.
           fs.mkdirSync(routeDir, { recursive: true });
 
           // Modify the HTML for this specific route
