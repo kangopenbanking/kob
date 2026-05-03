@@ -219,7 +219,7 @@ Content-Type: application/problem+json
   {
     path: '/developer/gateway/quickstart',
     title: 'Payment Gateway Quickstart (10 min) | Kang Open Banking',
-    description: 'Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v${KOB_API_VERSION}.',
+    description: `Accept your first payment in 10 minutes with Kang Open Banking Payment Gateway. Mobile money, cards, and bank transfers in Cameroon and CEMAC. Field names match OpenAPI v${KOB_API_VERSION}.`,
     h1: 'Payment Gateway Quickstart — Accept Payments in 10 Minutes',
     serveAsExtensionlessFile: true,
     content: `<h2>10-Minute Integration Guide</h2>
