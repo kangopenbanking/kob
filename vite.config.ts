@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => ({
     include: ['swagger-ui-react', 'js-yaml'],
   },
   build: {
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
         manualChunks(id) {
