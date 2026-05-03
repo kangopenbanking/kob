@@ -292,7 +292,10 @@ Deno.serve(async (req) => {
         from_status: 'Pending',
         to_status: 'AcceptedSettlementInProgress',
         idempotency_key: idempotencyKey,
-        submitted_by: user.id
+        submitted_by: user.id,
+        risk: body.risk,
+        instructed_amount: body.instructed_amount,
+        creditor_account: body.creditor_account,
       }
     });
 
