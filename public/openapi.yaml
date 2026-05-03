@@ -100614,7 +100614,7 @@ x-webhook-policy:
     - 21600
     - 86400
   max_attempts: 7
-  signature_header: X-KOB-Signature
+  signature_header: X-Webhook-Signature
   event_id_header: X-Webhook-ID
   event_type_header: X-Webhook-Event
   signature_algorithm: HMAC-SHA256(secret, raw_body) hex
@@ -100622,8 +100622,8 @@ x-webhook-policy:
   tls: TLS 1.2+ required on consumer endpoint
   signature_header_aliases:
     - Kang-Signature
-    - X-Webhook-Signature
     - X-Kang-Signature
+    - X-KOB-Signature
   event_id_header_aliases:
     - Kang-Event-ID
     - Kang-Webhook-ID
@@ -100634,7 +100634,7 @@ x-webhook-policy:
     Both X-Webhook-* (legacy) and Kang-* (preferred) header families are emitted on outbound deliveries and accepted on
     inbound verification. New integrations should prefer the Kang-* family.
   x-canonical-headers:
-    signature: X-KOB-Signature
+    signature: X-Webhook-Signature
     event_id: X-Webhook-ID
     event_type: X-Webhook-Event
     timestamp: X-Webhook-Timestamp
