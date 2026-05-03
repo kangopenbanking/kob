@@ -534,7 +534,7 @@ Content-Type: application/json
 <table>
   <tr><th>Method</th><th>Path</th><th>Description</th></tr>
   <tr><td>GET</td><td><code>/v1/spec/versions</code></td><td>Lists every published OpenAPI version with release date and snapshot availability.</td></tr>
-  <tr><td>GET</td><td><code>/v1/spec/diff?from=4.27.2&amp;to=4.27.3</code></td><td>Returns a structured JSON diff of two versions.</td></tr>
+  <tr><td>GET</td><td><code>/v1/spec/diff?from=4.28.1&amp;to=4.28.2</code></td><td>Returns a structured JSON diff of two versions.</td></tr>
 </table>
 <h3>Classification</h3>
 <ul>
@@ -542,7 +542,7 @@ Content-Type: application/json
   <li><strong>Breaking</strong> (red): removed paths, removed response codes, renamed operationIds, removed required fields, removed schemas. Per Standing Order 1 (The Lock), breaking changes require an API major-version increment.</li>
 </ul>
 <h3>cURL</h3>
-<pre><code>curl https://api.kangopenbanking.com/v1/spec/diff?from=4.27.2&amp;to=4.27.3</code></pre>
+<pre><code>curl https://api.kangopenbanking.com/v1/spec/diff?from=4.28.1&amp;to=4.28.2</code></pre>
 <p>Standards cited: RFC 6902 (JSON Patch), Standing Order 1 (The Lock), Standing Order 4 (Surgeon Rule).</p>`
   },
   {
