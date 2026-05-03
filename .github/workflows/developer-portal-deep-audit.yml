@@ -1,0 +1,95 @@
+name: Developer Portal Deep Audit
+
+# Runs the stronger public-access auditor every 15 minutes against the
+# Netlify-hosted production host. In addition to status codes, this enforces:
+#   - No `X-Robots-Tag: noindex` on any documented URL
+#   - No SPA-shell-only responses on /developer/* (prerendered text required)
+#   - No `<div id="ssr-fallback">` content leak
+#   - /openapi.json info.version === EXPECTED_OPENAPI_VERSION (>= 100 paths)
+#   - /changelog.json apiVersion === EXPECTED_OPENAPI_VERSION
+#   - Correct Content-Type on JSON / YAML spec endpoints
+#
+# On failure: opens (or updates) a GitHub issue tagged `portal-down`.
+# Justification: Orders P1, P2, P4, P6 + Standing Order 6.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Base URL to audit'
+        required: false
+        default: 'https://kangopenbanking.com'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      AUDIT_BASE: ${{ github.event.inputs.base || 'https://kangopenbanking.com' }}
+      EXPECTED_OPENAPI_VERSION: '4.28.2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run public-access auditor
+        id: audit
+        shell: bash
+        run: |
+          set +e
+          node scripts/audit-public-access.mjs "$AUDIT_BASE" | tee audit.log
+          status=${PIPESTATUS[0]}
+          {
+            echo "report<<__EOF__"
+            cat audit.log
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+          exit $status
+
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const report = `${{ steps.audit.outputs.report }}`;
+            const title = 'Developer portal deep audit failed';
+            const body = [
+              '`developer-portal-deep-audit` detected one or more failing checks',
+              `against \`${process.env.AUDIT_BASE}\` (Netlify-hosted production).`,
+              '',
+              '```',
+              report,
+              '```',
+              '',
+              'Workflow run: ' +
+                `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'portal-down',
+              per_page: 5,
+            });
+            if (existing.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['portal-down', 'priority:high'],
+              });
+            }
