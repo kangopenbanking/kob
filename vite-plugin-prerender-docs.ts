@@ -621,7 +621,7 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
   {
     path: '/developer',
     title: 'Developer Portal | Kang Open Banking API Documentation',
-    description: 'Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v${KOB_API_VERSION}.',
+    description: `Kang Open Banking Developer Portal. API documentation, interactive explorer, SDKs, sandbox environment, and integration guides for Cameroon and CEMAC payments. API v${KOB_API_VERSION}.`,
     h1: 'Kang Open Banking Developer Portal',
     content: `<h2>Build with the Kang Open Banking API</h2>
 <p><strong>Kang Open Banking API v${KOB_API_VERSION} · OpenAPI 3.1.0 · 391 operations · FAPI 1.0 Advanced</strong></p>
