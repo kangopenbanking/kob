@@ -436,14 +436,24 @@ function DocsFooter() {
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4" />
           <span>Kang Open Banking Developer Docs</span>
-          <span className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">v4.6.0</span>
+          <span className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{KOB_API_VERSION_LABEL}</span>
         </div>
         <div className="flex items-center gap-4">
+          <a
+            href={KOB_STATUS_PAGE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+            aria-label="System status — opens status page in new tab"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            All systems operational
+          </a>
           <Link to="/developer/support" className="hover:text-foreground transition-colors">
             Support
-          </Link>
-          <Link to="/developer/status" className="hover:text-foreground transition-colors">
-            Status
           </Link>
           <Link to="/developer/changelog" className="hover:text-foreground transition-colors">
             Changelog
