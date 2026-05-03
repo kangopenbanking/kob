@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Copy, ExternalLink, FileCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 const sdks = [
   {
