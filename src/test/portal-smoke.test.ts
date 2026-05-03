@@ -92,7 +92,7 @@ describe(`Developer portal smoke (${BASE})`, () => {
     // page URL must be exposed via the spec's x-status-page extension, which
     // is what the badge component reads.
     const spec = await fetch(`${BASE}/openapi.json`).then((r) => r.json());
-    expect(spec['x-status-page']).toBe('https://status.kangopenbanking.com');
+    expect(spec?.info?.['x-status-page']).toBe('https://status.kangopenbanking.com');
   }, 30_000);
 
   it('/openapi.json info.version matches /changelog.json apiVersion', async () => {
