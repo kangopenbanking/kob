@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 const seedData = `# Generate a full set of test accounts, transactions, and merchants
 curl -X POST https://sandbox-api.kangopenbanking.com/v1/sandbox/data/generate \\
