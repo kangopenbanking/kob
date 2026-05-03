@@ -15520,6 +15520,80 @@ export type Database = {
           },
         ]
       }
+      pisp_payment_submissions: {
+        Row: {
+          client_id: string
+          consent_id: string
+          created_at: string
+          creditor_account: Json
+          debtor_account: Json | null
+          expected_execution_date: string | null
+          expected_settlement_date: string | null
+          id: string
+          idempotency_key: string | null
+          instructed_amount: Json
+          payment_id: string
+          remittance_information: Json | null
+          response_payload: Json | null
+          risk: Json
+          status: string
+          status_update_datetime: string
+          submission_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          consent_id: string
+          created_at?: string
+          creditor_account: Json
+          debtor_account?: Json | null
+          expected_execution_date?: string | null
+          expected_settlement_date?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instructed_amount: Json
+          payment_id: string
+          remittance_information?: Json | null
+          response_payload?: Json | null
+          risk: Json
+          status?: string
+          status_update_datetime?: string
+          submission_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          consent_id?: string
+          created_at?: string
+          creditor_account?: Json
+          debtor_account?: Json | null
+          expected_execution_date?: string | null
+          expected_settlement_date?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instructed_amount?: Json
+          payment_id?: string
+          remittance_information?: Json | null
+          response_payload?: Json | null
+          risk?: Json
+          status?: string
+          status_update_datetime?: string
+          submission_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pisp_payment_submissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["payment_id"]
+          },
+        ]
+      }
       pos_cash_movements: {
         Row: {
           amount: number
