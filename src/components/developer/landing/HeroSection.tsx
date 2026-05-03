@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Webhook } from "lucide-react";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 export function HeroSection() {
   return (
