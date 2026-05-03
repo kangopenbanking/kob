@@ -1,16 +1,20 @@
 ###############################################################################
 # Developer Portal CI Smoke Tests
 #
-# Runs on:
-#   - every push to main (after Netlify auto-builds, smokes production)
-#   - every pull request (parity gate only — site not yet deployed)
-#   - manual dispatch
+# Triggers:
+#   - push to main           → live smoke + audit against production after
+#                              Netlify deploys.
+#   - pull_request to main   → parity gate + Netlify Deploy Preview smoke
+#                              (requires NETLIFY_SITE_ID + NETLIFY_AUTH_TOKEN
+#                              repo secrets).
+#   - workflow_dispatch      → manual run against arbitrary base URL.
 #
-# Steps:
-#   1) Version-parity check (offline)
-#   2) Public-access audit against the chosen base URL
-#   3) Vitest portal smoke suite (route 200s, unique titles, Swagger UI mount,
-#      status badge, version parity between openapi.json and changelog.json)
+# Required GitHub repo secrets:
+#   NETLIFY_SITE_ID, NETLIFY_AUTH_TOKEN  — for PR Deploy Preview smoke
+#   SLACK_WEBHOOK_URL                    — failure notifications (Slack)
+#   SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_TO  — email fallback
+#
+# EXPECTED_OPENAPI_VERSION is read from src/config/version.ts (SSOT).
 ###############################################################################
 name: developer-portal-smoke
 
@@ -30,34 +34,124 @@ concurrency:
   group: portal-smoke-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  EXPECTED_OPENAPI_VERSION: '4.28.2'
-  AUDIT_BASE: ${{ github.event.inputs.base_url || 'https://kangopenbanking.com' }}
-
 jobs:
   parity:
     name: Version parity (offline)
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_TO: ${{ secrets.SMTP_TO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node_version: '20'
+          node-version: '20'
       - run: npm ci --no-audit --no-fund
+
+      - name: Resolve expected API version (SSOT)
+        run: echo "EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_ENV"
+
       - name: Version-parity gate
         run: npm run openapi:check-version
 
-  smoke:
-    name: Live smoke + audit (${{ env.AUDIT_BASE }})
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'Version-parity gate'
+
+  preview-smoke:
+    name: Smoke Netlify Deploy Preview
     needs: parity
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_TO: ${{ secrets.SMTP_TO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node_version: '20'
+          node-version: '20'
       - run: npm ci --no-audit --no-fund
+
+      - name: Resolve expected API version (SSOT)
+        run: echo "EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_ENV"
+
+      - name: Wait for Netlify Deploy Preview
+        id: netlify
+        if: ${{ secrets.NETLIFY_SITE_ID != '' && secrets.NETLIFY_AUTH_TOKEN != '' }}
+        uses: probablyup/wait-for-netlify-action@3.6.0
+        with:
+          site_id: ${{ secrets.NETLIFY_SITE_ID }}
+          max_timeout: 600
+        env:
+          NETLIFY_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: Skip notice if Netlify secrets missing
+        if: ${{ secrets.NETLIFY_SITE_ID == '' || secrets.NETLIFY_AUTH_TOKEN == '' }}
+        run: |
+          echo "::warning::NETLIFY_SITE_ID / NETLIFY_AUTH_TOKEN not configured — skipping deploy-preview smoke."
+          echo "Add these repo secrets to enable PR Deploy Preview smoke tests."
+
+      - name: Public-access audit (deploy preview)
+        if: ${{ steps.netlify.outputs.url != '' }}
+        run: npm run audit:public
+        env:
+          AUDIT_BASE: ${{ steps.netlify.outputs.url }}
+
+      - name: Vitest portal smoke (deploy preview)
+        if: ${{ steps.netlify.outputs.url != '' }}
+        run: npm run smoke:portal
+        env:
+          SMOKE_BASE_URL: ${{ steps.netlify.outputs.url }}
+
+      - name: Install Playwright browser
+        if: ${{ steps.netlify.outputs.url != '' }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Swagger UI smoke (deploy preview)
+        if: ${{ steps.netlify.outputs.url != '' }}
+        run: npm run smoke:swagger
+        env:
+          SMOKE_BASE_URL: ${{ steps.netlify.outputs.url }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'Deploy Preview smoke'
+
+  smoke:
+    name: Live smoke + audit (production)
+    needs: parity
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      AUDIT_BASE: ${{ github.event.inputs.base_url || 'https://kangopenbanking.com' }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_TO: ${{ secrets.SMTP_TO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund
+
+      - name: Resolve expected API version (SSOT)
+        run: echo "EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_ENV"
 
       - name: Wait for Netlify deploy to finish
         run: |
@@ -66,11 +160,22 @@ jobs:
 
       - name: Public-access audit
         run: npm run audit:public
-        env:
-          AUDIT_BASE: ${{ env.AUDIT_BASE }}
-          EXPECTED_OPENAPI_VERSION: ${{ env.EXPECTED_OPENAPI_VERSION }}
 
       - name: Vitest portal smoke suite
         run: npm run smoke:portal
         env:
           SMOKE_BASE_URL: ${{ env.AUDIT_BASE }}
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Swagger UI smoke
+        run: npm run smoke:swagger
+        env:
+          SMOKE_BASE_URL: ${{ env.AUDIT_BASE }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'Live production smoke'

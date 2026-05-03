@@ -1,40 +1,106 @@
-## Audit Result: All 7 Requested Upgrades Already Exist
+## Goal
 
-I cross-checked each requested upgrade against the live OpenAPI spec (`public/openapi.yaml` v4.28.1), the deployed edge functions, and the codebase. Every item on the list is already shipped. Here is the evidence and the only minor non-breaking enhancement worth adding.
+Strengthen the developer-portal CI/CD pipeline by (1) smoke-testing the actual Netlify Deploy Preview on PRs, (2) reading the expected API version from a single TypeScript SSOT instead of duplicating it as a hardcoded env var, (3) hardening the Swagger UI smoke test, and (4) routing failures of the predeploy gate or smoke workflow to Slack/email.
 
-### Audit Table
+---
 
-| # | Requested Upgrade | Status | Evidence |
-|---|---|---|---|
-| 1 | OAuth 2.0 + OIDC (`/oauth/authorize`, `/oauth/token`) | **Shipped** | `/v1/oauth/authorize`, `/v1/oauth/token`, `/v1/oauth/introspect`, `/v1/oauth/revoke`, `/v1/oauth/par`, `/v1/oauth/userinfo` + edge functions `oauth-authorize`, `oauth-token`, `oauth-introspect`, `oauth-revoke`. Authorization Code (with PKCE), Client Credentials, mTLS-bound tokens, FAPI 1.0 Advanced. API key auth retained as legacy. |
-| 2 | Consent Management | **Shipped** | `/v1/consents`, `/v1/consents/{id}/authorize`, `/v1/consents/{id}/revoke`, `/v1/consents/{id}/status`, `/v1/consents/{id}/extend`, `/v1/aisp/consents`, `/v1/pisp/consents`. Edge functions: `aisp-create-consent`, `pisp-create-consent`, `consent-authorize`, `consent-revoke`, `consent-extend`, `consent-status`, `gdpr-consent-retention`. |
-| 3 | SCA / Step-up Auth | **Shipped** | `acr_values: urn:openbanking:psd2:sca` declared on `/v1/oauth/authorize`. Memory note `Financial Operation Gates` confirms `SCAChallenge` for PISP. Step-up via OAuth `acr` + PinConfirmDialog flow. |
-| 4 | Idempotency for Payments | **Shipped** | `Idempotency-Key` header (UUID v4) is **required** on all 15+ payment-related POST endpoints per spec changelog G3. Component parameter defined at line 3497. RFC 7807 error `idempotency_conflict` returned on key reuse with different body. |
-| 5 | Webhook Hardening | **Shipped** | Headers: `X-Kang-Signature` (HMAC-SHA256), `X-Webhook-ID` (dedup), `X-Webhook-Timestamp` (5-min replay window), `Kang-Webhook-ID`. v2 endpoints: `/v1/webhooks/v2/endpoints`, `/replay`, `/health`. Secret rotation endpoint. 7-attempt exponential backoff (memory: Webhook Governance). DLQ: `admin-webhook-dlq-replay`. |
-| 6 | API Versioning | **Shipped** | All paths under `/v1/`. `/v1/webhooks/v2/*` already demonstrates the additive v2 sub-resource pattern. Standing Order 1 (The Lock) + Standing Order 6 (Version Gate) enforce versioning rules. info.version 4.28.1. |
-| 7 | Standardized Error Format | **Shipped** | RFC 7807 `application/problem+json` with `type`, `title`, `status`, `detail`, `instance`, `error_id`, `code`, `details`. 63 standardized codes (memory: API Spec Refinements). Reusable `Unauthorized`, `Forbidden`, `RateLimited` response components. |
+## 1. Single source of truth for `EXPECTED_OPENAPI_VERSION`
 
-### The Only Non-Breaking Enhancement Worth Adding
+**Problem:** The version `4.28.2` is hardcoded in `netlify.toml`, `developer-portal-smoke.yml`, `developer-portal-deep-audit.yml`, `developer-portal-uptime.yml`, `check-openapi-version.mjs`, and `predeploy.mjs` — a clear drift risk.
 
-While auditing webhooks I noticed the **header naming is inconsistent across the spec**:
-- AsyncAPI section uses `X-Webhook-Signature` / `X-Webhook-ID` / `X-Webhook-Timestamp`
-- Event docs say `X-Kang-Signature`
-- Memory says `Kang-Webhook-ID`
+**Plan:**
 
-This is a documentation-only inconsistency — runtime code already accepts the canonical headers. Aligning the docs is purely additive and breaks nothing.
+- Create `scripts/lib/read-expected-version.mjs` — a tiny helper that parses `src/config/version.ts` with a regex (`/KOB_API_VERSION\s*=\s*["']([^"']+)["']/`) and returns the version string. No TS compile, no deps.
+- Create `scripts/print-expected-version.mjs` — wrapper that prints the value to stdout (used by Netlify and GitHub Actions to export the env var).
+- Update `scripts/check-openapi-version.mjs` and `scripts/predeploy.mjs` and `scripts/audit-public-access.mjs` to fall back to the helper when `EXPECTED_OPENAPI_VERSION` is unset, so callers no longer need to pass it.
+- Update `netlify.toml`:
+  - Remove the static `EXPECTED_OPENAPI_VERSION = "4.28.2"` line.
+  - Prefix every build command with `export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) &&`.
+- Update all three GitHub workflows (`developer-portal-smoke.yml`, `developer-portal-deep-audit.yml`, `developer-portal-uptime.yml`) to drop the hardcoded `EXPECTED_OPENAPI_VERSION: '4.28.2'` and add a "Resolve expected version" step:
+  ```yaml
+  - id: ver
+    run: echo "value=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_OUTPUT"
+  ```
+  then reference `${{ steps.ver.outputs.value }}` wherever needed (or export it to `$GITHUB_ENV`).
+- Add `npm run version:print` to `package.json` for convenience.
 
-### Proposed Change (Single, Small, Doc-Only)
+After this, bumping the API version requires editing only `src/config/version.ts`.
 
-Add a single explicit `Webhook Signature Headers` table to `public/openapi.yaml` info.description and to `docs/portal/error-reference.md` clarifying the canonical names + accepted aliases. Bump `info.version` to **4.28.2** (patch — Standing Order 6).
+---
 
-**Files touched:**
-- `public/openapi.yaml` — add headers reference table + version bump
-- `public/openapi.json` — mirror change + version bump
-- `public/changelog.json` + `CHANGELOG.md` — add 4.28.2 entry (rebuilt via `scripts/build-changelog-index.mjs`)
-- `docs/governance/CHANGELOG-v4.28.2.md` — new governance file
+## 2. Run smoke tests against the Netlify Deploy Preview on PRs
 
-**Standing Orders honored:** Lock (no renames), Ratchet (additive only), Audit Trail (cites RFC 7807 + own changelog), Surgeon (additive), Version Gate (patch bump).
+**Problem:** Today, PRs only run the offline parity gate; the live preview is never exercised.
 
-### Recommendation
+**Plan:**
 
-The 7-point upgrade list reflects an outdated audit snapshot. The API is **already at or above PSD2 / FAPI 1.0 Advanced parity** for every item requested. The only useful action is the small documentation alignment above. Confirm and I will apply it; reject and I will leave the spec untouched at v4.28.1.
+- Switch `developer-portal-smoke.yml` to a `pull_request_target` trigger for the smoke job (so it can read PR metadata) **plus** keep `push` and `workflow_dispatch`.
+- Add a new `preview-smoke` job, gated on `github.event_name == 'pull_request'`, that:
+  1. Uses the official **`nwtgck/actions-netlify`** wait action — `jsmrcaga/action-netlify-deploy@v2.0.0` or `probablyup/wait-for-netlify-action@3.6.0` — to block until the PR's Deploy Preview reports `ready`. Inputs: `site_id` and `max_timeout: 300`. The action returns the preview URL (e.g. `deploy-preview-42--site.netlify.app`) as an output.
+  2. Exports `SMOKE_BASE_URL` and `AUDIT_BASE` from that output.
+  3. Runs `npm run audit:public` and `npm run smoke:portal` against it.
+- Add two new GitHub Actions repository secrets the user will need to provide:
+  - `NETLIFY_SITE_ID`
+  - `NETLIFY_AUTH_TOKEN`
+  We will document this in the workflow header comment and surface it after the change.
+- Keep the existing parity job as a required pre-step.
+
+---
+
+## 3. Stronger Swagger UI smoke test
+
+**Problem:** The current test only greps the static HTML for the substring `swagger`. SPA-rendered Swagger UI is invisible to a plain `fetch`, so this is a weak signal.
+
+**Plan:**
+
+- Add `playwright` (already in devDependencies) to `src/test/portal-smoke.test.ts`'s sibling: create `src/test/portal-swagger.spec.ts` as a tiny Playwright spec that:
+  1. Navigates to `${BASE}/developer/api-explorer`.
+  2. Waits for `network idle` and intercepts requests; asserts that a `GET /openapi.json` request resolved with status `200` and a JSON body whose `info.version` equals the SSOT version.
+  3. Waits for the selector `.swagger-ui .opblock` (the rendered operation row) and asserts `count() >= 1`, proving at least one endpoint was rendered.
+- Add `npm run smoke:swagger` → `playwright test src/test/portal-swagger.spec.ts --reporter=line`.
+- Wire it into `developer-portal-smoke.yml` after the Vitest step (with `npx playwright install --with-deps chromium`).
+- Keep the existing Vitest HTML check as a low-cost sanity test — it still catches dropped script tags.
+
+---
+
+## 4. Failure notifications (Slack + email)
+
+**Plan (Slack-first, with email as a backup):**
+
+- Add a reusable composite action at `.github/actions/notify-failure/action.yml` that:
+  - Posts to Slack via Incoming Webhook (`SLACK_WEBHOOK_URL` secret) using `slackapi/slack-github-action@v1.27.0`.
+  - Falls back to email via `dawidd6/action-send-mail@v3` if `SMTP_*` secrets are present and Slack secret is not.
+  - Message includes: workflow name, job, commit SHA, PR link, run URL, and the failing step name.
+- Append `if: failure()` notification steps to:
+  - `developer-portal-smoke.yml` (both `parity` and `smoke`/`preview-smoke` jobs)
+  - `developer-portal-deep-audit.yml`
+  - `developer-portal-uptime.yml`
+- For the **predeploy script** (which runs locally + on Netlify), wrap it: in `scripts/predeploy.mjs`, on non-zero exit, if `SLACK_WEBHOOK_URL` is set in `process.env` (Netlify build env), POST a JSON payload to it with the failing step name before calling `process.exit`. Local dev runs without the secret remain silent.
+- Document the two new secrets (`SLACK_WEBHOOK_URL`, optional `SMTP_*`) in a small block at the bottom of `netlify.toml` and in a one-paragraph note in `docs/DEVELOPER_PORTAL_CHECKLIST.md`.
+
+---
+
+## Files to be created
+
+- `scripts/lib/read-expected-version.mjs`
+- `scripts/print-expected-version.mjs`
+- `src/test/portal-swagger.spec.ts`
+- `.github/actions/notify-failure/action.yml`
+
+## Files to be edited
+
+- `netlify.toml` — remove hardcoded version; export from SSOT; add Slack secret note.
+- `package.json` — add `version:print`, `smoke:swagger` scripts.
+- `scripts/check-openapi-version.mjs`, `scripts/audit-public-access.mjs`, `scripts/predeploy.mjs` — fallback to SSOT helper; Slack hook in predeploy.
+- `.github/workflows/developer-portal-smoke.yml` — preview-smoke job, dynamic version, notify-failure step, Playwright run.
+- `.github/workflows/developer-portal-deep-audit.yml` — dynamic version, notify-failure.
+- `.github/workflows/developer-portal-uptime.yml` — dynamic version, notify-failure.
+- `docs/DEVELOPER_PORTAL_CHECKLIST.md` — short note on the four new secrets.
+
+## Required secrets the user will add (one-time)
+
+- `NETLIFY_SITE_ID`
+- `NETLIFY_AUTH_TOKEN`
+- `SLACK_WEBHOOK_URL` (or `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_TO` for email)
+
+I'll surface these in the final response so you can paste them into GitHub → Settings → Secrets and into Netlify → Site settings → Environment variables.

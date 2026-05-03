@@ -1,34 +1,38 @@
 ###########################################################################
 # Netlify build & deploy configuration
 #
-# Auto-deploy: connect this repo in the Netlify dashboard
+# Auto-deploy: connect this repo in Netlify dashboard
 #   (Site settings -> Build & deploy -> Continuous deployment).
-# Once the GitHub repo is linked with `main` as the production branch,
-# every push to `main` triggers a fresh build using the settings below.
-# Pull requests automatically generate Deploy Previews.
+#
+# EXPECTED_OPENAPI_VERSION is NOT hardcoded here — it is read at build time
+# from src/config/version.ts (the single source of truth) via
+# `scripts/print-expected-version.mjs`.
+#
+# Optional Netlify environment variables for failure notifications:
+#   SLACK_WEBHOOK_URL  — Slack incoming webhook; predeploy.mjs posts here on
+#                        any pre-deploy failure.
 ###########################################################################
 
 [build]
-  command = "npm run predeploy && npm run build"
+  command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
-  EXPECTED_OPENAPI_VERSION = "4.28.2"
   AUDIT_BASE = "https://kangopenbanking.com"
 
 # Production deploys (main branch)
 [context.production]
-  command = "npm run predeploy && npm run build"
+  command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy && npm run build"
 
 # Deploy previews (pull requests) — skip the live audit since the new
 # version isn't deployed yet, only run the version-parity gate.
 [context.deploy-preview]
-  command = "npm run predeploy:offline && npm run build"
+  command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build"
 
 # Branch deploys
 [context.branch-deploy]
-  command = "npm run predeploy:offline && npm run build"
+  command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build"
 
 [[redirects]]
   from = "/*"

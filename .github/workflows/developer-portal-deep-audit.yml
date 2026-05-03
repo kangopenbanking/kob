@@ -31,12 +31,20 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AUDIT_BASE: ${{ github.event.inputs.base || 'https://kangopenbanking.com' }}
-      EXPECTED_OPENAPI_VERSION: '4.28.2'
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_TO: ${{ secrets.SMTP_TO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Resolve expected API version (SSOT)
+        run: echo "EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_ENV"
 
       - name: Run public-access auditor
         id: audit
@@ -51,6 +59,12 @@ jobs:
             echo "__EOF__"
           } >> "$GITHUB_OUTPUT"
           exit $status
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'Public-access deep audit'
 
       - name: Open issue on failure
         if: failure()

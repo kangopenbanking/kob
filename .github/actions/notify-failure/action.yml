@@ -1,0 +1,78 @@
+###############################################################################
+# Reusable failure notifier — Slack-first, email fallback.
+#
+# Inputs:
+#   step:     short label of the failing step
+#   workflow: workflow name (defaults to ${{ github.workflow }})
+#
+# Secrets read from the calling workflow's env:
+#   SLACK_WEBHOOK_URL  — preferred channel
+#   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_TO  — fallback
+#
+# Usage in caller:
+#   - name: Notify on failure
+#     if: failure()
+#     uses: ./.github/actions/notify-failure
+#     with:
+#       step: 'Public-access audit'
+###############################################################################
+name: notify-failure
+description: Send a Slack (or email) notification when a workflow step fails
+inputs:
+  step:
+    description: Short label of the failing step
+    required: true
+  workflow:
+    description: Workflow name
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Build payload
+      id: payload
+      shell: bash
+      run: |
+        WF="${{ inputs.workflow }}"
+        [ -z "$WF" ] && WF="${{ github.workflow }}"
+        RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        SHA_SHORT="${GITHUB_SHA:0:7}"
+        TITLE=":rotating_light: ${WF} failed — ${{ inputs.step }}"
+        BODY="Repo: ${{ github.repository }}
+        Branch/Ref: ${{ github.ref }}
+        Commit: ${SHA_SHORT}
+        Event: ${{ github.event_name }}
+        Run: ${RUN_URL}"
+        {
+          echo "title<<EOF"
+          echo "$TITLE"
+          echo "EOF"
+          echo "body<<EOF"
+          echo "$BODY"
+          echo "EOF"
+          echo "run_url=$RUN_URL"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Send Slack notification
+      if: env.SLACK_WEBHOOK_URL != ''
+      shell: bash
+      run: |
+        TEXT="${{ steps.payload.outputs.title }}
+        ${{ steps.payload.outputs.body }}"
+        # Escape for JSON
+        PAYLOAD=$(jq -n --arg t "$TEXT" '{text:$t}')
+        curl -sS -X POST -H 'Content-Type: application/json' \
+          --data "$PAYLOAD" "$SLACK_WEBHOOK_URL" || true
+
+    - name: Send email notification (fallback)
+      if: env.SLACK_WEBHOOK_URL == '' && env.SMTP_HOST != ''
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ env.SMTP_HOST }}
+        server_port: ${{ env.SMTP_PORT || 587 }}
+        username: ${{ env.SMTP_USER }}
+        password: ${{ env.SMTP_PASS }}
+        subject: ${{ steps.payload.outputs.title }}
+        to: ${{ env.SMTP_TO }}
+        from: ${{ env.SMTP_USER }}
+        body: ${{ steps.payload.outputs.body }}

@@ -8,8 +8,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveExpectedVersion } from './lib/read-expected-version.mjs';
 
-const EXPECTED_VERSION = process.env.EXPECTED_OPENAPI_VERSION || '4.28.2';
+const EXPECTED_VERSION = resolveExpectedVersion();
 const EXPECTED_OPENAPI = '3.1.0';
 const SPEC_PATH = path.resolve(process.cwd(), 'public/openapi.json');
 const CHANGELOG_PATH = path.resolve(process.cwd(), 'public/changelog.json');
