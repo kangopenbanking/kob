@@ -1139,6 +1139,14 @@ function App() {
               <Route path="api-reference/charge-states" element={<ChargeStatesGuide />} />
               <Route path="api-reference/payout-states" element={<PayoutStatesGuide />} />
               <Route path="api-reference/dispute-lifecycle" element={<DisputeLifecycleGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6) */}
+              <Route path="api-reference/deprecation-policy" element={<DeprecationPolicyPage />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P6, P9) */}
+              <Route path="security/sca" element={<ScaGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6) */}
+              <Route path="security/jwks" element={<JwksGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P3, P6) */}
+              <Route path="environments" element={<EnvironmentsPage />} />
               <Route path="api-reference/http-caching" element={<HttpCachingGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
