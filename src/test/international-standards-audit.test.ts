@@ -21,11 +21,14 @@ describe("International standards — production spec", () => {
   let spec: Spec;
   beforeAll(() => { spec = loadSpec("openapi.json"); });
 
-  it("declares a single canonical base URL (no Supabase leakage)", () => {
+  it("declares only canonical kangopenbanking.com base URLs (no Supabase leakage)", () => {
     const urls = (spec.servers ?? []).map((s: any) => s.url);
     expect(urls.length).toBeGreaterThan(0);
+    // Production must be present and listed first.
+    expect(urls[0]).toBe(CANONICAL);
+    // All servers must be on kangopenbanking.com (production or sandbox subdomain), never Supabase.
     for (const u of urls) {
-      expect(u).toBe(CANONICAL);
+      expect(u).toMatch(/^https:\/\/(api|sandbox-api)\.kangopenbanking\.com\/v1$/);
       expect(u).not.toMatch(/supabase\.co|functions\/v1|wdzkzeahdtxlynetndqw/);
     }
     expect(spec["x-api-standards"]?.single_canonical_origin).toBe(true);
