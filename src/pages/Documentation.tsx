@@ -2,17 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { 
-  Building2, Code, Book, Copy, CheckCircle2, DollarSign, TrendingUp, 
-  Wallet, AlertTriangle, Download, ExternalLink, Terminal, Shield, 
-  CreditCard, Smartphone, FileText, Lock, BarChart3, Users, 
+import {
+  Building2, Code, Book, Copy, CheckCircle2, DollarSign, TrendingUp,
+  Wallet, AlertTriangle, Download, ExternalLink, Terminal, Shield,
+  CreditCard, Smartphone, FileText, Lock, BarChart3, Users,
   ArrowRight, Zap, Globe, Database, Key, Layers, Send, ChevronRight,
-  BookOpen, Webhook, RefreshCw
+  BookOpen, Webhook, RefreshCw, Sparkles, Activity
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
 import { SEO } from "@/components/SEO";
+import { KOB_API_VERSION, KOB_API_VERSION_LABEL, KOB_STATUS_PAGE_URL } from "@/config/version";
 
 const Documentation = () => {
   const { toast } = useToast();
