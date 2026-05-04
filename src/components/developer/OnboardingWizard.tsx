@@ -120,11 +120,11 @@ function StepInstallSDK({ onNext, onPrev }: StepProps) {
       </p>
       <CodeBlock
         examples={[
-          { language: "bash", label: "Node.js", code: "npm install @kangopenbanking/sdk" },
-          { language: "bash", label: "Python", code: "pip install kangopenbanking" },
-          { language: "bash", label: "PHP", code: "composer require kangopenbanking/sdk-php" },
-          { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/kob-go" },
-          { language: "bash", label: "Java", code: '<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>sdk</artifactId>\n  <version>1.0.0</version>\n</dependency>' },
+          { language: "bash", label: "Node.js", code: "npm install @kang/openbanking-node" },
+          { language: "bash", label: "Python", code: "pip install kang-openbanking" },
+          { language: "bash", label: "PHP", code: "composer require kang/openbanking-php" },
+          { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go" },
+          { language: "bash", label: "Java", code: '<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>4.28.1</version>\n</dependency>' },
         ]}
       />
       <div className="flex justify-between pt-2">
@@ -164,7 +164,7 @@ function StepFirstCall({ onNext, onPrev }: StepProps) {
           },
           {
             language: "javascript", label: "Node.js",
-            code: `import { KangOpenBanking } from '@kangopenbanking/sdk';
+            code: `import { KangOpenBanking } from '@kang/openbanking-node';
 
 const kob = new KangOpenBanking({
   apiKey: 'sk_test_sandbox_KangOB2026Demo',
@@ -296,7 +296,7 @@ function StepFirstTransfer({ onNext, onPrev }: StepProps) {
           },
           {
             language: "javascript", label: "Node.js",
-            code: `import { KangOpenBanking } from "@kangopenbanking/sdk";
+            code: `import { KangOpenBanking } from "@kang/openbanking-node";
 import { randomUUID } from "node:crypto";
 
 const kob = new KangOpenBanking({
