@@ -1073,3 +1073,7 @@ verify_jwt = false
 
 [functions.seed-e2e-users]
 verify_jwt = false
+
+[functions.developer-tryit]
+verify_jwt = false
+

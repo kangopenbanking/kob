@@ -6,9 +6,22 @@ import {
 } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import {
-  examples, buildSnippets, mockResponse, SANDBOX_BASE, SANDBOX_KEY,
+  examples, buildSnippets, SANDBOX_BASE, SANDBOX_KEY,
   type Example, type Snippet,
 } from "./realWorldExamplesData";
+
+const TRYIT_ENDPOINT =
+  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/developer-tryit";
+
+type TryItResponse = {
+  request: { method: string; url: string; headers: Record<string, string>; body: unknown };
+  response: { status: number; headers: Record<string, string>; body: unknown } | null;
+  duration_ms: number;
+  network_error: string | null;
+  using_demo_key: boolean;
+  sandbox_base: string;
+  notice?: string;
+};
 
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2, P6, P9)
 
@@ -104,19 +117,31 @@ function GuideCard({ ex }: { ex: Example }) {
   const active = snippets.find(s => s.language === lang)!;
 
   const [running, setRunning] = useState(false);
-  const [response, setResponse] = useState<{ status: number; body: unknown; ms: number } | null>(null);
+  const [result, setResult] = useState<TryItResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const runTryIt = (e: React.MouseEvent) => {
+  const runTryIt = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    setRunning(true); setResponse(null);
-    const start = performance.now();
-    // Simulated latency 350-900ms; uses local mock so no auth required.
-    const delay = 350 + Math.random() * 550;
-    window.setTimeout(() => {
-      const r = mockResponse(ex);
-      setResponse({ ...r, ms: Math.round(performance.now() - start) });
+    setRunning(true); setResult(null); setError(null);
+    try {
+      const resp = await fetch(TRYIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: ex.slug, path: ex.samplePath, body: ex.body ?? null }),
+      });
+      const data = await resp.json() as TryItResponse | { error: { message: string } };
+      if (!resp.ok || (data as { error?: unknown }).error) {
+        const msg = (data as { error?: { message?: string } }).error?.message
+          || `Request failed (${resp.status})`;
+        setError(msg);
+      } else {
+        setResult(data as TryItResponse);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error");
+    } finally {
       setRunning(false);
-    }, delay);
+    }
   };
 
   return (
@@ -201,24 +226,48 @@ function GuideCard({ ex }: { ex: Example }) {
               </pre>
             </div>
 
-            {/* Response panel */}
-            {response && (
+            {/* Error banner */}
+            {error && (
+              <div className="px-4 py-2.5 text-xs bg-rose-500/10 text-rose-700 dark:text-rose-300 border-t border-rose-500/30">
+                {error}
+              </div>
+            )}
+
+            {/* Live response panel */}
+            {result && result.response && (
               <div className="bg-[#0a0f17] border-t border-white/[0.08]">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.08] bg-[#11161f]">
-                  <span className="text-xs font-medium text-gray-400 flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-400 flex items-center gap-2 flex-wrap">
                     Response
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                      response.status < 300 ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                      : response.status < 500 ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                      result.response.status < 300 ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                      : result.response.status < 500 ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
                       : "bg-rose-500/10 text-rose-300 border-rose-500/30"
-                    }`}>{response.status}</span>
-                    <span className="text-[10px] text-gray-500">{response.ms} ms · simulated</span>
+                    }`}>{result.response.status}</span>
+                    <span className="text-[10px] text-gray-500">{result.duration_ms} ms · live sandbox</span>
+                    {result.using_demo_key && (
+                      <span className="text-[10px] text-amber-400 font-medium">demo key</span>
+                    )}
                   </span>
-                  <CopyButton code={JSON.stringify(response.body, null, 2)} />
+                  <CopyButton code={JSON.stringify(result.response.body, null, 2)} />
                 </div>
+                {Object.keys(result.response.headers).length > 0 && (
+                  <div className="px-4 py-1.5 text-[10px] font-mono text-gray-500 border-b border-white/[0.06] bg-[#0d1117] overflow-x-auto whitespace-nowrap">
+                    {Object.entries(result.response.headers).map(([k, v]) => (
+                      <span key={k} className="mr-4">{k}: <span className="text-gray-300">{v}</span></span>
+                    ))}
+                  </div>
+                )}
                 <pre className="p-4 overflow-x-auto text-[12px] leading-6 font-mono text-[#9cdcfe] max-h-72">
-                  <code>{JSON.stringify(response.body, null, 2)}</code>
+                  <code>{typeof result.response.body === "string"
+                    ? result.response.body
+                    : JSON.stringify(result.response.body, null, 2)}</code>
                 </pre>
+              </div>
+            )}
+            {result && result.network_error && (
+              <div className="px-4 py-2.5 text-xs bg-rose-500/10 text-rose-700 dark:text-rose-300 border-t border-rose-500/30">
+                Network error reaching sandbox: {result.network_error}
               </div>
             )}
 
