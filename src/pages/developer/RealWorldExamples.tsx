@@ -6,9 +6,22 @@ import {
 } from "lucide-react";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import {
-  examples, buildSnippets, mockResponse, SANDBOX_BASE, SANDBOX_KEY,
+  examples, buildSnippets, SANDBOX_BASE, SANDBOX_KEY,
   type Example, type Snippet,
 } from "./realWorldExamplesData";
+
+const TRYIT_ENDPOINT =
+  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/developer-tryit";
+
+type TryItResponse = {
+  request: { method: string; url: string; headers: Record<string, string>; body: unknown };
+  response: { status: number; headers: Record<string, string>; body: unknown } | null;
+  duration_ms: number;
+  network_error: string | null;
+  using_demo_key: boolean;
+  sandbox_base: string;
+  notice?: string;
+};
 
 // PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2, P6, P9)
 
