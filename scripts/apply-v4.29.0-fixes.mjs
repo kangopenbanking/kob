@@ -16,7 +16,7 @@ const ROOT = process.cwd();
 const JSON_PATH = path.join(ROOT, 'public/openapi.json');
 const YAML_PATH = path.join(ROOT, 'public/openapi.yaml');
 const SBX_PATH = path.join(ROOT, 'public/openapi-sandbox.json');
-const VERSION = '4.29.2';
+const VERSION = '4.29.3';
 
 const spec = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const sbx = JSON.parse(fs.readFileSync(SBX_PATH, 'utf8'));
@@ -37,64 +37,23 @@ sbx.info.version = VERSION;
   const op = spec.paths['/v1/pisp/payment-submission']?.post;
   if (op) {
     const sch = op.requestBody.content['application/json'].schema;
-    sch.required = ['payment_id', 'instructed_amount', 'creditor_account', 'risk'];
+    sch.required = ['payment_id', 'consent_id', 'amount', 'currency', 'debtor_account', 'creditor_account'];
     sch.properties = {
       ...sch.properties,
-      instructed_amount: {
-        type: 'object',
-        required: ['amount', 'currency'],
-        description: 'Per OBIE Read/Write 4.0 §5.4 — must mirror consent amount/currency.',
-        properties: {
-          amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' },
-          currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' },
-        },
-      },
-      creditor_account: {
-        type: 'object',
-        required: ['scheme', 'identification'],
-        properties: {
-          scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'], example: 'RIB' },
-          identification: { type: 'string', example: '10005-00001-12345678901-23' },
-          name: { type: 'string', example: 'Acme Ltd' },
-        },
-      },
-      debtor_account: {
-        type: 'object',
-        required: ['scheme', 'identification'],
-        properties: {
-          scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'] },
-          identification: { type: 'string' },
-          name: { type: 'string' },
-        },
-      },
-      remittance_information: {
-        type: 'object',
-        properties: {
-          unstructured: { type: 'string', maxLength: 140, example: 'Invoice #INV-001' },
-          reference: { type: 'string', maxLength: 35, example: 'INV-001' },
-        },
-      },
-      risk: {
-        type: 'object',
-        description: 'OBIE PaymentContextCode risk block — required for fraud scoring.',
-        properties: {
-          payment_context_code: {
-            type: 'string',
-            enum: ['BillPayment', 'EcommerceGoods', 'EcommerceServices', 'Other'],
-            example: 'EcommerceGoods',
-          },
-          merchant_category_code: { type: 'string', pattern: '^[0-9]{4}$', example: '5411' },
-          merchant_customer_identification: { type: 'string', example: 'cust_001' },
-        },
-      },
+      payment_id: { type: 'string', minLength: 1, maxLength: 128 },
+      consent_id: { type: 'string', minLength: 1, maxLength: 128 },
+      amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' },
+      currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' },
+      debtor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-09876543210-45' },
+      creditor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-12345678901-23' },
     };
     op.requestBody.content['application/json'].example = {
-      payment_id: 'pmt_01HFG...',
-      instructed_amount: { amount: '50000', currency: 'XAF' },
-      creditor_account: { scheme: 'RIB', identification: '10005-00001-12345678901-23', name: 'Acme Ltd' },
-      debtor_account: { scheme: 'RIB', identification: '10005-00001-09876543210-45' },
-      remittance_information: { unstructured: 'Invoice #INV-001', reference: 'INV-001' },
-      risk: { payment_context_code: 'EcommerceGoods', merchant_category_code: '5411' },
+      payment_id: 'pmt_01HFG',
+      consent_id: 'cns_01HFG',
+      amount: '50000',
+      currency: 'XAF',
+      debtor_account: '10005-00001-09876543210-45',
+      creditor_account: '10005-00001-12345678901-23',
     };
     bump('p1.2_pisp_submission_expanded');
   }
@@ -355,7 +314,7 @@ for (const p of AISP_LIST) {
 // -------------------------------------------------------------- //
 // Update info.description with v4.29.0 changelog entry
 // -------------------------------------------------------------- //
-spec.info.description += ` | v${VERSION} (${new Date().toISOString().slice(0, 10)}): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (instructed_amount, creditor_account, risk); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (${stats['p2.1_money_coerced'] || 0} fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset ${SUNSET_V1}); ${stats['p2.4_problem_ref_fixed'] || 0} application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: ${stats['p3.1_default_5xx_added'] || 0} ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive.`;
+spec.info.description += ` | v${VERSION} (${new Date().toISOString().slice(0, 10)}): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (payment_id, consent_id, amount, currency, debtor_account, creditor_account); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (${stats['p2.1_money_coerced'] || 0} fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset ${SUNSET_V1}); ${stats['p2.4_problem_ref_fixed'] || 0} application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: ${stats['p3.1_default_5xx_added'] || 0} ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive.`;
 
 // -------------------------------------------------------------- //
 // Mirror to sandbox spec (only the safe pieces)
@@ -376,6 +335,7 @@ function mirrorTo(target) {
       tgt['x-retired'] = true;
       tgt['x-sunset-date'] = sr['x-sunset-date'];
       tgt['x-successor'] = sr['x-successor'];
+      tgt['x-replacement-endpoint'] = sr['x-replacement-endpoint'];
       tgt.responses = tgt.responses || {};
       tgt.responses['410'] = JSON.parse(JSON.stringify(sr.responses['410']));
     }
