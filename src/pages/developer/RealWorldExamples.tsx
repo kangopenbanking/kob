@@ -117,19 +117,31 @@ function GuideCard({ ex }: { ex: Example }) {
   const active = snippets.find(s => s.language === lang)!;
 
   const [running, setRunning] = useState(false);
-  const [response, setResponse] = useState<{ status: number; body: unknown; ms: number } | null>(null);
+  const [result, setResult] = useState<TryItResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const runTryIt = (e: React.MouseEvent) => {
+  const runTryIt = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    setRunning(true); setResponse(null);
-    const start = performance.now();
-    // Simulated latency 350-900ms; uses local mock so no auth required.
-    const delay = 350 + Math.random() * 550;
-    window.setTimeout(() => {
-      const r = mockResponse(ex);
-      setResponse({ ...r, ms: Math.round(performance.now() - start) });
+    setRunning(true); setResult(null); setError(null);
+    try {
+      const resp = await fetch(TRYIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: ex.slug, path: ex.samplePath, body: ex.body ?? null }),
+      });
+      const data = await resp.json() as TryItResponse | { error: { message: string } };
+      if (!resp.ok || (data as { error?: unknown }).error) {
+        const msg = (data as { error?: { message?: string } }).error?.message
+          || `Request failed (${resp.status})`;
+        setError(msg);
+      } else {
+        setResult(data as TryItResponse);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error");
+    } finally {
       setRunning(false);
-    }, delay);
+    }
   };
 
   return (
