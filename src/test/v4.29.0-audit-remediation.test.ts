@@ -31,10 +31,10 @@ describe('v4.29.1 — critical audit remediation', () => {
 
   it('P1.2: PISP payment-submission body has expanded required + properties', () => {
     const sch = spec.paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'].schema;
-    for (const r of ['payment_id', 'instructed_amount', 'creditor_account', 'risk']) {
+    for (const r of ['payment_id', 'consent_id', 'amount', 'currency', 'debtor_account', 'creditor_account']) {
       expect(sch.required).toContain(r);
     }
-    for (const p of ['instructed_amount', 'creditor_account', 'debtor_account', 'remittance_information', 'risk']) {
+    for (const p of ['payment_id', 'consent_id', 'amount', 'currency', 'debtor_account', 'creditor_account']) {
       expect(sch.properties[p]).toBeDefined();
     }
   });

@@ -3549,6 +3549,23 @@ components:
         - Status
       x-obie-version: 3.1.10
       x-obie-spec: https://standards.openbanking.org.uk/api-specifications/
+    WebhookEvent:
+      type: object
+      required:
+        - id
+        - type
+        - created_at
+        - data
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
