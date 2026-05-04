@@ -1,0 +1,68 @@
+name: Auto-sync API version artifacts
+
+# When the SSOT (src/config/version.ts) or any spec/changelog source changes,
+# regenerate openapi.yaml, sandbox spec, postman manifest + collections, and
+# CHANGELOG.md so kangopenbanking.com always serves the canonical version
+# without manual steps.
+#
+# Justification: Standing Order 6 (Version Gate) + ORDER P7 (Changelog Rule)
+# + ORDER P10 (Living Docs Rule).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/config/version.ts'
+      - 'public/openapi.json'
+      - 'public/openapi-sandbox.json'
+      - 'public/changelog.json'
+      - 'scripts/sync-version-artifacts.mjs'
+      - 'scripts/build-changelog-md.mjs'
+      - 'scripts/build-changelog-index.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install minimal deps
+        run: npm install --no-audit --no-fund js-yaml
+
+      - name: Sync all version artifacts
+        run: node scripts/sync-version-artifacts.mjs
+
+      - name: Verify version parity
+        run: node scripts/check-openapi-version.mjs
+
+      - name: Commit regenerated artifacts
+        run: |
+          git config user.name "kob-version-bot"
+          git config user.email "version-bot@kangopenbanking.com"
+          git add public/openapi.yaml \
+                  public/openapi.json \
+                  public/openapi-sandbox.yaml \
+                  public/openapi-sandbox.json \
+                  public/changelog.json \
+                  public/CHANGELOG.md \
+                  CHANGELOG.md \
+                  public/postman/manifest.json \
+                  public/postman/Kang_Open_Banking_API_*.postman_collection.json
+          if git diff --cached --quiet; then
+            echo "No artifact drift — already in sync."
+            exit 0
+          fi
+          VERSION=$(node -e "import('./scripts/lib/read-expected-version.mjs').then(m => process.stdout.write(m.readExpectedVersion()))")
+          git commit -m "chore(version): auto-sync artifacts to v${VERSION} [skip ci]"
+          git push

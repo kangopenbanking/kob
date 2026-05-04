@@ -64,6 +64,13 @@ console.log(
 );
 
 await run(
+  'Sync version artifacts (openapi/changelog/postman → SSOT)',
+  'node',
+  ['scripts/sync-version-artifacts.mjs'],
+  { EXPECTED_OPENAPI_VERSION: EXPECTED }
+);
+
+await run(
   'Version-parity check (openapi.json + changelog.json)',
   'node',
   ['scripts/check-openapi-version.mjs'],

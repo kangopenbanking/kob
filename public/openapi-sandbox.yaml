@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.29.3
+  version: 4.29.4
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -194,11 +194,6 @@ info:
       P3_medium: 8 hours
       P4_low: 48 hours
     maintenance_notice: 72 hours advance notice
-  x-sdk-versions:
-    node: 1.6.1
-    python: 1.6.1
-    php: 1.6.1
-    go: 1.6.1
   x-sdk-libraries:
     node:
       name: '@kang/openbanking-node'
@@ -225,7 +220,7 @@ info:
       docs: https://kangopenbanking.com/developer/guides/sdks#java
     go:
       name: github.com/kangopenbanking/sdk-go
-      version: v1.6.1
+      version: 1.6.1
       status: available
       repository: https://github.com/kangopenbanking/sdk-go
       package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
@@ -278,6 +273,11 @@ info:
         scenario: Triggers insufficient_funds error
       - tx_ref: err_blocked_card
         scenario: Triggers card_blocked error
+  x-sdk-versions:
+    node: 1.6.1
+    python: 1.6.1
+    php: 1.6.1
+    go: 1.6.1
 servers:
   - url: https://sandbox-api.kangopenbanking.com/v1
     description: Sandbox
@@ -55053,12 +55053,15 @@ x-sdks:
   - language: Node.js / TypeScript
     package: '@kang/openbanking-node'
     registry: npm
+    version: 1.6.1
   - language: Python
     package: kang-openbanking
     registry: PyPI
+    version: 1.6.1
   - language: PHP / Laravel
     package: kang/openbanking-php
     registry: Packagist
+    version: 1.6.1
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman
   - language: Java
@@ -55071,7 +55074,7 @@ x-sdks:
     registry: Maven
   - language: Go
     name: github.com/kangopenbanking/sdk-go
-    version: v1.6.1
+    version: 1.6.1
     repository: https://github.com/kangopenbanking/sdk-go
     package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
     docs: https://kangopenbanking.com/developer/guides/sdks#go
