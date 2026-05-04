@@ -104,45 +104,47 @@ sbx.info.version = VERSION;
 // P1.3 — Retire 12 past-sunset endpoints (add 410 + x-retired)
 // -------------------------------------------------------------- //
 const RETIRED = [
-  { path: '/v1/mobile-money/charge', method: 'post', successor: '/v1/gateway/charges?channel=mobile_money' },
-  { path: '/v1/mobile-money/transfer', method: 'post', successor: '/v1/gateway/payouts?channel=mobile_money' },
-  { path: '/v1/mobile-money/verify', method: 'post', successor: '/v1/gateway/charges/{chargeId}' },
-  { path: '/v1/mobile-money/to-bank', method: 'post', successor: '/v1/gateway/payouts?channel=bank_transfer' },
-  { path: '/v1/flutterwave/bank-transfer', method: 'post', successor: '/v1/gateway/payouts?provider=flutterwave' },
-  { path: '/v1/flutterwave/banks', method: 'get', successor: '/v1/banks/directory' },
-  { path: '/v1/flutterwave/verify-bank', method: 'post', successor: '/v1/banks/verify-account' },
-  { path: '/v1/stripe/payment-intent', method: 'post', successor: '/v1/gateway/charges?provider=stripe' },
-  { path: '/v1/stripe/confirm-payment', method: 'post', successor: '/v1/gateway/charges/{chargeId}' },
-  { path: '/v1/standards/swift/mt103/parse', method: 'post', successor: '/v1/interbank/messages' },
-  { path: '/v1/standards/swift/mt940/parse', method: 'post', successor: '/v1/interbank/messages' },
-  { path: '/v1/standards/swift/mt103/generate', method: 'post', successor: '/v1/interbank/messages' },
+  { path: '/v1/mobile-money/charge', method: 'post', successor: '/v1/gateway/charges?channel=mobile_money', sunset: '2026-01-01' },
+  { path: '/v1/mobile-money/transfer', method: 'post', successor: '/v1/gateway/payouts?channel=mobile_money', sunset: '2026-01-01' },
+  { path: '/v1/mobile-money/verify', method: 'post', successor: '/v1/gateway/charges/{chargeId}', sunset: '2026-01-01' },
+  { path: '/v1/mobile-money/to-bank', method: 'post', successor: '/v1/gateway/payouts?channel=bank_transfer', sunset: '2026-01-01' },
+  { path: '/v1/flutterwave/bank-transfer', method: 'post', successor: '/v1/gateway/payouts?provider=flutterwave', sunset: '2026-01-01' },
+  { path: '/v1/flutterwave/banks', method: 'get', successor: '/v1/banks/directory', sunset: '2026-01-01' },
+  { path: '/v1/flutterwave/verify-bank', method: 'post', successor: '/v1/banks/verify-account', sunset: '2026-01-01' },
+  { path: '/v1/stripe/payment-intent', method: 'post', successor: '/v1/gateway/charges?provider=stripe', sunset: '2026-01-01' },
+  { path: '/v1/stripe/confirm-payment', method: 'post', successor: '/v1/gateway/charges/{chargeId}', sunset: '2026-01-01' },
+  { path: '/v1/standards/swift/mt103/parse', method: 'post', successor: '/v1/standards/iso20022/pacs008/generate', sunset: '2025-11-22' },
+  { path: '/v1/standards/swift/mt940/parse', method: 'post', successor: '/v1/standards/iso20022/camt053/parse', sunset: '2025-11-22' },
+  { path: '/v1/standards/swift/mt103/generate', method: 'post', successor: '/v1/standards/iso20022/pacs008/generate', sunset: '2025-11-22' },
 ];
 for (const r of RETIRED) {
   const op = spec.paths[r.path]?.[r.method];
   if (!op) continue;
   op.deprecated = true;
   op['x-retired'] = true;
-  op['x-sunset-date'] = op['x-sunset'] || op['x-sunset-date'] || '2026-01-01';
+  op['x-sunset'] = r.sunset;
+  op['x-sunset-date'] = r.sunset;
   op['x-successor'] = r.successor;
-  op.description = `**RETIRED on ${op['x-sunset-date']}.** This endpoint returns HTTP 410 Gone. Use \`${r.successor}\` instead.\n\n${op.description || ''}`;
-  op.responses = op.responses || {};
-  delete op.responses['200'];
-  op.responses['410'] = {
-    description: 'Gone — endpoint retired. See `x-successor` for replacement.',
-    headers: {
-      Sunset: { schema: { type: 'string' }, description: 'RFC 8594 sunset date' },
-      Link: { schema: { type: 'string' }, description: `<${r.successor}>; rel="successor-version"` },
-      Deprecation: { schema: { type: 'string' } },
-    },
-    content: {
-      'application/problem+json': {
-        schema: { $ref: '#/components/schemas/ProblemDetails' },
-        example: {
-          type: 'https://api.kangopenbanking.com/v1/errors/endpoint-retired',
-          title: 'Endpoint Retired',
-          status: 410,
-          detail: `This endpoint was retired on ${op['x-sunset-date']}. Use ${r.successor}.`,
-          error_code: 'DEPRECATED_ENDPOINT_RETIRED',
+  op['x-replacement-endpoint'] = r.successor;
+  op.description = `**RETIRED on ${r.sunset}.** This endpoint returns HTTP 410 Gone. Use \`${r.successor}\` instead.\n\n${op.description || ''}`;
+  op.responses = {
+    '410': {
+      description: `Gone — endpoint retired on ${r.sunset}. Use \`${r.successor}\`.`,
+      headers: {
+        Sunset: { schema: { type: 'string' }, description: `RFC 8594 sunset date (${r.sunset}).` },
+        Link: { schema: { type: 'string' }, description: `<${r.successor}>; rel="successor-version"` },
+        Deprecation: { schema: { type: 'string' }, description: 'true' },
+      },
+      content: {
+        'application/problem+json': {
+          schema: { $ref: '#/components/schemas/ProblemDetails' },
+          example: {
+            type: 'https://api.kangopenbanking.com/v1/errors/endpoint-retired',
+            title: 'Endpoint Retired',
+            status: 410,
+            detail: `This endpoint was retired on ${r.sunset}. Use ${r.successor}.`,
+            error_code: 'DEPRECATED_ENDPOINT_RETIRED',
+          },
         },
       },
     },

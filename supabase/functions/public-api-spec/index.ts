@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
 
-const API_VERSION = '4.29.1';
+const API_VERSION = '4.29.2';
 
 // ─── Reusable Schema Components ────────────────────────────────────────────
 const schemas = {
@@ -2387,23 +2387,61 @@ paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'
 };
 paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'].example = { payment_id: 'pmt_01HFG', instructed_amount: { amount: '50000', currency: 'XAF' }, creditor_account: { scheme: 'RIB', identification: '10005-00001-12345678901-23', name: 'Acme Ltd' }, debtor_account: { scheme: 'RIB', identification: '10005-00001-09876543210-45' }, remittance_information: { unstructured: 'Invoice #INV-001', reference: 'INV-001' }, risk: { payment_context_code: 'EcommerceGoods', merchant_category_code: '5411' } };
 
-const retiredEndpoints = [
-  ['/v1/mobile-money/charge', 'post', '/v1/gateway/charges?channel=mobile_money'], ['/v1/mobile-money/transfer', 'post', '/v1/gateway/payouts?channel=mobile_money'], ['/v1/mobile-money/verify', 'post', '/v1/gateway/charges/{chargeId}'], ['/v1/mobile-money/to-bank', 'post', '/v1/gateway/payouts?channel=bank_transfer'],
-  ['/v1/flutterwave/bank-transfer', 'post', '/v1/gateway/payouts?provider=flutterwave'], ['/v1/flutterwave/banks', 'get', '/v1/banks/directory'], ['/v1/flutterwave/verify-bank', 'post', '/v1/banks/verify-account'],
-  ['/v1/stripe/payment-intent', 'post', '/v1/gateway/charges?provider=stripe'], ['/v1/stripe/confirm-payment', 'post', '/v1/gateway/charges/{chargeId}'],
-  ['/v1/standards/swift/mt103/parse', 'post', '/v1/standards/iso20022/pacs008/generate'], ['/v1/standards/swift/mt940/parse', 'post', '/v1/standards/iso20022/camt053/parse'], ['/v1/standards/swift/mt103/generate', 'post', '/v1/standards/iso20022/pacs008/generate'],
+// Per Standing Order 2 (Ratchet) and RFC 8594 (Sunset), every endpoint past its
+// sunset date MUST advertise only HTTP 410 Gone with x-replacement-endpoint
+// metadata. The 9 mobile-money / Flutterwave / Stripe direct endpoints sunset
+// 2026-01-01; the 3 SWIFT MT endpoints sunset 2025-11-22 (replaced by
+// ISO 20022 equivalents).
+const retiredEndpoints: ReadonlyArray<readonly [string, string, string, string]> = [
+  ['/v1/mobile-money/charge', 'post', '/v1/gateway/charges?channel=mobile_money', '2026-01-01'],
+  ['/v1/mobile-money/transfer', 'post', '/v1/gateway/payouts?channel=mobile_money', '2026-01-01'],
+  ['/v1/mobile-money/verify', 'post', '/v1/gateway/charges/{chargeId}', '2026-01-01'],
+  ['/v1/mobile-money/to-bank', 'post', '/v1/gateway/payouts?channel=bank_transfer', '2026-01-01'],
+  ['/v1/flutterwave/bank-transfer', 'post', '/v1/gateway/payouts?provider=flutterwave', '2026-01-01'],
+  ['/v1/flutterwave/banks', 'get', '/v1/banks/directory', '2026-01-01'],
+  ['/v1/flutterwave/verify-bank', 'post', '/v1/banks/verify-account', '2026-01-01'],
+  ['/v1/stripe/payment-intent', 'post', '/v1/gateway/charges?provider=stripe', '2026-01-01'],
+  ['/v1/stripe/confirm-payment', 'post', '/v1/gateway/charges/{chargeId}', '2026-01-01'],
+  ['/v1/standards/swift/mt103/parse', 'post', '/v1/standards/iso20022/pacs008/generate', '2025-11-22'],
+  ['/v1/standards/swift/mt940/parse', 'post', '/v1/standards/iso20022/camt053/parse', '2025-11-22'],
+  ['/v1/standards/swift/mt103/generate', 'post', '/v1/standards/iso20022/pacs008/generate', '2025-11-22'],
 ] as const;
 
-for (const [path, method, replacement] of retiredEndpoints) {
+for (const [path, method, replacement, sunsetDate] of retiredEndpoints) {
   const op = paths[path]?.[method];
   if (!op) continue;
   op.deprecated = true;
   op['x-retired'] = true;
-  op['x-sunset-date'] = op['x-sunset-date'] ?? '2026-01-01';
+  op['x-sunset'] = sunsetDate;
+  op['x-sunset-date'] = sunsetDate;
   op['x-replacement-endpoint'] = replacement;
   op['x-successor'] = replacement;
-  op.description = `RETIRED. This endpoint now returns HTTP 410 Gone. Use ${replacement}.`;
-  op.responses = { '410': { description: `Gone — use ${replacement}`, headers: { Sunset: { schema: { type: 'string' }, description: 'RFC 8594 sunset date.' }, Link: { schema: { type: 'string' }, description: `<${replacement}>; rel="successor-version"` }, Deprecation: { schema: { type: 'string' }, description: 'true' } }, content: { 'application/problem+json': { schema: { $ref: '#/components/schemas/ProblemDetails' }, example: { type: 'https://api.kangopenbanking.com/v1/errors/endpoint-retired', title: 'Endpoint Retired', status: 410, detail: `This endpoint is retired. Use ${replacement}.`, error_code: 'DEPRECATED_ENDPOINT_RETIRED' } } } } };
+  op.description = `**RETIRED on ${sunsetDate}.** This endpoint now returns HTTP 410 Gone (RFC 8594). Use \`${replacement}\` instead.`;
+  // Strip every prior 2xx response — only 410 + error envelopes are advertised.
+  op.responses = {
+    '410': {
+      description: `Gone — endpoint retired on ${sunsetDate}. Use \`${replacement}\`.`,
+      headers: {
+        Sunset: { schema: { type: 'string' }, description: `RFC 8594 sunset date (${sunsetDate}).` },
+        Link: { schema: { type: 'string' }, description: `<${replacement}>; rel="successor-version"` },
+        Deprecation: { schema: { type: 'string' }, description: 'true' },
+      },
+      content: {
+        'application/problem+json': {
+          schema: { $ref: '#/components/schemas/ProblemDetails' },
+          example: {
+            type: 'https://api.kangopenbanking.com/v1/errors/endpoint-retired',
+            title: 'Endpoint Retired',
+            status: 410,
+            detail: `This endpoint was retired on ${sunsetDate}. Use ${replacement}.`,
+            error_code: 'DEPRECATED_ENDPOINT_RETIRED',
+            error_id: 'err_endpoint_retired',
+            timestamp: new Date(0).toISOString(),
+          },
+        },
+      },
+    },
+  };
 }
 
 serve(async (req) => {

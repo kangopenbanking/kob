@@ -39,29 +39,34 @@ describe('v4.29.x — critical audit remediation', () => {
     }
   });
 
-  it('P1.3: 12 retired endpoints have x-retired + 410 + Sunset header', () => {
+  it('P1.3: 12 retired endpoints have x-retired + 410 + Sunset header + correct replacement & sunset', () => {
     const retired = [
-      ['/v1/mobile-money/charge', 'post'],
-      ['/v1/mobile-money/transfer', 'post'],
-      ['/v1/mobile-money/verify', 'post'],
-      ['/v1/mobile-money/to-bank', 'post'],
-      ['/v1/flutterwave/bank-transfer', 'post'],
-      ['/v1/flutterwave/banks', 'get'],
-      ['/v1/flutterwave/verify-bank', 'post'],
-      ['/v1/stripe/payment-intent', 'post'],
-      ['/v1/stripe/confirm-payment', 'post'],
-      ['/v1/standards/swift/mt103/parse', 'post'],
-      ['/v1/standards/swift/mt940/parse', 'post'],
-      ['/v1/standards/swift/mt103/generate', 'post'],
+      ['/v1/mobile-money/charge', 'post', '/v1/gateway/charges?channel=mobile_money', '2026-01-01'],
+      ['/v1/mobile-money/transfer', 'post', '/v1/gateway/payouts?channel=mobile_money', '2026-01-01'],
+      ['/v1/mobile-money/verify', 'post', '/v1/gateway/charges/{chargeId}', '2026-01-01'],
+      ['/v1/mobile-money/to-bank', 'post', '/v1/gateway/payouts?channel=bank_transfer', '2026-01-01'],
+      ['/v1/flutterwave/bank-transfer', 'post', '/v1/gateway/payouts?provider=flutterwave', '2026-01-01'],
+      ['/v1/flutterwave/banks', 'get', '/v1/banks/directory', '2026-01-01'],
+      ['/v1/flutterwave/verify-bank', 'post', '/v1/banks/verify-account', '2026-01-01'],
+      ['/v1/stripe/payment-intent', 'post', '/v1/gateway/charges?provider=stripe', '2026-01-01'],
+      ['/v1/stripe/confirm-payment', 'post', '/v1/gateway/charges/{chargeId}', '2026-01-01'],
+      ['/v1/standards/swift/mt103/parse', 'post', '/v1/standards/iso20022/pacs008/generate', '2025-11-22'],
+      ['/v1/standards/swift/mt940/parse', 'post', '/v1/standards/iso20022/camt053/parse', '2025-11-22'],
+      ['/v1/standards/swift/mt103/generate', 'post', '/v1/standards/iso20022/pacs008/generate', '2025-11-22'],
     ] as const;
-    for (const [p, m] of retired) {
+    for (const [p, m, replacement, sunset] of retired) {
       const op = spec.paths[p]?.[m];
       expect(op, `${m} ${p}`).toBeDefined();
-      expect(op['x-retired']).toBe(true);
-      expect(op['x-successor']).toBeTruthy();
-      expect(op.responses['410']).toBeDefined();
-      expect(op.responses['410'].headers?.Sunset).toBeDefined();
-      expect(op.responses['200']).toBeUndefined();
+      expect(op.deprecated, `${m} ${p} deprecated`).toBe(true);
+      expect(op['x-retired'], `${m} ${p} x-retired`).toBe(true);
+      expect(op['x-successor'], `${m} ${p} x-successor`).toBe(replacement);
+      expect(op['x-replacement-endpoint'], `${m} ${p} x-replacement-endpoint`).toBe(replacement);
+      expect(op['x-sunset-date'] ?? op['x-sunset'], `${m} ${p} sunset`).toBe(sunset);
+      expect(op.responses['200'], `${m} ${p} no 200`).toBeUndefined();
+      expect(op.responses['410'], `${m} ${p} 410`).toBeDefined();
+      expect(op.responses['410'].headers?.Sunset, `${m} ${p} Sunset header`).toBeDefined();
+      expect(op.responses['410'].headers?.Link, `${m} ${p} Link header`).toBeDefined();
+      expect(op.responses['410'].content?.['application/problem+json'], `${m} ${p} problem+json`).toBeDefined();
     }
   });
 
