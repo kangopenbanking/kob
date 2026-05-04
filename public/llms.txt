@@ -53,6 +53,15 @@ discover the full developer surface in one fetch.
 - [mTLS](https://kangopenbanking.com/developer/auth/mtls)
 - [FAPI 1.0 Advanced](https://kangopenbanking.com/developer/auth/fapi)
 - [Dynamic Client Registration (RFC 7591)](https://kangopenbanking.com/developer/dynamic-client-registration)
+- [Strong Customer Authentication (SCA)](https://kangopenbanking.com/developer/security/sca): step-up flow for payments, consents, and account changes.
+- [JWKS — public signing keys](https://kangopenbanking.com/developer/security/jwks): RFC 7517 key set, 90-day rotation, ID-token verification.
+- [Consent management](https://kangopenbanking.com/developer/open-banking/consents): create/read/revoke AISP/PISP consents and scope mapping.
+
+## Environments & lifecycle
+- [Environments — sandbox vs production](https://kangopenbanking.com/developer/environments): base URLs, OAuth/PAR/JWKS endpoints, rate limits, mTLS, IP allow-list, SLA.
+- [Deprecation policy](https://kangopenbanking.com/developer/api-reference/deprecation-policy): RFC 8594 Sunset headers, 12-month minimum window, successor links, migration playbook.
+- [API versioning](https://kangopenbanking.com/developer/api-reference/versioning): semver discipline, info.version gate, additive-only Standing Order.
+
 
 ## Payment gateway endpoints
 - [Charges (mobile money, card, USSD)](https://kangopenbanking.com/developer/gateway/charges)
