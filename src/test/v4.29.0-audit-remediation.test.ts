@@ -13,15 +13,15 @@ beforeAll(() => {
   sbx = JSON.parse(fs.readFileSync(path.resolve('public/openapi-sandbox.json'), 'utf8'));
 });
 
-describe('v4.29.1 — critical audit remediation', () => {
-  it('Pre-flight: version is 4.29.1 across SSOT, JSON, sandbox, changelog', () => {
+describe('v4.29.x — critical audit remediation', () => {
+  it('Pre-flight: version is 4.29.2 across SSOT, JSON, sandbox, changelog', () => {
     const ssot = fs.readFileSync(path.resolve('src/config/version.ts'), 'utf8');
-    expect(ssot).toMatch(/KOB_API_VERSION\s*=\s*"4\.29\.1"/);
-    expect(spec.info.version).toBe('4.29.1');
-    expect(sbx.info.version).toBe('4.29.1');
+    expect(ssot).toMatch(/KOB_API_VERSION\s*=\s*"4\.29\.2"/);
+    expect(spec.info.version).toBe('4.29.2');
+    expect(sbx.info.version).toBe('4.29.2');
     const cl = JSON.parse(fs.readFileSync(path.resolve('public/changelog.json'), 'utf8'));
-    expect(cl.apiVersion).toBe('4.29.1');
-    expect(cl.entries.some((e: any) => e.version === '4.29.1')).toBe(true);
+    expect(cl.apiVersion).toBe('4.29.2');
+    expect(cl.entries.some((e: any) => e.version === '4.29.2')).toBe(true);
   });
 
   it('P1.1: DCR /v1/dcr/register references DcrRegistrationRequest via $ref', () => {
@@ -155,6 +155,6 @@ describe('v4.29.1 — critical audit remediation', () => {
   });
 
   it('Sandbox spec mirrors the same version', () => {
-    expect(sbx.info.version).toBe('4.29.1');
+    expect(sbx.info.version).toBe('4.29.2');
   });
 });
