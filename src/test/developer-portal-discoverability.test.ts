@@ -31,6 +31,9 @@ const REQUIRED_OPS_ROUTES = [
   "/developer/api-reference/webhook-retry",
   "/developer/api-reference/token-lifecycle",
   "/developer/api-reference/payment-lifecycle",
+  "/developer/api-reference/charge-states",
+  "/developer/api-reference/payout-states",
+  "/developer/api-reference/dispute-lifecycle",
   "/developer/idempotency-playground",
 ];
 

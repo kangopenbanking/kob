@@ -244,6 +244,9 @@ const ApiStatusPage = lazy(() => import("./pages/developer/ApiStatusPage"));
 const TestingGuide = lazy(() => import("./pages/developer/TestingGuide"));
 const TokenLifecycleGuide = lazy(() => import("./pages/developer/TokenLifecycleGuide"));
 const PaymentLifecycleGuide = lazy(() => import("./pages/developer/PaymentLifecycleGuide"));
+const ChargeStatesGuide = lazy(() => import("./pages/developer/ChargeStatesGuide"));
+const PayoutStatesGuide = lazy(() => import("./pages/developer/PayoutStatesGuide"));
+const DisputeLifecycleGuide = lazy(() => import("./pages/developer/DisputeLifecycleGuide"));
 const WebhookRetryGuide = lazy(() => import("./pages/developer/WebhookRetryGuide"));
 const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide"));
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
@@ -1129,6 +1132,9 @@ function App() {
               <Route path="api-reference/token-lifecycle" element={<TokenLifecycleGuide />} />
               <Route path="api-reference/webhook-retry" element={<WebhookRetryGuide />} />
               <Route path="api-reference/payment-lifecycle" element={<PaymentLifecycleGuide />} />
+              <Route path="api-reference/charge-states" element={<ChargeStatesGuide />} />
+              <Route path="api-reference/payout-states" element={<PayoutStatesGuide />} />
+              <Route path="api-reference/dispute-lifecycle" element={<DisputeLifecycleGuide />} />
               <Route path="api-reference/http-caching" element={<HttpCachingGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />

@@ -13,6 +13,9 @@ import {
   Webhook,
   Clock,
   GitBranch,
+  CircleDot,
+  ArrowRightLeft,
+  ShieldAlert,
 } from "lucide-react";
 
 const items = [
@@ -63,6 +66,24 @@ const items = [
     title: "Payment lifecycle",
     desc: "Sequence diagrams and state machines for charges, payouts, refunds, and disputes — every transition documented.",
     icon: GitBranch,
+  },
+  {
+    href: "/developer/api-reference/charge-states",
+    title: "Charge states",
+    desc: "State machine for charges: pending, processing, succeeded, failed, refunded, disputed, resolved — with webhook mapping.",
+    icon: CircleDot,
+  },
+  {
+    href: "/developer/api-reference/payout-states",
+    title: "Payout states",
+    desc: "State machine for payouts: queued, processing, paid, failed, returned — including bank-rail return semantics.",
+    icon: ArrowRightLeft,
+  },
+  {
+    href: "/developer/api-reference/dispute-lifecycle",
+    title: "Dispute lifecycle",
+    desc: "Chargeback flow: needs_response, under_review, won, lost — SLA windows and evidence submission contract.",
+    icon: ShieldAlert,
   },
   {
     href: "/developer/idempotency-playground",
