@@ -450,11 +450,12 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
 
         {/* Sample Request */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Example Request</h2>
-          <CodeBlock
-            label="cURL — Initiate a Charge"
-            id="example-charge"
-            code={`curl -X POST "https://api.kangopenbanking.com/v1/gateway-charges-router" \\
+          <h2 className="text-2xl font-bold mb-4">Example Requests</h2>
+          <div className="grid lg:grid-cols-2 gap-4">
+            <CodeBlock
+              label="cURL — Initiate a Charge"
+              id="example-charge"
+              code={`curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\
@@ -465,7 +466,24 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
     "payment_method": "mobile_money",
     "metadata": { "order_id": "ord_123" }
   }'`}
-          />
+            />
+            <CodeBlock
+              label={`cURL — PISP Submission (${KOB_API_VERSION_LABEL})`}
+              id="example-pisp-submit"
+              code={`curl -X POST "https://api.kangopenbanking.com/v1/pisp/payment-submission" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: 7c3a4b6e-2f81-4a12-9c05-1a2b3c4d5e6f" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "payment_id": "pmt_01HX...",
+    "consent_id": "cns_01HX...",
+    "amount": "50000",
+    "currency": "XAF",
+    "debtor_account":   { "scheme": "IBAN", "identification": "CM2110001..." },
+    "creditor_account": { "scheme": "IBAN", "identification": "CM2110002..." }
+  }'`}
+            />
+          </div>
         </section>
 
         {/* Response Format */}
