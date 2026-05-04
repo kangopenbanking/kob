@@ -1,0 +1,75 @@
+# ============================================================
+# Auto-publish SDKs whenever a new API version tag is pushed.
+# Trigger: push tag matching `api-v*` (e.g. api-v4.29.3)
+#
+# Flow:
+#   1. Read info.version from public/openapi.json
+#   2. Run scripts/bump-sdk-version.sh <version>
+#   3. Commit the bump back to main (if changed)
+#   4. Create + push tag `sdk-v<version>` which fans out to
+#      .github/workflows/publish-sdks.yml (npm, PyPI, Packagist, Go).
+#
+# Standing Order 6 (Version Gate): SDK semver mirrors API info.version.
+# Standing Order P5 (Working Code Rule): generated/typed SDKs must
+# build cleanly — handled by sdk-generate.yml on the same commit.
+# ============================================================
+
+name: Auto-Publish SDKs on API Tag
+
+on:
+  push:
+    tags:
+      - 'api-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  bump-and-tag:
+    name: Bump SDKs and trigger publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve API version from tag and spec
+        id: ver
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/api-v}"
+          SPEC_VERSION=$(node -p "require('./public/openapi.json').info.version")
+          echo "Tag version:  $TAG_VERSION"
+          echo "Spec version: $SPEC_VERSION"
+          if [ "$TAG_VERSION" != "$SPEC_VERSION" ]; then
+            echo "::warning::Tag version ($TAG_VERSION) differs from openapi.json info.version ($SPEC_VERSION). Using spec version."
+          fi
+          echo "VERSION=$SPEC_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Bump all SDK manifests
+        run: bash scripts/bump-sdk-version.sh "${{ steps.ver.outputs.VERSION }}"
+
+      - name: Commit version bump (if any)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore(sdk): bump to ${{ steps.ver.outputs.VERSION }} [auto]"
+            git push origin HEAD:main
+          else
+            echo "No SDK manifest changes — already at ${{ steps.ver.outputs.VERSION }}."
+          fi
+
+      - name: Create and push sdk-v<version> tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SDK_TAG="sdk-v${{ steps.ver.outputs.VERSION }}"
+          if git rev-parse "$SDK_TAG" >/dev/null 2>&1; then
+            echo "Tag $SDK_TAG already exists — skipping (publish-sdks.yml will not re-run)."
+            exit 0
+          fi
+          git tag "$SDK_TAG"
+          git push origin "$SDK_TAG"
+          echo "Pushed $SDK_TAG → triggers .github/workflows/publish-sdks.yml"
