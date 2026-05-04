@@ -1,6 +1,6 @@
 {
-  "name": "@kangopenbanking/sdk",
-  "version": "1.6.0",
+  "name": "@kang/openbanking-node",
+  "version": "1.1.0",
   "description": "Official Kang Open Banking (KOB) SDK for Node.js and TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,10 +15,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kangopenbanking/sdk-node"
+    "url": "https://github.com/kangfinance/openbanking-node"
   },
   "bugs": {
-    "url": "https://github.com/kangopenbanking/sdk-node/issues"
+    "url": "https://github.com/kangfinance/openbanking-node/issues"
   },
   "homepage": "https://kangopenbanking.com/developer",
   "keywords": [
