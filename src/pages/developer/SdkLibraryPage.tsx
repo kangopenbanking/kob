@@ -79,15 +79,15 @@ const LIBRARIES: Record<string, SdkLibrary> = {
     language: "typescript",
     filenameExt: "ts",
     runtime: "Node.js 18+ · ESM + CJS",
-    version: "1.4.0",
+    version: "1.1.0",
     released: "2026-04-30",
     status: "stable",
     installLabel: "npm",
-    install: "npm install @kangopenbanking/sdk",
+    install: "npm install @kang/openbanking-node",
     altInstalls: [
-      { label: "pnpm", cmd: "pnpm add @kangopenbanking/sdk" },
-      { label: "yarn", cmd: "yarn add @kangopenbanking/sdk" },
-      { label: "bun", cmd: "bun add @kangopenbanking/sdk" },
+      { label: "pnpm", cmd: "pnpm add @kang/openbanking-node" },
+      { label: "yarn", cmd: "yarn add @kang/openbanking-node" },
+      { label: "bun", cmd: "bun add @kang/openbanking-node" },
     ],
     Logo: NodeLogo,
     tagline: "First-class TypeScript types for every endpoint, with auto token refresh and webhook verification baked in.",
@@ -108,7 +108,7 @@ const LIBRARIES: Record<string, SdkLibrary> = {
       { path: "packages/sdk-node/src/integration.ts", description: "Integration helpers (Express middleware, Next.js route handlers)." },
       { path: "packages/sdk-node/README.md", description: "Quickstart and API reference." },
     ],
-    initSnippet: `import { KangOpenBanking } from '@kangopenbanking/sdk';
+    initSnippet: `import { KangOpenBanking } from '@kang/openbanking-node';
 
 // Sandbox (API key)
 const kob = new KangOpenBanking({
@@ -145,7 +145,7 @@ const charge = await kob.charges.create({
 
 console.log(charge.data.id, charge.data.status);`,
     webhookSnippet: `import express from 'express';
-import { KangOpenBanking } from '@kangopenbanking/sdk';
+import { KangOpenBanking } from '@kang/openbanking-node';
 
 const app = express();
 app.post('/webhooks/kob', express.raw({ type: 'application/json' }), (req, res) => {
@@ -171,7 +171,7 @@ const txns = await kob.transactions.list(accounts.data[0].id, {
   to: '2026-03-31',
   per_page: 50,
 });`,
-    errorSnippet: `import { KOBError } from '@kangopenbanking/sdk';
+    errorSnippet: `import { KOBError } from '@kang/openbanking-node';
 
 try {
   await kob.charges.create({ /* ... */ });
