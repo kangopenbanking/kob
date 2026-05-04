@@ -32,7 +32,9 @@ type DiffResult = {
   to_changelog?: string | null;
 };
 
-const FN_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
+// Resolve backend at runtime via env var (Direct Backend Mandate); keeps
+// the developer-portal source free of hard-coded *.supabase.co hosts.
+const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 export default function SpecDiff() {
   const [versions, setVersions] = useState<ManifestEntry[]>([]);
