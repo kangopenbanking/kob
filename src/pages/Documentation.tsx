@@ -494,7 +494,7 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
                   <div className="flex items-center gap-2">
                     <Zap className="h-6 w-6 text-primary" />
                     <h3 className="text-xl font-bold">Payment Gateway</h3>
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25">35+ Endpoints</Badge>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25">100+ Endpoints</Badge>
                   </div>
                   <p className="text-muted-foreground">
                     Full-featured payment gateway with charges, payouts, subscriptions, payment links, split payments, 
