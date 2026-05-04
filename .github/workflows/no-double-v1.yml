@@ -1,0 +1,28 @@
+name: No double /v1/v1/ prefix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if /v1/v1/ appears in any JSON or YAML
+        run: |
+          set -e
+          matches=$(grep -rln "/v1/v1/" \
+            --include="*.json" --include="*.yaml" --include="*.yml" \
+            --exclude-dir=node_modules --exclude-dir=.git \
+            --exclude-dir=dist --exclude-dir=build . || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Found malformed /v1/v1/ prefix in:"
+            echo "$matches"
+            echo ""
+            echo "Run: find . -name '*.json' -o -name '*.yaml' -o -name '*.yml' \\"
+            echo "  | xargs sed -i 's|/v1/v1/|/v1/|g'"
+            exit 1
+          fi
+          echo "OK — no /v1/v1/ occurrences."
