@@ -60,3 +60,23 @@ if !ok { http.Error(w, "invalid signature", 401); return }
 ## License
 
 MIT.
+
+## PISP Payment Submission (v4.29.3)
+
+As of OpenAPI v4.29.3, `POST /v1/pisp/payment-submission` requires the full payment instruction.
+
+```go
+_, err := c.PISP.SubmitPayment(ctx, kob.PispSubmission{
+    PaymentID:       "pmt_01HX...",
+    ConsentID:       "cns_01HX...",
+    Amount:          "50000",
+    Currency:        "XAF",
+    DebtorAccount:   "10005-00001-09876543210-45",
+    CreditorAccount: "10005-00001-12345678901-23",
+}, kob.WithIdempotencyKey(uuid.NewString()))
+```
+
+## Changelog
+
+- **v1.6.1** — Aligned to OpenAPI v4.29.3 PISP submission schema.
+- **v1.6.0** — OpenAPI v4.28.x baseline.

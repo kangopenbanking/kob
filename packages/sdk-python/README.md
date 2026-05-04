@@ -122,3 +122,26 @@ with KangOpenBanking(client_id="id", api_key="sbx_key") as kob:
 ## License
 
 MIT
+
+## PISP Payment Submission (v4.29.3)
+
+As of OpenAPI v4.29.3, `POST /v1/pisp/payment-submission` requires the full payment instruction.
+
+```python
+import uuid
+
+kob.pisp.submit_payment(
+    payment_id="pmt_01HX...",
+    consent_id="cns_01HX...",
+    amount="50000",
+    currency="XAF",
+    debtor_account="10005-00001-09876543210-45",
+    creditor_account="10005-00001-12345678901-23",
+    idempotency_key=str(uuid.uuid4()),
+)
+```
+
+## Changelog
+
+- **1.6.1** — Aligned to OpenAPI v4.29.3 PISP submission schema.
+- **1.6.0** — OpenAPI v4.28.x baseline.
