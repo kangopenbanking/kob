@@ -279,6 +279,58 @@ const Documentation = () => {
           </div>
         </section>
 
+        {/* What's New — surfaces the live API version's headline changes */}
+        <section>
+          <Card className="rounded-xl overflow-hidden border-primary/20">
+            <div className="grid md:grid-cols-[auto_1fr] gap-0">
+              <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10 p-6 md:p-8 flex md:flex-col items-center md:items-start gap-3 md:min-w-[220px]">
+                <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Latest release</div>
+                  <div className="text-2xl font-bold">{KOB_API_VERSION_LABEL}</div>
+                </div>
+              </div>
+              <CardContent className="p-6 md:p-8 space-y-3">
+                <h3 className="font-semibold text-lg">What's new in {KOB_API_VERSION_LABEL}</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong className="text-foreground">PISP submission schema expanded</strong> — <code className="text-xs bg-muted px-1.5 py-0.5 rounded">POST /v1/pisp/payment-submission</code> now requires <code className="text-xs">consent_id</code>, <code className="text-xs">amount</code>, <code className="text-xs">currency</code>, <code className="text-xs">debtor_account</code>, and <code className="text-xs">creditor_account</code>.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong className="text-foreground">12 deprecated endpoints retired</strong> — legacy mobile money, Flutterwave direct, Stripe direct, and SWIFT MT routes now return <code className="text-xs">410 Gone</code> with RFC 8594 sunset headers and an <code className="text-xs">x-replacement-endpoint</code> hint.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Standards-grade metadata</strong> — cursor pagination, RFC 7807 error catalog, rate-limit tiers, deterministic sandbox, and signed webhooks documented in the live OpenAPI extensions.
+                    </span>
+                  </li>
+                </ul>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/developer/changelog">
+                      Full changelog <ArrowRight className="ml-1.5 h-3 w-3" />
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/developer/api/pisp">
+                      PISP migration guide
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </div>
+          </Card>
+        </section>
+
         {/* API Domains */}
         <section>
           <div className="flex items-center justify-between mb-4">
