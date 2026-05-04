@@ -223,16 +223,16 @@ export default function GettingStarted() {
           <CardContent className="space-y-4">
             <CodeBlock
               examples={[
-                { language: "bash", label: "Node.js", code: "npm install @kangopenbanking/sdk         # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-node" },
-                { language: "bash", label: "Python", code: "pip install kangopenbanking              # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-python" },
-                { language: "bash", label: "PHP", code: "composer require kangopenbanking/sdk     # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-php" },
-                { language: "bash", label: "Java", code: "<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>4.29.1</version>\n</dependency>\n<!-- GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB -->\n<!-- CI/CD:  https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml -->" },
+                { language: "bash", label: "Node.js", code: "npm install @kang/openbanking-node      # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-node" },
+                { language: "bash", label: "Python", code: "pip install kang-openbanking             # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-python" },
+                { language: "bash", label: "PHP", code: "composer require kang/openbanking-php    # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-php" },
+                { language: "bash", label: "Java", code: "<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>4.28.1</version>\n</dependency>\n<!-- GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB -->" },
                 { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go  # v1.5.0\n# pkg.go.dev: https://pkg.go.dev/github.com/kangopenbanking/sdk-go" },
                 { language: "bash", label: "Ruby", code: "# Community guide via openapi-generator-cli (ruby)\n# GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB\n# Docs:   https://kangopenbanking.com/developer/guides/sdks#ruby" },
               ]}
             />
             <p className="text-xs text-muted-foreground">
-              All six official SDKs are generally available. Node.js, Python, and PHP are first-party packages; Java and Go ship from the typed generator pipeline; Ruby is supported via the community OpenAPI Generator workflow.
+              Node.js, Python, PHP, Java, and Go SDKs are available now; Ruby is supported via the community OpenAPI Generator workflow.
             </p>
           </CardContent>
         </Card>

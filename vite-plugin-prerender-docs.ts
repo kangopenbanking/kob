@@ -133,10 +133,12 @@ Content-Type: application/problem+json
 }</code></pre>
 <h3>Available SDKs</h3>
 <ul>
-  <li>Node.js / TypeScript — <code>npm install @kangopenbanking/sdk</code></li>
+  <li>Node.js / TypeScript — <code>npm install @kang/openbanking-node</code></li>
   <li>Python — <code>pip install kang-openbanking</code></li>
   <li>PHP — <code>composer require kang/openbanking-php</code></li>
-  <li>Java, Go, Ruby — community implementation guides available on the SDKs page; official packages targeted Q3 2026.</li>
+  <li>Java — <code>com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1</code></li>
+  <li>Go — <code>go get github.com/kangopenbanking/sdk-go</code></li>
+  <li>Ruby — community guide via <code>openapi-generator-cli (ruby)</code></li>
 </ul>
 <p>Production base URL: <code>https://api.kangopenbanking.com/v1</code><br/>Sandbox base URL: <code>https://sandbox-api.kangopenbanking.com/v1</code></p>
 <h3>Postman Collection</h3>
@@ -411,9 +413,12 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <h3>Officially Published SDKs</h3>
 <table>
   <tr><th>Language</th><th>Package</th><th>Install</th><th>Min Runtime</th></tr>
-  <tr><td>Node.js / TypeScript</td><td>@kangopenbanking/sdk</td><td><code>npm install @kangopenbanking/sdk</code></td><td>Node 18+</td></tr>
+  <tr><td>Node.js / TypeScript</td><td>@kang/openbanking-node</td><td><code>npm install @kang/openbanking-node</code></td><td>Node 18+</td></tr>
   <tr><td>Python</td><td>kang-openbanking</td><td><code>pip install kang-openbanking</code></td><td>Python 3.9+</td></tr>
   <tr><td>PHP</td><td>kang/openbanking-php</td><td><code>composer require kang/openbanking-php</code></td><td>PHP 8.1+</td></tr>
+  <tr><td>Java</td><td>com.kangopenbanking:kangopenbanking-sdk-typed</td><td><code>4.28.1</code></td><td>Java 11+</td></tr>
+  <tr><td>Go</td><td>github.com/kangopenbanking/sdk-go</td><td><code>go get github.com/kangopenbanking/sdk-go</code></td><td>Go 1.21+</td></tr>
+  <tr><td>Ruby</td><td>openapi-generator-cli (ruby)</td><td><code>openapi-generator-cli generate -g ruby</code></td><td>Ruby 3+</td></tr>
 </table>
 <h3>Node.js — Create a Mobile Money Charge</h3>
 <pre><code>import { KangOpenBanking } from '@kangopenbanking/sdk';
@@ -648,7 +653,7 @@ const challenge = crypto.createHash('sha256').update(verifier).digest('base64url
   <li><a href="/developer/gateway/quickstart">Payment Gateway Quickstart</a> — accept payments in 10 minutes</li>
   <li><a href="/developer/gateway/webhooks">Webhook Verification Guide</a> — HMAC-SHA256, 52 event types, retry policy</li>
   <li><a href="/developer/sandbox/overview">Sandbox Environment</a> — free testing with test credentials</li>
-  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP (Java, Go, Ruby implementation guides)</li>
+  <li><a href="/developer/guides/sdks">SDKs and Libraries</a> — Node.js, Python, PHP, Java, Go, and Ruby</li>
   <li><a href="/developer/examples/real-world">Real-World Examples</a> — production-ready integration patterns</li>
   <li><a href="/developer/open-banking/standards">Standards &amp; Compliance Index</a> — FAPI, OBIE, Berlin Group, FDX, ISO 20022, PSD2</li>
   <li><a href="/developer/authentication/dcr">Dynamic Client Registration</a> — RFC 7591 ecosystem onboarding</li>
