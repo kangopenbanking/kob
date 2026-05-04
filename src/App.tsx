@@ -247,6 +247,10 @@ const PaymentLifecycleGuide = lazy(() => import("./pages/developer/PaymentLifecy
 const ChargeStatesGuide = lazy(() => import("./pages/developer/ChargeStatesGuide"));
 const PayoutStatesGuide = lazy(() => import("./pages/developer/PayoutStatesGuide"));
 const DisputeLifecycleGuide = lazy(() => import("./pages/developer/DisputeLifecycleGuide"));
+const ScaGuide = lazy(() => import("./pages/developer/security/ScaGuide"));
+const JwksGuide = lazy(() => import("./pages/developer/security/JwksGuide"));
+const EnvironmentsPage = lazy(() => import("./pages/developer/EnvironmentsPage"));
+const DeprecationPolicyPage = lazy(() => import("./pages/developer/DeprecationPolicyPage"));
 const WebhookRetryGuide = lazy(() => import("./pages/developer/WebhookRetryGuide"));
 const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide"));
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
