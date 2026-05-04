@@ -1,7 +1,8 @@
+# Generated from openapi.json — do not edit by hand.
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.28.2
+  version: 4.29.1
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -760,7 +761,7 @@ components:
         rib_account_number:
           type: string
           maxLength: 11
-          example: 1234567890
+          example: '01234567890'
           description: Digits 11-21 of RIB (account number)
         rib_key:
           type: string
@@ -1284,14 +1285,23 @@ components:
           format: date
           example: '2026-03-16'
         principal:
-          type: number
-          example: 80000
+          type: string
+          example: '80000'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         interest:
-          type: number
-          example: 12500
+          type: string
+          example: '12500'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         fees:
-          type: number
-          example: 0
+          type: string
+          example: '0'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         total_due:
           type: number
           example: 92500
@@ -1725,11 +1735,17 @@ components:
         provider_ref:
           type: string
         fee_amount:
-          type: number
-          example: 200
+          type: string
+          example: '200'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         net_amount:
-          type: number
-          example: 4800
+          type: string
+          example: '4800'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         tx_ref:
           type: string
         customer_phone:
@@ -2010,7 +2026,11 @@ components:
         fees_total:
           type: number
         net_amount:
-          type: number
+          type: string
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          example: '0'
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         settled_at:
           type: string
           format: date-time
@@ -2079,17 +2099,26 @@ components:
         channel:
           type: string
         fee_amount:
-          type: number
-          example: 200
+          type: string
+          example: '200'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         net_amount:
-          type: number
-          example: 4800
+          type: string
+          example: '4800'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         fee_percentage:
           type: string
           example: 3%
         fixed_fee:
-          type: number
-          example: 50
+          type: string
+          example: '50'
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
       required:
         - amount
         - currency
@@ -2716,9 +2745,17 @@ components:
         customer_email:
           type: string
         fee_amount:
-          type: number
+          type: string
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          example: '0'
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         net_amount:
-          type: number
+          type: string
+          pattern: ^-?[0-9]{1,15}$
+          format: monetary-minor-unit
+          example: '0'
+          x-coercion: numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision
         created_at:
           type: string
           format: date-time
@@ -4536,10 +4573,10 @@ paths:
                     properties:
                       token_endpoint:
                         type: string
-                        example: https://api.kangopenbanking.com/v1/v1/oauth/token
+                        example: https://api.kangopenbanking.com/v1/oauth/token
                       par_endpoint:
                         type: string
-                        example: https://api.kangopenbanking.com/v1/v1/oauth/par
+                        example: https://api.kangopenbanking.com/v1/oauth/par
                   pushed_authorization_request_endpoint:
                     type: string
                     format: uri
@@ -4582,6 +4619,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/jwks:
     get:
       tags:
@@ -4640,6 +4683,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/auth/phone/send-otp:
     post:
       tags:
@@ -6881,6 +6930,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/aisp/accounts/{accountId}:
     get:
       tags:
@@ -7175,6 +7225,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/aisp/accounts/{accountId}/transactions:
     get:
       tags:
@@ -7396,6 +7447,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/aisp/accounts/{accountId}/beneficiaries:
     get:
       tags:
@@ -7541,6 +7593,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/aisp/accounts/{accountId}/standing-orders:
     get:
       tags:
@@ -7685,6 +7738,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/aisp/accounts/{accountId}/direct-debits:
     get:
       tags:
@@ -7829,6 +7883,7 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      x-pagination-style: cursor
   /v1/pisp/consents:
     post:
       tags:
@@ -8225,9 +8280,39 @@ paths:
               type: object
               required:
                 - payment_id
+                - consent_id
+                - amount
+                - currency
+                - debtor_account
+                - creditor_account
               properties:
                 payment_id:
                   type: string
+                consent_id:
+                  type: string
+                amount:
+                  type: string
+                  pattern: ^[0-9]{1,15}$
+                  example: '50000'
+                currency:
+                  type: string
+                  enum:
+                    - XAF
+                    - XOF
+                    - EUR
+                    - USD
+                  example: XAF
+                debtor_account:
+                  type: string
+                creditor_account:
+                  type: string
+            example:
+              payment_id: pmt_01HFG
+              consent_id: cns_01HFG
+              amount: '50000'
+              currency: XAF
+              debtor_account: 10005-00001-09876543210-45
+              creditor_account: 10005-00001-12345678901-23
       responses:
         '200':
           description: Payment submission confirmed
@@ -11211,6 +11296,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/savings/accounts/{accountId}/deposit:
     post:
       tags:
@@ -12543,129 +12634,40 @@ paths:
               currency: XAF
               provider: MTN
       responses:
-        '200':
-          description: Charge initiated
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/MobileMoneyCharge'
+        '410':
+          description: Gone — use /v1/gateway/charges?channel=mobile_money
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/charges?channel=mobile_money>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/charges?channel=mobile_money.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       description: >-
         ⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses
         will conform to the StandardResponse envelope in a future minor release.
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/charges?channel=mobile_money
+      x-replacement-endpoint: /v1/gateway/charges?channel=mobile_money
   /v1/mobile-money/transfer:
     post:
       tags:
@@ -12721,122 +12723,38 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
-        '200':
-          description: Transfer initiated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MobileMoneyCharge'
+        '410':
+          description: Gone — use /v1/gateway/payouts?channel=mobile_money
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/payouts?channel=mobile_money>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/payouts?channel=mobile_money.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/payouts?channel=mobile_money
+      x-replacement-endpoint: /v1/gateway/payouts?channel=mobile_money
   /v1/mobile-money/verify:
     post:
       tags:
@@ -12858,119 +12776,31 @@ paths:
                 transaction_ref:
                   type: string
       responses:
-        '200':
-          description: Transaction status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MobileMoneyCharge'
+        '410':
+          description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/charges/{chargeId}>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/charges/{chargeId}.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       parameters:
         - name: Idempotency-Key
           in: header
@@ -12985,6 +12815,10 @@ paths:
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/charges/{chargeId}
+      x-replacement-endpoint: /v1/gateway/charges/{chargeId}
   /v1/mobile-money/to-bank:
     post:
       tags:
@@ -13026,128 +12860,38 @@ paths:
                 bank_code:
                   type: string
       responses:
-        '200':
-          description: Transfer initiated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
+        '410':
+          description: Gone — use /v1/gateway/payouts?channel=bank_transfer
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/payouts?channel=bank_transfer>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/payouts?channel=bank_transfer.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/payouts?channel=bank_transfer
+      x-replacement-endpoint: /v1/gateway/payouts?channel=bank_transfer
   /v1/flutterwave/bank-transfer:
     post:
       tags:
@@ -13208,128 +12952,38 @@ paths:
                 narration:
                   type: string
       responses:
-        '200':
-          description: Transfer initiated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
+        '410':
+          description: Gone — use /v1/gateway/payouts?provider=flutterwave
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/payouts?provider=flutterwave>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/payouts?provider=flutterwave.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/payouts?provider=flutterwave
+      x-replacement-endpoint: /v1/gateway/payouts?provider=flutterwave
   /v1/flutterwave/banks:
     get:
       tags:
@@ -13349,132 +13003,38 @@ paths:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
       responses:
-        '200':
-          description: Banks list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/PaginatedResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items: {}
+        '410':
+          description: Gone — use /v1/banks/directory
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-            Cache-Control:
-              $ref: '#/components/headers/CacheControl'
-            ETag:
-              $ref: '#/components/headers/ETag'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/banks/directory>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/banks/directory.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/banks/directory
+      x-replacement-endpoint: /v1/banks/directory
   /v1/flutterwave/verify-bank:
     post:
       tags:
@@ -13499,122 +13059,38 @@ paths:
                 bank_code:
                   type: string
       responses:
-        '200':
-          description: Account details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GatewayBankVerification'
+        '410':
+          description: Gone — use /v1/banks/verify-account
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/banks/verify-account>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/banks/verify-account.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/banks/verify-account
+      x-replacement-endpoint: /v1/banks/verify-account
   /v1/stripe/payment-intent:
     post:
       tags:
@@ -13667,128 +13143,38 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
-        '200':
-          description: Payment intent created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
+        '410':
+          description: Gone — use /v1/gateway/charges?provider=stripe
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/charges?provider=stripe>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/charges?provider=stripe.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/charges?provider=stripe
+      x-replacement-endpoint: /v1/gateway/charges?provider=stripe
   /v1/stripe/confirm-payment:
     post:
       tags:
@@ -13820,128 +13206,38 @@ paths:
                 payment_intent_id:
                   type: string
       responses:
-        '200':
-          description: Payment confirmed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
+        '410':
+          description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/gateway/charges/{chargeId}>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/gateway/charges/{chargeId}.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
+      x-retired: true
+      x-sunset-date: '2026-01-01'
+      x-successor: /v1/gateway/charges/{chargeId}
+      x-replacement-endpoint: /v1/gateway/charges/{chargeId}
   /v1/banking/bulk-transfers:
     post:
       tags:
@@ -15650,153 +14946,31 @@ paths:
             schema:
               type: string
       responses:
-        '200':
-          description: Parsed SWIFT transfer
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sender_bic:
-                    type: string
-                  receiver_bic:
-                    type: string
-                  amount:
-                    type: string
-                    pattern: ^[0-9]{1,15}$
-                    description: >-
-                      Represented as a string integer in the currency's minor unit (XAF has no subunits). Must be
-                      consistent with the currency field.
-                  currency:
-                    type: string
-                    enum:
-                      - XAF
-                      - XOF
-                      - USD
-                      - EUR
-                      - GBP
-                      - CNY
-                      - NGN
-                      - GHS
-                      - KES
-                      - ZAR
-                    default: XAF
-                    description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
-                  value_date:
-                    type: string
-                  reference:
-                    type: string
-                  beneficiary:
-                    type: string
-                  ordering_customer:
-                    type: string
+        '410':
+          description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/standards/iso20022/pacs008/generate>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/standards/iso20022/pacs008/generate.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       deprecated: true
       description: >-
         ⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
@@ -15805,6 +14979,10 @@ paths:
         MT940). 
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
+      x-retired: true
+      x-sunset-date: '2025-11-22'
+      x-successor: /v1/standards/iso20022/pacs008/generate
+      x-replacement-endpoint: /v1/standards/iso20022/pacs008/generate
   /v1/standards/swift/mt940/parse:
     post:
       tags:
@@ -15820,143 +14998,31 @@ paths:
             schema:
               type: string
       responses:
-        '200':
-          description: Parsed statement
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  account:
-                    type: string
-                  statement_number:
-                    type: string
-                  opening_balance:
-                    type: number
-                  closing_balance:
-                    type: number
-                  transactions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        date:
-                          type: string
-                        amount:
-                          type: string
-                          pattern: ^[0-9]{1,15}$
-                          description: Represented as a string integer in the currency's minor unit (XAF has no subunits).
-                        type:
-                          type: string
-                        reference:
-                          type: string
+        '410':
+          description: Gone — use /v1/standards/iso20022/camt053/parse
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/standards/iso20022/camt053/parse>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/standards/iso20022/camt053/parse.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       deprecated: true
       description: >-
         ⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
@@ -15965,6 +15031,10 @@ paths:
         MT940). 
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/camt053/parse
+      x-retired: true
+      x-sunset-date: '2025-11-22'
+      x-successor: /v1/standards/iso20022/camt053/parse
+      x-replacement-endpoint: /v1/standards/iso20022/camt053/parse
   /v1/standards/swift/mt103/generate:
     post:
       tags:
@@ -15990,124 +15060,31 @@ paths:
             schema:
               type: object
       responses:
-        '200':
-          description: Generated MT103 message
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  mt103:
-                    type: string
-                  reference:
-                    type: string
+        '410':
+          description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
-            x-fapi-interaction-id:
-              $ref: '#/components/headers/XFapiInteractionIdResponse'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '400':
-          description: Bad request
-          content:
-            application/json:
+            Sunset:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: string
+              description: RFC 8594 sunset date.
+            Link:
+              schema:
+                type: string
+              description: </v1/standards/iso20022/pacs008/generate>; rel="successor-version"
+            Deprecation:
+              schema:
+                type: string
+              description: 'true'
+          content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '409':
-          description: Conflict (idempotency mismatch)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-        '429':
-          description: Rate limit exceeded
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-              description: Number of seconds to wait before retrying
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-            X-RateLimit-Reset:
-              $ref: '#/components/headers/XRateLimitReset'
+              example:
+                type: https://api.kangopenbanking.com/v1/errors/endpoint-retired
+                title: Endpoint Retired
+                status: 410
+                detail: This endpoint is retired. Use /v1/standards/iso20022/pacs008/generate.
+                error_code: DEPRECATED_ENDPOINT_RETIRED
       deprecated: true
       description: >-
         ⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme.
@@ -16116,6 +15093,10 @@ paths:
         MT940). 
       x-sunset: '2025-11-22'
       x-replaced-by: /v1/standards/iso20022/pacs008/generate
+      x-retired: true
+      x-sunset-date: '2025-11-22'
+      x-successor: /v1/standards/iso20022/pacs008/generate
+      x-replacement-endpoint: /v1/standards/iso20022/pacs008/generate
   /v1/standards/validate/iban:
     post:
       tags:
@@ -16450,7 +15431,7 @@ paths:
                     example: '00100'
                   account_number:
                     type: string
-                    example: 1234567890
+                    example: '01234567890'
                   rib_key:
                     type: string
                     example: '23'
@@ -16804,6 +15785,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/kyc/submit:
     post:
       tags:
@@ -17512,6 +16499,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
     get:
       tags:
         - Webhooks
@@ -17648,6 +16638,9 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
   /v1/webhooks/{webhookId}/deliveries:
     get:
       tags:
@@ -17814,6 +16807,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
   /v1/admin/users:
     post:
       tags:
@@ -32805,6 +31801,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     delete:
       operationId: deleteSubscription
       summary: Cancel a subscription
@@ -32888,6 +31890,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/gateway/subscriptions/cancel:
     post:
       tags:
@@ -37204,6 +36212,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
     get:
       tags:
         - Merchant Onboarding
@@ -37342,6 +36353,9 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
   /v1/oauth/revoke:
     post:
       tags:
@@ -37565,6 +36579,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/consumer/piggybank:
     post:
       tags:
@@ -52304,6 +51324,7 @@ paths:
                 - debtor_participant_id
                 - creditor_participant_id
                 - amount
+                - currency
               properties:
                 debtor_participant_id:
                   type: string
@@ -54476,8 +53497,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       security:
         - bearerAuth: []
+      deprecated: true
+      x-sunset-date: '2026-12-31'
+      x-successor: /v1/webhooks/v2/endpoints
   /v1/webhooks/providers/stripe:
     post:
       tags:
@@ -54578,6 +53608,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/webhooks/providers/flutterwave:
     post:
       tags:
@@ -54674,6 +53710,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/webhooks/providers/paypal:
     post:
       tags:
@@ -54831,6 +53873,12 @@ paths:
               $ref: '#/components/headers/XRateLimitRemaining'
             X-RateLimit-Reset:
               $ref: '#/components/headers/XRateLimitReset'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       parameters:
         - name: paypal-auth-algo
           in: header
@@ -54991,6 +54039,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/standards/iso20022/pacs004/generate:
     post:
       operationId: generatePacs004
@@ -55108,6 +54162,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/standards/iso20022/pacs009/generate:
     post:
       operationId: generatePacs009
@@ -55223,6 +54283,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/standards/iso20022/camt056/generate:
     post:
       operationId: generateCamt056
@@ -55340,6 +54406,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/standards/iso20022/camt052/parse:
     post:
       operationId: parseISO20022Camt052
@@ -55459,6 +54531,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/standards/iso20022/camt054/parse:
     post:
       operationId: parseISO20022Camt054
@@ -55578,6 +54656,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /healthz:
     get:
       tags:
@@ -55597,6 +54681,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/sandbox/events/simulate:
     post:
       tags:
@@ -55647,6 +54737,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookEvent'
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/sandbox/payments/simulate:
     post:
       tags:
@@ -55696,6 +54792,12 @@ paths:
             application/json:
               schema:
                 type: object
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/sandbox/webhooks/send-test:
     post:
       tags:
@@ -55732,6 +54834,12 @@ paths:
                     type: string
                 required:
                   - success
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /v1/sandbox/reset:
     post:
       tags:
@@ -55758,6 +54866,12 @@ paths:
                     type: string
                 required:
                   - success
+        default:
+          description: Server error — see ProblemDetails for trace ID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 externalDocs:
   description: Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console
   url: https://kangopenbanking.com/developer/sandbox
@@ -55841,23 +54955,23 @@ x-deprecation-policy:
 x-rate-limits:
   tiers:
     oauth_token:
-      limit: 500
+      limit: 100
       window: 1h
       per: client_id
     aisp:
-      limit: 5000
+      limit: 1000
       window: 1h
       per: consent_id
     pisp:
-      limit: 2500
+      limit: 500
       window: 1h
       per: client_id
     gateway:
-      limit: 5000
+      limit: 1000
       window: 1h
       per: merchant_id
     sandbox:
-      limit: 25000
+      limit: 5000
       window: 1h
       per: client_id
   response_headers:
@@ -55867,6 +54981,9 @@ x-rate-limits:
     - Retry-After
   error_status: 429
   error_format: application/problem+json (RFC 7807) — see RateLimitError schema
+  window_unit: per_minute
+  authoritative_source: spec['x-rate-limits']
+  note: All limits in this object are per-minute unless explicitly stated. Markdown documentation mirrors these values.
 x-sla:
   uptime_target: 99.95%
   p95_latency_ms:
@@ -55913,6 +55030,18 @@ x-sdks:
     registry: Packagist
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman
+  - language: Java
+    name: com.kangopenbanking:kangopenbanking-sdk-typed
+    version: 4.28.1
+    repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
+    package_manager: https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml
+    docs: https://kangopenbanking.com/developer/guides/sdks#java
+  - language: Go
+    name: github.com/kangopenbanking/sdk-go
+    version: v1.5.0
+    repository: https://github.com/kangopenbanking/sdk-go
+    package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
+    docs: https://kangopenbanking.com/developer/guides/sdks#go
 x-webhook-policy:
   delivery: At-least-once
   ordering: Per-resource sequential best-effort; consumers MUST be idempotent on event.id
@@ -55933,6 +55062,8 @@ x-webhook-policy:
   tls: TLS 1.2+ required on consumer endpoint
   signature_header_aliases:
     - Kang-Signature
+    - X-Kang-Signature
+    - X-KOB-Signature
   event_id_header_aliases:
     - Kang-Event-ID
     - Kang-Webhook-ID
@@ -55942,6 +55073,12 @@ x-webhook-policy:
   header_compatibility_note: >-
     Both X-Webhook-* (legacy) and Kang-* (preferred) header families are emitted on outbound deliveries and accepted on
     inbound verification. New integrations should prefer the Kang-* family.
+  x-canonical-headers:
+    signature: X-Webhook-Signature
+    event_id: X-Webhook-ID
+    event_type: X-Webhook-Event
+    timestamp: X-Webhook-Timestamp
+    attempt: X-Webhook-Attempt
 x-webhook-events:
   - charge.succeeded
   - charge.failed
