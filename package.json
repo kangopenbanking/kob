@@ -20,7 +20,8 @@
     "smoke:swagger": "playwright test src/test/portal-swagger.spec.ts --reporter=line",
     "changelog:md": "node scripts/build-changelog-md.mjs",
     "postman:contract": "node scripts/postman-contract-check.mjs",
-    "sdk:generate": "node scripts/generate-typed-sdks.mjs"
+    "sdk:generate": "node scripts/generate-typed-sdks.mjs",
+    "version:sync": "node scripts/sync-version-artifacts.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
