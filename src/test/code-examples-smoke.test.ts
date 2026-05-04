@@ -65,3 +65,4 @@ describe("generateCodeExamples", () => {
       expect(ex.code).not.toContain("/v1/v1/");
     });
   });
+});
