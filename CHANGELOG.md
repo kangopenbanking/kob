@@ -1,12 +1,54 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.28.2** · Last updated: **2026-05-02**
+Current API version: **4.29.2** · Last updated: **2026-05-04**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.29.2 — 2026-05-04
+**Type:** patch · **Breaking changes:** none
+
+Developer portal version alignment across public OpenAPI specs, Postman manifest and collections, getting-started examples, gateway quickstart metadata, and changelog mirrors. This release also preserves the /v1/v1/ prefix cleanup and documents that changelog coverage now spans v4.17.0 through v4.29.x without gaps.
+
+### Highlights
+- public/openapi.json, public/openapi.yaml, public/openapi-sandbox.json, and public/openapi-sandbox.yaml now report info.version 4.29.2.
+- public/postman/manifest.json and regenerated Postman collection aliases now match the canonical OpenAPI version.
+- Developer guide response examples now use the shared KOB_API_VERSION source instead of stale literal API versions.
+- public/changelog.json includes entries for every release family from v4.17.0 through v4.29.x, closing the documented five-week gap.
+
+### Fixed
+- Resolved stale portal version strings that reported v4.28.2, v4.29.1, or older example metadata on public developer surfaces.
+- Regenerated public/CHANGELOG.md and CHANGELOG.md from the machine-readable changelog feed.
+
+### Standards & citations
+- ORDER P4 — Open Spec Rule
+- ORDER P7 — Changelog Rule
+- ORDER P10 — Living Docs Rule
+- STANDING ORDER 1 — The Lock (no operationId, path key, schema name, security scheme name, parameter, or header removal)
+- STANDING ORDER 2 — The Ratchet (release coverage only moves forward)
+- STANDING ORDER 6 — Version Gate (patch bump 4.29.1 → 4.29.2)
+
+### Migration notes
+No client action required. This is a documentation and metadata synchronization release; API paths, schemas, and runtime behavior remain unchanged.
+
+---
+
+## 4.29.1 — 2026-05-03
+**Type:** patch · **Breaking changes:** none
+
+Critical live-spec remediation: /v1/pisp/payment-submission now advertises the expanded OBIE 4.0 §5.4 request body, and the 12 past-sunset endpoints now expose only HTTP 410 Gone with RFC 8594 successor metadata.
+
+---
+
+## 4.29.0 — 2026-05-03
+**Type:** minor · **Breaking changes:** none
+
+Audit remediation: PISP submission body expanded (OBIE 4.0 §5.4); 12 past-sunset endpoints retired with HTTP 410 + RFC 8594 Sunset/Link; 19 monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2; webhook signature header canonicalized (X-KOB-Signature with X-Webhook-Signature alias); Webhook v1 endpoints deprecated → /v1/webhooks/v2/endpoints (sunset 2026-12-31); 2144 application/problem+json refs corrected to ProblemDetails (RFC 7807); rate-limit window unit declared per_minute; 45 ops gained default 5XX; SDK metadata unified (Java + Go added to x-sdks); currency required on POST /v1/interbank/payments per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor.
 
 ---
 
