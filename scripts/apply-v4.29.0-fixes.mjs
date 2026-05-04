@@ -314,7 +314,7 @@ for (const p of AISP_LIST) {
 // -------------------------------------------------------------- //
 // Update info.description with v4.29.0 changelog entry
 // -------------------------------------------------------------- //
-spec.info.description += ` | v${VERSION} (${new Date().toISOString().slice(0, 10)}): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (instructed_amount, creditor_account, risk); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (${stats['p2.1_money_coerced'] || 0} fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset ${SUNSET_V1}); ${stats['p2.4_problem_ref_fixed'] || 0} application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: ${stats['p3.1_default_5xx_added'] || 0} ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive.`;
+spec.info.description += ` | v${VERSION} (${new Date().toISOString().slice(0, 10)}): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (payment_id, consent_id, amount, currency, debtor_account, creditor_account); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (${stats['p2.1_money_coerced'] || 0} fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset ${SUNSET_V1}); ${stats['p2.4_problem_ref_fixed'] || 0} application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: ${stats['p3.1_default_5xx_added'] || 0} ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive.`;
 
 // -------------------------------------------------------------- //
 // Mirror to sandbox spec (only the safe pieces)
@@ -335,6 +335,7 @@ function mirrorTo(target) {
       tgt['x-retired'] = true;
       tgt['x-sunset-date'] = sr['x-sunset-date'];
       tgt['x-successor'] = sr['x-successor'];
+      tgt['x-replacement-endpoint'] = sr['x-replacement-endpoint'];
       tgt.responses = tgt.responses || {};
       tgt.responses['410'] = JSON.parse(JSON.stringify(sr.responses['410']));
     }
