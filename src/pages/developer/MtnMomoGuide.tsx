@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { KOB_API_VERSION } from "@/config/version";
 
 const mtnCharge = `curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
   -H "Authorization: Bearer sk_test_sandbox_KangOB2026Demo" \\
@@ -179,7 +180,7 @@ export default function MtnMomoGuide() {
     "tx_ref": "order_12345",
     "created_at": "2026-03-27T14:32:00Z"
   },
-  "meta": { "request_id": "req_abc123", "api_version": "4.6.0" }
+  "meta": { "request_id": "req_abc123", "api_version": "${KOB_API_VERSION}" }
 }`, language: "json" }]} title="Charge Response" />
         </section>
 
