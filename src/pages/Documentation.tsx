@@ -268,10 +268,11 @@ const Documentation = () => {
             <div className="rounded-xl border p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Badge variant="outline">Sandbox</Badge>
+                <span className="text-xs text-muted-foreground">Free, deterministic test data</span>
               </div>
               <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3 font-mono text-sm">
-                <code>https://api.kangopenbanking.com/v1/v1</code>
-                <CopyButton text="https://api.kangopenbanking.com/v1/v1" id="sandbox" />
+                <code>https://sandbox-api.kangopenbanking.com/v1</code>
+                <CopyButton text="https://sandbox-api.kangopenbanking.com/v1" id="sandbox" />
               </div>
             </div>
           </div>
