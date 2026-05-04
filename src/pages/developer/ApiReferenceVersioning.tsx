@@ -193,12 +193,12 @@ export default function ApiReferenceVersioning() {
               </thead>
               <tbody>
                 {[
-                  ["Node.js", "1.1.0", "@kangopenbanking/sdk"],
-                  ["Python", "1.1.0", "kangopenbanking"],
-                  ["PHP", "1.1.0", "kangopenbanking/sdk-php"],
-                  ["Java", "1.0.0", "com.kangopenbanking:sdk"],
-                  ["Go", "1.0.0", "github.com/kangopenbanking/kob-go"],
-                  ["Flutter/Dart", "1.0.0", "kangopenbanking"],
+                  ["Node.js", "1.1.0", "@kang/openbanking-node"],
+                  ["Python", "1.1.0", "kang-openbanking"],
+                  ["PHP", "1.1.0", "kang/openbanking-php"],
+                  ["Java", "4.28.1", "com.kangopenbanking:kangopenbanking-sdk-typed"],
+                  ["Go", "v1.5.0", "github.com/kangopenbanking/sdk-go"],
+                  ["Ruby", "1.0.0", "kangopenbanking"],
                 ].map(([sdk, ver, pkg]) => (
                   <tr key={sdk} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{sdk}</td>
