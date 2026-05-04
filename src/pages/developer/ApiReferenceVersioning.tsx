@@ -3,11 +3,34 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { KOB_API_VERSION } from "@/config/version";
 
-const deprecationHeaders = `HTTP/1.1 200 OK
-Content-Type: application/json
+const deprecationHeaders = `HTTP/1.1 410 Gone
+Content-Type: application/problem+json
 Deprecation: true
-Sunset: Sat, 01 Jan 2028 00:00:00 GMT
-Link: <https://kangopenbanking.com/developer/migrate>; rel="successor-version"`;
+Sunset: Thu, 01 Jan 2026 00:00:00 GMT
+Link: </v1/gateway/charges?channel=mobile_money>; rel="successor-version"
+
+{
+  "type": "https://api.kangopenbanking.com/v1/errors/endpoint-retired",
+  "title": "Endpoint Retired",
+  "status": 410,
+  "detail": "This endpoint was retired on 2026-01-01. Use /v1/gateway/charges?channel=mobile_money.",
+  "error_code": "DEPRECATED_ENDPOINT_RETIRED"
+}`;
+
+const RETIRED_ENDPOINTS: Array<[string, string, string, string]> = [
+  ["POST /v1/mobile-money/charge", "2026-01-01", "/v1/gateway/charges?channel=mobile_money", "Mobile Money"],
+  ["POST /v1/mobile-money/transfer", "2026-01-01", "/v1/gateway/payouts?channel=mobile_money", "Mobile Money"],
+  ["POST /v1/mobile-money/verify", "2026-01-01", "/v1/gateway/charges/{chargeId}", "Mobile Money"],
+  ["POST /v1/mobile-money/to-bank", "2026-01-01", "/v1/gateway/payouts?channel=bank_transfer", "Mobile Money"],
+  ["POST /v1/flutterwave/bank-transfer", "2026-01-01", "/v1/gateway/payouts?provider=flutterwave", "Flutterwave (direct)"],
+  ["GET /v1/flutterwave/banks", "2026-01-01", "/v1/banks/directory", "Flutterwave (direct)"],
+  ["POST /v1/flutterwave/verify-bank", "2026-01-01", "/v1/banks/verify-account", "Flutterwave (direct)"],
+  ["POST /v1/stripe/payment-intent", "2026-01-01", "/v1/gateway/charges?provider=stripe", "Stripe (direct)"],
+  ["POST /v1/stripe/confirm-payment", "2026-01-01", "/v1/gateway/charges/{chargeId}", "Stripe (direct)"],
+  ["POST /v1/standards/swift/mt103/parse", "2025-11-22", "/v1/standards/iso20022/pacs008/generate", "SWIFT MT"],
+  ["POST /v1/standards/swift/mt940/parse", "2025-11-22", "/v1/standards/iso20022/camt053/parse", "SWIFT MT"],
+  ["POST /v1/standards/swift/mt103/generate", "2025-11-22", "/v1/standards/iso20022/pacs008/generate", "SWIFT MT"],
+];
 
 const versionHeader = `# Check current API version in any response
 curl -I https://api.kangopenbanking.com/v1/gateway-charges-router \\
@@ -116,12 +139,61 @@ export default function ApiReferenceVersioning() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-foreground mb-4" id="deprecation">Deprecation Headers</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="deprecation">Deprecation &amp; Retirement Headers</h2>
           <p className="text-muted-foreground mb-4">
-            When an endpoint is deprecated, all responses include these headers:
+            Deprecated endpoints continue to return successful responses but include
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">Deprecation: true</code>,
+            an RFC 8594 <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">Sunset</code> date, and a
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">Link; rel="successor-version"</code> header that
+            points to the replacement endpoint. After the sunset date the endpoint is <strong>retired</strong> and returns
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">410 Gone</code> with an RFC 7807
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">application/problem+json</code> body. The OpenAPI
+            spec exposes the replacement on every retired operation via the
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">x-replacement-endpoint</code> extension (mirrored as
+            <code className="text-xs px-1 py-0.5 rounded bg-muted mx-1">x-successor</code> for backward compatibility).
           </p>
           <CodeBlock examples={[{ code: deprecationHeaders, language: "http" }]} />
         </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="retired-endpoints">
+            Retired Endpoints (HTTP 410 Gone)
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            The endpoints below have passed their sunset date and now return <strong>410 Gone</strong>. The OpenAPI spec
+            no longer advertises a 200 response for them. Migrate to the listed replacement before integrating against
+            v{KOB_API_VERSION}. The 9 channel-specific endpoints sunset on <strong>2026-01-01</strong>; the 3 SWIFT MT
+            endpoints sunset earlier on <strong>2025-11-22</strong> and are replaced by their ISO 20022 equivalents.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border border-border rounded-lg">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-3 font-medium text-foreground">Group</th>
+                  <th className="text-left p-3 font-medium text-foreground">Retired endpoint</th>
+                  <th className="text-left p-3 font-medium text-foreground">Sunset date</th>
+                  <th className="text-left p-3 font-medium text-foreground">x-replacement-endpoint</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RETIRED_ENDPOINTS.map(([endpoint, sunset, replacement, group]) => (
+                  <tr key={endpoint} className="border-t border-border">
+                    <td className="p-3 text-xs text-muted-foreground">{group}</td>
+                    <td className="p-3 font-mono text-xs text-foreground line-through">{endpoint}</td>
+                    <td className="p-3 font-mono text-xs text-foreground">{sunset}</td>
+                    <td className="p-3 font-mono text-xs text-foreground">{replacement}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            SDK consumers can read the replacement programmatically from the OpenAPI operation object
+            (<code className="text-xs px-1 py-0.5 rounded bg-muted">paths[path][method]["x-replacement-endpoint"]</code>) or
+            from the <code className="text-xs px-1 py-0.5 rounded bg-muted">Link</code> response header on a live 410.
+          </p>
+        </section>
+
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="version-check">Check API Version</h2>
