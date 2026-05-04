@@ -194,20 +194,25 @@ info:
       P3_medium: 8 hours
       P4_low: 48 hours
     maintenance_notice: 72 hours advance notice
+  x-sdk-versions:
+    node: 1.6.1
+    python: 1.6.1
+    php: 1.6.1
+    go: 1.6.1
   x-sdk-libraries:
     node:
       name: '@kang/openbanking-node'
-      version: 1.1.0
+      version: 1.6.1
       repository: https://github.com/kangfinance/openbanking-node
       package_manager: https://www.npmjs.com/package/@kang/openbanking-node
     python:
       name: kang-openbanking
-      version: 1.1.0
+      version: 1.6.1
       repository: https://github.com/kangfinance/openbanking-python
       package_manager: https://pypi.org/project/kang-openbanking/
     php:
       name: kang/openbanking-php
-      version: 1.1.0
+      version: 1.6.1
       repository: https://github.com/kangfinance/openbanking-php
       package_manager: https://packagist.org/packages/kang/openbanking-php
     java:
@@ -220,7 +225,7 @@ info:
       docs: https://kangopenbanking.com/developer/guides/sdks#java
     go:
       name: github.com/kangopenbanking/sdk-go
-      version: v1.5.0
+      version: v1.6.1
       status: available
       repository: https://github.com/kangopenbanking/sdk-go
       package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
@@ -98641,7 +98646,7 @@ x-sdks:
     registry: Maven
   - language: Go
     name: github.com/kangopenbanking/sdk-go
-    version: v1.5.0
+    version: v1.6.1
     repository: https://github.com/kangopenbanking/sdk-go
     package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
     docs: https://kangopenbanking.com/developer/guides/sdks#go
