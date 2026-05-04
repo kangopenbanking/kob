@@ -220,16 +220,20 @@ export default function GettingStarted() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <CodeBlock
               examples={[
-                { language: "bash", label: "Node.js", code: "npm install @kangopenbanking/sdk" },
-                { language: "bash", label: "Python", code: "pip install kangopenbanking" },
-                { language: "bash", label: "PHP", code: "composer require kangopenbanking/sdk-php" },
-                { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/kob-go" },
-                { language: "bash", label: "Java", code: "// Maven\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>sdk</artifactId>\n  <version>1.0.0</version>\n</dependency>" },
+                { language: "bash", label: "Node.js", code: "npm install @kangopenbanking/sdk         # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-node" },
+                { language: "bash", label: "Python", code: "pip install kangopenbanking              # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-python" },
+                { language: "bash", label: "PHP", code: "composer require kangopenbanking/sdk     # v1.6.0\n# GitHub: https://github.com/kangopenbanking/sdk-php" },
+                { language: "bash", label: "Java", code: "<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>4.29.1</version>\n</dependency>\n<!-- GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB -->\n<!-- CI/CD:  https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml -->" },
+                { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go  # v1.5.0\n# pkg.go.dev: https://pkg.go.dev/github.com/kangopenbanking/sdk-go" },
+                { language: "bash", label: "Ruby", code: "# Community guide via openapi-generator-cli (ruby)\n# GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB\n# Docs:   https://kangopenbanking.com/developer/guides/sdks#ruby" },
               ]}
             />
+            <p className="text-xs text-muted-foreground">
+              All six official SDKs are generally available. Node.js, Python, and PHP are first-party packages; Java and Go ship from the typed generator pipeline; Ruby is supported via the community OpenAPI Generator workflow.
+            </p>
           </CardContent>
         </Card>
 
