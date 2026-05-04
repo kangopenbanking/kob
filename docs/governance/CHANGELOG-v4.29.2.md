@@ -22,7 +22,7 @@ copy-paste workflows in the developer portal and Postman.
 
 The live `public/openapi.json`, `public/openapi.yaml`,
 `public/openapi-sandbox.json`, and `public/openapi-sandbox.yaml` were
-already clean as of v4.29.1.
+already clean as of v4.29.2.
 
 ## Verification
 
@@ -47,4 +47,4 @@ are relative to `servers[].url`, so prefixing twice produces `/v1/v1/...`.
   corrected example strings.
 - **ORDER P5 — Working Code Rule:** Smoke test confirms canonical
   endpoints still respond.
-- **STANDING ORDER 6 — Version Gate:** Patch increment (4.29.1 → 4.29.2).
+- **STANDING ORDER 6 — Version Gate:** Patch increment (4.29.2 → 4.29.2).

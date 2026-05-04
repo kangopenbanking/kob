@@ -16,7 +16,7 @@ const ROOT = process.cwd();
 const JSON_PATH = path.join(ROOT, 'public/openapi.json');
 const YAML_PATH = path.join(ROOT, 'public/openapi.yaml');
 const SBX_PATH = path.join(ROOT, 'public/openapi-sandbox.json');
-const VERSION = '4.29.1';
+const VERSION = '4.29.2';
 
 const spec = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const sbx = JSON.parse(fs.readFileSync(SBX_PATH, 'utf8'));

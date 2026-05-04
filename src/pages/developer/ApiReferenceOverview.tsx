@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { KOB_API_VERSION } from "@/config/version";
 
 const requestFormat = `curl -X POST https://api.kangopenbanking.com/v1/{endpoint} \\
   -H "Authorization: Bearer {your_secret_key}" \\
@@ -19,7 +20,7 @@ const standardResponse = `{
   "meta": {
     "request_id": "req_550e8400e29b",
     "timestamp": "2026-03-27T14:32:00Z",
-    "api_version": "4.6.0"
+    "api_version": "${KOB_API_VERSION}"
   }
 }`;
 

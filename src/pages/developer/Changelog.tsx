@@ -47,17 +47,17 @@ interface ChangelogFile {
 
 const FALLBACK: ChangelogFile = {
   apiVersion: KOB_API_VERSION,
-  lastUpdated: "2026-05-02",
+  lastUpdated: "2026-05-04",
   entries: [
     {
-      version: "4.28.2",
-      date: "2026-05-02",
+      version: KOB_API_VERSION,
+      date: "2026-05-04",
       type: "patch",
-      summary: "Webhook signature and replay-protection header names aligned across the public OpenAPI spec and developer docs.",
+      summary: "Developer portal version alignment across OpenAPI, Postman, changelog, and guide metadata.",
       highlights: [
-        "Canonical X-KOB-Signature header with v1=<hex> signature versioning",
-        "X-Webhook-ID deduplication and X-Webhook-Timestamp replay windows documented",
-        "Public changelog feed remains available at /changelog.json",
+        "OpenAPI JSON/YAML, sandbox specs, Postman manifest, and SDK generator surfaces now report the same current version.",
+        "Changelog feed confirms v4.17.0 through v4.29.x coverage.",
+        "Getting-started and gateway quickstart metadata now read from the shared API version source.",
       ],
     },
   ],

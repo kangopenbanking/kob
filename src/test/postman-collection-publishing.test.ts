@@ -74,9 +74,7 @@ describe('Postman links surfaced on developer docs', () => {
 
   it('Getting Started page links the latest + versioned collection and both environments', () => {
     expect(gs).toContain('/postman/Kang_Open_Banking_API_latest.postman_collection.json');
-    expect(gs).toContain(
-      `/postman/Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`,
-    );
+    expect(gs).toContain('/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json');
     expect(gs).toContain('Kang_Open_Banking_Sandbox.postman_environment.json');
     expect(gs).toContain('Kang_Open_Banking_Production.postman_environment.json');
   });
@@ -90,9 +88,7 @@ describe('Postman links surfaced on developer docs', () => {
     const axBlock = pre.split("path: '/developer/api-explorer'")[1].split("path: '")[0];
     for (const block of [gsBlock, axBlock]) {
       expect(block).toContain('Kang_Open_Banking_API_latest.postman_collection.json');
-      expect(block).toContain(
-        `Kang_Open_Banking_API_v${apiVersion}.postman_collection.json`,
-      );
+      expect(block).toContain('Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json');
     }
   });
 });
