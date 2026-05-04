@@ -5815,11 +5815,11 @@
                       "properties": {
                         "token_endpoint": {
                           "type": "string",
-                          "example": "https://api.kangopenbanking.com/v1/v1/oauth/token"
+                          "example": "https://api.kangopenbanking.com/v1/oauth/token"
                         },
                         "par_endpoint": {
                           "type": "string",
-                          "example": "https://api.kangopenbanking.com/v1/v1/oauth/par"
+                          "example": "https://api.kangopenbanking.com/v1/oauth/par"
                         }
                       }
                     },
