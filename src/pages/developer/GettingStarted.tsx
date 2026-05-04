@@ -147,7 +147,7 @@ const responseExample = `{
   "meta": {
     "request_id": "req_550e8400e29b",
     "timestamp": "2026-04-01T10:00:00Z",
-    "api_version": "4.6.0"
+    "api_version": "${KOB_API_VERSION}"
   }
 }`;
 
