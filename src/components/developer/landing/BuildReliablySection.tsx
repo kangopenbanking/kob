@@ -16,6 +16,7 @@ import {
   CircleDot,
   ArrowRightLeft,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 
 const items = [
