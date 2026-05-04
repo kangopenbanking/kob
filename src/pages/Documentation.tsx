@@ -117,6 +117,7 @@ const Documentation = () => {
   const coreEndpoints = [
     { method: "GET", endpoint: "/v1/aisp/accounts", description: "List accounts linked to a consent (AISP)" },
     { method: "POST", endpoint: "/v1/pisp/domestic-payments", description: "Initiate a domestic payment (PISP)" },
+    { method: "POST", endpoint: "/v1/pisp/payment-submission", description: `Submit a PISP payment (${KOB_API_VERSION_LABEL}: requires consent_id, amount, currency, debtor & creditor account)` },
     { method: "POST", endpoint: "/v1/gateway/charges", description: "Create a charge to collect payment" },
     { method: "POST", endpoint: "/v1/gateway/payouts", description: "Initiate a payout to a bank account or mobile wallet" },
     { method: "POST", endpoint: "/v1/gateway/payment-links", description: "Generate a hosted payment link" },
