@@ -4216,7 +4216,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/health" \
+            curl -X GET "https://api.kangopenbanking.com/v1/health" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -4361,7 +4361,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/ready" \
+            curl -X GET "https://api.kangopenbanking.com/v1/ready" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -4596,7 +4596,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/system-health" \
+            curl -X GET "https://api.kangopenbanking.com/v1/system-health" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -4905,7 +4905,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/oauth/authorize" \
+            curl -X GET "https://api.kangopenbanking.com/v1/oauth/authorize" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -5178,7 +5178,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/oauth/token" \
+            curl -X POST "https://api.kangopenbanking.com/v1/oauth/token" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -5434,7 +5434,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/oauth/introspect" \
+            curl -X POST "https://api.kangopenbanking.com/v1/oauth/introspect" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -5710,7 +5710,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/oauth/par" \
+            curl -X POST "https://api.kangopenbanking.com/v1/oauth/par" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -5986,7 +5986,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/dcr/register" \
+            curl -X POST "https://api.kangopenbanking.com/v1/dcr/register" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -6155,10 +6155,10 @@ paths:
                     properties:
                       token_endpoint:
                         type: string
-                        example: https://api.kangopenbanking.com/v1/v1/oauth/token
+                        example: https://api.kangopenbanking.com/v1/oauth/token
                       par_endpoint:
                         type: string
-                        example: https://api.kangopenbanking.com/v1/v1/oauth/par
+                        example: https://api.kangopenbanking.com/v1/oauth/par
                   pushed_authorization_request_endpoint:
                     type: string
                     format: uri
@@ -6251,7 +6251,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/oidc/.well-known/openid-configuration" \
+            curl -X GET "https://api.kangopenbanking.com/v1/oidc/.well-known/openid-configuration" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -6404,7 +6404,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/jwks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/jwks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -6647,7 +6647,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/phone/send-otp" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/phone/send-otp" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -6908,7 +6908,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/phone/verify-otp" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/phone/verify-otp" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -7171,7 +7171,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/phone/pin-login" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/phone/pin-login" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -7422,7 +7422,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/pin/set" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/pin/set" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -7673,7 +7673,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/pin/verify" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/pin/verify" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -7929,7 +7929,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/auth/password/reset-with-pin" \
+            curl -X POST "https://api.kangopenbanking.com/v1/auth/password/reset-with-pin" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -8173,7 +8173,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/security/captcha/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/security/captcha/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -8426,7 +8426,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/security/captcha/verify" \
+            curl -X POST "https://api.kangopenbanking.com/v1/security/captcha/verify" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -8688,7 +8688,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/security/sca/initiate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/security/sca/initiate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -8942,7 +8942,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/security/sca/verify" \
+            curl -X POST "https://api.kangopenbanking.com/v1/security/sca/verify" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -9199,7 +9199,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/certificates" \
+            curl -X POST "https://api.kangopenbanking.com/v1/certificates" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -9451,7 +9451,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/certificates" \
+            curl -X GET "https://api.kangopenbanking.com/v1/certificates" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -9712,7 +9712,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/certificates/revoke" \
+            curl -X POST "https://api.kangopenbanking.com/v1/certificates/revoke" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -9990,7 +9990,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/aisp/consents" \
+            curl -X POST "https://api.kangopenbanking.com/v1/aisp/consents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -10298,7 +10298,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -10548,7 +10548,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -10818,7 +10818,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}/balances" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}/balances" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -11143,7 +11143,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}/transactions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -11411,7 +11411,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}/beneficiaries" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}/beneficiaries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -11678,7 +11678,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}/standing-orders" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}/standing-orders" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -11945,7 +11945,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/aisp/accounts/{accountId}/direct-debits" \
+            curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts/{accountId}/direct-debits" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -12230,7 +12230,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pisp/consents" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pisp/consents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -12515,7 +12515,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pisp/domestic-payment" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pisp/domestic-payment" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -12878,7 +12878,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pisp/payment-submission" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pisp/payment-submission" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -13127,7 +13127,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/pisp/payments/{paymentId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/pisp/payments/{paymentId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -13367,7 +13367,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consents/{consentId}/authorize" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consents/{consentId}/authorize" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -13615,7 +13615,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consents/{consentId}/revoke" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consents/{consentId}/revoke" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -13924,7 +13924,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/consents" \
+            curl -X GET "https://api.kangopenbanking.com/v1/consents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -14158,7 +14158,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/credit/score" \
+            curl -X GET "https://api.kangopenbanking.com/v1/credit/score" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -14384,7 +14384,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/credit/score" \
+            curl -X POST "https://api.kangopenbanking.com/v1/credit/score" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -14647,7 +14647,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/credit/simulate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/credit/simulate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -14894,7 +14894,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/credit/tips" \
+            curl -X GET "https://api.kangopenbanking.com/v1/credit/tips" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -15130,7 +15130,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/credit/report" \
+            curl -X POST "https://api.kangopenbanking.com/v1/credit/report" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -15378,7 +15378,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/loans/products" \
+            curl -X GET "https://api.kangopenbanking.com/v1/loans/products" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -15635,7 +15635,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/apply" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/apply" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -15902,7 +15902,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/calculate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/calculate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -16163,7 +16163,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/{loanId}/approve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/{loanId}/approve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -16425,7 +16425,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/{loanId}/disburse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/{loanId}/disburse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -16678,7 +16678,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/loans/{loanId}/schedule" \
+            curl -X GET "https://api.kangopenbanking.com/v1/loans/{loanId}/schedule" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -16923,7 +16923,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/{loanId}/schedule" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/{loanId}/schedule" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -17202,7 +17202,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/loans/{loanId}/repay" \
+            curl -X POST "https://api.kangopenbanking.com/v1/loans/{loanId}/repay" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -17450,7 +17450,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/savings/products" \
+            curl -X GET "https://api.kangopenbanking.com/v1/savings/products" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -17715,7 +17715,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/savings/accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/savings/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -17906,7 +17906,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/savings/accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/savings/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -18171,7 +18171,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/savings/accounts/{accountId}/deposit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/savings/accounts/{accountId}/deposit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -18442,7 +18442,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/savings/accounts/{accountId}/withdraw" \
+            curl -X POST "https://api.kangopenbanking.com/v1/savings/accounts/{accountId}/withdraw" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -18691,7 +18691,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/savings/accrue-interest" \
+            curl -X POST "https://api.kangopenbanking.com/v1/savings/accrue-interest" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -18965,7 +18965,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/ledger/accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/ledger/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -19243,7 +19243,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/ledger/accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/ledger/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -19497,7 +19497,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/ledger/accounts/{accountId}/balance" \
+            curl -X GET "https://api.kangopenbanking.com/v1/ledger/accounts/{accountId}/balance" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -19738,7 +19738,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/ledger/journal" \
+            curl -X POST "https://api.kangopenbanking.com/v1/ledger/journal" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20015,7 +20015,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/ledger/journal" \
+            curl -X GET "https://api.kangopenbanking.com/v1/ledger/journal" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -20163,7 +20163,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/mobile-money/charge" \
+            curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/charge" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20312,7 +20312,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/mobile-money/transfer" \
+            curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/transfer" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20436,7 +20436,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/mobile-money/verify" \
+            curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/verify" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20571,7 +20571,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/mobile-money/to-bank" \
+            curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/to-bank" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20725,7 +20725,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/flutterwave/bank-transfer" \
+            curl -X POST "https://api.kangopenbanking.com/v1/flutterwave/bank-transfer" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -20836,7 +20836,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/flutterwave/banks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/flutterwave/banks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -20953,7 +20953,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/flutterwave/verify-bank" \
+            curl -X POST "https://api.kangopenbanking.com/v1/flutterwave/verify-bank" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -21099,7 +21099,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/stripe/payment-intent" \
+            curl -X POST "https://api.kangopenbanking.com/v1/stripe/payment-intent" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -21222,7 +21222,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/stripe/confirm-payment" \
+            curl -X POST "https://api.kangopenbanking.com/v1/stripe/confirm-payment" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -21500,7 +21500,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/bulk-transfers" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/bulk-transfers" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -21761,7 +21761,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banking/exchange-rate" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banking/exchange-rate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -22021,7 +22021,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/cards" \
+            curl -X POST "https://api.kangopenbanking.com/v1/cards" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -22269,7 +22269,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/cards" \
+            curl -X GET "https://api.kangopenbanking.com/v1/cards" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -22533,7 +22533,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/cards/{cardId}/topup" \
+            curl -X POST "https://api.kangopenbanking.com/v1/cards/{cardId}/topup" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -22812,7 +22812,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/cards/{cardId}/transactions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/cards/{cardId}/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -23065,7 +23065,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/cards/{cardId}/status" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/cards/{cardId}/status" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -23343,7 +23343,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/pain001/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/pain001/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -23608,7 +23608,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/camt053/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/camt053/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -23866,7 +23866,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/pacs008/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/pacs008/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24124,7 +24124,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/pacs002/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/pacs002/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24232,7 +24232,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/swift/mt103/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/swift/mt103/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24344,7 +24344,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/swift/mt940/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/swift/mt940/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24466,7 +24466,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/swift/mt103/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/swift/mt103/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24728,7 +24728,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/validate/iban" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/validate/iban" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -24985,7 +24985,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/validate/bic" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/validate/bic" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -25267,7 +25267,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/validate/rib" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/validate/rib" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -25548,7 +25548,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/validate/account-identifier" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/validate/account-identifier" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -25709,7 +25709,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/directory/banks/cm" \
+            curl -X GET "https://api.kangopenbanking.com/v1/directory/banks/cm" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -26022,7 +26022,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/kyc/submit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/kyc/submit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -26282,7 +26282,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/kyc/sanctions-screen" \
+            curl -X POST "https://api.kangopenbanking.com/v1/kyc/sanctions-screen" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -26535,7 +26535,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/kyc/data-export" \
+            curl -X GET "https://api.kangopenbanking.com/v1/kyc/data-export" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -26850,7 +26850,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/webhooks" \
+            curl -X POST "https://api.kangopenbanking.com/v1/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -27103,7 +27103,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/webhooks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -27377,7 +27377,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/webhooks/{webhookId}/deliveries" \
+            curl -X GET "https://api.kangopenbanking.com/v1/webhooks/{webhookId}/deliveries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -27647,7 +27647,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/users" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/users" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -27921,7 +27921,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/clients" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/clients" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -28166,7 +28166,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/metrics" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/metrics" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -28406,7 +28406,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/sandbox/accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/sandbox/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -28636,7 +28636,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/system-config" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/system-config" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -28873,7 +28873,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/admin/system-config" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/admin/system-config" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -29137,7 +29137,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/webhooks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -29396,7 +29396,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/transactions/review" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/transactions/review" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -29663,7 +29663,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/loans" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/loans" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -29934,7 +29934,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/savings" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/savings" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -30209,7 +30209,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/consents" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/consents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -30457,7 +30457,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/staff/assign" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/staff/assign" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -30705,7 +30705,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/branches" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/branches" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -30956,7 +30956,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/branches" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/branches" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -31229,7 +31229,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/communications/send" \
+            curl -X POST "https://api.kangopenbanking.com/v1/communications/send" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -31487,7 +31487,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/communications/bulk" \
+            curl -X POST "https://api.kangopenbanking.com/v1/communications/bulk" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -31769,7 +31769,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/invoices/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/invoices/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -32030,7 +32030,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/institutions/register" \
+            curl -X POST "https://api.kangopenbanking.com/v1/institutions/register" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -32298,7 +32298,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/institutions/{institutionId}/clients" \
+            curl -X POST "https://api.kangopenbanking.com/v1/institutions/{institutionId}/clients" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -32563,7 +32563,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/institutions/{institutionId}/kyb" \
+            curl -X POST "https://api.kangopenbanking.com/v1/institutions/{institutionId}/kyb" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -32807,7 +32807,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/crediq/health-check" \
+            curl -X GET "https://api.kangopenbanking.com/v1/crediq/health-check" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -33032,7 +33032,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/crediq/baseline-score" \
+            curl -X POST "https://api.kangopenbanking.com/v1/crediq/baseline-score" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -33272,7 +33272,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/crediq/health-metrics" \
+            curl -X POST "https://api.kangopenbanking.com/v1/crediq/health-metrics" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -33512,7 +33512,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/crediq/action-plan" \
+            curl -X POST "https://api.kangopenbanking.com/v1/crediq/action-plan" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -33770,7 +33770,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/postiq/codes" \
+            curl -X POST "https://api.kangopenbanking.com/v1/postiq/codes" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -34022,7 +34022,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/postiq/codes/{code}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/postiq/codes/{code}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -34279,7 +34279,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/woocommerce/merchants" \
+            curl -X POST "https://api.kangopenbanking.com/v1/woocommerce/merchants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -34553,7 +34553,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/woocommerce/validate-install" \
+            curl -X POST "https://api.kangopenbanking.com/v1/woocommerce/validate-install" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -34783,7 +34783,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/woocommerce/plugin/download" \
+            curl -X GET "https://api.kangopenbanking.com/v1/woocommerce/plugin/download" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -35083,7 +35083,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/woocommerce/process-payment" \
+            curl -X POST "https://api.kangopenbanking.com/v1/woocommerce/process-payment" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -35368,7 +35368,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/woocommerce/transactions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/woocommerce/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -35642,7 +35642,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/woocommerce/webhook" \
+            curl -X POST "https://api.kangopenbanking.com/v1/woocommerce/webhook" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -35892,7 +35892,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -36143,7 +36143,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/api-keys" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/api-keys" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -36383,7 +36383,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/data/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/data/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -36643,7 +36643,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/webhooks" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -36920,7 +36920,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/developers/register" \
+            curl -X POST "https://api.kangopenbanking.com/v1/developers/register" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -37215,7 +37215,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -37500,7 +37500,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/charges" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/charges" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -37740,7 +37740,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -37981,7 +37981,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}/verify" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}/verify" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -38231,7 +38231,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}/cancel" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}/cancel" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -38499,7 +38499,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/fee-estimate" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/fee-estimate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -38760,7 +38760,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/refunds" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/refunds" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -39023,7 +39023,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/refunds" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/refunds" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -39263,7 +39263,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/refunds/{refundId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/refunds/{refundId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -39558,7 +39558,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payouts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payouts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -39829,7 +39829,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payouts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payouts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -40069,7 +40069,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payouts/{payoutId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payouts/{payoutId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -40369,7 +40369,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payout-batches" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payout-batches" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -40624,7 +40624,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payout-batches/{batchId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payout-batches/{batchId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -40902,7 +40902,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payouts/paypal" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payouts/paypal" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -41213,7 +41213,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/withdraw-to-paypal" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/withdraw-to-paypal" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -41487,7 +41487,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/disputes" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/disputes" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -41727,7 +41727,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/disputes/{disputeId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/disputes/{disputeId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -41988,7 +41988,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/disputes/{disputeId}/evidence" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/disputes/{disputeId}/evidence" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -42266,7 +42266,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/settlements" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/settlements" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -42506,7 +42506,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/settlements/{settlementId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/settlements/{settlementId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -42764,7 +42764,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/beneficiaries" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/beneficiaries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -43041,7 +43041,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/beneficiaries" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/beneficiaries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -43269,7 +43269,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/gateway/beneficiaries/{beneficiaryId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/beneficiaries/{beneficiaryId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -43545,7 +43545,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/transactions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -43821,7 +43821,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/settlements" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/settlements" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -44080,7 +44080,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/export/transactions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/export/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -44347,7 +44347,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/preauth" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/preauth" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -44617,7 +44617,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}/capture" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}/capture" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -44884,7 +44884,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}/void" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}/void" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -45137,7 +45137,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/validate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/validate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -45418,7 +45418,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/virtual-accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/virtual-accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -45670,7 +45670,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/virtual-accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/virtual-accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -45910,7 +45910,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/virtual-accounts/{accountId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/virtual-accounts/{accountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -46154,7 +46154,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/balances" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/balances" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -46405,7 +46405,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/verify-bank-account" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/verify-bank-account" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -46661,7 +46661,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/resolve-bvn" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/resolve-bvn" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -46988,7 +46988,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/fund-account" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/fund-account" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -47297,7 +47297,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/withdraw-to-bank" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/withdraw-to-bank" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -47610,7 +47610,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/internal-transfer" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/internal-transfer" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -47941,7 +47941,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/facilitated-transfer" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/facilitated-transfer" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -48236,7 +48236,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/facilitated-mobile-money-charge" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/facilitated-mobile-money-charge" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -48505,7 +48505,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/settlement/calculate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/settlement/calculate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -48777,7 +48777,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/settlement/process" \
+            curl -X POST "https://api.kangopenbanking.com/v1/settlement/process" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -49116,7 +49116,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/risk/score" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/risk/score" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -49386,7 +49386,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/exchange-rate" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/exchange-rate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -49665,7 +49665,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payment-links" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payment-links" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -49946,7 +49946,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payment-links" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payment-links" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -50195,7 +50195,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/gateway/payment-links/{linkId}" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/gateway/payment-links/{linkId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -50431,7 +50431,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/gateway/payment-links/{linkId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/payment-links/{linkId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -50714,7 +50714,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payment-plans" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payment-plans" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -50991,7 +50991,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payment-plans" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payment-plans" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -51231,7 +51231,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/payment-plans/{planId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/payment-plans/{planId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -51485,7 +51485,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/gateway/payment-plans/{planId}" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/gateway/payment-plans/{planId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -51751,7 +51751,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/subscriptions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -52032,7 +52032,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/subscriptions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -52272,7 +52272,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions/{subscriptionId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/subscriptions/{subscriptionId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -52484,7 +52484,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions/{subscriptionId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/gateway/subscriptions/{subscriptionId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -52672,7 +52672,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions/{subscriptionId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/subscriptions/{subscriptionId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -52921,7 +52921,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/subscriptions/cancel" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/subscriptions/cancel" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -53196,7 +53196,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/subaccounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/subaccounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -53473,7 +53473,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/subaccounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/subaccounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -53713,7 +53713,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/subaccounts/{subaccountId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/subaccounts/{subaccountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -53965,7 +53965,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/gateway/subaccounts/{subaccountId}" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/gateway/subaccounts/{subaccountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -54201,7 +54201,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/gateway/subaccounts/{subaccountId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/subaccounts/{subaccountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -54457,7 +54457,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/customers" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/customers" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -54734,7 +54734,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/customers" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/customers" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -54974,7 +54974,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/customers/{customerId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/customers/{customerId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -55228,7 +55228,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/gateway/customers/{customerId}" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/gateway/customers/{customerId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -55481,7 +55481,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/customers/{customerId}/tokens" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/customers/{customerId}/tokens" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -55714,7 +55714,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/gateway/customers/{customerId}/tokens/{tokenId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/gateway/customers/{customerId}/tokens/{tokenId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -55988,7 +55988,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/charges/token" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/charges/token" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -56241,7 +56241,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/charges/{chargeId}/events" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/charges/{chargeId}/events" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -56503,7 +56503,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/reconciliation" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/reconciliation" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -56780,7 +56780,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reconciliation" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reconciliation" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -57058,7 +57058,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/fees" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/fees" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -57298,7 +57298,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/payouts/{payoutId}/retry" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/payouts/{payoutId}/retry" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -57572,7 +57572,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -57849,7 +57849,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -58090,7 +58090,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/merchants" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/merchants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -58359,7 +58359,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/kyb" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/kyb" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -58618,7 +58618,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/kyb" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/kyb" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -58881,7 +58881,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/api-keys" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/api-keys" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -59132,7 +59132,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/api-keys" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/api-keys" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -59365,7 +59365,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/merchants/api-keys" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/merchants/api-keys" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -59640,7 +59640,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/settlement-accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/settlement-accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -59891,7 +59891,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/settlement-accounts" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/settlement-accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -60166,7 +60166,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/webhooks" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -60423,7 +60423,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/webhooks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/webhooks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -60678,7 +60678,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/oauth/revoke" \
+            curl -X POST "https://api.kangopenbanking.com/v1/oauth/revoke" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -60847,7 +60847,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/oauth/userinfo" \
+            curl -X GET "https://api.kangopenbanking.com/v1/oauth/userinfo" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -61158,7 +61158,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/piggybank" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/piggybank" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -61414,7 +61414,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/piggybank/pay" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/piggybank/pay" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -61727,7 +61727,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/njangi" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/njangi" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -61989,7 +61989,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/njangi/join" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/njangi/join" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -62245,7 +62245,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/njangi/contribute" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/njangi/contribute" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -62511,7 +62511,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consumer/njangi/payout" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consumer/njangi/payout" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -62823,7 +62823,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/funding-intents" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/funding-intents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -63099,7 +63099,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/funding-intents" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/funding-intents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -63367,7 +63367,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/funding-intents/{intentId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/funding-intents/{intentId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -63605,7 +63605,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/funding-intents/{intentId}/cancel" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/funding-intents/{intentId}/cancel" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -63852,7 +63852,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/funding-intents/{intentId}/confirm" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/funding-intents/{intentId}/confirm" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -64154,7 +64154,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/teller/transaction" \
+            curl -X POST "https://api.kangopenbanking.com/v1/teller/transaction" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -64407,7 +64407,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/withdrawal-policies" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/withdrawal-policies" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -64714,7 +64714,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/withdrawal-policies" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/withdrawal-policies" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -64971,7 +64971,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/withdrawal-policies/{policyId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/withdrawal-policies/{policyId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -65223,7 +65223,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/admin/withdrawal-policies/{policyId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/admin/withdrawal-policies/{policyId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -65476,7 +65476,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/staff/authorizations" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/staff/authorizations" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -65751,7 +65751,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/staff/authorizations" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/staff/authorizations" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -66006,7 +66006,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/staff/authorizations/{authorizationId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/staff/authorizations/{authorizationId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -66257,7 +66257,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/admin/staff/authorizations/{authorizationId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/admin/staff/authorizations/{authorizationId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -66604,7 +66604,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/withdrawal-requests" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/withdrawal-requests" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -66886,7 +66886,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banking/withdrawal-requests" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banking/withdrawal-requests" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -67154,7 +67154,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banking/withdrawal-requests/{requestId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banking/withdrawal-requests/{requestId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -67392,7 +67392,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/withdrawal-requests/{requestId}/submit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/withdrawal-requests/{requestId}/submit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -67647,7 +67647,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/withdrawal-requests/{requestId}/cancel" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/withdrawal-requests/{requestId}/cancel" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -67930,7 +67930,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banking/approvals" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banking/approvals" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -68188,7 +68188,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banking/approvals/{approvalId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banking/approvals/{approvalId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -68432,7 +68432,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/approvals/{approvalId}/approve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/approvals/{approvalId}/approve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -68691,7 +68691,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/approvals/{approvalId}/reject" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/approvals/{approvalId}/reject" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -68950,7 +68950,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banking/approvals/{approvalId}/escalate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banking/approvals/{approvalId}/escalate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -69221,7 +69221,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft" \
+            curl -X GET "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -69462,7 +69462,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/recalculate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/recalculate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -69738,7 +69738,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/request" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/request" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -70009,7 +70009,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/approve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/approve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -70275,7 +70275,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/suspend" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/suspend" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -70541,7 +70541,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/revoke" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/revoke" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -70806,7 +70806,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/accounts/{accountId}/overdraft/reinstate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/accounts/{accountId}/overdraft/reinstate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -71107,7 +71107,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/wallets" \
+            curl -X POST "https://api.kangopenbanking.com/v1/wallets" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -71380,7 +71380,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/wallets" \
+            curl -X GET "https://api.kangopenbanking.com/v1/wallets" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -71620,7 +71620,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/wallets/{walletId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/wallets/{walletId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -71899,7 +71899,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/wallets/{walletId}/credit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/wallets/{walletId}/credit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -72187,7 +72187,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/wallets/{walletId}/debit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/wallets/{walletId}/debit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -72450,7 +72450,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/wallets/{walletId}/freeze" \
+            curl -X POST "https://api.kangopenbanking.com/v1/wallets/{walletId}/freeze" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -72738,7 +72738,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/wallets/{walletId}/statement" \
+            curl -X GET "https://api.kangopenbanking.com/v1/wallets/{walletId}/statement" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -73088,7 +73088,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/escrow" \
+            curl -X POST "https://api.kangopenbanking.com/v1/escrow" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -73374,7 +73374,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/escrow" \
+            curl -X GET "https://api.kangopenbanking.com/v1/escrow" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -73635,7 +73635,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/escrow/{escrowId}/fund" \
+            curl -X POST "https://api.kangopenbanking.com/v1/escrow/{escrowId}/fund" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -73905,7 +73905,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/escrow/{escrowId}/release" \
+            curl -X POST "https://api.kangopenbanking.com/v1/escrow/{escrowId}/release" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -74169,7 +74169,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/escrow/{escrowId}/refund" \
+            curl -X POST "https://api.kangopenbanking.com/v1/escrow/{escrowId}/refund" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -74432,7 +74432,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/escrow/{escrowId}/freeze" \
+            curl -X POST "https://api.kangopenbanking.com/v1/escrow/{escrowId}/freeze" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -74706,7 +74706,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/compliance/screen" \
+            curl -X POST "https://api.kangopenbanking.com/v1/compliance/screen" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -75001,7 +75001,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/compliance/sar" \
+            curl -X POST "https://api.kangopenbanking.com/v1/compliance/sar" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -75284,7 +75284,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/compliance/sar" \
+            curl -X GET "https://api.kangopenbanking.com/v1/compliance/sar" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -75539,7 +75539,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/compliance/sar/{sarId}/review" \
+            curl -X POST "https://api.kangopenbanking.com/v1/compliance/sar/{sarId}/review" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -75794,7 +75794,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/compliance/sar/{sarId}/submit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/compliance/sar/{sarId}/submit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -76037,7 +76037,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/safeguarding/reconcile" \
+            curl -X POST "https://api.kangopenbanking.com/v1/safeguarding/reconcile" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -76320,7 +76320,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/safeguarding/snapshots" \
+            curl -X GET "https://api.kangopenbanking.com/v1/safeguarding/snapshots" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -76591,7 +76591,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/payouts/instant" \
+            curl -X POST "https://api.kangopenbanking.com/v1/payouts/instant" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -76875,7 +76875,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/payouts/push-to-card" \
+            curl -X POST "https://api.kangopenbanking.com/v1/payouts/push-to-card" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -77130,7 +77130,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/payouts/rails" \
+            curl -X GET "https://api.kangopenbanking.com/v1/payouts/rails" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -77377,7 +77377,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/payouts/{payoutId}/cancel" \
+            curl -X POST "https://api.kangopenbanking.com/v1/payouts/{payoutId}/cancel" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -77644,7 +77644,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/treasury/float" \
+            curl -X GET "https://api.kangopenbanking.com/v1/treasury/float" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -77919,7 +77919,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/treasury/replenish" \
+            curl -X POST "https://api.kangopenbanking.com/v1/treasury/replenish" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -78176,7 +78176,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/sla/metrics" \
+            curl -X GET "https://api.kangopenbanking.com/v1/sla/metrics" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -78427,7 +78427,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sla/metrics" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sla/metrics" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -78708,7 +78708,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/sla/incidents" \
+            curl -X GET "https://api.kangopenbanking.com/v1/sla/incidents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -78966,7 +78966,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sla/incidents" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sla/incidents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -79227,7 +79227,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/sla/incidents/{incidentId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/sla/incidents/{incidentId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -79556,7 +79556,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints" \
+            curl -X POST "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -79807,7 +79807,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints" \
+            curl -X GET "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -80060,7 +80060,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints/{endpointId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints/{endpointId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -80296,7 +80296,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints/{endpointId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints/{endpointId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -80572,7 +80572,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/webhooks/v2/deliveries" \
+            curl -X GET "https://api.kangopenbanking.com/v1/webhooks/v2/deliveries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -80768,7 +80768,7 @@ paths:
           label: cURL
           source: >-
             curl -X POST
-            "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay" \
+            "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -80947,7 +80947,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/webhooks/v2/endpoints/{endpointId}/health" \
+            curl -X GET "https://api.kangopenbanking.com/v1/webhooks/v2/endpoints/{endpointId}/health" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -81236,7 +81236,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/payout-sim" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/payout-sim" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -81482,7 +81482,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/sandbox/payout-sim" \
+            curl -X GET "https://api.kangopenbanking.com/v1/sandbox/payout-sim" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -81758,7 +81758,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/reconciliation/mismatches" \
+            curl -X GET "https://api.kangopenbanking.com/v1/reconciliation/mismatches" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -82021,7 +82021,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/reconciliation/mismatches/{mismatchId}/resolve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/reconciliation/mismatches/{mismatchId}/resolve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -82262,7 +82262,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/directory/banks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/directory/banks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -82530,7 +82530,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/register" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/register" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -82804,7 +82804,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -83045,7 +83045,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -83291,7 +83291,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PUT "https://api.kangopenbanking.com/v1/v1/banks/{bankId}" \
+            curl -X PUT "https://api.kangopenbanking.com/v1/banks/{bankId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -83538,7 +83538,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/approve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/approve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -83785,7 +83785,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/suspend" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/suspend" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -84038,7 +84038,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connectors" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/connectors" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -84309,7 +84309,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connectors" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connectors" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -84568,7 +84568,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connectors/{connectorId}/health" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/connectors/{connectorId}/health" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -84823,7 +84823,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connectors/{connectorId}/certificates" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connectors/{connectorId}/certificates" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -85119,7 +85119,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/internal/connectors/{bankId}/accounts" \
+            curl -X POST "https://api.kangopenbanking.com/v1/internal/connectors/{bankId}/accounts" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -85429,7 +85429,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/internal/connectors/{bankId}/transactions" \
+            curl -X POST "https://api.kangopenbanking.com/v1/internal/connectors/{bankId}/transactions" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -85719,7 +85719,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/interbank/payments" \
+            curl -X GET "https://api.kangopenbanking.com/v1/interbank/payments" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -85990,7 +85990,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/interbank/payments" \
+            curl -X POST "https://api.kangopenbanking.com/v1/interbank/payments" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -86240,7 +86240,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/interbank/payments/{paymentId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/interbank/payments/{paymentId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -86479,7 +86479,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/interbank/payments/{paymentId}/submit" \
+            curl -X POST "https://api.kangopenbanking.com/v1/interbank/payments/{paymentId}/submit" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -86726,7 +86726,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/interbank/participants" \
+            curl -X GET "https://api.kangopenbanking.com/v1/interbank/participants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -86994,7 +86994,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/interbank/messages" \
+            curl -X GET "https://api.kangopenbanking.com/v1/interbank/messages" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -87243,7 +87243,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/link" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/link" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -87523,7 +87523,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/payments" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/payments" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -87783,7 +87783,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/internal/connectors/{bankId}/payments/status" \
+            curl -X POST "https://api.kangopenbanking.com/v1/internal/connectors/{bankId}/payments/status" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -88047,7 +88047,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pay-by-bank/intents" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pay-by-bank/intents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -88322,7 +88322,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/pay-by-bank/intents" \
+            curl -X GET "https://api.kangopenbanking.com/v1/pay-by-bank/intents" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -88563,7 +88563,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/pay-by-bank/intents/{intentId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/pay-by-bank/intents/{intentId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -88818,7 +88818,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pay-by-bank/intents/{intentId}/authorize" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pay-by-bank/intents/{intentId}/authorize" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -89073,7 +89073,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pay-by-bank/intents/{intentId}/reject" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pay-by-bank/intents/{intentId}/reject" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -89342,7 +89342,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/pay-by-bank/callback" \
+            curl -X POST "https://api.kangopenbanking.com/v1/pay-by-bank/callback" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -89550,7 +89550,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/gateway/merchants/webhooks/{webhookId}/rotate-secret" \
+            curl -X POST "https://api.kangopenbanking.com/v1/gateway/merchants/webhooks/{webhookId}/rotate-secret" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -89744,7 +89744,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/webhooks/providers/stripe" \
+            curl -X POST "https://api.kangopenbanking.com/v1/webhooks/providers/stripe" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -89931,7 +89931,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/webhooks/providers/flutterwave" \
+            curl -X POST "https://api.kangopenbanking.com/v1/webhooks/providers/flutterwave" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -90247,7 +90247,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/webhooks/providers/paypal" \
+            curl -X POST "https://api.kangopenbanking.com/v1/webhooks/providers/paypal" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -90441,7 +90441,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/savings/accounts/{accountId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/savings/accounts/{accountId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -90638,7 +90638,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/pacs004/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/pacs004/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -90842,7 +90842,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/pacs009/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/pacs009/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91048,7 +91048,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/camt056/generate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/camt056/generate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91256,7 +91256,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/camt052/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/camt052/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91464,7 +91464,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/standards/iso20022/camt054/parse" \
+            curl -X POST "https://api.kangopenbanking.com/v1/standards/iso20022/camt054/parse" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91623,7 +91623,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/events/simulate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/events/simulate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91781,7 +91781,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/payments/simulate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/payments/simulate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -91931,7 +91931,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/webhooks/send-test" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/webhooks/send-test" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -92058,7 +92058,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/sandbox/reset" \
+            curl -X POST "https://api.kangopenbanking.com/v1/sandbox/reset" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -92194,7 +92194,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/consents/{consentId}/status" \
+            curl -X GET "https://api.kangopenbanking.com/v1/consents/{consentId}/status" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -92325,7 +92325,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/consents/{consentId}/extend" \
+            curl -X POST "https://api.kangopenbanking.com/v1/consents/{consentId}/extend" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -92453,7 +92453,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/certificates/{certificateId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/certificates/{certificateId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -92603,7 +92603,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/oauth/register" \
+            curl -X POST "https://api.kangopenbanking.com/v1/oauth/register" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -92701,7 +92701,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/.well-known/jwks.json" \
+            curl -X GET "https://api.kangopenbanking.com/v1/.well-known/jwks.json" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -92791,7 +92791,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/userinfo" \
+            curl -X GET "https://api.kangopenbanking.com/v1/userinfo" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -92958,7 +92958,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/files/upload" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/files/upload" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -93142,7 +93142,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/sftp/config" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/sftp/config" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -93295,7 +93295,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/sftp/pull" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/sftp/pull" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -93467,7 +93467,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/imports" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/imports" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -93577,7 +93577,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/imports/{importId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/imports/{importId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -93722,7 +93722,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/mappings" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/mappings" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -93879,7 +93879,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/mappings" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/mappings" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -94038,7 +94038,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/validate-template" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/validate-template" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -94235,7 +94235,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/batch-payments" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/batch-payments" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -94409,7 +94409,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/batch-payments" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/batch-payments" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -94531,7 +94531,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/batch-payments/{batchId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/batch-payments/{batchId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -94656,7 +94656,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/batch-payments/{batchId}/download" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/batch-payments/{batchId}/download" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -94815,7 +94815,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/connector/status-files/upload" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/connector/status-files/upload" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -94986,7 +94986,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/reconciliation" \
+            curl -X GET "https://api.kangopenbanking.com/v1/banks/{bankId}/reconciliation" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -95143,7 +95143,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/banks/{bankId}/reconciliation/resolve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/banks/{bankId}/reconciliation/resolve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -95283,7 +95283,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/api-keys/{keyId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/api-keys/{keyId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -95414,7 +95414,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/merchants/api-keys/{keyId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/merchants/api-keys/{keyId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -95558,7 +95558,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/api-keys/{keyId}/rotate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/api-keys/{keyId}/rotate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -95710,7 +95710,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -95862,7 +95862,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X PATCH "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}" \
+            curl -X PATCH "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -96008,7 +96008,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X DELETE "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}" \
+            curl -X DELETE "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -96155,7 +96155,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}/rotate-secret" \
+            curl -X POST "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}/rotate-secret" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -96336,7 +96336,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}/deliveries" \
+            curl -X GET "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}/deliveries" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -96482,7 +96482,7 @@ paths:
           label: cURL
           source: >-
             curl -X POST
-            "https://api.kangopenbanking.com/v1/v1/merchants/webhooks/{webhookId}/deliveries/{deliveryId}/replay" \
+            "https://api.kangopenbanking.com/v1/merchants/webhooks/{webhookId}/deliveries/{deliveryId}/replay" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -96666,7 +96666,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/merchants" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/merchants" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -96813,7 +96813,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/admin/kyb/queue" \
+            curl -X GET "https://api.kangopenbanking.com/v1/admin/kyb/queue" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -96959,7 +96959,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/merchants/{merchantId}/approve" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/merchants/{merchantId}/approve" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -97120,7 +97120,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/merchants/{merchantId}/reject" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/merchants/{merchantId}/reject" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -97286,7 +97286,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/merchants/{merchantId}/suspend" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/merchants/{merchantId}/suspend" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -97448,7 +97448,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X POST "https://api.kangopenbanking.com/v1/v1/admin/merchants/{merchantId}/reinstate" \
+            curl -X POST "https://api.kangopenbanking.com/v1/admin/merchants/{merchantId}/reinstate" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)" \
               -H "Idempotency-Key: $(uuidgen)" \
@@ -97604,7 +97604,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/transactions/export" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/transactions/export" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -97739,7 +97739,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/settlements/export" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/settlements/export" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -97874,7 +97874,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reports/fees/export" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reports/fees/export" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -98040,7 +98040,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/statements" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/statements" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -98157,7 +98157,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/statements/{statementId}/download" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/statements/{statementId}/download" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
@@ -98288,7 +98288,7 @@ paths:
         - lang: cURL
           label: cURL
           source: |-
-            curl -X GET "https://api.kangopenbanking.com/v1/v1/gateway/reconciliation/{runId}" \
+            curl -X GET "https://api.kangopenbanking.com/v1/gateway/reconciliation/{runId}" \
               -H "Authorization: Bearer $KOB_API_KEY" \
               -H "X-Request-Id: $(uuidgen)"
         - lang: JavaScript
