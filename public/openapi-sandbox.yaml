@@ -55037,24 +55037,28 @@ x-sandbox:
   guarantee: Sandbox keys are permanently free (Standing Order P3).
 x-sdks:
   - language: Node.js / TypeScript
-    package: '@kangopenbanking/sdk'
+    package: '@kang/openbanking-node'
     registry: npm
   - language: Python
-    package: kangopenbanking
+    package: kang-openbanking
     registry: PyPI
   - language: PHP / Laravel
-    package: kangopenbanking/sdk
+    package: kang/openbanking-php
     registry: Packagist
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman
   - language: Java
     name: com.kangopenbanking:kangopenbanking-sdk-typed
+    package: com.kangopenbanking:kangopenbanking-sdk-typed
+    registry: Maven
     version: 4.28.1
     repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
     package_manager: https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml
     docs: https://kangopenbanking.com/developer/guides/sdks#java
   - language: Go
     name: github.com/kangopenbanking/sdk-go
+    package: github.com/kangopenbanking/sdk-go
+    registry: pkg.go.dev
     version: v1.5.0
     repository: https://github.com/kangopenbanking/sdk-go
     package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
