@@ -155,23 +155,24 @@ export default function PispReference() {
 
         <ApiEndpoint
           method="POST"
-          endpoint="/v1/pisp/payment-submissions"
-          description="Submit a payment for processing after user authorization. Requires Idempotency-Key header."
+          endpoint="/v1/pisp/payment-submission"
+          description="Submit a payment for processing after user authorization. As of v4.29.3 the request must include the full payment instruction (payment_id, consent_id, amount, currency, debtor_account, creditor_account). Requires Idempotency-Key header."
           requestBody={`{
-  "Data": {
-    "PaymentId": "pay_abc123"
-  }
+  "payment_id": "pay_abc123",
+  "consent_id": "pisp_consent_xyz789",
+  "amount": "50000",
+  "currency": "XAF",
+  "debtor_account": "10005-00001-09876543210-45",
+  "creditor_account": "10005-00001-12345678901-23"
 }`}
           response={`{
-  "Data": {
-    "DomesticPaymentId": "pay_abc123",
-    "ConsentId": "pisp_consent_xyz789",
-    "Status": "submitted",
-    "CreationDateTime": "2026-02-16T10:05:00Z",
-    "StatusUpdateDateTime": "2026-02-16T10:10:00Z",
-    "ExpectedExecutionDateTime": "2026-02-16T14:00:00Z",
-    "ExpectedSettlementDateTime": "2026-02-16T16:00:00Z"
-  }
+  "payment_id": "pay_abc123",
+  "consent_id": "pisp_consent_xyz789",
+  "status": "submitted",
+  "creation_datetime": "2026-05-04T10:05:00Z",
+  "status_update_datetime": "2026-05-04T10:10:00Z",
+  "expected_execution_datetime": "2026-05-04T14:00:00Z",
+  "expected_settlement_datetime": "2026-05-04T16:00:00Z"
 }`}
         />
 

@@ -194,3 +194,25 @@ HTTP 429 responses include a `Retry-After` header.
 ## License
 
 MIT
+
+## PISP Payment Submission (v4.29.3)
+
+As of OpenAPI v4.29.3, `POST /v1/pisp/payment-submission` requires the full payment instruction.
+
+```php
+$kob->pisp->submitPayment([
+    'payment_id'       => 'pay_abc123',
+    'consent_id'       => 'pisp_consent_xyz789',
+    'amount'           => '50000',
+    'currency'         => 'XAF',
+    'debtor_account'   => '10005-00001-09876543210-45',
+    'creditor_account' => '10005-00001-12345678901-23',
+], ['idempotency_key' => Str::uuid()->toString()]);
+```
+
+## Changelog
+
+- **1.2.0** — Aligned to OpenAPI v4.29.3. `submitPayment` now requires
+  `payment_id`, `consent_id`, `amount`, `currency`, `debtor_account`,
+  `creditor_account`. Removed legacy `instructed_amount` / `risk` fields.
+- **1.1.0** — OpenAPI v4.28.x baseline.
