@@ -91,6 +91,46 @@
         {
           "type": "X-ai-plugin",
           "url": "https://kangopenbanking.com/.well-known/ai-plugin.json"
+        },
+        {
+          "type": "X-llms-txt",
+          "url": "https://kangopenbanking.com/llms.txt"
+        },
+        {
+          "type": "X-rate-limits",
+          "url": "https://kangopenbanking.com/developer/api-reference/rate-limits"
+        },
+        {
+          "type": "X-idempotency",
+          "url": "https://kangopenbanking.com/developer/api-reference/idempotency"
+        },
+        {
+          "type": "X-pagination",
+          "url": "https://kangopenbanking.com/developer/api-reference/pagination"
+        },
+        {
+          "type": "X-webhook-retry",
+          "url": "https://kangopenbanking.com/developer/api-reference/webhook-retry"
+        },
+        {
+          "type": "X-token-lifecycle",
+          "url": "https://kangopenbanking.com/developer/api-reference/token-lifecycle"
+        },
+        {
+          "type": "X-sdk-node",
+          "url": "https://www.npmjs.com/package/@kangopenbanking/sdk"
+        },
+        {
+          "type": "X-sdk-python",
+          "url": "https://pypi.org/project/kangopenbanking/"
+        },
+        {
+          "type": "X-sdk-php",
+          "url": "https://packagist.org/packages/kangopenbanking/sdk"
+        },
+        {
+          "type": "X-sdk-go",
+          "url": "https://pkg.go.dev/github.com/kangopenbanking/sdk-go"
         }
       ],
       "contact": [

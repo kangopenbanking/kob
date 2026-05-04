@@ -57,3 +57,9 @@ Allow: /guides/certificates
 Allow: /guides/security
 
 Sitemap: https://kangopenbanking.com/sitemap.xml
+
+# AI crawler index (llmstxt.org convention)
+# GPTBot, ClaudeBot, PerplexityBot, Google-Extended, CCBot, Cohere-ai use this
+# to discover the full developer surface in a single fetch.
+# DO NOT REMOVE — required for AI agent discoverability of operational guides.
+# Index file: https://kangopenbanking.com/llms.txt
