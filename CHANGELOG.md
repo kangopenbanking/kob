@@ -1,12 +1,35 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.29.3** · Last updated: **2026-05-04**
+Current API version: **4.29.4** · Last updated: **2026-05-04**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.29.4 — 2026-05-04
+**Type:** patch · **Breaking changes:** none
+
+Native OpenAPI 3.1 webhooks, lifecycle reference pages, and SDK changelog discoverability. Additive only — no path, schema, or operationId changes.
+
+### Highlights
+- Promoted 8 outbound webhook events (payment_intent.succeeded/failed, refund.created, payout.paid, consent.authorized/revoked, account.balance.updated, kyc.verification.completed) from x-webhooks into the native OpenAPI 3.1 webhooks object so SDK generators emit typed handlers.
+- New developer-portal lifecycle pages: /developer/api-reference/charge-states, /payout-states, /dispute-lifecycle — each with sequence diagrams and state machines.
+- BuildReliablySection on /developer surfaces the new lifecycle pages plus a Standards & compliance entry pointing to /developer/standards.
+- apis.json advertises SDK CHANGELOG.md URLs for Node, Python, PHP, and Go and links the FAPI/OBIE/DCR/ISO 20022 standards index.
+
+### Added
+- webhooks: top-level OpenAPI 3.1 object populated from x-webhooks (additive — x-webhooks retained for backward compatibility).
+- Sitemap, llms.txt, and the discoverability test suite now include /developer/standards plus the three new lifecycle routes.
+
+### Standards & citations
+- OpenAPI 3.1.0 §4.8.16 (Webhook Object)
+- Standing Order 4 — The Surgeon Rule (additive only)
+- Standing Order 6 — The Version Gate (patch increment)
+- ORDER P7 — Changelog Rule
 
 ---
 
