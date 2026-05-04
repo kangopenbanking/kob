@@ -1,12 +1,40 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.29.4** · Last updated: **2026-05-04**
+Current API version: **4.29.5** · Last updated: **2026-05-04**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.29.5 — 2026-05-04
+**Type:** patch · **Breaking changes:** none
+
+Documentation closure on the 15-point Open Banking readiness audit. Four new public developer pages expose surface that already existed in the API: Strong Customer Authentication, JWKS, Environments, and the Deprecation Policy. Additive only — no path, schema, or operationId changes.
+
+### Highlights
+- New page /developer/security/sca documents POST /v1/security/sca/initiate, challenge types, verification, and the full payment-with-SCA sequence diagram.
+- New page /developer/security/jwks documents GET /v1/jwks and the OIDC alias /v1/.well-known/jwks.json with verification snippets and 90-day rotation policy.
+- New page /developer/environments consolidates sandbox vs. production base URLs, OAuth/PAR/JWKS endpoints, rate limits, mTLS posture, IP allow-list, and SLA in one matrix.
+- New page /developer/api-reference/deprecation-policy formalizes the 12-month sunset window, RFC 8594 Sunset/Deprecation/Link headers, and the migration playbook.
+- BuildReliablySection on /developer surfaces all four new pages plus the consent-management entry.
+- Sitemap, llms.txt, ai-plugin manifest, and the discoverability test suite all updated.
+
+### Added
+- Five new entries in the operational discoverability matrix (sitemap + llms.txt + landing + tests).
+- ai-plugin description_for_model now references SCA, JWKS, environments, deprecation policy, and consent management URLs.
+
+### Standards & citations
+- FAPI 1.0 Advanced §5.2.5 (Strong Customer Authentication)
+- RFC 7517 §5 (JSON Web Key Set)
+- RFC 8414 §3 (OAuth 2.0 Authorization Server Metadata — jwks_uri)
+- RFC 8594 (Sunset HTTP Header)
+- Standing Order 4 — The Surgeon Rule (additive only)
+- Standing Order 6 — The Version Gate (patch increment)
+- ORDER P1 — Public First, ORDER P6 — Complete Content, ORDER P7 — Changelog
 
 ---
 
