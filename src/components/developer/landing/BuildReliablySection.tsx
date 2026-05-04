@@ -12,6 +12,7 @@ import {
   ListOrdered,
   Webhook,
   Clock,
+  GitBranch,
 } from "lucide-react";
 
 const items = [
@@ -56,6 +57,12 @@ const items = [
     title: "Token lifecycle",
     desc: "OAuth 2.0 access and refresh rotation, SHA-256 hashing, and immediate revoke-on-reuse semantics.",
     icon: Clock,
+  },
+  {
+    href: "/developer/api-reference/payment-lifecycle",
+    title: "Payment lifecycle",
+    desc: "Sequence diagrams and state machines for charges, payouts, refunds, and disputes — every transition documented.",
+    icon: GitBranch,
   },
   {
     href: "/developer/idempotency-playground",

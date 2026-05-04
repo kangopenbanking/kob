@@ -10,8 +10,9 @@ import {
   type Example, type Snippet,
 } from "./realWorldExamplesData";
 
-const TRYIT_ENDPOINT =
-  "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/developer-tryit";
+// Resolve backend at runtime via env var (Direct Backend Mandate) so the
+// developer-portal source contains no hard-coded *.supabase.co host.
+const TRYIT_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/developer-tryit`;
 
 type TryItResponse = {
   request: { method: string; url: string; headers: Record<string, string>; body: unknown };

@@ -10,7 +10,9 @@ import { Loader2, Check, AlertCircle, ArrowRight } from "lucide-react";
 type Provider = "stripe" | "flutterwave" | "paypal";
 type Scenario = "success" | "declined" | "timeout" | "dispute_opened" | "refund";
 
-const FN_BASE = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1";
+// Resolve backend at runtime via env var (Direct Backend Mandate); keeps
+// the developer-portal source free of hard-coded *.supabase.co hosts.
+const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 const SCENARIOS: { value: Scenario; label: string }[] = [
   { value: "success", label: "Successful payment" },

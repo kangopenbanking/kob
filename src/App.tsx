@@ -243,6 +243,7 @@ const SupportedCountriesPage = lazy(() => import("./pages/developer/SupportedCou
 const ApiStatusPage = lazy(() => import("./pages/developer/ApiStatusPage"));
 const TestingGuide = lazy(() => import("./pages/developer/TestingGuide"));
 const TokenLifecycleGuide = lazy(() => import("./pages/developer/TokenLifecycleGuide"));
+const PaymentLifecycleGuide = lazy(() => import("./pages/developer/PaymentLifecycleGuide"));
 const WebhookRetryGuide = lazy(() => import("./pages/developer/WebhookRetryGuide"));
 const HttpCachingGuide = lazy(() => import("./pages/developer/HttpCachingGuide"));
 const QuickStart = lazy(() => import("./pages/developer/QuickStart"));
@@ -1127,6 +1128,7 @@ function App() {
               <Route path="api-reference/idempotency" element={<IdempotencyGuide />} />
               <Route path="api-reference/token-lifecycle" element={<TokenLifecycleGuide />} />
               <Route path="api-reference/webhook-retry" element={<WebhookRetryGuide />} />
+              <Route path="api-reference/payment-lifecycle" element={<PaymentLifecycleGuide />} />
               <Route path="api-reference/http-caching" element={<HttpCachingGuide />} />
               <Route path="open-banking" element={<OpenBankingOverview />} />
               <Route path="open-banking/aisp" element={<AispReference />} />
