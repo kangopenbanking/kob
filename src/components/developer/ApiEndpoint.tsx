@@ -36,7 +36,10 @@ const methodColors = {
 
 import { API_EXAMPLE_BASE_URL } from "@/config/api";
 
-const BASE_URL = API_EXAMPLE_BASE_URL;
+// Endpoint props already include the `/v1/...` prefix, so strip the trailing
+// `/v1` from the public gateway base to avoid producing malformed `/v1/v1/...`
+// URLs in copy-pasteable snippets (enforced by .github/workflows/no-double-v1.yml).
+const BASE_URL = API_EXAMPLE_BASE_URL.replace(/\/v1\/?$/, "");
 
 export function generateCodeExamples(
   method: string,
