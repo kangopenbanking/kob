@@ -312,7 +312,15 @@ if (!pm.collectionVariables.get('access_token') || pm.collectionVariables.get('a
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
           r('Payment Submission', 'POST', '/v1/pisp/payment-submission', {
-            body: { payment_id: '{{payment_id}}' },
+            // v4.29.3 — PISP submission requires full payment instruction (BoG-OBSv4 §5.2.2)
+            body: {
+              payment_id: '{{payment_id}}',
+              consent_id: '{{consent_id}}',
+              amount: '50000',
+              currency: 'XAF',
+              debtor_account: '10005-00001-09876543210-45',
+              creditor_account: '10005-00001-12345678901-23',
+            },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
           r('Get Payment Details', 'GET', '/v1/pisp/payments/{{payment_id}}'),
