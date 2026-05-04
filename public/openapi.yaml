@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.29.3
+  version: 4.29.4
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -194,11 +194,6 @@ info:
       P3_medium: 8 hours
       P4_low: 48 hours
     maintenance_notice: 72 hours advance notice
-  x-sdk-versions:
-    node: 1.6.1
-    python: 1.6.1
-    php: 1.6.1
-    go: 1.6.1
   x-sdk-libraries:
     node:
       name: '@kang/openbanking-node'
@@ -225,7 +220,7 @@ info:
       docs: https://kangopenbanking.com/developer/guides/sdks#java
     go:
       name: github.com/kangopenbanking/sdk-go
-      version: v1.6.1
+      version: 1.6.1
       status: available
       repository: https://github.com/kangopenbanking/sdk-go
       package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
@@ -239,6 +234,11 @@ info:
       generator: openapi-generator-cli (ruby)
       docs: https://kangopenbanking.com/developer/guides/sdks#ruby
   x-postman-collection: https://www.postman.com/kangfinance/kang-open-banking-api
+  x-sdk-versions:
+    node: 1.6.1
+    python: 1.6.1
+    php: 1.6.1
+    go: 1.6.1
 servers:
   - url: https://api.kangopenbanking.com/v1
     description: Production
@@ -98628,12 +98628,15 @@ x-sdks:
   - language: Node.js / TypeScript
     package: '@kang/openbanking-node'
     registry: npm
+    version: 1.6.1
   - language: Python
     package: kang-openbanking
     registry: PyPI
+    version: 1.6.1
   - language: PHP / Laravel
     package: kang/openbanking-php
     registry: Packagist
+    version: 1.6.1
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman
   - language: Java
@@ -98646,7 +98649,7 @@ x-sdks:
     registry: Maven
   - language: Go
     name: github.com/kangopenbanking/sdk-go
-    version: v1.6.1
+    version: 1.6.1
     repository: https://github.com/kangopenbanking/sdk-go
     package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
     docs: https://kangopenbanking.com/developer/guides/sdks#go
@@ -98713,6 +98716,429 @@ x-webhook-events:
   - kyb.rejected
   - webhook.delivery_failed
 x-webhooks:
+  payment_intent.succeeded:
+    post:
+      summary: Payment intent successfully captured
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookpaymentintentsucceeded
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: payment_intent.succeeded
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: payment_intent.succeeded payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: payment_intent.succeeded
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: pi_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    amount: '5000'
+                    currency: XAF
+                    status: succeeded
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  payment_intent.failed:
+    post:
+      summary: Payment intent failed
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookpaymentintentfailed
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: payment_intent.failed
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: payment_intent.failed payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: payment_intent.failed
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: pi_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    amount: '5000'
+                    currency: XAF
+                    status: failed
+                    failure_code: insufficient_funds
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  refund.created:
+    post:
+      summary: Refund initiated
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookrefundcreated
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: refund.created
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: refund.created payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: refund.created
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: rf_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    payment_intent_id: pi_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    amount: '5000'
+                    currency: XAF
+                    status: pending
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  payout.paid:
+    post:
+      summary: Payout settled to bank account
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookpayoutpaid
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: payout.paid
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: payout.paid payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: payout.paid
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: po_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    amount: '125000'
+                    currency: XAF
+                    destination: acc_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    status: paid
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  consent.authorized:
+    post:
+      summary: AISP/PISP consent authorized by PSU
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookconsentauthorized
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: consent.authorized
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: consent.authorized payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: consent.authorized
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: cns_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    status: Authorised
+                    expires_at: '2026-08-02T10:15:30Z'
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  consent.revoked:
+    post:
+      summary: AISP/PISP consent revoked by PSU
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookconsentrevoked
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: consent.revoked
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: consent.revoked payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: consent.revoked
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    id: cns_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    status: Revoked
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  account.balance.updated:
+    post:
+      summary: Account balance changed
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookaccountbalanceupdated
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: account.balance.updated
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: account.balance.updated payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: account.balance.updated
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    account_id: acc_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    currency: XAF
+                    closing_available: '125000'
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+  kyc.verification.completed:
+    post:
+      summary: KYC/KYB verification finished
+      description: >-
+        Kang POSTs this event to your registered webhook URL. Verify the `X-Kang-Signature` HMAC-SHA256 header before
+        processing. See [Webhook signature verification](https://kangopenbanking.com/developer/webhooks/signatures).
+      operationId: webhookkycverificationcompleted
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - created_at
+                - data
+              properties:
+                id:
+                  type: string
+                  example: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                type:
+                  type: string
+                  example: kyc.verification.completed
+                created_at:
+                  type: string
+                  format: date-time
+                livemode:
+                  type: boolean
+                  example: false
+                data:
+                  type: object
+            examples:
+              default:
+                summary: kyc.verification.completed payload
+                value:
+                  id: evt_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                  type: kyc.verification.completed
+                  created_at: '2026-05-02T10:15:30Z'
+                  livemode: false
+                  data:
+                    customer_id: cus_01HZX9TRJ4M7YQK6P3W2VBDN5K
+                    status: verified
+                    tier: 2
+      responses:
+        '200':
+          description: >-
+            Acknowledged. Return 2xx within 10 seconds; otherwise Kang retries with exponential backoff up to 7
+            attempts.
+webhooks:
   payment_intent.succeeded:
     post:
       summary: Payment intent successfully captured

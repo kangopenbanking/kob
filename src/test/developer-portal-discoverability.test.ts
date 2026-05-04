@@ -35,6 +35,7 @@ const REQUIRED_OPS_ROUTES = [
   "/developer/api-reference/payout-states",
   "/developer/api-reference/dispute-lifecycle",
   "/developer/idempotency-playground",
+  "/developer/standards",
 ];
 
 describe("Developer portal discoverability — operational reliability surface", () => {

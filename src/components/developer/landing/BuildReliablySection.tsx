@@ -16,6 +16,7 @@ import {
   CircleDot,
   ArrowRightLeft,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 
 const items = [
@@ -90,6 +91,12 @@ const items = [
     title: "Idempotency playground",
     desc: "Live sandbox tool to replay the same idempotency key and observe the cached response.",
     icon: Webhook,
+  },
+  {
+    href: "/developer/standards",
+    title: "Standards & compliance",
+    desc: "FAPI 1.0 Advanced, OBIE 4.0.1, RFC 7591 DCR, ISO 20022, COBAC — full conformance index for bank procurement.",
+    icon: ShieldCheck,
   },
 ];
 

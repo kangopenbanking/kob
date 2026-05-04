@@ -131,6 +131,26 @@
         {
           "type": "X-sdk-go",
           "url": "https://pkg.go.dev/github.com/kangopenbanking/sdk-go"
+        },
+        {
+          "type": "X-sdk-changelog-node",
+          "url": "https://github.com/kangopenbanking/sdk-node/blob/main/CHANGELOG.md"
+        },
+        {
+          "type": "X-sdk-changelog-python",
+          "url": "https://github.com/kangopenbanking/sdk-python/blob/main/CHANGELOG.md"
+        },
+        {
+          "type": "X-sdk-changelog-php",
+          "url": "https://github.com/kangopenbanking/sdk-php/blob/main/CHANGELOG.md"
+        },
+        {
+          "type": "X-sdk-changelog-go",
+          "url": "https://github.com/kangopenbanking/sdk-go/blob/main/CHANGELOG.md"
+        },
+        {
+          "type": "X-compliance-standards",
+          "url": "https://kangopenbanking.com/developer/standards"
         }
       ],
       "contact": [
