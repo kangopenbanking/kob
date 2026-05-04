@@ -1,0 +1,91 @@
+# Kang Open Banking — LLM & AI Crawler Index
+
+> Payment Gateway and Open Banking REST API for Cameroon and the CEMAC region.
+> XAF-native. COBAC-compliant. FAPI 1.0 Advanced. Free public sandbox.
+
+This file follows the emerging llms.txt convention (https://llmstxt.org) so AI
+agents (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Cohere, etc.) can
+discover the full developer surface in one fetch.
+
+## Machine-readable specs
+- [OpenAPI 3.1 (JSON)](https://kangopenbanking.com/openapi.json)
+- [OpenAPI 3.1 (YAML)](https://kangopenbanking.com/openapi.yaml)
+- [Sandbox OpenAPI (JSON)](https://kangopenbanking.com/openapi-sandbox.json)
+- [Postman collection](https://kangopenbanking.com/postman/manifest.json)
+- [APIs.json directory](https://kangopenbanking.com/apis.json)
+- [AI plugin manifest](https://kangopenbanking.com/.well-known/ai-plugin.json)
+- [Public changelog (JSON)](https://kangopenbanking.com/changelog.json)
+
+## Developer portal — entry points
+- [Developer home](https://kangopenbanking.com/developer): hero, instant sandbox keys, onboarding wizard, code snippets.
+- [Getting started](https://kangopenbanking.com/developer/getting-started): zero-to-charge in under five minutes.
+- [API explorer (Swagger UI)](https://kangopenbanking.com/developer/api-explorer): live request builder against sandbox.
+- [Sandbox overview](https://kangopenbanking.com/developer/sandbox): free test credentials, mock cards, mock MoMo numbers.
+- [Changelog](https://kangopenbanking.com/developer/changelog): every API version with full release notes.
+
+## Official SDKs (Standing Order P9 — multi-language coverage)
+- [SDK index](https://kangopenbanking.com/developer/guides/sdks): install commands and quickstart per language.
+- Node.js / TypeScript — `@kangopenbanking/sdk` — https://www.npmjs.com/package/@kangopenbanking/sdk
+- Python — `kangopenbanking` — https://pypi.org/project/kangopenbanking/
+- PHP / Laravel — `kangopenbanking/sdk` — https://packagist.org/packages/kangopenbanking/sdk
+- Go — `github.com/kangopenbanking/sdk-go` — https://pkg.go.dev/github.com/kangopenbanking/sdk-go
+- [Postman collection guide](https://kangopenbanking.com/developer/guides/postman)
+- [Webhook SDK signature verification](https://kangopenbanking.com/developer/api-reference/webhook-retry)
+
+## Operational reliability (rate limits, retries, idempotency, pagination)
+- [Rate limits](https://kangopenbanking.com/developer/api-reference/rate-limits): per-tier RPS, burst, X-RateLimit-* headers, 429 backoff.
+- [Idempotency keys](https://kangopenbanking.com/developer/api-reference/idempotency): UUID v4 idempotency-key contract for all state-changing calls.
+- [Idempotency playground](https://kangopenbanking.com/developer/idempotency-playground): live replay test.
+- [Pagination](https://kangopenbanking.com/developer/api-reference/pagination): cursor-based, RFC 5988 Link header, `next_cursor` field.
+- [Pagination examples](https://kangopenbanking.com/developer/guides/pagination-examples): Node, Python, cURL loops.
+- [Webhook retry strategy](https://kangopenbanking.com/developer/api-reference/webhook-retry): 7-attempt exponential backoff, signed deliveries, replay endpoint.
+- [Token lifecycle](https://kangopenbanking.com/developer/api-reference/token-lifecycle): OAuth2 access/refresh rotation, SHA-256 hashing, revoke-on-reuse.
+- [Error catalog](https://kangopenbanking.com/developer/error-codes): RFC 7807 problem+json with 60+ documented codes.
+
+## Authentication & security
+- [Authentication overview](https://kangopenbanking.com/developer/authentication)
+- [OAuth 2.0 + PKCE](https://kangopenbanking.com/developer/auth/oauth2)
+- [API keys](https://kangopenbanking.com/developer/auth/api-keys)
+- [mTLS](https://kangopenbanking.com/developer/auth/mtls)
+- [FAPI 1.0 Advanced](https://kangopenbanking.com/developer/auth/fapi)
+- [Dynamic Client Registration (RFC 7591)](https://kangopenbanking.com/developer/dynamic-client-registration)
+
+## Payment gateway endpoints
+- [Charges (mobile money, card, USSD)](https://kangopenbanking.com/developer/gateway/charges)
+- [Refunds](https://kangopenbanking.com/developer/gateway/refunds)
+- [Payouts](https://kangopenbanking.com/developer/gateway/payouts)
+- [Instant payouts (Visa Direct, Mastercard Send)](https://kangopenbanking.com/developer/gateway/instant-payouts)
+- [Funding intents](https://kangopenbanking.com/developer/gateway/funding-intents)
+- [Payment links](https://kangopenbanking.com/developer/gateway/payment-links)
+- [Subscriptions](https://kangopenbanking.com/developer/gateway/subscriptions)
+- [Split payments / marketplace](https://kangopenbanking.com/developer/gateway/split-payments)
+- [Disputes](https://kangopenbanking.com/developer/gateway/disputes)
+- [Settlements](https://kangopenbanking.com/developer/gateway/settlements)
+- [Wallets, escrow, treasury](https://kangopenbanking.com/developer/gateway/wallets)
+
+## Open Banking (AISP / PISP)
+- [AISP reference](https://kangopenbanking.com/developer/aisp-reference)
+- [PISP reference](https://kangopenbanking.com/developer/api/pisp)
+- [Mobile money](https://kangopenbanking.com/developer/api/mobile-money)
+- [Beneficiaries](https://kangopenbanking.com/developer/api/beneficiaries)
+
+## Compliance & governance
+- [KYC / KYB](https://kangopenbanking.com/developer/compliance/kyc)
+- [AML screening](https://kangopenbanking.com/developer/compliance/aml)
+- [FAPI compliance](https://kangopenbanking.com/developer/compliance/fapi)
+- [Standards index](https://kangopenbanking.com/developer/standards)
+
+## Quickstarts
+- [Developer quickstart](https://kangopenbanking.com/docs/public/quickstarts/developer-quickstart)
+- [Merchant quickstart](https://kangopenbanking.com/docs/public/quickstarts/merchant-quickstart)
+- [Institution quickstart](https://kangopenbanking.com/docs/public/quickstarts/institution-quickstart)
+
+## Status
+- [Status page](https://kangopenbanking.com/status)
+- [Health JSON](https://kangopenbanking.com/support-agent-health.json)
+
+## Permanent guarantees
+1. /developer and every sub-route are publicly accessible (no auth wall).
+2. /openapi.json and /openapi.yaml are publicly served as raw machine-readable files.
+3. SDK packages (npm, PyPI, Packagist, pkg.go.dev) are publicly downloadable.
+4. The sandbox is free forever — never gated behind a paid plan.
