@@ -1,12 +1,41 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.29.2** · Last updated: **2026-05-04**
+Current API version: **4.29.3** · Last updated: **2026-05-04**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.29.3 — 2026-05-04
+**Type:** patch · **Breaking changes:** none
+
+Live OpenAPI remediation for POST /v1/pisp/payment-submission. The request schema now requires payment_id, consent_id, amount, currency, debtor_account, and creditor_account so SDK generators and developer integrations no longer see the stale payment_id-only contract.
+
+### Highlights
+- public/openapi.json, public/openapi.yaml, public/openapi-sandbox.json, and public/openapi-sandbox.yaml now advertise the expanded PISP submission request body.
+- The public spec-serving function now emits API version 4.29.3 with the same required PISP request fields as the static OpenAPI files.
+- The changelog feed head records the PISP schema correction, preserving public developer auditability under ORDER P7.
+
+### Fixed
+- Replaced the stale payment_id-only request schema for POST /v1/pisp/payment-submission.
+- Removed the mismatched instructed_amount/risk live-function override so the deployed openapi.json contract matches the required consent_id, amount, currency, debtor_account, and creditor_account fields.
+
+### Standards & citations
+- OBIE Read/Write 4.0 §5.4 (payment submission request consistency)
+- ORDER P4 — Open Spec Rule
+- ORDER P7 — Changelog Rule
+- ORDER P10 — Living Docs Rule
+- STANDING ORDER 1 — The Lock (path and operationId preserved)
+- STANDING ORDER 2 — The Ratchet (request contract expanded, not reduced)
+- STANDING ORDER 3 — The Audit Trail
+- STANDING ORDER 6 — Version Gate (patch bump 4.29.2 → 4.29.3)
+
+### Migration notes
+PISP submission clients must send consent_id, amount, currency, debtor_account, and creditor_account in addition to payment_id. Amount remains a string integer in minor units for monetary precision.
 
 ---
 

@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "kob-api-v4.29.2",
-    "name": "Kang Open Banking API v4.29.2",
-    "description": "Auto-generated from OpenAPI 4.29.2.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.",
+    "_postman_id": "kob-api-v4.29.3",
+    "name": "Kang Open Banking API v4.29.3",
+    "description": "Auto-generated from OpenAPI 4.29.3.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "4.29.2"
+    "version": "4.29.3"
   },
   "item": [
     {
@@ -18284,7 +18284,7 @@
             "description": "Confirm payment submission",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"payment_id\": \"pmt_01HFG...\",\n  \"instructed_amount\": {\n    \"amount\": \"50000\",\n    \"currency\": \"XAF\"\n  },\n  \"creditor_account\": {\n    \"scheme\": \"RIB\",\n    \"identification\": \"10005-00001-12345678901-23\",\n    \"name\": \"Acme Ltd\"\n  },\n  \"debtor_account\": {\n    \"scheme\": \"RIB\",\n    \"identification\": \"10005-00001-09876543210-45\"\n  },\n  \"remittance_information\": {\n    \"unstructured\": \"Invoice #INV-001\",\n    \"reference\": \"INV-001\"\n  },\n  \"risk\": {\n    \"payment_context_code\": \"EcommerceGoods\",\n    \"merchant_category_code\": \"5411\"\n  }\n}",
+              "raw": "{\n  \"payment_id\": \"pmt_01HFG\",\n  \"consent_id\": \"cns_01HFG\",\n  \"amount\": \"50000\",\n  \"currency\": \"XAF\",\n  \"debtor_account\": \"10005-00001-09876543210-45\",\n  \"creditor_account\": \"10005-00001-12345678901-23\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
