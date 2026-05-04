@@ -479,8 +479,8 @@ grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=
     "consent_id": "cns_01HX...",
     "amount": "50000",
     "currency": "XAF",
-    "debtor_account":   { "scheme": "IBAN", "identification": "CM2110001..." },
-    "creditor_account": { "scheme": "IBAN", "identification": "CM2110002..." }
+    "debtor_account": "10005-00001-09876543210-45",
+    "creditor_account": "10005-00001-12345678901-23"
   }'`}
             />
           </div>
