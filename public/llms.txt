@@ -41,6 +41,9 @@ discover the full developer surface in one fetch.
 - [Webhook retry strategy](https://kangopenbanking.com/developer/api-reference/webhook-retry): 7-attempt exponential backoff, signed deliveries, replay endpoint.
 - [Token lifecycle](https://kangopenbanking.com/developer/api-reference/token-lifecycle): OAuth2 access/refresh rotation, SHA-256 hashing, revoke-on-reuse.
 - [Payment lifecycle & state machines](https://kangopenbanking.com/developer/api-reference/payment-lifecycle): sequence diagrams + state machines for charges, payouts, refunds, disputes.
+- [Charge state machine](https://kangopenbanking.com/developer/api-reference/charge-states): pending, processing, succeeded, failed, refunded, disputed, resolved.
+- [Payout state machine](https://kangopenbanking.com/developer/api-reference/payout-states): queued, processing, paid, failed, returned.
+- [Dispute lifecycle](https://kangopenbanking.com/developer/api-reference/dispute-lifecycle): needs_response, under_review, won, lost — with SLA rules.
 - [Error catalog](https://kangopenbanking.com/developer/error-codes): RFC 7807 problem+json with 60+ documented codes.
 
 ## Authentication & security
