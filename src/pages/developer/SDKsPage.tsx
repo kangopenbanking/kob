@@ -30,13 +30,14 @@ import {
   GoLogo,
   RubyLogo,
 } from "@/components/developer/ClientLibraryLogos";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   toast.success("Copied to clipboard");
 };
 
-const NODE_AUTH = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+const NODE_AUTH = `import { KangOpenBanking } from '@kang/openbanking-node';
 
 const kob = new KangOpenBanking({
   clientId: 'your_client_id',
@@ -68,7 +69,7 @@ const charge = await kob.charges.create({
 console.log(charge.data.id);     // "ch_abc123"
 console.log(charge.data.status); // "pending"`;
 
-const NODE_WEBHOOK = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+const NODE_WEBHOOK = `import { KangOpenBanking } from '@kang/openbanking-node';
 
 // Express middleware
 app.post('/webhooks/kob', express.raw({ type: 'application/json' }), (req, res) => {
