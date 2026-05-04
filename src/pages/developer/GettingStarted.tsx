@@ -24,7 +24,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
     "tx_ref": "my_first_charge"
   }'`;
 
-const nodeFirstCall = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+const nodeFirstCall = `import { KangOpenBanking } from '@kang/openbanking-node';
 
 // Initialize with sandbox credentials
 const kob = new KangOpenBanking({
@@ -89,7 +89,7 @@ const goFirstCall = `package main
 
 import (
     "fmt"
-    kob "github.com/kangopenbanking/kob-go"
+    kob "github.com/kangopenbanking/sdk-go"
 )
 
 func main() {

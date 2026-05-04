@@ -58279,13 +58279,13 @@ x-sandbox:
   guarantee: Sandbox keys are permanently free (Standing Order P3).
 x-sdks:
   - language: Node.js / TypeScript
-    package: '@kangopenbanking/sdk'
+    package: '@kang/openbanking-node'
     registry: npm
   - language: Python
-    package: kangopenbanking
+    package: kang-openbanking
     registry: PyPI
   - language: PHP / Laravel
-    package: kangopenbanking/sdk
+    package: kang/openbanking-php
     registry: Packagist
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman

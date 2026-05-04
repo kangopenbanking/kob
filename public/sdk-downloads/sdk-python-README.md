@@ -1,11 +1,11 @@
-# kangopenbanking — Python SDK
+# kang-openbanking — Python SDK
 
 Official Python SDK for the **Kang Open Banking (KOB) v1 API**.
 
 ## Installation
 
 ```bash
-pip install kangopenbanking
+pip install kang-openbanking
 ```
 
 ## Quick Start

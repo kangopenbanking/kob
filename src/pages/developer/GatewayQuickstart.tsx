@@ -100,7 +100,7 @@ const GatewayQuickstart = () => (
             {
               language: "javascript",
               label: "Node.js",
-              code: `import { KangOpenBanking } from '@kangopenbanking/sdk';
+              code: `import { KangOpenBanking } from '@kang/openbanking-node';
 
 const kob = new KangOpenBanking({
   apiKey: 'YOUR_TOKEN',

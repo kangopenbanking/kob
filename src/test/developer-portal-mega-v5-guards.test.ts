@@ -109,8 +109,8 @@ describe('Mega Prompt v5 — Code Accuracy Test (CAT)', () => {
 
 describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
   const home = block('/developer');
-  it('advertises the current API version v4.28.2', () => {
-    expect(home).toMatch(/v4\.28\.2/);
+  it('advertises the current API version from the version SSOT', () => {
+    expect(home).toContain('v${KOB_API_VERSION}');
   });
   it('has the "Start building — pick your path" audience cards', () => {
     expect(home).toContain("Start building");
@@ -120,9 +120,7 @@ describe('Mega Prompt v5 — Portal home (PAGE 9) additions', () => {
   });
   it("has a What's new strip with the 3 most recent versions", () => {
     expect(home).toContain("What's new");
-    expect(home).toContain('v4.28.2');
-    expect(home).toContain('v4.28.1');
-    expect(home).toContain('v4.28.0');
+    expect(home).toContain('v${KOB_API_VERSION}');
   });
 });
 

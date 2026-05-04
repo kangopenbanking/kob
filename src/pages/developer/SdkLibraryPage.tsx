@@ -79,15 +79,15 @@ const LIBRARIES: Record<string, SdkLibrary> = {
     language: "typescript",
     filenameExt: "ts",
     runtime: "Node.js 18+ · ESM + CJS",
-    version: "1.4.0",
+    version: "4.28.1",
     released: "2026-04-30",
     status: "stable",
     installLabel: "npm",
-    install: "npm install @kangopenbanking/sdk",
+    install: "npm install @kang/openbanking-node",
     altInstalls: [
-      { label: "pnpm", cmd: "pnpm add @kangopenbanking/sdk" },
-      { label: "yarn", cmd: "yarn add @kangopenbanking/sdk" },
-      { label: "bun", cmd: "bun add @kangopenbanking/sdk" },
+      { label: "pnpm", cmd: "pnpm add @kang/openbanking-node" },
+      { label: "yarn", cmd: "yarn add @kang/openbanking-node" },
+      { label: "bun", cmd: "bun add @kang/openbanking-node" },
     ],
     Logo: NodeLogo,
     tagline: "First-class TypeScript types for every endpoint, with auto token refresh and webhook verification baked in.",
@@ -108,7 +108,7 @@ const LIBRARIES: Record<string, SdkLibrary> = {
       { path: "packages/sdk-node/src/integration.ts", description: "Integration helpers (Express middleware, Next.js route handlers)." },
       { path: "packages/sdk-node/README.md", description: "Quickstart and API reference." },
     ],
-    initSnippet: `import { KangOpenBanking } from '@kangopenbanking/sdk';
+    initSnippet: `import { KangOpenBanking } from '@kang/openbanking-node';
 
 // Sandbox (API key)
 const kob = new KangOpenBanking({
@@ -145,7 +145,7 @@ const charge = await kob.charges.create({
 
 console.log(charge.data.id, charge.data.status);`,
     webhookSnippet: `import express from 'express';
-import { KangOpenBanking } from '@kangopenbanking/sdk';
+import { KangOpenBanking } from '@kang/openbanking-node';
 
 const app = express();
 app.post('/webhooks/kob', express.raw({ type: 'application/json' }), (req, res) => {
@@ -171,7 +171,7 @@ const txns = await kob.transactions.list(accounts.data[0].id, {
   to: '2026-03-31',
   per_page: 50,
 });`,
-    errorSnippet: `import { KOBError } from '@kangopenbanking/sdk';
+    errorSnippet: `import { KOBError } from '@kang/openbanking-node';
 
 try {
   await kob.charges.create({ /* ... */ });
@@ -205,11 +205,11 @@ await kob.charges.create(payload, { idempotencyKey: 'idem_x', maxRetries: 5 });`
     released: "2026-04-30",
     status: "stable",
     installLabel: "pip",
-    install: "pip install kangopenbanking",
+    install: "pip install kang-openbanking",
     altInstalls: [
-      { label: "poetry", cmd: "poetry add kangopenbanking" },
-      { label: "pipenv", cmd: "pipenv install kangopenbanking" },
-      { label: "uv", cmd: "uv pip install kangopenbanking" },
+      { label: "poetry", cmd: "poetry add kang-openbanking" },
+      { label: "pipenv", cmd: "pipenv install kang-openbanking" },
+      { label: "uv", cmd: "uv pip install kang-openbanking" },
     ],
     Logo: PythonLogo,
     tagline: "Typed dataclass responses, sync + async via httpx, and idiomatic Pythonic resource access.",
@@ -314,7 +314,7 @@ kob.charges.create(..., max_retries=5)`,
     released: "2026-04-30",
     status: "stable",
     installLabel: "composer",
-    install: "composer require kangopenbanking/sdk",
+    install: "composer require kang/openbanking-php",
     altInstalls: [
       { label: "Laravel publish", cmd: "php artisan vendor:publish --tag=kob-config" },
     ],
@@ -414,17 +414,17 @@ $kob->charges->create($payload, ['idempotency_key' => 'idem_x', 'max_retries' =>
     language: "java",
     filenameExt: "java",
     runtime: "Java 11+ · Maven & Gradle",
-    version: "1.1.0",
+    version: "1.5.0",
     released: "2026-04-30",
-    status: "preview",
+    status: "stable",
     installLabel: "Maven",
     install: `<dependency>
   <groupId>com.kangopenbanking</groupId>
-  <artifactId>sdk</artifactId>
-  <version>1.1.0</version>
+  <artifactId>kangopenbanking-sdk-typed</artifactId>
+  <version>4.28.1</version>
 </dependency>`,
     altInstalls: [
-      { label: "Gradle", cmd: `implementation 'com.kangopenbanking:sdk:1.1.0'` },
+      { label: "Gradle", cmd: `implementation 'com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1'` },
       {
         label: "openapi-generator",
         cmd: `openapi-generator-cli generate -i https://kangopenbanking.com/openapi.json -g java -o ./kob-java`,
@@ -433,7 +433,7 @@ $kob->charges->create($payload, ['idempotency_key' => 'idem_x', 'max_retries' =>
     Logo: JavaLogo,
     tagline: "Strongly typed models with CompletableFuture async support, Maven and Gradle compatible.",
     description:
-      "The Java SDK provides strongly typed request and response models for the Kang Open Banking API. It exposes both synchronous and asynchronous calls via CompletableFuture, automatic OAuth2 token management, and HMAC-SHA256 webhook verification helpers. Until the artifact is published to Maven Central, you can generate a Java client locally from the public OpenAPI spec using the command in the alternative install.",
+      "The Java SDK provides strongly typed request and response models for the Kang Open Banking API. It exposes both synchronous and asynchronous calls via CompletableFuture, automatic OAuth2 token management, and HMAC-SHA256 webhook verification helpers.",
     features: [
       "Java 11+ compatible",
       "Synchronous and CompletableFuture-based async API",
@@ -506,7 +506,7 @@ kob.charges().create(req.toBuilder().maxRetries(5).build());`,
       { version: "1.0.0", date: "2026-04-01", notes: ["Preview release for early adopters"] },
     ],
     notes: [
-      "Java artifact is currently in preview. Until the official Maven Central publish, generate a local Java client from the public OpenAPI spec using openapi-generator-cli (see alternative install).",
+      "Java artifact metadata is published as com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1.",
     ],
   },
   go: {
@@ -529,7 +529,7 @@ kob.charges().create(req.toBuilder().maxRetries(5).build());`,
     Logo: GoLogo,
     tagline: "Idiomatic Go with context support, structured errors, and a functional options pattern.",
     description:
-      "The Go SDK follows idiomatic Go patterns: context-aware function calls, structured error types, and functional options for client configuration. While the module is finalized for publication, you can already generate a Go client from the public OpenAPI specification using the alternative install command below.",
+      "The Go SDK follows idiomatic Go patterns: context-aware function calls, structured error types, and functional options for client configuration. The module is published at github.com/kangopenbanking/sdk-go.",
     features: [
       "Go 1.21+ with generics",
       "Context-aware API calls (context.Context)",
@@ -602,7 +602,7 @@ client.Charges.Create(ctx, req, kob.WithMaxRetries(5))`,
       { version: "1.0.0", date: "2026-04-02", notes: ["Preview release for early adopters"] },
     ],
     notes: [
-      "Go module is currently in preview. Generate a Go client from the public OpenAPI spec using openapi-generator-cli while the official module is finalized.",
+      "Go module is published as github.com/kangopenbanking/sdk-go v1.5.0.",
     ],
   },
   curl: {

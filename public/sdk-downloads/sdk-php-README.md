@@ -1,4 +1,4 @@
-# kangopenbanking/sdk
+# kang/openbanking-php
 
 Official PHP SDK for the **Kang Open Banking (KOB) v1 API** (v1.2.0) with Laravel support.
 
@@ -10,7 +10,7 @@ Official PHP SDK for the **Kang Open Banking (KOB) v1 API** (v1.2.0) with Larave
 ## Installation
 
 ```bash
-composer require kangopenbanking/sdk
+composer require kang/openbanking-php
 ```
 
 ### Laravel Auto-Discovery

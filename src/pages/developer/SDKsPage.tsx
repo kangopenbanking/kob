@@ -30,13 +30,14 @@ import {
   GoLogo,
   RubyLogo,
 } from "@/components/developer/ClientLibraryLogos";
+import { KOB_API_VERSION_LABEL } from "@/config/version";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   toast.success("Copied to clipboard");
 };
 
-const NODE_AUTH = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+const NODE_AUTH = `import { KangOpenBanking } from '@kang/openbanking-node';
 
 const kob = new KangOpenBanking({
   clientId: 'your_client_id',
@@ -68,7 +69,7 @@ const charge = await kob.charges.create({
 console.log(charge.data.id);     // "ch_abc123"
 console.log(charge.data.status); // "pending"`;
 
-const NODE_WEBHOOK = `import { KangOpenBanking } from '@kangopenbanking/sdk';
+const NODE_WEBHOOK = `import { KangOpenBanking } from '@kang/openbanking-node';
 
 // Express middleware
 app.post('/webhooks/kob', express.raw({ type: 'application/json' }), (req, res) => {
@@ -527,11 +528,11 @@ const sdks: SDKDef[] = [
     title: "Node.js / TypeScript",
     language: "typescript",
     desc: "Full-featured SDK with TypeScript types, auto token refresh, and webhook verification. ESM + CJS dual build.",
-    install: "npm install @kangopenbanking/sdk",
+    install: "npm install @kang/openbanking-node",
     installLabel: "npm",
     badge: "v1.1.0",
-    repo: "https://github.com/kangopenbanking/sdk-node",
-    registry: "https://www.npmjs.com/package/@kangopenbanking/sdk",
+    repo: "https://github.com/kangfinance/openbanking-node",
+    registry: "https://www.npmjs.com/package/@kang/openbanking-node",
     registryLabel: "npm",
     runtime: "Node.js 18+",
     features: [
@@ -553,11 +554,11 @@ const sdks: SDKDef[] = [
     title: "Python",
     language: "python",
     desc: "Typed responses with PEP 484 hints, sync + async support via httpx, and context manager pattern.",
-    install: "pip install kangopenbanking",
+    install: "pip install kang-openbanking",
     installLabel: "pip",
     badge: "v1.1.0",
-    repo: "https://github.com/kangopenbanking/sdk-python",
-    registry: "https://pypi.org/project/kangopenbanking/",
+    repo: "https://github.com/kangfinance/openbanking-python",
+    registry: "https://pypi.org/project/kang-openbanking/",
     registryLabel: "PyPI",
     runtime: "Python 3.9+",
     features: [
@@ -579,11 +580,11 @@ const sdks: SDKDef[] = [
     title: "PHP / Laravel",
     language: "php",
     desc: "PSR-4 autoloaded with Laravel service provider, Guzzle HTTP client, and webhook middleware.",
-    install: "composer require kangopenbanking/sdk",
+    install: "composer require kang/openbanking-php",
     installLabel: "composer",
     badge: "v1.1.0",
-    repo: "https://github.com/kangopenbanking/sdk-php",
-    registry: "https://packagist.org/packages/kangopenbanking/sdk",
+    repo: "https://github.com/kangfinance/openbanking-php",
+    registry: "https://packagist.org/packages/kang/openbanking-php",
     registryLabel: "Packagist",
     runtime: "PHP 8.1+",
     features: [
@@ -604,13 +605,13 @@ const sdks: SDKDef[] = [
     key: "java",
     title: "Java",
     language: "java",
-    desc: "Reference implementation guide using OkHttp + Gson. Drop-in client class with OAuth2, idempotency-key handling, and HMAC-SHA256 webhook verification.",
-    install: "// Implementation guide — see code samples below",
-    installLabel: "Guide",
-    badge: "Community guide",
-    repo: "https://github.com/kangopenbanking/sdk-java",
-    registry: "https://github.com/kangopenbanking/sdk-java",
-    registryLabel: "GitHub",
+    desc: "Typed OpenAPI-generated client with OkHttp + Gson, OAuth2, idempotency-key handling, and HMAC-SHA256 webhook verification.",
+    install: "com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1",
+    installLabel: "Maven",
+    badge: "v4.28.1",
+    repo: "https://github.com/kangopenbanking/KangOpenBanking-KOB",
+    registry: "https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml",
+    registryLabel: "Maven workflow",
     runtime: "Java 11+ · OkHttp 4 · Gson 2.10",
     features: [
       "Java 11+ compatible (OkHttp + Gson)",
@@ -618,26 +619,25 @@ const sdks: SDKDef[] = [
       "OAuth2 client_credentials flow",
       "Idempotency-Key on every payment POST",
       "Webhook HMAC-SHA256 verification (constant-time)",
-      "Coming soon as published Maven artifact",
+      "Published typed client artifact metadata",
     ],
     Logo: JavaLogo,
     auth: JAVA_AUTH,
     charge: JAVA_CHARGE,
     webhook: JAVA_WEBHOOK,
     aisp: JAVA_AISP,
-    community: true,
   },
   {
     key: "go",
     title: "Go",
     language: "go",
-    desc: "Reference implementation using net/http + crypto/hmac. Idiomatic Go with constant-time signature comparison and string-typed amounts for XAF/XOF.",
-    install: "// Implementation guide — see code samples below",
-    installLabel: "Guide",
-    badge: "Community guide",
+    desc: "Published Go module with idiomatic net/http patterns, constant-time signature comparison, and string-typed amounts for XAF/XOF.",
+    install: "go get github.com/kangopenbanking/sdk-go",
+    installLabel: "go get",
+    badge: "v1.5.0",
     repo: "https://github.com/kangopenbanking/sdk-go",
-    registry: "https://github.com/kangopenbanking/sdk-go",
-    registryLabel: "GitHub",
+    registry: "https://pkg.go.dev/github.com/kangopenbanking/sdk-go",
+    registryLabel: "pkg.go.dev",
     runtime: "Go 1.21+ · net/http",
     features: [
       "Go 1.21+ idiomatic patterns",
@@ -645,14 +645,13 @@ const sdks: SDKDef[] = [
       "OAuth2 client_credentials flow",
       "Idempotency-Key on every payment POST",
       "hmac.Equal constant-time signature check",
-      "Coming soon as a tagged Go module",
+      "Published tagged Go module",
     ],
     Logo: GoLogo,
     auth: GO_AUTH,
     charge: GO_CHARGE,
     webhook: GO_WEBHOOK,
     aisp: GO_AISP,
-    community: true,
   },
   {
     key: "ruby",
@@ -774,7 +773,7 @@ export default function SDKsPage() {
       <section className="space-y-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="font-mono text-[11px]">
-            v4.23.0
+            {KOB_API_VERSION_LABEL}
           </Badge>
           <Badge variant="outline" className="text-[11px]">
             OpenAPI 3.1
@@ -896,11 +895,9 @@ export default function SDKsPage() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Officially published SDKs:</strong> Node.js, Python, PHP — installable today
-            from npm, PyPI, and Packagist.{" "}
-            <strong>Community implementation guides:</strong> Java, Go, Ruby — drop-in client
-            classes shown below using each language's standard HTTP libraries. Published packages
-            for these three languages ship in a future release.
+            <strong>Published SDKs:</strong> Node.js, Python, PHP, Java, and Go are installable today
+            from their package registries. <strong>Ruby:</strong> supported via the community
+            OpenAPI Generator workflow until the RubyGem is published.
           </AlertDescription>
         </Alert>
 

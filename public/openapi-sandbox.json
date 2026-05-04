@@ -85519,17 +85519,17 @@
   "x-sdks": [
     {
       "language": "Node.js / TypeScript",
-      "package": "@kangopenbanking/sdk",
+      "package": "@kang/openbanking-node",
       "registry": "npm"
     },
     {
       "language": "Python",
-      "package": "kangopenbanking",
+      "package": "kang-openbanking",
       "registry": "PyPI"
     },
     {
       "language": "PHP / Laravel",
-      "package": "kangopenbanking/sdk",
+      "package": "kang/openbanking-php",
       "registry": "Packagist"
     },
     {
@@ -85542,7 +85542,9 @@
       "version": "4.28.1",
       "repository": "https://github.com/kangopenbanking/KangOpenBanking-KOB",
       "package_manager": "https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml",
-      "docs": "https://kangopenbanking.com/developer/guides/sdks#java"
+      "docs": "https://kangopenbanking.com/developer/guides/sdks#java",
+      "package": "com.kangopenbanking:kangopenbanking-sdk-typed",
+      "registry": "Maven"
     },
     {
       "language": "Go",
@@ -85550,7 +85552,9 @@
       "version": "v1.5.0",
       "repository": "https://github.com/kangopenbanking/sdk-go",
       "package_manager": "https://pkg.go.dev/github.com/kangopenbanking/sdk-go",
-      "docs": "https://kangopenbanking.com/developer/guides/sdks#go"
+      "docs": "https://kangopenbanking.com/developer/guides/sdks#go",
+      "package": "github.com/kangopenbanking/sdk-go",
+      "registry": "pkg.go.dev"
     }
   ],
   "x-webhook-policy": {
