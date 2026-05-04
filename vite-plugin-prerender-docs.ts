@@ -421,7 +421,7 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
   <tr><td>Ruby</td><td>openapi-generator-cli (ruby)</td><td><code>openapi-generator-cli generate -g ruby</code></td><td>Ruby 3+</td></tr>
 </table>
 <h3>Node.js — Create a Mobile Money Charge</h3>
-<pre><code>import { KangOpenBanking } from '@kangopenbanking/sdk';
+<pre><code>import { KangOpenBanking } from '@kang/openbanking-node';
 
 const kob = new KangOpenBanking({
   apiKey: process.env.KOB_API_KEY!, // sk_test_... or sk_live_...
