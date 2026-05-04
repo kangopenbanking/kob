@@ -9,6 +9,7 @@ import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSe
 import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
 import { StandardsComplianceRow } from "@/components/developer/landing/StandardsComplianceRow";
+import { BuildReliablySection } from "@/components/developer/landing/BuildReliablySection";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
 import { OnboardingWizard } from "@/components/developer/OnboardingWizard";
@@ -161,6 +162,7 @@ export default function DeveloperHome() {
         <OpenBankingSection />
         <ArchitectureSection />
         <SDKSection />
+        <BuildReliablySection />
         <AdvancedFeaturesGate />
         <AutoDocNavigation />
       </div>
