@@ -79,7 +79,7 @@ const LIBRARIES: Record<string, SdkLibrary> = {
     language: "typescript",
     filenameExt: "ts",
     runtime: "Node.js 18+ · ESM + CJS",
-    version: "1.1.0",
+    version: "4.28.1",
     released: "2026-04-30",
     status: "stable",
     installLabel: "npm",
@@ -420,11 +420,11 @@ $kob->charges->create($payload, ['idempotency_key' => 'idem_x', 'max_retries' =>
     installLabel: "Maven",
     install: `<dependency>
   <groupId>com.kangopenbanking</groupId>
-  <artifactId>sdk</artifactId>
-  <version>1.1.0</version>
+  <artifactId>kangopenbanking-sdk-typed</artifactId>
+  <version>4.28.1</version>
 </dependency>`,
     altInstalls: [
-      { label: "Gradle", cmd: `implementation 'com.kangopenbanking:sdk:1.1.0'` },
+      { label: "Gradle", cmd: `implementation 'com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1'` },
       {
         label: "openapi-generator",
         cmd: `openapi-generator-cli generate -i https://kangopenbanking.com/openapi.json -g java -o ./kob-java`,
@@ -433,7 +433,7 @@ $kob->charges->create($payload, ['idempotency_key' => 'idem_x', 'max_retries' =>
     Logo: JavaLogo,
     tagline: "Strongly typed models with CompletableFuture async support, Maven and Gradle compatible.",
     description:
-      "The Java SDK provides strongly typed request and response models for the Kang Open Banking API. It exposes both synchronous and asynchronous calls via CompletableFuture, automatic OAuth2 token management, and HMAC-SHA256 webhook verification helpers. Until the artifact is published to Maven Central, you can generate a Java client locally from the public OpenAPI spec using the command in the alternative install.",
+      "The Java SDK provides strongly typed request and response models for the Kang Open Banking API. It exposes both synchronous and asynchronous calls via CompletableFuture, automatic OAuth2 token management, and HMAC-SHA256 webhook verification helpers.",
     features: [
       "Java 11+ compatible",
       "Synchronous and CompletableFuture-based async API",
@@ -506,7 +506,7 @@ kob.charges().create(req.toBuilder().maxRetries(5).build());`,
       { version: "1.0.0", date: "2026-04-01", notes: ["Preview release for early adopters"] },
     ],
     notes: [
-      "Java artifact is currently in preview. Until the official Maven Central publish, generate a local Java client from the public OpenAPI spec using openapi-generator-cli (see alternative install).",
+      "Java artifact metadata is published as com.kangopenbanking:kangopenbanking-sdk-typed:4.28.1.",
     ],
   },
   go: {
