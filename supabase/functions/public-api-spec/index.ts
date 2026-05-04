@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
 
-const API_VERSION = '4.29.2';
+const API_VERSION = '4.29.3';
 
 // ─── Reusable Schema Components ────────────────────────────────────────────
 const schemas = {
@@ -2371,21 +2371,21 @@ paths['/v1/pay-by-bank/callback'] = {
   },
 };
 
-// v4.29.1 critical audit remediation.
+// v4.29.3 critical live-spec remediation.
 // Standards: OBIE Read/Write 4.0 §5.4, RFC 8594, RFC 7807, Standing Orders 1/2/3/6.
 paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'].schema = {
   type: 'object',
-  required: ['payment_id', 'instructed_amount', 'creditor_account', 'risk'],
+  required: ['payment_id', 'consent_id', 'amount', 'currency', 'debtor_account', 'creditor_account'],
   properties: {
     payment_id: { type: 'string', minLength: 1, maxLength: 128 },
-    instructed_amount: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' }, currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' } } },
-    creditor_account: { type: 'object', required: ['scheme', 'identification'], properties: { scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'], example: 'RIB' }, identification: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-12345678901-23' }, name: { type: 'string', maxLength: 140, example: 'Acme Ltd' } } },
-    debtor_account: { type: 'object', required: ['scheme', 'identification'], properties: { scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'] }, identification: { type: 'string', minLength: 1, maxLength: 64 }, name: { type: 'string', maxLength: 140 } } },
-    remittance_information: { type: 'object', properties: { unstructured: { type: 'string', maxLength: 140, example: 'Invoice #INV-001' }, reference: { type: 'string', maxLength: 35, example: 'INV-001' } } },
-    risk: { type: 'object', required: ['payment_context_code'], properties: { payment_context_code: { type: 'string', enum: ['BillPayment', 'EcommerceGoods', 'EcommerceServices', 'Other'], example: 'EcommerceGoods' }, merchant_category_code: { type: 'string', pattern: '^[0-9]{4}$', example: '5411' }, merchant_customer_identification: { type: 'string', maxLength: 70, example: 'cust_001' } } },
+    consent_id: { type: 'string', minLength: 1, maxLength: 128 },
+    amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' },
+    currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' },
+    debtor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-09876543210-45' },
+    creditor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-12345678901-23' },
   },
 };
-paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'].example = { payment_id: 'pmt_01HFG', instructed_amount: { amount: '50000', currency: 'XAF' }, creditor_account: { scheme: 'RIB', identification: '10005-00001-12345678901-23', name: 'Acme Ltd' }, debtor_account: { scheme: 'RIB', identification: '10005-00001-09876543210-45' }, remittance_information: { unstructured: 'Invoice #INV-001', reference: 'INV-001' }, risk: { payment_context_code: 'EcommerceGoods', merchant_category_code: '5411' } };
+paths['/v1/pisp/payment-submission'].post.requestBody.content['application/json'].example = { payment_id: 'pmt_01HFG', consent_id: 'cns_01HFG', amount: '50000', currency: 'XAF', debtor_account: '10005-00001-09876543210-45', creditor_account: '10005-00001-12345678901-23' };
 
 // Per Standing Order 2 (Ratchet) and RFC 8594 (Sunset), every endpoint past its
 // sunset date MUST advertise only HTTP 410 Gone with x-replacement-endpoint
