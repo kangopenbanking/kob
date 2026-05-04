@@ -414,9 +414,9 @@ $kob->charges->create($payload, ['idempotency_key' => 'idem_x', 'max_retries' =>
     language: "java",
     filenameExt: "java",
     runtime: "Java 11+ · Maven & Gradle",
-    version: "1.1.0",
+    version: "1.5.0",
     released: "2026-04-30",
-    status: "preview",
+    status: "stable",
     installLabel: "Maven",
     install: `<dependency>
   <groupId>com.kangopenbanking</groupId>
@@ -529,7 +529,7 @@ kob.charges().create(req.toBuilder().maxRetries(5).build());`,
     Logo: GoLogo,
     tagline: "Idiomatic Go with context support, structured errors, and a functional options pattern.",
     description:
-      "The Go SDK follows idiomatic Go patterns: context-aware function calls, structured error types, and functional options for client configuration. While the module is finalized for publication, you can already generate a Go client from the public OpenAPI specification using the alternative install command below.",
+      "The Go SDK follows idiomatic Go patterns: context-aware function calls, structured error types, and functional options for client configuration. The module is published at github.com/kangopenbanking/sdk-go.",
     features: [
       "Go 1.21+ with generics",
       "Context-aware API calls (context.Context)",
@@ -602,7 +602,7 @@ client.Charges.Create(ctx, req, kob.WithMaxRetries(5))`,
       { version: "1.0.0", date: "2026-04-02", notes: ["Preview release for early adopters"] },
     ],
     notes: [
-      "Go module is currently in preview. Generate a Go client from the public OpenAPI spec using openapi-generator-cli while the official module is finalized.",
+      "Go module is published as github.com/kangopenbanking/sdk-go v1.5.0.",
     ],
   },
   curl: {
