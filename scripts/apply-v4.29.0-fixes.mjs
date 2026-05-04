@@ -16,7 +16,7 @@ const ROOT = process.cwd();
 const JSON_PATH = path.join(ROOT, 'public/openapi.json');
 const YAML_PATH = path.join(ROOT, 'public/openapi.yaml');
 const SBX_PATH = path.join(ROOT, 'public/openapi-sandbox.json');
-const VERSION = '4.29.2';
+const VERSION = '4.29.3';
 
 const spec = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const sbx = JSON.parse(fs.readFileSync(SBX_PATH, 'utf8'));
@@ -37,64 +37,23 @@ sbx.info.version = VERSION;
   const op = spec.paths['/v1/pisp/payment-submission']?.post;
   if (op) {
     const sch = op.requestBody.content['application/json'].schema;
-    sch.required = ['payment_id', 'instructed_amount', 'creditor_account', 'risk'];
+    sch.required = ['payment_id', 'consent_id', 'amount', 'currency', 'debtor_account', 'creditor_account'];
     sch.properties = {
       ...sch.properties,
-      instructed_amount: {
-        type: 'object',
-        required: ['amount', 'currency'],
-        description: 'Per OBIE Read/Write 4.0 §5.4 — must mirror consent amount/currency.',
-        properties: {
-          amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' },
-          currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' },
-        },
-      },
-      creditor_account: {
-        type: 'object',
-        required: ['scheme', 'identification'],
-        properties: {
-          scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'], example: 'RIB' },
-          identification: { type: 'string', example: '10005-00001-12345678901-23' },
-          name: { type: 'string', example: 'Acme Ltd' },
-        },
-      },
-      debtor_account: {
-        type: 'object',
-        required: ['scheme', 'identification'],
-        properties: {
-          scheme: { type: 'string', enum: ['IBAN', 'RIB', 'ACCOUNT_NUMBER'] },
-          identification: { type: 'string' },
-          name: { type: 'string' },
-        },
-      },
-      remittance_information: {
-        type: 'object',
-        properties: {
-          unstructured: { type: 'string', maxLength: 140, example: 'Invoice #INV-001' },
-          reference: { type: 'string', maxLength: 35, example: 'INV-001' },
-        },
-      },
-      risk: {
-        type: 'object',
-        description: 'OBIE PaymentContextCode risk block — required for fraud scoring.',
-        properties: {
-          payment_context_code: {
-            type: 'string',
-            enum: ['BillPayment', 'EcommerceGoods', 'EcommerceServices', 'Other'],
-            example: 'EcommerceGoods',
-          },
-          merchant_category_code: { type: 'string', pattern: '^[0-9]{4}$', example: '5411' },
-          merchant_customer_identification: { type: 'string', example: 'cust_001' },
-        },
-      },
+      payment_id: { type: 'string', minLength: 1, maxLength: 128 },
+      consent_id: { type: 'string', minLength: 1, maxLength: 128 },
+      amount: { type: 'string', pattern: '^[0-9]{1,15}$', example: '50000' },
+      currency: { type: 'string', enum: ['XAF', 'XOF', 'EUR', 'USD'], example: 'XAF' },
+      debtor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-09876543210-45' },
+      creditor_account: { type: 'string', minLength: 1, maxLength: 64, example: '10005-00001-12345678901-23' },
     };
     op.requestBody.content['application/json'].example = {
-      payment_id: 'pmt_01HFG...',
-      instructed_amount: { amount: '50000', currency: 'XAF' },
-      creditor_account: { scheme: 'RIB', identification: '10005-00001-12345678901-23', name: 'Acme Ltd' },
-      debtor_account: { scheme: 'RIB', identification: '10005-00001-09876543210-45' },
-      remittance_information: { unstructured: 'Invoice #INV-001', reference: 'INV-001' },
-      risk: { payment_context_code: 'EcommerceGoods', merchant_category_code: '5411' },
+      payment_id: 'pmt_01HFG',
+      consent_id: 'cns_01HFG',
+      amount: '50000',
+      currency: 'XAF',
+      debtor_account: '10005-00001-09876543210-45',
+      creditor_account: '10005-00001-12345678901-23',
     };
     bump('p1.2_pisp_submission_expanded');
   }
