@@ -773,7 +773,7 @@ export default function SDKsPage() {
       <section className="space-y-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="font-mono text-[11px]">
-            v4.23.0
+            {KOB_API_VERSION_LABEL}
           </Badge>
           <Badge variant="outline" className="text-[11px]">
             OpenAPI 3.1
@@ -895,11 +895,9 @@ export default function SDKsPage() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Officially published SDKs:</strong> Node.js, Python, PHP — installable today
-            from npm, PyPI, and Packagist.{" "}
-            <strong>Community implementation guides:</strong> Java, Go, Ruby — drop-in client
-            classes shown below using each language's standard HTTP libraries. Published packages
-            for these three languages ship in a future release.
+            <strong>Published SDKs:</strong> Node.js, Python, PHP, Java, and Go are installable today
+            from their package registries. <strong>Ruby:</strong> supported via the community
+            OpenAPI Generator workflow until the RubyGem is published.
           </AlertDescription>
         </Alert>
 
