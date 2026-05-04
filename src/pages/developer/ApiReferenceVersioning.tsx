@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
+import { KOB_API_VERSION } from "@/config/version";
 
 const deprecationHeaders = `HTTP/1.1 200 OK
 Content-Type: application/json
@@ -133,7 +134,7 @@ export default function ApiReferenceVersioning() {
           </h2>
           <p className="text-muted-foreground mb-4">
             The following fields are marked <code className="text-xs px-1 py-0.5 rounded bg-muted">deprecated: true</code> in the
-            current OpenAPI specification (v4.28.0). They remain functional under our backward-compatibility
+            current OpenAPI specification (v{KOB_API_VERSION}). They remain functional under our backward-compatibility
             promise and will only be removed in <strong>v5.0.0</strong>. Integrators should migrate to the
             replacement fields now to avoid a future breaking change. All replacement amount fields use
             <strong> minor-unit strings</strong> (e.g. <code className="text-xs px-1 py-0.5 rounded bg-muted">"500000"</code>

@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Zap, Download, ExternalLink } from "lucide-react";
+import { KOB_API_VERSION } from "@/config/version";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
@@ -261,13 +262,13 @@ export default function GettingStarted() {
               <Button variant="outline" asChild>
                 <a href="/postman/Kang_Open_Banking_API_latest.postman_collection.json" download>
                   <Download className="h-4 w-4 mr-2" />
-                  Latest collection (v4.28.0)
+                  Latest collection (v{KOB_API_VERSION})
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="/postman/Kang_Open_Banking_API_v4.28.0.postman_collection.json" download>
+                <a href={`/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json`} download>
                   <Download className="h-4 w-4 mr-2" />
-                  v4.28.0 (immutable)
+                  v{KOB_API_VERSION} (immutable)
                 </a>
               </Button>
               <Button variant="outline" asChild>
