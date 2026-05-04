@@ -1,8 +1,8 @@
 {
-  "apiVersion": "4.29.4",
-  "generatedAt": "2026-05-04T20:53:00.425Z",
+  "apiVersion": "4.29.5",
+  "generatedAt": "2026-05-04T21:14:31.051Z",
   "collection": {
-    "versioned": "/postman/Kang_Open_Banking_API_v4.29.4.postman_collection.json",
+    "versioned": "/postman/Kang_Open_Banking_API_v4.29.5.postman_collection.json",
     "latest": "/postman/Kang_Open_Banking_API_latest.postman_collection.json",
     "legacy": "/postman/Kang_Open_Banking_API_v1.postman_collection.json"
   },
@@ -10,8 +10,13 @@
     "sandbox": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json",
     "production": "/postman/Kang_Open_Banking_Production.postman_environment.json"
   },
-  "current": "4.29.4",
+  "current": "4.29.5",
   "versions": [
+    {
+      "version": "4.29.5",
+      "file": "Kang_Open_Banking_API_v4.29.5.postman_collection.json",
+      "released_at": "2026-05-04T21:14:31.051Z"
+    },
     {
       "version": "4.29.4",
       "file": "Kang_Open_Banking_API_v4.29.4.postman_collection.json",

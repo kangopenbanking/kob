@@ -17,6 +17,11 @@ import {
   ArrowRightLeft,
   ShieldAlert,
   ShieldCheck,
+  ShieldQuestion,
+  KeyRound,
+  Globe,
+  CalendarClock,
+  FileCheck,
 } from "lucide-react";
 
 const items = [
@@ -97,6 +102,36 @@ const items = [
     title: "Standards & compliance",
     desc: "FAPI 1.0 Advanced, OBIE 4.0.1, RFC 7591 DCR, ISO 20022, COBAC — full conformance index for bank procurement.",
     icon: ShieldCheck,
+  },
+  {
+    href: "/developer/security/sca",
+    title: "Strong Customer Authentication",
+    desc: "Step-up flow for payments, consents, and account changes — challenge issuance, verification, and full SCA payment sequence.",
+    icon: ShieldQuestion,
+  },
+  {
+    href: "/developer/security/jwks",
+    title: "JWKS & key material",
+    desc: "Public signing keys for ID tokens, signed request objects, and webhook signatures. RFC 7517 with 90-day rotation.",
+    icon: KeyRound,
+  },
+  {
+    href: "/developer/environments",
+    title: "Environments",
+    desc: "Sandbox vs. production base URLs, OAuth/PAR/JWKS endpoints, rate limits, mTLS posture, IP allow-list, SLA.",
+    icon: Globe,
+  },
+  {
+    href: "/developer/api-reference/deprecation-policy",
+    title: "Deprecation policy",
+    desc: "RFC 8594 Sunset headers, 12-month minimum window, successor links, migration playbook — Standing Order 1 enforced.",
+    icon: CalendarClock,
+  },
+  {
+    href: "/developer/open-banking/consents",
+    title: "Consent management",
+    desc: "Create, read, and revoke AISP/PISP consents — status transitions, scope mapping, and expiry semantics.",
+    icon: FileCheck,
   },
 ];
 

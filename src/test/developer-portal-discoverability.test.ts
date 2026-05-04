@@ -36,6 +36,11 @@ const REQUIRED_OPS_ROUTES = [
   "/developer/api-reference/dispute-lifecycle",
   "/developer/idempotency-playground",
   "/developer/standards",
+  "/developer/security/sca",
+  "/developer/security/jwks",
+  "/developer/environments",
+  "/developer/api-reference/deprecation-policy",
+  "/developer/open-banking/consents",
 ];
 
 describe("Developer portal discoverability — operational reliability surface", () => {
