@@ -17,6 +17,11 @@ import {
   ArrowRightLeft,
   ShieldAlert,
   ShieldCheck,
+  ShieldQuestion,
+  KeyRound,
+  Globe,
+  CalendarClock,
+  FileCheck,
 } from "lucide-react";
 
 const items = [
