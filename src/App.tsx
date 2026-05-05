@@ -335,6 +335,7 @@ const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const WooCommerceManagement = lazy(() => import("./pages/admin/WooCommerceManagement"));
 const BranchManagement = lazy(() => import("./pages/admin/BranchManagement"));
 const ApiClientManagement = lazy(() => import("./pages/admin/ApiClientManagement"));
+const DeveloperManagement = lazy(() => import("./pages/admin/DeveloperManagement"));
 const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
