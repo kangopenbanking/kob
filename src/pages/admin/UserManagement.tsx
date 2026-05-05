@@ -177,6 +177,33 @@ export default function UserManagement() {
     }
   };
 
+  const changePrimaryRole = async () => {
+    if (!roleDialogTarget) return;
+    setRoleChangeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'set_primary_role',
+          target_user_id: roleDialogTarget.id,
+          primary_role: newPrimaryRole,
+          reason: actionReason || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Primary role set to "${newPrimaryRole}"`);
+      setRoleDialogOpen(false);
+      setRoleDialogTarget(null);
+      setActionReason('');
+      loadUsers();
+    } catch (error: any) {
+      logger.error('Error changing primary role:', error);
+      toast.error(extractEdgeFunctionError(error, 'Failed to change role'));
+    } finally {
+      setRoleChangeLoading(false);
+    }
+  };
+
   const handleSuspendUser = async () => {
     if (!actionTargetUser) return;
     setActionLoading(true);
