@@ -958,6 +958,7 @@ function App() {
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
               <Route path="i18n-coverage" element={<I18nCoverageDashboard />} />
+              <Route path="dashboard-routing-audit" element={<DashboardRoutingAudit />} />
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
