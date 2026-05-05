@@ -38,7 +38,7 @@ serve(async (req) => {
       });
     }
 
-    const { action, target_user_id, target_entity_id, reason } = await req.json();
+    const { action, target_user_id, target_entity_id, reason, primary_role, account_type } = await req.json();
 
     if (!action) {
       return new Response(JSON.stringify({ error: 'Missing action' }), {
