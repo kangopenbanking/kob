@@ -56,6 +56,12 @@ export default function UserManagement() {
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Primary role change state
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [roleDialogTarget, setRoleDialogTarget] = useState<UserProfile | null>(null);
+  const [newPrimaryRole, setNewPrimaryRole] = useState<string>('personal');
+  const [roleChangeLoading, setRoleChangeLoading] = useState(false);
+
   useEffect(() => {
     checkAdminAccess();
     loadUsers();
