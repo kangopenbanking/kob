@@ -82,6 +82,7 @@ export default function InstitutionVerification() {
   const [rejectingKYB, setRejectingKYB] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [creatingSteps, setCreatingSteps] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch all institutions (not just pending verification)
   const { data: institutions, isLoading: institutionsLoading, refetch, error: institutionsError } = useQuery({
