@@ -484,6 +484,47 @@ export default function UserManagement() {
         </CardContent>
       </Card>
 
+      {/* Change Primary Role Dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Primary Role</DialogTitle>
+            <DialogDescription>
+              Set <strong>{roleDialogTarget?.email}</strong>'s primary role. This becomes their default dashboard and replaces their existing primary role.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label htmlFor="primary-role">Primary role</Label>
+              <Select value={newPrimaryRole} onValueChange={setNewPrimaryRole}>
+                <SelectTrigger id="primary-role"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal — /dashboard</SelectItem>
+                  <SelectItem value="merchant">Merchant — /merchant</SelectItem>
+                  <SelectItem value="developer">Developer — /developer</SelectItem>
+                  <SelectItem value="institution">Institution — /fi-portal</SelectItem>
+                  <SelectItem value="staff">Staff (FI) — /fi-portal</SelectItem>
+                  <SelectItem value="tpp">TPP — /developer</SelectItem>
+                  <SelectItem value="moderator">Moderator — /admin</SelectItem>
+                  <SelectItem value="support_agent">Support Agent — /admin</SelectItem>
+                  <SelectItem value="admin">Admin — /admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="role-reason">Reason (optional)</Label>
+              <Textarea id="role-reason" value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder="Why is this role being changed?" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRoleDialogOpen(false)} disabled={roleChangeLoading}>Cancel</Button>
+            <Button onClick={changePrimaryRole} disabled={roleChangeLoading}>
+              {roleChangeLoading ? 'Saving…' : 'Save Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Suspend/Unsuspend Dialog */}
       <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
         <DialogContent>
