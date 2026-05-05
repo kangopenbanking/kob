@@ -65,7 +65,7 @@ export function decideDashboard(s: RoutingSignals): { path: string; reason: stri
 }
 
 export async function collectRoutingSignals(userId: string): Promise<RoutingSignals> {
-  const [adminRes, merchRes, devRes, devOrgRes, staffMerchRes, instRes, fiStaffRes] = await Promise.all([
+  const [adminRes, merchRes, devRes, devOrgRes, staffMerchRes, instRes, fiStaffRes, profileRes] = await Promise.all([
     supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any }),
     supabase.rpc("has_role", { _user_id: userId, _role: "merchant" as any }),
     supabase.rpc("has_role", { _user_id: userId, _role: "developer" as any }),
@@ -73,6 +73,7 @@ export async function collectRoutingSignals(userId: string): Promise<RoutingSign
     supabase.from("merchant_staff_roles").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
     supabase.from("institutions").select("status, institution_type").eq("user_id", userId).maybeSingle(),
     supabase.rpc("has_role", { _user_id: userId, _role: "staff" as any }),
+    supabase.from("profiles").select("account_type").eq("id", userId).maybeSingle(),
   ]);
 
   return {
@@ -84,6 +85,7 @@ export async function collectRoutingSignals(userId: string): Promise<RoutingSign
     institutionStatus: (instRes.data as any)?.status ?? null,
     institutionType: (instRes.data as any)?.institution_type ?? null,
     isStaff: !!fiStaffRes.data,
+    accountType: (profileRes.data as any)?.account_type ?? null,
   };
 }
 
