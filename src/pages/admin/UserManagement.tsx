@@ -418,6 +418,16 @@ export default function UserManagement() {
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => {
+                          setRoleDialogTarget(user);
+                          setNewPrimaryRole(user.roles[0] || 'personal');
+                          setActionReason('');
+                          setRoleDialogOpen(true);
+                        }}>
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Change Primary Role
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => assignRole(user.id, 'admin')}>
                           <Shield className="h-4 w-4 mr-2" />
                           Make Admin
