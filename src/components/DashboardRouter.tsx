@@ -187,6 +187,29 @@ export function useDashboardPath() {
           return;
         }
 
+        // Check developer role
+        const { data: isDeveloper } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'developer' as any
+        });
+
+        if (isDeveloper) {
+          setDashboardPath("/developer");
+          return;
+        }
+
+        const { data: devOrg } = await supabase
+          .from("developer_orgs")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (devOrg) {
+          setDashboardPath("/developer");
+          return;
+        }
+
         // Check for merchant staff
         const { data: merchantStaff } = await supabase
           .from("merchant_staff_roles")
