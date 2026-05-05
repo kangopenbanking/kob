@@ -111,7 +111,7 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
       setUserEmail(user.email || "");
       setInitials((user.email || "U").substring(0, 2).toUpperCase());
 
-      const [{ data: profile }, { data: roles }, { data: devOrg }, { data: inst }, { data: merch }] = await Promise.all([
+      const [{ data: profile }, { data: rolesData }, { data: devOrg }, { data: inst }, { data: merch }] = await Promise.all([
         supabase.from("profiles").select("full_name, account_type").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("developer_orgs").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
