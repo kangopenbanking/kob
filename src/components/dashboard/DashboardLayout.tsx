@@ -36,12 +36,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
-type Audience = "personal" | "merchant" | "developer" | "institution";
+import { resolveAudiences, type Audience } from "@/lib/permissions";
 
 interface NavItem {
   title: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
+  // Audiences allowed to see this item. If omitted, visible to everyone.
+  audiences?: Audience[];
+}
   // Audiences allowed to see this item. If omitted, visible to everyone.
   audiences?: Audience[];
 }
