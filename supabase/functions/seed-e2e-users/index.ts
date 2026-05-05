@@ -13,7 +13,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
-type SeedRole = 'admin' | 'merchant' | 'institution' | 'personal';
+type SeedRole = 'admin' | 'merchant' | 'institution' | 'personal' | 'developer' | 'developer_org';
 
 interface SeedSpec {
   email: string;
@@ -22,10 +22,12 @@ interface SeedSpec {
 }
 
 const SEED_USERS: SeedSpec[] = [
-  { email: 'e2e+admin@kob.test',       role: 'admin',       fullName: 'E2E Admin' },
-  { email: 'e2e+merchant@kob.test',    role: 'merchant',    fullName: 'E2E Merchant' },
-  { email: 'e2e+institution@kob.test', role: 'institution', fullName: 'E2E Institution' },
-  { email: 'e2e+consumer@kob.test',    role: 'personal',    fullName: 'E2E Consumer' },
+  { email: 'e2e+admin@kob.test',         role: 'admin',         fullName: 'E2E Admin' },
+  { email: 'e2e+merchant@kob.test',      role: 'merchant',      fullName: 'E2E Merchant' },
+  { email: 'e2e+institution@kob.test',   role: 'institution',   fullName: 'E2E Institution' },
+  { email: 'e2e+developer@kob.test',     role: 'developer',     fullName: 'E2E Developer' },
+  { email: 'e2e+devorg@kob.test',        role: 'developer_org', fullName: 'E2E DevOrg User' },
+  { email: 'e2e+consumer@kob.test',      role: 'personal',      fullName: 'E2E Consumer' },
 ];
 
 Deno.serve(async (req) => {
@@ -117,9 +119,11 @@ async function upsertProfile(sb: any, userId: string, spec: SeedSpec) {
 }
 
 async function upsertRole(sb: any, userId: string, role: SeedRole) {
-  // user_roles unique on (user_id, role)
+  // user_roles unique on (user_id, role). 'developer_org' is a seed cohort, not a real role.
+  const realRole = role === 'developer_org' ? null : role === 'personal' ? null : role;
+  if (!realRole) return;
   await sb.from('user_roles')
-    .upsert({ user_id: userId, role }, { onConflict: 'user_id,role' });
+    .upsert({ user_id: userId, role: realRole }, { onConflict: 'user_id,role' });
 }
 
 async function upsertRoleExtras(sb: any, userId: string, spec: SeedSpec) {
@@ -154,6 +158,20 @@ async function upsertRoleExtras(sb: any, userId: string, spec: SeedSpec) {
     }).select('id').single();
     if (error) throw error;
     return { merchant_id: data.id };
+  }
+
+  if (spec.role === 'developer_org') {
+    const { data: existing } = await sb.from('developer_orgs')
+      .select('id').eq('user_id', userId).maybeSingle();
+    if (existing?.id) return { developer_org_id: existing.id };
+    const { data, error } = await sb.from('developer_orgs').insert({
+      user_id: userId,
+      name: 'E2E DevOrg',
+      status: 'active',
+      country: 'CM',
+    }).select('id').single();
+    if (error) throw error;
+    return { developer_org_id: data.id };
   }
 
   return {};
