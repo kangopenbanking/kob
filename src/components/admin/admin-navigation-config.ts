@@ -36,6 +36,7 @@ import {
   MessageCircle,
   Plug,
   Lock,
+  Code2,
   type LucideIcon,
 } from "lucide-react";
 
