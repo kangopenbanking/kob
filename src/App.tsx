@@ -746,6 +746,7 @@ function App() {
         <LivePageTranslator />
         <BrowserRouter>
           <ScrollToTop />
+          <RoleChangeListenerMount />
           <PWARouteGuard>
           <TooltipProvider>
             <Toaster />
