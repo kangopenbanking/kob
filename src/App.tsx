@@ -903,6 +903,7 @@ function App() {
               <Route path="users" element={<UserManagement />} />
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
+              <Route path="developer-management" element={<DeveloperManagement />} />
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
               <Route path="audit-logs" element={<AuditLogs />} />
