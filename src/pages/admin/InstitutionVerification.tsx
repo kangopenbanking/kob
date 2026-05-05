@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +82,7 @@ export default function InstitutionVerification() {
   const [rejectingKYB, setRejectingKYB] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [creatingSteps, setCreatingSteps] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch all institutions (not just pending verification)
   const { data: institutions, isLoading: institutionsLoading, refetch, error: institutionsError } = useQuery({
@@ -88,13 +91,26 @@ export default function InstitutionVerification() {
       const { data, error } = await supabase
         .from("institutions")
         .select("*")
-        .neq('verification_step', 'approved')
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Institution[];
     },
   });
+
+  // Realtime: refetch when institutions, steps, or KYB rows change
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-institution-verification")
+      .on("postgres_changes", { event: "*", schema: "public", table: "institutions" },
+        () => queryClient.invalidateQueries({ queryKey: ["institutions-verification"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "institution_verification_steps" },
+        () => queryClient.invalidateQueries({ queryKey: ["verification-steps"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "business_kyc" },
+        () => queryClient.invalidateQueries({ queryKey: ["kyb-for-institutions"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   // Fetch verification steps
   const { data: verificationSteps, isLoading: stepsLoading, refetch: refetchSteps } = useQuery({
@@ -635,136 +651,79 @@ export default function InstitutionVerification() {
             <p className="text-muted-foreground">Loading institutions...</p>
           </div>
         ) : institutions && institutions.length > 0 ? (
-          <Tabs defaultValue="all" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all">
-                All ({institutions.length})
-              </TabsTrigger>
-              <TabsTrigger value="pending_registration">
-                New ({institutions.filter(i => i.verification_step === 'pending_registration').length})
-              </TabsTrigger>
-              <TabsTrigger value="pending_kyb">
-                Pending KYB ({institutions.filter(i => i.verification_step === 'pending_kyb').length})
-              </TabsTrigger>
-              <TabsTrigger value="kyb_submitted">
-                KYB Review ({institutions.filter(i => i.verification_step === 'kyb_submitted').length})
-              </TabsTrigger>
-              <TabsTrigger value="pending_branch">
-                Pending Branch ({institutions.filter(i => ['pending_branch', 'kyb_approved'].includes(i.verification_step)).length})
-              </TabsTrigger>
-              <TabsTrigger value="rejected">
-                Rejected ({institutions.filter(i => i.verification_step === 'rejected').length})
-              </TabsTrigger>
-            </TabsList>
+          (() => {
+            const q = searchQuery.trim().toLowerCase();
+            const matchesSearch = (i: Institution) =>
+              !q ||
+              i.institution_name?.toLowerCase().includes(q) ||
+              i.institution_type?.toLowerCase().includes(q);
+            const filtered = institutions.filter(matchesSearch);
+            const filterBy = (pred: (i: Institution) => boolean) => filtered.filter(pred);
 
-            <TabsContent value="all" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {institutions.map((inst) => (
-                  <InstitutionCard key={inst.id} institution={inst} />
-                ))}
-              </div>
-            </TabsContent>
+            const groups: Array<{ key: string; label: string; pred: (i: Institution) => boolean; emptyIcon: any; emptyText: string }> = [
+              { key: "all", label: "All", pred: () => true, emptyIcon: Building2, emptyText: "No institutions found" },
+              { key: "pending_registration", label: "New", pred: (i) => i.verification_step === 'pending_registration', emptyIcon: CheckCircle, emptyText: "No new registrations pending" },
+              { key: "pending_kyb", label: "Pending KYB", pred: (i) => i.verification_step === 'pending_kyb', emptyIcon: Clock, emptyText: "No institutions pending KYB submission" },
+              { key: "kyb_submitted", label: "KYB Review", pred: (i) => i.verification_step === 'kyb_submitted', emptyIcon: FileText, emptyText: "No KYB submissions to review" },
+              { key: "pending_branch", label: "Pending Branch", pred: (i) => ['pending_branch', 'kyb_approved'].includes(i.verification_step), emptyIcon: MapPin, emptyText: "No institutions pending branch creation" },
+              { key: "approved", label: "Approved", pred: (i) => i.verification_step === 'approved', emptyIcon: CheckCircle, emptyText: "No approved institutions yet" },
+              { key: "rejected", label: "Rejected", pred: (i) => i.verification_step === 'rejected', emptyIcon: Ban, emptyText: "No rejected institutions" },
+            ];
 
-            <TabsContent value="pending_registration" className="space-y-4">
-              {institutions.filter(i => i.verification_step === 'pending_registration').length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {institutions
-                    .filter(i => i.verification_step === 'pending_registration')
-                    .map((inst) => (
-                      <InstitutionCard key={inst.id} institution={inst} />
+            return (
+              <Tabs defaultValue="all" className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <TabsList className="flex-wrap h-auto">
+                    {groups.map((g) => (
+                      <TabsTrigger key={g.key} value={g.key}>
+                        {g.label} ({filterBy(g.pred).length})
+                      </TabsTrigger>
                     ))}
+                  </TabsList>
+                  <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search institutions..."
+                      className="pl-8"
+                      aria-label="Search institutions"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No new registrations pending</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
 
-            <TabsContent value="pending_kyb" className="space-y-4">
-              {institutions.filter(i => i.verification_step === 'pending_kyb').length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {institutions
-                    .filter(i => i.verification_step === 'pending_kyb')
-                    .map((inst) => (
-                      <InstitutionCard key={inst.id} institution={inst} />
-                    ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No institutions pending KYB submission</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="kyb_submitted" className="space-y-4">
-              {institutions.filter(i => i.verification_step === 'kyb_submitted').length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {institutions
-                    .filter(i => i.verification_step === 'kyb_submitted')
-                    .map((inst) => (
-                      <InstitutionCard key={inst.id} institution={inst} />
-                    ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No KYB submissions to review</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="pending_branch" className="space-y-4">
-              {institutions.filter(i => ['pending_branch', 'kyb_approved'].includes(i.verification_step)).length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {institutions
-                    .filter(i => ['pending_branch', 'kyb_approved'].includes(i.verification_step))
-                    .map((inst) => (
-                      <InstitutionCard key={inst.id} institution={inst} />
-                    ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No institutions pending branch creation</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="rejected" className="space-y-4">
-              {institutions.filter(i => i.verification_step === 'rejected').length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {institutions
-                    .filter(i => i.verification_step === 'rejected')
-                    .map((inst) => (
-                      <InstitutionCard key={inst.id} institution={inst} />
-                    ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Ban className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No rejected institutions</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
+                {groups.map((g) => {
+                  const items = filterBy(g.pred);
+                  const EmptyIcon = g.emptyIcon;
+                  return (
+                    <TabsContent key={g.key} value={g.key} className="space-y-4">
+                      {items.length > 0 ? (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {items.map((inst) => (
+                            <InstitutionCard key={inst.id} institution={inst} />
+                          ))}
+                        </div>
+                      ) : (
+                        <Card>
+                          <CardContent className="flex flex-col items-center justify-center py-12">
+                            <EmptyIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">
+                              {q ? `No matches for "${searchQuery}"` : g.emptyText}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
+            );
+          })()
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No institutions pending verification</p>
+              <p className="text-muted-foreground">No institutions registered yet</p>
             </CardContent>
           </Card>
         )}
