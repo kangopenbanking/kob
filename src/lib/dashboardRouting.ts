@@ -9,6 +9,14 @@ export interface RoutingSignals {
   institutionStatus?: string | null;
   institutionType?: string | null;
   isStaff: boolean;
+  /**
+   * Authoritative `profiles.account_type`. When an admin sets a user's
+   * primary role, `account_type` is updated to match. We honor this as
+   * the source of truth so the user immediately lands on the correct
+   * dashboard, regardless of legacy rows in developer_orgs / merchants
+   * / institutions that may still exist for historical reasons.
+   */
+  accountType?: string | null;
 }
 
 export interface RoutingDecision {
@@ -22,7 +30,27 @@ export interface RoutingDecision {
  * Kept pure for unit testing — no Supabase calls here.
  */
 export function decideDashboard(s: RoutingSignals): { path: string; reason: string } {
+  // Admin always wins.
   if (s.isAdmin) return { path: "/admin", reason: "admin_role" };
+
+  // Honor admin-set primary `account_type` BEFORE falling back to legacy
+  // entity rows. This guarantees the dashboard switches the moment an
+  // admin changes the user's primary role.
+  const acct = (s.accountType ?? "").toLowerCase();
+  if (acct === "personal") return { path: "/credit-score", reason: "account_type_personal" };
+  if (acct === "business" || acct === "merchant") return { path: "/merchant", reason: "account_type_merchant" };
+  if (acct === "developer") return { path: "/developer", reason: "account_type_developer" };
+  if (acct === "institution" || acct === "bank" || acct === "fi") {
+    if (s.institutionStatus === "approved" && s.institutionType === "developer") {
+      return { path: "/developer", reason: "institution_developer_approved" };
+    }
+    if (s.institutionStatus === "approved") return { path: "/fi-portal", reason: "institution_approved" };
+    if (s.institutionStatus) return { path: "/pending-approval", reason: "institution_pending" };
+    return { path: "/fi-portal", reason: "account_type_institution" };
+  }
+  if (acct === "admin") return { path: "/admin", reason: "account_type_admin" };
+
+  // Legacy fallback by role / row presence.
   if (s.isMerchantRole) return { path: "/merchant", reason: "merchant_role" };
   if (s.isDeveloperRole) return { path: "/developer", reason: "developer_role" };
   if (s.hasDeveloperOrg) return { path: "/developer", reason: "developer_org_row" };
@@ -37,7 +65,7 @@ export function decideDashboard(s: RoutingSignals): { path: string; reason: stri
 }
 
 export async function collectRoutingSignals(userId: string): Promise<RoutingSignals> {
-  const [adminRes, merchRes, devRes, devOrgRes, staffMerchRes, instRes, fiStaffRes] = await Promise.all([
+  const [adminRes, merchRes, devRes, devOrgRes, staffMerchRes, instRes, fiStaffRes, profileRes] = await Promise.all([
     supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any }),
     supabase.rpc("has_role", { _user_id: userId, _role: "merchant" as any }),
     supabase.rpc("has_role", { _user_id: userId, _role: "developer" as any }),
@@ -45,6 +73,7 @@ export async function collectRoutingSignals(userId: string): Promise<RoutingSign
     supabase.from("merchant_staff_roles").select("id").eq("user_id", userId).eq("is_active", true).limit(1).maybeSingle(),
     supabase.from("institutions").select("status, institution_type").eq("user_id", userId).maybeSingle(),
     supabase.rpc("has_role", { _user_id: userId, _role: "staff" as any }),
+    supabase.from("profiles").select("account_type").eq("id", userId).maybeSingle(),
   ]);
 
   return {
@@ -56,6 +85,7 @@ export async function collectRoutingSignals(userId: string): Promise<RoutingSign
     institutionStatus: (instRes.data as any)?.status ?? null,
     institutionType: (instRes.data as any)?.institution_type ?? null,
     isStaff: !!fiStaffRes.data,
+    accountType: (profileRes.data as any)?.account_type ?? null,
   };
 }
 
