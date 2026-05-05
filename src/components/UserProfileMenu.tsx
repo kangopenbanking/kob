@@ -11,37 +11,70 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Shield, LogOut, LayoutDashboard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  User, Settings, Shield, LogOut, LayoutDashboard,
+  Building2, Code2, Store, ShieldCheck, Wallet,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface UserProfileMenuProps {
   variant?: "admin" | "dashboard" | "developer" | "institution" | "merchant";
 }
 
+type DashKey = "admin" | "merchant" | "developer" | "institution" | "personal";
+
+interface DashOption {
+  key: DashKey;
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const DASH_META: Record<DashKey, DashOption> = {
+  admin:       { key: "admin",       label: "Admin Console",        path: "/admin",       icon: ShieldCheck },
+  merchant:    { key: "merchant",    label: "Business (Merchant)",  path: "/merchant",    icon: Store },
+  developer:   { key: "developer",   label: "Developer Portal",     path: "/developer",   icon: Code2 },
+  institution: { key: "institution", label: "Institution / FI",     path: "/fi-portal",   icon: Building2 },
+  personal:    { key: "personal",    label: "Personal",             path: "/dashboard",   icon: Wallet },
+};
+
+// Map profiles.account_type (registration choice) to a DashKey
+function accountTypeToDash(t?: string | null): DashKey | null {
+  if (!t) return null;
+  const v = t.toLowerCase();
+  if (v === "personal") return "personal";
+  if (v === "merchant" || v === "business") return "merchant";
+  if (v === "developer") return "developer";
+  if (v === "institution" || v === "bank" || v === "fi") return "institution";
+  if (v === "admin") return "admin";
+  return null;
+}
+
 export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps) {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>("");
-  const [userRole, setUserRole] = useState<string>("");
   const [initials, setInitials] = useState("U");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [available, setAvailable] = useState<DashKey[]>([]);
+  const [defaultDash, setDefaultDash] = useState<DashKey | null>(null);
+  const [primaryRoleLabel, setPrimaryRoleLabel] = useState<string>("User");
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsAuthenticated(false);
-        return;
-      }
+      if (!user) { setIsAuthenticated(false); return; }
       setIsAuthenticated(true);
       setUserEmail(user.email || "");
-      const email = user.email || "";
-      setInitials(email.substring(0, 2).toUpperCase());
+      setInitials((user.email || "U").substring(0, 2).toUpperCase());
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .maybeSingle();
+      const [{ data: profile }, { data: roles }, { data: devOrg }, { data: inst }, { data: merch }] = await Promise.all([
+        supabase.from("profiles").select("full_name, account_type").eq("id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.from("developer_orgs").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
+        supabase.from("institutions").select("status, institution_type").eq("user_id", user.id).maybeSingle(),
+        supabase.from("gateway_merchants").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
+      ]);
 
       if (profile?.full_name) {
         const parts = profile.full_name.split(" ");
@@ -52,60 +85,64 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
         );
       }
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (roleData) {
-        setUserRole(roleData.role);
+      const roleSet = new Set<string>((roles ?? []).map((r: any) => r.role));
+      const dashes = new Set<DashKey>();
+      if (roleSet.has("admin")) dashes.add("admin");
+      if (roleSet.has("merchant") || merch?.id) dashes.add("merchant");
+      if (roleSet.has("developer") || devOrg?.id) dashes.add("developer");
+      if (
+        roleSet.has("institution") ||
+        (inst as any)?.status
+      ) {
+        // Institutions of type 'developer' are routed through the developer portal
+        if ((inst as any)?.institution_type === "developer") dashes.add("developer");
+        else dashes.add("institution");
       }
+      // Every authenticated user has personal access
+      dashes.add("personal");
+
+      const def = accountTypeToDash(profile?.account_type) ?? (
+        roleSet.has("admin") ? "admin" :
+        roleSet.has("merchant") || merch?.id ? "merchant" :
+        roleSet.has("developer") || devOrg?.id ? "developer" :
+        (inst as any)?.status ? "institution" : "personal"
+      );
+
+      setAvailable(Array.from(dashes));
+      setDefaultDash(def);
+      setPrimaryRoleLabel(DASH_META[def].label);
     };
     fetchUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setIsAuthenticated(false);
-      } else {
-        setIsAuthenticated(true);
-        fetchUser();
-      }
+      if (!session) setIsAuthenticated(false);
+      else { setIsAuthenticated(true); fetchUser(); }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("You've been signed out. See you next time! 👋");
+    toast.success("You've been signed out. See you next time!");
     navigate("/");
   };
-
-  const roleLabel: Record<string, string> = {
-    admin: "Super Admin",
-    institution_owner: "Institution Owner",
-    institution_staff: "Staff",
-    developer: "Developer",
-    personal: "Personal",
-  };
-
-  const displayRole = roleLabel[userRole] || userRole || "User";
 
   const profilePath = variant === "admin" ? "/admin/users" : "/profile";
   const securityPath = variant === "admin" ? "/admin/security" : "/security";
   const settingsPath = variant === "institution" ? "/fi-portal/settings" : "/profile";
 
-  const dashboardPathMap: Record<string, string> = {
-    admin: "/admin",
-    institution: "/fi-portal",
-    developer: "/developer",
-    dashboard: "/dashboard",
-  };
-  const myDashboardPath = dashboardPathMap[variant] || "/dashboard";
-
-  // Don't render anything if not authenticated
   if (!isAuthenticated) return null;
+
+  // Order: default first, then the rest in canonical order
+  const ordered: DashKey[] = (() => {
+    const order: DashKey[] = ["admin", "merchant", "developer", "institution", "personal"];
+    const set = new Set(available);
+    const sorted = order.filter((k) => set.has(k));
+    if (defaultDash && sorted.includes(defaultDash)) {
+      return [defaultDash, ...sorted.filter((k) => k !== defaultDash)];
+    }
+    return sorted;
+  })();
 
   return (
     <DropdownMenu>
@@ -118,11 +155,11 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1.5">
             <p className="text-sm font-medium leading-none truncate">{userEmail}</p>
-            <p className="text-xs text-muted-foreground">{displayRole}</p>
+            <p className="text-xs text-muted-foreground">{primaryRoleLabel}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -139,10 +176,25 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
           Security
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate(myDashboardPath)}>
-          <LayoutDashboard className="mr-2 h-4 w-4" />
-          My Dashboard
-        </DropdownMenuItem>
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+          Your dashboards
+        </DropdownMenuLabel>
+        {ordered.map((k) => {
+          const meta = DASH_META[k];
+          const Icon = meta.icon;
+          const isDefault = k === defaultDash;
+          return (
+            <DropdownMenuItem key={k} onClick={() => navigate(meta.path)}>
+              <Icon className="mr-2 h-4 w-4" />
+              <span className="flex-1">{meta.label}</span>
+              {isDefault && (
+                <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
+                  Default
+                </Badge>
+              )}
+            </DropdownMenuItem>
+          );
+        })}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
@@ -152,3 +204,14 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
     </DropdownMenu>
   );
 }
+
+// Backwards-compat helper for callers that imported the old prop helper.
+export const __legacyMyDashboardPath = (variant: UserProfileMenuProps["variant"]) => {
+  switch (variant) {
+    case "admin": return "/admin";
+    case "institution": return "/fi-portal";
+    case "developer": return "/developer";
+    case "merchant": return "/merchant";
+    default: return "/dashboard";
+  }
+};
