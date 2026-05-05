@@ -56,6 +56,12 @@ export default function UserManagement() {
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Primary role change state
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [roleDialogTarget, setRoleDialogTarget] = useState<UserProfile | null>(null);
+  const [newPrimaryRole, setNewPrimaryRole] = useState<string>('personal');
+  const [roleChangeLoading, setRoleChangeLoading] = useState(false);
+
   useEffect(() => {
     checkAdminAccess();
     loadUsers();
@@ -168,6 +174,33 @@ export default function UserManagement() {
     } catch (error) {
       logger.error('Error removing role:', error);
       toast.error('Failed to remove role');
+    }
+  };
+
+  const changePrimaryRole = async () => {
+    if (!roleDialogTarget) return;
+    setRoleChangeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'set_primary_role',
+          target_user_id: roleDialogTarget.id,
+          primary_role: newPrimaryRole,
+          reason: actionReason || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Primary role set to "${newPrimaryRole}"`);
+      setRoleDialogOpen(false);
+      setRoleDialogTarget(null);
+      setActionReason('');
+      loadUsers();
+    } catch (error: any) {
+      logger.error('Error changing primary role:', error);
+      toast.error(extractEdgeFunctionError(error, 'Failed to change role'));
+    } finally {
+      setRoleChangeLoading(false);
     }
   };
 
@@ -385,6 +418,16 @@ export default function UserManagement() {
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => {
+                          setRoleDialogTarget(user);
+                          setNewPrimaryRole(user.roles[0] || 'personal');
+                          setActionReason('');
+                          setRoleDialogOpen(true);
+                        }}>
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Change Primary Role
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => assignRole(user.id, 'admin')}>
                           <Shield className="h-4 w-4 mr-2" />
                           Make Admin
@@ -440,6 +483,47 @@ export default function UserManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Change Primary Role Dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Primary Role</DialogTitle>
+            <DialogDescription>
+              Set <strong>{roleDialogTarget?.email}</strong>'s primary role. This becomes their default dashboard and replaces their existing primary role.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label htmlFor="primary-role">Primary role</Label>
+              <Select value={newPrimaryRole} onValueChange={setNewPrimaryRole}>
+                <SelectTrigger id="primary-role"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal — /dashboard</SelectItem>
+                  <SelectItem value="merchant">Merchant — /merchant</SelectItem>
+                  <SelectItem value="developer">Developer — /developer</SelectItem>
+                  <SelectItem value="institution">Institution — /fi-portal</SelectItem>
+                  <SelectItem value="staff">Staff (FI) — /fi-portal</SelectItem>
+                  <SelectItem value="tpp">TPP — /developer</SelectItem>
+                  <SelectItem value="moderator">Moderator — /admin</SelectItem>
+                  <SelectItem value="support_agent">Support Agent — /admin</SelectItem>
+                  <SelectItem value="admin">Admin — /admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="role-reason">Reason (optional)</Label>
+              <Textarea id="role-reason" value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder="Why is this role being changed?" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRoleDialogOpen(false)} disabled={roleChangeLoading}>Cancel</Button>
+            <Button onClick={changePrimaryRole} disabled={roleChangeLoading}>
+              {roleChangeLoading ? 'Saving…' : 'Save Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Suspend/Unsuspend Dialog */}
       <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
