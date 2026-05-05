@@ -24022,6 +24022,30 @@ export type Database = {
         Args: { p_merchant_id: string; p_payload: string }
         Returns: string
       }
+      dashboard_routing_backfill_apply: {
+        Args: never
+        Returns: {
+          role_added: Database["public"]["Enums"]["app_role"]
+          source: string
+          user_id: string
+        }[]
+      }
+      dashboard_routing_backfill_preview: {
+        Args: never
+        Returns: {
+          missing_role: Database["public"]["Enums"]["app_role"]
+          source: string
+          user_id: string
+        }[]
+      }
+      dashboard_routing_expected_paths: {
+        Args: never
+        Returns: {
+          email: string
+          expected_path: string
+          id: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
