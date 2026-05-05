@@ -1,9 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -35,7 +36,26 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
-const dashboardNavigation = [
+type Audience = "personal" | "merchant" | "developer" | "institution";
+
+interface NavItem {
+  title: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  // Audiences allowed to see this item. If omitted, visible to everyone.
+  audiences?: Audience[];
+}
+
+interface NavSection {
+  title: string;
+  audiences?: Audience[];
+  items: NavItem[];
+}
+
+// Personal-account-only menu by default. Items relevant to other account types
+// are tagged with audiences[] so they only appear for users who have that
+// dashboard granted (merchant/developer/institution).
+export const dashboardNavigation: NavSection[] = [
   {
     title: "Overview",
     items: [
@@ -48,10 +68,6 @@ const dashboardNavigation = [
     items: [
       { title: "Credit Score", path: "/credit-score", icon: TrendingUp },
       { title: "Credit Report", path: "/credit-report", icon: FileText },
-      { title: "Banking & Payments", path: "/banking-payments", icon: Wallet },
-      { title: "Accept Payments", path: "/accept-payments", icon: CreditCard },
-      { title: "Open Banking APIs", path: "/open-banking", icon: Landmark },
-      { title: "Build & Integrate", path: "/build-integrate", icon: FileText },
     ],
   },
   {
@@ -62,7 +78,23 @@ const dashboardNavigation = [
       { title: "Savings", path: "/savings", icon: PiggyBank },
       { title: "Loans", path: "/loans", icon: DollarSign },
       { title: "Virtual Cards", path: "/virtual-cards", icon: CreditCard },
-      { title: "Banking Operations", path: "/banking-ops", icon: Landmark },
+    ],
+  },
+  {
+    title: "Business Tools",
+    audiences: ["merchant"],
+    items: [
+      { title: "Banking & Payments", path: "/banking-payments", icon: Wallet, audiences: ["merchant"] },
+      { title: "Accept Payments", path: "/accept-payments", icon: CreditCard, audiences: ["merchant"] },
+      { title: "Banking Operations", path: "/banking-ops", icon: Landmark, audiences: ["merchant", "institution"] },
+    ],
+  },
+  {
+    title: "Developer",
+    audiences: ["developer"],
+    items: [
+      { title: "Open Banking APIs", path: "/open-banking", icon: Landmark, audiences: ["developer"] },
+      { title: "Build & Integrate", path: "/build-integrate", icon: FileText, audiences: ["developer"] },
     ],
   },
   {
@@ -75,6 +107,17 @@ const dashboardNavigation = [
   },
 ];
 
+export function filterNavigationForAudiences(
+  sections: NavSection[],
+  audiences: Set<Audience>,
+): NavSection[] {
+  const visible = (a?: Audience[]) => !a || a.length === 0 || a.some((x) => audiences.has(x));
+  return sections
+    .filter((s) => visible(s.audiences))
+    .map((s) => ({ ...s, items: s.items.filter((i) => visible(i.audiences)) }))
+    .filter((s) => s.items.length > 0);
+}
+
 interface DashboardLayoutProps {
   children?: ReactNode;
 }
@@ -82,11 +125,41 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [audiences, setAudiences] = useState<Set<Audience>>(new Set(["personal"]));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [{ data: profile }, { data: roles }, { data: devOrg }, { data: inst }, { data: merch }] = await Promise.all([
+        supabase.from("profiles").select("account_type").eq("id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.from("developer_orgs").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
+        supabase.from("institutions").select("status").eq("user_id", user.id).maybeSingle(),
+        supabase.from("gateway_merchants").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const roleSet = new Set<string>((roles ?? []).map((r: any) => r.role));
+      const a = new Set<Audience>(["personal"]);
+      const acct = (profile?.account_type ?? "").toLowerCase();
+      if (acct === "merchant" || acct === "business" || roleSet.has("merchant") || merch?.id) a.add("merchant");
+      if (acct === "developer" || roleSet.has("developer") || devOrg?.id) a.add("developer");
+      if (
+        acct === "institution" || acct === "bank" || acct === "fi" ||
+        roleSet.has("institution") || (inst as any)?.status
+      ) a.add("institution");
+      setAudiences(a);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const isActivePath = (path: string) => {
     if (path === "/dashboard") return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
+
+  const sections = filterNavigationForAudiences(dashboardNavigation, audiences);
 
   return (
     <SessionGuard logoutPath="/auth" appName="Kang Dashboard" appContext="dashboard">
@@ -106,7 +179,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <SidebarContent className="px-2 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {dashboardNavigation.map((section) => (
+              {sections.map((section) => (
                 <SidebarGroup key={section.title}>
                   <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
                     {section.title}
