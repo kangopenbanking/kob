@@ -32,6 +32,7 @@ import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { LivePageTranslator } from "@/lib/i18n/LivePageTranslator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
+import { AudienceGuard } from "@/components/auth/AudienceGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
