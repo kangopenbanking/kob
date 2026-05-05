@@ -7396,6 +7396,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_redirect_audit: {
+        Row: {
+          context: string | null
+          created_at: string
+          has_developer_org: boolean
+          id: string
+          institution_status: string | null
+          institution_type: string | null
+          is_admin: boolean
+          is_developer_role: boolean
+          is_merchant: boolean
+          is_merchant_staff: boolean
+          is_staff: boolean
+          reason: string
+          target_path: string
+          user_id: string
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          has_developer_org?: boolean
+          id?: string
+          institution_status?: string | null
+          institution_type?: string | null
+          is_admin?: boolean
+          is_developer_role?: boolean
+          is_merchant?: boolean
+          is_merchant_staff?: boolean
+          is_staff?: boolean
+          reason: string
+          target_path: string
+          user_id: string
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          has_developer_org?: boolean
+          id?: string
+          institution_status?: string | null
+          institution_type?: string | null
+          is_admin?: boolean
+          is_developer_role?: boolean
+          is_merchant?: boolean
+          is_merchant_staff?: boolean
+          is_staff?: boolean
+          reason?: string
+          target_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_widgets: {
         Row: {
           config: Json | null
@@ -24052,6 +24103,21 @@ export type Database = {
           transaction_type: string
         }[]
       }
+      get_dashboard_mismatches: {
+        Args: never
+        Returns: {
+          email: string
+          expected_dashboard: string
+          has_developer_institution: boolean
+          has_developer_org: boolean
+          has_developer_role: boolean
+          has_institution: boolean
+          has_merchant: boolean
+          has_merchant_role: boolean
+          issues: string[]
+          user_id: string
+        }[]
+      }
       get_profile_phone: { Args: { _profile_id: string }; Returns: string }
       get_role_hierarchy_level: {
         Args: { _role: Database["public"]["Enums"]["operational_role_type"] }
@@ -24278,6 +24344,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      repair_user_routing: { Args: { _user_id: string }; Returns: Json }
       report_missing_i18n_key: {
         Args: {
           p_component?: string
