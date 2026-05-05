@@ -1,0 +1,77 @@
+###############################################################################
+# DashboardRouter redirect smoke tests
+#
+# Runs on every push and PR. Executes:
+#   - vitest unit suite for decideDashboard() (regression matrix)
+#   - DB consistency check against Test (dev) on push to main
+#   - DB consistency check against Live (prod) on push to main
+#
+# Failures notify via the existing notify-failure composite action.
+###############################################################################
+name: dashboard-routing-smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: dashboard-routing-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Routing decision matrix (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci --no-audit --no-fund
+      - name: Run routing matrix
+        run: npx vitest run src/test/dashboard-routing.test.ts --reporter=verbose
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'Dashboard routing matrix'
+
+  db-consistency:
+    name: DB routing consistency (${{ matrix.env }})
+    needs: unit
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci --no-audit --no-fund
+
+      - name: Invoke routing-consistency edge function (${{ matrix.env }})
+        env:
+          SUPABASE_URL: https://wdzkzeahdtxlynetndqw.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TARGET_ENV: ${{ matrix.env }}
+        run: |
+          set -e
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            "$SUPABASE_URL/functions/v1/dashboard-routing-monitor" \
+            -d "{\"mode\":\"consistency\",\"env\":\"$TARGET_ENV\"}" | tee /tmp/result.json
+          # Fail if mismatches > 0
+          node -e "const r=require('/tmp/result.json');if((r.mismatches||0)>0){console.error('Mismatches:',r);process.exit(1)}"
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          step: 'DB routing consistency (${{ matrix.env }})'
