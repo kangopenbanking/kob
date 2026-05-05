@@ -9,6 +9,14 @@ export interface RoutingSignals {
   institutionStatus?: string | null;
   institutionType?: string | null;
   isStaff: boolean;
+  /**
+   * Authoritative `profiles.account_type`. When an admin sets a user's
+   * primary role, `account_type` is updated to match. We honor this as
+   * the source of truth so the user immediately lands on the correct
+   * dashboard, regardless of legacy rows in developer_orgs / merchants
+   * / institutions that may still exist for historical reasons.
+   */
+  accountType?: string | null;
 }
 
 export interface RoutingDecision {
