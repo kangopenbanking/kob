@@ -418,6 +418,82 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
 
+    } else if (action === 'set_primary_role' && target_user_id) {
+      // Admin updates a user's primary role -> persists in user_roles + profiles.account_type
+      const VALID = ['admin','moderator','institution','staff','merchant','tpp','developer','support_agent','personal'] as const;
+      type Role = typeof VALID[number];
+      const role = String(primary_role || '').toLowerCase() as Role;
+      if (!VALID.includes(role)) {
+        return new Response(JSON.stringify({ error: 'Invalid primary_role' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Map role -> profiles.account_type so default dashboard follows it.
+      const acctMap: Record<string, string> = {
+        admin: 'admin',
+        merchant: 'business',
+        developer: 'developer',
+        institution: 'institution',
+        staff: 'institution',
+        tpp: 'developer',
+        moderator: 'admin',
+        support_agent: 'admin',
+        personal: 'personal',
+      };
+      const newAccountType = account_type || acctMap[role] || 'personal';
+
+      // Replace exclusive role set with this single primary role.
+      // Keep `admin` if explicitly chosen; otherwise remove all dashboard roles
+      // (admin/merchant/developer/institution/tpp/staff/personal/moderator/support_agent)
+      // and insert the new one. This guarantees the user's default landing
+      // dashboard is the one the admin selected.
+      const { error: delErr } = await supabaseAdmin
+        .from('user_roles')
+        .delete()
+        .eq('user_id', target_user_id)
+        .in('role', VALID as unknown as string[]);
+      if (delErr) {
+        return new Response(JSON.stringify({ error: delErr.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const { error: insErr } = await supabaseAdmin
+        .from('user_roles')
+        .insert({ user_id: target_user_id, role });
+      if (insErr) {
+        return new Response(JSON.stringify({ error: insErr.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Persist the registration default so DashboardRouter + UserProfileMenu
+      // route to the matching dashboard going forward.
+      await supabaseAdmin
+        .from('profiles')
+        .update({ account_type: newAccountType })
+        .eq('id', target_user_id);
+
+      await supabaseAdmin.rpc('log_audit_event', {
+        _action_type: 'set_primary_role',
+        _entity_type: 'user',
+        _entity_id: target_user_id,
+        _details: { role, account_type: newAccountType, changed_by: user.id, reason: reason || null },
+      });
+
+      await sendNotification(
+        target_user_id,
+        'role_changed',
+        'Your account role was updated',
+        `An administrator set your primary role to "${role}". Your default dashboard has been updated.`,
+        { role, account_type: newAccountType, reason: reason || '' }
+      );
+
+      return new Response(JSON.stringify({ success: true, role, account_type: newAccountType }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
