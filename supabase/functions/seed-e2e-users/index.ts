@@ -119,9 +119,11 @@ async function upsertProfile(sb: any, userId: string, spec: SeedSpec) {
 }
 
 async function upsertRole(sb: any, userId: string, role: SeedRole) {
-  // user_roles unique on (user_id, role)
+  // user_roles unique on (user_id, role). 'developer_org' is a seed cohort, not a real role.
+  const realRole = role === 'developer_org' ? null : role === 'personal' ? null : role;
+  if (!realRole) return;
   await sb.from('user_roles')
-    .upsert({ user_id: userId, role }, { onConflict: 'user_id,role' });
+    .upsert({ user_id: userId, role: realRole }, { onConflict: 'user_id,role' });
 }
 
 async function upsertRoleExtras(sb: any, userId: string, spec: SeedSpec) {
@@ -156,6 +158,20 @@ async function upsertRoleExtras(sb: any, userId: string, spec: SeedSpec) {
     }).select('id').single();
     if (error) throw error;
     return { merchant_id: data.id };
+  }
+
+  if (spec.role === 'developer_org') {
+    const { data: existing } = await sb.from('developer_orgs')
+      .select('id').eq('user_id', userId).maybeSingle();
+    if (existing?.id) return { developer_org_id: existing.id };
+    const { data, error } = await sb.from('developer_orgs').insert({
+      user_id: userId,
+      name: 'E2E DevOrg',
+      status: 'active',
+      country: 'CM',
+    }).select('id').single();
+    if (error) throw error;
+    return { developer_org_id: data.id };
   }
 
   return {};
