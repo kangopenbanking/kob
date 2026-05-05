@@ -10,7 +10,23 @@ const base: RoutingSignals = {
   institutionStatus: null,
   institutionType: null,
   isStaff: false,
+  accountType: null,
 };
+
+describe("decideDashboard — admin-set account_type wins over legacy rows", () => {
+  it("account_type=personal routes to /credit-score even with legacy developer_org row", () => {
+    expect(decideDashboard({ ...base, accountType: "personal", hasDeveloperOrg: true }).path).toBe("/credit-score");
+  });
+  it("account_type=business routes to /merchant", () => {
+    expect(decideDashboard({ ...base, accountType: "business" }).path).toBe("/merchant");
+  });
+  it("account_type=developer routes to /developer", () => {
+    expect(decideDashboard({ ...base, accountType: "developer" }).path).toBe("/developer");
+  });
+  it("account_type=institution + approved bank routes to /fi-portal", () => {
+    expect(decideDashboard({ ...base, accountType: "institution", institutionStatus: "approved", institutionType: "bank" }).path).toBe("/fi-portal");
+  });
+});
 
 describe("decideDashboard — single-signal cases", () => {
   it("admin → /admin", () => {
