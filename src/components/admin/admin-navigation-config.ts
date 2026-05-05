@@ -36,6 +36,7 @@ import {
   MessageCircle,
   Plug,
   Lock,
+  Code2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -101,6 +102,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Linked Account Requests", path: "/admin/linked-account-requests", icon: ArrowLeftRight },
       { title: "Branch Management", path: "/admin/branches", icon: Building2 },
       { title: "API Clients", path: "/admin/api-clients", icon: Key },
+      { title: "Developer Management", path: "/admin/developer-management", icon: Code2 },
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Webhook Deliveries", path: "/admin/webhook-deliveries", icon: Webhook },
       { title: "Communications", path: "/admin/communications", icon: Mail },
