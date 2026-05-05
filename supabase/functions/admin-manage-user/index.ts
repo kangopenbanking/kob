@@ -418,19 +418,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
 
-    } else if (action === 'set_primary_role' && target_user_id) {
-      const { primary_role } = await (async () => {
-        // Re-parse not needed; we already consumed body. Read from outer scope
-        // by relying on the second-pass: caller must include primary_role on the
-        // initial body. We simulate by re-reading from a captured variable.
-        return { primary_role: (globalThis as any).__lastBody?.primary_role };
-      })();
-      // Fallback: parse again from req? Body already consumed. Use the value
-      // we expect the client to send via target_entity_id when primary_role
-      // wasn't captured. To keep things simple and reliable, require clients
-      // to send `primary_role` in the JSON body and read it from the original
-      // parse below.
-      return new Response(JSON.stringify({ error: 'set_primary_role handled below' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
