@@ -36,7 +36,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
-type Audience = "personal" | "merchant" | "developer" | "institution";
+import { resolveAudiences, type Audience } from "@/lib/permissions";
 
 interface NavItem {
   title: string;
@@ -136,20 +136,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         supabase.from("profiles").select("account_type").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("developer_orgs").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
-        supabase.from("institutions").select("status").eq("user_id", user.id).maybeSingle(),
+        supabase.from("institutions").select("status, institution_type").eq("user_id", user.id).maybeSingle(),
         supabase.from("gateway_merchants").select("id").eq("user_id", user.id).limit(1).maybeSingle(),
       ]);
       if (cancelled) return;
-      const roleSet = new Set<string>((roles ?? []).map((r: any) => r.role));
-      const a = new Set<Audience>(["personal"]);
-      const acct = (profile?.account_type ?? "").toLowerCase();
-      if (acct === "merchant" || acct === "business" || roleSet.has("merchant") || merch?.id) a.add("merchant");
-      if (acct === "developer" || roleSet.has("developer") || devOrg?.id) a.add("developer");
-      if (
-        acct === "institution" || acct === "bank" || acct === "fi" ||
-        roleSet.has("institution") || (inst as any)?.status
-      ) a.add("institution");
-      setAudiences(a);
+      setAudiences(resolveAudiences({
+        accountType: profile?.account_type,
+        roles: (roles ?? []).map((r: any) => r.role),
+        hasDeveloperOrg: !!devOrg?.id,
+        hasMerchant: !!merch?.id,
+        institution: inst as any,
+      }));
     })();
     return () => { cancelled = true; };
   }, []);
