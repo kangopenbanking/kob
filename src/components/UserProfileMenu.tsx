@@ -22,7 +22,7 @@ interface UserProfileMenuProps {
   variant?: "admin" | "dashboard" | "developer" | "institution" | "merchant";
 }
 
-type DashKey = "admin" | "merchant" | "developer" | "institution" | "personal";
+export type DashKey = "admin" | "merchant" | "developer" | "institution" | "personal";
 
 interface DashOption {
   key: DashKey;
