@@ -331,6 +331,7 @@ const ApiClientManagement = lazy(() => import("./pages/admin/ApiClientManagement
 const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const DashboardRoutingAudit = lazy(() => import("./pages/admin/DashboardRoutingAudit"));
 const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
 const DeveloperRateLimits = lazy(() => import("./pages/developer/RateLimits"));
