@@ -34,8 +34,15 @@ export function useRoleChangeListener() {
         const previous = lastPath;
         lastPath = decision.path;
         if (previous !== null) {
-          toast.info("Your account role was updated", {
-            description: "Redirecting you to your new dashboard…",
+          const roleName = roleLabelFromDecision(decision, signals);
+          const effectiveAt = new Date();
+          const timeStr = effectiveAt.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          toast.info(`Your role was changed to ${roleName}`, {
+            description: `Effective ${timeStr} — redirecting to your new dashboard…`,
           });
           navigate(decision.path, { replace: true });
         }
