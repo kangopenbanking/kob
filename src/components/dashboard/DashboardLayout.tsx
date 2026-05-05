@@ -45,9 +45,6 @@ interface NavItem {
   // Audiences allowed to see this item. If omitted, visible to everyone.
   audiences?: Audience[];
 }
-  // Audiences allowed to see this item. If omitted, visible to everyone.
-  audiences?: Audience[];
-}
 
 interface NavSection {
   title: string;
