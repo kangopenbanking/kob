@@ -13,7 +13,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
-type SeedRole = 'admin' | 'merchant' | 'institution' | 'personal';
+type SeedRole = 'admin' | 'merchant' | 'institution' | 'personal' | 'developer' | 'developer_org';
 
 interface SeedSpec {
   email: string;
@@ -22,10 +22,12 @@ interface SeedSpec {
 }
 
 const SEED_USERS: SeedSpec[] = [
-  { email: 'e2e+admin@kob.test',       role: 'admin',       fullName: 'E2E Admin' },
-  { email: 'e2e+merchant@kob.test',    role: 'merchant',    fullName: 'E2E Merchant' },
-  { email: 'e2e+institution@kob.test', role: 'institution', fullName: 'E2E Institution' },
-  { email: 'e2e+consumer@kob.test',    role: 'personal',    fullName: 'E2E Consumer' },
+  { email: 'e2e+admin@kob.test',         role: 'admin',         fullName: 'E2E Admin' },
+  { email: 'e2e+merchant@kob.test',      role: 'merchant',      fullName: 'E2E Merchant' },
+  { email: 'e2e+institution@kob.test',   role: 'institution',   fullName: 'E2E Institution' },
+  { email: 'e2e+developer@kob.test',     role: 'developer',     fullName: 'E2E Developer' },
+  { email: 'e2e+devorg@kob.test',        role: 'developer_org', fullName: 'E2E DevOrg User' },
+  { email: 'e2e+consumer@kob.test',      role: 'personal',      fullName: 'E2E Consumer' },
 ];
 
 Deno.serve(async (req) => {
