@@ -23945,6 +23945,7 @@ export type Database = {
         }
         Returns: Json
       }
+      backfill_single_primary_role: { Args: never; Returns: undefined }
       calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
       calculate_settlement_balance: {
         Args: {
