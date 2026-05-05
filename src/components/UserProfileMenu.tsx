@@ -128,30 +128,23 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
         );
       }
 
-      const roleSet = new Set<string>((roles ?? []).map((r: any) => r.role));
-      const dashes = new Set<DashKey>();
-      if (roleSet.has("admin")) dashes.add("admin");
-      if (roleSet.has("merchant") || merch?.id) dashes.add("merchant");
-      if (roleSet.has("developer") || devOrg?.id) dashes.add("developer");
-      if (
-        roleSet.has("institution") ||
-        (inst as any)?.status
-      ) {
-        // Institutions of type 'developer' are routed through the developer portal
-        if ((inst as any)?.institution_type === "developer") dashes.add("developer");
-        else dashes.add("institution");
-      }
-      // Every authenticated user has personal access
-      dashes.add("personal");
+      const roles = (rolesData ?? []).map((r: any) => r.role as string);
+      const dashes = computeAvailableDashboards({
+        accountType: profile?.account_type,
+        roles,
+        hasDeveloperOrg: !!devOrg?.id,
+        hasMerchant: !!merch?.id,
+        institution: inst as any,
+      });
+      const def = computeDefaultDashboard({
+        accountType: profile?.account_type,
+        roles,
+        hasDeveloperOrg: !!devOrg?.id,
+        hasMerchant: !!merch?.id,
+        institution: inst as any,
+      });
 
-      const def = accountTypeToDash(profile?.account_type) ?? (
-        roleSet.has("admin") ? "admin" :
-        roleSet.has("merchant") || merch?.id ? "merchant" :
-        roleSet.has("developer") || devOrg?.id ? "developer" :
-        (inst as any)?.status ? "institution" : "personal"
-      );
-
-      setAvailable(Array.from(dashes));
+      setAvailable(dashes);
       setDefaultDash(def);
       setPrimaryRoleLabel(DASH_META[def].label);
     };
