@@ -32,6 +32,7 @@ import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { LivePageTranslator } from "@/lib/i18n/LivePageTranslator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
+import { AudienceGuard } from "@/components/auth/AudienceGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
@@ -1303,7 +1304,7 @@ function App() {
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
-            <Route path="/banking-ops" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/banking-ops" element={<ProtectedRoute><NonInstitutionRoute><AudienceGuard allowed={["merchant","institution"]}><DashboardLayout><BankingOps /></DashboardLayout></AudienceGuard></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><ProfileSettings /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/profile-settings" element={<Layout><ProtectedRoute><NonInstitutionRoute><ProfileSettings /></NonInstitutionRoute></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
