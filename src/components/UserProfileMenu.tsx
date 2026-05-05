@@ -51,6 +51,49 @@ function accountTypeToDash(t?: string | null): DashKey | null {
   return null;
 }
 
+export interface ProfileMenuInputs {
+  accountType?: string | null;
+  roles?: string[];
+  hasDeveloperOrg?: boolean;
+  hasMerchant?: boolean;
+  institution?: { status?: string | null; institution_type?: string | null } | null;
+}
+
+export function computeAvailableDashboards(input: ProfileMenuInputs): DashKey[] {
+  const roleSet = new Set(input.roles ?? []);
+  const dashes = new Set<DashKey>();
+  if (roleSet.has("admin")) dashes.add("admin");
+  if (roleSet.has("merchant") || input.hasMerchant) dashes.add("merchant");
+  if (roleSet.has("developer") || input.hasDeveloperOrg) dashes.add("developer");
+  if (roleSet.has("institution") || input.institution?.status) {
+    if (input.institution?.institution_type === "developer") dashes.add("developer");
+    else dashes.add("institution");
+  }
+  dashes.add("personal");
+  return Array.from(dashes);
+}
+
+export function computeDefaultDashboard(input: ProfileMenuInputs): DashKey {
+  const fromAccount = accountTypeToDash(input.accountType);
+  if (fromAccount) return fromAccount;
+  const roleSet = new Set(input.roles ?? []);
+  if (roleSet.has("admin")) return "admin";
+  if (roleSet.has("merchant") || input.hasMerchant) return "merchant";
+  if (roleSet.has("developer") || input.hasDeveloperOrg) return "developer";
+  if (input.institution?.status) return "institution";
+  return "personal";
+}
+
+export function orderDashboards(available: DashKey[], def: DashKey | null): DashKey[] {
+  const order: DashKey[] = ["admin", "merchant", "developer", "institution", "personal"];
+  const set = new Set(available);
+  const sorted = order.filter((k) => set.has(k));
+  if (def && sorted.includes(def)) {
+    return [def, ...sorted.filter((k) => k !== def)];
+  }
+  return sorted;
+}
+
 export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps) {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>("");
