@@ -38,6 +38,12 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
 import { DashboardRouter } from "@/components/DashboardRouter";
+import { useRoleChangeListener } from "@/hooks/useRoleChangeListener";
+
+function RoleChangeListenerMount() {
+  useRoleChangeListener();
+  return null;
+}
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { NestedNotFound } from "@/components/NestedNotFound";
@@ -746,6 +752,7 @@ function App() {
         <LivePageTranslator />
         <BrowserRouter>
           <ScrollToTop />
+          <RoleChangeListenerMount />
           <PWARouteGuard>
           <TooltipProvider>
             <Toaster />
