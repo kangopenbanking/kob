@@ -91,13 +91,26 @@ export default function InstitutionVerification() {
       const { data, error } = await supabase
         .from("institutions")
         .select("*")
-        .neq('verification_step', 'approved')
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Institution[];
     },
   });
+
+  // Realtime: refetch when institutions, steps, or KYB rows change
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-institution-verification")
+      .on("postgres_changes", { event: "*", schema: "public", table: "institutions" },
+        () => queryClient.invalidateQueries({ queryKey: ["institutions-verification"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "institution_verification_steps" },
+        () => queryClient.invalidateQueries({ queryKey: ["verification-steps"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "business_kyc" },
+        () => queryClient.invalidateQueries({ queryKey: ["kyb-for-institutions"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   // Fetch verification steps
   const { data: verificationSteps, isLoading: stepsLoading, refetch: refetchSteps } = useQuery({
