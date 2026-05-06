@@ -336,6 +336,7 @@ const WooCommerceManagement = lazy(() => import("./pages/admin/WooCommerceManage
 const BranchManagement = lazy(() => import("./pages/admin/BranchManagement"));
 const ApiClientManagement = lazy(() => import("./pages/admin/ApiClientManagement"));
 const DeveloperManagement = lazy(() => import("./pages/admin/DeveloperManagement"));
+const QRPaymentsAudit = lazy(() => import("./pages/admin/QRPaymentsAudit"));
 const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
@@ -904,6 +905,7 @@ function App() {
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
+              <Route path="qr-payments-audit" element={<QRPaymentsAudit />} />
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
               <Route path="audit-logs" element={<AuditLogs />} />

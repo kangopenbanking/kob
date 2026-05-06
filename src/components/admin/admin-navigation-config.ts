@@ -90,6 +90,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Invoice Management", path: "/admin/invoice-management", icon: Receipt },
       { title: "Payment Command Center", path: "/admin/payment-command-center", icon: Activity },
       { title: "Tenant Connectors (BYO)", path: "/admin/tenant-connectors", icon: Plug },
+      { title: "QR Payments Audit", path: "/admin/qr-payments-audit", icon: ScrollText },
     ],
   },
   {
