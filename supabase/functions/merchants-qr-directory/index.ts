@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   // 'VERIFIED' (uppercase) which the view legitimately exposes.
   let q = supabase
     .from('merchant_qr_directory')
-    .select('merchant_id, name, environment, status, mcc, country, logo_url, verified, created_at')
+    .select('merchant_id, name, environment, status, mcc, country, logo_url, verified, created_at, kob_wallet_id, wallet_currency')
     .eq('verified', true)
     .order('merchant_id', { ascending: true })
     .limit(limit + 1);
