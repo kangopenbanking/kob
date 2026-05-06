@@ -25,6 +25,9 @@
 //   QR_004  step_up_required
 //   QR_005  upstream_pisp_error
 //   QR_006  idempotency_conflict
+//   QR_007  partner_scope_missing      (client_credentials token lacks payments:qr)
+//   QR_008  partner_card_token_unknown (revoked/expired/unknown token)
+//   QR_009  partner_sca_evidence_missing (PSD2 RTS Art. 18)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
