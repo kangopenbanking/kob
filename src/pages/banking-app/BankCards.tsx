@@ -46,15 +46,27 @@ const BankCards: React.FC = () => {
             USD cards for online purchases
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="rounded-full"
-          onClick={() => setShowCreate(true)}
-        >
-          <Plus className="mr-1 h-4 w-4" strokeWidth={1.5} />
-          New
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setShowQR(true)}
+            disabled={!cards.length}
+          >
+            <ScanLine className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            Scan & Pay
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            New
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
