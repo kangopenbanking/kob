@@ -194,6 +194,62 @@ const CustomerCards: React.FC = () => {
         </>
       )}
 
+      {/* Pay a KOB merchant — auto-discovered from the public directory */}
+      <section className="rounded-2xl bg-card p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Store className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Pay a KOB Merchant
+            </p>
+          </div>
+          {dirFetching && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+        </div>
+
+        <div className="relative mb-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+          <Input
+            value={merchantQuery}
+            onChange={(e) => setMerchantQuery(e.target.value)}
+            placeholder="Search verified merchants"
+            className="pl-9 rounded-xl"
+          />
+        </div>
+
+        {filteredMerchants.length === 0 ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">
+            {merchantQuery ? 'No merchants match your search.' : 'No verified merchants available yet.'}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {filteredMerchants.map((m) => (
+              <button
+                key={m.merchant_id}
+                onClick={() => navigate(`/scan?merchant=${m.merchant_id}`)}
+                className="flex w-full items-center justify-between rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/40"
+              >
+                <div className="flex items-center gap-3">
+                  {m.logo_url ? (
+                    <img src={m.logo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                      <Store className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{m.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {m.country ?? '—'} · MCC {m.mcc ?? '----'}
+                    </p>
+                  </div>
+                </div>
+                <ScanLine className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
