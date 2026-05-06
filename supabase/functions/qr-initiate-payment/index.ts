@@ -359,8 +359,8 @@ Deno.serve(async (req) => {
     pispErrorDetail = (e as Error).message;
   }
 
-  // Refund the card if the upstream push failed
-  if (pispStatus === 'failed') {
+  // Refund the card if the upstream push failed (user mode only — partner mode debits external token)
+  if (pispStatus === 'failed' && mode === 'user' && card) {
     await supabase.from('virtual_cards')
       .update({ balance_usd: newBalance + chargeUsd })
       .eq('id', card.id);
@@ -370,8 +370,13 @@ Deno.serve(async (req) => {
   const { data: row, error: insErr } = await supabase
     .from('qr_card_payments')
     .insert({
-      user_id: user.id,
-      virtual_card_id: card.id,
+      user_id: mode === 'user' ? user.id : null,
+      virtual_card_id: mode === 'user' ? card.id : null,
+      source: mode,
+      partner_client_id: partnerClientId,
+      partner_cardholder_ref: partnerCardholderRef,
+      partner_card_token_id: mode === 'partner' ? partnerToken?.id : null,
+      auth_evidence: mode === 'partner' ? auth_evidence : null,
       pisp_payment_id: pispPaymentId,
       qr_hash: qrHash,
       merchant_key: decoded.merchantKey,
@@ -388,7 +393,8 @@ Deno.serve(async (req) => {
       metadata: {
         qr_type: decoded.qrType,
         charge_usd: chargeUsd,
-        card_last4: card.last4,
+        card_last4: mode === 'user' ? card.last4 : partnerToken?.last4,
+        partner_brand: partnerToken?.brand ?? null,
       },
     })
     .select('*')
