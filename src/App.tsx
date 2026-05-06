@@ -204,6 +204,8 @@ const CertificateManagement = lazy(() => import("./pages/developer/CertificateMa
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
 const MerchantsDiscoveryGuide = lazy(() => import("./pages/developer/MerchantsDiscoveryGuide"));
+const DeploymentStatus = lazy(() => import("./pages/developer/DeploymentStatus"));
+const DeveloperEnvVars = lazy(() => import("./pages/developer/DeveloperEnvVars"));
 const SandboxUsage = lazy(() => import("./pages/developer/SandboxUsage"));
 const SandboxWebhooks = lazy(() => import("./pages/developer/SandboxWebhooks"));
 const WebhookTesting = lazy(() => import("./pages/developer/WebhookTesting"));
