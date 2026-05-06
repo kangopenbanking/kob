@@ -4612,6 +4612,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_app_feature_flags_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       business_kyc: {
@@ -8234,6 +8241,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "escrow_wallets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "escrow_wallets_parent_wallet_id_fkey"
             columns: ["parent_wallet_id"]
             isOneToOne: false
@@ -8573,6 +8587,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fee_structures_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       fee_waivers: {
@@ -8904,6 +8925,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "funding_intents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_audit_logs: {
@@ -9005,6 +9033,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_beneficiaries_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_bulk_operations: {
@@ -9057,6 +9092,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_bulk_operations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -9234,6 +9276,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gateway_charges_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "gateway_charges_payment_link_id_fkey"
             columns: ["payment_link_id"]
             isOneToOne: false
@@ -9335,6 +9384,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_customers_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_disputes: {
@@ -9422,6 +9478,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_disputes_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_merchant_api_keys: {
@@ -9472,6 +9535,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_merchant_api_keys_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_merchant_keys: {
@@ -9521,6 +9591,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_merchant_keys_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -9581,6 +9658,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_merchant_settlement_accounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_merchant_wallets: {
@@ -9624,6 +9708,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_merchant_wallets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -9674,6 +9765,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_merchant_webhooks_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -9862,6 +9960,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_payment_links_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_payment_plans: {
@@ -9915,6 +10020,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_payment_plans_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_payout_batches: {
@@ -9967,6 +10079,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_payout_batches_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -10069,6 +10188,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_payouts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "gateway_payouts_rail_id_fkey"
@@ -10222,6 +10348,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_reconciliation_runs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_refunds: {
@@ -10285,6 +10418,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_refunds_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_settlements: {
@@ -10347,6 +10487,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_settlements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_subaccounts: {
@@ -10399,6 +10546,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_subaccounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -10463,6 +10617,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gateway_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "gateway_subscriptions_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
@@ -10525,6 +10686,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_virtual_accounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_webhook_deliveries: {
@@ -10577,6 +10745,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_webhook_deliveries_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "gateway_webhook_deliveries_webhook_id_fkey"
@@ -10691,6 +10866,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gateway_webhook_endpoints_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       gateway_webhook_events: {
@@ -10743,6 +10925,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_webhook_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -11598,6 +11787,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "integration_mappings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       integration_sync_runs: {
@@ -11651,6 +11847,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_sync_runs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -13669,6 +13872,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchant_integrations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       merchant_locations: {
@@ -13719,6 +13929,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchant_locations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       merchant_notification_preferences: {
@@ -13756,6 +13973,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_notification_preferences_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -13797,6 +14021,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_pos_staff_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -13868,6 +14099,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_qr_codes_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -13978,6 +14216,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchant_staff_roles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       merchant_travel_notifications: {
@@ -14027,6 +14272,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_travel_notifications_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "merchant_travel_notifications_trip_id_fkey"
@@ -14102,6 +14354,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_trust_scores_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -14806,6 +15065,45 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_card_tokens: {
+        Row: {
+          brand: string | null
+          client_id: string
+          created_at: string
+          id: string
+          last4: string | null
+          metadata: Json
+          network_token: string
+          partner_cardholder_ref: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          last4?: string | null
+          metadata?: Json
+          network_token: string
+          partner_cardholder_ref: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          last4?: string | null
+          metadata?: Json
+          network_token?: string
+          partner_cardholder_ref?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pay_by_bank_intents: {
         Row: {
           amount: number
@@ -14886,6 +15184,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_by_bank_intents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -15685,6 +15990,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pos_cash_movements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "pos_cash_movements_shift_id_fkey"
             columns: ["shift_id"]
             isOneToOne: false
@@ -15722,6 +16034,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_categories_parent_id_fkey"
@@ -15807,6 +16126,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pos_consumer_carts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       pos_coupons: {
@@ -15857,6 +16183,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pos_coupons_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       pos_inventory_items: {
@@ -15901,6 +16234,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_inventory_items_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_inventory_items_variant_id_fkey"
@@ -15964,6 +16304,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pos_inventory_movements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "pos_inventory_movements_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
@@ -16011,6 +16358,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_merchant_trial_usage_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -16067,6 +16421,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_items_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_order_items_order_id_fkey"
@@ -16148,6 +16509,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_payments_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_order_payments_order_id_fkey"
@@ -16311,6 +16679,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pos_orders_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       pos_product_category_links: {
@@ -16430,6 +16805,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pos_product_variants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "pos_product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -16488,6 +16870,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -16573,6 +16962,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pos_returns_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "pos_returns_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -16650,6 +17046,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_shifts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -16734,6 +17137,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pos_store_profiles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       pos_store_reviews: {
@@ -16777,6 +17187,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_store_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_store_reviews_order_id_fkey"
@@ -16884,6 +17301,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_store_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
           {
             foreignKeyName: "pos_store_subscriptions_plan_id_fkey"
@@ -17502,6 +17926,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "public_business_profiles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       push_to_card_transactions: {
@@ -17583,6 +18014,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "push_to_card_transactions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+          {
             foreignKeyName: "push_to_card_transactions_payout_id_fkey"
             columns: ["payout_id"]
             isOneToOne: false
@@ -17608,12 +18046,16 @@ export type Database = {
           merchant_key: string
           merchant_name: string | null
           metadata: Json
+          partner_card_token_id: string | null
+          partner_cardholder_ref: string | null
+          partner_client_id: string | null
           pisp_payment_id: string | null
           qr_hash: string
+          source: string
           status: string
           updated_at: string
           user_id: string
-          virtual_card_id: string
+          virtual_card_id: string | null
         }
         Insert: {
           amount: number
@@ -17631,12 +18073,16 @@ export type Database = {
           merchant_key: string
           merchant_name?: string | null
           metadata?: Json
+          partner_card_token_id?: string | null
+          partner_cardholder_ref?: string | null
+          partner_client_id?: string | null
           pisp_payment_id?: string | null
           qr_hash: string
+          source?: string
           status?: string
           updated_at?: string
           user_id: string
-          virtual_card_id: string
+          virtual_card_id?: string | null
         }
         Update: {
           amount?: number
@@ -17654,14 +18100,25 @@ export type Database = {
           merchant_key?: string
           merchant_name?: string | null
           metadata?: Json
+          partner_card_token_id?: string | null
+          partner_cardholder_ref?: string | null
+          partner_client_id?: string | null
           pisp_payment_id?: string | null
           qr_hash?: string
+          source?: string
           status?: string
           updated_at?: string
           user_id?: string
-          virtual_card_id?: string
+          virtual_card_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_card_payments_partner_card_token_id_fkey"
+            columns: ["partner_card_token_id"]
+            isOneToOne: false
+            referencedRelation: "partner_card_tokens"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qr_card_payments_virtual_card_id_fkey"
             columns: ["virtual_card_id"]
@@ -19291,6 +19748,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safeguarding_ledger_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -21522,6 +21986,13 @@ export type Database = {
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suspicious_activity_reports_subject_merchant_id_fkey"
+            columns: ["subject_merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
         ]
       }
       swift_messages: {
@@ -22649,6 +23120,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_services_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
           },
         ]
       }
@@ -24045,16 +24523,27 @@ export type Database = {
           merchant_key: string | null
           merchant_name: string | null
           metadata: Json | null
+          partner_card_token_id: string | null
+          partner_cardholder_ref: string | null
+          partner_client_id: string | null
           pisp_payment_id: string | null
           qr_hash: string | null
           qr_payment_id: string | null
           request_hash: string | null
+          source: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
           virtual_card_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_card_payments_partner_card_token_id_fkey"
+            columns: ["partner_card_token_id"]
+            isOneToOne: false
+            referencedRelation: "partner_card_tokens"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qr_card_payments_virtual_card_id_fkey"
             columns: ["virtual_card_id"]
@@ -24069,6 +24558,42 @@ export type Database = {
           avg_score: number | null
           score_range: string | null
           user_count: number | null
+        }
+        Relationships: []
+      }
+      merchant_qr_directory: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          environment: string | null
+          logo_url: string | null
+          mcc: string | null
+          merchant_id: string | null
+          name: string | null
+          status: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          country?: never
+          created_at?: string | null
+          environment?: string | null
+          logo_url?: never
+          mcc?: never
+          merchant_id?: string | null
+          name?: string | null
+          status?: string | null
+          verified?: never
+        }
+        Update: {
+          country?: never
+          created_at?: string | null
+          environment?: string | null
+          logo_url?: never
+          mcc?: never
+          merchant_id?: string | null
+          name?: string | null
+          status?: string | null
+          verified?: never
         }
         Relationships: []
       }
@@ -24307,10 +24832,14 @@ export type Database = {
           merchant_key: string | null
           merchant_name: string | null
           metadata: Json | null
+          partner_card_token_id: string | null
+          partner_cardholder_ref: string | null
+          partner_client_id: string | null
           pisp_payment_id: string | null
           qr_hash: string | null
           qr_payment_id: string | null
           request_hash: string | null
+          source: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
