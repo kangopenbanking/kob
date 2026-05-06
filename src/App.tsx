@@ -203,6 +203,7 @@ const RealWorldExampleDetail = lazy(() => import("./pages/developer/RealWorldExa
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
+const MerchantsDiscoveryGuide = lazy(() => import("./pages/developer/MerchantsDiscoveryGuide"));
 const SandboxUsage = lazy(() => import("./pages/developer/SandboxUsage"));
 const SandboxWebhooks = lazy(() => import("./pages/developer/SandboxWebhooks"));
 const WebhookTesting = lazy(() => import("./pages/developer/WebhookTesting"));
