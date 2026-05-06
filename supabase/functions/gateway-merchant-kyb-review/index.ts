@@ -154,6 +154,14 @@ Deno.serve(async (req) => {
         metadata: { business_name: merchant.business_name },
       });
 
+      await emitKybEvent(supabase, {
+        event_type: 'merchant.kyb.submitted',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
+        extra: { document_count: (documents as any[]).length },
+      });
+
       return json({ merchant_id, kyb_status: 'submitted', submitted_at: new Date().toISOString() });
     }
 
