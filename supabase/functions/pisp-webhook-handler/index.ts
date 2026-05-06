@@ -53,10 +53,12 @@ async function verifySignature(rawBody: string, signature: string | null): Promi
   return diff === 0;
 }
 
-function mapStatus(s: string): 'completed' | 'failed' | 'pending' {
+function mapStatus(s: string, eventName?: string): 'completed' | 'failed' | 'cancelled' | 'pending' {
   const v = (s || '').toLowerCase();
+  const e = (eventName || '').toLowerCase();
+  if (e.includes('cancel') || v === 'cancelled' || v === 'canceled') return 'cancelled';
   if (v === 'acceptedsettlementcompleted' || v === 'completed' || v === 'settled') return 'completed';
-  if (v === 'rejected' || v === 'failed' || v === 'cancelled' || v === 'canceled') return 'failed';
+  if (v === 'rejected' || v === 'failed') return 'failed';
   return 'pending';
 }
 
@@ -89,16 +91,21 @@ Deno.serve(async (req) => {
     return json(202, { ok: true, ignored: 'not_qr_payment' });
   }
 
-  const next = mapStatus(evt?.status || '');
+  const next = mapStatus(evt?.status || '', eventName);
 
   // Idempotency: same status update arriving twice should be a no-op.
   if (next !== 'pending' && qrRow.status !== next) {
     const update: Record<string, unknown> = { status: next };
     if (next === 'failed') update.failure_reason = evt?.reason || evt?.status || 'pisp_failed';
+    if (next === 'cancelled') {
+      update.failure_reason = evt?.reason || 'cancelled_via_pisp';
+      update.cancelled_at = new Date().toISOString();
+    }
     await supabase.from('qr_card_payments').update(update).eq('id', qrRow.id);
 
-    // Refund the virtual card balance if PISP rejected after we already debited.
-    if (next === 'failed' && qrRow.metadata && typeof (qrRow.metadata as any).charge_usd === 'number') {
+    // Refund the virtual card balance for any non-completed terminal state.
+    if ((next === 'failed' || next === 'cancelled') &&
+        qrRow.metadata && typeof (qrRow.metadata as any).charge_usd === 'number') {
       const refund = (qrRow.metadata as any).charge_usd as number;
       const { data: card } = await supabase
         .from('virtual_cards')
@@ -110,9 +117,11 @@ Deno.serve(async (req) => {
           .from('virtual_cards')
           .update({ balance_usd: Number(card.balance_usd) + refund })
           .eq('id', qrRow.virtual_card_id);
-        await supabase.from('qr_card_payments')
-          .update({ status: 'refunded' })
-          .eq('id', qrRow.id);
+        if (next === 'failed') {
+          await supabase.from('qr_card_payments')
+            .update({ status: 'refunded' })
+            .eq('id', qrRow.id);
+        }
       }
     }
   }
