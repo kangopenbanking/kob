@@ -62,6 +62,7 @@ const navSections = [
       { title: "PISP (Bank Pay)", path: "/developer/api/pisp" },
       { title: "Gateway Webhooks", path: "/developer/gateway/webhooks" },
       { title: "Provider Webhook Receivers", path: "/developer/webhooks/provider-receivers" },
+      { title: "KOB Merchants Discovery", path: "/developer/payments/merchants-discovery" },
     ],
   },
   {
