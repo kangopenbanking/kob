@@ -64,6 +64,13 @@ Deno.serve(async (req) => {
           director_id_document_url, director_name, director_id_number, additional_notes,
         } = body;
 
+        // Server-side MIME + size validation
+        const docValidation = validateKybDocuments(documents);
+        if (!docValidation.ok) {
+          return new Response(JSON.stringify({ error: 'invalid_documents', detail: docValidation.errors.join('; '), errors: docValidation.errors }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         const updates: Record<string, unknown> = {
           kyb_status: 'submitted',
           metadata: {
