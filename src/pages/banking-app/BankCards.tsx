@@ -157,6 +157,22 @@ const BankCards: React.FC = () => {
           {txCard && <CardTransactions card={txCard} />}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showQR} onOpenChange={setShowQR}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan & Pay</DialogTitle>
+            <DialogDescription>
+              Scan a merchant QR code to pay with your virtual card.
+            </DialogDescription>
+          </DialogHeader>
+          <QRPayScanner
+            cards={cards}
+            onPaid={() => refetch()}
+            onClose={() => setShowQR(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
