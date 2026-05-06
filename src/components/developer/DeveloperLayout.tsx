@@ -62,6 +62,7 @@ const navSections = [
       { title: "PISP (Bank Pay)", path: "/developer/api/pisp" },
       { title: "Gateway Webhooks", path: "/developer/gateway/webhooks" },
       { title: "Provider Webhook Receivers", path: "/developer/webhooks/provider-receivers" },
+      { title: "KOB Merchants Discovery", path: "/developer/payments/merchants-discovery" },
     ],
   },
   {
@@ -144,6 +145,8 @@ const navSections = [
       { title: "Supported Countries", path: "/developer/api/countries" },
       { title: "Testing Guide", path: "/developer/api/testing" },
       { title: "API Status", path: "/developer/status" },
+      { title: "Deployment Status", path: "/developer/deployment-status" },
+      { title: "Environment Variables", path: "/developer/env-vars" },
     ],
   },
   {

@@ -204,6 +204,8 @@ const CertificateManagement = lazy(() => import("./pages/developer/CertificateMa
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
 const MerchantsDiscoveryGuide = lazy(() => import("./pages/developer/MerchantsDiscoveryGuide"));
+const DeploymentStatus = lazy(() => import("./pages/developer/DeploymentStatus"));
+const DeveloperEnvVars = lazy(() => import("./pages/developer/DeveloperEnvVars"));
 const SandboxUsage = lazy(() => import("./pages/developer/SandboxUsage"));
 const SandboxWebhooks = lazy(() => import("./pages/developer/SandboxWebhooks"));
 const WebhookTesting = lazy(() => import("./pages/developer/WebhookTesting"));
@@ -1104,6 +1106,8 @@ function App() {
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6, P9) */}
               <Route path="payments/merchants-discovery" element={<MerchantsDiscoveryGuide />} />
+              <Route path="deployment-status" element={<DeploymentStatus />} />
+              <Route path="env-vars" element={<DeveloperEnvVars />} />
               <Route path="getting-started-by-type" element={<GettingStartedByType />} />
               <Route path="identity-guide" element={<IdentityGuide />} />
               <Route path="onboarding-guide" element={<OnboardingGuide />} />
