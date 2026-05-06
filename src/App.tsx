@@ -1101,6 +1101,8 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6, P9) */}
+              <Route path="payments/merchants-discovery" element={<MerchantsDiscoveryGuide />} />
               <Route path="getting-started-by-type" element={<GettingStartedByType />} />
               <Route path="identity-guide" element={<IdentityGuide />} />
               <Route path="onboarding-guide" element={<OnboardingGuide />} />
