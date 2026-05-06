@@ -74,7 +74,7 @@ export default function QRPaymentsAudit() {
     if (!search.trim()) return rows;
     const q = search.toLowerCase();
     return rows.filter(r =>
-      [r.merchant_name, r.merchant_key, r.pisp_payment_id, r.idempotency_key, r.request_hash, r.status]
+      [r.merchant_name, r.merchant_key, r.pisp_payment_id, r.idempotency_key, r.request_hash, r.status, r.source, r.partner_client_id]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q)),
     );
