@@ -1,9 +1,34 @@
 {
-  "apiVersion": "4.30.0",
+  "apiVersion": "4.31.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-06",
   "entries": [
+    {
+      "version": "4.31.0",
+      "date": "2026-05-06",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Partner-mode QR acceptance — external virtual-card issuers (Visa, Mastercard, fintechs) can now discover KOB merchants and push card-funded payments through the KOB PISP rail. Fully additive — no path, schema, or operationId renames.",
+      "highlights": [
+        "New endpoint GET /v1/merchants/qr-directory paginated public list of verified KOB merchants (country, MCC, cursor).",
+        "New endpoint GET /v1/merchants/qr-directory/{id} returns merchant info plus a freshly built EMVCo MPQR payload (static or dynamic).",
+        "POST /v1/payments/qr-initiate gains a partner-mode auth branch driven by client_credentials access tokens carrying scope payments:qr; partner mode debits a partner_card_token instead of an internal virtual card.",
+        "New header X-Partner-Cardholder-Ref and request fields partner_card_token_id + auth_evidence (PSD2 RTS Art. 18 SCA attestation).",
+        "New error codes QR_007 partner_scope_missing (403), QR_008 partner_card_token_unknown (404), QR_009 partner_sca_evidence_missing (412).",
+        "Admin QR Payments Audit gains a Source column distinguishing user vs partner:<client_id> originated payments.",
+        "Public view merchant_qr_directory (KYB-approved active merchants only) backs the directory endpoints."
+      ],
+      "standard_citations": [
+        "EMVCo MPM Specification v1.1 §4 (TLV) + §6 (CRC16-CCITT/FALSE)",
+        "PSD2 RTS Article 18 (Transaction Risk Analysis / SCA delegation)",
+        "FAPI 1.0 Advanced §5.2.2 (Bearer for inter-service)",
+        "RFC 6749 §4.4 (Client Credentials Grant)",
+        "RFC 7807 (Problem Details)",
+        "Standing Order 4 — The Surgeon Rule (additive only)",
+        "Standing Order 6 — The Version Gate (minor increment)"
+      ]
+    },
     {
       "version": "4.30.0",
       "date": "2026-05-06",
