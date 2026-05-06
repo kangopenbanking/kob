@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/admin-notify.ts";
+import { emitKybEvent, validateKybDocuments } from "../_shared/kyb-events.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
