@@ -41,6 +41,31 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Gate production API keys behind KYB approval + live mode toggle
+    if (api_environment === 'production' || api_environment === 'live') {
+      const adminCheck = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      const { data: org } = await adminCheck
+        .from('developer_orgs')
+        .select('kyb_status, live_mode_enabled')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!org || org.kyb_status !== 'approved') {
+        return new Response(
+          JSON.stringify({ error: 'KYB must be completed and approved before creating production API keys.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (!org.live_mode_enabled) {
+        return new Response(
+          JSON.stringify({ error: 'Enable Go Live mode in Developer settings before creating production API keys.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Get user email from profile
     const { data: profile } = await supabase
       .from('profiles')
