@@ -19,8 +19,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface AuditRow {
   qr_payment_id: string;
-  user_id: string;
+  user_id: string | null;
   pisp_payment_id: string | null;
+  source: string | null;
+  partner_client_id: string | null;
+  partner_cardholder_ref: string | null;
+  partner_card_token_id: string | null;
   merchant_name: string | null;
   merchant_id: string | null;
   merchant_external: boolean;
@@ -70,7 +74,7 @@ export default function QRPaymentsAudit() {
     if (!search.trim()) return rows;
     const q = search.toLowerCase();
     return rows.filter(r =>
-      [r.merchant_name, r.merchant_key, r.pisp_payment_id, r.idempotency_key, r.request_hash, r.status]
+      [r.merchant_name, r.merchant_key, r.pisp_payment_id, r.idempotency_key, r.request_hash, r.status, r.source, r.partner_client_id]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q)),
     );
@@ -129,6 +133,7 @@ export default function QRPaymentsAudit() {
               <TableRow>
                 <TableHead>Created</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Merchant</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>PISP Payment</TableHead>
@@ -154,6 +159,11 @@ export default function QRPaymentsAudit() {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Badge variant={r.source === 'partner' ? 'outline' : 'secondary'}>
+                      {r.source === 'partner' ? `partner:${r.partner_client_id ?? '?'}` : 'user'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm font-medium">{r.merchant_name ?? "—"}</div>
                     <div className="text-xs text-muted-foreground">
                       {r.merchant_key} · {r.merchant_country ?? "?"} · MCC {r.merchant_category_code ?? "—"}
@@ -177,7 +187,7 @@ export default function QRPaymentsAudit() {
               ))}
               {!loading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-sm text-muted-foreground py-8">
                     No QR payments found.
                   </TableCell>
                 </TableRow>

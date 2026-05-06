@@ -56,6 +56,9 @@ the cached response is returned with header `X-Idempotent-Replayed: true`.
 | `QR_004` | 401 / 412 | PIN missing/invalid or no phone on profile. |
 | `QR_005` | 502 | PISP consent / payment / submission failed. Card debit is automatically refunded. |
 | `QR_006` | 409 | `Idempotency-Key` collision or reuse with a different body. |
+| `QR_007` | 403 | Partner access token missing scope `payments:qr`. |
+| `QR_008` | 404 | Partner card token unknown, revoked, or expired. |
+| `QR_009` | 412 | Partner SCA evidence (PSD2 RTS Art. 18) missing or expired. |
 
 All errors follow [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807):
 
@@ -141,3 +144,46 @@ PISP webhook → pisp-webhook-handler → status: "completed" | "failed" | "refu
                 ↓
         Realtime → in-app merchant success screen
 ```
+
+## Partner Mode (v4.31.0)
+
+External virtual-card issuers can debit a tokenized card instead of a KOB
+virtual card by:
+
+1. Obtaining an OAuth2 `client_credentials` access token with scope `payments:qr`.
+2. Sending header `X-Partner-Cardholder-Ref: <opaque-cardholder-ref>`.
+3. Replacing `virtual_card_id` + `pin_token` with:
+   - `partner_card_token_id` — UUID of an active `partner_card_tokens` row.
+   - `auth_evidence` — PSD2 RTS Art. 18 attestation:
+
+```json
+{
+  "method": "3ds_v2",
+  "challenge_id": "ares_…",
+  "issued_at": "2026-05-06T12:00:00Z",
+  "expires_at": "2026-05-06T12:05:00Z"
+}
+```
+
+### Partner cURL
+
+```bash
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/qr-initiate-payment \
+  -H "Authorization: Bearer $PARTNER_CC_TOKEN" \
+  -H "X-Partner-Cardholder-Ref: cust_42" \
+  -H "Idempotency-Key: 7c8e2f4a-9b1d-4e6f-a012-3456789abce0" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qr_payload": "00020101021226...6304ABCD",
+    "partner_card_token_id": "11111111-1111-4111-8111-111111111111",
+    "auth_evidence": { "method": "3ds_v2", "challenge_id": "ares_x" }
+  }'
+```
+
+### Partner-mode error mapping
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `QR_007` | 403 | Token missing `payments:qr` scope. |
+| `QR_008` | 404 | Token id unknown, revoked, or expired. |
+| `QR_009` | 412 | `auth_evidence` missing or expired. |
