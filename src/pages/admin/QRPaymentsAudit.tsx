@@ -159,7 +159,11 @@ export default function QRPaymentsAudit() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium">{r.merchant_name ?? "—"}</div>
+                    <Badge variant={r.source === 'partner' ? 'outline' : 'secondary'}>
+                      {r.source === 'partner' ? `partner:${r.partner_client_id ?? '?'}` : 'user'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-xs text-muted-foreground">
                       {r.merchant_key} · {r.merchant_country ?? "?"} · MCC {r.merchant_category_code ?? "—"}
                     </div>
