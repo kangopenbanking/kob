@@ -158,23 +158,26 @@ Deno.serve(async (req) => {
 
 
   // ----- Replay protection via dedicated qr_payment_idempotency table -----
-  // Hash the request body to detect "same key, different payload" (409 conflict).
   const reqHashBuf = await crypto.subtle.digest(
     'SHA-256',
-    new TextEncoder().encode(JSON.stringify({ qr_payload, virtual_card_id, amount_override })),
+    new TextEncoder().encode(JSON.stringify({
+      qr_payload, virtual_card_id, amount_override,
+      partner_card_token_id, mode, ownerId,
+    })),
   );
   const requestHash = Array.from(new Uint8Array(reqHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
   const { data: idem } = await supabase
     .from('qr_payment_idempotency')
-    .select('user_id, request_hash, response_status, response_json, qr_card_payment_id, expires_at')
+    .select('user_id, owner_key, request_hash, response_status, response_json, qr_card_payment_id, expires_at')
     .eq('idempotency_key', idempotencyKey)
     .maybeSingle();
 
   if (idem) {
     const expired = idem.expires_at && new Date(idem.expires_at).getTime() < Date.now();
     if (!expired) {
-      if (idem.user_id !== user.id) return problem(409, 'QR_006', 'Idempotency-Key collision (different user)');
+      const idemOwner = idem.owner_key || idem.user_id;
+      if (idemOwner !== ownerId) return problem(409, 'QR_006', 'Idempotency-Key collision (different caller)');
       if (idem.request_hash && idem.request_hash !== requestHash) {
         return problem(409, 'QR_006', 'Idempotency-Key reused with a different payload');
       }
@@ -185,11 +188,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Helper: persist idempotent response (best-effort) so even rejections cannot be retried with same key.
   const cacheReply = async (status: number, body: Record<string, unknown>, qrRowId: string | null) => {
     await supabase.from('qr_payment_idempotency').upsert({
       idempotency_key: idempotencyKey,
-      user_id: user.id,
+      user_id: mode === 'user' ? user.id : null,
+      owner_key: ownerId,
       request_hash: requestHash,
       response_status: status,
       response_json: body,
