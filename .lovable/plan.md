@@ -1,60 +1,83 @@
-## KOB Merchant QR Acceptance for External Virtual Card Apps — v4.31.0
+## Auto-fetch KOB Merchant Directory into Virtual Card Surfaces
 
-Lets third-party virtual-card issuers (a) discover KOB merchants and their EMVCo MPQR payloads, (b) decode any scanned EMVCo QR, and (c) push a card-funded payment through the existing PISP rail using their own client-credentials token.
+Wire the public `merchants-qr-directory` + `merchants-qr-get` endpoints (shipped in v4.31.0) into every virtual-card-facing surface so any KOB merchant or business becomes instantly discoverable and payable via QR — with no manual configuration per merchant.
 
-Fully additive — no operationId, schema, or path renames (Standing Orders 1, 2, 4).
+### Goal
+
+Whenever a user opens a virtual-card screen (Consumer PWA, Business PWA `/biz`, Merchant Portal `/merchant`, or external partner card apps via SDK), the active KOB merchant catalogue is auto-fetched, cached, and kept fresh — so scanning a KOB merchant QR resolves the payee without any lookup friction.
 
 ---
 
-### 1. Database (one new migration)
-- New table `partner_card_tokens` (no PAN — `network_token` + `last4` only). RLS: admin-read.
-- Extend `qr_card_payments`:
-  - new columns `source` (`user`/`partner`), `partner_client_id`, `partner_cardholder_ref`, `partner_card_token_id`
-  - `virtual_card_id` becomes nullable (partner-mode rows debit a token instead).
-- New public view `merchant_qr_directory` over `gateway_merchants` (active + KYB-approved only). `grant select to anon, authenticated`.
-- Refresh `admin_qr_payments_audit` view + `get_admin_qr_payments_audit()` RPC to expose new partner columns.
+### 1. Shared data hook (single source of truth)
 
-### 2. New edge functions
-- `merchants-qr-directory` (GET) — paginated public list (`country`, `category`, `cursor`, `limit`).
-- `merchants-qr-get` (GET) — returns merchant info + a freshly built EMVCo MPQR payload for `{id}` (static or dynamic when `?amount=…&ref=…`).
+Create `src/hooks/useMerchantDirectory.ts`:
+- React Query hook hitting `GET https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants-qr-directory`
+- Cursor-based auto-pagination (loops until `has_more=false`, capped at 1000 rows per refresh)
+- Filters: `country`, `category`, `search` (client-side over `name`)
+- `staleTime: 5 min`, `refetchInterval: 5 min`, `refetchOnWindowFocus: true`
+- Persists last snapshot to `localStorage` (`kob_merchant_dir_v1`) for offline QR-decode resolution
+- Exposes `{ merchants, byId, isLoading, refetch, lastSyncedAt }`
 
-### 3. Update `qr-initiate-payment`
-- Detect auth mode: user JWT (existing) **or** `client_credentials` access token (new).
-- Partner mode requires:
-  - scope `payments:qr` on the access token,
-  - header `X-Partner-Cardholder-Ref`,
-  - body `partner_card_token_id` + `auth_evidence` (partner-attested SCA per PSD2 RTS Art. 18) instead of `virtual_card_id` + `pin_token`.
-- Add error codes:
-  - `QR_007` 403 missing `payments:qr` scope
-  - `QR_008` 404 partner card token unknown/revoked
-  - `QR_009` 412 SCA evidence missing/expired
+Companion hook `useMerchantQR(merchantId, { amount?, ref? })` → `merchants-qr-get` for on-demand EMVCo payload generation (used by "Show my QR" tiles).
 
-### 4. Documentation (Orders P5/P6/P9/P10)
-- Bump SSOT `src/config/version.ts` → `4.31.0`.
-- `public/openapi.json` + `.yaml` add operations `merchantsQrDirectoryList`, `merchantsQrGet`, partner-mode parameters on `paymentsQrInitiate`. New error codes documented.
-- New `docs/governance/CHANGELOG-v4.31.0.md`.
-- Prepend entry in `public/changelog.json` + `public/CHANGELOG.md` + root `CHANGELOG.md`.
-- New `docs/developer-portal/payments/qr-merchant-directory.md` (cURL + Node + Python + PHP).
-- Update `docs/developer-portal/payments/qr-initiate.md` with partner-mode section.
-- Regenerate `public/postman/Kang_Open_Banking_API_latest.postman_collection.json`.
+### 2. Wire into Virtual Card surfaces
 
-### 5. SDK additions (Node / Python / PHP)
-- New `qr` namespace exposing `directory.list()`, `merchant.get(id)`, `payments.initiate(input)`.
+| Surface | File | Change |
+|---|---|---|
+| Consumer PWA — Virtual Card screen | `src/pages/customer/VirtualCard*.tsx` (existing) | Mount `useMerchantDirectory()`; show "Pay a KOB merchant" search field + recents |
+| QR Scanner result handler | scanner that detects `kob_pos_pay` / EMVCo payloads | Resolve scanned merchant ID via `byId` map before calling `qr-initiate-payment` |
+| Business PWA `/biz/home` | `src/pages/biz/BizHome.tsx` | Add "Your QR poster" tile (calls `useMerchantQR(myMerchantId)`) + live "QR payments today" feed |
+| Merchant Portal | new `src/pages/merchant/QRAcceptance.tsx` route `/merchant/qr-acceptance` | Lists own QR config, downloadable EMVCo poster (PNG/PDF), partner-payment report table |
+| Merchant nav | `src/components/merchant/merchant-navigation-config.ts` | Add "QR Acceptance" under **Payments** with `QrCode` icon |
 
-### 6. Admin & UX
-- `src/pages/admin/QRPaymentsAudit.tsx` adds **Source** column (`user` / `partner:<client_id>`).
+### 3. Background sync for partner SDK consumers
 
-### 7. Tests
-- Vitest fixtures for directory pagination + merchant QR generation.
-- New Deno test in `qr-initiate-payment` exercising partner-mode auth branch.
-- New Playwright spec `e2e/authenticated/qr-partner-flow.spec.ts`.
+Add `directory.sync()` to the `qr` namespace in:
+- `packages/sdk-node/src/index.ts`
+- `packages/sdk-python/kangopenbanking/__init__.py`
+- `packages/sdk-php/src/Resources/`
 
-### Compliance citations
-- EMVCo MPM v1.1 §4 + §6 · ISO 4217 / 18245 / 3166-1 · PSD2 RTS Art. 18 + 36(1)(b) · FAPI 1.0 Adv §5.2.2 · RFC 7807 · PCI DSS v4.0 §3.4.
+Each SDK gets a built-in 5-minute cache + cursor pagination identical to the React hook so external virtual-card apps poll once, not per scan.
 
-### Out of scope
-- Storing real PANs (network tokens only).
-- Visa/MC card-network certification (partner responsibility).
-- Any modification of existing operationIds, paths, or schemas.
+### 4. Realtime freshness (optional but cheap)
 
-Approve to switch to build mode and implement all of the above.
+Subscribe to `gateway_merchants` row changes via Supabase Realtime in `useMerchantDirectory` (filter `status=eq.active`). On INSERT/UPDATE invalidate the React Query cache → instant propagation when a new merchant is KYB-approved, no 5-min wait.
+
+Requires: `ALTER PUBLICATION supabase_realtime ADD TABLE public.gateway_merchants;` (migration).
+
+### 5. Public listing edge-function tweak
+
+Confirm `merchants-qr-directory` returns the fields the UIs need. If `logo_url`, `category_label`, `accepts_partner_cards` are missing from the `merchant_qr_directory` view, extend the view (additive — Standing Order 4) and bump OpenAPI to **v4.31.1** (patch).
+
+### 6. Tests
+
+- Vitest: `src/hooks/__tests__/useMerchantDirectory.test.ts` — pagination loop, localStorage hydration, realtime invalidation
+- Playwright: `e2e/authenticated/merchant-directory-autosync.spec.ts` — scanner picks up a freshly KYB-approved merchant within one refetch cycle
+
+### 7. Files to create / edit
+
+Created:
+- `src/hooks/useMerchantDirectory.ts`
+- `src/hooks/useMerchantQR.ts`
+- `src/pages/merchant/QRAcceptance.tsx`
+- `src/hooks/__tests__/useMerchantDirectory.test.ts`
+- `e2e/authenticated/merchant-directory-autosync.spec.ts`
+- `supabase/migrations/<ts>_realtime_gateway_merchants.sql`
+- `docs/governance/CHANGELOG-v4.31.1.md` (only if view extended)
+
+Edited:
+- `src/App.tsx` (route `/merchant/qr-acceptance`)
+- `src/components/merchant/merchant-navigation-config.ts`
+- `src/pages/biz/BizHome.tsx` (or current Biz home file)
+- Existing virtual-card pages + QR scanner result handler
+- `packages/sdk-node`, `sdk-python`, `sdk-php` — add `qr.directory.sync()`
+- `src/config/version.ts`, `public/openapi.json`, `public/openapi.yaml`, `public/changelog.json`, `public/CHANGELOG.md`, `CHANGELOG.md` (only if view extended → 4.31.1)
+
+### Compliance
+
+- Standing Orders 1, 2, 4 (additive only, no renames)
+- P1 Public First (directory endpoint already public/anon)
+- P5 Working Code (smoke test in Playwright)
+- Direct Backend Mandate (`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`)
+
+Approve to switch to build mode.
