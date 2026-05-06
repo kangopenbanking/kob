@@ -252,67 +252,52 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ----- Verify virtual card (ownership + status + balance) -----
-  const { data: card, error: cardErr } = await supabase
-    .from('virtual_cards')
-    .select('id, user_id, status, balance_usd, currency, last4, card_name')
-    .eq('id', virtual_card_id)
-    .maybeSingle();
-  if (cardErr || !card) return problem(404, 'QR_003', 'Virtual card not found');
-  if (card.user_id !== user.id) return problem(403, 'QR_003', 'Card not owned by user');
-  if (card.status !== 'active') return problem(409, 'QR_003', `Card is ${card.status}`);
-
-  // For non-USD QRs we'd convert via exchange-rate-get; for now require XAF→USD pre-funded
-  // and reject mismatched currencies if no FX path. Card is USD-denominated.
-  // Convert XAF/XOF/EUR → USD via exchange-rate-get.
+  // ----- Verify card / step-up (mode-dependent) -----
+  let card: any = null;
   let chargeUsd = amount;
+  let newBalance = 0;
+
   if (decoded.currency !== 'USD') {
     const fxRes = await fetch(`${SUPABASE_URL}/functions/v1/exchange-rate-get?from=${decoded.currency}&to=USD&amount=${amount}`, {
       headers: { Authorization: `Bearer ${SERVICE_KEY}` },
     });
-    if (!fxRes.ok) {
-      await fxRes.text().catch(() => '');
-      return problem(502, 'QR_005', 'Exchange rate unavailable');
-    }
+    if (!fxRes.ok) { await fxRes.text().catch(() => ''); return problem(502, 'QR_005', 'Exchange rate unavailable'); }
     const fx = await fxRes.json();
     chargeUsd = Number(fx?.converted ?? fx?.amount_to ?? 0);
     if (!chargeUsd || chargeUsd <= 0) return problem(502, 'QR_005', 'Invalid FX response');
   }
 
-  if (Number(card.balance_usd) < chargeUsd) {
-    return problem(402, 'QR_003', 'Insufficient virtual card balance');
-  }
+  if (mode === 'user') {
+    const { data: c, error: cardErr } = await supabase
+      .from('virtual_cards')
+      .select('id, user_id, status, balance_usd, currency, last4, card_name')
+      .eq('id', virtual_card_id).maybeSingle();
+    if (cardErr || !c) return problem(404, 'QR_003', 'Virtual card not found');
+    if (c.user_id !== user.id) return problem(403, 'QR_003', 'Card not owned by user');
+    if (c.status !== 'active') return problem(409, 'QR_003', `Card is ${c.status}`);
+    if (Number(c.balance_usd) < chargeUsd) return problem(402, 'QR_003', 'Insufficient virtual card balance');
+    card = c;
 
-  // ----- Step-up verification (PIN) -----
-  if (!pin_token || typeof pin_token !== 'string' || pin_token.length < 4) {
-    return problem(401, 'QR_004', 'Step-up authentication required (pin_token = 6-digit PIN)');
-  }
-  // Resolve user's phone for pin-code-verify
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('phone_number')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile?.phone_number) return problem(412, 'QR_004', 'No phone number on profile');
+    if (!pin_token || typeof pin_token !== 'string' || pin_token.length < 4) {
+      return problem(401, 'QR_004', 'Step-up authentication required (pin_token = 6-digit PIN)');
+    }
+    const { data: profile } = await supabase
+      .from('profiles').select('phone_number').eq('id', user.id).maybeSingle();
+    if (!profile?.phone_number) return problem(412, 'QR_004', 'No phone number on profile');
+    const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/pin-code-verify`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone_number: profile.phone_number, pin_code: pin_token }),
+    });
+    const stepJson = await stepRes.json().catch(() => ({}));
+    if (!stepRes.ok || !stepJson?.verified) return problem(401, 'QR_004', 'PIN verification failed');
 
-  const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/pin-code-verify`, {
-    method: 'POST',
-    headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone_number: profile.phone_number, pin_code: pin_token }),
-  });
-  const stepJson = await stepRes.json().catch(() => ({}));
-  if (!stepRes.ok || !stepJson?.verified) {
-    return problem(401, 'QR_004', 'PIN verification failed');
+    newBalance = Number(card.balance_usd) - chargeUsd;
+    const { error: updErr } = await supabase
+      .from('virtual_cards').update({ balance_usd: newBalance })
+      .eq('id', card.id).eq('balance_usd', card.balance_usd);
+    if (updErr) return problem(409, 'QR_003', 'Card balance changed concurrently, retry');
   }
-
-  // ----- Atomic debit via RPC (fall back to optimistic update if RPC absent) -----
-  const newBalance = Number(card.balance_usd) - chargeUsd;
-  const { error: updErr } = await supabase
-    .from('virtual_cards')
-    .update({ balance_usd: newBalance })
-    .eq('id', card.id)
-    .eq('balance_usd', card.balance_usd); // optimistic concurrency
-  if (updErr) return problem(409, 'QR_003', 'Card balance changed concurrently, retry');
+  // Partner mode: SCA evidence already validated; no internal balance to debit.
 
   // ----- Forward to PISP rail -----
   const qrHash = await hashQRPayload(qr_payload);
