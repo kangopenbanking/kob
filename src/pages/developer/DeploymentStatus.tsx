@@ -15,16 +15,20 @@ type ArtifactCheck = {
   detail?: string;
 };
 
-const ARTIFACTS: { name: string; url: string }[] = [
-  { name: "OpenAPI JSON", url: "/openapi.json" },
-  { name: "OpenAPI YAML", url: "/openapi.yaml" },
-  { name: "Sandbox OpenAPI JSON", url: "/openapi-sandbox.json" },
-  { name: "Changelog JSON", url: "/changelog.json" },
-  { name: "Postman (latest)", url: "/postman/Kang_Open_Banking_API_latest.postman_collection.json" },
-  { name: "Postman manifest", url: "/postman/manifest.json" },
-  { name: "APIs.json", url: "/apis.json" },
-  { name: "Sitemap", url: "/sitemap.xml" },
+const PORTAL_BASE_URL = "https://342820e7-280a-44d3-88ce-2854c6d907ed.lovableproject.com";
+
+const ARTIFACT_PATHS: { name: string; path: string }[] = [
+  { name: "OpenAPI JSON", path: "/openapi.json" },
+  { name: "OpenAPI YAML", path: "/openapi.yaml" },
+  { name: "Sandbox OpenAPI JSON", path: "/openapi-sandbox.json" },
+  { name: "Changelog JSON", path: "/changelog.json" },
+  { name: "Postman (latest)", path: "/postman/Kang_Open_Banking_API_latest.postman_collection.json" },
+  { name: "Postman manifest", path: "/postman/manifest.json" },
+  { name: "APIs.json", path: "/apis.json" },
+  { name: "Sitemap", path: "/sitemap.xml" },
 ];
+
+const ARTIFACTS = ARTIFACT_PATHS.map((a) => ({ name: a.name, url: `${PORTAL_BASE_URL}${a.path}` }));
 
 export default function DeploymentStatus() {
   const [checks, setChecks] = useState<ArtifactCheck[]>([]);
@@ -90,7 +94,7 @@ export default function DeploymentStatus() {
           </div>
           <div>
             <div className="text-muted-foreground">Portal Origin</div>
-            <div className="font-medium">{typeof window !== "undefined" ? window.location.origin : "—"}</div>
+            <div className="font-medium break-all">{PORTAL_BASE_URL}</div>
           </div>
           <div>
             <div className="text-muted-foreground">API Gateway</div>
