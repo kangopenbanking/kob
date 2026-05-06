@@ -27,10 +27,18 @@ Deno.serve(async (req) => {
       const { merchant_id, environment = 'sandbox', label } = body;
       if (!merchant_id) return problem(400, 'Bad Request', 'merchant_id is required');
 
-      const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
+      const { data: merchant } = await supabase.from('gateway_merchants').select('id, kyb_status, live_mode_enabled').eq('id', merchant_id).eq('user_id', user.id).single();
       if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
 
       const env = environment;
+      if (env === 'live') {
+        if (merchant.kyb_status !== 'approved') {
+          return problem(403, 'KYB Required', 'KYB must be completed and approved before creating production API keys.');
+        }
+        if (!merchant.live_mode_enabled) {
+          return problem(403, 'Live Mode Disabled', 'Enable Go Live mode for this merchant before creating production API keys.');
+        }
+      }
       const prefix = env === 'live' ? 'pk_live_' : 'pk_test_';
       const secretPrefix = env === 'live' ? 'sk_live_' : 'sk_test_';
       const publicKey = prefix + crypto.randomUUID().replace(/-/g, '');
