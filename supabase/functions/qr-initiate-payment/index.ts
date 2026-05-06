@@ -201,20 +201,27 @@ Deno.serve(async (req) => {
     return problem(402, 'QR_003', 'Insufficient virtual card balance');
   }
 
-  // ----- Step-up verification -----
-  if (!pin_token || typeof pin_token !== 'string') {
-    return problem(401, 'QR_004', 'Step-up authentication required');
+  // ----- Step-up verification (PIN) -----
+  if (!pin_token || typeof pin_token !== 'string' || pin_token.length < 4) {
+    return problem(401, 'QR_004', 'Step-up authentication required (pin_token = 6-digit PIN)');
   }
-  const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/verify-step-up`, {
+  // Resolve user's phone for pin-code-verify
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('phone_number')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!profile?.phone_number) return problem(412, 'QR_004', 'No phone number on profile');
+
+  const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/pin-code-verify`, {
     method: 'POST',
     headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: pin_token, action: 'qr_payment' }),
+    body: JSON.stringify({ phone_number: profile.phone_number, pin_code: pin_token }),
   });
-  if (!stepRes.ok) {
-    await stepRes.text().catch(() => '');
-    return problem(401, 'QR_004', 'Step-up token invalid or expired');
+  const stepJson = await stepRes.json().catch(() => ({}));
+  if (!stepRes.ok || !stepJson?.verified) {
+    return problem(401, 'QR_004', 'PIN verification failed');
   }
-  await stepRes.text().catch(() => '');
 
   // ----- Atomic debit via RPC (fall back to optimistic update if RPC absent) -----
   const newBalance = Number(card.balance_usd) - chargeUsd;
