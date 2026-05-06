@@ -19,3 +19,4 @@ export {
   type MerchantWebhookEndpoint,
   type WebhookDelivery,
 } from './phase3';
+export { qr, type QRDirectoryMerchant, type QRDirectoryFilters } from './qr';

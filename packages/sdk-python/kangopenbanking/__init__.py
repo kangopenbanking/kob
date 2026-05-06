@@ -8,8 +8,9 @@ from .types import (
     ChargeChannel, ChargeStatus,
 )
 from .phase3 import MerchantOps
+from .qr import qr
 
-__version__ = "1.6.1"
+__version__ = "1.6.2"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",
@@ -17,4 +18,5 @@ __all__ = [
     "PayByBankIntent", "PayByBankStatus",
     "ChargeChannel", "ChargeStatus",
     "MerchantOps",
+    "qr",
 ]

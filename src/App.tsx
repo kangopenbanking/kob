@@ -573,6 +573,7 @@ const MerchantWhiteLabel = lazy(() => import("./pages/merchant/MerchantWhiteLabe
 const MerchantAdvancedAnalytics = lazy(() => import("./pages/merchant/MerchantAdvancedAnalytics"));
 const MerchantPOSTill = lazy(() => import("./pages/merchant/MerchantPOSTill"));
 const MerchantPayByBank = lazy(() => import("./pages/merchant/MerchantPayByBank"));
+const MerchantQRAcceptance = lazy(() => import("./pages/merchant/MerchantQRAcceptance"));
 
 // Banking App PWA
 const BankSplash = lazy(() => import("./pages/banking-app/BankSplash"));
@@ -893,6 +894,7 @@ function App() {
               <Route path="pos-till" element={<MerchantPOSTill />} />
               <Route path="notification-history" element={<NotificationHistory />} />
               <Route path="pay-by-bank" element={<MerchantPayByBank />} />
+              <Route path="qr-acceptance" element={<MerchantQRAcceptance />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
