@@ -146,6 +146,7 @@ const navSections = [
       { title: "Settlements", path: "/developer/gateway/settlements" },
       { title: "Split Payments", path: "/developer/gateway/split-payments" },
       { title: "BYO Mobile Money", path: "/developer/connectors/byo-mobile-money" },
+      { title: "KOB Merchants Discovery", path: "/developer/payments/merchants-discovery" },
     ],
   },
   {
