@@ -106,3 +106,44 @@ describe('parseEmvQR', () => {
     expect(isSupportedQR(d)).toEqual({ ok: false, reason: 'no_merchant_account' });
   });
 });
+
+/**
+ * Pre-payment-wiring fixture suite — locks in the four canonical EMVCo
+ * shapes the qr-initiate-payment bridge MUST tolerate before any money
+ * moves: static, dynamic, bad-CRC, missing-amount.
+ */
+describe('EMVCo MPM fixtures (pre-payment wiring)', () => {
+  const KOB = { tag: '26', guid: 'KOB', merchantId: 'mer_kob_demo' };
+
+  it('FIXTURE: dynamic XAF QR with amount → decodes & is supported', () => {
+    const qr = buildQR({ poi: '12', account: KOB, currency: '950', amount: '12500.50' });
+    const d = parseEmvQR(qr);
+    expect(d.qrType).toBe('dynamic');
+    expect(d.amount).toBe('12500.50');
+    expect(d.currency).toBe('XAF');
+    expect(isSupportedQR(d)).toEqual({ ok: true });
+  });
+
+  it('FIXTURE: static QR with NO amount → decodes; consumer must supply amount_override', () => {
+    const qr = buildQR({ poi: '11', account: KOB });
+    const d = parseEmvQR(qr);
+    expect(d.qrType).toBe('static');
+    expect(d.amount).toBeUndefined();
+    expect(isSupportedQR(d)).toEqual({ ok: true });
+  });
+
+  it('FIXTURE: bad CRC → throws EmvParseError(QR_001_BAD_CRC)', () => {
+    const qr = buildQR({ poi: '12', account: KOB, amount: '1000', badCrc: true });
+    let caught: unknown;
+    try { parseEmvQR(qr); } catch (e) { caught = e; }
+    expect(caught).toBeInstanceOf(EmvParseError);
+    expect((caught as EmvParseError).code).toBe('QR_001_BAD_CRC');
+  });
+
+  it('FIXTURE: dynamic QR missing amount tag (54) → parser tolerant, downstream must reject', () => {
+    const qr = buildQR({ poi: '12', account: KOB });
+    const d = parseEmvQR(qr);
+    expect(d.amount).toBeUndefined();
+    expect(d.qrType).toBe('dynamic');
+  });
+});
