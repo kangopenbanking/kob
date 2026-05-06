@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CreditCard, Plus, Loader2 } from 'lucide-react';
+import { CreditCard, Plus, Loader2, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,9 +14,11 @@ import { VirtualCardDisplay } from '@/components/virtual-cards/VirtualCardDispla
 import { CreateCardForm } from '@/components/virtual-cards/CreateCardForm';
 import { TopUpForm } from '@/components/virtual-cards/TopUpForm';
 import { CardTransactions } from '@/components/virtual-cards/CardTransactions';
+import { QRPayScanner } from '@/components/virtual-cards/QRPayScanner';
 
 const BankCards: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [topUpCard, setTopUpCard] = useState<any | null>(null);
   const [txCard, setTxCard] = useState<any | null>(null);
 
