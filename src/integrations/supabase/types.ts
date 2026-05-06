@@ -24626,34 +24626,14 @@ export type Database = {
           country: string | null
           created_at: string | null
           environment: string | null
+          kob_wallet_id: string | null
           logo_url: string | null
           mcc: string | null
           merchant_id: string | null
           name: string | null
           status: string | null
           verified: boolean | null
-        }
-        Insert: {
-          country?: never
-          created_at?: string | null
-          environment?: string | null
-          logo_url?: never
-          mcc?: never
-          merchant_id?: string | null
-          name?: string | null
-          status?: string | null
-          verified?: never
-        }
-        Update: {
-          country?: never
-          created_at?: string | null
-          environment?: string | null
-          logo_url?: never
-          mcc?: never
-          merchant_id?: string | null
-          name?: string | null
-          status?: string | null
-          verified?: never
+          wallet_currency: string | null
         }
         Relationships: []
       }
