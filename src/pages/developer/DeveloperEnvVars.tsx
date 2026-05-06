@@ -122,14 +122,14 @@ export default function DeveloperEnvVars() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>Use the Netlify CLI for repeatable provisioning:</p>
-          <CodeBlock language="bash" code={`netlify env:set NODE_VERSION 20
+          <CodeBlock examples={[{ language: "bash", code: `netlify env:set NODE_VERSION 20
 netlify env:set AUDIT_BASE https://kangopenbanking.com
 netlify env:set VITE_FIREBASE_API_KEY "<value>"
 netlify env:set VITE_FIREBASE_AUTH_DOMAIN "kang-open-banking-5e1e2.firebaseapp.com"
 netlify env:set VITE_FIREBASE_PROJECT_ID "kang-open-banking-5e1e2"
 netlify env:set VITE_STRIPE_PUBLIC_KEY "<value>"
 # Optional
-netlify env:set SLACK_WEBHOOK_URL "<incoming-webhook>"`} />
+netlify env:set SLACK_WEBHOOK_URL "<incoming-webhook>"` }]} />
           <p>
             See <a className="underline" href="/developer/deployment-status">Deployment Status</a>
             {" "}to verify that the latest build published every required artifact.
