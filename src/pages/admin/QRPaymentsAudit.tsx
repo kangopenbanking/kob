@@ -133,6 +133,7 @@ export default function QRPaymentsAudit() {
               <TableRow>
                 <TableHead>Created</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Merchant</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>PISP Payment</TableHead>
