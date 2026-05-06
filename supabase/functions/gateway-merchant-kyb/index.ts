@@ -109,6 +109,14 @@ Deno.serve(async (req) => {
           metadata: { business_name: merchant.business_name, merchant_id: merchantId },
         });
 
+        await emitKybEvent(supabase, {
+          event_type: 'merchant.kyb.submitted',
+          merchant_id: merchantId,
+          business_name: merchant.business_name,
+          actor_id: user.id,
+          extra: { document_count: Array.isArray(documents) ? (documents as any[]).length : 0 },
+        });
+
         return new Response(JSON.stringify({ data: updated }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
