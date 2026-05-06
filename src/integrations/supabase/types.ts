@@ -17594,6 +17594,8 @@ export type Database = {
       qr_card_payments: {
         Row: {
           amount: number
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           currency: string
           failure_reason: string | null
@@ -17615,6 +17617,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           currency: string
           failure_reason?: string | null
@@ -17636,6 +17640,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           currency?: string
           failure_reason?: string | null
@@ -17736,6 +17742,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_payment_idempotency_qr_card_payment_id_fkey"
+            columns: ["qr_card_payment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_qr_payments_audit"
+            referencedColumns: ["qr_payment_id"]
+          },
           {
             foreignKeyName: "qr_payment_idempotency_qr_card_payment_id_fkey"
             columns: ["qr_card_payment_id"]
@@ -24012,6 +24025,45 @@ export type Database = {
       }
     }
     Views: {
+      admin_qr_payments_audit: {
+        Row: {
+          amount: number | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string | null
+          currency: string | null
+          failure_reason: string | null
+          idempotency_created_at: string | null
+          idempotency_expires_at: string | null
+          idempotency_key: string | null
+          idempotency_response_json: Json | null
+          idempotency_response_status: number | null
+          merchant_category_code: string | null
+          merchant_country: string | null
+          merchant_external: boolean | null
+          merchant_id: string | null
+          merchant_key: string | null
+          merchant_name: string | null
+          metadata: Json | null
+          pisp_payment_id: string | null
+          qr_hash: string | null
+          qr_payment_id: string | null
+          request_hash: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          virtual_card_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_card_payments_virtual_card_id_fkey"
+            columns: ["virtual_card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_score_distribution: {
         Row: {
           avg_score: number | null
@@ -24022,6 +24074,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_can_read_qr_audit: { Args: never; Returns: boolean }
       atomic_charge_wallet_credit: {
         Args: {
           _charge_id: string
@@ -24232,6 +24285,43 @@ export type Database = {
           can_view: boolean
           section_key: string
         }[]
+      }
+      get_admin_qr_payments_audit: {
+        Args: never
+        Returns: {
+          amount: number | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string | null
+          currency: string | null
+          failure_reason: string | null
+          idempotency_created_at: string | null
+          idempotency_expires_at: string | null
+          idempotency_key: string | null
+          idempotency_response_json: Json | null
+          idempotency_response_status: number | null
+          merchant_category_code: string | null
+          merchant_country: string | null
+          merchant_external: boolean | null
+          merchant_id: string | null
+          merchant_key: string | null
+          merchant_name: string | null
+          metadata: Json | null
+          pisp_payment_id: string | null
+          qr_hash: string | null
+          qr_payment_id: string | null
+          request_hash: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          virtual_card_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "admin_qr_payments_audit"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_daily_fee_summary: {
         Args: {
