@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/admin-notify.ts";
+import { emitKybEvent, validateKybDocuments } from "../_shared/kyb-events.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -63,6 +64,13 @@ Deno.serve(async (req) => {
           director_id_document_url, director_name, director_id_number, additional_notes,
         } = body;
 
+        // Server-side MIME + size validation
+        const docValidation = validateKybDocuments(documents);
+        if (!docValidation.ok) {
+          return new Response(JSON.stringify({ error: 'invalid_documents', detail: docValidation.errors.join('; '), errors: docValidation.errors }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         const updates: Record<string, unknown> = {
           kyb_status: 'submitted',
           metadata: {
@@ -101,6 +109,14 @@ Deno.serve(async (req) => {
           metadata: { business_name: merchant.business_name, merchant_id: merchantId },
         });
 
+        await emitKybEvent(supabase, {
+          event_type: 'merchant.kyb.submitted',
+          merchant_id: merchantId,
+          business_name: merchant.business_name,
+          actor_id: user.id,
+          extra: { document_count: Array.isArray(documents) ? (documents as any[]).length : 0 },
+        });
+
         return new Response(JSON.stringify({ data: updated }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
@@ -131,6 +147,14 @@ Deno.serve(async (req) => {
         await supabase.from('audit_logs').insert({
           action_type: `merchant.kyb_${decision}`, entity_type: 'gateway_merchant', entity_id: merchantId,
           performed_by: user.id, details: { decision, reason },
+        });
+
+        await emitKybEvent(supabase, {
+          event_type: decision === 'approved' ? 'merchant.kyb.approved' : 'merchant.kyb.rejected',
+          merchant_id: merchantId,
+          business_name: merchant.business_name,
+          actor_id: user.id,
+          reason: decision === 'rejected' ? (reason ?? null) : null,
         });
 
         return new Response(JSON.stringify({ data: updated }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

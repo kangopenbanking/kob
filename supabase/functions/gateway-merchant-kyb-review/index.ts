@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/admin-notify.ts";
 import { notifyUser } from "../_shared/admin-notify.ts";
+import { emitKybEvent, validateKybDocuments } from "../_shared/kyb-events.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -111,8 +112,11 @@ Deno.serve(async (req) => {
 
       const { documents, business_registration_number, tax_id, business_address } = body as any;
 
-      if (!documents || !Array.isArray(documents) || documents.length === 0) {
-        return rfc7807('validation_error', 'Validation Error', 400, 'At least one document is required');
+      const docValidation = validateKybDocuments(documents);
+      if (!docValidation.ok) {
+        return rfc7807('validation_error', 'Invalid Documents', 400,
+          `Document validation failed: ${docValidation.errors.join('; ')}`,
+          { errors: docValidation.errors });
       }
 
       const { error } = await supabase.from('gateway_merchants').update({
@@ -148,6 +152,14 @@ Deno.serve(async (req) => {
         title: 'Merchant KYB Submitted',
         message: `${merchant.business_name} has submitted KYB documents for review.`,
         metadata: { business_name: merchant.business_name },
+      });
+
+      await emitKybEvent(supabase, {
+        event_type: 'merchant.kyb.submitted',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
+        extra: { document_count: (documents as any[]).length },
       });
 
       return json({ merchant_id, kyb_status: 'submitted', submitted_at: new Date().toISOString() });
@@ -224,6 +236,15 @@ Deno.serve(async (req) => {
         });
       }
 
+      await emitKybEvent(supabase, {
+        event_type: decision === 'approve' ? 'merchant.kyb.approved' : 'merchant.kyb.rejected',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
+        reason: decision === 'reject' ? (reason ?? null) : null,
+        extra: { kyb_status: newKybStatus, merchant_status: newMerchantStatus },
+      });
+
       return json({
         merchant_id,
         decision,
@@ -252,6 +273,13 @@ Deno.serve(async (req) => {
         entity_type: 'gateway_merchant',
         entity_id: merchant_id,
         performed_by: user.id,
+      });
+
+      await emitKybEvent(supabase, {
+        event_type: 'merchant.kyb.under_review',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
       });
 
       return json({ merchant_id, kyb_status: 'under_review', merchant_status: 'UNDER_REVIEW' });
