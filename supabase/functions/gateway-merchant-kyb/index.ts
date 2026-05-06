@@ -149,6 +149,14 @@ Deno.serve(async (req) => {
           performed_by: user.id, details: { decision, reason },
         });
 
+        await emitKybEvent(supabase, {
+          event_type: decision === 'approved' ? 'merchant.kyb.approved' : 'merchant.kyb.rejected',
+          merchant_id: merchantId,
+          business_name: merchant.business_name,
+          actor_id: user.id,
+          reason: decision === 'rejected' ? (reason ?? null) : null,
+        });
+
         return new Response(JSON.stringify({ data: updated }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
