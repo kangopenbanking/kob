@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CreditCard, Plus, Loader2 } from 'lucide-react';
+import { CreditCard, Plus, Loader2, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,9 +14,11 @@ import { VirtualCardDisplay } from '@/components/virtual-cards/VirtualCardDispla
 import { CreateCardForm } from '@/components/virtual-cards/CreateCardForm';
 import { TopUpForm } from '@/components/virtual-cards/TopUpForm';
 import { CardTransactions } from '@/components/virtual-cards/CardTransactions';
+import { QRPayScanner } from '@/components/virtual-cards/QRPayScanner';
 
 const BankCards: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [topUpCard, setTopUpCard] = useState<any | null>(null);
   const [txCard, setTxCard] = useState<any | null>(null);
 
@@ -44,15 +46,27 @@ const BankCards: React.FC = () => {
             USD cards for online purchases
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="rounded-full"
-          onClick={() => setShowCreate(true)}
-        >
-          <Plus className="mr-1 h-4 w-4" strokeWidth={1.5} />
-          New
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setShowQR(true)}
+            disabled={!cards.length}
+          >
+            <ScanLine className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            Scan & Pay
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            New
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -141,6 +155,22 @@ const BankCards: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           {txCard && <CardTransactions card={txCard} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showQR} onOpenChange={setShowQR}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan & Pay</DialogTitle>
+            <DialogDescription>
+              Scan a merchant QR code to pay with your virtual card.
+            </DialogDescription>
+          </DialogHeader>
+          <QRPayScanner
+            cards={cards}
+            onPaid={() => refetch()}
+            onClose={() => setShowQR(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -1,85 +1,136 @@
-## Audit result vs. the 15-point checklist
+## Goal
 
-I cross-checked every item against routes in `src/App.tsx`, the developer pages in `src/pages/developer/`, the OpenAPI spec (`public/openapi.json`), `llms.txt`, and `sitemap.xml`.
+Enable Virtual Card users to scan any **EMVCo Merchant-Presented QR (MPQR)** code (KOB-issued or external CEMAC merchant) and pay the merchant by debiting their virtual card. Reuse existing infrastructure (`useQRScanner`, `pisp-domestic-payment`, `pos-qr-payment`, virtual card ledger) without breaking current flows.
 
-### Already implemented AND publicly documented (no action needed)
+## How KOB API is enhanced (adaptive, additive)
 
-| # | Item | Where it lives |
-|---|---|---|
-| 1 | OAuth2 + token + authorize + refresh + scopes | `/developer/authentication`, `/authentication/oauth2`, `/api-reference/token-lifecycle`; spec `/v1/oauth/token`, `/v1/oauth/authorize` |
-| 2 | Consent CRUD (POST/GET/DELETE), status, scope mapping | `/developer/open-banking/consents` page + spec endpoints |
-| 3 | mTLS, cert mgmt, request signing — partial | `/developer/authentication/mtls`, `/developer/authentication/fapi`, `/developer-tools/certificates` (JWKS gap below) |
-| 4 | SCA — backend exists | spec `/v1/security/sca/initiate` (no dedicated /developer page — gap) |
-| 5 | Developer / TPP onboarding | `/developer/register`, `/developer/onboarding-guide`, `/developer/authentication/dcr` |
-| 6 | Idempotency, retries, payment lifecycle | `/developer/api-reference/idempotency`, `payment-lifecycle`, `charge-states`, `payout-states`, `dispute-lifecycle` |
-| 7 | Error standard (RFC 7807) | `/developer/api-reference/errors` |
-| 8 | Rate limits + headers + 429 | `/developer/api-reference/rate-limits` |
-| 9 | Webhook retries + signatures | `/developer/api-reference/webhook-retry`, `/developer/gateway/webhooks` |
-| 10 | Versioning | `/developer/api-reference/versioning` (deprecation policy is light — minor gap) |
-| 11 | Full payment flow with diagrams | `/developer/api-reference/payment-lifecycle` (just shipped) |
-| 12 | SDKs + Postman | `/developer/guides/sdks`, `/developer/guides/postman` |
-| 13 | SLA | `/developer/sla` (environments URLs not listed in one place — gap) |
-| 14 | ISO 20022 | `/developer/iso20022`, `/developer/iso20022/messages` |
-| 15 | Status + analytics | `/status`, dashboard analytics |
+KOB has no `/qr` endpoint, but already exposes:
+- `pisp-create-consent` + `pisp-domestic-payment` + `pisp-payment-submission` (Push payment rail)
+- `pos-qr-payment` (signed KOB-internal QRs only)
+- `virtual-cards` (balance + ledger)
 
-### Real gaps (implementation/exposure work)
+We add a **thin Bridge edge function** that decodes EMVCo TLV, normalizes the merchant target, then routes to the existing PISP endpoints. No breaking change to OpenAPI — additive only (new path + new schema), version bump per Standing Order 6 (patch → x.y.Z+1).
 
-```text
-GAP A  SCA developer page                    -> implemented in API, NOT documented
-GAP B  JWKS / public-keys page               -> in spec, NOT a dedicated /developer doc
-GAP C  Environments page (sandbox vs prod)   -> info scattered, NO single page
-GAP D  Deprecation policy detail             -> light coverage in versioning page
-GAP E  Discoverability surfaces miss A-D     -> landing card, sitemap, llms, ai-plugin, test
+## Components
+
+### 1. EMVCo decoder (shared TS lib)
+`src/lib/emvco-qr.ts` — pure parser, TLV walker, CRC16-CCITT validator. Extracts:
+- `merchantName` (tag 59)
+- `merchantCity` (tag 60)
+- `merchantCategoryCode` (tag 52)
+- `currency` ISO-4217 numeric → alpha (tag 53; 950→XAF, 952→XOF)
+- `amount` (tag 54, optional → static QR)
+- `countryCode` (tag 58)
+- `merchantAccountInfo` (tags 26-51, picks first with KOB/MoMo GUID; falls back to raw account ID)
+- `qrType`: `static | dynamic`
+Mirrored to a Deno copy at `supabase/functions/_shared/emvco-qr.ts`.
+
+### 2. Scanner UI
+`src/components/virtual-cards/QRPayScanner.tsx`
+- Reuses `useQRScanner` hook (already iOS-safe, dual-engine).
+- On decode: parses EMVCo, shows merchant card (name, city, MCC, amount/currency) + amount input for static QRs.
+- Card selector pulls user's virtual cards; shows live balance.
+- "Pay" button triggers `PinConfirmDialog` (existing) for PIN/biometric step-up.
+- Renders success screen with reference ID + merchant name (for merchant verification).
+
+Hooked into `src/pages/banking-app/BankCards.tsx` via a new "Scan & Pay" button next to "New".
+
+### 3. Bridge edge function
+`supabase/functions/qr-initiate-payment/index.ts` (new, `verify_jwt = false`, validates JWT in code per house rules).
+
+Request:
+```json
+{ "qr_payload": "00020101...6304ABCD", "virtual_card_id": "uuid", "amount_override": "5000", "pin_token": "..." }
 ```
 
-## Build plan (additive only — Standing Orders 1, 2, 4)
+Logic:
+1. CORS + `supabase.auth.getUser()` (3-attempt retry per memory).
+2. Require `Idempotency-Key` header (UUID v4 regex).
+3. Replay check against `qr_payment_idempotency` (existing table).
+4. Decode EMVCo via shared lib; reject bad CRC → `400 QR_001`.
+5. Validate currency ∈ {XAF, XOF, USD} and country ∈ CEMAC/UEMOA allowlist → else `QR_002`.
+6. Resolve merchant:
+   - If `merchantAccountInfo.guid === 'KOB'` → look up `gateway_merchants` by embedded merchant_id (internal).
+   - Else treat as external CEMAC merchant; insert into `qr_external_merchants` cache with verification status.
+7. Verify virtual card: belongs to user, status=`active`, not frozen, `available_balance >= amount`.
+8. Verify `pin_token` (existing `verify-step-up` pattern) — fail-closed.
+9. Atomic FOR UPDATE on virtual card row → debit + ledger entry (`type=qr_purchase`).
+10. Call `pisp-create-consent` → `pisp-domestic-payment` → `pisp-payment-submission` with normalized payload (amount as zero-decimal string for XAF/XOF). Bearer = service-role JWT to internal functions; preserves existing PISP audit trail.
+11. Persist row in new `qr_card_payments` table (links virtual_card_id ↔ pisp_payment_id ↔ qr hash).
+12. Cache idempotent response.
+13. Return `{ status: 'pending'|'completed', reference, merchant, amount, pisp_payment_id }`.
 
-### 1. New developer pages (4 files)
-- `src/pages/developer/security/ScaGuide.tsx` → mounted at `/developer/security/sca`
-  - Step-by-step SCA flow, challenge types (otp/biometric/pin), request/response samples for `POST /v1/security/sca/initiate` and verify, full payment-with-SCA sequence diagram, redirect/challenge mechanics, error codes.
-- `src/pages/developer/security/JwksGuide.tsx` → `/developer/security/jwks`
-  - Documents `GET /v1/jwks` and `/v1/.well-known/jwks.json`, key rotation, how request-object/ID-token signatures are validated, JS/Python verification snippets.
-- `src/pages/developer/EnvironmentsPage.tsx` → `/developer/environments`
-  - Single source of truth: sandbox base URL, production base URL, OAuth/PAR/JWKS/discovery URLs per environment, when to switch, allow-list IPs, status/SLA links.
-- `src/pages/developer/DeprecationPolicyPage.tsx` → `/developer/api-reference/deprecation-policy`
-  - Sunset header (RFC 8594), 12-month minimum window, deprecation channels (changelog + email + `Deprecation`/`Sunset` headers), migration playbook.
+### 4. Webhook → status sync
+Extend existing `pisp-webhook-handler` (already wired for PISP events) with a small switch: when payload has matching `qr_card_payments.pisp_payment_id`, update `status` and emit:
+- consumer notification (existing notifications table)
+- realtime channel `qr-card-payments:user_id` for the success screen
+No new webhook endpoint — reuses authoritative inbound webhook per memory.
 
-All four use the existing `GuidePageShell` pattern with TOC, code blocks, and at least one table or diagram (Order P6).
+### 5. Database (migration)
+```sql
+create table public.qr_card_payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  virtual_card_id uuid not null references public.virtual_cards(id),
+  pisp_payment_id text,
+  qr_hash text not null,
+  merchant_name text, merchant_id text, merchant_external boolean default false,
+  amount numeric not null, currency text not null,
+  status text not null default 'pending',
+  idempotency_key text unique not null,
+  created_at timestamptz default now(), updated_at timestamptz default now()
+);
+alter table public.qr_card_payments enable row level security;
+create policy "own rows" on public.qr_card_payments for select using (user_id = auth.uid());
+-- inserts/updates only via service role (edge functions)
 
-### 2. Surface them everywhere (no orphaned routes)
-- Add 4 routes in `src/App.tsx` under the existing `/developer` block, with `// PERMANENT PUBLIC ROUTE` comments.
-- Add 4 cards to `src/components/developer/landing/BuildReliablySection.tsx` (SCA, JWKS, Environments, Deprecation policy) using lucide icons (`ShieldQuestion`, `KeyRound`, `Globe`, `CalendarClock`).
-- Add the 4 new URLs to `public/sitemap.xml`.
-- Add a new "Strong Customer Authentication & key material" section + "Environments & lifecycle" section to `public/llms.txt`.
-- Add the 4 URLs to `public/.well-known/ai-plugin.json` route list.
-- Add `/developer/open-banking/consents` to llms.txt and BuildReliablySection (currently routed but not surfaced on landing).
+create table public.qr_external_merchants (
+  merchant_key text primary key,  -- guid:account
+  display_name text, country_code text, mcc text,
+  verification_status text default 'unverified', -- unverified|verified|blocked
+  first_seen_at timestamptz default now(), last_seen_at timestamptz default now()
+);
+alter table public.qr_external_merchants enable row level security;
+create policy "read all" on public.qr_external_merchants for select using (true);
+```
 
-### 3. Lock with tests
-Extend `src/test/developer-portal-discoverability.test.ts`:
-- Assert each new path appears in `App.tsx`, `sitemap.xml`, `llms.txt`, `BuildReliablySection.tsx`, and `ai-plugin.json`.
-- Run the full suite; expected 49+ passing.
+### 6. OpenAPI + docs (additive, version bump)
+- Add `POST /v1/payments/qr-initiate` to `public/openapi.json` + `.yaml` (request/response schemas, RFC7807 errors `QR_001..QR_004`, `Idempotency-Key` required header, `X-RateLimit-*` headers).
+- Bump `info.version` (patch).
+- Add `docs/developer-portal/payments/qr-initiate.md` with cURL/Node/Python examples (Order P5 + P9).
+- Add changelog entry under `docs/governance/CHANGELOG-vX.Y.Z.md`.
+- Standards cited: EMVCo MPM Spec v1.1 §4 (TLV), ISO 18245 (MCC), ISO 4217.
 
-### 4. Version + changelog (Order P7, Standing Order 6)
-- Bump `src/config/version.ts` 4.29.4 → **4.29.5** (additive — patch).
-- Add `4.29.5` entry in `public/changelog.json` with citations: FAPI 1.0 Adv §5.2.5 (SCA), RFC 7517 §5 (JWKS), RFC 8414 §3 (discovery), RFC 8594 (Sunset).
-- The existing `scripts/sync-version-artifacts.mjs` will propagate to OpenAPI info.version, sandbox spec, CHANGELOG.md, Postman manifest + collection clone (4.29.5).
-- Auto-sync GitHub Action will commit regenerated artifacts on push.
+### 7. Tests
+- `src/test/emvco-qr.test.ts` — fixtures (Cameroon MoMo dynamic, static, bad CRC, KOB-issued).
+- `supabase/functions/qr-initiate-payment/index.test.ts` — happy path, replay, bad CRC, insufficient funds, frozen card, currency rejection.
+- `e2e/authenticated/virtual-card-qr-pay.spec.ts` — scan stub → PIN → success screen → DB row.
 
-### 5. No backend changes
-The SCA, JWKS, and OIDC discovery endpoints already exist in the spec and edge functions. This is a documentation + discoverability ship.
+## Security & invariants
+- All financial mutations server-side (memory: Direct Backend Mandate + Financial Safety).
+- `FOR UPDATE` row lock + idempotency UUID v4.
+- PIN/biometric step-up mandatory (memory: MFA Policy).
+- `supabase.auth.getUser()` only, never `getSession()`.
+- RLS enforced; ledger rows write-only via service role.
+- Daily velocity cap reused from `financial-safety-and-automation-infrastructure`.
 
-### Files created
-1. `src/pages/developer/security/ScaGuide.tsx`
-2. `src/pages/developer/security/JwksGuide.tsx`
-3. `src/pages/developer/EnvironmentsPage.tsx`
-4. `src/pages/developer/DeprecationPolicyPage.tsx`
+## Files
 
-### Files edited
-- `src/App.tsx` (4 routes + 4 lazy imports)
-- `src/components/developer/landing/BuildReliablySection.tsx` (5 new cards incl. consents)
-- `public/sitemap.xml`, `public/llms.txt`, `public/.well-known/ai-plugin.json`
-- `src/test/developer-portal-discoverability.test.ts`
-- `src/config/version.ts`, `public/changelog.json` (auto-syncer handles the rest)
+Created:
+- `src/lib/emvco-qr.ts`
+- `src/components/virtual-cards/QRPayScanner.tsx`
+- `supabase/functions/_shared/emvco-qr.ts`
+- `supabase/functions/qr-initiate-payment/index.ts`
+- `supabase/functions/qr-initiate-payment/index.test.ts`
+- `supabase/migrations/<ts>_qr_card_payments.sql`
+- `src/test/emvco-qr.test.ts`
+- `e2e/authenticated/virtual-card-qr-pay.spec.ts`
+- `docs/developer-portal/payments/qr-initiate.md`
+- `docs/governance/CHANGELOG-vX.Y.Z.md`
 
-### Verdict after ship
-Every red and orange item on the checklist will be both implemented AND linked from the landing page, sitemap, llms.txt, and ai-plugin manifest, with a Vitest guard preventing regression.
+Edited:
+- `src/pages/banking-app/BankCards.tsx` (add "Scan & Pay" button + dialog)
+- `supabase/functions/pisp-webhook-handler/index.ts` (status sync hook)
+- `public/openapi.json`, `public/openapi.yaml`, `src/config/version.ts`
+
+Untouched (no breaking change): existing `pos-qr-payment`, `virtual-cards`, all PISP functions, OpenAPI operationIds.

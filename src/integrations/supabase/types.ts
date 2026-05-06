@@ -17591,6 +17591,110 @@ export type Database = {
           },
         ]
       }
+      qr_card_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          merchant_category_code: string | null
+          merchant_country: string | null
+          merchant_external: boolean
+          merchant_id: string | null
+          merchant_key: string
+          merchant_name: string | null
+          metadata: Json
+          pisp_payment_id: string | null
+          qr_hash: string
+          status: string
+          updated_at: string
+          user_id: string
+          virtual_card_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          merchant_category_code?: string | null
+          merchant_country?: string | null
+          merchant_external?: boolean
+          merchant_id?: string | null
+          merchant_key: string
+          merchant_name?: string | null
+          metadata?: Json
+          pisp_payment_id?: string | null
+          qr_hash: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          virtual_card_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          merchant_category_code?: string | null
+          merchant_country?: string | null
+          merchant_external?: boolean
+          merchant_id?: string | null
+          merchant_key?: string
+          merchant_name?: string | null
+          metadata?: Json
+          pisp_payment_id?: string | null
+          qr_hash?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          virtual_card_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_card_payments_virtual_card_id_fkey"
+            columns: ["virtual_card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_external_merchants: {
+        Row: {
+          country_code: string | null
+          display_name: string | null
+          first_seen_at: string
+          last_seen_at: string
+          mcc: string | null
+          merchant_key: string
+          verification_status: string
+        }
+        Insert: {
+          country_code?: string | null
+          display_name?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+          mcc?: string | null
+          merchant_key: string
+          verification_status?: string
+        }
+        Update: {
+          country_code?: string | null
+          display_name?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+          mcc?: string | null
+          merchant_key?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
       qr_payment_idempotency: {
         Row: {
           amount: number
