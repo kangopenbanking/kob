@@ -39,8 +39,8 @@ export function GoLiveToggle({ entity, entityId }: Props) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const table = TABLE[entity] as any;
-        let q = supabase.from(table).select("id, kyb_status, live_mode_enabled");
+        const table = TABLE[entity];
+        let q: any = (supabase as any).from(table).select("id, kyb_status, live_mode_enabled");
         if (entityId) q = q.eq("id", entityId);
         else q = q.eq("user_id", user.id);
         const { data } = await q.maybeSingle();
