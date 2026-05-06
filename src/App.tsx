@@ -203,6 +203,7 @@ const RealWorldExampleDetail = lazy(() => import("./pages/developer/RealWorldExa
 const CertificateManagement = lazy(() => import("./pages/developer/CertificateManagement"));
 const CertificateReference = lazy(() => import("./pages/developer/CertificateReference"));
 const Sandbox = lazy(() => import("./pages/developer/Sandbox"));
+const MerchantsDiscoveryGuide = lazy(() => import("./pages/developer/MerchantsDiscoveryGuide"));
 const SandboxUsage = lazy(() => import("./pages/developer/SandboxUsage"));
 const SandboxWebhooks = lazy(() => import("./pages/developer/SandboxWebhooks"));
 const WebhookTesting = lazy(() => import("./pages/developer/WebhookTesting"));
@@ -1101,6 +1102,8 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6, P9) */}
+              <Route path="payments/merchants-discovery" element={<MerchantsDiscoveryGuide />} />
               <Route path="getting-started-by-type" element={<GettingStartedByType />} />
               <Route path="identity-guide" element={<IdentityGuide />} />
               <Route path="onboarding-guide" element={<OnboardingGuide />} />
