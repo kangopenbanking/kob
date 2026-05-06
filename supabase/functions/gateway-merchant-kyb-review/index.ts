@@ -112,8 +112,11 @@ Deno.serve(async (req) => {
 
       const { documents, business_registration_number, tax_id, business_address } = body as any;
 
-      if (!documents || !Array.isArray(documents) || documents.length === 0) {
-        return rfc7807('validation_error', 'Validation Error', 400, 'At least one document is required');
+      const docValidation = validateKybDocuments(documents);
+      if (!docValidation.ok) {
+        return rfc7807('validation_error', 'Invalid Documents', 400,
+          `Document validation failed: ${docValidation.errors.join('; ')}`,
+          { errors: docValidation.errors });
       }
 
       const { error } = await supabase.from('gateway_merchants').update({
