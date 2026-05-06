@@ -140,7 +140,11 @@ export default function DeploymentStatus() {
                     <AlertCircle className="h-4 w-4 text-destructive" />
                   )}
                   <span className="font-medium">{c.name}</span>
-                  {c.detail && <Badge variant="secondary">{c.detail}</Badge>}
+                  {c.detail && (
+                    <Badge variant={c.stale ? "destructive" : "secondary"}>
+                      {c.detail}{c.stale ? ` (expected v${KOB_API_VERSION})` : ""}
+                    </Badge>
+                  )}
                 </div>
                 <a
                   href={c.url}
