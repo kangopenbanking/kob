@@ -1,12 +1,31 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.29.5** · Last updated: **2026-05-04**
+Current API version: **4.30.0** · Last updated: **2026-05-06**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.30.0 — 2026-05-06
+**Type:** minor · **Breaking changes:** none
+
+Adds Merchant-Presented QR (MPQR) bridge for virtual cards. New POST /v1/payments/qr-initiate decodes EMVCo MPM payloads and forwards through the existing PISP rail. Replay-protected, additive only.
+
+### Highlights
+- New endpoint POST /v1/payments/qr-initiate (EMVCo decode + PISP push).
+- New error codes QR_001 invalid_qr_payload, QR_002 unsupported_currency_or_country, QR_003 card_unavailable, QR_004 step_up_required, QR_005 upstream_pisp_error, QR_006 idempotency_conflict.
+- Dedicated qr_payment_idempotency table provides deterministic 24h replay protection (Idempotency-Key + request hash).
+- PISP webhook handler reconciles QR card payments and triggers the in-app merchant success screen via realtime.
+
+### Standards & citations
+- EMVCo MPM Specification v1.1 §4 (TLV) + §6 (CRC16-CCITT/FALSE)
+- Open Banking UK PISP §7.5 (Payment Status Lifecycle)
+- RFC 7807 (Problem Details for HTTP APIs)
+- PSD2 RTS Article 36(1)(b) (Idempotent retries)
 
 ---
 

@@ -99,24 +99,45 @@ Deno.serve(async (req) => {
   try { user = await getUserWithRetry(supabase, auth.slice(7)); }
   catch { return problem(401, 'unauthorized', 'Invalid session'); }
 
-  // ----- Replay protection (idempotency cache) -----
-  const { data: existing } = await supabase
-    .from('qr_card_payments')
-    .select('*')
+  // ----- Replay protection via dedicated qr_payment_idempotency table -----
+  // Hash the request body to detect "same key, different payload" (409 conflict).
+  const reqHashBuf = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(JSON.stringify({ qr_payload, virtual_card_id, amount_override })),
+  );
+  const requestHash = Array.from(new Uint8Array(reqHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const { data: idem } = await supabase
+    .from('qr_payment_idempotency')
+    .select('user_id, request_hash, response_status, response_json, qr_card_payment_id, expires_at')
     .eq('idempotency_key', idempotencyKey)
     .maybeSingle();
-  if (existing) {
-    if (existing.user_id !== user.id) return problem(409, 'QR_006', 'Key collision');
-    return new Response(JSON.stringify({
-      replayed: true,
-      id: existing.id,
-      status: existing.status,
-      reference: existing.pisp_payment_id,
-      merchant: { name: existing.merchant_name, id: existing.merchant_id, external: existing.merchant_external },
-      amount: existing.amount,
-      currency: existing.currency,
-    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' } });
+
+  if (idem) {
+    const expired = idem.expires_at && new Date(idem.expires_at).getTime() < Date.now();
+    if (!expired) {
+      if (idem.user_id !== user.id) return problem(409, 'QR_006', 'Idempotency-Key collision (different user)');
+      if (idem.request_hash && idem.request_hash !== requestHash) {
+        return problem(409, 'QR_006', 'Idempotency-Key reused with a different payload');
+      }
+      return new Response(JSON.stringify({ replayed: true, ...(idem.response_json as object) }), {
+        status: idem.response_status || 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' },
+      });
+    }
   }
+
+  // Helper: persist idempotent response (best-effort) so even rejections cannot be retried with same key.
+  const cacheReply = async (status: number, body: Record<string, unknown>, qrRowId: string | null) => {
+    await supabase.from('qr_payment_idempotency').upsert({
+      idempotency_key: idempotencyKey,
+      user_id: user.id,
+      request_hash: requestHash,
+      response_status: status,
+      response_json: body,
+      qr_card_payment_id: qrRowId,
+    }, { onConflict: 'idempotency_key' });
+  };
 
   // ----- Decode + validate QR -----
   let decoded;
@@ -331,7 +352,7 @@ Deno.serve(async (req) => {
     return problem(500, 'persist_failed', insErr.message);
   }
 
-  return new Response(JSON.stringify({
+  const responseBody = {
     id: row.id,
     status: row.status,
     reference: pispPaymentId,
@@ -340,5 +361,11 @@ Deno.serve(async (req) => {
     currency: decoded.currency,
     charged_usd: chargeUsd,
     qr_type: decoded.qrType,
-  }), { status: pispStatus === 'failed' ? 502 : 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  };
+  const httpStatus = pispStatus === 'failed' ? 502 : 200;
+  await cacheReply(httpStatus, responseBody, row.id);
+  return new Response(JSON.stringify(responseBody), {
+    status: httpStatus,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 });

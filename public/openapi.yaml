@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.29.5
+  version: 4.30.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -98479,6 +98479,127 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /v1/payments/qr-initiate:
+    post:
+      tags:
+        - Payments
+      summary: Initiate a payment from an EMVCo Merchant-Presented QR (MPQR)
+      description: >-
+        Decodes a scanned EMVCo MPM payload, validates CRC + currency + country (CEMAC/UEMOA), debits the user's virtual
+        card, and forwards the push to the KOB PISP rail. Replay-protected via dedicated `qr_payment_idempotency` table.
+      operationId: paymentsQrInitiate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - qr_payload
+                - virtual_card_id
+                - pin_token
+              properties:
+                qr_payload:
+                  type: string
+                  description: Raw EMVCo MPM string from the scanner.
+                  example: 00020101021226...6304ABCD
+                virtual_card_id:
+                  type: string
+                  format: uuid
+                amount_override:
+                  type: string
+                  pattern: ^[0-9]+(\.[0-9]{1,2})?$
+                  description: Required for static (POI=11) QRs that omit tag 54.
+                pin_token:
+                  type: string
+                  minLength: 4
+                  maxLength: 12
+                  description: User PIN (or biometric step-up token).
+            examples:
+              dynamic_xaf:
+                summary: Dynamic Cameroon MoMo QR
+                value:
+                  qr_payload: 00020101021226...6304ABCD
+                  virtual_card_id: 9b1c8c1e-1234-4f00-9aaa-aaaaaaaaaaaa
+                  pin_token: '123456'
+              static_with_override:
+                summary: Static QR + customer-entered amount
+                value:
+                  qr_payload: 00020101021126...6304WXYZ
+                  virtual_card_id: 9b1c8c1e-1234-4f00-9aaa-aaaaaaaaaaaa
+                  amount_override: '5000'
+                  pin_token: '123456'
+      responses:
+        '200':
+          description: Payment initiated and submitted to PISP rail.
+          headers:
+            X-Idempotent-Replayed:
+              schema:
+                type: string
+                enum:
+                  - 'true'
+              description: Present when this response was served from the idempotency cache.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - completed
+                      - failed
+                      - refunded
+                  reference:
+                    type: string
+                    nullable: true
+                    description: Upstream PISP DomesticPaymentId.
+                  merchant:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      id:
+                        type: string
+                        nullable: true
+                      external:
+                        type: boolean
+                  amount:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                      - XAF
+                      - XOF
+                      - USD
+                      - EUR
+                  charged_usd:
+                    type: number
+                  qr_type:
+                    type: string
+                    enum:
+                      - static
+                      - dynamic
+        '400':
+          description: QR_001 invalid_qr_payload (bad CRC, malformed TLV, missing amount on static QR).
+        '401':
+          description: QR_004 step_up_required (missing or invalid PIN/biometric).
+        '402':
+          description: 'QR_003 card_unavailable: insufficient virtual-card balance.'
+        '403':
+          description: QR_002 unsupported_currency_or_country, or merchant blocked.
+        '409':
+          description: 'QR_006 idempotency_conflict: same Idempotency-Key reused with a different body.'
+        '502':
+          description: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (debit auto-refunded).'
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
   url: https://kangopenbanking.com/developer
@@ -98539,6 +98660,12 @@ x-error-catalog:
     '422': validation_error
     '429': rate_limit_error
     '500': api_error
+  QR_001: Invalid EMVCo QR payload (CRC, TLV, or missing amount).
+  QR_002: Unsupported currency, country, or merchant blocked.
+  QR_003: Virtual card unavailable (frozen, inactive, or insufficient balance).
+  QR_004: Step-up authentication required (PIN or biometric token).
+  QR_005: Upstream PISP rail error; card debit was refunded.
+  QR_006: Idempotency-Key conflict.
 x-deprecation-policy:
   minimum_notice_days: 180
   headers_emitted_on_deprecated_endpoints:

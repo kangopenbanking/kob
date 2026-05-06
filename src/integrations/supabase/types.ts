@@ -17697,33 +17697,53 @@ export type Database = {
       }
       qr_payment_idempotency: {
         Row: {
-          amount: number
+          amount: number | null
           created_at: string
+          expires_at: string
           idempotency_key: string
-          merchant_id: string
+          merchant_id: string | null
           order_id: string | null
+          qr_card_payment_id: string | null
+          request_hash: string | null
           response_json: Json
+          response_status: number | null
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: number | null
           created_at?: string
+          expires_at?: string
           idempotency_key: string
-          merchant_id: string
+          merchant_id?: string | null
           order_id?: string | null
+          qr_card_payment_id?: string | null
+          request_hash?: string | null
           response_json: Json
+          response_status?: number | null
           user_id: string
         }
         Update: {
-          amount?: number
+          amount?: number | null
           created_at?: string
+          expires_at?: string
           idempotency_key?: string
-          merchant_id?: string
+          merchant_id?: string | null
           order_id?: string | null
+          qr_card_payment_id?: string | null
+          request_hash?: string | null
           response_json?: Json
+          response_status?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_payment_idempotency_qr_card_payment_id_fkey"
+            columns: ["qr_card_payment_id"]
+            isOneToOne: false
+            referencedRelation: "qr_card_payments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
