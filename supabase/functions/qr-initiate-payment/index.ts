@@ -89,18 +89,73 @@ Deno.serve(async (req) => {
 
   let body: any;
   try { body = await req.json(); } catch { return problem(400, 'invalid_body', 'JSON body required'); }
-  const { qr_payload, virtual_card_id, amount_override, pin_token } = body || {};
+  const {
+    qr_payload, virtual_card_id, amount_override, pin_token,
+    partner_card_token_id, auth_evidence,
+  } = body || {};
 
   if (typeof qr_payload !== 'string') return problem(400, 'QR_001', 'qr_payload required');
-  if (typeof virtual_card_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(virtual_card_id)) {
-    return problem(400, 'invalid_card_id', 'virtual_card_id must be a UUID');
-  }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  let user: any;
-  try { user = await getUserWithRetry(supabase, auth.slice(7)); }
-  catch { return problem(401, 'unauthorized', 'Invalid session'); }
+  // ----- Auth mode detection -----
+  // Partner mode: the bearer matches an active client_credentials access_tokens row
+  //               with scope "payments:qr".
+  // User mode (default): bearer is a Supabase user JWT.
+  const partnerCardholderRef = req.headers.get('X-Partner-Cardholder-Ref');
+  const bearer = auth.slice(7);
+  let mode: 'user' | 'partner' = 'user';
+  let user: any = null;
+  let partnerClientId: string | null = null;
+  let partnerToken: any = null;
+
+  // Try partner-mode lookup first IF a partner cardholder ref header is present.
+  if (partnerCardholderRef) {
+    const tokenHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(bearer));
+    const tokenHash = Array.from(new Uint8Array(tokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const { data: tok } = await supabase
+      .from('access_tokens')
+      .select('client_id, scope, expires_at, is_revoked, user_id')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+    if (tok && !tok.is_revoked && new Date(tok.expires_at) > new Date() && tok.user_id === null) {
+      const scopes = String(tok.scope || '').split(/\s+/);
+      if (!scopes.includes('payments:qr')) {
+        return problem(403, 'QR_007', 'access token missing required scope: payments:qr');
+      }
+      mode = 'partner';
+      partnerClientId = tok.client_id;
+      if (typeof partner_card_token_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(partner_card_token_id)) {
+        return problem(400, 'invalid_partner_card_token_id', 'partner_card_token_id (UUID) required');
+      }
+      const { data: pct } = await supabase
+        .from('partner_card_tokens')
+        .select('id, client_id, status, last4, brand, partner_cardholder_ref')
+        .eq('id', partner_card_token_id)
+        .eq('client_id', partnerClientId)
+        .eq('partner_cardholder_ref', partnerCardholderRef)
+        .maybeSingle();
+      if (!pct || pct.status !== 'active') {
+        return problem(404, 'QR_008', 'partner card token unknown, revoked, or expired');
+      }
+      if (!auth_evidence || typeof auth_evidence !== 'object'
+          || typeof (auth_evidence as any).method !== 'string') {
+        return problem(412, 'QR_009', 'auth_evidence (PSD2 RTS Art. 18) required');
+      }
+      partnerToken = pct;
+    }
+  }
+
+  if (mode === 'user') {
+    try { user = await getUserWithRetry(supabase, bearer); }
+    catch { return problem(401, 'unauthorized', 'Invalid session'); }
+    if (typeof virtual_card_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(virtual_card_id)) {
+      return problem(400, 'invalid_card_id', 'virtual_card_id must be a UUID');
+    }
+  }
+  // Use a synthetic owner id for idempotency partitioning in partner mode
+  const ownerId = mode === 'user' ? user.id : `partner:${partnerClientId}:${partnerCardholderRef}`;
+
 
   // ----- Replay protection via dedicated qr_payment_idempotency table -----
   // Hash the request body to detect "same key, different payload" (409 conflict).
