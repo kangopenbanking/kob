@@ -275,6 +275,13 @@ Deno.serve(async (req) => {
         performed_by: user.id,
       });
 
+      await emitKybEvent(supabase, {
+        event_type: 'merchant.kyb.under_review',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
+      });
+
       return json({ merchant_id, kyb_status: 'under_review', merchant_status: 'UNDER_REVIEW' });
     }
 
