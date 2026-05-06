@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2 } from 'lucide-react';
+import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2, Search, Store, ScanLine } from 'lucide-react';
+import { useMerchantDirectory, searchMerchants } from '@/hooks/useMerchantDirectory';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
