@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
           RemittanceInformation: { Unstructured: `QR ${qrHash}` },
         },
       },
-      meta: { source: 'qr_initiate_payment', user_id: user.id },
+      meta: { source: 'qr_initiate_payment', user_id: user?.id ?? null, partner_client_id: partnerClientId },
     }, `${idempotencyKey}-consent`);
     const consentJson = await consentRes.json().catch(() => ({}));
     const consentId = consentJson?.Data?.ConsentId || consentJson?.consent_id;
