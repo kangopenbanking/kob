@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
         return rfc7807('forbidden', 'Forbidden', 403, 'Access denied');
       }
 
+      const coverage = assessCoverage(merchant);
       return json({
         merchant_id: merchant.id,
         business_name: merchant.business_name,
@@ -83,6 +84,9 @@ Deno.serve(async (req) => {
         kyb_reviewed_at: merchant.kyb_reviewed_at,
         kyb_documents: merchant.kyb_documents,
         kyb_rejection_reason: merchant.kyb_rejection_reason,
+        coverage,
+        required_document_types: REQUIRED_DOC_TYPES,
+        required_metadata_fields: REQUIRED_META_FIELDS,
       });
     }
 
