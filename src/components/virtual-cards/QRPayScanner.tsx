@@ -46,7 +46,7 @@ export const QRPayScanner: React.FC<QRPayScannerProps> = ({ cards, onPaid, onClo
       const d = parseEmvQR(raw);
       const sup = isSupportedQR(d);
       if (!sup.ok) {
-        toast.error(`QR not supported: ${sup.reason}`);
+        toast.error(`QR not supported: ${(sup as { reason: string }).reason}`);
         scanner.resetProcessed();
         return;
       }
