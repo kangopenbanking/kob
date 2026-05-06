@@ -30,6 +30,14 @@ const CustomerCards: React.FC = () => {
   const { data: cards = [], isLoading } = useCustomerCards(user?.id);
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
 
+  // Auto-fetched KOB merchant directory (refreshes every 5 min, realtime invalidated).
+  const { merchants: directory, isFetching: dirFetching } = useMerchantDirectory();
+  const [merchantQuery, setMerchantQuery] = useState('');
+  const filteredMerchants = useMemo(
+    () => searchMerchants(directory, merchantQuery).slice(0, 8),
+    [directory, merchantQuery]
+  );
+
   const card = cards[activeCard] as any;
 
   const handleFreezeUnfreeze = () => {
