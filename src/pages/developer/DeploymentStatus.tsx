@@ -94,7 +94,7 @@ export default function DeploymentStatus() {
           </div>
           <div>
             <div className="text-muted-foreground">Portal Origin</div>
-            <div className="font-medium">{typeof window !== "undefined" ? window.location.origin : "—"}</div>
+            <div className="font-medium break-all">{PORTAL_BASE_URL}</div>
           </div>
           <div>
             <div className="text-muted-foreground">API Gateway</div>
