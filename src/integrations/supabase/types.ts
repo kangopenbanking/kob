@@ -18054,7 +18054,7 @@ export type Database = {
           source: string
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           virtual_card_id: string | null
         }
         Insert: {
@@ -18081,7 +18081,7 @@ export type Database = {
           source?: string
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           virtual_card_id?: string | null
         }
         Update: {
@@ -18108,7 +18108,7 @@ export type Database = {
           source?: string
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           virtual_card_id?: string | null
         }
         Relationships: [
@@ -18166,11 +18166,12 @@ export type Database = {
           idempotency_key: string
           merchant_id: string | null
           order_id: string | null
+          owner_key: string | null
           qr_card_payment_id: string | null
           request_hash: string | null
           response_json: Json
           response_status: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount?: number | null
@@ -18179,11 +18180,12 @@ export type Database = {
           idempotency_key: string
           merchant_id?: string | null
           order_id?: string | null
+          owner_key?: string | null
           qr_card_payment_id?: string | null
           request_hash?: string | null
           response_json: Json
           response_status?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number | null
@@ -18192,11 +18194,12 @@ export type Database = {
           idempotency_key?: string
           merchant_id?: string | null
           order_id?: string | null
+          owner_key?: string | null
           qr_card_payment_id?: string | null
           request_hash?: string | null
           response_json?: Json
           response_status?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
