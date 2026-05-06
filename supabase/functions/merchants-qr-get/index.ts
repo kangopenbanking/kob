@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, ANON_KEY);
   const { data, error } = await supabase
     .from('merchant_qr_directory')
-    .select('merchant_id, name, mcc, country, verified, logo_url')
+    .select('merchant_id, name, mcc, country, verified, logo_url, kob_wallet_id, wallet_currency')
     .eq('merchant_id', id)
     .maybeSingle();
   if (error) return json({ error: error.message }, 500);
