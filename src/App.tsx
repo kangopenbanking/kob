@@ -1106,7 +1106,7 @@ function App() {
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6, P9) */}
               <Route path="payments/merchants-discovery" element={<MerchantsDiscoveryGuide />} />
-              <Route path="deployment-status" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp', 'staff']} redirectTo="/auth"><DeploymentStatus /></RoleGuard></ProtectedRoute>} />
+              <Route path="deployment-status" element={<ProtectedRoute><RoleGuard allowedRoles={[]} redirectTo="/dashboard"><DeploymentStatus /></RoleGuard></ProtectedRoute>} />
               <Route path="env-vars" element={<DeveloperEnvVars />} />
               <Route path="getting-started-by-type" element={<GettingStartedByType />} />
               <Route path="identity-guide" element={<IdentityGuide />} />
