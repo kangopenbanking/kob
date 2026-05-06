@@ -56,6 +56,9 @@ the cached response is returned with header `X-Idempotent-Replayed: true`.
 | `QR_004` | 401 / 412 | PIN missing/invalid or no phone on profile. |
 | `QR_005` | 502 | PISP consent / payment / submission failed. Card debit is automatically refunded. |
 | `QR_006` | 409 | `Idempotency-Key` collision or reuse with a different body. |
+| `QR_007` | 403 | Partner access token missing scope `payments:qr`. |
+| `QR_008` | 404 | Partner card token unknown, revoked, or expired. |
+| `QR_009` | 412 | Partner SCA evidence (PSD2 RTS Art. 18) missing or expired. |
 
 All errors follow [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807):
 
