@@ -66,7 +66,7 @@ export default function DeploymentStatus() {
         description="Live verification of the latest Netlify deployment, API version, and artifact publication status."
         canonical="https://kangopenbanking.com/developer/deployment-status"
       />
-      <DeveloperBreadcrumb items={[{ label: "Deployment Status" }]} />
+      <DeveloperBreadcrumb />
 
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Deployment Status</h1>
