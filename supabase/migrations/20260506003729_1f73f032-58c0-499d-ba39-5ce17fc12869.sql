@@ -1,0 +1,1 @@
+alter view public.admin_qr_payments_audit set (security_invoker = true);
