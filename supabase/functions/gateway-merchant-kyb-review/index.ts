@@ -7,10 +7,33 @@ import { notifyUser } from "../_shared/admin-notify.ts";
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const rfc7807 = (type: string, title: string, status: number, detail: string) =>
-  new Response(JSON.stringify({ type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`, title, status, detail }), {
+const rfc7807 = (type: string, title: string, status: number, detail: string, extra?: Record<string, unknown>) =>
+  new Response(JSON.stringify({
+    type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`,
+    title, status, detail, error: detail, message: detail, ...(extra || {}),
+  }), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
   });
+
+const log = (level: 'info' | 'warn' | 'error', event: string, ctx: Record<string, unknown> = {}) => {
+  const line = JSON.stringify({ ts: new Date().toISOString(), level, fn: 'gateway-merchant-kyb-review', event, ...ctx });
+  if (level === 'error') console.error(line); else console.log(line);
+};
+
+// Required KYB coverage gates — enforced before approval
+const REQUIRED_DOC_TYPES = ['business_registration', 'tax_certificate', 'proof_of_address'];
+const REQUIRED_META_FIELDS = ['kyb_business_registration', 'kyb_tax_id', 'kyb_business_address'];
+
+function assessCoverage(merchant: any): { ok: boolean; missing_documents: string[]; missing_fields: string[] } {
+  const docs = Array.isArray(merchant.kyb_documents) ? merchant.kyb_documents : [];
+  const presentTypes = new Set<string>(
+    docs.map((d: any) => (typeof d === 'string' ? d : d?.type || d?.document_type)).filter(Boolean)
+  );
+  const missing_documents = REQUIRED_DOC_TYPES.filter((t) => !presentTypes.has(t));
+  const meta = merchant.metadata || {};
+  const missing_fields = REQUIRED_META_FIELDS.filter((f) => !meta[f]);
+  return { ok: missing_documents.length === 0 && missing_fields.length === 0, missing_documents, missing_fields };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -51,6 +74,7 @@ Deno.serve(async (req) => {
         return rfc7807('forbidden', 'Forbidden', 403, 'Access denied');
       }
 
+      const coverage = assessCoverage(merchant);
       return json({
         merchant_id: merchant.id,
         business_name: merchant.business_name,
@@ -60,6 +84,9 @@ Deno.serve(async (req) => {
         kyb_reviewed_at: merchant.kyb_reviewed_at,
         kyb_documents: merchant.kyb_documents,
         kyb_rejection_reason: merchant.kyb_rejection_reason,
+        coverage,
+        required_document_types: REQUIRED_DOC_TYPES,
+        required_metadata_fields: REQUIRED_META_FIELDS,
       });
     }
 
@@ -145,6 +172,17 @@ Deno.serve(async (req) => {
         return rfc7807('validation_error', 'Validation Error', 400, 'reason is required for rejection');
       }
 
+      // Coverage gate: only enforced for approval
+      if (decision === 'approve') {
+        const cov = assessCoverage(merchant);
+        if (!cov.ok) {
+          log('warn', 'kyb_approval_blocked_missing_coverage', { merchant_id, ...cov });
+          return rfc7807('kyb_coverage_incomplete', 'KYB Coverage Incomplete', 422,
+            `Cannot approve: missing documents [${cov.missing_documents.join(', ')}] or fields [${cov.missing_fields.join(', ')}]`,
+            { missing_documents: cov.missing_documents, missing_fields: cov.missing_fields });
+        }
+      }
+
       const newKybStatus = decision === 'approve' ? 'verified' : 'rejected';
       const newMerchantStatus = decision === 'approve' ? 'VERIFIED' : merchant.status;
 
@@ -157,7 +195,12 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq('id', merchant_id);
 
-      if (error) return rfc7807('review_failed', 'Review Failed', 500, error.message);
+      if (error) {
+        log('error', 'kyb_review_db_update_failed', { merchant_id, decision, db_error: error.message, code: (error as any).code });
+        return rfc7807('review_failed', 'Review Failed', 500, error.message);
+      }
+
+      log('info', 'kyb_reviewed', { merchant_id, decision, reviewer: user.id });
 
       await supabase.from('audit_logs').insert({
         action_type: `merchant_kyb_${decision}d`,
@@ -263,7 +306,14 @@ Deno.serve(async (req) => {
     return rfc7807('invalid_action', 'Invalid Action', 400, `Unknown action: ${action}`);
   } catch (err: any) {
     const errorId = crypto.randomUUID().slice(0, 8);
-    console.error(`[${errorId}] [gateway-merchant-kyb-review] Error:`, err);
-    return rfc7807('internal_error', 'Internal Server Error', 500, `An unexpected error occurred. Reference: ${errorId}`);
+    log('error', 'unhandled_exception', {
+      error_id: errorId,
+      message: err?.message,
+      name: err?.name,
+      stack: (err?.stack || '').split('\n').slice(0, 5).join(' | '),
+    });
+    return rfc7807('internal_error', 'Internal Server Error', 500,
+      `${err?.message || 'An unexpected error occurred'} (ref: ${errorId})`,
+      { error_id: errorId });
   }
 });
