@@ -70,13 +70,10 @@ export default function MerchantsDiscoveryGuide() {
           <code className="mx-1 px-1.5 py-0.5 rounded bg-muted text-sm">Requested function was not found</code>.
           Set both the base URL and the merchants path explicitly.
         </p>
-        <CodeBlock
-          language="bash"
-          code={`# Required environment variables for any KOB virtual-card client
+        <CodeBlock examples={[{ language: "bash", code: `# Required environment variables for any KOB virtual-card client
 KOB_API_BASE_URL=https://api.kangopenbanking.com/v1
 KOB_MERCHANTS_PATH=/merchants-qr-directory
-KOB_MERCHANT_QR_PATH=/merchants-qr-get`}
-        />
+KOB_MERCHANT_QR_PATH=/merchants-qr-get` }]} />
       </section>
 
       <section>
@@ -140,14 +137,9 @@ KOB_MERCHANT_QR_PATH=/merchants-qr-get`}
 
       <section>
         <h2 className="text-2xl font-bold mb-3">Full Pagination Example</h2>
-        <CodeBlock
-          language="bash"
-          code={`curl "https://api.kangopenbanking.com/v1/merchants-qr-directory?limit=100&country=CM"`}
-        />
+        <CodeBlock examples={[{ language: "bash", code: `curl "https://api.kangopenbanking.com/v1/merchants-qr-directory?limit=100&country=CM"` }]} />
         <div className="mt-4">
-          <CodeBlock
-            language="javascript"
-            code={`async function fetchAllMerchants() {
+          <CodeBlock examples={[{ language: "javascript", code: `async function fetchAllMerchants() {
   const out = [];
   let cursor = null;
   do {
@@ -161,13 +153,10 @@ KOB_MERCHANT_QR_PATH=/merchants-qr-get`}
     cursor = page.has_more ? page.next_cursor : null;
   } while (cursor && out.length < 1000);
   return out;
-}`}
-          />
+}` }]} />
         </div>
         <div className="mt-4">
-          <CodeBlock
-            language="python"
-            code={`import requests
+          <CodeBlock examples={[{ language: "python", code: `import requests
 
 def fetch_all_merchants(country="CM"):
     url = "https://api.kangopenbanking.com/v1/merchants-qr-directory"
@@ -181,8 +170,7 @@ def fetch_all_merchants(country="CM"):
         if not page.get("has_more"):
             break
         cursor = page.get("next_cursor")
-    return out`}
-          />
+    return out` }]} />
         </div>
       </section>
 
@@ -191,25 +179,25 @@ def fetch_all_merchants(country="CM"):
         <Card className="p-6 space-y-4">
           <div>
             <p className="font-semibold mb-2">Node</p>
-            <CodeBlock language="javascript" code={`import { qr } from "@kangopenbanking/sdk-node";
+            <CodeBlock examples={[{ language: "javascript", code: `import { qr } from "@kangopenbanking/sdk-node";
 const merchants = await qr.directory.list({ country: "CM" });
 const byId = await qr.directory.byId();
-const payload = await qr.merchant.get("8f5c1a52-...-a1b2", { amount: "1500", ref: "ORDER-42" });`} />
+const payload = await qr.merchant.get("8f5c1a52-...-a1b2", { amount: "1500", ref: "ORDER-42" });` }]} />
           </div>
           <div>
             <p className="font-semibold mb-2">Python</p>
-            <CodeBlock language="python" code={`from kangopenbanking import qr
+            <CodeBlock examples={[{ language: "python", code: `from kangopenbanking import qr
 
 merchants = qr.directory.list(country="CM")
-payload = qr.merchant.get("8f5c1a52-...-a1b2", amount="1500", ref="ORDER-42")`} />
+payload = qr.merchant.get("8f5c1a52-...-a1b2", amount="1500", ref="ORDER-42")` }]} />
           </div>
           <div>
             <p className="font-semibold mb-2">PHP</p>
-            <CodeBlock language="php" code={`use KangOpenBanking\\Resources\\QRDirectoryResource;
+            <CodeBlock examples={[{ language: "php", code: `use KangOpenBanking\\Resources\\QRDirectoryResource;
 
 $qr = new QRDirectoryResource();
 $merchants = $qr->list('CM');
-$payload   = $qr->getMerchantQr('8f5c1a52-...-a1b2', '1500', 'ORDER-42');`} />
+$payload   = $qr->getMerchantQr('8f5c1a52-...-a1b2', '1500', 'ORDER-42');` }]} />
           </div>
           <p className="text-sm text-muted-foreground">
             All SDK helpers wrap cursor pagination and cache the directory in-process for 5 minutes,
