@@ -236,6 +236,15 @@ Deno.serve(async (req) => {
         });
       }
 
+      await emitKybEvent(supabase, {
+        event_type: decision === 'approve' ? 'merchant.kyb.approved' : 'merchant.kyb.rejected',
+        merchant_id,
+        business_name: merchant.business_name,
+        actor_id: user.id,
+        reason: decision === 'reject' ? (reason ?? null) : null,
+        extra: { kyb_status: newKybStatus, merchant_status: newMerchantStatus },
+      });
+
       return json({
         merchant_id,
         decision,
