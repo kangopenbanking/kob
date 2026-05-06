@@ -13,6 +13,7 @@ type ArtifactCheck = {
   ok: boolean;
   status?: number;
   detail?: string;
+  stale?: boolean;
 };
 
 const PORTAL_BASE_URL = "https://kangopenbanking.com";
@@ -37,18 +38,25 @@ export default function DeploymentStatus() {
 
   async function runChecks() {
     setLoading(true);
+    const bust = Date.now();
     const results = await Promise.all(
       ARTIFACTS.map(async (a) => {
+        const url = `${a.url}${a.url.includes("?") ? "&" : "?"}_=${bust}`;
         try {
-          const res = await fetch(a.url, { cache: "no-store" });
+          const res = await fetch(url, { cache: "no-store" });
           let detail: string | undefined;
+          let stale = false;
           if (res.ok && a.url.endsWith(".json")) {
             try {
               const j = await res.clone().json();
-              detail = j?.info?.version || j?.apiVersion || undefined;
-            } catch { /* ignore */ }
+              const v = j?.info?.version || j?.apiVersion || j?.current;
+              if (v) {
+                detail = String(v);
+                stale = detail !== KOB_API_VERSION;
+              }
+            } catch { /* non-JSON or parse error */ }
           }
-          return { name: a.name, url: a.url, ok: res.ok, status: res.status, detail };
+          return { name: a.name, url: a.url, ok: res.ok, status: res.status, detail, stale };
         } catch (e: any) {
           return { name: a.name, url: a.url, ok: false, detail: e?.message };
         }
@@ -58,6 +66,7 @@ export default function DeploymentStatus() {
     setLastChecked(new Date());
     setLoading(false);
   }
+
 
   useEffect(() => { runChecks(); }, []);
 
