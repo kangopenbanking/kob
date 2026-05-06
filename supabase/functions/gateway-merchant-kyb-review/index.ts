@@ -306,7 +306,14 @@ Deno.serve(async (req) => {
     return rfc7807('invalid_action', 'Invalid Action', 400, `Unknown action: ${action}`);
   } catch (err: any) {
     const errorId = crypto.randomUUID().slice(0, 8);
-    console.error(`[${errorId}] [gateway-merchant-kyb-review] Error:`, err);
-    return rfc7807('internal_error', 'Internal Server Error', 500, `An unexpected error occurred. Reference: ${errorId}`);
+    log('error', 'unhandled_exception', {
+      error_id: errorId,
+      message: err?.message,
+      name: err?.name,
+      stack: (err?.stack || '').split('\n').slice(0, 5).join(' | '),
+    });
+    return rfc7807('internal_error', 'Internal Server Error', 500,
+      `${err?.message || 'An unexpected error occurred'} (ref: ${errorId})`,
+      { error_id: errorId });
   }
 });
