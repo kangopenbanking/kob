@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { GoLiveToggle } from "@/components/shared/GoLiveToggle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -242,6 +243,8 @@ export default function MerchantApiKeys() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {merchantId && <GoLiveToggle entity="merchant" entityId={merchantId} />}
 
       {keys.length === 0 ? (
         <Card>

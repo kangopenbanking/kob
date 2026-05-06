@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Key, Copy, RefreshCw, Shield, Clock, CheckCircle2, XCircle, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { GoLiveToggle } from "@/components/shared/GoLiveToggle";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -96,6 +97,8 @@ export default function InstitutionApiKeys() {
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />Refresh
         </Button>
       </motion.div>
+
+      {institutionId && <GoLiveToggle entity="institution" entityId={institutionId} />}
 
       {/* KPI Cards */}
       <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp} className="grid gap-4 md:grid-cols-4">
