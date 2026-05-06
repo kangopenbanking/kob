@@ -122,8 +122,8 @@ export default function BusinessKYCReview() {
         const { data, error } = await supabase.functions.invoke("gateway-merchant-kyb-review", {
           body: { action: "review", merchant_id: id, decision, reason: notes || undefined },
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error || data.detail);
+        if (error) throw new Error(extractEdgeFunctionError(error, "Failed to review KYB"));
+        if (data?.error || data?.detail) throw new Error(data.error || data.detail);
       } else {
         const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
         let institutionId: string | null = null;
