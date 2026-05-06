@@ -143,3 +143,22 @@ export async function hashQRPayload(payload: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
+
+/**
+ * Validate that a decoded EMVCo QR is acceptable for the KOB rail.
+ * Currency must be in SUPPORTED_QR_CURRENCIES; country (when present)
+ * must be in SUPPORTED_QR_COUNTRIES; at least one merchant account tag
+ * (26-51) is required.
+ */
+export function isSupportedQR(decoded: EmvDecoded): { ok: true } | { ok: false; reason: string } {
+  if (!decoded.currency || !SUPPORTED_QR_CURRENCIES.includes(decoded.currency)) {
+    return { ok: false, reason: `unsupported_currency:${decoded.currency ?? '?'}` };
+  }
+  if (decoded.countryCode && !SUPPORTED_QR_COUNTRIES.includes(decoded.countryCode)) {
+    return { ok: false, reason: `unsupported_country:${decoded.countryCode}` };
+  }
+  if (!decoded.merchantAccounts?.length) {
+    return { ok: false, reason: 'no_merchant_account' };
+  }
+  return { ok: true };
+}
