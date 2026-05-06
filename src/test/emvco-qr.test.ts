@@ -190,7 +190,7 @@ describe('Extra EMVCo fixtures + QR_001..QR_004 error mapping', () => {
     expect(d.currency).toBeUndefined(); // not in the alpha map
     const r = isSupportedQR(d);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe('unsupported_currency');
+    if (r.ok === false) expect(r.reason).toBe('unsupported_currency');
   });
 
   it('unsupported country (e.g. NG outside CEMAC/UEMOA) → QR_002 reason unsupported_country', () => {
@@ -198,7 +198,7 @@ describe('Extra EMVCo fixtures + QR_001..QR_004 error mapping', () => {
     const d = parseEmvQR(qr);
     const r = isSupportedQR(d);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe('unsupported_country');
+    if (r.ok === false) expect(r.reason).toBe('unsupported_country');
   });
 
   /**
@@ -244,7 +244,7 @@ describe('Extra EMVCo fixtures + QR_001..QR_004 error mapping', () => {
         const d = parseEmvQR(payload);
         const r = isSupportedQR(d);
         expect(r.ok).toBe(false);
-        if (!r.ok && row.expect_reason) expect(r.reason).toBe(row.expect_reason);
+        if (r.ok === false && row.expect_reason) expect(r.reason).toBe(row.expect_reason);
       }
     });
   }
