@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getKycDocumentUrl } from "@/lib/kyc-storage";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -122,8 +123,8 @@ export default function BusinessKYCReview() {
         const { data, error } = await supabase.functions.invoke("gateway-merchant-kyb-review", {
           body: { action: "review", merchant_id: id, decision, reason: notes || undefined },
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error || data.detail);
+        if (error) throw new Error(extractEdgeFunctionError(error, "Failed to review KYB"));
+        if (data?.error || data?.detail) throw new Error(data.error || data.detail);
       } else {
         const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
         let institutionId: string | null = null;
