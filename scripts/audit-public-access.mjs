@@ -39,6 +39,8 @@ const URLS = [
   '/.well-known/ai-plugin.json',
   '/sitemap.xml',
   '/robots.txt',
+  '/postman/manifest.json',
+  '/postman/Kang_Open_Banking_API_latest.postman_collection.json',
 ];
 
 const UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';

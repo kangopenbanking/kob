@@ -54,6 +54,27 @@
   access-control-allow-headers: *
   x-robots-tag: all
 
+/postman/*
+  cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
+  x-robots-tag: all
+
+/sitemap.xml
+  content-type: application/xml; charset=utf-8
+  cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  access-control-allow-methods: GET, HEAD, OPTIONS
+  access-control-allow-headers: *
+  x-robots-tag: all
+
+/CHANGELOG.md
+  content-type: text/markdown; charset=utf-8
+  cache-control: public, max-age=300, stale-while-revalidate=86400
+  access-control-allow-origin: *
+  x-robots-tag: all
+
 /developer/*
   x-robots-tag: all
   cache-control: public, max-age=60, stale-while-revalidate=600
