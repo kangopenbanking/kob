@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
     return problem(500, 'persist_failed', insErr.message);
   }
 
-  return new Response(JSON.stringify({
+  const responseBody = {
     id: row.id,
     status: row.status,
     reference: pispPaymentId,
@@ -361,5 +361,11 @@ Deno.serve(async (req) => {
     currency: decoded.currency,
     charged_usd: chargeUsd,
     qr_type: decoded.qrType,
-  }), { status: pispStatus === 'failed' ? 502 : 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  };
+  const httpStatus = pispStatus === 'failed' ? 502 : 200;
+  await cacheReply(httpStatus, responseBody, row.id);
+  return new Response(JSON.stringify(responseBody), {
+    status: httpStatus,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 });
