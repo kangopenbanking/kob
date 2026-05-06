@@ -153,3 +153,50 @@ Deno.test("state machine: reject requires reason", () => {
   assertEquals(validate('approve'), 'ok');
   assertEquals(validate('hold'), 'invalid_decision');
 });
+
+import { validateKybDocuments, ALLOWED_DOC_MIMES, MAX_DOC_SIZE_BYTES } from "../_shared/kyb-events.ts";
+
+Deno.test("validateKybDocuments: rejects empty array", () => {
+  const r = validateKybDocuments([]);
+  assert(!r.ok);
+  assert(r.errors[0].includes('non-empty'));
+});
+
+Deno.test("validateKybDocuments: rejects disallowed mime type", () => {
+  const r = validateKybDocuments([
+    { type: 'business_registration', url: 'https://x/y.exe', mime_type: 'application/x-msdownload', size_bytes: 1024 },
+  ]);
+  assert(!r.ok);
+  assert(r.errors.some((e) => e.includes('not allowed')));
+});
+
+Deno.test("validateKybDocuments: rejects oversized file", () => {
+  const r = validateKybDocuments([
+    { type: 'business_registration', url: 'https://x/y.pdf', mime_type: 'application/pdf', size_bytes: MAX_DOC_SIZE_BYTES + 1 },
+  ]);
+  assert(!r.ok);
+  assert(r.errors.some((e) => e.includes('exceeds max')));
+});
+
+Deno.test("validateKybDocuments: passes valid PDF and PNG", () => {
+  const r = validateKybDocuments([
+    { type: 'business_registration', url: 'https://x/y.pdf', mime_type: 'application/pdf', size_bytes: 500_000 },
+    { type: 'tax_certificate', url: 'https://x/y.png', mime_type: 'image/png', size_bytes: 200_000 },
+  ]);
+  assertEquals(r.errors, []);
+  assert(r.ok);
+});
+
+Deno.test("validateKybDocuments: requires mime_type and size", () => {
+  const r = validateKybDocuments([{ type: 'business_registration', url: 'https://x/y.pdf' }]);
+  assert(!r.ok);
+  assert(r.errors.some((e) => e.includes('mime_type is required')));
+  assert(r.errors.some((e) => e.includes('size_bytes is required')));
+});
+
+Deno.test("ALLOWED_DOC_MIMES list is locked to safe document types", () => {
+  assertEquals(ALLOWED_DOC_MIMES.includes('application/pdf'), true);
+  assertEquals(ALLOWED_DOC_MIMES.includes('image/png'), true);
+  assertEquals(ALLOWED_DOC_MIMES.includes('application/x-msdownload'), false);
+  assertEquals(ALLOWED_DOC_MIMES.includes('text/html'), false);
+});
