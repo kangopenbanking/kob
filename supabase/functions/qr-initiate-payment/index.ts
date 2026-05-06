@@ -25,6 +25,9 @@
 //   QR_004  step_up_required
 //   QR_005  upstream_pisp_error
 //   QR_006  idempotency_conflict
+//   QR_007  partner_scope_missing      (client_credentials token lacks payments:qr)
+//   QR_008  partner_card_token_unknown (revoked/expired/unknown token)
+//   QR_009  partner_sca_evidence_missing (PSD2 RTS Art. 18)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
@@ -86,37 +89,95 @@ Deno.serve(async (req) => {
 
   let body: any;
   try { body = await req.json(); } catch { return problem(400, 'invalid_body', 'JSON body required'); }
-  const { qr_payload, virtual_card_id, amount_override, pin_token } = body || {};
+  const {
+    qr_payload, virtual_card_id, amount_override, pin_token,
+    partner_card_token_id, auth_evidence,
+  } = body || {};
 
   if (typeof qr_payload !== 'string') return problem(400, 'QR_001', 'qr_payload required');
-  if (typeof virtual_card_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(virtual_card_id)) {
-    return problem(400, 'invalid_card_id', 'virtual_card_id must be a UUID');
-  }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  let user: any;
-  try { user = await getUserWithRetry(supabase, auth.slice(7)); }
-  catch { return problem(401, 'unauthorized', 'Invalid session'); }
+  // ----- Auth mode detection -----
+  // Partner mode: the bearer matches an active client_credentials access_tokens row
+  //               with scope "payments:qr".
+  // User mode (default): bearer is a Supabase user JWT.
+  const partnerCardholderRef = req.headers.get('X-Partner-Cardholder-Ref');
+  const bearer = auth.slice(7);
+  let mode: 'user' | 'partner' = 'user';
+  let user: any = null;
+  let partnerClientId: string | null = null;
+  let partnerToken: any = null;
+
+  // Try partner-mode lookup first IF a partner cardholder ref header is present.
+  if (partnerCardholderRef) {
+    const tokenHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(bearer));
+    const tokenHash = Array.from(new Uint8Array(tokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const { data: tok } = await supabase
+      .from('access_tokens')
+      .select('client_id, scope, expires_at, is_revoked, user_id')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+    if (tok && !tok.is_revoked && new Date(tok.expires_at) > new Date() && tok.user_id === null) {
+      const scopes = String(tok.scope || '').split(/\s+/);
+      if (!scopes.includes('payments:qr')) {
+        return problem(403, 'QR_007', 'access token missing required scope: payments:qr');
+      }
+      mode = 'partner';
+      partnerClientId = tok.client_id;
+      if (typeof partner_card_token_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(partner_card_token_id)) {
+        return problem(400, 'invalid_partner_card_token_id', 'partner_card_token_id (UUID) required');
+      }
+      const { data: pct } = await supabase
+        .from('partner_card_tokens')
+        .select('id, client_id, status, last4, brand, partner_cardholder_ref')
+        .eq('id', partner_card_token_id)
+        .eq('client_id', partnerClientId)
+        .eq('partner_cardholder_ref', partnerCardholderRef)
+        .maybeSingle();
+      if (!pct || pct.status !== 'active') {
+        return problem(404, 'QR_008', 'partner card token unknown, revoked, or expired');
+      }
+      if (!auth_evidence || typeof auth_evidence !== 'object'
+          || typeof (auth_evidence as any).method !== 'string') {
+        return problem(412, 'QR_009', 'auth_evidence (PSD2 RTS Art. 18) required');
+      }
+      partnerToken = pct;
+    }
+  }
+
+  if (mode === 'user') {
+    try { user = await getUserWithRetry(supabase, bearer); }
+    catch { return problem(401, 'unauthorized', 'Invalid session'); }
+    if (typeof virtual_card_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(virtual_card_id)) {
+      return problem(400, 'invalid_card_id', 'virtual_card_id must be a UUID');
+    }
+  }
+  // Use a synthetic owner id for idempotency partitioning in partner mode
+  const ownerId = mode === 'user' ? user.id : `partner:${partnerClientId}:${partnerCardholderRef}`;
+
 
   // ----- Replay protection via dedicated qr_payment_idempotency table -----
-  // Hash the request body to detect "same key, different payload" (409 conflict).
   const reqHashBuf = await crypto.subtle.digest(
     'SHA-256',
-    new TextEncoder().encode(JSON.stringify({ qr_payload, virtual_card_id, amount_override })),
+    new TextEncoder().encode(JSON.stringify({
+      qr_payload, virtual_card_id, amount_override,
+      partner_card_token_id, mode, ownerId,
+    })),
   );
   const requestHash = Array.from(new Uint8Array(reqHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
   const { data: idem } = await supabase
     .from('qr_payment_idempotency')
-    .select('user_id, request_hash, response_status, response_json, qr_card_payment_id, expires_at')
+    .select('user_id, owner_key, request_hash, response_status, response_json, qr_card_payment_id, expires_at')
     .eq('idempotency_key', idempotencyKey)
     .maybeSingle();
 
   if (idem) {
     const expired = idem.expires_at && new Date(idem.expires_at).getTime() < Date.now();
     if (!expired) {
-      if (idem.user_id !== user.id) return problem(409, 'QR_006', 'Idempotency-Key collision (different user)');
+      const idemOwner = idem.owner_key || idem.user_id;
+      if (idemOwner !== ownerId) return problem(409, 'QR_006', 'Idempotency-Key collision (different caller)');
       if (idem.request_hash && idem.request_hash !== requestHash) {
         return problem(409, 'QR_006', 'Idempotency-Key reused with a different payload');
       }
@@ -127,11 +188,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Helper: persist idempotent response (best-effort) so even rejections cannot be retried with same key.
   const cacheReply = async (status: number, body: Record<string, unknown>, qrRowId: string | null) => {
     await supabase.from('qr_payment_idempotency').upsert({
       idempotency_key: idempotencyKey,
-      user_id: user.id,
+      user_id: mode === 'user' ? user.id : null,
+      owner_key: ownerId,
       request_hash: requestHash,
       response_status: status,
       response_json: body,
@@ -191,67 +252,52 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ----- Verify virtual card (ownership + status + balance) -----
-  const { data: card, error: cardErr } = await supabase
-    .from('virtual_cards')
-    .select('id, user_id, status, balance_usd, currency, last4, card_name')
-    .eq('id', virtual_card_id)
-    .maybeSingle();
-  if (cardErr || !card) return problem(404, 'QR_003', 'Virtual card not found');
-  if (card.user_id !== user.id) return problem(403, 'QR_003', 'Card not owned by user');
-  if (card.status !== 'active') return problem(409, 'QR_003', `Card is ${card.status}`);
-
-  // For non-USD QRs we'd convert via exchange-rate-get; for now require XAF→USD pre-funded
-  // and reject mismatched currencies if no FX path. Card is USD-denominated.
-  // Convert XAF/XOF/EUR → USD via exchange-rate-get.
+  // ----- Verify card / step-up (mode-dependent) -----
+  let card: any = null;
   let chargeUsd = amount;
+  let newBalance = 0;
+
   if (decoded.currency !== 'USD') {
     const fxRes = await fetch(`${SUPABASE_URL}/functions/v1/exchange-rate-get?from=${decoded.currency}&to=USD&amount=${amount}`, {
       headers: { Authorization: `Bearer ${SERVICE_KEY}` },
     });
-    if (!fxRes.ok) {
-      await fxRes.text().catch(() => '');
-      return problem(502, 'QR_005', 'Exchange rate unavailable');
-    }
+    if (!fxRes.ok) { await fxRes.text().catch(() => ''); return problem(502, 'QR_005', 'Exchange rate unavailable'); }
     const fx = await fxRes.json();
     chargeUsd = Number(fx?.converted ?? fx?.amount_to ?? 0);
     if (!chargeUsd || chargeUsd <= 0) return problem(502, 'QR_005', 'Invalid FX response');
   }
 
-  if (Number(card.balance_usd) < chargeUsd) {
-    return problem(402, 'QR_003', 'Insufficient virtual card balance');
-  }
+  if (mode === 'user') {
+    const { data: c, error: cardErr } = await supabase
+      .from('virtual_cards')
+      .select('id, user_id, status, balance_usd, currency, last4, card_name')
+      .eq('id', virtual_card_id).maybeSingle();
+    if (cardErr || !c) return problem(404, 'QR_003', 'Virtual card not found');
+    if (c.user_id !== user.id) return problem(403, 'QR_003', 'Card not owned by user');
+    if (c.status !== 'active') return problem(409, 'QR_003', `Card is ${c.status}`);
+    if (Number(c.balance_usd) < chargeUsd) return problem(402, 'QR_003', 'Insufficient virtual card balance');
+    card = c;
 
-  // ----- Step-up verification (PIN) -----
-  if (!pin_token || typeof pin_token !== 'string' || pin_token.length < 4) {
-    return problem(401, 'QR_004', 'Step-up authentication required (pin_token = 6-digit PIN)');
-  }
-  // Resolve user's phone for pin-code-verify
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('phone_number')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile?.phone_number) return problem(412, 'QR_004', 'No phone number on profile');
+    if (!pin_token || typeof pin_token !== 'string' || pin_token.length < 4) {
+      return problem(401, 'QR_004', 'Step-up authentication required (pin_token = 6-digit PIN)');
+    }
+    const { data: profile } = await supabase
+      .from('profiles').select('phone_number').eq('id', user.id).maybeSingle();
+    if (!profile?.phone_number) return problem(412, 'QR_004', 'No phone number on profile');
+    const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/pin-code-verify`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone_number: profile.phone_number, pin_code: pin_token }),
+    });
+    const stepJson = await stepRes.json().catch(() => ({}));
+    if (!stepRes.ok || !stepJson?.verified) return problem(401, 'QR_004', 'PIN verification failed');
 
-  const stepRes = await fetch(`${SUPABASE_URL}/functions/v1/pin-code-verify`, {
-    method: 'POST',
-    headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone_number: profile.phone_number, pin_code: pin_token }),
-  });
-  const stepJson = await stepRes.json().catch(() => ({}));
-  if (!stepRes.ok || !stepJson?.verified) {
-    return problem(401, 'QR_004', 'PIN verification failed');
+    newBalance = Number(card.balance_usd) - chargeUsd;
+    const { error: updErr } = await supabase
+      .from('virtual_cards').update({ balance_usd: newBalance })
+      .eq('id', card.id).eq('balance_usd', card.balance_usd);
+    if (updErr) return problem(409, 'QR_003', 'Card balance changed concurrently, retry');
   }
-
-  // ----- Atomic debit via RPC (fall back to optimistic update if RPC absent) -----
-  const newBalance = Number(card.balance_usd) - chargeUsd;
-  const { error: updErr } = await supabase
-    .from('virtual_cards')
-    .update({ balance_usd: newBalance })
-    .eq('id', card.id)
-    .eq('balance_usd', card.balance_usd); // optimistic concurrency
-  if (updErr) return problem(409, 'QR_003', 'Card balance changed concurrently, retry');
+  // Partner mode: SCA evidence already validated; no internal balance to debit.
 
   // ----- Forward to PISP rail -----
   const qrHash = await hashQRPayload(qr_payload);
@@ -270,7 +316,7 @@ Deno.serve(async (req) => {
           RemittanceInformation: { Unstructured: `QR ${qrHash}` },
         },
       },
-      meta: { source: 'qr_initiate_payment', user_id: user.id },
+      meta: { source: 'qr_initiate_payment', user_id: user?.id ?? null, partner_client_id: partnerClientId },
     }, `${idempotencyKey}-consent`);
     const consentJson = await consentRes.json().catch(() => ({}));
     const consentId = consentJson?.Data?.ConsentId || consentJson?.consent_id;
