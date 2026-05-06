@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
+import { GoLiveToggle } from "@/components/shared/GoLiveToggle";
 
 
 import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
@@ -222,6 +223,8 @@ export default function ApiKeys() {
             Create New App
           </Button>
         </div>
+
+        <GoLiveToggle entity="developer" />
 
         {apiKeys.length === 0 ? (
           <Card>
