@@ -7,10 +7,33 @@ import { notifyUser } from "../_shared/admin-notify.ts";
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const rfc7807 = (type: string, title: string, status: number, detail: string) =>
-  new Response(JSON.stringify({ type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`, title, status, detail }), {
+const rfc7807 = (type: string, title: string, status: number, detail: string, extra?: Record<string, unknown>) =>
+  new Response(JSON.stringify({
+    type: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/errors/${type}`,
+    title, status, detail, error: detail, message: detail, ...(extra || {}),
+  }), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
   });
+
+const log = (level: 'info' | 'warn' | 'error', event: string, ctx: Record<string, unknown> = {}) => {
+  const line = JSON.stringify({ ts: new Date().toISOString(), level, fn: 'gateway-merchant-kyb-review', event, ...ctx });
+  if (level === 'error') console.error(line); else console.log(line);
+};
+
+// Required KYB coverage gates — enforced before approval
+const REQUIRED_DOC_TYPES = ['business_registration', 'tax_certificate', 'proof_of_address'];
+const REQUIRED_META_FIELDS = ['kyb_business_registration', 'kyb_tax_id', 'kyb_business_address'];
+
+function assessCoverage(merchant: any): { ok: boolean; missing_documents: string[]; missing_fields: string[] } {
+  const docs = Array.isArray(merchant.kyb_documents) ? merchant.kyb_documents : [];
+  const presentTypes = new Set<string>(
+    docs.map((d: any) => (typeof d === 'string' ? d : d?.type || d?.document_type)).filter(Boolean)
+  );
+  const missing_documents = REQUIRED_DOC_TYPES.filter((t) => !presentTypes.has(t));
+  const meta = merchant.metadata || {};
+  const missing_fields = REQUIRED_META_FIELDS.filter((f) => !meta[f]);
+  return { ok: missing_documents.length === 0 && missing_fields.length === 0, missing_documents, missing_fields };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
