@@ -894,6 +894,7 @@ function App() {
               <Route path="pos-till" element={<MerchantPOSTill />} />
               <Route path="notification-history" element={<NotificationHistory />} />
               <Route path="pay-by-bank" element={<MerchantPayByBank />} />
+              <Route path="qr-acceptance" element={<MerchantQRAcceptance />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
