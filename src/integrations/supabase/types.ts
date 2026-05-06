@@ -7550,6 +7550,15 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          kyb_documents: Json | null
+          kyb_rejection_reason: string | null
+          kyb_reviewed_at: string | null
+          kyb_reviewed_by: string | null
+          kyb_status: string
+          kyb_submitted_at: string | null
+          live_mode_enabled: boolean
+          live_mode_enabled_at: string | null
+          live_mode_enabled_by: string | null
           name: string
           status: string
           updated_at: string
@@ -7561,6 +7570,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          kyb_documents?: Json | null
+          kyb_rejection_reason?: string | null
+          kyb_reviewed_at?: string | null
+          kyb_reviewed_by?: string | null
+          kyb_status?: string
+          kyb_submitted_at?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           name: string
           status?: string
           updated_at?: string
@@ -7572,6 +7590,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          kyb_documents?: Json | null
+          kyb_rejection_reason?: string | null
+          kyb_reviewed_at?: string | null
+          kyb_reviewed_by?: string | null
+          kyb_status?: string
+          kyb_submitted_at?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           name?: string
           status?: string
           updated_at?: string
@@ -9800,6 +9827,9 @@ export type Database = {
           kyb_reviewed_by: string | null
           kyb_status: string
           kyb_submitted_at: string | null
+          live_mode_enabled: boolean
+          live_mode_enabled_at: string | null
+          live_mode_enabled_by: string | null
           metadata: Json | null
           monthly_volume_limit: number | null
           onboarding_status: string | null
@@ -9840,6 +9870,9 @@ export type Database = {
           kyb_reviewed_by?: string | null
           kyb_status?: string
           kyb_submitted_at?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           metadata?: Json | null
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
@@ -9880,6 +9913,9 @@ export type Database = {
           kyb_reviewed_by?: string | null
           kyb_status?: string
           kyb_submitted_at?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           metadata?: Json | null
           monthly_volume_limit?: number | null
           onboarding_status?: string | null
@@ -11561,9 +11597,13 @@ export type Database = {
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id: string | null
+          kyb_status: string
           kyb_submission_id: string | null
           kyb_verified_at: string | null
           kyb_verified_by: string | null
+          live_mode_enabled: boolean
+          live_mode_enabled_at: string | null
+          live_mode_enabled_by: string | null
           logo_url: string | null
           main_branch_id: string | null
           minimum_settlement_amount: number | null
@@ -11594,9 +11634,13 @@ export type Database = {
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id?: string | null
+          kyb_status?: string
           kyb_submission_id?: string | null
           kyb_verified_at?: string | null
           kyb_verified_by?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           logo_url?: string | null
           main_branch_id?: string | null
           minimum_settlement_amount?: number | null
@@ -11627,9 +11671,13 @@ export type Database = {
           institution_name?: string
           institution_type?: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id?: string | null
+          kyb_status?: string
           kyb_submission_id?: string | null
           kyb_verified_at?: string | null
           kyb_verified_by?: string | null
+          live_mode_enabled?: boolean
+          live_mode_enabled_at?: string | null
+          live_mode_enabled_by?: string | null
           logo_url?: string | null
           main_branch_id?: string | null
           minimum_settlement_amount?: number | null
