@@ -28,10 +28,13 @@ Deno.serve(async (req) => {
   if (cursor && !UUID_RE.test(cursor)) return json({ error: 'invalid_cursor' }, 400);
 
   const supabase = createClient(SUPABASE_URL, ANON_KEY);
+  // Note: status/kyb_status filtering already enforced by the merchant_qr_directory view.
+  // Filtering on raw `status='active'` here would exclude rows whose underlying value is
+  // 'VERIFIED' (uppercase) which the view legitimately exposes.
   let q = supabase
     .from('merchant_qr_directory')
     .select('merchant_id, name, environment, status, mcc, country, logo_url, verified, created_at')
-    .eq('status', 'active')
+    .eq('verified', true)
     .order('merchant_id', { ascending: true })
     .limit(limit + 1);
 
