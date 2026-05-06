@@ -168,6 +168,17 @@ Deno.serve(async (req) => {
         return rfc7807('validation_error', 'Validation Error', 400, 'reason is required for rejection');
       }
 
+      // Coverage gate: only enforced for approval
+      if (decision === 'approve') {
+        const cov = assessCoverage(merchant);
+        if (!cov.ok) {
+          log('warn', 'kyb_approval_blocked_missing_coverage', { merchant_id, ...cov });
+          return rfc7807('kyb_coverage_incomplete', 'KYB Coverage Incomplete', 422,
+            `Cannot approve: missing documents [${cov.missing_documents.join(', ')}] or fields [${cov.missing_fields.join(', ')}]`,
+            { missing_documents: cov.missing_documents, missing_fields: cov.missing_fields });
+        }
+      }
+
       const newKybStatus = decision === 'approve' ? 'verified' : 'rejected';
       const newMerchantStatus = decision === 'approve' ? 'VERIFIED' : merchant.status;
 
@@ -180,7 +191,12 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq('id', merchant_id);
 
-      if (error) return rfc7807('review_failed', 'Review Failed', 500, error.message);
+      if (error) {
+        log('error', 'kyb_review_db_update_failed', { merchant_id, decision, db_error: error.message, code: (error as any).code });
+        return rfc7807('review_failed', 'Review Failed', 500, error.message);
+      }
+
+      log('info', 'kyb_reviewed', { merchant_id, decision, reviewer: user.id });
 
       await supabase.from('audit_logs').insert({
         action_type: `merchant_kyb_${decision}d`,
