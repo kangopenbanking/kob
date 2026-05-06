@@ -19,8 +19,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface AuditRow {
   qr_payment_id: string;
-  user_id: string;
+  user_id: string | null;
   pisp_payment_id: string | null;
+  source: string | null;
+  partner_client_id: string | null;
+  partner_cardholder_ref: string | null;
+  partner_card_token_id: string | null;
   merchant_name: string | null;
   merchant_id: string | null;
   merchant_external: boolean;
