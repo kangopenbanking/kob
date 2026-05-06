@@ -15,7 +15,7 @@ type ArtifactCheck = {
   detail?: string;
 };
 
-const PORTAL_BASE_URL = "https://342820e7-280a-44d3-88ce-2854c6d907ed.lovableproject.com";
+const PORTAL_BASE_URL = "https://kangopenbanking.com";
 
 const ARTIFACT_PATHS: { name: string; path: string }[] = [
   { name: "OpenAPI JSON", path: "/openapi.json" },
@@ -94,7 +94,7 @@ export default function DeploymentStatus() {
           </div>
           <div>
             <div className="text-muted-foreground">Portal Origin</div>
-            <div className="font-medium break-all">{PORTAL_BASE_URL}</div>
+            <div className="font-medium break-all">https://kangopenbanking.com</div>
           </div>
           <div>
             <div className="text-muted-foreground">API Gateway</div>
