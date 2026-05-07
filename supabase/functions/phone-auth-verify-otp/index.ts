@@ -290,6 +290,7 @@ Deno.serve(async (req) => {
 
     // Mint a real session for the verified user (matches phone-auth-pin-login flow)
     let session: any = null;
+    let sessionBootstrapError: string | null = null;
     try {
       const userId = authData?.user?.id;
       let userEmail = authData?.user?.email as string | undefined;
@@ -299,20 +300,40 @@ Deno.serve(async (req) => {
         const kangId = (kangRow as any)?.kang_id as string | undefined;
         userEmail = kangId ? `${kangId.toLowerCase()}@kang.id` : `${userId}@kang.id`;
       }
-      if (userEmail) {
+      if (!userEmail) {
+        sessionBootstrapError = 'No email available for session bootstrap';
+      } else {
         const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
           type: 'magiclink', email: userEmail,
         });
-        if (!linkError && linkData?.properties?.hashed_token) {
+        if (linkError || !linkData?.properties?.hashed_token) {
+          sessionBootstrapError = linkError?.message || 'generateLink returned no token';
+        } else {
           const { data: sessionData, error: sessErr } = await supabase.auth.verifyOtp({
             token_hash: linkData.properties.hashed_token,
             type: 'magiclink',
           });
-          if (!sessErr) session = sessionData.session;
+          if (sessErr || !sessionData?.session) {
+            sessionBootstrapError = sessErr?.message || 'verifyOtp returned no session';
+          } else {
+            session = sessionData.session;
+          }
         }
       }
-    } catch (e) {
-      console.warn('Session bootstrap failed (non-blocking):', e);
+    } catch (e: any) {
+      sessionBootstrapError = e?.message || String(e);
+    }
+
+    if (!session) {
+      console.error('Session bootstrap failed:', sessionBootstrapError);
+      return new Response(
+        JSON.stringify({
+          error: 'session_bootstrap_failed',
+          message: 'OTP verified but failed to establish session. Please try logging in again.',
+          details: sessionBootstrapError,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     return new Response(
