@@ -174,5 +174,6 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
     userMessage: err?.message || 'Verification failed. Please try again.',
     hint: 'Switching to SMS fallback…',
     shouldFallback: true,
+      rawCode: code || undefined,
   };
 }
