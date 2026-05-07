@@ -197,12 +197,12 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       return true;
     } catch (err: any) {
       console.error('verifyOTP error:', err);
-      const msg = err.code === 'auth/invalid-verification-code'
-        ? 'Invalid code. Please try again.'
-        : err.message || 'Verification failed';
-      setError(msg);
+      const mapped = mapFirebaseAuthError(err);
+      setError(mapped.userMessage);
+      setErrorCategory(mapped.category);
+      setErrorHint(mapped.hint || null);
       setStep('otp');
-      toast.error(msg);
+      toast.error(mapped.userMessage, mapped.hint ? { description: mapped.hint } : undefined);
       return false;
     } finally {
       setLoading(false);
@@ -212,6 +212,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const reset = useCallback(() => {
     setStep('phone');
     setError(null);
+    setErrorCategory(null);
+    setErrorHint(null);
     setLoading(false);
     setProvider('firebase');
     confirmationRef.current = null;
@@ -221,5 +223,5 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, provider, sendOTP, verifyOTP, reset };
 }
