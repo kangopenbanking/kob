@@ -1,0 +1,49 @@
+name: Firebase OTP Preflight + E2E
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/firebase.ts'
+      - 'src/lib/firebaseErrors.ts'
+      - 'src/lib/otpProviderConfig.ts'
+      - 'src/hooks/useFirebasePhoneAuth.ts'
+      - 'supabase/functions/firebase-phone-verify/**'
+      - 'supabase/functions/phone-auth-send-otp/**'
+      - 'supabase/functions/phone-auth-verify-otp/**'
+      - 'scripts/firebase-otp-preflight.mjs'
+      - '.github/workflows/firebase-otp-preflight.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+
+jobs:
+  preflight:
+    name: Validate Firebase + reCAPTCHA Enterprise config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run Firebase OTP preflight
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTHORIZED_DOMAINS: ${{ vars.FIREBASE_AUTHORIZED_DOMAINS }}
+          RECAPTCHA_ENTERPRISE_SITE_KEY: ${{ secrets.RECAPTCHA_ENTERPRISE_SITE_KEY }}
+          GCP_ACCESS_TOKEN: ${{ secrets.GCP_ACCESS_TOKEN }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: node scripts/firebase-otp-preflight.mjs
+
+  phone-auth-e2e:
+    name: Phone-auth E2E (gated by preflight)
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci || npm install
+      - name: Run phone-auth tests
+        run: npx vitest run src/hooks/__tests__/useFirebasePhoneAuth.test.ts src/pages/__tests__/Auth.test.tsx
