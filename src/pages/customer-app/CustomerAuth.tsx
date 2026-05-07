@@ -64,7 +64,12 @@ const CustomerAuth: React.FC = () => {
   // General loading
   const [loading, setLoading] = useState(false);
 
-  const { step: otpStep, loading: otpLoading, error: otpError, sendOTP, verifyOTP, reset: resetOTP } = useFirebasePhoneAuth();
+  const { step: otpStep, loading: otpLoading, error: otpError, provider: otpProvider, sendOTP, verifyOTP, reset: resetOTP } = useFirebasePhoneAuth({
+    otpType: intent === 'signup' ? 'signup' : 'login',
+    fullName,
+    pinCode: pin,
+    countryCode,
+  });
 
   useEffect(() => {
     if (otpStep === 'otp' && mode === 'input') setMode('otp');

@@ -39,7 +39,8 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   const [countryCode, setCountryCode] = useState('+237');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const firebasePhone = useFirebasePhoneAuth();
+  // MobileAuthForm is login-only (signup happens elsewhere); default opts are fine.
+  const firebasePhone = useFirebasePhoneAuth({ otpType: 'login', countryCode });
 
   // PIN login state
   const [pinCode, setPinCode] = useState('');
