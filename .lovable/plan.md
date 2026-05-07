@@ -1,83 +1,69 @@
-## Auto-fetch KOB Merchant Directory into Virtual Card Surfaces
+## Goal
 
-Wire the public `merchants-qr-directory` + `merchants-qr-get` endpoints (shipped in v4.31.0) into every virtual-card-facing surface so any KOB merchant or business becomes instantly discoverable and payable via QR — with no manual configuration per merchant.
+The uploaded "Mega Implementation Prompt" lists 18 enhancements. Most are documentation / DX additions. Many are already implemented in this codebase. The plan adds only what's missing, strictly additively (Standing Orders 1, 4 — no rename, no removal, no API surface changes).
 
-### Goal
+## What already exists (no work needed)
 
-Whenever a user opens a virtual-card screen (Consumer PWA, Business PWA `/biz`, Merchant Portal `/merchant`, or external partner card apps via SDK), the active KOB merchant catalogue is auto-fetched, cached, and kept fresh — so scanning a KOB merchant QR resolves the payee without any lookup friction.
+- `/developer` pages: `QuickStart`, `AuthOAuth2`, `AuthMtls`, `ErrorCodesReference`, `RateLimits` + `RateLimitsGuide`, `IdempotencyGuide` + `IdempotencyPlayground`, `SDKsPage`, `SdkInstallPage`, `SdkVersionPinning`, `BankConnectorRunbook`, `CertificateManagement`.
+- Markdown sources in `docs/portal/` (quickstart, authentication, error-reference, webhooks, aisp/pisp guides) and `docs/public/quickstarts/`.
+- `public/docs/snippets/auth-and-payments.md` covers cURL + Node + webhook verification.
+- OpenAPI compliance gates already enforce ratchet/error catalog.
 
----
+## What's missing — proposed additive work
 
-### 1. Shared data hook (single source of truth)
+### A. Multi-language SDK example pages (Standing Order P9)
 
-Create `src/hooks/useMerchantDirectory.ts`:
-- React Query hook hitting `GET https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/merchants-qr-directory`
-- Cursor-based auto-pagination (loops until `has_more=false`, capped at 1000 rows per refresh)
-- Filters: `country`, `category`, `search` (client-side over `name`)
-- `staleTime: 5 min`, `refetchInterval: 5 min`, `refetchOnWindowFocus: true`
-- Persists last snapshot to `localStorage` (`kob_merchant_dir_v1`) for offline QR-decode resolution
-- Exposes `{ merchants, byId, isLoading, refetch, lastSyncedAt }`
+Workspace already has Node + cURL + Python in places, but lacks consolidated **PHP, Java, Go, Ruby** runnable examples on the public docs site. Add:
 
-Companion hook `useMerchantQR(merchantId, { amount?, ref? })` → `merchants-qr-get` for on-demand EMVCo payload generation (used by "Show my QR" tiles).
+- `docs/public/sdk-examples/typescript.md`
+- `docs/public/sdk-examples/python.md`
+- `docs/public/sdk-examples/php.md`
+- `docs/public/sdk-examples/java.md`
+- `docs/public/sdk-examples/go.md`
+- `docs/public/sdk-examples/ruby.md`
+- `docs/public/sdk-examples/index.md` (hub page)
 
-### 2. Wire into Virtual Card surfaces
+Each: init client, create charge, retry/backoff, webhook signature verification.
 
-| Surface | File | Change |
-|---|---|---|
-| Consumer PWA — Virtual Card screen | `src/pages/customer/VirtualCard*.tsx` (existing) | Mount `useMerchantDirectory()`; show "Pay a KOB merchant" search field + recents |
-| QR Scanner result handler | scanner that detects `kob_pos_pay` / EMVCo payloads | Resolve scanned merchant ID via `byId` map before calling `qr-initiate-payment` |
-| Business PWA `/biz/home` | `src/pages/biz/BizHome.tsx` | Add "Your QR poster" tile (calls `useMerchantQR(myMerchantId)`) + live "QR payments today" feed |
-| Merchant Portal | new `src/pages/merchant/QRAcceptance.tsx` route `/merchant/qr-acceptance` | Lists own QR config, downloadable EMVCo poster (PNG/PDF), partner-payment report table |
-| Merchant nav | `src/components/merchant/merchant-navigation-config.ts` | Add "QR Acceptance" under **Payments** with `QrCode` icon |
+Wire a new public route `src/pages/developer/SdkExamplesHub.tsx` (lists languages, links to existing `SDKsPage`) — public, no auth (Standing Order P1).
 
-### 3. Background sync for partner SDK consumers
+### B. Structured developer learning path landing
 
-Add `directory.sync()` to the `qr` namespace in:
-- `packages/sdk-node/src/index.ts`
-- `packages/sdk-python/kangopenbanking/__init__.py`
-- `packages/sdk-php/src/Resources/`
+Add `src/pages/developer/LearningPath.tsx` at `/developer/learn` linking the existing pages in a 6-step flow (Quickstart → Auth → First Charge → Errors → Rate Limits → Idempotency). Pure presentational; no new endpoints.
 
-Each SDK gets a built-in 5-minute cache + cursor pagination identical to the React hook so external virtual-card apps poll once, not per scan.
+### C. Connector Mode selection guide
 
-### 4. Realtime freshness (optional but cheap)
+Existing `BankConnectorRunbook.tsx` is operational. Add a **selection / decision** companion:
 
-Subscribe to `gateway_merchants` row changes via Supabase Realtime in `useMerchantDirectory` (filter `status=eq.active`). On INSERT/UPDATE invalidate the React Query cache → instant propagation when a new merchant is KYB-approved, no 5-min wait.
+- `docs/public/connectors/mode-selection.md` (comparison matrix + decision flow for `connector_push`, `db_connector`, `connector_pull`, `file_feed`, `mq_realtime`, `hybrid`).
+- `src/pages/developer/ConnectorModeSelection.tsx` rendering it.
 
-Requires: `ALTER PUBLICATION supabase_realtime ADD TABLE public.gateway_merchants;` (migration).
+### D. mTLS step-by-step setup guide (companion to existing AuthMtls/CertificateManagement)
 
-### 5. Public listing edge-function tweak
+- `docs/public/security/mtls-setup.md` — openssl CSR, upload, verify, renewal cron, language client snippets.
+- Link from `AuthMtls.tsx` (no rewrite — add a "Setup walkthrough" link).
 
-Confirm `merchants-qr-directory` returns the fields the UIs need. If `logo_url`, `category_label`, `accepts_partner_cards` are missing from the `merchant_qr_directory` view, extend the view (additive — Standing Order 4) and bump OpenAPI to **v4.31.1** (patch).
+### E. SDK status / changelog page
 
-### 6. Tests
+- `src/pages/developer/SdkStatus.tsx` at `/developer/sdks/status` listing each SDK version, support matrix, roadmap (sourced from existing `packages/sdk-*` package metadata).
 
-- Vitest: `src/hooks/__tests__/useMerchantDirectory.test.ts` — pagination loop, localStorage hydration, realtime invalidation
-- Playwright: `e2e/authenticated/merchant-directory-autosync.spec.ts` — scanner picks up a freshly KYB-approved merchant within one refetch cycle
+### F. Public route registration
 
-### 7. Files to create / edit
+Update `src/App.tsx` (or the developer routes file) to register the new pages, keeping the `// PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT` block intact and ensuring all new routes are unauthenticated.
 
-Created:
-- `src/hooks/useMerchantDirectory.ts`
-- `src/hooks/useMerchantQR.ts`
-- `src/pages/merchant/QRAcceptance.tsx`
-- `src/hooks/__tests__/useMerchantDirectory.test.ts`
-- `e2e/authenticated/merchant-directory-autosync.spec.ts`
-- `supabase/migrations/<ts>_realtime_gateway_merchants.sql`
-- `docs/governance/CHANGELOG-v4.31.1.md` (only if view extended)
+## What is intentionally NOT done
 
-Edited:
-- `src/App.tsx` (route `/merchant/qr-acceptance`)
-- `src/components/merchant/merchant-navigation-config.ts`
-- `src/pages/biz/BizHome.tsx` (or current Biz home file)
-- Existing virtual-card pages + QR scanner result handler
-- `packages/sdk-node`, `sdk-python`, `sdk-php` — add `qr.directory.sync()`
-- `src/config/version.ts`, `public/openapi.json`, `public/openapi.yaml`, `public/changelog.json`, `public/CHANGELOG.md`, `CHANGELOG.md` (only if view extended → 4.31.1)
+- No changes to `public/openapi.json`, `supabase/functions/*`, edge functions, schemas, or any operationId — Standing Orders 1, 2, 4.
+- No new database tables.
+- No SDK API changes; only added docs/examples.
+- Items already shipped (RateLimits, Idempotency, Errors, Quickstart) get no rewrite.
 
-### Compliance
+## Verification
 
-- Standing Orders 1, 2, 4 (additive only, no renames)
-- P1 Public First (directory endpoint already public/anon)
-- P5 Working Code (smoke test in Playwright)
-- Direct Backend Mandate (`https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`)
+- `bunx vitest run src/test/openapi-2xx-schema-coverage.test.ts` and existing OpenAPI gate scripts must still pass (no spec changes expected).
+- Visit each new `/developer/*` route logged-out → must render 200.
+- Confirm `docs/public/**` files build into Netlify static output (no redirects).
 
-Approve to switch to build mode.
+## Open question
+
+The prompt also references `docs/guides/00-quickstart.md` etc. We already have equivalents under `docs/portal/` and live `/developer` pages. Plan reuses those instead of duplicating, to avoid two sources of truth. Confirm this consolidation approach is acceptable, or say "create the `/docs/guides/` tree verbatim" and I will do that additively as well.
