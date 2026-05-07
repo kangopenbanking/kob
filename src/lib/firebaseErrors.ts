@@ -22,6 +22,54 @@ export interface MappedFirebaseError {
   hint?: string;
   /** True if the app should automatically fall back to Vonage SMS. */
   shouldFallback: boolean;
+  /** Raw Firebase error code (e.g. 'auth/invalid-app-credential') for diagnostics. */
+  rawCode?: string;
+}
+
+/**
+ * Build a user-safe diagnostics block describing what to check, given the
+ * mapped error category and current runtime context. Safe to render in the UI.
+ */
+export function buildOTPDiagnostics(
+  mapped: MappedFirebaseError,
+  ctx: { host: string; env: string; expectedDomains: string[]; domainOk: boolean },
+): { title: string; checks: Array<{ label: string; ok: boolean | null; detail?: string }> } {
+  const checks: Array<{ label: string; ok: boolean | null; detail?: string }> = [];
+  checks.push({
+    label: `Current host "${ctx.host}" is in Firebase Authorized domains (${ctx.env})`,
+    ok: ctx.domainOk,
+    detail: ctx.domainOk ? undefined : `Add "${ctx.host}" in Firebase Console → Authentication → Settings → Authorized domains.`,
+  });
+  if (mapped.category === 'recaptcha-disabled') {
+    checks.push({
+      label: 'reCAPTCHA Enterprise site key configured for this host',
+      ok: false,
+      detail: 'Add this hostname to the reCAPTCHA Enterprise key allowlist in Google Cloud Console → Security → reCAPTCHA Enterprise.',
+    });
+    checks.push({
+      label: 'Identity Toolkit & reCAPTCHA Enterprise APIs enabled',
+      ok: null,
+      detail: 'Verify both APIs are enabled in Google Cloud Console → APIs & Services.',
+    });
+  }
+  if (mapped.category === 'billing-required') {
+    checks.push({
+      label: 'Firebase project on Blaze plan',
+      ok: false,
+      detail: 'Phone Auth SMS requires the Blaze (pay-as-you-go) plan.',
+    });
+  }
+  if (mapped.category === 'provider-disabled') {
+    checks.push({
+      label: 'Phone provider enabled in Firebase Auth',
+      ok: false,
+      detail: 'Firebase Console → Authentication → Sign-in method → Phone → Enable.',
+    });
+  }
+  return {
+    title: mapped.userMessage,
+    checks,
+  };
 }
 
 export function mapFirebaseAuthError(err: any): MappedFirebaseError {
