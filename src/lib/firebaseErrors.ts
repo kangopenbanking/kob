@@ -98,7 +98,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
     return {
       category: 'recaptcha-disabled',
       userMessage: 'Phone verification is temporarily unavailable.',
-      hint: 'reCAPTCHA Enterprise is not enabled or the site key is missing. Switching to SMS fallback…',
+      hint: 'reCAPTCHA v2 Invisible could not load. If a reCAPTCHA Enterprise key is still bound in Firebase Auth settings, unlink it. Switching to SMS fallback…',
       shouldFallback: true,
       rawCode: code || undefined,
     };
