@@ -16,6 +16,9 @@
 //   /developer/sandbox
 //   /developer/guides/sdks
 //   /developer/changelog
+//   /developer/learn
+//   /developer/sdk-examples
+//   /developer/connectors/mode-selection
 //   /openapi.json
 //   /openapi.yaml
 //   /openapi-sandbox.json
@@ -190,6 +193,10 @@ const MobileIntegration = lazy(() => import("./pages/developer/MobileIntegration
 const WebhooksGuide = lazy(() => import("./pages/developer/WebhooksGuide"));
 const CodeExamples = lazy(() => import("./pages/developer/CodeExamples"));
 const SDKsPage = lazy(() => import("./pages/developer/SDKsPage"));
+// PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT (Order P1, P6, P9)
+const SdkExamplesHub = lazy(() => import("./pages/developer/SdkExamplesHub"));
+const LearningPath = lazy(() => import("./pages/developer/LearningPath"));
+const ConnectorModeSelection = lazy(() => import("./pages/developer/ConnectorModeSelection"));
 const SdkLibraryPage = lazy(() => import("./pages/developer/SdkLibraryPage"));
 const ApiTesting = lazy(() => import("./pages/developer/ApiTesting"));
 const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
@@ -1128,6 +1135,10 @@ function App() {
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (ORDER P1, P4, P9) */}
               <Route path="install" element={<SdkInstallPage />} />
               <Route path="guides/sdk-versioning" element={<SdkVersionPinning />} />
+              {/* PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT (Order P1, P6, P9) */}
+              <Route path="learn" element={<LearningPath />} />
+              <Route path="sdk-examples" element={<SdkExamplesHub />} />
+              <Route path="connectors/mode-selection" element={<ConnectorModeSelection />} />
               <Route path="guides/pagination-examples" element={<PaginationExamples />} />
               <Route path="webhook-simulator" element={<WebhookEventSimulator />} />
               <Route path="idempotency-playground" element={<IdempotencyPlayground />} />
