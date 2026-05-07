@@ -42,14 +42,14 @@ export function buildOTPDiagnostics(
   });
   if (mapped.category === 'recaptcha-disabled') {
     checks.push({
-      label: 'reCAPTCHA Enterprise site key configured for this host',
+      label: 'reCAPTCHA v2 Invisible active (no Enterprise key bound)',
       ok: false,
-      detail: 'Add this hostname to the reCAPTCHA Enterprise key allowlist in Google Cloud Console → Security → reCAPTCHA Enterprise.',
+      detail: 'In Firebase Console → Authentication → Settings → reCAPTCHA Enterprise, unlink any site key so the SDK falls back to the free v2 Invisible widget.',
     });
     checks.push({
-      label: 'Identity Toolkit & reCAPTCHA Enterprise APIs enabled',
+      label: 'Identity Toolkit API enabled',
       ok: null,
-      detail: 'Verify both APIs are enabled in Google Cloud Console → APIs & Services.',
+      detail: 'Verify identitytoolkit.googleapis.com is enabled in Google Cloud Console → APIs & Services.',
     });
   }
   if (mapped.category === 'billing-required') {
@@ -98,7 +98,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
     return {
       category: 'recaptcha-disabled',
       userMessage: 'Phone verification is temporarily unavailable.',
-      hint: 'reCAPTCHA Enterprise is not enabled or the site key is missing. Switching to SMS fallback…',
+      hint: 'reCAPTCHA v2 Invisible could not load. If a reCAPTCHA Enterprise key is still bound in Firebase Auth settings, unlink it. Switching to SMS fallback…',
       shouldFallback: true,
       rawCode: code || undefined,
     };
