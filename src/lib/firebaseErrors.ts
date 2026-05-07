@@ -22,6 +22,54 @@ export interface MappedFirebaseError {
   hint?: string;
   /** True if the app should automatically fall back to Vonage SMS. */
   shouldFallback: boolean;
+  /** Raw Firebase error code (e.g. 'auth/invalid-app-credential') for diagnostics. */
+  rawCode?: string;
+}
+
+/**
+ * Build a user-safe diagnostics block describing what to check, given the
+ * mapped error category and current runtime context. Safe to render in the UI.
+ */
+export function buildOTPDiagnostics(
+  mapped: MappedFirebaseError,
+  ctx: { host: string; env: string; expectedDomains: string[]; domainOk: boolean },
+): { title: string; checks: Array<{ label: string; ok: boolean | null; detail?: string }> } {
+  const checks: Array<{ label: string; ok: boolean | null; detail?: string }> = [];
+  checks.push({
+    label: `Current host "${ctx.host}" is in Firebase Authorized domains (${ctx.env})`,
+    ok: ctx.domainOk,
+    detail: ctx.domainOk ? undefined : `Add "${ctx.host}" in Firebase Console → Authentication → Settings → Authorized domains.`,
+  });
+  if (mapped.category === 'recaptcha-disabled') {
+    checks.push({
+      label: 'reCAPTCHA Enterprise site key configured for this host',
+      ok: false,
+      detail: 'Add this hostname to the reCAPTCHA Enterprise key allowlist in Google Cloud Console → Security → reCAPTCHA Enterprise.',
+    });
+    checks.push({
+      label: 'Identity Toolkit & reCAPTCHA Enterprise APIs enabled',
+      ok: null,
+      detail: 'Verify both APIs are enabled in Google Cloud Console → APIs & Services.',
+    });
+  }
+  if (mapped.category === 'billing-required') {
+    checks.push({
+      label: 'Firebase project on Blaze plan',
+      ok: false,
+      detail: 'Phone Auth SMS requires the Blaze (pay-as-you-go) plan.',
+    });
+  }
+  if (mapped.category === 'provider-disabled') {
+    checks.push({
+      label: 'Phone provider enabled in Firebase Auth',
+      ok: false,
+      detail: 'Firebase Console → Authentication → Sign-in method → Phone → Enable.',
+    });
+  }
+  return {
+    title: mapped.userMessage,
+    checks,
+  };
 }
 
 export function mapFirebaseAuthError(err: any): MappedFirebaseError {
@@ -35,6 +83,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'This domain is not authorized for phone sign-in.',
       hint: 'The current website address must be added in Firebase Console → Authentication → Settings → Authorized domains. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -51,6 +100,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification is temporarily unavailable.',
       hint: 'reCAPTCHA Enterprise is not enabled or the site key is missing. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -61,6 +111,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification is temporarily unavailable.',
       hint: 'Firebase Blaze plan billing must be active to send SMS via Phone Auth. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -71,6 +122,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone sign-in is disabled for this project.',
       hint: 'Enable Phone provider in Firebase Console → Authentication → Sign-in method. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -88,6 +140,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification service is temporarily unreachable.',
       hint: 'Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -97,6 +150,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'invalid-phone',
       userMessage: 'Invalid phone number. Please check the format (e.g. +237 6XX XXX XXX).',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/too-many-requests') {
@@ -104,6 +158,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'too-many-requests',
       userMessage: 'Too many attempts on this number. Please wait a few minutes and try again.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/invalid-verification-code') {
@@ -111,6 +166,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'invalid-code',
       userMessage: 'Incorrect code. Please check and try again.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/code-expired') {
@@ -118,6 +174,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'expired-code',
       userMessage: 'This code has expired. Please request a new one.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
 
@@ -126,5 +183,6 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
     userMessage: err?.message || 'Verification failed. Please try again.',
     hint: 'Switching to SMS fallback…',
     shouldFallback: true,
+    rawCode: code || undefined,
   };
 }

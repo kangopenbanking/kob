@@ -5,8 +5,10 @@ import {
   setupRecaptchaVerifier,
   isFirebaseConfigured,
   checkRuntimeDomainAuthorized,
+  FIREBASE_ENV,
 } from '@/lib/firebase';
-import { mapFirebaseAuthError, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
+import { mapFirebaseAuthError, buildOTPDiagnostics, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
+import { isFirebaseOnly } from '@/lib/otpProviderConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -47,6 +49,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [error, setError] = useState<string | null>(null);
   const [errorCategory, setErrorCategory] = useState<FirebaseErrorCategory | null>(null);
   const [errorHint, setErrorHint] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof buildOTPDiagnostics> | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
@@ -123,12 +126,25 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     } catch (err: any) {
       console.error('Firebase sendOTP error:', err);
       const mapped = mapFirebaseAuthError(err);
+      const dom = checkRuntimeDomainAuthorized();
+      const diag = buildOTPDiagnostics(mapped, {
+        host: dom.host,
+        env: FIREBASE_ENV,
+        expectedDomains: dom.expected,
+        domainOk: dom.ok,
+      });
       setErrorCategory(mapped.category);
       setErrorHint(mapped.hint || null);
+      setDiagnostics(diag);
 
-      if (!mapped.shouldFallback) {
-        setError(mapped.userMessage);
-        toast.error(mapped.userMessage);
+      const firebaseOnly = isFirebaseOnly();
+
+      if (!mapped.shouldFallback || firebaseOnly) {
+        const finalMsg = firebaseOnly
+          ? `${mapped.userMessage} (Firebase-only mode — fallback disabled)`
+          : mapped.userMessage;
+        setError(finalMsg);
+        toast.error(finalMsg, mapped.hint ? { description: mapped.hint } : undefined);
       } else {
         // Show the specific cause then auto-fallback.
         toast.message(mapped.userMessage, { description: mapped.hint });
@@ -214,6 +230,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setError(null);
     setErrorCategory(null);
     setErrorHint(null);
+    setDiagnostics(null);
     setLoading(false);
     setProvider('firebase');
     confirmationRef.current = null;
@@ -223,5 +240,5 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, errorCategory, errorHint, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, sendOTP, verifyOTP, reset };
 }
