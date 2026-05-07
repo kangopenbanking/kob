@@ -28,6 +28,11 @@ const FIREBASE_FALLBACK_CODES = new Set([
   'auth/quota-exceeded',
   'auth/operation-not-allowed',
   'auth/web-storage-unsupported',
+  'auth/missing-app-credential',
+  'auth/invalid-app-credential',
+  'auth/argument-error',
+  'auth/unknown',
+  'auth/timeout',
 ]);
 
 function shouldFallback(err: any): boolean {
@@ -173,15 +178,16 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
           },
         });
         if (fnErr) throw fnErr;
-        if (!data?.success) throw new Error(data?.error || 'Verification failed');
+        if (!data?.success) throw new Error(data?.error || data?.message || 'Verification failed');
 
-        if (data.session?.access_token && data.session?.refresh_token) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-          });
-          if (sessionError) throw sessionError;
+        if (!data.session?.access_token || !data.session?.refresh_token) {
+          throw new Error('Verification succeeded but session could not be created. Please try logging in again.');
         }
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        if (sessionError) throw sessionError;
         toast.success('Verified successfully!');
         return true;
       }
