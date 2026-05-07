@@ -5,8 +5,10 @@ import {
   setupRecaptchaVerifier,
   isFirebaseConfigured,
   checkRuntimeDomainAuthorized,
+  FIREBASE_ENV,
 } from '@/lib/firebase';
-import { mapFirebaseAuthError, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
+import { mapFirebaseAuthError, buildOTPDiagnostics, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
+import { isFirebaseOnly } from '@/lib/otpProviderConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
