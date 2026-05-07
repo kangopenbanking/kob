@@ -1,6 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { signInWithPhoneNumber, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
-import { getFirebaseAuth, setupRecaptchaVerifier, isFirebaseConfigured } from '@/lib/firebase';
+import {
+  getFirebaseAuth,
+  setupRecaptchaVerifier,
+  isFirebaseConfigured,
+  checkRuntimeDomainAuthorized,
+} from '@/lib/firebase';
+import { mapFirebaseAuthError, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,40 +14,10 @@ export type FirebaseOTPStep = 'phone' | 'otp' | 'verifying';
 export type OTPProvider = 'firebase' | 'vonage';
 
 export interface UseFirebasePhoneAuthOptions {
-  /** Defaults to 'login'. Use 'signup' to create the account on verify (requires fullName). */
   otpType?: 'login' | 'signup';
-  /** Required when otpType='signup' on the Vonage fallback path. */
   fullName?: string;
-  /** Optional PIN to set on signup. */
   pinCode?: string;
-  /** Country dial code (e.g. '+237'). */
   countryCode?: string;
-}
-
-// Firebase error codes that warrant an automatic fallback to Vonage SMS.
-const FIREBASE_FALLBACK_CODES = new Set([
-  'auth/internal-error',
-  'auth/network-request-failed',
-  'auth/captcha-check-failed',
-  'auth/app-not-authorized',
-  'auth/billing-not-enabled',
-  'auth/quota-exceeded',
-  'auth/operation-not-allowed',
-  'auth/web-storage-unsupported',
-  'auth/missing-app-credential',
-  'auth/invalid-app-credential',
-  'auth/argument-error',
-  'auth/unknown',
-  'auth/timeout',
-]);
-
-function shouldFallback(err: any): boolean {
-  if (!err) return false;
-  if (FIREBASE_FALLBACK_CODES.has(err.code)) return true;
-  const msg = String(err?.message || '').toLowerCase();
-  // 503 / Enterprise misconfig surfaces as "error-code:-39" or generic 503
-  if (msg.includes('503') || msg.includes('error-code:-39') || msg.includes('recaptcha')) return true;
-  return false;
 }
 
 async function autoSolveCaptcha(): Promise<string | null> {
@@ -69,6 +45,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [step, setStep] = useState<FirebaseOTPStep>('phone');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCategory, setErrorCategory] = useState<FirebaseErrorCategory | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
@@ -108,6 +86,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     phoneRef.current = phoneNumber;
     setLoading(true);
     setError(null);
+    setErrorCategory(null);
+    setErrorHint(null);
 
     // If Firebase isn't configured at all, go straight to Vonage.
     if (!isFirebaseConfigured) {
@@ -118,6 +98,9 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       }
       return;
     }
+
+    // Pre-flight: warn about unauthorized domain (non-blocking).
+    checkRuntimeDomainAuthorized();
 
     try {
       if (recaptchaRef.current) {
@@ -136,23 +119,21 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       confirmationRef.current = confirmation;
       setProvider('firebase');
       setStep('otp');
-      toast.success('Verification code sent!');
+      toast.success('Verification code sent.');
     } catch (err: any) {
       console.error('Firebase sendOTP error:', err);
+      const mapped = mapFirebaseAuthError(err);
+      setErrorCategory(mapped.category);
+      setErrorHint(mapped.hint || null);
 
-      // Hard user-input errors — do NOT fallback, surface clearly.
-      if (err.code === 'auth/invalid-phone-number') {
-        const m = 'Invalid phone number format.';
-        setError(m); toast.error(m);
-      } else if (err.code === 'auth/too-many-requests') {
-        const m = 'Too many attempts on this number. Please try again later.';
-        setError(m); toast.error(m);
-      } else if (shouldFallback(err)) {
-        toast.message('Phone verification provider unavailable — switching to SMS fallback…');
-        await sendViaVonage(phoneNumber);
+      if (!mapped.shouldFallback) {
+        setError(mapped.userMessage);
+        toast.error(mapped.userMessage);
       } else {
-        const m = err.message || 'Failed to send verification code';
-        setError(m); toast.error(m);
+        // Show the specific cause then auto-fallback.
+        toast.message(mapped.userMessage, { description: mapped.hint });
+        const ok = await sendViaVonage(phoneNumber);
+        if (!ok) setError(mapped.userMessage);
       }
     } finally {
       setLoading(false);
@@ -216,12 +197,12 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       return true;
     } catch (err: any) {
       console.error('verifyOTP error:', err);
-      const msg = err.code === 'auth/invalid-verification-code'
-        ? 'Invalid code. Please try again.'
-        : err.message || 'Verification failed';
-      setError(msg);
+      const mapped = mapFirebaseAuthError(err);
+      setError(mapped.userMessage);
+      setErrorCategory(mapped.category);
+      setErrorHint(mapped.hint || null);
       setStep('otp');
-      toast.error(msg);
+      toast.error(mapped.userMessage, mapped.hint ? { description: mapped.hint } : undefined);
       return false;
     } finally {
       setLoading(false);
@@ -231,6 +212,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const reset = useCallback(() => {
     setStep('phone');
     setError(null);
+    setErrorCategory(null);
+    setErrorHint(null);
     setLoading(false);
     setProvider('firebase');
     confirmationRef.current = null;
@@ -240,5 +223,5 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, provider, sendOTP, verifyOTP, reset };
 }

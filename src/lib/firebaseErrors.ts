@@ -1,0 +1,130 @@
+/**
+ * Translate Firebase Auth errors into user-friendly messages and a
+ * machine-readable category the UI can act on (e.g. show a banner).
+ */
+export type FirebaseErrorCategory =
+  | 'invalid-phone'
+  | 'too-many-requests'
+  | 'unauthorized-domain'
+  | 'recaptcha-disabled'
+  | 'billing-required'
+  | 'network'
+  | 'provider-disabled'
+  | 'invalid-code'
+  | 'expired-code'
+  | 'unknown';
+
+export interface MappedFirebaseError {
+  category: FirebaseErrorCategory;
+  /** Short message safe to show in toast / inline error. */
+  userMessage: string;
+  /** Longer hint shown in the fallback banner. */
+  hint?: string;
+  /** True if the app should automatically fall back to Vonage SMS. */
+  shouldFallback: boolean;
+}
+
+export function mapFirebaseAuthError(err: any): MappedFirebaseError {
+  const code = String(err?.code || '').toLowerCase();
+  const msg = String(err?.message || '').toLowerCase();
+
+  // Domain not authorized in Firebase Console
+  if (code === 'auth/unauthorized-domain' || msg.includes('unauthorized-domain') || msg.includes('not authorized')) {
+    return {
+      category: 'unauthorized-domain',
+      userMessage: 'This domain is not authorized for phone sign-in.',
+      hint: 'The current website address must be added in Firebase Console → Authentication → Settings → Authorized domains. Switching to SMS fallback…',
+      shouldFallback: true,
+    };
+  }
+
+  // reCAPTCHA Enterprise not enabled / misconfigured
+  if (
+    code === 'auth/captcha-check-failed' ||
+    code === 'auth/missing-app-credential' ||
+    code === 'auth/invalid-app-credential' ||
+    msg.includes('recaptcha') ||
+    msg.includes('error-code:-39')
+  ) {
+    return {
+      category: 'recaptcha-disabled',
+      userMessage: 'Phone verification is temporarily unavailable.',
+      hint: 'reCAPTCHA Enterprise is not enabled or the site key is missing. Switching to SMS fallback…',
+      shouldFallback: true,
+    };
+  }
+
+  // Billing / Blaze plan not active
+  if (code === 'auth/billing-not-enabled' || msg.includes('billing')) {
+    return {
+      category: 'billing-required',
+      userMessage: 'Phone verification is temporarily unavailable.',
+      hint: 'Firebase Blaze plan billing must be active to send SMS via Phone Auth. Switching to SMS fallback…',
+      shouldFallback: true,
+    };
+  }
+
+  // Provider disabled
+  if (code === 'auth/operation-not-allowed') {
+    return {
+      category: 'provider-disabled',
+      userMessage: 'Phone sign-in is disabled for this project.',
+      hint: 'Enable Phone provider in Firebase Console → Authentication → Sign-in method. Switching to SMS fallback…',
+      shouldFallback: true,
+    };
+  }
+
+  // Network / transient
+  if (
+    code === 'auth/network-request-failed' ||
+    code === 'auth/internal-error' ||
+    code === 'auth/timeout' ||
+    code === 'auth/quota-exceeded' ||
+    msg.includes('503') ||
+    msg.includes('network')
+  ) {
+    return {
+      category: 'network',
+      userMessage: 'Phone verification service is temporarily unreachable.',
+      hint: 'Switching to SMS fallback…',
+      shouldFallback: true,
+    };
+  }
+
+  // Hard user errors — do NOT fallback
+  if (code === 'auth/invalid-phone-number') {
+    return {
+      category: 'invalid-phone',
+      userMessage: 'Invalid phone number. Please check the format (e.g. +237 6XX XXX XXX).',
+      shouldFallback: false,
+    };
+  }
+  if (code === 'auth/too-many-requests') {
+    return {
+      category: 'too-many-requests',
+      userMessage: 'Too many attempts on this number. Please wait a few minutes and try again.',
+      shouldFallback: false,
+    };
+  }
+  if (code === 'auth/invalid-verification-code') {
+    return {
+      category: 'invalid-code',
+      userMessage: 'Incorrect code. Please check and try again.',
+      shouldFallback: false,
+    };
+  }
+  if (code === 'auth/code-expired') {
+    return {
+      category: 'expired-code',
+      userMessage: 'This code has expired. Please request a new one.',
+      shouldFallback: false,
+    };
+  }
+
+  return {
+    category: 'unknown',
+    userMessage: err?.message || 'Verification failed. Please try again.',
+    hint: 'Switching to SMS fallback…',
+    shouldFallback: true,
+  };
+}
