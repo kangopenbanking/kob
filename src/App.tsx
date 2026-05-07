@@ -190,6 +190,10 @@ const MobileIntegration = lazy(() => import("./pages/developer/MobileIntegration
 const WebhooksGuide = lazy(() => import("./pages/developer/WebhooksGuide"));
 const CodeExamples = lazy(() => import("./pages/developer/CodeExamples"));
 const SDKsPage = lazy(() => import("./pages/developer/SDKsPage"));
+// PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT (Order P1, P6, P9)
+const SdkExamplesHub = lazy(() => import("./pages/developer/SdkExamplesHub"));
+const LearningPath = lazy(() => import("./pages/developer/LearningPath"));
+const ConnectorModeSelection = lazy(() => import("./pages/developer/ConnectorModeSelection"));
 const SdkLibraryPage = lazy(() => import("./pages/developer/SdkLibraryPage"));
 const ApiTesting = lazy(() => import("./pages/developer/ApiTesting"));
 const ApiExplorer = lazy(() => import("./pages/developer/ApiExplorer"));
