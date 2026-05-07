@@ -126,12 +126,25 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     } catch (err: any) {
       console.error('Firebase sendOTP error:', err);
       const mapped = mapFirebaseAuthError(err);
+      const dom = checkRuntimeDomainAuthorized();
+      const diag = buildOTPDiagnostics(mapped, {
+        host: dom.host,
+        env: FIREBASE_ENV,
+        expectedDomains: dom.expected,
+        domainOk: dom.ok,
+      });
       setErrorCategory(mapped.category);
       setErrorHint(mapped.hint || null);
+      setDiagnostics(diag);
 
-      if (!mapped.shouldFallback) {
-        setError(mapped.userMessage);
-        toast.error(mapped.userMessage);
+      const firebaseOnly = isFirebaseOnly();
+
+      if (!mapped.shouldFallback || firebaseOnly) {
+        const finalMsg = firebaseOnly
+          ? `${mapped.userMessage} (Firebase-only mode — fallback disabled)`
+          : mapped.userMessage;
+        setError(finalMsg);
+        toast.error(finalMsg, mapped.hint ? { description: mapped.hint } : undefined);
       } else {
         // Show the specific cause then auto-fallback.
         toast.message(mapped.userMessage, { description: mapped.hint });
