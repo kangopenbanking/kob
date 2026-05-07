@@ -80,29 +80,27 @@ function checkPhoneProvider(cfg) {
   }
 }
 
-// 4. reCAPTCHA Enterprise key allowlist (optional, requires GCP token)
-async function checkRecaptchaKey() {
-  if (!siteKey) {
-    warn.push('RECAPTCHA_ENTERPRISE_SITE_KEY not provided — skipping key allowlist check');
-    return;
-  }
-  if (!gcpToken) {
-    warn.push('GCP_ACCESS_TOKEN not provided — cannot validate reCAPTCHA Enterprise key allowlist');
-    return;
-  }
-  const url = `https://recaptchaenterprise.googleapis.com/v1/projects/${gcpProject}/keys/${siteKey}`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${gcpToken}` } });
-  const body = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    fail.push(`reCAPTCHA Enterprise key lookup failed: HTTP ${r.status} — ${body?.error?.message || 'unknown'}`);
-    return;
-  }
-  const allowed = body?.webSettings?.allowedDomains || [];
-  const missing = expectedDomains.filter((d) => !allowed.includes(d));
-  if (missing.length) {
-    fail.push(`reCAPTCHA Enterprise key allowlist missing: ${missing.join(', ')}. Add them in GCP Console → Security → reCAPTCHA Enterprise → key.`);
+// 4. reCAPTCHA v2 Invisible mode check.
+//    We use v2 Invisible (free, no GCP allowlist). Validate that NO
+//    Enterprise key is bound in Firebase Auth — having one forces the SDK
+//    onto the Enterprise path and breaks v2 Invisible.
+async function checkRecaptchaMode(cfg) {
+  if (!cfg) return;
+  const enterpriseKey = cfg?.recaptchaConfig?.recaptchaEnterpriseConfig?.siteKey
+    || cfg?.recaptcha_config?.recaptcha_enterprise_config?.site_key
+    || cfg?.recaptchaEnterpriseSiteKey
+    || null;
+  if (enterpriseKey) {
+    fail.push(
+      `A reCAPTCHA Enterprise site key (${enterpriseKey}) is bound to Firebase Auth. ` +
+      `This project uses reCAPTCHA v2 Invisible — unlink it in ` +
+      `Firebase Console → Authentication → Settings → reCAPTCHA Enterprise.`
+    );
   } else {
-    ok.push('All expected domains present in reCAPTCHA Enterprise key allowlist');
+    ok.push('reCAPTCHA v2 Invisible mode active (no Enterprise key bound)');
+  }
+  if (siteKey || gcpToken) {
+    warn.push('RECAPTCHA_ENTERPRISE_SITE_KEY / GCP_ACCESS_TOKEN set but project uses v2 Invisible — ignoring.');
   }
 }
 
