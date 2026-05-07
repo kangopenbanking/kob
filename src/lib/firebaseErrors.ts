@@ -83,6 +83,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'This domain is not authorized for phone sign-in.',
       hint: 'The current website address must be added in Firebase Console → Authentication → Settings → Authorized domains. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -99,6 +100,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification is temporarily unavailable.',
       hint: 'reCAPTCHA Enterprise is not enabled or the site key is missing. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -109,6 +111,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification is temporarily unavailable.',
       hint: 'Firebase Blaze plan billing must be active to send SMS via Phone Auth. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -119,6 +122,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone sign-in is disabled for this project.',
       hint: 'Enable Phone provider in Firebase Console → Authentication → Sign-in method. Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -136,6 +140,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       userMessage: 'Phone verification service is temporarily unreachable.',
       hint: 'Switching to SMS fallback…',
       shouldFallback: true,
+      rawCode: code || undefined,
     };
   }
 
@@ -145,6 +150,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'invalid-phone',
       userMessage: 'Invalid phone number. Please check the format (e.g. +237 6XX XXX XXX).',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/too-many-requests') {
@@ -152,6 +158,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'too-many-requests',
       userMessage: 'Too many attempts on this number. Please wait a few minutes and try again.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/invalid-verification-code') {
@@ -159,6 +166,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'invalid-code',
       userMessage: 'Incorrect code. Please check and try again.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
   if (code === 'auth/code-expired') {
@@ -166,6 +174,7 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
       category: 'expired-code',
       userMessage: 'This code has expired. Please request a new one.',
       shouldFallback: false,
+      rawCode: code || undefined,
     };
   }
 
@@ -174,6 +183,6 @@ export function mapFirebaseAuthError(err: any): MappedFirebaseError {
     userMessage: err?.message || 'Verification failed. Please try again.',
     hint: 'Switching to SMS fallback…',
     shouldFallback: true,
-      rawCode: code || undefined,
+    rawCode: code || undefined,
   };
 }
