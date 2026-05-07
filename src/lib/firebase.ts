@@ -110,13 +110,28 @@ export const firebaseAuth = new Proxy({} as Auth, {
   },
 });
 
-// Setup invisible reCAPTCHA verifier
+/**
+ * Setup reCAPTCHA v2 Invisible verifier.
+ *
+ * NOTE: We intentionally use **reCAPTCHA v2 Invisible** (the free, silent
+ * widget that runs without any Google Cloud allowlist), NOT reCAPTCHA
+ * Enterprise. The Firebase Web SDK serves v2 Invisible automatically when
+ * no Enterprise site key is registered for the project in
+ * Firebase Console → Authentication → Settings → reCAPTCHA Enterprise.
+ *
+ * If you previously configured an Enterprise key, unlink it there to fall
+ * back to v2 Invisible. The only domain list that matters for v2 Invisible
+ * is **Firebase Authorized domains**.
+ */
 export function setupRecaptchaVerifier(containerId: string = 'recaptcha-container'): RecaptchaVerifier {
   const auth = getFirebaseAuth();
   const verifier = new RecaptchaVerifier(auth, containerId, {
     size: 'invisible',
     callback: () => {
-      // reCAPTCHA solved
+      // v2 Invisible solved silently
+    },
+    'expired-callback': () => {
+      // token expired before submit — caller will re-render on next sendOTP
     },
   });
   return verifier;
