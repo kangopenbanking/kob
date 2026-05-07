@@ -230,6 +230,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setError(null);
     setErrorCategory(null);
     setErrorHint(null);
+    setDiagnostics(null);
     setLoading(false);
     setProvider('firebase');
     confirmationRef.current = null;
@@ -239,5 +240,5 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, errorCategory, errorHint, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, sendOTP, verifyOTP, reset };
 }
