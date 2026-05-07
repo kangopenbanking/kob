@@ -182,7 +182,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
 
   // OTP verification (registration)
-  const firebasePhone = useFirebasePhoneAuth();
+  const firebasePhone = useFirebasePhoneAuth({ otpType: 'login', countryCode: loginCountryCode });
   const [regOtpCode, setRegOtpCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpVerified, setRegOtpVerified] = useState(false);
