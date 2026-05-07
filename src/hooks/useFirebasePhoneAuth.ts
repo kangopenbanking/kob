@@ -1,6 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { signInWithPhoneNumber, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
-import { getFirebaseAuth, setupRecaptchaVerifier, isFirebaseConfigured } from '@/lib/firebase';
+import {
+  getFirebaseAuth,
+  setupRecaptchaVerifier,
+  isFirebaseConfigured,
+  checkRuntimeDomainAuthorized,
+} from '@/lib/firebase';
+import { mapFirebaseAuthError, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,40 +14,10 @@ export type FirebaseOTPStep = 'phone' | 'otp' | 'verifying';
 export type OTPProvider = 'firebase' | 'vonage';
 
 export interface UseFirebasePhoneAuthOptions {
-  /** Defaults to 'login'. Use 'signup' to create the account on verify (requires fullName). */
   otpType?: 'login' | 'signup';
-  /** Required when otpType='signup' on the Vonage fallback path. */
   fullName?: string;
-  /** Optional PIN to set on signup. */
   pinCode?: string;
-  /** Country dial code (e.g. '+237'). */
   countryCode?: string;
-}
-
-// Firebase error codes that warrant an automatic fallback to Vonage SMS.
-const FIREBASE_FALLBACK_CODES = new Set([
-  'auth/internal-error',
-  'auth/network-request-failed',
-  'auth/captcha-check-failed',
-  'auth/app-not-authorized',
-  'auth/billing-not-enabled',
-  'auth/quota-exceeded',
-  'auth/operation-not-allowed',
-  'auth/web-storage-unsupported',
-  'auth/missing-app-credential',
-  'auth/invalid-app-credential',
-  'auth/argument-error',
-  'auth/unknown',
-  'auth/timeout',
-]);
-
-function shouldFallback(err: any): boolean {
-  if (!err) return false;
-  if (FIREBASE_FALLBACK_CODES.has(err.code)) return true;
-  const msg = String(err?.message || '').toLowerCase();
-  // 503 / Enterprise misconfig surfaces as "error-code:-39" or generic 503
-  if (msg.includes('503') || msg.includes('error-code:-39') || msg.includes('recaptcha')) return true;
-  return false;
 }
 
 async function autoSolveCaptcha(): Promise<string | null> {
