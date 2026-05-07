@@ -16,6 +16,9 @@
 //   /developer/sandbox
 //   /developer/guides/sdks
 //   /developer/changelog
+//   /developer/learn
+//   /developer/sdk-examples
+//   /developer/connectors/mode-selection
 //   /openapi.json
 //   /openapi.yaml
 //   /openapi-sandbox.json
