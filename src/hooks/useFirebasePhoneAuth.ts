@@ -28,6 +28,11 @@ const FIREBASE_FALLBACK_CODES = new Set([
   'auth/quota-exceeded',
   'auth/operation-not-allowed',
   'auth/web-storage-unsupported',
+  'auth/missing-app-credential',
+  'auth/invalid-app-credential',
+  'auth/argument-error',
+  'auth/unknown',
+  'auth/timeout',
 ]);
 
 function shouldFallback(err: any): boolean {
