@@ -1132,6 +1132,10 @@ function App() {
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (ORDER P1, P4, P9) */}
               <Route path="install" element={<SdkInstallPage />} />
               <Route path="guides/sdk-versioning" element={<SdkVersionPinning />} />
+              {/* PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT (Order P1, P6, P9) */}
+              <Route path="learn" element={<LearningPath />} />
+              <Route path="sdk-examples" element={<SdkExamplesHub />} />
+              <Route path="connectors/mode-selection" element={<ConnectorModeSelection />} />
               <Route path="guides/pagination-examples" element={<PaginationExamples />} />
               <Route path="webhook-simulator" element={<WebhookEventSimulator />} />
               <Route path="idempotency-playground" element={<IdempotencyPlayground />} />
