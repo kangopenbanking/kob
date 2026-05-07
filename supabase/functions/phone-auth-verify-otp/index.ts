@@ -288,11 +288,39 @@ Deno.serve(async (req) => {
       })
       .eq('id', otpRecord.id);
 
+    // Mint a real session for the verified user (matches phone-auth-pin-login flow)
+    let session: any = null;
+    try {
+      const userId = authData?.user?.id;
+      let userEmail = authData?.user?.email as string | undefined;
+      if (userId && !userEmail) {
+        const { data: kangRow } = await supabase
+          .from('profiles').select('kang_id').eq('id', userId).maybeSingle();
+        const kangId = (kangRow as any)?.kang_id as string | undefined;
+        userEmail = kangId ? `${kangId.toLowerCase()}@kang.id` : `${userId}@kang.id`;
+      }
+      if (userEmail) {
+        const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+          type: 'magiclink', email: userEmail,
+        });
+        if (!linkError && linkData?.properties?.hashed_token) {
+          const { data: sessionData, error: sessErr } = await supabase.auth.verifyOtp({
+            token_hash: linkData.properties.hashed_token,
+            type: 'magiclink',
+          });
+          if (!sessErr) session = sessionData.session;
+        }
+      }
+    } catch (e) {
+      console.warn('Session bootstrap failed (non-blocking):', e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         message: `OTP verified successfully for ${otp_type}`,
         user: authData?.user,
+        session,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
