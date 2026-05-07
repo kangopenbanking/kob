@@ -49,6 +49,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [error, setError] = useState<string | null>(null);
   const [errorCategory, setErrorCategory] = useState<FirebaseErrorCategory | null>(null);
   const [errorHint, setErrorHint] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof buildOTPDiagnostics> | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
