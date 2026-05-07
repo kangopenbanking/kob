@@ -108,7 +108,7 @@ async function checkRecaptchaMode(cfg) {
   const cfg = await checkIdentityToolkit();
   checkAuthorizedDomains(cfg);
   checkPhoneProvider(cfg);
-  await checkRecaptchaKey();
+  await checkRecaptchaMode(cfg);
 
   console.log('\n=== Firebase OTP Preflight Report ===');
   ok.forEach((m) => console.log(`  PASS  ${m}`));
