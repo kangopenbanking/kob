@@ -86,6 +86,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     phoneRef.current = phoneNumber;
     setLoading(true);
     setError(null);
+    setErrorCategory(null);
+    setErrorHint(null);
 
     // If Firebase isn't configured at all, go straight to Vonage.
     if (!isFirebaseConfigured) {
@@ -96,6 +98,9 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       }
       return;
     }
+
+    // Pre-flight: warn about unauthorized domain (non-blocking).
+    checkRuntimeDomainAuthorized();
 
     try {
       if (recaptchaRef.current) {
@@ -114,23 +119,21 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       confirmationRef.current = confirmation;
       setProvider('firebase');
       setStep('otp');
-      toast.success('Verification code sent!');
+      toast.success('Verification code sent.');
     } catch (err: any) {
       console.error('Firebase sendOTP error:', err);
+      const mapped = mapFirebaseAuthError(err);
+      setErrorCategory(mapped.category);
+      setErrorHint(mapped.hint || null);
 
-      // Hard user-input errors — do NOT fallback, surface clearly.
-      if (err.code === 'auth/invalid-phone-number') {
-        const m = 'Invalid phone number format.';
-        setError(m); toast.error(m);
-      } else if (err.code === 'auth/too-many-requests') {
-        const m = 'Too many attempts on this number. Please try again later.';
-        setError(m); toast.error(m);
-      } else if (shouldFallback(err)) {
-        toast.message('Phone verification provider unavailable — switching to SMS fallback…');
-        await sendViaVonage(phoneNumber);
+      if (!mapped.shouldFallback) {
+        setError(mapped.userMessage);
+        toast.error(mapped.userMessage);
       } else {
-        const m = err.message || 'Failed to send verification code';
-        setError(m); toast.error(m);
+        // Show the specific cause then auto-fallback.
+        toast.message(mapped.userMessage, { description: mapped.hint });
+        const ok = await sendViaVonage(phoneNumber);
+        if (!ok) setError(mapped.userMessage);
       }
     } finally {
       setLoading(false);
