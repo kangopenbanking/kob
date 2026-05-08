@@ -1061,6 +1061,9 @@ function App() {
               <Route path="api/disputes" element={<DisputesReference />} />
               <Route path="api/exports" element={<ExportsReference />} />
               <Route path="api/risk-audit" element={<RiskAuditReference />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2, P4, P6, P9) */}
+              <Route path="api/issuing" element={<IssuingReference />} />
+              <Route path="issuing" element={<Navigate to="/developer/api/issuing" replace />} />
               <Route path="gateway/quickstart" element={<GatewayQuickstart />} />
               <Route path="gateway/charges" element={<GatewayChargesGuide />} />
               <Route path="gateway/payouts" element={<GatewayPayoutsGuide />} />
