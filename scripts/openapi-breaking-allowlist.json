@@ -1,0 +1,11 @@
+{
+  "_comment": "Grandfathered breaking-change baseline. Each entry pins a (kind, element) tuple that existed BEFORE this gate was added. New breaks not on this list MUST be declared in public/changelog.json (breaking_changes: true + named in highlights/breaking) AND require a major-version bump (Standing Order 6). Adding new entries to this file requires Guardian sign-off — it is NOT a place to silence regressions.",
+  "since_baseline_version": "4.27.3",
+  "allowed": [
+    { "kind_prefix": "response_code_removed", "element_prefix": "POST /v1/flutterwave/" },
+    { "kind_prefix": "response_code_removed", "element_prefix": "GET /v1/flutterwave/" },
+    { "kind_prefix": "response_code_removed", "element_prefix": "POST /v1/mobile-money/" },
+    { "kind_prefix": "response_code_removed", "element_prefix": "POST /v1/standards/swift/" },
+    { "kind_prefix": "response_code_removed", "element_prefix": "POST /v1/stripe/" }
+  ]
+}
