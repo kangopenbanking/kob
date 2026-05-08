@@ -431,6 +431,8 @@ serve(async (req) => {
       case "fund":              return await fundOrWithdraw(supabase, ctx, body, "fund");
       case "withdraw":          return await fundOrWithdraw(supabase, ctx, body, "withdraw");
       case "transactions":      return await getCardTxns(supabase, ctx, body);
+      case "get-card":          return await getCard(supabase, ctx, body);
+      case "reveal-card":       return await revealCard(supabase, ctx, body, req);
       default:                  return err("card_validation_failed", `unknown action: ${action}`, 422);
     }
   } catch (e) {
