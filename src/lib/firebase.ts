@@ -123,15 +123,23 @@ export const firebaseAuth = new Proxy({} as Auth, {
  * back to v2 Invisible. The only domain list that matters for v2 Invisible
  * is **Firebase Authorized domains**.
  */
-export function setupRecaptchaVerifier(containerId: string = 'recaptcha-container'): RecaptchaVerifier {
+export interface RecaptchaVerifierCallbacks {
+  onSolved?: (token: string) => void;
+  onExpired?: () => void;
+}
+
+export function setupRecaptchaVerifier(
+  containerId: string = 'recaptcha-container',
+  cb: RecaptchaVerifierCallbacks = {},
+): RecaptchaVerifier {
   const auth = getFirebaseAuth();
   const verifier = new RecaptchaVerifier(auth, containerId, {
     size: 'invisible',
-    callback: () => {
-      // v2 Invisible solved silently
+    callback: (token: string) => {
+      cb.onSolved?.(token);
     },
     'expired-callback': () => {
-      // token expired before submit — caller will re-render on next sendOTP
+      cb.onExpired?.();
     },
   });
   return verifier;

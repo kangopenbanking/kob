@@ -15033,6 +15033,42 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_provider_settings: {
+        Row: {
+          created_at: string
+          environment: string
+          firebase_enabled: boolean
+          id: string
+          notes: string | null
+          role_scope: string
+          sms_fallback_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          firebase_enabled?: boolean
+          id?: string
+          notes?: string | null
+          role_scope?: string
+          sms_fallback_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          firebase_enabled?: boolean
+          id?: string
+          notes?: string | null
+          role_scope?: string
+          sms_fallback_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       overdraft_score_factors: {
         Row: {
           account_overdraft_profile_id: string

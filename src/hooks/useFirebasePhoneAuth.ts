@@ -8,7 +8,7 @@ import {
   FIREBASE_ENV,
 } from '@/lib/firebase';
 import { mapFirebaseAuthError, buildOTPDiagnostics, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
-import { isFirebaseOnly } from '@/lib/otpProviderConfig';
+import { isFirebaseOnly, resolveOTPSettings } from '@/lib/otpProviderConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -51,9 +51,11 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [errorHint, setErrorHint] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof buildOTPDiagnostics> | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
+  const [autoResendCount, setAutoResendCount] = useState(0);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const phoneRef = useRef<string>('');
+  const submittedRef = useRef<boolean>(false);
   const optsRef = useRef<UseFirebasePhoneAuthOptions>(options);
   optsRef.current = options;
 
@@ -87,18 +89,24 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
 
   const sendOTP = useCallback(async (phoneNumber: string) => {
     phoneRef.current = phoneNumber;
+    submittedRef.current = false;
     setLoading(true);
     setError(null);
     setErrorCategory(null);
     setErrorHint(null);
 
-    // If Firebase isn't configured at all, go straight to Vonage.
-    if (!isFirebaseConfigured) {
+    const resolved = resolveOTPSettings();
+
+    // Admin/operator says Firebase is OFF — go straight to fallback (if allowed).
+    if (!resolved.firebase_enabled || !isFirebaseConfigured) {
       try {
-        await sendViaVonage(phoneNumber);
-      } finally {
-        setLoading(false);
-      }
+        if (resolved.sms_fallback_enabled) {
+          await sendViaVonage(phoneNumber);
+        } else {
+          const m = 'Phone verification is currently disabled by the administrator.';
+          setError(m); toast.error(m);
+        }
+      } finally { setLoading(false); }
       return;
     }
 
@@ -113,7 +121,22 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       const container = document.getElementById('recaptcha-container');
       if (container) container.innerHTML = '';
 
-      recaptchaRef.current = setupRecaptchaVerifier();
+      recaptchaRef.current = setupRecaptchaVerifier('recaptcha-container', {
+        onExpired: () => {
+          // The invisible token expired before the user submitted the code.
+          // If we have not yet received an OTP submission and we have not
+          // already retried 3 times, automatically re-issue the verification.
+          if (submittedRef.current) return;
+          setAutoResendCount((n) => {
+            if (n >= 2) return n;
+            const next = n + 1;
+            toast.message('Security check expired — re-sending verification code…');
+            // Defer to break out of the verifier callback frame.
+            setTimeout(() => { void sendOTP(phoneRef.current); }, 250);
+            return next;
+          });
+        },
+      });
       const confirmation = await signInWithPhoneNumber(
         getFirebaseAuth(),
         phoneNumber,
@@ -137,16 +160,15 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       setErrorHint(mapped.hint || null);
       setDiagnostics(diag);
 
-      const firebaseOnly = isFirebaseOnly();
+      const firebaseOnly = isFirebaseOnly() || !resolved.sms_fallback_enabled;
 
       if (!mapped.shouldFallback || firebaseOnly) {
         const finalMsg = firebaseOnly
-          ? `${mapped.userMessage} (Firebase-only mode — fallback disabled)`
+          ? `${mapped.userMessage} (SMS fallback disabled)`
           : mapped.userMessage;
         setError(finalMsg);
         toast.error(finalMsg, mapped.hint ? { description: mapped.hint } : undefined);
       } else {
-        // Show the specific cause then auto-fallback.
         toast.message(mapped.userMessage, { description: mapped.hint });
         const ok = await sendViaVonage(phoneNumber);
         if (!ok) setError(mapped.userMessage);
@@ -157,6 +179,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   }, [sendViaVonage]);
 
   const verifyOTP = useCallback(async (code: string): Promise<boolean> => {
+    submittedRef.current = true;
     setLoading(true);
     setError(null);
     setStep('verifying');
@@ -233,6 +256,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setDiagnostics(null);
     setLoading(false);
     setProvider('firebase');
+    setAutoResendCount(0);
+    submittedRef.current = false;
     confirmationRef.current = null;
     if (recaptchaRef.current) {
       try { recaptchaRef.current.clear(); } catch (_) { /* ignore */ }
@@ -240,5 +265,5 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, autoResendCount, sendOTP, verifyOTP, reset };
 }

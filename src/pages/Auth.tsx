@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
+import { useOTPProviderSettings } from '@/hooks/useOTPProviderSettings';
+import { OTPProviderStatus } from '@/components/auth/OTPProviderStatus';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -183,6 +185,7 @@ export default function Auth() {
 
   // OTP verification (registration)
   const firebasePhone = useFirebasePhoneAuth({ otpType: 'login' });
+  useOTPProviderSettings();
   const [regOtpCode, setRegOtpCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpVerified, setRegOtpVerified] = useState(false);
@@ -779,6 +782,12 @@ export default function Auth() {
                       )}
                       {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
                         <>
+                          <OTPProviderStatus
+                            provider={firebasePhone.provider}
+                            autoResendCount={firebasePhone.autoResendCount}
+                            errorCategory={firebasePhone.errorCategory}
+                            hint={firebasePhone.errorHint}
+                          />
                           <div className="space-y-2 text-center">
                             <Label>Enter 6-Digit Code</Label>
                             <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>

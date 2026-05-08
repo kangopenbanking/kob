@@ -78,6 +78,7 @@ const Register = lazy(() => import("./pages/Register"));
 const IntegrationWorkflow = lazy(() => import("./pages/IntegrationWorkflow"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
+const OTPHealthCheck = lazy(() => import("./pages/OTPHealthCheck"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const LiveSupportPage = lazy(() => import("./pages/LiveSupportPage"));
@@ -382,6 +383,7 @@ const EmailTemplates = lazy(() => import("./pages/admin/EmailTemplates"));
 const ManagedEmailAdmin = lazy(() => import("./pages/admin/ManagedEmailAdmin"));
 const MerchantManagementAdmin = lazy(() => import("./pages/admin/MerchantManagement"));
 const AuthBrandingManager = lazy(() => import("./pages/admin/AuthBrandingManager"));
+const OTPProviderSettings = lazy(() => import("./pages/admin/OTPProviderSettings"));
 const BankingAppManagement = lazy(() => import("./pages/admin/BankingAppManagement"));
 const InstitutionAppUrls = lazy(() => import("./pages/admin/InstitutionAppUrls"));
 const HomepageHeroManager = lazy(() => import("./pages/admin/HomepageHeroManager"));
@@ -975,6 +977,7 @@ function App() {
               <Route path="merchants" element={<MerchantManagementAdmin />} />
               <Route path="merchant-wallet-oversight" element={<MerchantWalletOversight />} />
               <Route path="auth-branding" element={<AuthBrandingManager />} />
+              <Route path="otp-providers" element={<OTPProviderSettings />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
               <Route path="customer-apps" element={<CustomerAppManagement />} />
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
@@ -1407,6 +1410,7 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/auth/otp-health" element={<Layout showFooter={false}><OTPHealthCheck /></Layout>} />
             <Route path="/staff-login" element={<StaffLogin />} />
             {/* Public Live Support — no account required */}
             <Route path="/support" element={<Layout showFooter={false}><LiveSupportPage /></Layout>} />
