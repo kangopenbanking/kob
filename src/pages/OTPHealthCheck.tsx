@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, RefreshCw, AlertTriangle, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   isFirebaseConfigured,
   checkRuntimeDomainAuthorized,
@@ -146,6 +147,7 @@ export default function OTPHealthCheck() {
               Admin settings last updated {new Date(adminSettings.updated_at).toLocaleString()} for environment <strong>{adminSettings.environment}</strong>, scope <strong>{adminSettings.role_scope}</strong>.
             </div>
           )}
+          <DiagnosticsCopyPanel checks={checks} adminSettings={adminSettings} />
           <div className="flex justify-end">
             <Button variant="outline" onClick={run} disabled={running}>
               <RefreshCw className={`h-4 w-4 mr-2 ${running ? 'animate-spin' : ''}`} /> Re-run checks
@@ -153,6 +155,69 @@ export default function OTPHealthCheck() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DiagnosticsCopyPanel({
+  checks,
+  adminSettings,
+}: {
+  checks: Check[];
+  adminSettings: { environment: string; role_scope: string; firebase_enabled: boolean; sms_fallback_enabled: boolean; updated_at: string } | null;
+}) {
+  const [copied, setCopied] = useState(false);
+  const resolved = resolveOTPSettings();
+  const dom = checkRuntimeDomainAuthorized();
+  const failures = checks.filter((c) => c.state === 'fail' || c.state === 'warn');
+
+  const report = [
+    `Kang OTP Health Diagnostics`,
+    `Generated: ${new Date().toISOString()}`,
+    `Host: ${dom.host}`,
+    `Environment: ${FIREBASE_ENV}`,
+    `Domain authorized: ${dom.ok ? 'yes' : 'NO'}  (expected: ${dom.expected.join(', ')})`,
+    ``,
+    `Resolved provider mode: ${resolved.mode}`,
+    `  source:               ${resolved.source}`,
+    `  firebase_enabled:     ${resolved.firebase_enabled}`,
+    `  sms_fallback_enabled: ${resolved.sms_fallback_enabled}`,
+    `  role_scope:           ${resolved.role_scope}`,
+    ``,
+    `Admin settings row: ${adminSettings ? `${adminSettings.environment}/${adminSettings.role_scope} (firebase=${adminSettings.firebase_enabled}, sms=${adminSettings.sms_fallback_enabled}, updated ${adminSettings.updated_at})` : 'none — using defaults'}`,
+    ``,
+    `Checks (${checks.length}):`,
+    ...checks.map((c) => `  [${c.state.toUpperCase()}] ${c.label}${c.detail ? ` — ${c.detail}` : ''}`),
+    ``,
+    failures.length
+      ? `Failure summary (${failures.length}): ${failures.map((f) => f.label).join(' | ')}`
+      : `Failure summary: none`,
+  ].join('\n');
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(report);
+      setCopied(true);
+      toast.success('Diagnostics copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e: any) {
+      toast.error('Could not copy', { description: e?.message });
+    }
+  };
+
+  return (
+    <div className="rounded-md border border-border/50 bg-muted/30">
+      <div className="flex items-center justify-between p-3 border-b border-border/50">
+        <div>
+          <div className="text-sm font-medium">Support diagnostics</div>
+          <div className="text-xs text-muted-foreground">Copy this and send it to support — includes resolved provider mode and the exact failure reason.</div>
+        </div>
+        <Button variant="outline" size="sm" onClick={onCopy}>
+          {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+          {copied ? 'Copied' : 'Copy diagnostics'}
+        </Button>
+      </div>
+      <pre className="p-3 text-xs whitespace-pre-wrap break-words font-mono max-h-80 overflow-auto">{report}</pre>
     </div>
   );
 }
