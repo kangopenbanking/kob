@@ -80,6 +80,9 @@ if (cl.apiVersion !== VERSION || cl.lastUpdated !== TODAY) {
 await import('./build-changelog-index.mjs');
 await import('./build-changelog-md.mjs');
 
+// 3b. Snapshot the OpenAPI build into openapi-history/ + register manifest entry
+await import('./snapshot-openapi-history.mjs');
+
 // 4. Postman manifest + versioned + latest collection
 const manifestPath = path.join(ROOT, 'public/postman/manifest.json');
 if (fs.existsSync(manifestPath)) {
