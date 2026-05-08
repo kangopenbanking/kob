@@ -179,6 +179,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   }, [sendViaVonage]);
 
   const verifyOTP = useCallback(async (code: string): Promise<boolean> => {
+    submittedRef.current = true;
     setLoading(true);
     setError(null);
     setStep('verifying');
