@@ -466,6 +466,7 @@ const BankApiLogs = lazy(() => import("./pages/bank-dashboard/BankApiLogs"));
 const BankIssuingPage = lazy(() => import("./pages/issuing/BankIssuingPage"));
 const DeveloperIssuingPage = lazy(() => import("./pages/issuing/DeveloperIssuingPage"));
 const AdminIssuingPage = lazy(() => import("./pages/issuing/AdminIssuingPage"));
+const IssuingReference = lazy(() => import("./pages/developer/IssuingReference"));
 
 // Widgets
 const EmbeddablePaymentWidget = lazy(() => import("./pages/widgets/EmbeddablePaymentWidget"));
@@ -1061,6 +1062,9 @@ function App() {
               <Route path="api/disputes" element={<DisputesReference />} />
               <Route path="api/exports" element={<ExportsReference />} />
               <Route path="api/risk-audit" element={<RiskAuditReference />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P2, P4, P6, P9) */}
+              <Route path="api/issuing" element={<IssuingReference />} />
+              <Route path="issuing" element={<Navigate to="/developer/api/issuing" replace />} />
               <Route path="gateway/quickstart" element={<GatewayQuickstart />} />
               <Route path="gateway/charges" element={<GatewayChargesGuide />} />
               <Route path="gateway/payouts" element={<GatewayPayoutsGuide />} />
