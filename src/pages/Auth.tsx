@@ -782,6 +782,12 @@ export default function Auth() {
                       )}
                       {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
                         <>
+                          <OTPProviderStatus
+                            provider={firebasePhone.provider}
+                            autoResendCount={firebasePhone.autoResendCount}
+                            errorCategory={firebasePhone.errorCategory}
+                            hint={firebasePhone.errorHint}
+                          />
                           <div className="space-y-2 text-center">
                             <Label>Enter 6-Digit Code</Label>
                             <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>
