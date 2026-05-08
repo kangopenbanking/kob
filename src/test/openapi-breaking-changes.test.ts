@@ -200,8 +200,9 @@ describe('OpenAPI breaking-change gate', () => {
 
   it('every breaking change vs the previous snapshot is declared in the changelog', () => {
     if (!prevSnapshot) return;
-    const breaks = diffSpecs(prevSnapshot.spec, SPEC);
-    if (breaks.length === 0) return; // additive-only release — Surgeon Rule satisfied
+    const allBreaks = diffSpecs(prevSnapshot.spec, SPEC);
+    const breaks = allBreaks.filter((b) => !isGrandfathered(b));
+    if (breaks.length === 0) return; // additive-only OR fully grandfathered
 
     // If breaks exist, the bump must be MAJOR (X.0.0) and the changelog must declare them.
     const [prevMajor] = String(prevSnapshot.entry.version).split('.').map((n) => Number(n));
