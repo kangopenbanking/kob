@@ -89,18 +89,24 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
 
   const sendOTP = useCallback(async (phoneNumber: string) => {
     phoneRef.current = phoneNumber;
+    submittedRef.current = false;
     setLoading(true);
     setError(null);
     setErrorCategory(null);
     setErrorHint(null);
 
-    // If Firebase isn't configured at all, go straight to Vonage.
-    if (!isFirebaseConfigured) {
+    const resolved = resolveOTPSettings();
+
+    // Admin/operator says Firebase is OFF — go straight to fallback (if allowed).
+    if (!resolved.firebase_enabled || !isFirebaseConfigured) {
       try {
-        await sendViaVonage(phoneNumber);
-      } finally {
-        setLoading(false);
-      }
+        if (resolved.sms_fallback_enabled) {
+          await sendViaVonage(phoneNumber);
+        } else {
+          const m = 'Phone verification is currently disabled by the administrator.';
+          setError(m); toast.error(m);
+        }
+      } finally { setLoading(false); }
       return;
     }
 
@@ -115,7 +121,22 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       const container = document.getElementById('recaptcha-container');
       if (container) container.innerHTML = '';
 
-      recaptchaRef.current = setupRecaptchaVerifier();
+      recaptchaRef.current = setupRecaptchaVerifier('recaptcha-container', {
+        onExpired: () => {
+          // The invisible token expired before the user submitted the code.
+          // If we have not yet received an OTP submission and we have not
+          // already retried 3 times, automatically re-issue the verification.
+          if (submittedRef.current) return;
+          setAutoResendCount((n) => {
+            if (n >= 2) return n;
+            const next = n + 1;
+            toast.message('Security check expired — re-sending verification code…');
+            // Defer to break out of the verifier callback frame.
+            setTimeout(() => { void sendOTP(phoneRef.current); }, 250);
+            return next;
+          });
+        },
+      });
       const confirmation = await signInWithPhoneNumber(
         getFirebaseAuth(),
         phoneNumber,
@@ -139,16 +160,15 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       setErrorHint(mapped.hint || null);
       setDiagnostics(diag);
 
-      const firebaseOnly = isFirebaseOnly();
+      const firebaseOnly = isFirebaseOnly() || !resolved.sms_fallback_enabled;
 
       if (!mapped.shouldFallback || firebaseOnly) {
         const finalMsg = firebaseOnly
-          ? `${mapped.userMessage} (Firebase-only mode — fallback disabled)`
+          ? `${mapped.userMessage} (SMS fallback disabled)`
           : mapped.userMessage;
         setError(finalMsg);
         toast.error(finalMsg, mapped.hint ? { description: mapped.hint } : undefined);
       } else {
-        // Show the specific cause then auto-fallback.
         toast.message(mapped.userMessage, { description: mapped.hint });
         const ok = await sendViaVonage(phoneNumber);
         if (!ok) setError(mapped.userMessage);
