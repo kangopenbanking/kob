@@ -61,11 +61,13 @@ describe("_headers — public spec & docs are crawlable (x-robots-tag: all)", ()
     "/sitemap.xml",
     "/developer/*",
   ])("%s declares x-robots-tag: all and never noindex", (route) => {
-    // Match the route at start-of-file or after a blank line, on its own line.
-    const re = new RegExp(`(^|\\n)${route.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\n`);
-    const m = headers.match(re);
-    expect(m, `missing rule block for ${route} in public/_headers`).not.toBeNull();
-    const idx = (m!.index ?? 0) + m![1].length;
+    // Locate the rule block: the route appears on its own line at SOF or after a blank line.
+    const needle1 = `\n${route}\n`;
+    const needle2 = headers.startsWith(`${route}\n`) ? `${route}\n` : null;
+    let idx = headers.indexOf(needle1);
+    if (idx < 0 && needle2) idx = 0;
+    else if (idx >= 0) idx += 1;
+    expect(idx, `missing rule block for ${route} in public/_headers`).toBeGreaterThanOrEqual(0);
     const block = headers.slice(idx, idx + 800);
     expect(block.toLowerCase()).toContain("x-robots-tag: all");
     expect(block.toLowerCase()).not.toMatch(/x-robots-tag:\s*noindex/);
