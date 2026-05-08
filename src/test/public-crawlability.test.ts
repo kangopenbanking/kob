@@ -137,6 +137,30 @@ describe("App.tsx — /developer/* must NOT be auth-gated (Order P1)", () => {
   });
 });
 
+describe("Admin-only operational pages are hidden from crawlers", () => {
+  const robots = read("public/robots.txt");
+  const headers = read("public/_headers");
+
+  it.each([
+    "/developer/deployment-status",
+    "/developer/env-vars",
+  ])("robots.txt Disallows %s", (p) => {
+    expect(robots).toContain(`Disallow: ${p}`);
+  });
+
+  it.each([
+    "/developer/deployment-status",
+    "/developer/env-vars",
+  ])("_headers declares x-robots-tag: noindex for %s", (route) => {
+    const needle = `\n${route}\n`;
+    let idx = headers.indexOf(needle);
+    expect(idx, `missing rule block for ${route} in public/_headers`).toBeGreaterThanOrEqual(0);
+    idx += 1; // move past the leading newline
+    const block = headers.slice(idx, idx + 400);
+    expect(block.toLowerCase()).toContain("x-robots-tag: noindex");
+  });
+});
+
 describe("Public spec files exist and are valid", () => {
   it.each(PUBLIC_DOC_PATHS)("%s exists in public/", (p) => {
     const fp = path.join(root, "public", p.replace(/^\//, ""));
