@@ -8,7 +8,7 @@ import {
   FIREBASE_ENV,
 } from '@/lib/firebase';
 import { mapFirebaseAuthError, buildOTPDiagnostics, type FirebaseErrorCategory } from '@/lib/firebaseErrors';
-import { isFirebaseOnly } from '@/lib/otpProviderConfig';
+import { isFirebaseOnly, resolveOTPSettings } from '@/lib/otpProviderConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -51,9 +51,11 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [errorHint, setErrorHint] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof buildOTPDiagnostics> | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
+  const [autoResendCount, setAutoResendCount] = useState(0);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const phoneRef = useRef<string>('');
+  const submittedRef = useRef<boolean>(false);
   const optsRef = useRef<UseFirebasePhoneAuthOptions>(options);
   optsRef.current = options;
 
