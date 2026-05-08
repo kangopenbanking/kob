@@ -80,6 +80,7 @@ discover the full developer surface in one fetch.
 - [AISP reference](https://kangopenbanking.com/developer/aisp-reference)
 - [PISP reference](https://kangopenbanking.com/developer/api/pisp)
 - [Mobile money](https://kangopenbanking.com/developer/api/mobile-money)
+- [Virtual Card Issuing v2 (Kora)](https://kangopenbanking.com/developer/api/issuing): cardholders, issue/fund/withdraw, freeze/terminate, MFA-gated reveal.
 - [Beneficiaries](https://kangopenbanking.com/developer/api/beneficiaries)
 
 ## Compliance & governance
