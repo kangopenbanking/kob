@@ -1,12 +1,34 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.31.0** · Last updated: **2026-05-06**
+Current API version: **4.32.0** · Last updated: **2026-05-08**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.32.0 — 2026-05-08
+**Type:** minor · **Breaking changes:** none
+
+Virtual Card Issuing v2 release — Kora middleware for Banks and Developers.
+
+### Highlights
+- New /v1/issuing/* surface: cardholders, cards, fund/withdraw, freeze/unfreeze/terminate, transactions, reveal.
+- PCI-safe reveal endpoint requires step-up MFA; full PAN/CVV is never persisted.
+- HMAC-SHA256 webhook receiver (kora-webhook) with idempotent event ledger.
+- New Issuing console for Bank staff (/fi-portal/issuing), Developers (/developer-tools/issuing), and Admins (/admin/issuing).
+- Per-tenant RLS scoping (bank | developer | platform); admin oversight + audit log.
+- Public reference page added at /developer/api/issuing (Order P1, P6, P9).
+- New RFC 7807 error codes: card_kyc_required, card_insufficient_funds, card_provider_unavailable, card_terminated, mfa_required.
+
+### Standards & citations
+- PCI-DSS v4.0 §3.2
+- RFC 7807
+- FAPI 1.0 Adv §5.2.2
+- OWASP ASVS v4 §V2.8
 
 ---
 

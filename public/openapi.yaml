@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: "4.32.0"
+  version: 4.32.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -173,7 +173,7 @@ info:
 
     Planned maintenance windows are announced at least 72 hours in advance via the status page and registered developer
     email addresses. Current API status: https://status.kangopenbanking.com
-     | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained. | v4.29.0 (2026-05-03): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (instructed_amount, creditor_account, risk); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (8 fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset 2026-12-31); 2144 application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: 45 ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive.
+     | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained. | v4.29.0 (2026-05-03): Audit remediation. P1: PISP submission body expanded per OBIE R/W 4.0 §5.4 (instructed_amount, creditor_account, risk); 12 past-sunset endpoints marked x-retired with HTTP 410 + Sunset/Link headers per RFC 8594. P2: monetary fields coerced number→string per FAPI 1.0 Adv §5.2.2 (8 fields); webhook signature header canonical=X-KOB-Signature with X-Webhook-Signature alias; Webhook v1 endpoints deprecated, successor=/v1/webhooks/v2/endpoints (sunset 2026-12-31); 2144 application/problem+json references corrected to ProblemDetails (RFC 7807); rate-limit window_unit=per_minute declared. P3: 45 ops gained default 5XX response; SDK ecosystem unified (Java, Go added to x-sdks); currency required on interbank payment creation per ISO 20022 pacs.008; AISP list endpoints flagged x-pagination-style=cursor. Standing Orders 1, 2, 3, 6 honored — zero renames, zero removals, all changes additive. | v4.32.0 (2026-05-08): Virtual Card Issuing v2 release. Added /v1/issuing/* surface backed by Kora middleware: cardholders, cards, fund/withdraw, freeze/unfreeze/terminate, transactions, and PCI-safe reveal (step-up MFA). New tag Standards-PCI-DSS. New error codes: card_kyc_required, card_insufficient_funds, card_provider_unavailable, card_terminated, mfa_required, card_validation_failed, card_not_found. Webhook events: card.issued, card.charged, card.refunded, card.declined, card.terminated. Additive only — Standing Orders 1, 2, 4, 5, 6 preserved.
   x-changelog-url: https://kangopenbanking.com/changelog.json
   contact:
     name: Kang Open Banking Support
@@ -358,6 +358,8 @@ tags:
       url: /developer/banks/connector-runbook
   - name: Specification
     description: OpenAPI specification metadata and version diff
+  - name: Issuing
+    description: Virtual Card Issuing for Banks and Developers (Kora middleware).
 components:
   securitySchemes:
     bearerAuth:
@@ -98784,6 +98786,408 @@ paths:
                     type: string
         '404':
           description: Merchant not found or not KYB-approved.
+  /v1/issuing/cardholders:
+    post:
+      operationId: createCardholder
+      tags:
+        - Issuing
+      summary: Create a cardholder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards:
+    post:
+      operationId: issueVirtualCard
+      tags:
+        - Issuing
+      summary: Issue a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      x-versioned-since: 4.32.0
+    get:
+      operationId: listVirtualCards
+      tags:
+        - Issuing
+      summary: List virtual cards
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}:
+    get:
+      operationId: getVirtualCard
+      tags:
+        - Issuing
+      summary: Retrieve a virtual card (masked)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/fund:
+    post:
+      operationId: fundVirtualCard
+      tags:
+        - Issuing
+      summary: Fund a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/withdraw:
+    post:
+      operationId: withdrawVirtualCard
+      tags:
+        - Issuing
+      summary: Withdraw from a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/freeze:
+    post:
+      operationId: freezeVirtualCard
+      tags:
+        - Issuing
+      summary: Freeze a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/unfreeze:
+    post:
+      operationId: unfreezeVirtualCard
+      tags:
+        - Issuing
+      summary: Unfreeze a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/terminate:
+    post:
+      operationId: terminateVirtualCard
+      tags:
+        - Issuing
+      summary: Permanently terminate a virtual card
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/transactions:
+    get:
+      operationId: listVirtualCardTransactions
+      tags:
+        - Issuing
+      summary: List card transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
+  /v1/issuing/cards/{id}/reveal:
+    post:
+      operationId: revealVirtualCard
+      tags:
+        - Issuing
+      summary: Reveal full PAN/CVV (step-up MFA required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-versioned-since: 4.32.0
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
   url: https://kangopenbanking.com/developer
