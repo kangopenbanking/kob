@@ -463,6 +463,9 @@ const BankCustomerView = lazy(() => import("./pages/bank-dashboard/BankCustomerV
 const BankTransferManager = lazy(() => import("./pages/bank-dashboard/BankTransferManager"));
 const BankReports = lazy(() => import("./pages/bank-dashboard/BankReports"));
 const BankApiLogs = lazy(() => import("./pages/bank-dashboard/BankApiLogs"));
+const BankIssuingPage = lazy(() => import("./pages/issuing/BankIssuingPage"));
+const DeveloperIssuingPage = lazy(() => import("./pages/issuing/DeveloperIssuingPage"));
+const AdminIssuingPage = lazy(() => import("./pages/issuing/AdminIssuingPage"));
 
 // Widgets
 const EmbeddablePaymentWidget = lazy(() => import("./pages/widgets/EmbeddablePaymentWidget"));
