@@ -52,6 +52,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof buildOTPDiagnostics> | null>(null);
   const [provider, setProvider] = useState<OTPProvider>('firebase');
   const [autoResendCount, setAutoResendCount] = useState(0);
+  const autoResendRef = useRef(0);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const phoneRef = useRef<string>('');
@@ -124,17 +125,13 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       recaptchaRef.current = setupRecaptchaVerifier('recaptcha-container', {
         onExpired: () => {
           // The invisible token expired before the user submitted the code.
-          // If we have not yet received an OTP submission and we have not
-          // already retried 3 times, automatically re-issue the verification.
+          // Cap auto-retries at 2 (3 total send attempts) to avoid loops.
           if (submittedRef.current) return;
-          setAutoResendCount((n) => {
-            if (n >= 2) return n;
-            const next = n + 1;
-            toast.message('Security check expired — re-sending verification code…');
-            // Defer to break out of the verifier callback frame.
-            setTimeout(() => { void sendOTP(phoneRef.current); }, 250);
-            return next;
-          });
+          if (autoResendRef.current >= 2) return;
+          autoResendRef.current += 1;
+          setAutoResendCount(autoResendRef.current);
+          toast.message('Security check expired — re-sending verification code…');
+          setTimeout(() => { void sendOTP(phoneRef.current); }, 250);
         },
       });
       const confirmation = await signInWithPhoneNumber(
@@ -257,6 +254,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setLoading(false);
     setProvider('firebase');
     setAutoResendCount(0);
+    autoResendRef.current = 0;
     submittedRef.current = false;
     confirmationRef.current = null;
     if (recaptchaRef.current) {
