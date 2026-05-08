@@ -76,7 +76,9 @@ describe("_headers — public spec & docs are crawlable (x-robots-tag: all)", ()
     if (idx < 0 && needle2) idx = 0;
     else if (idx >= 0) idx += 1;
     expect(idx, `missing rule block for ${route} in public/_headers`).toBeGreaterThanOrEqual(0);
-    const block = headers.slice(idx, idx + 800);
+    // Block ends at the next route declaration (line starting with "/") or end of string.
+    const blockEnd = headers.indexOf("\n/", idx + route.length);
+    const block = headers.slice(idx, blockEnd > 0 ? blockEnd : idx + 800);
     expect(block.toLowerCase()).toContain("x-robots-tag: all");
     expect(block.toLowerCase()).not.toMatch(/x-robots-tag:\s*noindex/);
   });
