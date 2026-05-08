@@ -28,6 +28,7 @@ Allow: /developer/certificates
 Allow: /developer/examples
 Allow: /developer/sandbox
 Allow: /developer/api/
+Allow: /developer/api/issuing
 Allow: /developer/quick-start
 Allow: /developer/playground
 Allow: /developer/changelog
