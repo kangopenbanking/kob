@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
+import { useOTPProviderSettings } from '@/hooks/useOTPProviderSettings';
+import { OTPProviderStatus } from '@/components/auth/OTPProviderStatus';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -183,6 +185,7 @@ export default function Auth() {
 
   // OTP verification (registration)
   const firebasePhone = useFirebasePhoneAuth({ otpType: 'login' });
+  useOTPProviderSettings();
   const [regOtpCode, setRegOtpCode] = useState('');
   const [regOtpSent, setRegOtpSent] = useState(false);
   const [regOtpVerified, setRegOtpVerified] = useState(false);
