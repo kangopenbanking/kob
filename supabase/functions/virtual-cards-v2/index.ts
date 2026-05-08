@@ -338,6 +338,66 @@ async function getCardTxns(supabase: any, ctx: AuthCtx, p: any) {
   }
 }
 
+async function getCard(supabase: any, ctx: AuthCtx, p: any) {
+  if (!p.card_id) return err("card_validation_failed", "card_id required", 422);
+  const { data: card } = await supabase.from("virtual_cards").select("*").eq("id", p.card_id).single();
+  if (!card) return err("card_not_found", "card not found", 404);
+  if (!ctx.isAdmin && (card.tenant_type !== ctx.tenantType || card.tenant_id !== ctx.tenantId)) {
+    return err("forbidden", "not your tenant", 403);
+  }
+  return json({
+    card: {
+      id: card.id,
+      status: card.status,
+      brand: card.brand,
+      last4: card.last4,
+      exp_month: card.exp_month,
+      exp_year: card.exp_year,
+      currency: card.currency,
+      balance: String(card.balance_usd ?? 0),
+      tenant_type: card.tenant_type,
+      kora_card_id: card.kora_card_id,
+      created_at: card.created_at,
+      frozen_at: card.frozen_at,
+      terminated_at: card.terminated_at,
+    },
+  });
+}
+
+async function revealCard(supabase: any, ctx: AuthCtx, p: any, req: Request) {
+  if (!p.card_id) return err("card_validation_failed", "card_id required", 422);
+  const mfaToken = p.mfa_token || req.headers.get("x-mfa-token");
+  if (!mfaToken) return err("mfa_required", "step-up MFA token required to reveal card", 401);
+
+  const { data: card } = await supabase.from("virtual_cards").select("*").eq("id", p.card_id).single();
+  if (!card) return err("card_not_found", "card not found", 404);
+  if (!ctx.isAdmin && (card.tenant_type !== ctx.tenantType || card.tenant_id !== ctx.tenantId)) {
+    return err("forbidden", "not your tenant", 403);
+  }
+  if (card.status === "terminated") return err("card_terminated", "card is terminated", 409);
+
+  try {
+    const r = await Kora.revealCard(card.kora_card_id);
+    await audit(supabase, ctx, card.id, "card.revealed", null, { at: new Date().toISOString() }, null, req);
+    return new Response(JSON.stringify({
+      reveal: r.data,
+      expires_in_seconds: 60,
+      pci_warning: "Sensitive data — do not log or persist.",
+    }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "Pragma": "no-cache",
+      },
+    });
+  } catch (e) {
+    if (e instanceof KoraApiError) return err(e.code, e.message, e.httpStatus || 502);
+    throw e;
+  }
+}
+
 // ---------------------------------------------------------------------
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
