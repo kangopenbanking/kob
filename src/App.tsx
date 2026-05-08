@@ -463,6 +463,9 @@ const BankCustomerView = lazy(() => import("./pages/bank-dashboard/BankCustomerV
 const BankTransferManager = lazy(() => import("./pages/bank-dashboard/BankTransferManager"));
 const BankReports = lazy(() => import("./pages/bank-dashboard/BankReports"));
 const BankApiLogs = lazy(() => import("./pages/bank-dashboard/BankApiLogs"));
+const BankIssuingPage = lazy(() => import("./pages/issuing/BankIssuingPage"));
+const DeveloperIssuingPage = lazy(() => import("./pages/issuing/DeveloperIssuingPage"));
+const AdminIssuingPage = lazy(() => import("./pages/issuing/AdminIssuingPage"));
 
 // Widgets
 const EmbeddablePaymentWidget = lazy(() => import("./pages/widgets/EmbeddablePaymentWidget"));
@@ -855,6 +858,8 @@ function App() {
               <Route path="banking/transfers" element={<BankTransferManager />} />
               <Route path="banking/reports" element={<BankReports />} />
               <Route path="banking/api-logs" element={<BankApiLogs />} />
+              <Route path="banking/issuing" element={<BankIssuingPage />} />
+              <Route path="issuing" element={<BankIssuingPage />} />
               <Route path="*" element={<NestedNotFound portalName="FI Portal" homePath="/fi-portal" />} />
             </Route>
             {/* Merchant Portal Routes */}
@@ -919,6 +924,7 @@ function App() {
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
+              <Route path="issuing" element={<AdminIssuingPage />} />
               <Route path="qr-payments-audit" element={<QRPaymentsAudit />} />
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
@@ -1272,6 +1278,7 @@ function App() {
               <Route path="console" element={<ApiConsole />} />
               <Route path="certificates" element={<CertificateManagement />} />
               <Route path="api-keys" element={<ApiKeys />} />
+              <Route path="issuing" element={<DeveloperIssuingPage />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />

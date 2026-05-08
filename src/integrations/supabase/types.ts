@@ -12870,6 +12870,81 @@ export type Database = {
         }
         Relationships: []
       }
+      kora_cardholders: {
+        Row: {
+          address_city: string | null
+          address_country: string | null
+          address_line1: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          created_at: string
+          created_by: string | null
+          customer_external_id: string
+          date_of_birth: string | null
+          email: string
+          first_name: string
+          id: string
+          kora_cardholder_id: string | null
+          kyc_documents: Json
+          kyc_level: Database["public"]["Enums"]["card_kyc_level"]
+          kyc_status: string
+          last_name: string
+          metadata: Json
+          phone: string | null
+          tenant_id: string
+          tenant_type: Database["public"]["Enums"]["card_tenant_type"]
+          updated_at: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_external_id: string
+          date_of_birth?: string | null
+          email: string
+          first_name: string
+          id?: string
+          kora_cardholder_id?: string | null
+          kyc_documents?: Json
+          kyc_level?: Database["public"]["Enums"]["card_kyc_level"]
+          kyc_status?: string
+          last_name: string
+          metadata?: Json
+          phone?: string | null
+          tenant_id: string
+          tenant_type: Database["public"]["Enums"]["card_tenant_type"]
+          updated_at?: string
+        }
+        Update: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_external_id?: string
+          date_of_birth?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          kora_cardholder_id?: string | null
+          kyc_documents?: Json
+          kyc_level?: Database["public"]["Enums"]["card_kyc_level"]
+          kyc_status?: string
+          last_name?: string
+          metadata?: Json
+          phone?: string | null
+          tenant_id?: string
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kyc_verifications: {
         Row: {
           created_at: string | null
@@ -23856,48 +23931,131 @@ export type Database = {
         }
         Relationships: []
       }
+      virtual_card_audit_log: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          card_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string | null
+          ip_address: string | null
+          tenant_id: string | null
+          tenant_type: Database["public"]["Enums"]["card_tenant_type"] | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          card_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          ip_address?: string | null
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"] | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          card_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          ip_address?: string | null
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"] | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_card_audit_log_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       virtual_card_programs: {
         Row: {
+          auto_topup_enabled: boolean
           created_at: string | null
+          currency: string
           daily_spend_limit: number | null
+          default_daily_limit: number | null
+          default_monthly_limit: number | null
           id: string
           institution_id: string | null
           is_active: boolean | null
+          issuer_provider: Database["public"]["Enums"]["card_issuer_provider"]
+          kyc_required_level: Database["public"]["Enums"]["card_kyc_level"]
           max_balance: number | null
+          metadata: Json
           monthly_fee: number | null
           monthly_spend_limit: number | null
           program_description: string | null
           program_name: string
+          tenant_id: string | null
+          tenant_type: Database["public"]["Enums"]["card_tenant_type"]
           transaction_fee_fixed: number | null
           transaction_fee_percentage: number | null
           updated_at: string | null
         }
         Insert: {
+          auto_topup_enabled?: boolean
           created_at?: string | null
+          currency?: string
           daily_spend_limit?: number | null
+          default_daily_limit?: number | null
+          default_monthly_limit?: number | null
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          issuer_provider?: Database["public"]["Enums"]["card_issuer_provider"]
+          kyc_required_level?: Database["public"]["Enums"]["card_kyc_level"]
           max_balance?: number | null
+          metadata?: Json
           monthly_fee?: number | null
           monthly_spend_limit?: number | null
           program_description?: string | null
           program_name: string
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"]
           transaction_fee_fixed?: number | null
           transaction_fee_percentage?: number | null
           updated_at?: string | null
         }
         Update: {
+          auto_topup_enabled?: boolean
           created_at?: string | null
+          currency?: string
           daily_spend_limit?: number | null
+          default_daily_limit?: number | null
+          default_monthly_limit?: number | null
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          issuer_provider?: Database["public"]["Enums"]["card_issuer_provider"]
+          kyc_required_level?: Database["public"]["Enums"]["card_kyc_level"]
           max_balance?: number | null
+          metadata?: Json
           monthly_fee?: number | null
           monthly_spend_limit?: number | null
           program_description?: string | null
           program_name?: string
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"]
           transaction_fee_fixed?: number | null
           transaction_fee_percentage?: number | null
           updated_at?: string | null
@@ -23912,6 +24070,53 @@ export type Database = {
           },
         ]
       }
+      virtual_card_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          provider: Database["public"]["Enums"]["card_issuer_provider"]
+          received_at: string
+          related_card_id: string | null
+          signature_verified: boolean
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider: Database["public"]["Enums"]["card_issuer_provider"]
+          received_at?: string
+          related_card_id?: string | null
+          signature_verified?: boolean
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider?: Database["public"]["Enums"]["card_issuer_provider"]
+          received_at?: string
+          related_card_id?: string | null
+          signature_verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_card_webhook_events_related_card_id_fkey"
+            columns: ["related_card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       virtual_cards: {
         Row: {
           balance_usd: number | null
@@ -23919,15 +24124,25 @@ export type Database = {
           card_name: string
           cardholder_id: string
           created_at: string | null
+          currency: string
+          customer_external_id: string | null
           exp_month: number
           exp_year: number
+          frozen_at: string | null
           id: string
+          issued_by_user_id: string | null
+          kora_card_id: string | null
+          kora_cardholder_id: string | null
           last4: string
           metadata: Json | null
           program_id: string | null
+          provider: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls: Json | null
           status: Database["public"]["Enums"]["card_status"] | null
-          stripe_card_id: string
+          stripe_card_id: string | null
+          tenant_id: string | null
+          tenant_type: Database["public"]["Enums"]["card_tenant_type"]
+          terminated_at: string | null
           updated_at: string | null
           user_id: string
         }
@@ -23937,15 +24152,25 @@ export type Database = {
           card_name: string
           cardholder_id: string
           created_at?: string | null
+          currency?: string
+          customer_external_id?: string | null
           exp_month: number
           exp_year: number
+          frozen_at?: string | null
           id?: string
+          issued_by_user_id?: string | null
+          kora_card_id?: string | null
+          kora_cardholder_id?: string | null
           last4: string
           metadata?: Json | null
           program_id?: string | null
+          provider?: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls?: Json | null
           status?: Database["public"]["Enums"]["card_status"] | null
-          stripe_card_id: string
+          stripe_card_id?: string | null
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"]
+          terminated_at?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -23955,15 +24180,25 @@ export type Database = {
           card_name?: string
           cardholder_id?: string
           created_at?: string | null
+          currency?: string
+          customer_external_id?: string | null
           exp_month?: number
           exp_year?: number
+          frozen_at?: string | null
           id?: string
+          issued_by_user_id?: string | null
+          kora_card_id?: string | null
+          kora_cardholder_id?: string | null
           last4?: string
           metadata?: Json | null
           program_id?: string | null
+          provider?: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls?: Json | null
           status?: Database["public"]["Enums"]["card_status"] | null
-          stripe_card_id?: string
+          stripe_card_id?: string | null
+          tenant_id?: string | null
+          tenant_type?: Database["public"]["Enums"]["card_tenant_type"]
+          terminated_at?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -25035,6 +25270,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_card_tenant_member: {
+        Args: {
+          _tenant_id: string
+          _tenant_type: Database["public"]["Enums"]["card_tenant_type"]
+        }
+        Returns: boolean
+      }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
         Returns: boolean
@@ -25337,7 +25579,10 @@ export type Database = {
         | "completed"
         | "failed"
         | "cancelled"
+      card_issuer_provider: "kora" | "cardyfie_legacy" | "stripe_legacy"
+      card_kyc_level: "none" | "tier1" | "tier2" | "tier3"
       card_status: "active" | "inactive" | "blocked" | "cancelled"
+      card_tenant_type: "bank" | "developer" | "platform"
       card_transaction_type: "authorization" | "capture" | "refund" | "reversal"
       consent_status:
         | "AwaitingAuthorisation"
@@ -25701,7 +25946,10 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
+      card_issuer_provider: ["kora", "cardyfie_legacy", "stripe_legacy"],
+      card_kyc_level: ["none", "tier1", "tier2", "tier3"],
       card_status: ["active", "inactive", "blocked", "cancelled"],
+      card_tenant_type: ["bank", "developer", "platform"],
       card_transaction_type: ["authorization", "capture", "refund", "reversal"],
       consent_status: [
         "AwaitingAuthorisation",
