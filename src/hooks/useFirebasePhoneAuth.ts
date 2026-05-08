@@ -267,4 +267,3 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
 
   return { step, loading, error, errorCategory, errorHint, diagnostics, provider, autoResendCount, sendOTP, verifyOTP, reset };
 }
-}
