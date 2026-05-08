@@ -145,8 +145,6 @@ const navSections = [
       { title: "Supported Countries", path: "/developer/api/countries" },
       { title: "Testing Guide", path: "/developer/api/testing" },
       { title: "API Status", path: "/developer/status" },
-      { title: "API Status", path: "/developer/status" },
-    ],
     ],
   },
   {
