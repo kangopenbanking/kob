@@ -191,4 +191,8 @@ export const Kora = {
 
   listTransactions: (cardId: string, page = 1, limit = 50) =>
     koraRequest({ method: "GET", path: `/virtual-cards/${encodeURIComponent(cardId)}/transactions`, query: { page, limit } }),
+
+  // Reveal full PAN/CVV. Kora returns clear text only via this endpoint; never persisted.
+  revealCard: (cardId: string) =>
+    koraRequest({ method: "GET", path: `/virtual-cards/${encodeURIComponent(cardId)}/reveal` }),
 };
