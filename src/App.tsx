@@ -1278,6 +1278,7 @@ function App() {
               <Route path="console" element={<ApiConsole />} />
               <Route path="certificates" element={<CertificateManagement />} />
               <Route path="api-keys" element={<ApiKeys />} />
+              <Route path="issuing" element={<DeveloperIssuingPage />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
