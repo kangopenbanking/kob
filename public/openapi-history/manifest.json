@@ -7,7 +7,7 @@
       "released_at": "2026-05-08T00:00:00Z",
       "type": "snapshot",
       "file": "openapi-4.32.0.json",
-      "notes": "Virtual Card Issuing v2 (Kora middleware). Adds /v1/issuing/* surface (cardholders, cards, fund/withdraw, freeze/unfreeze/terminate, transactions, reveal). PCI-safe reveal requires step-up MFA. New RFC 7807 card_* error codes. Fully additive."
+      "notes": "Virtual Card Issuing v2 release — Kora middleware for Banks and Developers."
     },
     {
       "version": "4.27.3",
