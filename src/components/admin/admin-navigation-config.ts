@@ -124,6 +124,8 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Load Testing", path: "/admin/load-testing", icon: Activity },
       { title: "Health Monitoring", path: "/admin/health", icon: Activity },
       { title: "AI Anomaly Detection", path: "/admin/anomaly-detection", icon: AlertTriangle },
+      { title: "Deployment Status", path: "/developer/deployment-status", icon: Activity },
+      { title: "Environment Variables", path: "/developer/env-vars", icon: FileText },
     ],
   },
   {
