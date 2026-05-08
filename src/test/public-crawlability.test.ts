@@ -96,27 +96,24 @@ describe("App.tsx — /developer/* must NOT be auth-gated (Order P1)", () => {
     expect(app).toMatch(/PERMANENT PUBLIC ROUTES/i);
   });
 
-  it("never wraps a /developer route or any developer Route element in an auth guard", () => {
-    // Heuristic: locate every <Route ...> line that mentions a /developer path
-    // OR sits inside the developer route block, and ensure its element prop
-    // does not chain ProtectedRoute / RequireAuth / AuthGuard / RequireRole.
+  it("never wraps a public /developer route in an auth guard", () => {
+    // ONLY guard the public docs surface at /developer (and /developer/...).
+    // /developer-tools and /developer-portal-admin are intentionally
+    // authenticated consoles for logged-in developers and are out of scope.
     const lines = app.split("\n");
     const offenders: string[] = [];
     for (let i = 0; i < lines.length; i += 1) {
       const l = lines[i];
-      // Only consider lines that explicitly bind a /developer path.
-      const isDeveloperPath =
-        /path=["']\/?developer/.test(l) ||
-        /path=["']developer/.test(l) ||
-        /<Route\s+path=["']\/?developer["']/.test(l);
-      if (!isDeveloperPath) continue;
-      // Look at this line and the next 2 for a guard wrapper on its element prop.
+      const isPublicDeveloperPath =
+        /path=["']\/developer(\/[^"']*)?["']/.test(l) ||
+        /<Route\s+path=["']developer["']/.test(l);
+      if (!isPublicDeveloperPath) continue;
       const window = lines.slice(i, i + 3).join(" ");
-      if (/element=\{<\s*(ProtectedRoute|RequireAuth|AuthGuard|RequireRole|RequireAdmin)/.test(window)) {
+      if (/element=\{<\s*(ProtectedRoute|RequireAuth|AuthGuard|RoleGuard|RequireRole|RequireAdmin)/.test(window)) {
         offenders.push(`L${i + 1}: ${l.trim()}`);
       }
     }
-    expect(offenders, `Auth-gated /developer routes detected:\n${offenders.join("\n")}`).toHaveLength(0);
+    expect(offenders, `Auth-gated public /developer routes detected:\n${offenders.join("\n")}`).toHaveLength(0);
   });
 
   it("never redirects from /developer to /auth", () => {
