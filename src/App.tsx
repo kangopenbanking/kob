@@ -858,6 +858,8 @@ function App() {
               <Route path="banking/transfers" element={<BankTransferManager />} />
               <Route path="banking/reports" element={<BankReports />} />
               <Route path="banking/api-logs" element={<BankApiLogs />} />
+              <Route path="banking/issuing" element={<BankIssuingPage />} />
+              <Route path="issuing" element={<BankIssuingPage />} />
               <Route path="*" element={<NestedNotFound portalName="FI Portal" homePath="/fi-portal" />} />
             </Route>
             {/* Merchant Portal Routes */}
