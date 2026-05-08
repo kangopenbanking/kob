@@ -977,6 +977,7 @@ function App() {
               <Route path="merchants" element={<MerchantManagementAdmin />} />
               <Route path="merchant-wallet-oversight" element={<MerchantWalletOversight />} />
               <Route path="auth-branding" element={<AuthBrandingManager />} />
+              <Route path="otp-providers" element={<OTPProviderSettings />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
               <Route path="customer-apps" element={<CustomerAppManagement />} />
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
