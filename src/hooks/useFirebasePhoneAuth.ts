@@ -256,6 +256,8 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setDiagnostics(null);
     setLoading(false);
     setProvider('firebase');
+    setAutoResendCount(0);
+    submittedRef.current = false;
     confirmationRef.current = null;
     if (recaptchaRef.current) {
       try { recaptchaRef.current.clear(); } catch (_) { /* ignore */ }
@@ -263,5 +265,6 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     }
   }, []);
 
-  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, sendOTP, verifyOTP, reset };
+  return { step, loading, error, errorCategory, errorHint, diagnostics, provider, autoResendCount, sendOTP, verifyOTP, reset };
+}
 }
