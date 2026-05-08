@@ -1,69 +1,181 @@
 ## Goal
 
-The uploaded "Mega Implementation Prompt" lists 18 enhancements. Most are documentation / DX additions. Many are already implemented in this codebase. The plan adds only what's missing, strictly additively (Standing Orders 1, 4 — no rename, no removal, no API surface changes).
+Re-engineer the Virtual Card feature so that **Banks/Financial Institutions and Developers** can issue and manage USD virtual cards for their customers via the **Kora (Korapay) Issue Virtual Cards API** as the underlying middleware, exposed through the Kang Open Banking API. Add full admin oversight, a bank/developer management console, end-to-end tests, and public documentation + changelog refresh.
 
-## What already exists (no work needed)
+Reference: [https://developers.korapay.com/docs/issue-virtual-cards](https://developers.korapay.com/docs/issue-virtual-cards)  
+                       [https://developers.korapay.com/docs/getting-started](https://developers.korapay.com/docs/getting-started)  
+                      
 
-- `/developer` pages: `QuickStart`, `AuthOAuth2`, `AuthMtls`, `ErrorCodesReference`, `RateLimits` + `RateLimitsGuide`, `IdempotencyGuide` + `IdempotencyPlayground`, `SDKsPage`, `SdkInstallPage`, `SdkVersionPinning`, `BankConnectorRunbook`, `CertificateManagement`.
-- Markdown sources in `docs/portal/` (quickstart, authentication, error-reference, webhooks, aisp/pisp guides) and `docs/public/quickstarts/`.
-- `public/docs/snippets/auth-and-payments.md` covers cURL + Node + webhook verification.
-- OpenAPI compliance gates already enforce ratchet/error catalog.
+---
 
-## What's missing — proposed additive work
+## Scope & Access Model
 
-### A. Multi-language SDK example pages (Standing Order P9)
+- Cardholders are **end customers of a bank or developer tenant** (not direct Kang consumers).
+- **Permitted issuers**: users with role `bank_admin`/`bank_staff` (scoped via `accounts.institution_id`) and `developer` (scoped via API key → tenant). Consumer self-service issuance is removed from the public PWA.
+- **Admin** has full oversight: programs, KYC gating, balance/limits, suspend/terminate, audit, FX, fee config.
+- All state-changing card operations must be **server-mediated via Edge Functions** with `idempotency_key` and `FOR UPDATE` row locks (per Financial Safety memory).
 
-Workspace already has Node + cURL + Python in places, but lacks consolidated **PHP, Java, Go, Ruby** runnable examples on the public docs site. Add:
+---
 
-- `docs/public/sdk-examples/typescript.md`
-- `docs/public/sdk-examples/python.md`
-- `docs/public/sdk-examples/php.md`
-- `docs/public/sdk-examples/java.md`
-- `docs/public/sdk-examples/go.md`
-- `docs/public/sdk-examples/ruby.md`
-- `docs/public/sdk-examples/index.md` (hub page)
+## Phase 1 — Discovery & Baseline (read-only)
 
-Each: init client, create charge, retry/backoff, webhook signature verification.
+1. Inventory current Cardyfie/Stripe-Issuing surfaces:
+  - DB: `virtual_cards`, `virtual_card_programs`, `card_transactions`, `card_funding_transactions`, `stripe_cardholders`, `qr_card_payments`.
+  - Edge: `supabase/functions/virtual-cards/index.ts` (267 lines, Cardyfie-based).
+  - Frontend: `src/pages/VirtualCards.tsx`, `src/components/virtual-cards/*`.
+2. Map gaps vs Kora API: cardholder creation, card issuance (USD), fund/withdraw, freeze/unfreeze, terminate, retrieve card, transactions, webhooks (`virtualcard.charge`, `virtualcard.refund`, `virtualcard.decline`, `virtualcard.termination`).
+3. Capture baseline in `docs/virtual-cards/baseline-audit.md`.
 
-Wire a new public route `src/pages/developer/SdkExamplesHub.tsx` (lists languages, links to existing `SDKsPage`) — public, no auth (Standing Order P1).
+## Phase 2 — Database Migrations (additive, ratchet rule)
 
-### B. Structured developer learning path landing
+New / extended tables:
 
-Add `src/pages/developer/LearningPath.tsx` at `/developer/learn` linking the existing pages in a 6-step flow (Quickstart → Auth → First Charge → Errors → Rate Limits → Idempotency). Pure presentational; no new endpoints.
+- `virtual_card_programs`: add `issuer_provider` (enum: `kora`, `cardyfie_legacy`), `tenant_type` (`bank`|`developer`), `tenant_id`, `currency` default `USD`, `kyc_required_level`, `default_daily_limit`, `default_monthly_limit`, `auto_topup_enabled`.
+- `virtual_cards`: add `kora_card_id`, `kora_cardholder_id`, `provider` (enum), `tenant_id`, `tenant_type`, `customer_external_id`, `issued_by_user_id`, `frozen_at`, `terminated_at`. Keep `stripe_card_id` nullable for legacy.
+- New `kora_cardholders` (mirrors stripe_cardholders) with KYC status, doc refs.
+- New `virtual_card_webhook_events` (provider, event_type, payload, signature_verified, processed_at, idempotency_key UNIQUE).
+- New `virtual_card_audit_log` (actor, action, before/after JSON, ip, ua).
+- Triggers: validation trigger ensuring `tenant_id` matches issuer's institution; `update_updated_at` triggers.
+- RLS:
+  - Bank staff: `tenant_type='bank' AND tenant_id = resolveInstitutionId(auth.uid())`.
+  - Developer: `tenant_type='developer' AND tenant_id = current_developer_tenant()`.
+  - Admin via `has_role(auth.uid(),'admin')`.
+  - End-customer view via signed token only (no direct RLS read).
+- All new SECURITY DEFINER functions: `SET search_path = public`.
 
-### C. Connector Mode selection guide
+## Phase 3 — Kora Middleware Layer (Edge Functions)
 
-Existing `BankConnectorRunbook.tsx` is operational. Add a **selection / decision** companion:
+Create `supabase/functions/_shared/kora-client.ts`:
 
-- `docs/public/connectors/mode-selection.md` (comparison matrix + decision flow for `connector_push`, `db_connector`, `connector_pull`, `file_feed`, `mq_realtime`, `hybrid`).
-- `src/pages/developer/ConnectorModeSelection.tsx` rendering it.
+- `koraRequest(method, path, body, idempotencyKey)` with HMAC signing per Kora docs, retries, 429 backoff, structured error mapping → RFC 7807 codes.
+- Webhook signature verification (`x-korapay-signature`, HMAC-SHA256 of raw body).
 
-### D. mTLS step-by-step setup guide (companion to existing AuthMtls/CertificateManagement)
+New consolidated function `virtual-cards-v2` (replaces inline Cardyfie calls). Actions:
 
-- `docs/public/security/mtls-setup.md` — openssl CSR, upload, verify, renewal cron, language client snippets.
-- Link from `AuthMtls.tsx` (no rewrite — add a "Setup walkthrough" link).
+- `create-program` (admin)
+- `create-cardholder` (bank/dev) — KYC payload
+- `issue-card` — POST `/virtual-cards`
+- `fund-card` / `withdraw-from-card` — atomic ledger debit + Kora call inside DB transaction
+- `freeze` / `unfreeze` / `terminate`
+- `get-card` (returns masked PAN, last4, exp; full PAN only via short-lived signed reveal endpoint)
+- `list-transactions` — paginated from Kora with local cache
+- `reveal-card` — issues a 60s signed URL with step-up MFA (per MFA memory)
 
-### E. SDK status / changelog page
+New `kora-webhook` function (verify_jwt=false; signature verified in code; fail-closed; idempotent on `event.id`). Updates ledger, status, emits Realtime event for UI.
 
-- `src/pages/developer/SdkStatus.tsx` at `/developer/sdks/status` listing each SDK version, support matrix, roadmap (sourced from existing `packages/sdk-*` package metadata).
+New `virtual-cards-admin` function for admin-only ops (force-terminate, refund, reissue, override limits).
 
-### F. Public route registration
+## Phase 4 — Tenant Resolution & Auth
 
-Update `src/App.tsx` (or the developer routes file) to register the new pages, keeping the `// PERMANENT PUBLIC ROUTES — DO NOT REMOVE OR REDIRECT` block intact and ensuring all new routes are unauthenticated.
+- Reuse `resolveInstitutionId` (Staff Privacy memory) for bank scoping.
+- Developer tenant resolved via `kob_api_keys` JWT claims (per API Client Governance memory).
+- Step-up MFA required for: reveal PAN, terminate, fund > threshold, withdraw.
+- All financial mutations use `idempotency_key` (UUID v4) and `FOR UPDATE` locks.
 
-## What is intentionally NOT done
+## Phase 5 — Public REST API (OpenAPI v4 → v5 minor bump)
 
-- No changes to `public/openapi.json`, `supabase/functions/*`, edge functions, schemas, or any operationId — Standing Orders 1, 2, 4.
-- No new database tables.
-- No SDK API changes; only added docs/examples.
-- Items already shipped (RateLimits, Idempotency, Errors, Quickstart) get no rewrite.
+Add under `/v1/issuing/`:
 
-## Verification
+- `POST /cardholders`, `GET /cardholders/{id}`
+- `POST /cards`, `GET /cards`, `GET /cards/{id}`
+- `POST /cards/{id}/fund`, `POST /cards/{id}/withdraw`
+- `POST /cards/{id}/freeze`, `POST /cards/{id}/unfreeze`, `POST /cards/{id}/terminate`
+- `GET /cards/{id}/transactions`
+- `POST /cards/{id}/reveal` (step-up)
+- Webhook event docs: `card.issued`, `card.charged`, `card.refunded`, `card.declined`, `card.terminated`.
 
-- `bunx vitest run src/test/openapi-2xx-schema-coverage.test.ts` and existing OpenAPI gate scripts must still pass (no spec changes expected).
-- Visit each new `/developer/*` route logged-out → must render 200.
-- Confirm `docs/public/**` files build into Netlify static output (no redirects).
+Compliance with Standing Orders 1–10:
 
-## Open question
+- Bump `info.version` minor (additive, e.g. 4.31.0 → 4.32.0).
+- New schemas referenced; no dead components.
+- Cite ISO 8583 + PCI-DSS scope reduction notes in `description`.
+- 63 RFC 7807 error codes maintained; add `card_kyc_required`, `card_insufficient_funds`, `card_provider_unavailable`, `card_terminated`.
 
-The prompt also references `docs/guides/00-quickstart.md` etc. We already have equivalents under `docs/portal/` and live `/developer` pages. Plan reuses those instead of duplicating, to avoid two sources of truth. Confirm this consolidation approach is acceptable, or say "create the `/docs/guides/` tree verbatim" and I will do that additively as well.
+## Phase 6 — Frontend
+
+### Bank/Developer Management Console (`/bank/issuing` and `/developer/issuing`)
+
+- Dashboard: cards issued, active, frozen, monthly spend, decline rate.
+- Programs tab (read-only for bank, request changes via admin workflow).
+- Cardholders list + KYC status + create.
+- Cards list with filters; card detail drawer (mask PAN, freeze/unfreeze, terminate, fund, withdraw, transactions, audit).
+- Webhook delivery viewer (read-only).
+- Built with existing shadcn/Tailwind tokens, Lucide outline icons, no gradients/emojis.
+
+### Admin Console (`/admin/issuing`)
+
+- Programs CRUD, provider toggle (kora/cardyfie_legacy), tenant assignment.
+- Global card search, force actions, refund, audit log viewer.
+- Provider health (`virtual-cards-health` preflight: Kora reachability, signature key present, webhook last-seen).
+- FX & fee configuration per program.
+
+### Removals / Migrations
+
+- Hide `/virtual-cards` consumer route behind feature flag (kept for legacy data view only).
+- Replace Cardyfie program selector with Kora-aware programs.
+
+## Phase 7 — Documentation & Changelog (Public)
+
+- New `/developer/docs/issuing` section with: overview, KYC flow, lifecycle diagram (ASCII), code examples in cURL/Node/Python (+PHP/Java/Go for quickstart) per Order P9.
+- Working sandbox examples seeded against Kora sandbox (Order P5). Smoke test added.
+- Update `/openapi.json` + `/openapi.yaml` (public, ungated — Order P4).
+- Update Postman collections (sandbox + production).
+- Changelog entry `docs/governance/CHANGELOG-v4.32.0.md` within 48h (Order P7).
+- Standards Index entry under `/developer/standards`.
+- 301 redirect any old `/docs/virtual-cards` URL (Order P2).
+
+## Phase 8 — End-to-End Testing
+
+Vitest unit tests:
+
+- `kora-client.test.ts` — signing, retry, error mapping.
+- `virtual-cards-v2.test.ts` — RBAC, idempotency, ledger atomicity.
+- `kora-webhook.test.ts` — signature verify, replay protection.
+
+Playwright E2E (`e2e/authenticated/issuing-bank-flow.spec.ts`, `issuing-developer-flow.spec.ts`, `issuing-admin-flow.spec.ts`):
+
+1. Bank staff creates cardholder → issues card → funds → simulates Kora charge webhook → sees txn → freezes → terminates.
+2. Developer issues via API key (sandbox) → asserts webhook delivered.
+3. Admin force-terminates and refunds; audit log entry visible.
+4. Reveal-PAN flow gated by step-up MFA.
+5. Negative paths: insufficient KYC, insufficient funds, frozen card decline.
+
+CI:
+
+- Add `.github/workflows/issuing-e2e.yml` running preflight (env keys present) + Playwright suite against sandbox.
+- Extend `direct-backend-guard.test.ts` to cover new endpoints.
+- Add `kora-preflight.mjs` script (mirrors `firebase-otp-preflight.mjs`).
+
+## Phase 9 — Secrets & Config
+
+Required (will request via `add_secret` once plan approved):
+
+- `KORA_PUBLIC_KEY`, `KORA_SECRET_KEY`, `KORA_ENCRYPTION_KEY`, `KORA_WEBHOOK_SECRET`, `KORA_BASE_URL` (sandbox vs live per env).
+
+## Phase 10 — Rollout
+
+1. Deploy migrations (Test) → seed Kora sandbox program.
+2. Run full E2E green.
+3. Publish docs + changelog.
+4. Feature-flag `issuing.kora_enabled` per environment via existing admin settings pattern.
+5. Publish to Live; monitor `virtual_card_webhook_events` and provider health page for 48h.
+
+---
+
+## Technical Notes
+
+- Kora returns card details in clear text only at creation; we store **only** `last4`, `brand`, `exp_month/year`, `kora_card_id`. Full PAN/CVV is **never persisted** — fetched on demand via reveal endpoint with short-lived token.
+- Currency: USD only at launch; FX from XAF/XOF wallet uses existing FX engine (zero-decimal currency memory).
+- Ledger entries tagged `card_fund`, `card_withdraw`, `card_charge`, `card_refund`, `card_fee` for reconciliation.
+- All admin destructive actions go through maker-checker (Banking Risk Operations memory).
+
+## Deliverables Checklist
+
+- Migrations + RLS
+- `kora-client.ts`, `virtual-cards-v2`, `kora-webhook`, `virtual-cards-admin`, `virtual-cards-health`
+- Bank/Developer/Admin UIs
+- OpenAPI v4.32.0 + Postman + SDK regen
+- Public docs + changelog + standards index
+- Vitest + Playwright suites + CI workflow
+- Preflight script
+- Secrets requested
