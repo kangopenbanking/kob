@@ -11,7 +11,8 @@
  *     newly published Issuing reference page.
  *   - llms.txt advertises the Issuing reference for AI crawlers.
  *   - No /developer/* route in src/App.tsx is wrapped in an auth guard
- *     (ProtectedRoute / RequireAuth / AuthGuard).
+ *     (ProtectedRoute / RequireAuth / AuthGuard) except admin-only operational
+ *     pages: /developer/deployment-status and /developer/env-vars.
  *   - No /developer page source contains a `Navigate to="/auth"` redirect.
  */
 import { describe, it, expect } from "vitest";
@@ -45,9 +46,16 @@ describe("robots.txt — public crawl rules", () => {
   ])("Allow rule present for %s", (p) => {
     expect(robots).toContain(`Allow: ${p}`);
   });
-  it("never declares Disallow on /developer or /openapi", () => {
-    expect(robots).not.toMatch(/Disallow:\s*\/developer/);
-    expect(robots).not.toMatch(/Disallow:\s*\/openapi/);
+  it("allows only known admin-only Disallow under /developer", () => {
+    const disallowed = (robots.match(/^Disallow: .*/gm) || []).filter(
+      (l) => l.startsWith("Disallow: /developer") || l.startsWith("Disallow: /openapi")
+    );
+    const allowedExceptions = [
+      "Disallow: /developer/deployment-status",
+      "Disallow: /developer/env-vars",
+    ];
+    const offenders = disallowed.filter((d) => !allowedExceptions.includes(d));
+    expect(offenders, `Unexpected Disallow rules: ${offenders.join(", ")}`).toHaveLength(0);
   });
 });
 
@@ -68,7 +76,9 @@ describe("_headers — public spec & docs are crawlable (x-robots-tag: all)", ()
     if (idx < 0 && needle2) idx = 0;
     else if (idx >= 0) idx += 1;
     expect(idx, `missing rule block for ${route} in public/_headers`).toBeGreaterThanOrEqual(0);
-    const block = headers.slice(idx, idx + 800);
+    // Block ends at the next route declaration (line starting with "/") or end of string.
+    const blockEnd = headers.indexOf("\n/", idx + route.length);
+    const block = headers.slice(idx, blockEnd > 0 ? blockEnd : idx + 800);
     expect(block.toLowerCase()).toContain("x-robots-tag: all");
     expect(block.toLowerCase()).not.toMatch(/x-robots-tag:\s*noindex/);
   });
@@ -102,6 +112,8 @@ describe("App.tsx — /developer/* must NOT be auth-gated (Order P1)", () => {
     // ONLY guard the public docs surface at /developer (and /developer/...).
     // /developer-tools and /developer-portal-admin are intentionally
     // authenticated consoles for logged-in developers and are out of scope.
+    // Admin-only operational routes are explicitly allowed exceptions.
+    const ADMIN_ONLY_DEV_PATHS = ["/developer/deployment-status", "/developer/env-vars"];
     const lines = app.split("\n");
     const offenders: string[] = [];
     for (let i = 0; i < lines.length; i += 1) {
@@ -110,6 +122,9 @@ describe("App.tsx — /developer/* must NOT be auth-gated (Order P1)", () => {
         /path=["']\/developer(\/[^"']*)?["']/.test(l) ||
         /<Route\s+path=["']developer["']/.test(l);
       if (!isPublicDeveloperPath) continue;
+      const pathMatch = l.match(/path=["'](\/developer\/[^"']*)["']/);
+      const fullPath = pathMatch ? pathMatch[1] : "";
+      if (ADMIN_ONLY_DEV_PATHS.includes(fullPath)) continue;
       const window = lines.slice(i, i + 3).join(" ");
       if (/element=\{<\s*(ProtectedRoute|RequireAuth|AuthGuard|RoleGuard|RequireRole|RequireAdmin)/.test(window)) {
         offenders.push(`L${i + 1}: ${l.trim()}`);
@@ -121,6 +136,30 @@ describe("App.tsx — /developer/* must NOT be auth-gated (Order P1)", () => {
   it("never redirects from /developer to /auth", () => {
     // Catch <Navigate to="/auth" /> placed inside a developer route element.
     expect(app).not.toMatch(/path=["']\/?developer[^"']*["'][^>]*element=\{<Navigate\s+to=["']\/auth/);
+  });
+});
+
+describe("Admin-only operational pages are hidden from crawlers", () => {
+  const robots = read("public/robots.txt");
+  const headers = read("public/_headers");
+
+  it.each([
+    "/developer/deployment-status",
+    "/developer/env-vars",
+  ])("robots.txt Disallows %s", (p) => {
+    expect(robots).toContain(`Disallow: ${p}`);
+  });
+
+  it.each([
+    "/developer/deployment-status",
+    "/developer/env-vars",
+  ])("_headers declares x-robots-tag: noindex for %s", (route) => {
+    const needle = `\n${route}\n`;
+    let idx = headers.indexOf(needle);
+    expect(idx, `missing rule block for ${route} in public/_headers`).toBeGreaterThanOrEqual(0);
+    idx += 1; // move past the leading newline
+    const block = headers.slice(idx, idx + 400);
+    expect(block.toLowerCase()).toContain("x-robots-tag: noindex");
   });
 });
 

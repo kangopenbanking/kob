@@ -38,6 +38,10 @@ Allow: /openapi.json
 Allow: /for-developers
 Allow: /api-catalog
 
+# Admin-only operational pages (not public documentation)
+Disallow: /developer/deployment-status
+Disallow: /developer/env-vars
+
 # Integration Guides
 Allow: /integrations
 Allow: /integrations/*
