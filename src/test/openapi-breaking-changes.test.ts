@@ -35,6 +35,18 @@ const MANIFEST = JSON.parse(
 const CHANGELOG = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'public/changelog.json'), 'utf8'),
 );
+const ALLOWLIST_PATH = path.join(ROOT, 'scripts/openapi-breaking-allowlist.json');
+const ALLOWLIST = fs.existsSync(ALLOWLIST_PATH)
+  ? JSON.parse(fs.readFileSync(ALLOWLIST_PATH, 'utf8'))
+  : { allowed: [] };
+
+function isGrandfathered(b) {
+  return (ALLOWLIST.allowed || []).some(
+    (rule) =>
+      b.kind.startsWith(rule.kind_prefix || '') &&
+      b.element.startsWith(rule.element_prefix || ''),
+  );
+}
 
 const HTTP_METHODS = new Set([
   'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace',
