@@ -62,9 +62,9 @@ describe('Admin OTP Provider Settings — E2E', () => {
 
   it('renders all three environments after loading from the database', async () => {
     render(<AdminOTPProviderSettings />);
-    await waitFor(() => expect(screen.getByText(/development/i)).toBeInTheDocument());
-    expect(screen.getByText(/preview/i)).toBeInTheDocument();
-    expect(screen.getByText(/production/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /Save development/i })).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /Save preview/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save production/i })).toBeInTheDocument();
     // Firebase + Vonage rows for each env (3 envs × 2 toggles = 6).
     const switches = screen.getAllByRole('switch');
     expect(switches.length).toBe(6);
@@ -73,7 +73,7 @@ describe('Admin OTP Provider Settings — E2E', () => {
 
   it('persists a Firebase OFF / Vonage ON switch via supabase update', async () => {
     render(<AdminOTPProviderSettings />);
-    await waitFor(() => expect(screen.getByText(/development/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("button", { name: /Save development/i })).toBeInTheDocument());
 
     const firebaseDev = screen.getByLabelText(/Toggle Firebase OTP for development/i);
     fireEvent.click(firebaseDev); // -> firebase_enabled: false
@@ -88,7 +88,7 @@ describe('Admin OTP Provider Settings — E2E', () => {
 
   it('Run E2E Check round-trips the saved row through the runtime path', async () => {
     render(<AdminOTPProviderSettings />);
-    await waitFor(() => expect(screen.getByText(/development/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("button", { name: /Save development/i })).toBeInTheDocument());
 
     // Flip Firebase off so the in-memory row matches what e2eRowMock returns.
     fireEvent.click(screen.getByLabelText(/Toggle Firebase OTP for development/i));
