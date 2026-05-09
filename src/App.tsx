@@ -367,6 +367,7 @@ const SpecDiff = lazy(() => import("./pages/developer/SpecDiff"));
 const IdempotencyPlayground = lazy(() => import("./pages/developer/IdempotencyPlayground"));
 const GatewayAuditLogs = lazy(() => import("./pages/admin/GatewayAuditLogs"));
 const SystemConfig = lazy(() => import("./pages/admin/SystemConfig"));
+const AdminOTPProviderSettings = lazy(() => import("./pages/admin/AdminOTPProviderSettings"));
 const WebhookManagement = lazy(() => import("./pages/admin/WebhookManagement"));
 const TransactionMonitoring = lazy(() => import("./pages/admin/TransactionMonitoring"));
 const ConsentDataManagement = lazy(() => import("./pages/admin/ConsentDataManagement"));
