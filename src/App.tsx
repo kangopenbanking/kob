@@ -933,6 +933,7 @@ function App() {
               <Route path="audit-logs" element={<AuditLogs />} />
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
               <Route path="system-config" element={<SystemConfig />} />
+              <Route path="otp-providers" element={<AdminOTPProviderSettings />} />
               <Route path="webhooks" element={<WebhookManagement />} />
               <Route path="webhooks/replay" element={<AdminWebhookReplay />} />
               <Route path="branches" element={<BranchManagement />} />
