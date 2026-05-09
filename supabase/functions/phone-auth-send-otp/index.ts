@@ -179,6 +179,29 @@ Deno.serve(async (req) => {
 
     const { phone_number, email_address, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
 
+    // Admin-managed provider toggle. Block SMS server-side when admin disabled it.
+    const env = (Deno.env.get('APP_ENV') || Deno.env.get('SUPABASE_ENV') || 'production') as
+      'development' | 'preview' | 'production';
+    const { data: providerCfg } = await supabase
+      .from('otp_provider_settings')
+      .select('firebase_enabled, sms_fallback_enabled')
+      .eq('environment', env)
+      .eq('role_scope', 'all')
+      .maybeSingle();
+    const smsAllowed = providerCfg ? providerCfg.sms_fallback_enabled !== false : true;
+    const isEmailDeliveryEarly = delivery_method === 'email';
+    if (!smsAllowed && !isEmailDeliveryEarly && (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both')) {
+      console.warn(`[phone-auth-send-otp] Vonage SMS disabled by admin for env=${env}`);
+      return new Response(
+        JSON.stringify({
+          error: 'SMS OTP is disabled by administrator for this environment',
+          error_code: 'SMS_DISABLED_BY_ADMIN',
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+
     // For email delivery, phone_number is optional; for phone delivery, phone_number is required
     const isEmailDelivery = delivery_method === 'email';
     
