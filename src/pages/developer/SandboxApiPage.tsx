@@ -30,13 +30,20 @@ const SandboxApiPage = () => {
                 fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
                 headings: { fontFamily: 'Inter, system-ui, -apple-system, sans-serif' },
               },
-              sidebar: { width: '280px' },
+              // Hide Redoc's own sidebar — the developer layout already provides nav,
+              // and the dual sidebars break responsive layout below 1280px.
+              sidebar: { width: '0' },
             },
             hideDownloadButton: false,
             expandResponses: '200,201',
             sortPropsAlphabetically: true,
             pathInMiddlePanel: true,
-            scrollYOffset: 200,
+            // Use native scrollbars so the spec scrolls inside our container
+            // instead of fighting the outer layout's overflow.
+            nativeScrollbars: true,
+            menuToggle: false,
+            scrollYOffset: 0,
+            hideHostname: false,
           },
           containerRef.current,
           () => setLoading(false),
@@ -171,7 +178,14 @@ const SandboxApiPage = () => {
         </div>
       )}
 
-      <div ref={containerRef} id="redoc-sandbox-container" data-testid="redoc-sandbox-container" />
+      <div className="w-full overflow-x-auto">
+        <div
+          ref={containerRef}
+          id="redoc-sandbox-container"
+          data-testid="redoc-sandbox-container"
+          className="min-h-[80vh] w-full"
+        />
+      </div>
     </>
   );
 };

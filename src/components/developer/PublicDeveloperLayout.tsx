@@ -82,8 +82,6 @@ const navSections = [
       { title: "Test Report", path: "/developer/test-report" },
       { title: "Bank Onboarding", path: "/developer/bank-onboarding" },
       { title: "Status", path: "/developer/status" },
-      { title: "Status", path: "/developer/status" },
-      { title: "SLA", path: "/developer/sla" },
       { title: "SLA", path: "/developer/sla" },
       { title: "Support", path: "/developer/support" },
       { title: "Access Policy", path: "/developer/access-policy" },
