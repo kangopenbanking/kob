@@ -13,6 +13,7 @@ type Scenario = "success" | "declined" | "timeout" | "dispute_opened" | "refund"
 // Resolve backend at runtime via env var (Direct Backend Mandate); keeps
 // the developer-portal source free of hard-coded *.supabase.co hosts.
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
 const SCENARIOS: { value: Scenario; label: string }[] = [
   { value: "success", label: "Successful payment" },
@@ -49,14 +50,24 @@ export function ProviderSimulatorPanel() {
       // step 1+2 happen server-side; advance UI optimistically
       await new Promise((r) => setTimeout(r, 200));
       setActiveStep(1);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-sandbox': 'true',
+      };
+      if (ANON_KEY) {
+        headers['apikey'] = ANON_KEY;
+        headers['Authorization'] = `Bearer ${ANON_KEY}`;
+      }
       const res = await fetch(`${FN_BASE}/sandbox-provider-simulator/${provider}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-sandbox": "true" },
+        headers,
         body: JSON.stringify({ scenario, amount: Number(amount), currency }),
       });
       setActiveStep(2);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "simulation_failed");
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+      if (!res.ok) throw new Error(data?.error ?? data?.detail ?? `simulation_failed (HTTP ${res.status})`);
       setActiveStep(3);
       await new Promise((r) => setTimeout(r, 200));
       setActiveStep(4);
