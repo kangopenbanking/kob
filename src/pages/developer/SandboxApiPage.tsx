@@ -178,7 +178,14 @@ const SandboxApiPage = () => {
         </div>
       )}
 
-      <div ref={containerRef} id="redoc-sandbox-container" data-testid="redoc-sandbox-container" />
+      <div className="w-full overflow-x-auto">
+        <div
+          ref={containerRef}
+          id="redoc-sandbox-container"
+          data-testid="redoc-sandbox-container"
+          className="min-h-[80vh] w-full"
+        />
+      </div>
     </>
   );
 };
