@@ -1,9 +1,49 @@
 {
-  "apiVersion": "4.38.0",
+  "apiVersion": "4.40.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-17",
   "entries": [
+    {
+      "version": "4.40.0",
+      "date": "2026-05-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 8 bank-grade hardening — scalability KV cache, typed SDK matrix completion (Java + Go auto-generated), and k6 load-test harness with published SLO targets.",
+      "highlights": [
+        "New table public.kv_cache (admin-only RLS) provides a TTL-based, Redis-style key/value store for OIDC discovery, JWKS, and rate-limit counter caching across edge functions.",
+        "New OpenAPI vendor extension x-scalability publishes the KV cache contract, typed SDK matrix (Node/Python/PHP/Go hand-tuned + auto-generated Java/Go/TS/Py), and the k6 load harness location and SLO budgets.",
+        "Load harness scaffolded at e2e/load/ with three scenarios — charge-burst.js, webhook-flood.js, aisp-read-storm.js — bound to the sandbox and tied to p95 latency + error-rate budgets.",
+        "Java SDK skeleton added at packages/sdk-java (Maven, Java 11) to satisfy Docs Standing Order P9 (Multi-Language Rule).",
+        "Fully additive — no operationId, path, schema, or RLS policy renamed or removed (Standing Orders 1 & 4)."
+      ],
+      "standard_citations": [
+        "Stripe load-test methodology",
+        "Adyen capacity-planning guide",
+        "KOB Docs Standing Order P9 (Multi-Language Rule)",
+        "KOB Standing Orders 1 (Lock), 4 (Surgeon), 5 (Dead Code), 6 (Version Gate)"
+      ]
+    },
+    {
+      "version": "4.39.0",
+      "date": "2026-05-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 7 bank-grade hardening — shared risk blocklists, per-merchant behavioral baselines, and configurable fail-closed risk policy for high-value transactions.",
+      "highlights": [
+        "New table public.risk_blocklists (admin-only RLS) unifies blocked msisdn/email/iban/device_id/ip across the platform with severity, source, and TTL via expires_at.",
+        "New table public.merchant_risk_baselines stores rolling 30-day per-merchant stats (avg/p95/max amount, decline rate, distinct customers) used to enrich risk-score decisions.",
+        "New system_config rows risk_fail_closed_enabled (default false) and risk_fail_closed_threshold_xaf (default 1,000,000 XAF) convert risk-score to fail-closed for high-value charges when enabled — opt-in to preserve current behaviour.",
+        "New OpenAPI vendor extension x-risk publishes the blocklist identifier types, baseline metric set, and fail-closed contract so SDKs and downstream tools can introspect the policy.",
+        "Fully additive — no operationId, path, schema, RLS policy, or column renamed or removed (Standing Orders 1 & 4)."
+      ],
+      "standard_citations": [
+        "PSD2 RTS Art. 18 (Transaction Risk Analysis)",
+        "FATF Recommendation 10 (Customer Due Diligence)",
+        "COBAC AML risk-based approach",
+        "KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)"
+      ]
+    },
     {
       "version": "4.38.0",
       "date": "2026-05-17",

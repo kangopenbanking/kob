@@ -1,7 +1,21 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.38.0",
+  "current": "4.40.0",
   "versions": [
+    {
+      "version": "4.40.0",
+      "released_at": "2026-05-17T20:32:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.40.0.json",
+      "notes": "Phase 8 — Scalability, DX & SDK Completeness. x-scalability vendor extension publishes the KV cache contract, typed SDK matrix (Node/Python/PHP/Go hand-tuned + TS/Py/Go/Java auto-generated), and k6 load harness SLOs."
+    },
+    {
+      "version": "4.39.0",
+      "released_at": "2026-05-17T20:31:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.39.0.json",
+      "notes": "Phase 7 — Fraud & Risk Enhancements. x-risk vendor extension publishes blocklist identifier types, merchant 30d baselines, and the configurable fail-closed threshold for high-value charges."
+    },
     {
       "version": "4.38.0",
       "released_at": "2026-05-17T20:25:00.000Z",
