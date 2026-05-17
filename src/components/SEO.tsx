@@ -26,7 +26,7 @@ export function SEO({
   const siteTitle = "Kang Open Banking";
   const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} - Unified Banking API for Cameroon`;
   const defaultDescription = "Unified Open Banking API for Cameroon's financial institutions. Connect banks, credit unions, and fintech companies with XAF-native payment gateway integration.";
-  const defaultImage = "https://kangopenbanking.com/hero-banner-kob.png";
+  const defaultImage = "https://kangopenbanking.com/images/og-social.png";
   const baseUrl = "https://kangopenbanking.com";
   
   // Generate breadcrumb structured data
