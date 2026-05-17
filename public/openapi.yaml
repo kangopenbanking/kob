@@ -20202,6 +20202,8 @@ paths:
               currency: XAF
               provider: MTN
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges?channel=mobile_money
           headers:
@@ -20227,6 +20229,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges?channel=mobile_money.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       description: >-
         **RETIRED on 2026-01-01.** This endpoint returns HTTP 410 Gone. Use `/v1/gateway/charges?channel=mobile_money`
         instead.
@@ -20353,6 +20357,8 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?channel=mobile_money
           headers:
@@ -20378,6 +20384,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?channel=mobile_money.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: >-
@@ -20468,6 +20476,8 @@ paths:
                 transaction_ref:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
@@ -20493,6 +20503,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges/{chargeId}.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       parameters:
         - name: Idempotency-Key
           in: header
@@ -20614,6 +20626,8 @@ paths:
                 bank_code:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?channel=bank_transfer
           headers:
@@ -20639,6 +20653,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?channel=bank_transfer.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: >-
@@ -20769,6 +20785,8 @@ paths:
                 narration:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?provider=flutterwave
           headers:
@@ -20794,6 +20812,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?provider=flutterwave.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: >-
@@ -20990,6 +21010,8 @@ paths:
                 bank_code:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/banks/verify-account
           headers:
@@ -21015,6 +21037,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/banks/verify-account.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: |-
@@ -21146,6 +21170,8 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges?provider=stripe
           headers:
@@ -21171,6 +21197,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges?provider=stripe.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: >-
@@ -21272,6 +21300,8 @@ paths:
                 payment_intent_id:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
@@ -21297,6 +21327,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges/{chargeId}.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: |-
@@ -24292,6 +24324,8 @@ paths:
             schema:
               type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
@@ -24317,6 +24351,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/pacs008/generate.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -24406,6 +24442,8 @@ paths:
             schema:
               type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/camt053/parse
           headers:
@@ -24431,6 +24469,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/camt053/parse.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -24531,6 +24571,8 @@ paths:
             schema:
               type: object
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
@@ -24556,6 +24598,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/pacs008/generate.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -99204,6 +99248,8 @@ paths:
           $ref: '#/components/responses/Conflict'
         '412':
           description: 'QR_009 partner_sca_evidence_missing: PSD2 RTS Art. 18 SCA attestation absent or expired.'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '502':
           description: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (user-mode debit auto-refunded).'
   /v1/merchants/qr-directory:
@@ -99377,6 +99423,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -99413,6 +99463,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -99506,6 +99560,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -99547,6 +99605,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -99588,6 +99650,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/unfreeze:
     post:
@@ -99623,6 +99689,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/terminate:
     post:
@@ -99658,6 +99728,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/transactions:
     get:
@@ -99716,6 +99790,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance
