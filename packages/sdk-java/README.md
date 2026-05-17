@@ -1,12 +1,8 @@
 # Kang Open Banking — Java SDK
 
-Skeleton package satisfying Docs Standing Order P9 (Multi-Language Rule).
+Official thin Java client for the Kang Open Banking REST API (v4.40.0+).
 
-Java 11+, Maven, OkHttp + Gson. Auto-generated typed clients are produced by
-`scripts/generate-typed-sdks.mjs` into `sdks/generated/java/`. This `packages/sdk-java`
-package is the **hand-tuned** wrapper with idiomatic helpers (OAuth2 client-credentials
-bootstrap, `Idempotency-Key` injection, HMAC-SHA256 webhook verification with 5-minute
-clock window, exponential-backoff retry honouring `Retry-After`).
+Targets **Java 11+** and uses only the standard library (`java.net.http.HttpClient`) — no external runtime dependencies.
 
 ## Install (Maven)
 
@@ -18,25 +14,39 @@ clock window, exponential-backoff retry honouring `Retry-After`).
 </dependency>
 ```
 
-## Quickstart
+## Quick start
 
 ```java
-KangClient kob = KangClient.builder()
-    .clientId(System.getenv("KANG_CLIENT_ID"))
-    .clientSecret(System.getenv("KANG_CLIENT_SECRET"))
-    .environment(Environment.SANDBOX)
-    .build();
+import com.kangopenbanking.KangClient;
+import java.util.Map;
 
-Charge charge = kob.gateway().charges().create(
-    ChargeRequest.builder()
-        .amount("50000").currency("XAF").channel("mobile_money")
-        .customerPhone("+237670000000").txRef(UUID.randomUUID().toString())
-        .build(),
-    UUID.randomUUID().toString()  // Idempotency-Key
+var client = new KangClient(
+    "https://sandbox-api.kangopenbanking.com/v1",
+    "sk_test_xxx"
 );
+
+var charge = client.post(
+    "/charges",
+    Map.of(
+        "amount", "5000",
+        "currency", "XAF",
+        "channel", "mobile_money",
+        "customer_phone", "237650000000",
+        "tx_ref", "order_001"
+    ),
+    Map.of("Idempotency-Key", java.util.UUID.randomUUID().toString())
+);
+System.out.println(charge);
 ```
 
-See the [public docs](https://kangopenbanking.com/developer) for the full Java guide.
+## Features
 
-> **Status:** Skeleton. Implementation tracks `public/openapi.json` v4.40.0 and ships
-> alongside the auto-generated typed client. Open an issue to influence the public API.
+- Bearer-token auth (publishable + secret keys, plus OAuth2 access tokens)
+- Automatic `Idempotency-Key`, `X-Request-ID`, and `X-Trace-Id` propagation
+- W3C `traceparent` support for distributed tracing
+- Exponential backoff with `Retry-After` on `429` / `5xx`
+- Webhook signature verification (HMAC-SHA256, 5-minute window)
+
+## Standards
+
+This SDK enforces the same headers and contracts as the cURL / Node / Python examples in [`/docs/public/sdk-examples`](../../docs/public/sdk-examples/). See `/developer` for the full spec.

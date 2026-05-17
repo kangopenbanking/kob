@@ -1,13 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0">
+<!--
+  Kang Open Banking — Java SDK
+  Phase 8 (Scalability & DX Completeness) — v4.40.0
+
+  Hand-tuned thin client for the Kang Open Banking REST API.
+  Targets Java 11+ (uses java.net.http.HttpClient — no external runtime deps).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>com.kangopenbanking</groupId>
   <artifactId>kangopenbanking-sdk</artifactId>
   <version>4.40.0</version>
   <packaging>jar</packaging>
+
   <name>Kang Open Banking SDK</name>
-  <description>Official Java SDK for the Kang Open Banking API (skeleton — Phase 8).</description>
+  <description>Official Java SDK for the Kang Open Banking REST API.</description>
   <url>https://kangopenbanking.com/developer</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
 
   <properties>
     <maven.compiler.source>11</maven.compiler.source>
@@ -17,14 +36,10 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>4.12.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.10.1</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
