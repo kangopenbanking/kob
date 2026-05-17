@@ -1,12 +1,34 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.35.0** · Last updated: **2026-05-17**
+Current API version: **4.36.0** · Last updated: **2026-05-17**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.36.0 — 2026-05-17
+**Type:** minor · **Breaking changes:** none
+
+Phase 5 bank-grade hardening — end-to-end distributed tracing, structured JSON logger for edge functions, and an admin SLO dashboard.
+
+### Highlights
+- Added nullable trace_id column + index to public.webhook_deliveries, gateway_charges, and safeguarding_ledger — a single request can now be followed across HTTP, charge processing, webhook delivery, and ledger posting.
+- New shared edge-function helper supabase/functions/_shared/logger.ts — structured single-line JSON logs with mandatory trace_id; accepts inbound X-Trace-Id or W3C traceparent and falls back to UUID v4.
+- X-Trace-Id response header documented on every operation (3,020 responses in production spec, 2,575 in sandbox).
+- New top-level OpenAPI vendor extension x-observability publishes the SLO targets: charge success ≥ 99.5% / webhook delivery ≥ 99.0% / charge latency p50 200ms, p95 800ms, p99 1500ms.
+- New admin page /admin/slo renders the rolling 24h SLO posture (charge success, webhook delivery, p50/p95/p99 latency).
+- Fully additive — no operationId, path, schema, RLS policy, or column was renamed or removed (Standing Orders 1 & 4).
+
+### Standards & citations
+- W3C Trace Context (traceparent header)
+- Google SRE Workbook — SLI/SLO/SLA definitions
+- OpenTelemetry Logs Data Model (structured JSON)
+- OpenAPI 3.1 vendor extensions (x-*)
+- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
 
 ---
 
