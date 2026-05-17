@@ -4058,6 +4058,240 @@
             }
           }
         }
+      },
+      "BadRequest": {
+        "description": "400 Bad Request",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorBadRequest"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "401 Unauthorized",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorUnauthorized"
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "403 Forbidden",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorForbidden"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "404 Not Found",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorNotFound"
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "409 Conflict",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorConflict"
+              }
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "422 Unprocessable Entity",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorUnprocessable"
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "500 Internal Server Error",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorServer"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "503 Service Unavailable",
+        "headers": {},
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ErrorUnavailable"
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "ErrorBadRequest": {
+        "summary": "400 Bad Request",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/invalid_request",
+          "title": "Bad Request",
+          "status": 400,
+          "code": "invalid_request",
+          "detail": "The request body failed validation. See errors[] for field-level detail.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorUnauthorized": {
+        "summary": "401 Unauthorized",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/invalid_credentials",
+          "title": "Unauthorized",
+          "status": 401,
+          "code": "invalid_credentials",
+          "detail": "Missing or invalid bearer token. Authenticate at /v1/oauth/token.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorForbidden": {
+        "summary": "403 Forbidden",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/insufficient_scope",
+          "title": "Forbidden",
+          "status": 403,
+          "code": "insufficient_scope",
+          "detail": "The access token is missing the required scope for this operation.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorNotFound": {
+        "summary": "404 Not Found",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/resource_not_found",
+          "title": "Not Found",
+          "status": 404,
+          "code": "resource_not_found",
+          "detail": "The requested resource does not exist or has been archived.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorConflict": {
+        "summary": "409 Conflict",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/idempotency_conflict",
+          "title": "Conflict",
+          "status": 409,
+          "code": "idempotency_conflict",
+          "detail": "Idempotency-Key was reused with a different request body.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorUnprocessable": {
+        "summary": "422 Unprocessable Entity",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/business_rule_violation",
+          "title": "Unprocessable Entity",
+          "status": 422,
+          "code": "business_rule_violation",
+          "detail": "The request was syntactically valid but violates a business rule (e.g. insufficient funds).",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorServer": {
+        "summary": "500 Internal Server Error",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/internal_error",
+          "title": "Internal Server Error",
+          "status": 500,
+          "code": "internal_error",
+          "detail": "An unexpected error occurred. The incident has been logged with request_id.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
+      },
+      "ErrorUnavailable": {
+        "summary": "503 Service Unavailable",
+        "value": {
+          "type": "https://docs.kangopenbanking.com/errors/service_unavailable",
+          "title": "Service Unavailable",
+          "status": 503,
+          "code": "service_unavailable",
+          "detail": "A downstream dependency is temporarily unavailable. Retry with exponential backoff.",
+          "instance": "/v1/resource/01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "request_id": "req_01HZX9TRJ4M7YQK6P3W2VBDN5K",
+          "timestamp": "2026-05-02T10:15:30Z"
+        }
       }
     }
   },
