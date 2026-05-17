@@ -158,6 +158,15 @@ export default function GettingStarted() {
         <title>Getting Started | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Make your first API call to the Kang Open Banking API in under 5 minutes. Free sandbox, no signup required. cURL, Node.js, Python, PHP, Go, and Java examples." />
         <link rel="canonical" href="https://kangopenbanking.com/developer/getting-started" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/getting-started" />
+        <meta property="og:title" content="Getting Started | Kang Open Banking Developer Docs" />
+        <meta property="og:description" content="Make your first API call in under 5 minutes. Free sandbox, no signup required." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-getting-started.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-getting-started.png" />
       </Helmet>
 
       <div className="space-y-8">

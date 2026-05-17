@@ -7,7 +7,12 @@ import { Separator } from "@/components/ui/separator";
 
 const GatewayWebhooksGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
-    <SEO title="Webhook Guide | Kang Open Banking" description="Complete webhook integration guide — setup, signature verification for all providers (HMAC + PayPal certs), retries, deduplication, and sample handlers." />
+    <SEO
+      title="Webhook Guide | Kang Open Banking"
+      description="Complete webhook integration guide — setup, signature verification for all providers (HMAC + PayPal certs), retries, deduplication, and sample handlers."
+      canonical="https://kangopenbanking.com/developer/gateway/webhooks"
+      ogImage="https://kangopenbanking.com/images/og-gateway-webhooks.png"
+    />
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Webhook Guide</h1>
