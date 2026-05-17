@@ -452,6 +452,15 @@ const ApiExplorer = () => {
           content={`Interactive API reference for Kang Open Banking. ${operations.length || "300+"} endpoints across payments, accounts, open banking and disbursements. Current version v${apiVersion}.`}
         />
         <link rel="canonical" href="https://kangopenbanking.com/developer/api-explorer" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/api-explorer" />
+        <meta property="og:title" content="API Explorer | Kang Open Banking Interactive Swagger UI" />
+        <meta property="og:description" content="Interactive Swagger UI covering every endpoint of the Kang Open Banking API. Try requests against the free sandbox." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-api-explorer.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-api-explorer.png" />
       </Helmet>
 
       <div className="min-h-screen bg-background" data-testid="api-explorer-container">

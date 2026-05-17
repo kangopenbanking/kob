@@ -7,7 +7,12 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 
 const GatewayQuickstart = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
-    <SEO title="Gateway Quickstart (10 min) | Kang Open Banking" description="Create a merchant, get API keys, accept your first payment, handle webhooks, and issue a refund — all in under 10 minutes." />
+    <SEO
+      title="Gateway Quickstart (10 min) | Kang Open Banking"
+      description="Create a merchant, get API keys, accept your first payment, handle webhooks, and issue a refund — all in under 10 minutes."
+      canonical="https://kangopenbanking.com/developer/gateway/quickstart"
+      ogImage="https://kangopenbanking.com/images/og-gateway-quickstart.png"
+    />
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Gateway Quickstart</h1>
