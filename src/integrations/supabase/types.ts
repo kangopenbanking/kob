@@ -7610,6 +7610,42 @@ export type Database = {
         }
         Relationships: []
       }
+      data_retention_policies: {
+        Row: {
+          anonymize_after_days: number | null
+          created_at: string
+          data_class: string
+          description: string | null
+          enabled: boolean
+          id: string
+          legal_basis: string
+          retention_days: number
+          updated_at: string
+        }
+        Insert: {
+          anonymize_after_days?: number | null
+          created_at?: string
+          data_class: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          legal_basis: string
+          retention_days: number
+          updated_at?: string
+        }
+        Update: {
+          anonymize_after_days?: number | null
+          created_at?: string
+          data_class?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          legal_basis?: string
+          retention_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       developer_orgs: {
         Row: {
           country: string | null
