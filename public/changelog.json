@@ -1,9 +1,31 @@
 {
-  "apiVersion": "4.33.0",
+  "apiVersion": "4.34.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-17",
   "entries": [
+    {
+      "version": "4.34.0",
+      "date": "2026-05-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 2 bank-grade hardening — per-key scope matrix on bearerAuth, webhook circuit-breaker headers, manual-replay headers, public webhook event registry.",
+      "highlights": [
+        "Added x-scopes extension to bearerAuth documenting the 12-scope per-key matrix (charges:*, payouts:*, customers:*, webhooks:*, reports:read, compliance:*, admin:*). Enforcement layer backed by new public.api_key_scopes table (additive).",
+        "Added X-Webhook-Replay, X-Webhook-Replay-Of, X-Circuit-State headers to every documented webhook event in the OpenAPI 3.1 webhooks block (additive parameters, no rename).",
+        "New table public.webhook_endpoint_health with per-endpoint circuit-breaker state (closed | half_open | open), rolling failure window, and cool-down deadline.",
+        "New permanent public page /developer/webhooks/events — canonical registry sourced from the live event-schema SSOT (Order P1, P2, P6).",
+        "Snapshot openapi-4.34.0.json published; history manifest updated.",
+        "Fully additive — no operationId, path, schema, security scheme, or RLS policy was renamed or removed (Standing Orders 1 & 4)."
+      ],
+      "standard_citations": [
+        "OAuth 2.0 Scope (RFC 6749 §3.3)",
+        "Stripe restricted-key scope model",
+        "Release It! circuit breaker pattern (Nygard, 2007)",
+        "OpenAPI 3.1 webhooks object",
+        "KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)"
+      ]
+    },
     {
       "version": "4.33.0",
       "date": "2026-05-17",
