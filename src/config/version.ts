@@ -9,7 +9,7 @@
  * this value, `public/openapi.json` info.version, and `public/changelog.json`
  * apiVersion.
  */
-export const KOB_API_VERSION = "4.33.0";
+export const KOB_API_VERSION = "4.34.0";
 export const KOB_API_VERSION_LABEL = `v${KOB_API_VERSION}`;
 
 /** Public status page URL — referenced by the developer portal status badge. */
