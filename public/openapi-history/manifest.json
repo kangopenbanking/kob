@@ -1,7 +1,21 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.36.0",
+  "current": "4.38.0",
   "versions": [
+    {
+      "version": "4.38.0",
+      "released_at": "2026-05-17T20:25:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.38.0.json",
+      "notes": "Phase 6 — Compliance & Data Retention. x-data-retention vendor extension publishes seeded retention horizons (kyc 7y, transactions 10y, consent 7y, webhooks 1y)."
+    },
+    {
+      "version": "4.37.0",
+      "released_at": "2026-05-17T20:23:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.37.0.json",
+      "notes": "Phase 4 — Payment Orchestration Layer (feature-flagged). x-payment-orchestrator vendor extension; charge_dlq + 24h idempotency_cache_extended tables."
+    },
     {
       "version": "4.36.0",
       "released_at": "2026-05-17T20:20:00.000Z",
