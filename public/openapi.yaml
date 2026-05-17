@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.32.0
+  version: 4.33.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -3655,6 +3655,37 @@ components:
       schema:
         type: string
         example: eyJpZCI6IjEyMyJ9
+    StartingAfter:
+      name: starting_after
+      in: query
+      required: false
+      description: >-
+        Cursor for pagination. Returns results immediately after the supplied object id. Mutually exclusive with
+        `ending_before`. Offset-style `offset` is also accepted for backward compatibility.
+      schema:
+        type: string
+        maxLength: 128
+    EndingBefore:
+      name: ending_before
+      in: query
+      required: false
+      description: >-
+        Cursor for pagination. Returns results immediately before the supplied object id. Mutually exclusive with
+        `starting_after`.
+      schema:
+        type: string
+        maxLength: 128
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: false
+      description: >-
+        Client-supplied correlation id (UUID v4 recommended). Echoed back in the `X-Request-ID` response header and
+        persisted across edge functions, ledger writes and outbound webhook deliveries for distributed tracing.
+      schema:
+        type: string
+        maxLength: 64
+        pattern: ^[A-Za-z0-9._-]{1,64}$
   headers:
     XFapiInteractionIdResponse:
       description: >-
@@ -4131,6 +4162,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/health:
     get:
       tags:
@@ -4285,6 +4318,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/ready:
     get:
       tags:
@@ -4430,6 +4465,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/system-health:
     get:
       tags:
@@ -4664,6 +4701,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/oauth/authorize:
     get:
       tags:
@@ -4772,6 +4811,7 @@ paths:
           description: JSON object requesting specific claims in the ID Token or UserInfo response (OIDC Core Section 5.5).
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '302':
           description: Redirect to authorization page
@@ -5255,6 +5295,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/oauth/introspect:
     post:
       tags:
@@ -5511,6 +5553,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/oauth/par:
     post:
       tags:
@@ -5529,6 +5573,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -5805,6 +5850,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -6320,6 +6366,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/jwks:
     get:
       tags:
@@ -6473,6 +6521,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/phone/send-otp:
     post:
       tags:
@@ -6724,6 +6774,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/phone/verify-otp:
     post:
       tags:
@@ -6985,6 +7037,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/phone/pin-login:
     post:
       tags:
@@ -7248,6 +7302,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/pin/set:
     post:
       tags:
@@ -7499,6 +7555,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/pin/verify:
     post:
       tags:
@@ -7750,6 +7808,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/auth/password/reset-with-pin:
     post:
       tags:
@@ -8006,6 +8066,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/security/captcha/generate:
     post:
       tags:
@@ -8250,6 +8312,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/security/captcha/verify:
     post:
       tags:
@@ -8503,6 +8567,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/security/sca/initiate:
     post:
       tags:
@@ -8765,6 +8831,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/security/sca/verify:
     post:
       tags:
@@ -9019,6 +9087,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/certificates:
     post:
       tags:
@@ -9037,6 +9107,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -9291,6 +9362,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Certificates list
@@ -9537,6 +9609,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -9807,6 +9880,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -10133,6 +10207,7 @@ paths:
           schema:
             type: string
             example: acc_01HZQ...
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Accounts list
@@ -10390,6 +10465,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Account details
@@ -10658,6 +10734,7 @@ paths:
             minimum: 0
             default: 0
           description: Page offset (additive — omitting preserves legacy behaviour).
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Account balances
@@ -10968,6 +11045,7 @@ paths:
           schema:
             type: string
             example: acc_01HZQ...
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Transactions list
@@ -11251,6 +11329,7 @@ paths:
             minimum: 0
             default: 0
           description: Page offset (additive — omitting preserves legacy behaviour).
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Beneficiaries list
@@ -11519,6 +11598,7 @@ paths:
             minimum: 0
             default: 0
           description: Page offset (additive — omitting preserves legacy behaviour).
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Standing orders list
@@ -11786,6 +11866,7 @@ paths:
             minimum: 0
             default: 0
           description: Page offset (additive — omitting preserves legacy behaviour).
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Direct debits list
@@ -12035,6 +12116,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -12328,6 +12410,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -12613,6 +12696,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -12904,6 +12988,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment details
@@ -13153,6 +13238,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Consent authorized
@@ -13393,6 +13479,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -13684,6 +13771,7 @@ paths:
           schema:
             type: string
             example: acc_01HZQ...
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Consents list
@@ -14161,6 +14249,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
     post:
       tags:
         - Credit Scoring
@@ -14326,6 +14416,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Calculate credit score.
 
@@ -14589,6 +14680,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Simulate score impact.
 
@@ -14836,6 +14928,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Get improvement tips.
 
@@ -15072,6 +15165,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Generate credit report.
 
@@ -15320,6 +15414,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List loan products.
 
@@ -15399,6 +15494,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -15844,6 +15940,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Calculate loan terms.
 
@@ -15937,6 +16034,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -16198,6 +16296,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -16453,6 +16552,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Repayment schedule
@@ -16703,6 +16803,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '201':
           description: Schedule generated
@@ -16958,6 +17059,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -17392,6 +17494,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List savings products.
 
@@ -17471,6 +17574,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -17748,6 +17852,7 @@ paths:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
         - $ref: '#/components/parameters/XFapiInteractionId'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Paginated list of savings accounts
@@ -17932,6 +18037,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -18206,6 +18312,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -18473,6 +18580,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -18740,6 +18848,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Ledger accounts (chart of accounts)
@@ -18985,6 +19096,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -19274,6 +19386,7 @@ paths:
           schema:
             type: string
             format: date
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Ledger balance
@@ -19519,6 +19632,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -19790,6 +19904,9 @@ paths:
           in: query
           schema:
             type: string
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Journal entries
@@ -20037,6 +20154,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -20084,6 +20202,8 @@ paths:
               currency: XAF
               provider: MTN
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges?channel=mobile_money
           headers:
@@ -20109,6 +20229,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges?channel=mobile_money.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       description: >-
         **RETIRED on 2026-01-01.** This endpoint returns HTTP 410 Gone. Use `/v1/gateway/charges?channel=mobile_money`
         instead.
@@ -20198,6 +20320,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -20234,6 +20357,8 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?channel=mobile_money
           headers:
@@ -20259,6 +20384,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?channel=mobile_money.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: >-
@@ -20349,6 +20476,8 @@ paths:
                 transaction_ref:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
@@ -20374,6 +20503,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges/{chargeId}.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       parameters:
         - name: Idempotency-Key
           in: header
@@ -20385,6 +20516,7 @@ paths:
             type: string
             format: uuid
             example: b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12
+        - $ref: '#/components/parameters/RequestId'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: |-
@@ -20471,6 +20603,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -20493,6 +20626,8 @@ paths:
                 bank_code:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?channel=bank_transfer
           headers:
@@ -20518,6 +20653,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?channel=bank_transfer.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: >-
@@ -20606,6 +20743,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -20647,6 +20785,8 @@ paths:
                 narration:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/payouts?provider=flutterwave
           headers:
@@ -20672,6 +20812,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/payouts?provider=flutterwave.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: >-
@@ -20759,6 +20901,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '410':
           description: Gone — use /v1/banks/directory
@@ -20867,6 +21010,8 @@ paths:
                 bank_code:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/banks/verify-account
           headers:
@@ -20892,6 +21037,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/banks/verify-account.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: flutterwave)'
       description: |-
@@ -20908,6 +21055,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -20988,6 +21136,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -21021,6 +21170,8 @@ paths:
                   default: XAF
                   description: ISO 4217 currency code. Default is XAF (Central African CFA Franc).
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges?provider=stripe
           headers:
@@ -21046,6 +21197,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges?provider=stripe.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: >-
@@ -21134,6 +21287,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -21146,6 +21300,8 @@ paths:
                 payment_intent_id:
                   type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/gateway/charges/{chargeId}
           headers:
@@ -21171,6 +21327,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2026-01-01. Use /v1/gateway/charges/{chargeId}.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: stripe)'
       description: |-
@@ -21256,6 +21414,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -21533,6 +21692,7 @@ paths:
           schema:
             type: string
             example: USD
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Exchange rate
@@ -21782,6 +21942,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -22211,6 +22372,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List virtual cards.
 
@@ -22295,6 +22457,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -22587,6 +22750,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Card transactions
@@ -22830,6 +22996,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -23355,6 +23522,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/iso20022/camt053/parse:
     post:
       tags:
@@ -23620,6 +23789,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/iso20022/pacs008/generate:
     post:
       tags:
@@ -23638,6 +23809,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -23896,6 +24068,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -24151,6 +24324,8 @@ paths:
             schema:
               type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
@@ -24176,6 +24351,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/pacs008/generate.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -24248,6 +24425,8 @@ paths:
       x-sunset-date: '2025-11-22'
       x-successor: /v1/standards/iso20022/pacs008/generate
       x-replacement-endpoint: /v1/standards/iso20022/pacs008/generate
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/swift/mt940/parse:
     post:
       tags:
@@ -24263,6 +24442,8 @@ paths:
             schema:
               type: string
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/camt053/parse
           headers:
@@ -24288,6 +24469,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/camt053/parse.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -24360,6 +24543,8 @@ paths:
       x-sunset-date: '2025-11-22'
       x-successor: /v1/standards/iso20022/camt053/parse
       x-replacement-endpoint: /v1/standards/iso20022/camt053/parse
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/swift/mt103/generate:
     post:
       tags:
@@ -24378,6 +24563,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -24385,6 +24571,8 @@ paths:
             schema:
               type: object
       responses:
+        '409':
+          $ref: '#/components/responses/Conflict'
         '410':
           description: Gone — use /v1/standards/iso20022/pacs008/generate
           headers:
@@ -24410,6 +24598,8 @@ paths:
                 status: 410
                 detail: This endpoint was retired on 2025-11-22. Use /v1/standards/iso20022/pacs008/generate.
                 error_code: DEPRECATED_ENDPOINT_RETIRED
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       deprecated: true
       description: >-
         **RETIRED on 2025-11-22.** This endpoint returns HTTP 410 Gone. Use `/v1/interbank/messages` instead.
@@ -24740,6 +24930,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/validate/bic:
     post:
       tags:
@@ -24997,6 +25189,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/validate/rib:
     post:
       tags:
@@ -25279,6 +25473,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/standards/validate/account-identifier:
     post:
       tags:
@@ -25560,6 +25756,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/directory/banks/cm:
     get:
       tags:
@@ -25713,6 +25911,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/kyc/submit:
     post:
       tags:
@@ -25731,6 +25931,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -26294,6 +26495,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/kyc/data-export:
     get:
       tags:
@@ -26477,6 +26680,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Export personal data (GDPR).
 
@@ -26556,6 +26760,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -27043,6 +27248,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         **Deprecated.** Use Webhooks v2 (`/v1/webhooks/v2/endpoints`). Sunset: 2026-12-31.
 
@@ -27151,6 +27357,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Delivery history
@@ -27401,6 +27610,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -27677,6 +27887,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -28169,6 +28380,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/admin/sandbox/accounts:
     get:
       tags:
@@ -28348,6 +28561,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List sandbox accounts.
 
@@ -28639,6 +28853,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
     put:
       tags:
         - Admin
@@ -28885,6 +29101,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/admin/webhooks:
     get:
       tags:
@@ -28912,6 +29130,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: All webhooks
@@ -29171,6 +29390,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Transactions for review
@@ -29438,6 +29658,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Loan applications with accounts
@@ -29709,6 +29930,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Savings accounts with products
@@ -29984,6 +30206,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: AISP or PISP consents
@@ -30469,6 +30692,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/admin/branches:
     get:
       tags:
@@ -30647,6 +30872,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List branches.
 
@@ -30725,6 +30951,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -30986,6 +31213,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -31259,6 +31487,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -31517,6 +31746,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -31799,6 +32029,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -32065,6 +32296,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -32333,6 +32565,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -32810,6 +33043,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/crediq/baseline-score:
     post:
       tags:
@@ -33044,6 +33279,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/crediq/health-metrics:
     post:
       tags:
@@ -33284,6 +33521,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/crediq/action-plan:
     post:
       tags:
@@ -33524,6 +33763,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/postiq/codes:
     post:
       tags:
@@ -33542,6 +33783,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -33795,6 +34037,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Address details
@@ -34044,6 +34287,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -34565,6 +34809,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/woocommerce/plugin/download:
     get:
       tags:
@@ -34786,6 +35032,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/woocommerce/process-payment:
     post:
       tags:
@@ -34805,6 +35053,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -35156,6 +35405,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Transaction list
@@ -35654,6 +35906,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sandbox/accounts:
     post:
       tags:
@@ -35672,6 +35926,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '201':
           description: Sandbox account created
@@ -35922,6 +36177,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '201':
           description: API key created
@@ -36395,6 +36651,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sandbox/webhooks:
     post:
       tags:
@@ -36413,6 +36671,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -36673,6 +36932,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -36953,6 +37213,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -37275,6 +37536,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Charges list
@@ -37517,6 +37779,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Charge details
@@ -37767,6 +38030,7 @@ paths:
             type: string
             format: uuid
             example: b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Verified charge status
@@ -38017,6 +38281,7 @@ paths:
             type: string
             format: uuid
             example: b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Charge cancelled
@@ -38276,6 +38541,7 @@ paths:
           schema:
             type: string
             default: XAF
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Fee estimate
@@ -38523,6 +38789,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -38798,6 +39065,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Refunds list
@@ -39040,6 +39308,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Refund details
@@ -39287,6 +39556,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -39604,6 +39874,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payouts list
@@ -39846,6 +40117,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payout details
@@ -40090,6 +40362,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -40395,6 +40668,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Batch details
@@ -40648,6 +40922,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -40935,6 +41210,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -41262,6 +41538,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Disputes list
@@ -41504,6 +41783,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Dispute details
@@ -41753,6 +42033,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -42041,6 +42322,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Settlements list
@@ -42283,6 +42567,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Settlement details
@@ -42527,6 +42812,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -42816,6 +43102,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Beneficiaries list
@@ -43059,6 +43348,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '204':
           description: Beneficiary deleted
@@ -43315,6 +43605,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Transaction report with summary
@@ -43591,6 +43884,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Settlement report with summary
@@ -43850,6 +44146,7 @@ paths:
           schema:
             type: string
             default: csv
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: CSV file download
@@ -44102,6 +44399,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -44396,6 +44694,7 @@ paths:
             type: string
             format: uuid
             example: b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: false
         content:
@@ -44666,6 +44965,7 @@ paths:
             type: string
             format: uuid
             example: b4a2f391-9a41-4d8b-a123-3c6f0e8b9d12
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -45092,6 +45392,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -45180,6 +45481,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -45445,6 +45747,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Virtual accounts list
@@ -45687,6 +45990,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Virtual account details
@@ -45942,6 +46246,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Merchant wallet balances
@@ -46360,6 +46665,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -46616,6 +46922,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -46694,6 +47001,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -47021,6 +47329,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -47330,6 +47639,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -47643,6 +47953,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -47974,6 +48285,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -48460,6 +48772,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -48538,6 +48851,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -49071,6 +49385,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -49157,6 +49472,7 @@ paths:
             type: number
             default: 1
           description: Amount to convert
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Exchange rate result
@@ -49407,6 +49723,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -49721,6 +50038,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment links
@@ -49964,6 +50284,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -50221,6 +50542,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '204':
           description: Payment link deleted
@@ -50452,6 +50774,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -50766,6 +51089,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment plans
@@ -51008,6 +51334,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Plan details
@@ -51256,6 +51583,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -51515,6 +51843,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -51807,6 +52136,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Subscriptions
@@ -52049,6 +52381,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Subscription details
@@ -52303,6 +52636,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -52523,6 +52857,7 @@ paths:
           description: If true, cancel immediately without finishing the current period
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Subscription cancelled successfully
@@ -52863,6 +53198,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Cancel subscription.
 
@@ -52951,6 +53287,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -53248,6 +53585,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Subaccounts
@@ -53490,6 +53830,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Subaccount details
@@ -53738,6 +54079,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -53991,6 +54333,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '204':
           description: Subaccount deleted
@@ -54222,6 +54565,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -54509,6 +54853,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Customers
@@ -54751,6 +55098,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Customer details
@@ -54999,6 +55347,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -55256,6 +55605,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Customer payment tokens
@@ -55504,6 +55854,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '204':
           description: Token revoked
@@ -55735,6 +56086,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -56029,6 +56381,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Charge event timeline
@@ -56262,6 +56615,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -56555,6 +56909,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Reconciliation runs
@@ -56826,6 +57183,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Fee report with totals by channel
@@ -57084,6 +57444,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payout retried
@@ -57328,6 +57689,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -57624,6 +57986,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Merchants
@@ -58032,6 +58397,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Update merchant.
 
@@ -58120,6 +58486,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -58384,6 +58751,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: KYB verification status
@@ -58639,6 +59007,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -58908,6 +59277,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: API keys list
@@ -59307,6 +59677,7 @@ paths:
               $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Revoke API key.
 
@@ -59386,6 +59757,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -59667,6 +60039,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Settlement accounts
@@ -59912,6 +60285,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -60196,6 +60570,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Merchant webhooks
@@ -60690,6 +61065,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/oauth/userinfo:
     get:
       tags:
@@ -60850,6 +61227,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/consumer/piggybank:
     post:
       tags:
@@ -60881,6 +61260,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -61189,6 +61569,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -61445,6 +61826,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -61931,6 +62313,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Join Njangi group.
 
@@ -62020,6 +62403,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -62288,6 +62672,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -62542,6 +62927,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -62875,6 +63261,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Funding intents list
@@ -63116,6 +63505,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Funding intent details
@@ -63385,6 +63775,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Funding intent cancelled
@@ -63645,6 +64036,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Funding confirmed and account credited
@@ -63895,6 +64287,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -64183,6 +64576,7 @@ paths:
             format: uuid
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Withdrawal policies list
@@ -64427,6 +64821,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -64740,6 +65135,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Policy details
@@ -64987,6 +65383,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -65252,6 +65649,7 @@ paths:
             format: uuid
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Staff authorizations
@@ -65496,6 +65894,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -65777,6 +66176,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Authorization details
@@ -66022,6 +66422,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -66290,6 +66691,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -66662,6 +67064,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Withdrawal requests
@@ -66903,6 +67308,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Withdrawal request details
@@ -67172,6 +67578,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Request submitted
@@ -67419,6 +67826,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -67706,6 +68114,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Approval requests with action history
@@ -67947,6 +68358,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Approval with full action audit trail
@@ -68217,6 +68629,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -68458,6 +68871,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -68717,6 +69131,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -68977,6 +69392,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Overdraft profile with score factors
@@ -69250,6 +69666,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Recalculated overdraft profile with score factor breakdown
@@ -69500,6 +69917,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -69773,6 +70191,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -70044,6 +70463,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -70310,6 +70730,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -70576,6 +70997,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         content:
           application/json:
@@ -70836,6 +71258,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -71155,6 +71578,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Wallets list
@@ -71397,6 +71823,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Wallet with Available, Pending, Ledger balances
@@ -71646,6 +72073,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -71934,6 +72362,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -72214,6 +72643,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -72514,6 +72944,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Wallet transaction history
@@ -72759,6 +73192,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -73150,6 +73584,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Escrow holds
@@ -73400,6 +73837,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -73670,6 +74108,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -73940,6 +74379,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -74196,6 +74636,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -74718,6 +75159,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/compliance/sar:
     post:
       tags:
@@ -74749,6 +75192,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -75060,6 +75504,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: SAR list
@@ -75301,6 +75748,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -75574,6 +76022,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: SAR submitted
@@ -76049,6 +76498,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/safeguarding/snapshots:
     get:
       tags:
@@ -76096,6 +76547,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Daily safeguarding snapshots
@@ -76342,6 +76796,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -76634,6 +77089,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -76919,6 +77375,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Available payout rails with speeds and fees
@@ -77148,6 +77605,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -77647,6 +78105,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/treasury/replenish:
     post:
       tags:
@@ -77665,6 +78125,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -77965,6 +78426,7 @@ paths:
             format: date
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: SLA metric data
@@ -78439,6 +78901,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sla/incidents:
     get:
       tags:
@@ -78484,6 +78948,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Incident list
@@ -78978,6 +79445,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sla/incidents/{incidentId}:
     patch:
       tags:
@@ -78993,6 +79462,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -79261,6 +79731,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -79583,6 +80054,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Webhook endpoints
@@ -79825,6 +80297,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -80086,6 +80559,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '204':
           description: Endpoint deleted
@@ -80361,6 +80835,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Delivery logs
@@ -80602,6 +81079,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: false
         content:
@@ -80799,6 +81277,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Health snapshot
@@ -80971,6 +81450,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -81424,6 +81904,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List sandbox scenarios.
 
@@ -81534,6 +82015,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Mismatch list
@@ -81784,6 +82268,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -82265,6 +82750,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/banks/register:
     post:
       tags:
@@ -82296,6 +82783,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -82592,6 +83080,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Banks list
@@ -82822,6 +83313,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Bank details
@@ -83062,6 +83554,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -83318,6 +83811,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Bank approved and set to active
@@ -83565,6 +84059,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Bank suspended
@@ -83814,6 +84309,7 @@ paths:
             format: uuid
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Connector instances list
@@ -84064,6 +84560,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -84342,6 +84839,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Connector health status
@@ -84592,6 +85090,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -84872,6 +85371,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -85168,6 +85668,7 @@ paths:
           description: >-
             Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys
             expire after 24 hours.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -85493,6 +85994,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Interbank payments list
@@ -85742,6 +86246,7 @@ paths:
         - $ref: '#/components/parameters/XFapiInteractionId'
         - $ref: '#/components/parameters/XFapiCustomerIpAddress'
         - $ref: '#/components/parameters/XFapiAuthDate'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -86017,6 +86522,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment details with status events
@@ -86272,6 +86778,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment submitted with pacs.008 generated
@@ -86668,6 +87175,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         List participants.
 
@@ -86770,6 +87278,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: ISO messages list
@@ -87025,6 +87536,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -87298,6 +87810,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Bank payments list
@@ -87555,6 +88070,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -87989,6 +88505,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       description: |-
         Create payment intent.
 
@@ -88099,6 +88616,9 @@ paths:
               - desc
             default: desc
           description: Sort direction
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Intent list
@@ -88340,6 +88860,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Intent details
@@ -88590,6 +89111,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -88854,6 +89376,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Payment rejected
@@ -89297,6 +89820,7 @@ paths:
           description: >-
             Recommended for safe retries. UUID v4. When supplied, duplicate requests within 24h replay the original
             response. See Idempotency guide.
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -89379,6 +89903,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: New secret generated
@@ -89584,6 +90109,7 @@ paths:
           schema:
             type: string
           description: Stripe HMAC-SHA256 signature header
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -89774,6 +90300,7 @@ paths:
           schema:
             type: string
           description: Flutterwave verification hash
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -90202,6 +90729,7 @@ paths:
           description: Algorithm used for the signature (e.g. SHA256withRSA)
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -90285,6 +90813,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/XFapiInteractionId'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Savings account details
@@ -90465,6 +90994,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -90669,6 +91199,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -90875,6 +91406,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -91083,6 +91615,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -91291,6 +91824,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -91635,6 +92169,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sandbox/payments/simulate:
     post:
       tags:
@@ -91793,6 +92329,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sandbox/webhooks/send-test:
     post:
       tags:
@@ -91943,6 +92481,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/sandbox/reset:
     post:
       tags:
@@ -92070,6 +92610,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/consents/{consentId}/status:
     get:
       tags:
@@ -92088,6 +92630,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Consent status
@@ -92215,6 +92758,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -92355,6 +92899,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Certificate metadata
@@ -92615,6 +93160,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/.well-known/jwks.json:
     get:
       tags:
@@ -92705,6 +93252,8 @@ paths:
 
             print_r($response->data);
       x-public-endpoint: true
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/userinfo:
     get:
       tags:
@@ -92794,6 +93343,8 @@ paths:
             ]);
 
             print_r($response->data);
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/banks/{bankId}/connector/files/upload:
     post:
       tags:
@@ -92815,6 +93366,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -92990,6 +93542,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -93172,6 +93725,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -93359,6 +93913,9 @@ paths:
               - validating
               - processed
               - failed
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -93494,6 +94051,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Import detail
@@ -93614,6 +94172,7 @@ paths:
           in: query
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -93742,6 +94301,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -93911,6 +94471,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -94070,6 +94631,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -94301,6 +94863,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -94448,6 +95013,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Batch detail
@@ -94568,6 +95134,7 @@ paths:
               - csv
               - pain001
             default: csv
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Batch file
@@ -94679,6 +95246,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -94878,6 +95446,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95009,6 +95580,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95175,6 +95747,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95304,6 +95877,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95437,6 +96011,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Rotated
@@ -95602,6 +96177,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95736,6 +96312,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -95898,6 +96475,7 @@ paths:
             type: string
             format: uuid
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96038,6 +96616,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Rotated
@@ -96228,6 +96807,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96371,6 +96953,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96558,6 +97141,9 @@ paths:
             type: string
             maxLength: 200
           description: Search business_name / email / id
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96705,6 +97291,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96836,6 +97425,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -96989,6 +97579,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -97152,6 +97743,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -97328,6 +97920,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -97518,6 +98111,7 @@ paths:
             type: string
             minLength: 3
             maxLength: 3
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Export file
@@ -97653,6 +98247,7 @@ paths:
             type: string
             minLength: 3
             maxLength: 3
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Export file
@@ -97788,6 +98383,7 @@ paths:
             type: string
             minLength: 3
             maxLength: 3
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Export file
@@ -97932,6 +98528,9 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - $ref: '#/components/parameters/StartingAfter'
+        - $ref: '#/components/parameters/EndingBefore'
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -98069,6 +98668,7 @@ paths:
               - pdf
               - csv
             default: pdf
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Statement
@@ -98180,6 +98780,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Success
@@ -98326,6 +98927,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
   /v1/spec/diff:
     get:
       tags:
@@ -98348,6 +98951,7 @@ paths:
           schema:
             type: string
             default: current
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98411,6 +99015,7 @@ paths:
               - stripe
               - flutterwave
               - paypal
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -98504,6 +99109,7 @@ paths:
             Partner mode only. Opaque, partner-stable cardholder reference. When present the request is authenticated
             against an OAuth2 client_credentials access token bearing scope payments:qr; in that mode
             partner_card_token_id + auth_evidence replace virtual_card_id + pin_token.
+        - $ref: '#/components/parameters/RequestId'
       requestBody:
         required: true
         content:
@@ -98629,23 +99235,53 @@ paths:
                       - static
                       - dynamic
         '400':
-          description: QR_001 invalid_qr_payload (bad CRC, malformed TLV, missing amount on static QR).
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: QR_004 step_up_required (missing or invalid PIN/biometric).
+          $ref: '#/components/responses/Unauthorized'
         '402':
           description: 'QR_003 card_unavailable: insufficient virtual-card balance.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/card-unavailable
+                title: card_unavailable
+                status: 402
+                code: QR_003
+                detail: 'QR_003 card_unavailable: insufficient virtual-card balance.'
         '403':
-          description: >-
-            QR_002 unsupported_currency_or_country, merchant blocked, or QR_007 partner access token missing payments:qr
-            scope.
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: 'QR_008 partner_card_token_unknown: partner card token not found, revoked, or expired.'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: 'QR_006 idempotency_conflict: same Idempotency-Key reused with a different body.'
+          $ref: '#/components/responses/Conflict'
         '412':
           description: 'QR_009 partner_sca_evidence_missing: PSD2 RTS Art. 18 SCA attestation absent or expired.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/partner-sca-evidence-missing
+                title: partner_sca_evidence_missing
+                status: 412
+                code: QR_009
+                detail: 'QR_009 partner_sca_evidence_missing: PSD2 RTS Art. 18 SCA attestation absent or expired.'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '502':
           description: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (user-mode debit auto-refunded).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/upstream-pisp-error
+                title: upstream_pisp_error
+                status: 502
+                code: QR_005
+                detail: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (user-mode debit auto-refunded).'
   /v1/merchants/qr-directory:
     get:
       tags:
@@ -98684,6 +99320,7 @@ paths:
             minimum: 1
             maximum: 100
             default: 25
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Paginated merchant directory.
@@ -98751,6 +99388,7 @@ paths:
           schema:
             type: string
             maxLength: 25
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: Merchant + EMVCo payload.
@@ -98785,7 +99423,7 @@ paths:
                   qr_payload:
                     type: string
         '404':
-          description: Merchant not found or not KYB-approved.
+          $ref: '#/components/responses/NotFound'
   /v1/issuing/cardholders:
     post:
       operationId: createCardholder
@@ -98801,6 +99439,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98809,15 +99448,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -98840,6 +99479,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98848,15 +99488,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -98871,7 +99511,8 @@ paths:
       summary: List virtual cards
       security:
         - bearerAuth: []
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98880,11 +99521,7 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -98904,6 +99541,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98912,11 +99550,7 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -98942,6 +99576,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98950,15 +99585,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -98986,6 +99621,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -98994,15 +99630,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       requestBody:
         required: true
         content:
@@ -99030,6 +99666,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -99038,15 +99675,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/unfreeze:
     post:
@@ -99068,6 +99705,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -99076,15 +99714,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/terminate:
     post:
@@ -99106,6 +99744,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -99114,15 +99753,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
   /v1/issuing/cards/{id}/transactions:
     get:
@@ -99138,6 +99777,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -99146,11 +99786,7 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -99170,6 +99806,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: OK
@@ -99178,15 +99815,15 @@ paths:
               schema:
                 type: object
         '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                type: object
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-versioned-since: 4.32.0
 externalDocs:
   description: Kang Open Banking Developer Portal — guides, SDKs, sandbox, security & compliance

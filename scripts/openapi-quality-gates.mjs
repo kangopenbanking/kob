@@ -12,6 +12,10 @@
  *       (RFC 7231 §6.5.8 Conflict, RFC 6585 §4 Too Many Requests)
  *  G7 — every DELETE operation accepts an Idempotency-Key header
  *       (draft-ietf-httpapi-idempotency-key-header §2)
+ *  G8 — every paginated list endpoint exposes cursor parity
+ *       (starting_after + ending_before alongside any offset/page)
+ *  G9 — every operation accepts an optional X-Request-ID correlation header
+ *       (W3C Trace Context-style propagation, Phase 1 hardening)
  *
  * Usage:   node scripts/openapi-quality-gates.mjs [--spec public/openapi.json]
  * Exit 0 = all gates pass. Exit 1 = at least one gate failed.
@@ -34,7 +38,7 @@ if (!fs.existsSync(specPath)) {
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const allow = fs.existsSync(allowExceptionsPath)
   ? JSON.parse(fs.readFileSync(allowExceptionsPath, 'utf8'))
-  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [], G7: [] };
+  : { G1: [], G2: [], G3: [], G4: [], G5: [], G6: [], G7: [], G8: [], G9: [] };
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
@@ -49,7 +53,7 @@ const FINANCIAL_PATH_PATTERNS = [
 const WEBHOOK_PATH = /\/webhooks\//i;
 
 const failures = [];
-const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0, G7: 0 };
+const counters = { G1: 0, G2: 0, G3: 0, G4: 0, G5: 0, G6: 0, G7: 0, G8: 0, G9: 0 };
 
 function fail(gate, opKey, message) {
   if ((allow[gate] || []).includes(opKey)) return;
@@ -157,6 +161,27 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
       if (!describesWebhookSignature(pathItem, op)) {
         fail('G2', opKey, `${opId}: webhook receiver missing signature header docs and/or dedupe note`);
       }
+    }
+
+    // G8 — cursor parity on paginated list ops (Phase 1)
+    if (method === 'get' && isPaginated(op)) {
+      const names = new Set((op.parameters || []).map((p) => (p.$ref ? p.$ref.split('/').pop() : p.name)));
+      const hasOffset = names.has('offset') || names.has('OffsetParam') || names.has('Offset');
+      const hasCursor = names.has('starting_after') || names.has('ending_before') ||
+        names.has('StartingAfter') || names.has('EndingBefore') ||
+        names.has('cursor') || names.has('CursorParam');
+      if (hasOffset && !hasCursor) {
+        fail('G8', opKey, `${opId}: paginated list offers offset but no cursor (starting_after/ending_before) — Phase 1 cursor parity`);
+      }
+    }
+
+    // G9 — X-Request-ID correlation header on every operation (Phase 1)
+    const reqIdPresent = (op.parameters || []).some((p) => {
+      const name = p.$ref ? p.$ref.split('/').pop() : p.name;
+      return name === 'RequestId' || name === 'X-Request-ID' || name === 'x-request-id';
+    });
+    if (!reqIdPresent) {
+      fail('G9', opKey, `${opId}: missing optional X-Request-ID correlation header parameter`);
     }
   }
 }

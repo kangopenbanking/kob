@@ -1,12 +1,32 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.32.0** · Last updated: **2026-05-08**
+Current API version: **4.33.0** · Last updated: **2026-05-17**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.33.0 — 2026-05-17
+**Type:** minor · **Breaking changes:** none
+
+Phase 1 API contract hardening — cursor pagination parity, RFC 7807 error normalization, and X-Request-ID correlation across all 405 operations.
+
+### Highlights
+- Added starting_after + ending_before cursor parameters to 41 offset-only list endpoints (offset retained for backward compatibility per Standing Order 1).
+- Normalized 17 inline 4xx/5xx responses to shared RFC 7807 ProblemDetails components (BadRequest, NotFound, Conflict, etc.).
+- Added optional X-Request-ID header to every operation; echoed back on responses and persisted across edge functions, ledger writes, and outbound webhook deliveries.
+- New OpenAPI quality gates: cursor-parity check and Problem coverage check, wired into CI.
+- Fully additive — no operationId/path/schema rename or removal.
+
+### Standards & citations
+- RFC 7807 Problem Details for HTTP APIs
+- Stripe/Adyen cursor pagination conventions
+- W3C Trace Context (X-Request-ID correlation)
+- KOB Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
 
 ---
 
