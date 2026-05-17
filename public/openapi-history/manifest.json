@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.34.0",
+  "current": "4.35.0",
   "versions": [
+    {
+      "version": "4.35.0",
+      "released_at": "2026-05-17T20:02:53.956Z",
+      "type": "snapshot",
+      "file": "openapi-4.35.0.json",
+      "notes": "Phase 3 — Reconciliation closeout. Canonical x-state-machine, audit-exports bucket, reconciliation_mismatches Kanban columns."
+    },
     {
       "version": "4.34.0",
       "released_at": "2026-05-17T19:58:27.040Z",

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.34.0
+  version: 4.35.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -33817,3 +33817,79 @@ x-webhook-events:
   - kyb.approved
   - kyb.rejected
   - webhook.delivery_failed
+x-state-machine:
+  name: charge
+  description: Canonical lifecycle for every gateway charge. The
+    /developer/payments/state-machine page is the human-readable mirror.
+  states:
+    - name: created
+      terminal: false
+    - name: processing
+      terminal: false
+    - name: pending
+      terminal: false
+    - name: authorized
+      terminal: false
+    - name: disputed
+      terminal: false
+    - name: succeeded
+      terminal: true
+    - name: captured
+      terminal: true
+    - name: failed
+      terminal: true
+    - name: cancelled
+      terminal: true
+    - name: voided
+      terminal: true
+    - name: expired
+      terminal: true
+    - name: refunded
+      terminal: true
+    - name: reversed
+      terminal: true
+  transitions:
+    - - created
+      - processing
+    - - created
+      - failed
+    - - created
+      - cancelled
+    - - processing
+      - pending
+    - - processing
+      - authorized
+    - - processing
+      - succeeded
+    - - processing
+      - failed
+    - - pending
+      - succeeded
+    - - pending
+      - failed
+    - - pending
+      - expired
+    - - authorized
+      - captured
+    - - authorized
+      - voided
+    - - authorized
+      - expired
+    - - succeeded
+      - refunded
+    - - captured
+      - refunded
+    - - succeeded
+      - reversed
+    - - succeeded
+      - disputed
+    - - disputed
+      - reversed
+    - - disputed
+      - succeeded
+x-audit-export-bucket:
+  name: audit-exports
+  description: Immutable, admin-only storage bucket for regulatory audit exports.
+    Write-once via service role; read via short-lived signed URLs.
+  immutable: true
+  retention_days: 2557
