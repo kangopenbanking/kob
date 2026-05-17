@@ -51275,3 +51275,37 @@ x-observability:
       p95: 800
       p99: 1500
   dashboard: /admin/slo
+x-payment-orchestrator:
+  flag: payment_orchestrator_enabled
+  default: false
+  route: /functions/v1/payment-orchestrator
+  delegates_to: /functions/v1/payment-router-charge
+  guarantees:
+    - Transparent passthrough when flag is OFF — zero behavioural change vs v4.36.0.
+    - Idempotency replay cache TTL extended to 24h via public.idempotency_cache_extended.
+    - >-
+      Dead-letter queue public.charge_dlq captures charges that exhaust provider 5xx retries (admin replay surface in
+      /admin/orchestrator).
+  response_header: X-Orchestrator
+  response_header_values:
+    - passthrough
+    - active
+x-data-retention:
+  table: public.data_retention_policies
+  legal_bases:
+    - COBAC AML horizon
+    - GDPR Art. 5(1)(c) & (e)
+    - PSD2 RTS Art. 36
+  default_horizons:
+    kyc_documents:
+      retention_days: 2555
+      anonymize_after_days: 2190
+    transactions:
+      retention_days: 3650
+    consent_events:
+      retention_days: 2555
+    webhook_deliveries:
+      retention_days: 365
+      anonymize_after_days: 180
+  consent_ledger_table: public.consent_events
+  regulatory_export_table: public.compliance_reports
