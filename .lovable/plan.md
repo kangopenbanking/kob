@@ -1,181 +1,99 @@
-## Goal
 
-Re-engineer the Virtual Card feature so that **Banks/Financial Institutions and Developers** can issue and manage USD virtual cards for their customers via the **Kora (Korapay) Issue Virtual Cards API** as the underlying middleware, exposed through the Kang Open Banking API. Add full admin oversight, a bank/developer management console, end-to-end tests, and public documentation + changelog refresh.
+# KOB Bank-Grade Hardening — Phased Roadmap (All 10 Domains)
 
-Reference: [https://developers.korapay.com/docs/issue-virtual-cards](https://developers.korapay.com/docs/issue-virtual-cards)  
-                       [https://developers.korapay.com/docs/getting-started](https://developers.korapay.com/docs/getting-started)  
-                      
+**Constraints honored:** Additive + safe refactors only. No rename/remove (SO-1). Every phase bumps `info.version` (SO-6). Zero changes to live transaction logic without a feature-flagged fallback. Public developer routes remain public.
 
----
-
-## Scope & Access Model
-
-- Cardholders are **end customers of a bank or developer tenant** (not direct Kang consumers).
-- **Permitted issuers**: users with role `bank_admin`/`bank_staff` (scoped via `accounts.institution_id`) and `developer` (scoped via API key → tenant). Consumer self-service issuance is removed from the public PWA.
-- **Admin** has full oversight: programs, KYC gating, balance/limits, suspend/terminate, audit, FX, fee config.
-- All state-changing card operations must be **server-mediated via Edge Functions** with `idempotency_key` and `FOR UPDATE` row locks (per Financial Safety memory).
+**Verdict today:** CONDITIONAL GO. Target after Phase 4: full GO equivalent to Stripe/Adyen/Flutterwave-grade.
 
 ---
 
-## Phase 1 — Discovery & Baseline (read-only)
+## Deliverables shipped in this turn
 
-1. Inventory current Cardyfie/Stripe-Issuing surfaces:
-  - DB: `virtual_cards`, `virtual_card_programs`, `card_transactions`, `card_funding_transactions`, `stripe_cardholders`, `qr_card_payments`.
-  - Edge: `supabase/functions/virtual-cards/index.ts` (267 lines, Cardyfie-based).
-  - Frontend: `src/pages/VirtualCards.tsx`, `src/components/virtual-cards/*`.
-2. Map gaps vs Kora API: cardholder creation, card issuance (USD), fund/withdraw, freeze/unfreeze, terminate, retrieve card, transactions, webhooks (`virtualcard.charge`, `virtualcard.refund`, `virtualcard.decline`, `virtualcard.termination`).
-3. Capture baseline in `docs/virtual-cards/baseline-audit.md`.
+<presentation-artifact path="KOB_Bank_Grade_Audit.md" mime_type="text/markdown"></presentation-artifact>
+<lov-artifact url="/__l5e/documents/KOB_Payment_State_Machine.mmd" mime_type="text/vnd.mermaid"></lov-artifact>
+<lov-artifact url="/__l5e/documents/KOB_Webhook_Delivery.mmd" mime_type="text/vnd.mermaid"></lov-artifact>
+<lov-artifact url="/__l5e/documents/KOB_Ledger_Architecture.mmd" mime_type="text/vnd.mermaid"></lov-artifact>
+<lov-artifact url="/__l5e/documents/KOB_Target_Architecture.mmd" mime_type="text/vnd.mermaid"></lov-artifact>
 
-## Phase 2 — Database Migrations (additive, ratchet rule)
-
-New / extended tables:
-
-- `virtual_card_programs`: add `issuer_provider` (enum: `kora`, `cardyfie_legacy`), `tenant_type` (`bank`|`developer`), `tenant_id`, `currency` default `USD`, `kyc_required_level`, `default_daily_limit`, `default_monthly_limit`, `auto_topup_enabled`.
-- `virtual_cards`: add `kora_card_id`, `kora_cardholder_id`, `provider` (enum), `tenant_id`, `tenant_type`, `customer_external_id`, `issued_by_user_id`, `frozen_at`, `terminated_at`. Keep `stripe_card_id` nullable for legacy.
-- New `kora_cardholders` (mirrors stripe_cardholders) with KYC status, doc refs.
-- New `virtual_card_webhook_events` (provider, event_type, payload, signature_verified, processed_at, idempotency_key UNIQUE).
-- New `virtual_card_audit_log` (actor, action, before/after JSON, ip, ua).
-- Triggers: validation trigger ensuring `tenant_id` matches issuer's institution; `update_updated_at` triggers.
-- RLS:
-  - Bank staff: `tenant_type='bank' AND tenant_id = resolveInstitutionId(auth.uid())`.
-  - Developer: `tenant_type='developer' AND tenant_id = current_developer_tenant()`.
-  - Admin via `has_role(auth.uid(),'admin')`.
-  - End-customer view via signed token only (no direct RLS read).
-- All new SECURITY DEFINER functions: `SET search_path = public`.
-
-## Phase 3 — Kora Middleware Layer (Edge Functions)
-
-Create `supabase/functions/_shared/kora-client.ts`:
-
-- `koraRequest(method, path, body, idempotencyKey)` with HMAC signing per Kora docs, retries, 429 backoff, structured error mapping → RFC 7807 codes.
-- Webhook signature verification (`x-korapay-signature`, HMAC-SHA256 of raw body).
-
-New consolidated function `virtual-cards-v2` (replaces inline Cardyfie calls). Actions:
-
-- `create-program` (admin)
-- `create-cardholder` (bank/dev) — KYC payload
-- `issue-card` — POST `/virtual-cards`
-- `fund-card` / `withdraw-from-card` — atomic ledger debit + Kora call inside DB transaction
-- `freeze` / `unfreeze` / `terminate`
-- `get-card` (returns masked PAN, last4, exp; full PAN only via short-lived signed reveal endpoint)
-- `list-transactions` — paginated from Kora with local cache
-- `reveal-card` — issues a 60s signed URL with step-up MFA (per MFA memory)
-
-New `kora-webhook` function (verify_jwt=false; signature verified in code; fail-closed; idempotent on `event.id`). Updates ledger, status, emits Realtime event for UI.
-
-New `virtual-cards-admin` function for admin-only ops (force-terminate, refund, reissue, override limits).
-
-## Phase 4 — Tenant Resolution & Auth
-
-- Reuse `resolveInstitutionId` (Staff Privacy memory) for bank scoping.
-- Developer tenant resolved via `kob_api_keys` JWT claims (per API Client Governance memory).
-- Step-up MFA required for: reveal PAN, terminate, fund > threshold, withdraw.
-- All financial mutations use `idempotency_key` (UUID v4) and `FOR UPDATE` locks.
-
-## Phase 5 — Public REST API (OpenAPI v4 → v5 minor bump)
-
-Add under `/v1/issuing/`:
-
-- `POST /cardholders`, `GET /cardholders/{id}`
-- `POST /cards`, `GET /cards`, `GET /cards/{id}`
-- `POST /cards/{id}/fund`, `POST /cards/{id}/withdraw`
-- `POST /cards/{id}/freeze`, `POST /cards/{id}/unfreeze`, `POST /cards/{id}/terminate`
-- `GET /cards/{id}/transactions`
-- `POST /cards/{id}/reveal` (step-up)
-- Webhook event docs: `card.issued`, `card.charged`, `card.refunded`, `card.declined`, `card.terminated`.
-
-Compliance with Standing Orders 1–10:
-
-- Bump `info.version` minor (additive, e.g. 4.31.0 → 4.32.0).
-- New schemas referenced; no dead components.
-- Cite ISO 8583 + PCI-DSS scope reduction notes in `description`.
-- 63 RFC 7807 error codes maintained; add `card_kyc_required`, `card_insufficient_funds`, `card_provider_unavailable`, `card_terminated`.
-
-## Phase 6 — Frontend
-
-### Bank/Developer Management Console (`/bank/issuing` and `/developer/issuing`)
-
-- Dashboard: cards issued, active, frozen, monthly spend, decline rate.
-- Programs tab (read-only for bank, request changes via admin workflow).
-- Cardholders list + KYC status + create.
-- Cards list with filters; card detail drawer (mask PAN, freeze/unfreeze, terminate, fund, withdraw, transactions, audit).
-- Webhook delivery viewer (read-only).
-- Built with existing shadcn/Tailwind tokens, Lucide outline icons, no gradients/emojis.
-
-### Admin Console (`/admin/issuing`)
-
-- Programs CRUD, provider toggle (kora/cardyfie_legacy), tenant assignment.
-- Global card search, force actions, refund, audit log viewer.
-- Provider health (`virtual-cards-health` preflight: Kora reachability, signature key present, webhook last-seen).
-- FX & fee configuration per program.
-
-### Removals / Migrations
-
-- Hide `/virtual-cards` consumer route behind feature flag (kept for legacy data view only).
-- Replace Cardyfie program selector with Kora-aware programs.
-
-## Phase 7 — Documentation & Changelog (Public)
-
-- New `/developer/docs/issuing` section with: overview, KYC flow, lifecycle diagram (ASCII), code examples in cURL/Node/Python (+PHP/Java/Go for quickstart) per Order P9.
-- Working sandbox examples seeded against Kora sandbox (Order P5). Smoke test added.
-- Update `/openapi.json` + `/openapi.yaml` (public, ungated — Order P4).
-- Update Postman collections (sandbox + production).
-- Changelog entry `docs/governance/CHANGELOG-v4.32.0.md` within 48h (Order P7).
-- Standards Index entry under `/developer/standards`.
-- 301 redirect any old `/docs/virtual-cards` URL (Order P2).
-
-## Phase 8 — End-to-End Testing
-
-Vitest unit tests:
-
-- `kora-client.test.ts` — signing, retry, error mapping.
-- `virtual-cards-v2.test.ts` — RBAC, idempotency, ledger atomicity.
-- `kora-webhook.test.ts` — signature verify, replay protection.
-
-Playwright E2E (`e2e/authenticated/issuing-bank-flow.spec.ts`, `issuing-developer-flow.spec.ts`, `issuing-admin-flow.spec.ts`):
-
-1. Bank staff creates cardholder → issues card → funds → simulates Kora charge webhook → sees txn → freezes → terminates.
-2. Developer issues via API key (sandbox) → asserts webhook delivered.
-3. Admin force-terminates and refunds; audit log entry visible.
-4. Reveal-PAN flow gated by step-up MFA.
-5. Negative paths: insufficient KYC, insufficient funds, frozen card decline.
-
-CI:
-
-- Add `.github/workflows/issuing-e2e.yml` running preflight (env keys present) + Playwright suite against sandbox.
-- Extend `direct-backend-guard.test.ts` to cover new endpoints.
-- Add `kora-preflight.mjs` script (mirrors `firebase-otp-preflight.mjs`).
-
-## Phase 9 — Secrets & Config
-
-Required (will request via `add_secret` once plan approved):
-
-- `KORA_PUBLIC_KEY`, `KORA_SECRET_KEY`, `KORA_ENCRYPTION_KEY`, `KORA_WEBHOOK_SECRET`, `KORA_BASE_URL` (sandbox vs live per env).
-
-## Phase 10 — Rollout
-
-1. Deploy migrations (Test) → seed Kora sandbox program.
-2. Run full E2E green.
-3. Publish docs + changelog.
-4. Feature-flag `issuing.kora_enabled` per environment via existing admin settings pattern.
-5. Publish to Live; monitor `virtual_card_webhook_events` and provider health page for 48h.
+The audit covers maturity scoring (10 dimensions), domain findings, top-10 risk register, and Standing-Orders compliance. Diagrams cover payment state machine, webhook delivery, ledger flow, and target architecture.
 
 ---
 
-## Technical Notes
+## Phase plan (each phase = separate approval gate)
 
-- Kora returns card details in clear text only at creation; we store **only** `last4`, `brand`, `exp_month/year`, `kora_card_id`. Full PAN/CVV is **never persisted** — fetched on demand via reveal endpoint with short-lived token.
-- Currency: USD only at launch; FX from XAF/XOF wallet uses existing FX engine (zero-decimal currency memory).
-- Ledger entries tagged `card_fund`, `card_withdraw`, `card_charge`, `card_refund`, `card_fee` for reconciliation.
-- All admin destructive actions go through maker-checker (Banking Risk Operations memory).
+### Phase 1 — API Contract Hardening (patch 4.32.x → 4.33.0)
+- Add `Idempotency-Key` parameter to the 5 financial DELETEs flagged in `docs/internal/openapi-quality-report.md`.
+- Add `starting_after` + `ending_before` cursor params to the 38 offset-only list ops (keep `offset` for SO-1).
+- Reference `components/responses/Problem` (RFC 7807) on every 4xx/5xx that currently inlines errors.
+- Propagate `X-Request-ID` header (generate if missing) on every edge function response.
+- CI gate: extend `scripts/openapi-quality-gates.mjs` to enforce cursor parity and Problem coverage.
 
-## Deliverables Checklist
+### Phase 2 — AuthZ Scope Enforcement & Webhook Resilience (minor 4.34.0)
+- Per-key scope matrix table (`api_key_scopes`); enforce in `banking-api-router` + `gateway-charges-router`.
+- Add per-endpoint circuit breaker state (`webhook_endpoint_health` already exists — wire `open/half-open/closed` into `gateway-webhook-deliver-v2`).
+- Introduce `X-Webhook-Replay: true` header on manual replays + persist `replay_of_delivery_id`.
+- Publish webhook event registry page under `/developer/webhooks/events` (read from `webhook_event_schemas`).
 
-- Migrations + RLS
-- `kora-client.ts`, `virtual-cards-v2`, `kora-webhook`, `virtual-cards-admin`, `virtual-cards-health`
-- Bank/Developer/Admin UIs
-- OpenAPI v4.32.0 + Postman + SDK regen
-- Public docs + changelog + standards index
-- Vitest + Playwright suites + CI workflow
-- Preflight script
-- Secrets requested
+### Phase 3 — Settlement & Reconciliation Closeout (minor 4.35.0)
+- New `reconciliation_mismatches` table + `AdminReconciliation.tsx` Kanban (open → investigating → resolved).
+- T+1 settlement PDF generator (`gateway-settlement-report`) — CSV exists, add PDF + JSON.
+- Immutable audit export bucket (`audit-exports/`, write-once policy) for regulators.
+- Document canonical payment state machine in `/developer/payments/state-machine` (sourced from diagram).
+
+### Phase 4 — Payment Orchestration Layer (minor 4.36.0, feature-flagged)
+- New `payment_orchestrator` edge function in front of `payment-router-charge` (flag-gated, default off).
+- Dead-letter for charge processors after N provider 5xx (`charge_dlq` table + admin replay).
+- Unified façade `POST /v1/gateway/charges/{id}/reverse` delegating to existing provider-specific reversal.
+- Idempotency cache TTL extended to 24h on all financial mutations.
+
+### Phase 5 — Observability & SLOs (patch 4.36.x)
+- End-to-end `trace_id` column added to `webhook_deliveries`, `gateway_charges`, `ledger_entries`.
+- Structured-log helper in `supabase/functions/_shared/logger.ts` enforcing JSON + `trace_id`.
+- SLO dashboard page `/admin/slo` (latency p50/p95/p99, success rate, webhook delivery rate).
+- Alert rules via Supabase cron + Resend (paging on breach).
+
+### Phase 6 — Compliance & Data Retention (minor 4.37.0)
+- `data_retention_policies` table + `retention-purge-cron` (PII anonymization beyond regulatory horizon).
+- Consent ledger extension (immutable consent events, AISP/PISP unified).
+- Regulatory report generator (`compliance-report-monthly`) for COBAC.
+
+### Phase 7 — Fraud & Risk Enhancements (minor 4.38.0)
+- Shared `risk_blocklists` table (msisdn, email, IBAN, device_id).
+- Behavioral baseline per merchant (rolling 30-day stats) → enrich `risk-score`.
+- Convert `risk-score` to fail-closed for high-value transactions (configurable threshold).
+
+### Phase 8 — Scalability, DX & SDK Completeness (minor 4.39.0)
+- Redis-style cache (Supabase KV table or external) for OIDC discovery + rate-limit counters.
+- Java + Go SDK skeletons published under `packages/sdk-java`, `packages/sdk-go` to satisfy Docs Order P9.
+- Load test harness in `e2e/load/` (k6 scripts: charge burst, webhook flood, AISP read storm).
+- Resilience report auto-generated from load results.
+
+---
+
+## Acceptance gates per phase
+1. OpenAPI quality gates G1–G5 still pass + new gate for the phase.
+2. `npm run build` + `audit:og` clean.
+3. No removal of any operationId/path/schema (CI breaking-change diff).
+4. E2E suite green (`e2e/authenticated/*`, `e2e/smoke/*`).
+5. Changelog entry within 48h (Docs Order P7).
+6. `info.version` incremented per SO-6.
+
+---
+
+## What changes vs what stays
+**Stays untouched:** existing operationIds, paths, schemas, RLS policies, public developer routes, ledger checksum logic, current webhook signature format.
+**Additive:** new tables, new columns (nullable), new endpoints, new flags, new dashboards, new SDK packages, new CI gates.
+**Safe refactors:** logger consolidation, scope-enforcement middleware extraction, circuit-breaker wiring — all behind existing contracts.
+
+---
+
+## Technical notes
+- All new DB objects: RLS on, `SECURITY DEFINER` + `SET search_path = public`, owner-scoped policies via `public.has_role()`.
+- All new edge functions: `verify_jwt = false` default, in-code JWT validation, `corsHeaders` from `npm:@supabase/supabase-js@2/cors`, Zod input validation, structured logs with `trace_id`.
+- Feature flags via existing `system_config` table to allow instant rollback.
+- Each phase delivered as one approval cycle; nothing implemented without your green light per phase.
+
+---
+
+## Next step
+Approve this roadmap, then tell me which phase to start with. Recommended order: **Phase 1 → 2 → 3 → 5 → 4 → 6 → 7 → 8** (contract + scopes + reconciliation + observability before orchestrator surgery).
