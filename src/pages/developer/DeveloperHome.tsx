@@ -120,13 +120,15 @@ export default function DeveloperHome() {
         <meta property="og:title" content="Payment Gateway & Open Banking API for Africa | Kang Open Banking" />
         <meta property="og:description" content="Accept mobile money, cards, and bank transfers in Cameroon & CEMAC. Unified REST API for payments, open banking, and financial services." />
         <meta property="og:site_name" content="Kang Open Banking" />
-        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/JCSxavmYvgdqHjrgJueCfjq5jxn2/social-images/social-1760797042805-Screenshot 2025-10-18 at 15.16.08.png" />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Payment Gateway & Open Banking API for Africa" />
         <meta name="twitter:description" content="Unified REST API for mobile money, card payments, bank transfers, payouts, and open banking in Cameroon & CEMAC." />
-        <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/JCSxavmYvgdqHjrgJueCfjq5jxn2/social-images/social-1760797042805-Screenshot 2025-10-18 at 15.16.08.png" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-social.png" />
 
         {/* Structured Data */}
         <script type="application/ld+json">{JSON.stringify(jsonLdWebAPI)}</script>
