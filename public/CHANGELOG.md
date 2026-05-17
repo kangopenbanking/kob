@@ -1,12 +1,35 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.34.0** · Last updated: **2026-05-17**
+Current API version: **4.35.0** · Last updated: **2026-05-17**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.35.0 — 2026-05-17
+**Type:** minor · **Breaking changes:** none
+
+Phase 3 bank-grade hardening — reconciliation Kanban data model, immutable audit-export bucket, canonical payment state machine documentation.
+
+### Highlights
+- Extended public.reconciliation_mismatches with assignee, settlement_id, ledger_batch_id, priority, detected_by, updated_at — enables the Kanban (open → investigating → resolved → written_off) without renaming any existing field.
+- New private storage bucket audit-exports — write-once, admin-only read, 7-year retention horizon (COBAC).
+- New permanent public page /developer/payments/state-machine — canonical charge lifecycle: 13 states, 19 legal transitions, terminal-state guarantees (Order P1, P2, P6).
+- OpenAPI x-state-machine extension documents the same states/transitions for SDK and tooling consumers.
+- OpenAPI x-audit-export-bucket extension documents the immutable export destination.
+- Snapshot openapi-4.35.0.json published; history manifest updated.
+- Fully additive — no operationId, path, schema, RLS policy, or column renamed or removed (Standing Orders 1 & 4).
+
+### Standards & citations
+- ISO 20022 reconciliation message family
+- COBAC 7-year retention horizon
+- Stripe charge state model (terminal-state immutability)
+- OpenAPI 3.1 vendor extensions (x-*)
+- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
 
 ---
 

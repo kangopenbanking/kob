@@ -101144,8 +101144,9 @@ webhooks:
           description: Current circuit-breaker state for this endpoint at delivery time.
 x-state-machine:
   name: charge
-  description: Canonical lifecycle for every gateway charge. The
-    /developer/payments/state-machine page is the human-readable mirror.
+  description: >-
+    Canonical lifecycle for every gateway charge. The /developer/payments/state-machine page is the human-readable
+    mirror.
   states:
     - name: created
       terminal: false
@@ -101214,7 +101215,8 @@ x-state-machine:
       - succeeded
 x-audit-export-bucket:
   name: audit-exports
-  description: Immutable, admin-only storage bucket for regulatory audit exports.
-    Write-once via service role; read via short-lived signed URLs.
+  description: >-
+    Immutable, admin-only storage bucket for regulatory audit exports. Write-once via service role; read via short-lived
+    signed URLs.
   immutable: true
   retention_days: 2557
