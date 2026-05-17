@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.35.0",
+  "current": "4.36.0",
   "versions": [
+    {
+      "version": "4.36.0",
+      "released_at": "2026-05-17T20:20:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.36.0.json",
+      "notes": "Phase 5 — Observability & SLOs. X-Trace-Id response header on every operation; x-observability vendor extension publishes SLO targets and trace propagation contract."
+    },
     {
       "version": "4.35.0",
       "released_at": "2026-05-17T20:02:53.956Z",
