@@ -333,6 +333,8 @@ const DeveloperRegistration = lazy(() => import("./pages/developer/DeveloperRegi
 const IntegrationLayerOverview = lazy(() => import("./pages/developer/IntegrationLayerOverview"));
 // Phase 3 — additive public guide for inbound provider webhooks
 const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
+// Phase 2 (bank-grade) — public webhook event registry sourced from SSOT
+const WebhookEventsRegistry = lazy(() => import("./pages/developer/WebhookEventsRegistry"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 // Phase 5 — additive merchants documentation hub
@@ -1171,6 +1173,8 @@ function App() {
               <Route path="integration-layer" element={<IntegrationLayerOverview />} />
               {/* Phase 3 — Provider webhook receivers (Stripe, Flutterwave, PayPal) */}
               <Route path="webhooks/provider-receivers" element={<ProviderWebhookReceiversGuide />} />
+              {/* PERMANENT PUBLIC ROUTE — Phase 2 bank-grade — webhook event registry */}
+              <Route path="webhooks/events" element={<WebhookEventsRegistry />} />
               <Route path="webhooks/onboarding" element={<ProviderOnboardingChecklist />} />
               {/* Phase 5 — Merchants documentation hub */}
               <Route path="merchants" element={<MerchantsDocsHub />} />
