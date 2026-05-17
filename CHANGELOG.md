@@ -1,12 +1,34 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.33.0** · Last updated: **2026-05-17**
+Current API version: **4.34.0** · Last updated: **2026-05-17**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.34.0 — 2026-05-17
+**Type:** minor · **Breaking changes:** none
+
+Phase 2 bank-grade hardening — per-key scope matrix on bearerAuth, webhook circuit-breaker headers, manual-replay headers, public webhook event registry.
+
+### Highlights
+- Added x-scopes extension to bearerAuth documenting the 12-scope per-key matrix (charges:*, payouts:*, customers:*, webhooks:*, reports:read, compliance:*, admin:*). Enforcement layer backed by new public.api_key_scopes table (additive).
+- Added X-Webhook-Replay, X-Webhook-Replay-Of, X-Circuit-State headers to every documented webhook event in the OpenAPI 3.1 webhooks block (additive parameters, no rename).
+- New table public.webhook_endpoint_health with per-endpoint circuit-breaker state (closed | half_open | open), rolling failure window, and cool-down deadline.
+- New permanent public page /developer/webhooks/events — canonical registry sourced from the live event-schema SSOT (Order P1, P2, P6).
+- Snapshot openapi-4.34.0.json published; history manifest updated.
+- Fully additive — no operationId, path, schema, security scheme, or RLS policy was renamed or removed (Standing Orders 1 & 4).
+
+### Standards & citations
+- OAuth 2.0 Scope (RFC 6749 §3.3)
+- Stripe restricted-key scope model
+- Release It! circuit breaker pattern (Nygard, 2007)
+- OpenAPI 3.1 webhooks object
+- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
 
 ---
 
