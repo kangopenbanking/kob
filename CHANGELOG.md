@@ -1,75 +1,12 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.38.0** · Last updated: **2026-05-17**
+Current API version: **4.35.0** · Last updated: **2026-05-17**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
-
----
-
-## 4.38.0 — 2026-05-17
-**Type:** minor · **Breaking changes:** none
-
-Phase 6 bank-grade hardening — declarative data-retention policy registry and consent-ledger reuse.
-
-### Highlights
-- New table public.data_retention_policies seeded with 4 COBAC/GDPR baselines: KYC 7y (anonymize 6y), transactions 10y, consent 7y, webhook deliveries 1y (anonymize 6mo).
-- Reuses existing public.consent_events (immutable AISP/PISP ledger) and public.compliance_reports (regulatory exports) without schema churn.
-- New OpenAPI vendor extension x-data-retention publishes the horizons and legal bases so SDKs and downstream tooling can introspect the policy contract.
-- Fully additive — no operationId, path, schema, RLS policy, or column renamed or removed (Standing Orders 1 & 4).
-
-### Standards & citations
-- COBAC AML retention horizon
-- GDPR Art. 5(1)(c) data minimisation and (e) storage limitation
-- PSD2 RTS Art. 36 consent records
-- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
-
----
-
-## 4.37.0 — 2026-05-17
-**Type:** minor · **Breaking changes:** none
-
-Phase 4 bank-grade hardening — feature-flagged payment orchestration layer with 24h idempotency cache and charge dead-letter queue.
-
-### Highlights
-- New edge function payment-orchestrator sits in front of payment-router-charge. Flag-gated by system_config.payment_orchestrator_enabled (default OFF) — when OFF, calls are passed through unchanged (zero behavioural risk).
-- New table public.charge_dlq (admin-only RLS) captures charges that exhaust provider 5xx retries; supports replay tooling.
-- New table public.idempotency_cache_extended extends the existing 60s in-flight reservation to a 24h replay window per merchant + idempotency_key.
-- Response header X-Orchestrator (passthrough | active) lets clients observe which path served the charge.
-- New OpenAPI vendor extension x-payment-orchestrator documents the flag, default, route, delegation target, and guarantees.
-- Fully additive — no operationId, path, schema, or RLS policy renamed or removed (Standing Orders 1 & 4).
-
-### Standards & citations
-- Stripe orchestration model (transparent passthrough with feature flag)
-- AWS SQS dead-letter queue pattern
-- RFC 7231 §6.6.5 (504 / upstream-failure semantics)
-- OpenAPI 3.1 vendor extensions (x-*)
-- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
-
----
-
-## 4.36.0 — 2026-05-17
-**Type:** minor · **Breaking changes:** none
-
-Phase 5 bank-grade hardening — end-to-end distributed tracing, structured JSON logger for edge functions, and an admin SLO dashboard.
-
-### Highlights
-- Added nullable trace_id column + index to public.webhook_deliveries, gateway_charges, and safeguarding_ledger — a single request can now be followed across HTTP, charge processing, webhook delivery, and ledger posting.
-- New shared edge-function helper supabase/functions/_shared/logger.ts — structured single-line JSON logs with mandatory trace_id; accepts inbound X-Trace-Id or W3C traceparent and falls back to UUID v4.
-- X-Trace-Id response header documented on every operation (3,020 responses in production spec, 2,575 in sandbox).
-- New top-level OpenAPI vendor extension x-observability publishes the SLO targets: charge success ≥ 99.5% / webhook delivery ≥ 99.0% / charge latency p50 200ms, p95 800ms, p99 1500ms.
-- New admin page /admin/slo renders the rolling 24h SLO posture (charge success, webhook delivery, p50/p95/p99 latency).
-- Fully additive — no operationId, path, schema, RLS policy, or column was renamed or removed (Standing Orders 1 & 4).
-
-### Standards & citations
-- W3C Trace Context (traceparent header)
-- Google SRE Workbook — SLI/SLO/SLA definitions
-- OpenTelemetry Logs Data Model (structured JSON)
-- OpenAPI 3.1 vendor extensions (x-*)
-- KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
 
 ---
 

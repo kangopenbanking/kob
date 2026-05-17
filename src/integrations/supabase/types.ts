@@ -13086,6 +13086,36 @@ export type Database = {
         }
         Relationships: []
       }
+      kv_cache: {
+        Row: {
+          cache_key: string
+          cache_value: Json
+          created_at: string
+          expires_at: string
+          hit_count: number
+          namespace: string
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          cache_value: Json
+          created_at?: string
+          expires_at: string
+          hit_count?: number
+          namespace?: string
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          cache_value?: Json
+          created_at?: string
+          expires_at?: string
+          hit_count?: number
+          namespace?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kyc_verifications: {
         Row: {
           created_at: string | null
@@ -14431,6 +14461,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      merchant_risk_baselines: {
+        Row: {
+          avg_amount: number
+          charge_count: number
+          created_at: string
+          decline_rate: number
+          distinct_customers: number
+          last_computed_at: string
+          max_amount: number
+          merchant_id: string
+          p95_amount: number
+          top_currencies: Json
+          updated_at: string
+          window_days: number
+        }
+        Insert: {
+          avg_amount?: number
+          charge_count?: number
+          created_at?: string
+          decline_rate?: number
+          distinct_customers?: number
+          last_computed_at?: string
+          max_amount?: number
+          merchant_id: string
+          p95_amount?: number
+          top_currencies?: Json
+          updated_at?: string
+          window_days?: number
+        }
+        Update: {
+          avg_amount?: number
+          charge_count?: number
+          created_at?: string
+          decline_rate?: number
+          distinct_customers?: number
+          last_computed_at?: string
+          max_amount?: number
+          merchant_id?: string
+          p95_amount?: number
+          top_currencies?: Json
+          updated_at?: string
+          window_days?: number
+        }
+        Relationships: []
       }
       merchant_staff_roles: {
         Row: {
@@ -19973,6 +20048,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      risk_blocklists: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          identifier_type: string
+          identifier_value: string
+          is_active: boolean
+          metadata: Json
+          reason: string
+          severity: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          identifier_type: string
+          identifier_value: string
+          is_active?: boolean
+          metadata?: Json
+          reason: string
+          severity?: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          identifier_type?: string
+          identifier_value?: string
+          is_active?: boolean
+          metadata?: Json
+          reason?: string
+          severity?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
