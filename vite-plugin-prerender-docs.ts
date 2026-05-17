@@ -30,7 +30,18 @@ interface DocRoute {
   h1: string;
   content: string;
   serveAsExtensionlessFile?: boolean;
+  ogImage?: string;
 }
+
+// Per-route OG image overrides. Routes not listed here fall back to the
+// sitewide /images/og-social.png card injected by index.html. All entries
+// MUST resolve to a 1200×630 PNG hosted on kangopenbanking.com/images/.
+const OG_IMAGE_OVERRIDES: Record<string, string> = {
+  '/developer/getting-started': '/images/og-getting-started.png',
+  '/developer/api-explorer': '/images/og-api-explorer.png',
+  '/developer/gateway/quickstart': '/images/og-gateway-quickstart.png',
+  '/developer/gateway/webhooks': '/images/og-gateway-webhooks.png',
+};
 
 function escapeHtml(value: unknown): string {
   return String(value ?? '')
