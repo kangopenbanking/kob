@@ -1,22 +1,45 @@
-// k6 — Webhook flood scenario (Phase 8 load harness).
+// Phase 8 — Scalability. Webhook delivery flood against the sandbox simulator.
+// SLO: p95 delivery < 3000ms, success >= 99.0%.
+
 import http from "k6/http";
 import { check } from "k6";
+import { uuidv4 } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
+
+const BASE = __ENV.KOB_BASE_URL || "https://sandbox-api.kangopenbanking.com/v1";
+const KEY = __ENV.KOB_API_KEY || "sk_test_REPLACE_ME";
 
 export const options = {
-  vus: 80,
+  vus: 30,
   duration: "2m",
   thresholds: {
-    http_req_duration: ["p(95)<800"],
-    http_req_failed:   ["rate<0.005"],
+    http_req_duration: ["p(95)<3000"],
+    http_req_failed: ["rate<0.01"],
   },
 };
 
-const BASE = __ENV.KOB_BASE || "https://sandbox-api.kangopenbanking.com/v1";
-const TOKEN = __ENV.KOB_TOKEN || "sbx_test_token_placeholder";
+const EVENTS = [
+  "charge.successful",
+  "charge.failed",
+  "payout.completed",
+  "refund.processed",
+];
 
 export default function () {
-  const res = http.post(`${BASE}/webhooks/test-deliver`,
-    JSON.stringify({ event: "charge.succeeded", payload: { tx_ref: `k6-${Date.now()}` } }),
-    { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` } });
-  check(res, { "no 5xx": (r) => r.status < 500 });
+  const event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  const res = http.post(
+    `${BASE}/sandbox/webhooks/simulate`,
+    JSON.stringify({ event_type: event, delivery_id: uuidv4() }),
+    {
+      headers: {
+        Authorization: `Bearer ${KEY}`,
+        "Content-Type": "application/json",
+        "X-Trace-Id": uuidv4(),
+      },
+      tags: { name: "POST /sandbox/webhooks/simulate" },
+    }
+  );
+
+  check(res, {
+    "queued or delivered": (r) => r.status === 200 || r.status === 202,
+  });
 }

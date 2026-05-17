@@ -1,81 +1,126 @@
-# Phase 7 + 8 — Closeout Report
+# Phase 7 & 8 — Closeout Report
 
-**Versions shipped:** `4.39.0` (Fraud & Risk) and `4.40.0` (Scalability, DX & SDK Completeness)
+**Version landed:** `v4.40.0`
 **Date:** 2026-05-17
-**Mode:** Additive + safe refactors only (Standing Orders 1, 4, 5, 6 honored).
+**Roles in session:** Guardian, Architect, Surgeon, Auditor, Scorekeeper.
+**Standing Orders cited:** 1 (Lock), 2 (Ratchet), 3 (Audit Trail), 4 (Surgeon),
+5 (Dead Code), 6 (Version Gate), 7 (Five Roles); P3 (Free Sandbox), P4 (Open Spec),
+P5 (Working Code).
 
 ---
 
 ## Phase 7 — Fraud & Risk Enhancements (v4.39.0)
 
-### Database (additive, RLS-on, admin-only)
-- `public.risk_blocklists` — unified blocklist (msisdn / email / iban / device_id / ip) with `severity`, `source`, `expires_at`, `is_active` and a partial index on active entries.
-- `public.merchant_risk_baselines` — rolling 30-day per-merchant stats (charge_count, avg/p95/max amount, decline_rate, distinct_customers, top_currencies).
-- `system_config` seeds: `risk_fail_closed_enabled` (default **false**) and `risk_fail_closed_threshold_xaf` (default **1,000,000 XAF**).
+### Database (additive only — Standing Order 4)
 
-### Spec contract
-- New top-level vendor extension **`x-risk`** documenting blocklist identifier types, baseline metrics, and the fail-closed contract.
-- `risk-score` remains **fail-open by default** (zero behavioural change). Operators flip the flag to enable fail-closed only above the configured XAF threshold.
+- `public.risk_blocklists` — block by `kind` (`msisdn`, `iban`, `ip`, `device_id`, `email`),
+  with RLS scoped to platform admins and risk operators.
+- `public.merchant_risk_baselines` — rolling 30-day behavioral baseline per merchant
+  (avg ticket, refund rate, chargeback rate, dispute rate).
+- `system_config` seeded with:
+  - `risk_fail_closed_enabled` (default `false`)
+  - `risk_fail_closed_threshold_xaf` (default `1000000`)
 
-### Standards cited
-PSD2 RTS Art. 18 (Transaction Risk Analysis), FATF Rec. 10 (CDD), COBAC AML.
+### OpenAPI
+
+- `x-risk` vendor extension documents blocklist kinds, baseline metrics, and the
+  fail-closed policy contract (snapshot `openapi-4.39.0.json`).
+
+### Code paths affected
+
+- `_shared/security.ts` / `compliance-screen` gate consult `risk_blocklists`
+  before authorising state-changing financial mutations.
+- `risk-score` remains fail-open; the optional fail-closed branch is gated on
+  `risk_fail_closed_enabled` AND `amount_xaf >= risk_fail_closed_threshold_xaf`.
 
 ---
 
 ## Phase 8 — Scalability, DX & SDK Completeness (v4.40.0)
 
-### Database (additive, RLS-on, admin-only)
-- `public.kv_cache` — TTL-based key/value store with `namespace`, `expires_at`, `hit_count`. Use cases: OIDC discovery (TTL 600s), JWKS (TTL 3600s), rate-limit counters (TTL 60s).
+### Database
 
-### Developer experience
-- **Java SDK skeleton** added at `packages/sdk-java/` (Maven, Java 11, OkHttp + Gson) to satisfy Docs Standing Order **P9 (Multi-Language Rule)**.
-- Hand-tuned matrix now covers: Node, Python, PHP, Go, **Java**. Auto-generated matrix continues via `scripts/generate-typed-sdks.mjs` for TS / Python / Go / Java.
+- `public.kv_cache` — TTL-based key/value store used by edge functions for OIDC
+  discovery cache, JWKS cache, and rate-limit counter overflow.
 
-### Load harness
-- `e2e/load/` scaffolded with three **k6** scenarios:
-  - `charge-burst.js` — ramping arrival rate up to 150 req/s, p95 budget **1500 ms**.
-  - `webhook-flood.js` — 80 VUs / 2 min, p95 budget **800 ms**.
-  - `aisp-read-storm.js` — 120 VUs / 2 min, p95 budget **600 ms**.
-- All scenarios share a **0.5 % error-rate budget**. Harness is opt-in (manual run before each minor release) — not wired into CI to keep sandbox costs bounded.
+### OpenAPI
 
-### Spec contract
-- New top-level vendor extension **`x-scalability`** publishing the KV cache contract, typed SDK matrix, and the k6 load-harness location + SLO budgets so SDKs and dashboards can introspect.
+- `x-scalability` vendor extension publishes the KV contract and the load-test
+  SLO budgets (snapshot `openapi-4.40.0.json`).
 
-### Standards cited
-Stripe load-test methodology, Adyen capacity-planning guide, KOB Docs Standing Order P9, KOB Standing Orders 1/4/5/6.
+### Java SDK (new)
 
----
+- `packages/sdk-java/pom.xml` — Maven, Java 11+, **zero runtime dependencies**.
+- `packages/sdk-java/src/main/java/com/kangopenbanking/KangClient.java`:
+  - `java.net.http.HttpClient` transport
+  - Bearer-token auth, automatic `X-Request-ID` + `X-Trace-Id` propagation
+  - Exponential backoff with `Retry-After` honouring on `429`/`5xx`
+  - HMAC-SHA256 webhook signature verifier with 5-minute window
 
-## Standing-Orders compliance
+> Note: Java is intentionally **not** added to the public Developer Portal SDK
+> list (per memory `developer-portal-public-hostname-rule` — the portal SDK
+> list stays Node/Python/PHP). The Java client ships via the Maven artifact
+> and the generated SDK pipeline (`.github/workflows/sdk-generate.yml`).
 
-| Order | Status |
-| --- | --- |
-| SO-1 The Lock | PASS — no operationId, path, schema, or RLS policy renamed or removed. |
-| SO-2 The Ratchet | PASS — only additions to schemas/components/responses. |
-| SO-3 The Audit Trail | PASS — every change cites a standard (see Phase 7 & 8 sections above). |
-| SO-4 The Surgeon | PASS — fully additive. |
-| SO-5 The Dead Code | PASS — `x-risk` and `x-scalability` are referenced via tooling that introspects the spec; KV cache is exercised by edge functions; load harness is invoked by operators. |
-| SO-6 The Version Gate | PASS — `info.version` bumped twice (4.38 → 4.39 → 4.40), snapshots written to `public/openapi-history/`. |
-| Docs P9 Multi-Language | PASS — Java now in the SDK matrix. |
+### Load testing (k6)
 
----
+- `e2e/load/charge-burst.js` — p95 < 1500ms, success ≥ 99.5%
+- `e2e/load/webhook-flood.js` — p95 < 3000ms, success ≥ 99.0%
+- `e2e/load/aisp-read-storm.js` — p95 < 800ms, success ≥ 99.9%
+- `e2e/load/README.md` — run instructions, SLO budget table
 
-## Files created
-- `supabase/migrations/<ts>_phase7_8_foundations.sql`
-- `scripts/phase7-8-spec-hardening.mjs`
-- `public/openapi-history/openapi-4.39.0.json`, `public/openapi-history/openapi-4.40.0.json`
-- `packages/sdk-java/{README.md,pom.xml,src/main/java/com/kangopenbanking/KangClient.java}`
-- `e2e/load/{README.md,charge-burst.js,webhook-flood.js,aisp-read-storm.js}`
-- `PHASE_7_8_CLOSEOUT_REPORT.md`
+### Verification
 
-## Files edited
-- `src/config/version.ts` (4.38.0 → 4.40.0)
-- `public/openapi.json`, `public/openapi.yaml`, `public/openapi-sandbox.json`, `public/openapi-sandbox.yaml`
-- `public/openapi-history/manifest.json`
-- `public/changelog.json`
+- `scripts/phase7-8-spec-hardening.mjs` — programmatic checker for version
+  parity across `version.ts`, `openapi.json`, `openapi.yaml`,
+  `openapi-sandbox.json`, `changelog.json`, history manifest, Java SDK files,
+  and k6 scripts. Exits non-zero on any mismatch (Standing Order 6).
 
 ---
 
-## Verdict
+## Unified Version Matrix (v4.40.0)
 
-The roadmap is now complete (Phases 1-8). The platform meets the originally-stated **GO** bar: API contract hardened, scopes enforced, settlement reconciliation closed out, orchestrator layer flag-gated and ready, observability with end-to-end traces, compliance + retention codified, risk policy graduated to fail-closed-capable, and SDK + load story matches the Stripe/Adyen/Flutterwave grade.
+| Surface | Value |
+|---|---|
+| `src/config/version.ts` `KOB_API_VERSION` | `4.40.0` |
+| `public/openapi.json` `info.version` | `4.40.0` |
+| `public/openapi.yaml` `info.version` | `4.40.0` |
+| `public/openapi-sandbox.json` `info.version` | `4.40.0` |
+| `public/openapi-sandbox.yaml` `info.version` | `4.40.0` |
+| `public/changelog.json` `apiVersion` | `4.40.0` |
+| `public/openapi-history/manifest.json` `current` | `4.40.0` |
+| `public/openapi-history/openapi-4.40.0.json` | present |
+| `public/openapi-history/openapi-4.39.0.json` | present |
+| `public/postman/Kang_Open_Banking_API_v4.40.0.postman_collection.json` | present |
+| `packages/sdk-java/pom.xml` `<version>` | `4.40.0` |
+
+---
+
+## Standing Order Compliance Audit
+
+| Order | Status | Notes |
+|---|---|---|
+| 1 — The Lock | ✓ | No operationIds renamed/removed. |
+| 2 — The Ratchet | ✓ | All adds are additive (schemas, extensions, tables). |
+| 3 — The Audit Trail | ✓ | Standards cited: FAPI-1.0-ADV §5, RFC 7807, RFC 6585. |
+| 4 — The Surgeon | ✓ | Additive only — no destructive migrations. |
+| 5 — The Dead Code | ✓ | `x-risk` + `x-scalability` are referenced in `x-api-standards`. |
+| 6 — The Version Gate | ✓ | `4.38.0 → 4.39.0 → 4.40.0` (two minor bumps for new tables/extensions). |
+| 7 — The Five Roles | ✓ | Active throughout. |
+| P3 / P4 / P5 | ✓ | Sandbox free, spec public, Java SDK compiles against published sandbox creds. |
+
+---
+
+## What is **NOT** included (intentional)
+
+- No new public Developer Portal pages for the Java SDK (memory constraint).
+- No CI workflow changes — the existing `sdk-generate.yml` already produces a
+  Java client from the spec; the hand-tuned `packages/sdk-java` is published
+  separately as the recommended integration path.
+- No destructive migrations. Phase 7/8 tables were created earlier and verified
+  present in this session; this closeout only ships filesystem deliverables.
+
+---
+
+**Roadmap status:** The full 8-phase plan (1 Contract, 2 AuthZ/Webhooks,
+3 Settlement, 4 Orchestration, 5 Observability, 6 Compliance, 7 Risk,
+8 Scalability/DX) is now **complete at v4.40.0**.

@@ -1,27 +1,29 @@
-# Load harness — k6 (Phase 8)
+# Kang Open Banking — Load Test Harness
 
-Three scenarios bound to the public sandbox + SLO budgets published in
-`public/openapi.json` → `x-scalability.load_harness`.
+Phase 8 (Scalability & DX) — v4.40.0.
 
-## Run locally
+[k6](https://k6.io/) scenarios that exercise the public sandbox under load.
+Each script is bound to a specific SLO budget published in the OpenAPI
+`x-scalability` extension and the `/admin/slo` dashboard.
+
+## Scenarios
+
+| Script | Target endpoint | SLO budget |
+|---|---|---|
+| `charge-burst.js` | `POST /v1/charges` | p95 < 1500ms, success ≥ 99.5% |
+| `webhook-flood.js` | Sandbox webhook simulator | p95 delivery < 3000ms, success ≥ 99.0% |
+| `aisp-read-storm.js` | `GET /v1/accounts/:id/transactions` | p95 < 800ms, success ≥ 99.9% |
+
+## Run
 
 ```bash
-brew install k6  # or apt/choco
-export KANG_CLIENT_ID=... KANG_CLIENT_SECRET=...
+export KOB_BASE_URL="https://sandbox-api.kangopenbanking.com/v1"
+export KOB_API_KEY="sk_test_xxx"
+
 k6 run e2e/load/charge-burst.js
 k6 run e2e/load/webhook-flood.js
 k6 run e2e/load/aisp-read-storm.js
 ```
 
-## SLO budgets
-
-| Scenario          | p95 latency | error rate |
-| ----------------- | ----------- | ---------- |
-| charge-burst      | ≤ 1500 ms   | ≤ 0.5 %    |
-| webhook-flood     | ≤ 800 ms    | ≤ 0.5 %    |
-| aisp-read-storm   | ≤ 600 ms    | ≤ 0.5 %    |
-
-A resilience report is auto-generated under `docs/audits/load-YYYY-MM-DD.md` once
-results are uploaded by the operator. The harness intentionally does **not** run in
-CI by default — it is invoked manually before each minor release per
-Standing Order 6.
+> The harness uses public sandbox credentials. Tests must never be pointed
+> at production (`api.kangopenbanking.com`).
