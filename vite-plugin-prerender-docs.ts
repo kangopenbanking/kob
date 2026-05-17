@@ -763,6 +763,20 @@ export function prerenderDocsPlugin(): Plugin {
             `<meta property="og:url" content="https://kangopenbanking.com${route.path}" />`
           );
 
+          // Per-route og:image / twitter:image override (1200x630 PNG on kangopenbanking.com/images/)
+          const ogImagePath = route.ogImage || OG_IMAGE_OVERRIDES[route.path];
+          if (ogImagePath) {
+            const absoluteOg = `https://kangopenbanking.com${ogImagePath}`;
+            html = html.replace(
+              /<meta property="og:image" content="[^"]*">/,
+              `<meta property="og:image" content="${absoluteOg}">`
+            );
+            html = html.replace(
+              /<meta name="twitter:image" content="[^"]*">/,
+              `<meta name="twitter:image" content="${absoluteOg}">`
+            );
+          }
+
           // Replace the <noscript> block with route-specific content
           html = html.replace(
             /<noscript>[\s\S]*?<\/noscript>/,
