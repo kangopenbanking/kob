@@ -14,27 +14,18 @@
 ###########################################################################
 
 [build]
-  command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
   AUDIT_BASE = "https://kangopenbanking.com"
 
-# Production deploys (main branch)
 [context.production]
-  # NOTE: production uses predeploy:offline to avoid the chicken-and-egg
-  # where the live audit checks the not-yet-published version. Post-deploy
-  # verification is handled by .github/workflows/developer-portal-deep-audit.yml
-  # (15-min cron) and developer-portal-uptime.yml.
   command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build"
 
-# Deploy previews (pull requests) — skip the live audit since the new
-# version isn't deployed yet, only run the version-parity gate.
 [context.deploy-preview]
   command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build"
 
-# Branch deploys
 [context.branch-deploy]
   command = "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build"
 
