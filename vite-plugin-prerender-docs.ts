@@ -30,7 +30,18 @@ interface DocRoute {
   h1: string;
   content: string;
   serveAsExtensionlessFile?: boolean;
+  ogImage?: string;
 }
+
+// Per-route OG image overrides. Routes not listed here fall back to the
+// sitewide /images/og-social.png card injected by index.html. All entries
+// MUST resolve to a 1200×630 PNG hosted on kangopenbanking.com/images/.
+const OG_IMAGE_OVERRIDES: Record<string, string> = {
+  '/developer/getting-started': '/images/og-getting-started.png',
+  '/developer/api-explorer': '/images/og-api-explorer.png',
+  '/developer/gateway/quickstart': '/images/og-gateway-quickstart.png',
+  '/developer/gateway/webhooks': '/images/og-gateway-webhooks.png',
+};
 
 function escapeHtml(value: unknown): string {
   return String(value ?? '')
@@ -751,6 +762,20 @@ export function prerenderDocsPlugin(): Plugin {
             /<meta property="og:url" content="[^"]*" \/>/,
             `<meta property="og:url" content="https://kangopenbanking.com${route.path}" />`
           );
+
+          // Per-route og:image / twitter:image override (1200x630 PNG on kangopenbanking.com/images/)
+          const ogImagePath = route.ogImage || OG_IMAGE_OVERRIDES[route.path];
+          if (ogImagePath) {
+            const absoluteOg = `https://kangopenbanking.com${ogImagePath}`;
+            html = html.replace(
+              /<meta property="og:image" content="[^"]*">/,
+              `<meta property="og:image" content="${absoluteOg}">`
+            );
+            html = html.replace(
+              /<meta name="twitter:image" content="[^"]*">/,
+              `<meta name="twitter:image" content="${absoluteOg}">`
+            );
+          }
 
           // Replace the <noscript> block with route-specific content
           html = html.replace(
