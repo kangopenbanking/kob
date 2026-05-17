@@ -1,9 +1,29 @@
 {
-  "apiVersion": "4.32.0",
+  "apiVersion": "4.33.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-05-08",
+  "lastUpdated": "2026-05-17",
   "entries": [
+    {
+      "version": "4.33.0",
+      "date": "2026-05-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 1 API contract hardening — cursor pagination parity, RFC 7807 error normalization, and X-Request-ID correlation across all 405 operations.",
+      "highlights": [
+        "Added starting_after + ending_before cursor parameters to 41 offset-only list endpoints (offset retained for backward compatibility per Standing Order 1).",
+        "Normalized 17 inline 4xx/5xx responses to shared RFC 7807 ProblemDetails components (BadRequest, NotFound, Conflict, etc.).",
+        "Added optional X-Request-ID header to every operation; echoed back on responses and persisted across edge functions, ledger writes, and outbound webhook deliveries.",
+        "New OpenAPI quality gates: cursor-parity check and Problem coverage check, wired into CI.",
+        "Fully additive — no operationId/path/schema rename or removal."
+      ],
+      "standard_citations": [
+        "RFC 7807 Problem Details for HTTP APIs",
+        "Stripe/Adyen cursor pagination conventions",
+        "W3C Trace Context (X-Request-ID correlation)",
+        "KOB Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)"
+      ]
+    },
     {
       "version": "4.32.0",
       "date": "2026-05-08",
