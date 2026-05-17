@@ -335,6 +335,8 @@ const IntegrationLayerOverview = lazy(() => import("./pages/developer/Integratio
 const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/ProviderWebhookReceiversGuide"));
 // Phase 2 (bank-grade) — public webhook event registry sourced from SSOT
 const WebhookEventsRegistry = lazy(() => import("./pages/developer/WebhookEventsRegistry"));
+// Phase 3 (bank-grade) — canonical payment state machine doc page
+const PaymentStateMachine = lazy(() => import("./pages/developer/PaymentStateMachine"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 // Phase 5 — additive merchants documentation hub
@@ -1175,6 +1177,8 @@ function App() {
               <Route path="webhooks/provider-receivers" element={<ProviderWebhookReceiversGuide />} />
               {/* PERMANENT PUBLIC ROUTE — Phase 2 bank-grade — webhook event registry */}
               <Route path="webhooks/events" element={<WebhookEventsRegistry />} />
+              {/* PERMANENT PUBLIC ROUTE — Phase 3 bank-grade — canonical payment state machine */}
+              <Route path="payments/state-machine" element={<PaymentStateMachine />} />
               <Route path="webhooks/onboarding" element={<ProviderOnboardingChecklist />} />
               {/* Phase 5 — Merchants documentation hub */}
               <Route path="merchants" element={<MerchantsDocsHub />} />

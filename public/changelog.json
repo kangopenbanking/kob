@@ -1,9 +1,32 @@
 {
-  "apiVersion": "4.34.0",
+  "apiVersion": "4.35.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-17",
   "entries": [
+    {
+      "version": "4.35.0",
+      "date": "2026-05-17",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 3 bank-grade hardening — reconciliation Kanban data model, immutable audit-export bucket, canonical payment state machine documentation.",
+      "highlights": [
+        "Extended public.reconciliation_mismatches with assignee, settlement_id, ledger_batch_id, priority, detected_by, updated_at — enables the Kanban (open → investigating → resolved → written_off) without renaming any existing field.",
+        "New private storage bucket audit-exports — write-once, admin-only read, 7-year retention horizon (COBAC).",
+        "New permanent public page /developer/payments/state-machine — canonical charge lifecycle: 13 states, 19 legal transitions, terminal-state guarantees (Order P1, P2, P6).",
+        "OpenAPI x-state-machine extension documents the same states/transitions for SDK and tooling consumers.",
+        "OpenAPI x-audit-export-bucket extension documents the immutable export destination.",
+        "Snapshot openapi-4.35.0.json published; history manifest updated.",
+        "Fully additive — no operationId, path, schema, RLS policy, or column renamed or removed (Standing Orders 1 & 4)."
+      ],
+      "standard_citations": [
+        "ISO 20022 reconciliation message family",
+        "COBAC 7-year retention horizon",
+        "Stripe charge state model (terminal-state immutability)",
+        "OpenAPI 3.1 vendor extensions (x-*)",
+        "KOB Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)"
+      ]
+    },
     {
       "version": "4.34.0",
       "date": "2026-05-17",
