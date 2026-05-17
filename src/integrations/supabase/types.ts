@@ -18448,15 +18448,19 @@ export type Database = {
       }
       reconciliation_mismatches: {
         Row: {
+          assignee: string | null
           created_at: string
           details: Json | null
+          detected_by: string | null
           entity_id: string | null
           entity_type: string
           id: string
+          ledger_batch_id: string | null
           mismatch_type: string
           platform_amount: number | null
           platform_currency: string | null
           platform_status: string | null
+          priority: string | null
           provider_amount: number | null
           provider_currency: string | null
           provider_ref: string | null
@@ -18467,17 +18471,23 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           run_id: string
+          settlement_id: string | null
+          updated_at: string
         }
         Insert: {
+          assignee?: string | null
           created_at?: string
           details?: Json | null
+          detected_by?: string | null
           entity_id?: string | null
           entity_type: string
           id?: string
+          ledger_batch_id?: string | null
           mismatch_type: string
           platform_amount?: number | null
           platform_currency?: string | null
           platform_status?: string | null
+          priority?: string | null
           provider_amount?: number | null
           provider_currency?: string | null
           provider_ref?: string | null
@@ -18488,17 +18498,23 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           run_id: string
+          settlement_id?: string | null
+          updated_at?: string
         }
         Update: {
+          assignee?: string | null
           created_at?: string
           details?: Json | null
+          detected_by?: string | null
           entity_id?: string | null
           entity_type?: string
           id?: string
+          ledger_batch_id?: string | null
           mismatch_type?: string
           platform_amount?: number | null
           platform_currency?: string | null
           platform_status?: string | null
+          priority?: string | null
           provider_amount?: number | null
           provider_currency?: string | null
           provider_ref?: string | null
@@ -18509,6 +18525,8 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           run_id?: string
+          settlement_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
