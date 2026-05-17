@@ -899,6 +899,30 @@ export type Database = {
           },
         ]
       }
+      api_key_scopes: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          granted_by: string | null
+          id: string
+          scope: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          scope: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       api_test_requests: {
         Row: {
           client_id: string
@@ -24266,6 +24290,51 @@ export type Database = {
           },
         ]
       }
+      webhook_endpoint_health: {
+        Row: {
+          circuit_state: Database["public"]["Enums"]["webhook_circuit_state"]
+          consecutive_failures: number
+          created_at: string
+          endpoint_id: string
+          id: string
+          last_failure_at: string | null
+          last_success_at: string | null
+          merchant_id: string | null
+          open_until: string | null
+          rolling_failure_count: number
+          rolling_window_start: string
+          updated_at: string
+        }
+        Insert: {
+          circuit_state?: Database["public"]["Enums"]["webhook_circuit_state"]
+          consecutive_failures?: number
+          created_at?: string
+          endpoint_id: string
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          merchant_id?: string | null
+          open_until?: string | null
+          rolling_failure_count?: number
+          rolling_window_start?: string
+          updated_at?: string
+        }
+        Update: {
+          circuit_state?: Database["public"]["Enums"]["webhook_circuit_state"]
+          consecutive_failures?: number
+          created_at?: string
+          endpoint_id?: string
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          merchant_id?: string | null
+          open_until?: string | null
+          rolling_failure_count?: number
+          rolling_window_start?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_inbox: {
         Row: {
           attempt_count: number
@@ -25771,6 +25840,7 @@ export type Database = {
         | "flutterwave"
         | "soap_bank"
       tenant_connector_owner_type: "institution" | "merchant" | "developer"
+      webhook_circuit_state: "closed" | "half_open" | "open"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -26158,6 +26228,7 @@ export const Constants = {
         "soap_bank",
       ],
       tenant_connector_owner_type: ["institution", "merchant", "developer"],
+      webhook_circuit_state: ["closed", "half_open", "open"],
     },
   },
 } as const
