@@ -337,6 +337,8 @@ const ProviderWebhookReceiversGuide = lazy(() => import("./pages/developer/Provi
 const WebhookEventsRegistry = lazy(() => import("./pages/developer/WebhookEventsRegistry"));
 // Phase 3 (bank-grade) — canonical payment state machine doc page
 const PaymentStateMachine = lazy(() => import("./pages/developer/PaymentStateMachine"));
+// Phase 5 (bank-grade) — admin SLO observability dashboard
+const AdminSLO = lazy(() => import("./pages/admin/AdminSLO"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 // Phase 5 — additive merchants documentation hub
@@ -951,6 +953,7 @@ function App() {
               <Route path="api-testing" element={<ApiTestingAdmin />} />
               <Route path="system-alerts" element={<SystemAlerts />} />
               <Route path="api-performance" element={<ApiPerformance />} />
+              <Route path="slo" element={<AdminSLO />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
               <Route path="load-testing" element={<LoadTesting />} />

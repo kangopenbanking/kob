@@ -9257,6 +9257,7 @@ export type Database = {
           settlement_currency: string | null
           status: string
           subscription_id: string | null
+          trace_id: string | null
           tx_ref: string
           updated_at: string
         }
@@ -9286,6 +9287,7 @@ export type Database = {
           settlement_currency?: string | null
           status?: string
           subscription_id?: string | null
+          trace_id?: string | null
           tx_ref: string
           updated_at?: string
         }
@@ -9315,6 +9317,7 @@ export type Database = {
           settlement_currency?: string | null
           status?: string
           subscription_id?: string | null
+          trace_id?: string | null
           tx_ref?: string
           updated_at?: string
         }
@@ -19912,6 +19915,7 @@ export type Database = {
           reference_id: string | null
           reference_type: string | null
           running_balance: number
+          trace_id: string | null
         }
         Insert: {
           amount: number
@@ -19929,6 +19933,7 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           running_balance?: number
+          trace_id?: string | null
         }
         Update: {
           amount?: number
@@ -19946,6 +19951,7 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           running_balance?: number
+          trace_id?: string | null
         }
         Relationships: [
           {
@@ -24272,6 +24278,7 @@ export type Database = {
           id: string
           response_body: string | null
           status: string
+          trace_id: string | null
           webhook_id: string
         }
         Insert: {
@@ -24284,6 +24291,7 @@ export type Database = {
           id?: string
           response_body?: string | null
           status: string
+          trace_id?: string | null
           webhook_id: string
         }
         Update: {
@@ -24296,6 +24304,7 @@ export type Database = {
           id?: string
           response_body?: string | null
           status?: string
+          trace_id?: string | null
           webhook_id?: string
         }
         Relationships: [
