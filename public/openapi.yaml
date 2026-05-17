@@ -99240,6 +99240,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '402':
           description: 'QR_003 card_unavailable: insufficient virtual-card balance.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/card-unavailable
+                title: card_unavailable
+                status: 402
+                code: QR_003
+                detail: 'QR_003 card_unavailable: insufficient virtual-card balance.'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -99248,10 +99258,30 @@ paths:
           $ref: '#/components/responses/Conflict'
         '412':
           description: 'QR_009 partner_sca_evidence_missing: PSD2 RTS Art. 18 SCA attestation absent or expired.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/partner-sca-evidence-missing
+                title: partner_sca_evidence_missing
+                status: 412
+                code: QR_009
+                detail: 'QR_009 partner_sca_evidence_missing: PSD2 RTS Art. 18 SCA attestation absent or expired.'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '502':
           description: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (user-mode debit auto-refunded).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://errors.kangopenbanking.com/qr/upstream-pisp-error
+                title: upstream_pisp_error
+                status: 502
+                code: QR_005
+                detail: 'QR_005 upstream_pisp_error: PISP consent/payment/submission failed (user-mode debit auto-refunded).'
   /v1/merchants/qr-directory:
     get:
       tags:
