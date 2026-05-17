@@ -5226,6 +5226,48 @@ export type Database = {
         }
         Relationships: []
       }
+      charge_dlq: {
+        Row: {
+          attempts: number
+          charge_id: string | null
+          created_at: string
+          id: string
+          last_error: Json | null
+          merchant_id: string | null
+          provider: string | null
+          replayed_at: string | null
+          replayed_by: string | null
+          trace_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          charge_id?: string | null
+          created_at?: string
+          id?: string
+          last_error?: Json | null
+          merchant_id?: string | null
+          provider?: string | null
+          replayed_at?: string | null
+          replayed_by?: string | null
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          charge_id?: string | null
+          created_at?: string
+          id?: string
+          last_error?: Json | null
+          merchant_id?: string | null
+          provider?: string | null
+          replayed_at?: string | null
+          replayed_by?: string | null
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_certificates: {
         Row: {
           certificate_pem: string
@@ -11103,6 +11145,42 @@ export type Database = {
           resolved?: boolean
           route?: string | null
           string_key?: string
+        }
+        Relationships: []
+      }
+      idempotency_cache_extended: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          idempotency_key: string
+          merchant_id: string
+          request_hash: string
+          response_body: Json | null
+          response_status: number | null
+          trace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key: string
+          merchant_id: string
+          request_hash: string
+          response_body?: Json | null
+          response_status?: number | null
+          trace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
+          merchant_id?: string
+          request_hash?: string
+          response_body?: Json | null
+          response_status?: number | null
+          trace_id?: string | null
         }
         Relationships: []
       }
