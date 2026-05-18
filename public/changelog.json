@@ -2,7 +2,7 @@
   "apiVersion": "4.40.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-05-17",
+  "lastUpdated": "2026-05-18",
   "entries": [
     {
       "version": "4.40.0",
@@ -2158,6 +2158,6 @@
       "entry_offset": 0
     },
     "total_entries": 70,
-    "generated_at": "2026-05-17T20:32:26.145Z"
+    "generated_at": "2026-05-18T00:06:21.268Z"
   }
 }
