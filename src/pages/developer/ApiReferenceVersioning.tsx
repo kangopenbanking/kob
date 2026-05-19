@@ -76,7 +76,7 @@ export default function ApiReferenceVersioning() {
                 {[
                   ["URL version", "v{major}", "v1"],
                   ["Spec version", "{major}.{minor}.{patch}", "4.6.0"],
-                  ["SDK version", "{major}.{minor}.{patch}", "1.1.0"],
+                  ["SDK version", "{major}.{minor}.{patch}", "1.6.1"],
                 ].map(([comp, fmt, ex]) => (
                   <tr key={comp} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{comp}</td>
@@ -265,12 +265,12 @@ export default function ApiReferenceVersioning() {
               </thead>
               <tbody>
                 {[
-                  ["Node.js", "1.1.0", "@kang/openbanking-node"],
-                  ["Python", "1.1.0", "kang-openbanking"],
-                  ["PHP", "1.1.0", "kang/openbanking-php"],
-                  ["Java", "4.28.1", "com.kangopenbanking:kangopenbanking-sdk-typed"],
-                  ["Go", "v1.5.0", "github.com/kangopenbanking/sdk-go"],
-                  ["Ruby", "1.0.0", "kangopenbanking"],
+                  ["Node.js", "1.6.1", "@kang/openbanking-node"],
+                  ["Python", "1.6.1", "kang-openbanking"],
+                  ["PHP", "1.6.1", "kang/openbanking-php"],
+                  ["Java", "4.40.0", "com.kangopenbanking:kangopenbanking-sdk-typed"],
+                  ["Go", "v1.6.1", "github.com/kangopenbanking/sdk-go"],
+                  ["Ruby", "community", "openapi-generator-cli (ruby)"],
                 ].map(([sdk, ver, pkg]) => (
                   <tr key={sdk} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{sdk}</td>

@@ -84,6 +84,9 @@ KOB follows a strict **zero breaking changes** policy for v1:
 
 | SDK | Current Version | Package |
 |-----|----------------|---------|
-| Node.js | 1.3.0 | `@kangopenbanking/sdk` |
-| Python | 1.1.0 | `kangopenbanking` |
-| PHP | 1.1.0 | `kangopenbanking/sdk-php` |
+| Node.js | 1.6.1 | `@kang/openbanking-node` |
+| Python | 1.6.1 | `kang-openbanking` |
+| PHP | 1.6.1 | `kang/openbanking-php` |
+| Go | 1.6.1 | `github.com/kangopenbanking/sdk-go` |
+| Java | 4.40.0 | `com.kangopenbanking:kangopenbanking-sdk-typed` |
+| Ruby | community | generated via `openapi-generator-cli` |
