@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Zap, Download, ExternalLink } from "lucide-react";
-import { KOB_API_VERSION } from "@/config/version";
+import { KOB_API_VERSION, KOB_SDK_VERSIONS } from "@/config/version";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
