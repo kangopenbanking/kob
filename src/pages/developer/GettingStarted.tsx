@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Zap, Download, ExternalLink } from "lucide-react";
-import { KOB_API_VERSION } from "@/config/version";
+import { KOB_API_VERSION, KOB_SDK_VERSIONS } from "@/config/version";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { InstantKeyGenerator } from "@/components/developer/InstantKeyGenerator";
@@ -233,12 +233,12 @@ export default function GettingStarted() {
           <CardContent className="space-y-4">
             <CodeBlock
               examples={[
-                { language: "bash", label: "Node.js", code: "npm install @kang/openbanking-node      # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-node" },
-                { language: "bash", label: "Python", code: "pip install kang-openbanking             # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-python" },
-                { language: "bash", label: "PHP", code: "composer require kang/openbanking-php    # v1.1.0\n# GitHub: https://github.com/kangfinance/openbanking-php" },
+                { language: "bash", label: "Node.js", code: `npm install @kang/openbanking-node@${KOB_SDK_VERSIONS.node}\n# GitHub: https://github.com/kangfinance/openbanking-node` },
+                { language: "bash", label: "Python", code: `pip install kang-openbanking==${KOB_SDK_VERSIONS.python}\n# GitHub: https://github.com/kangfinance/openbanking-python` },
+                { language: "bash", label: "PHP", code: `composer require kang/openbanking-php:^${KOB_SDK_VERSIONS.php}\n# GitHub: https://github.com/kangfinance/openbanking-php` },
                 { language: "bash", label: "Java", code: `<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>${KOB_API_VERSION}</version>\n</dependency>\n<!-- GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB -->` },
-                { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go  # v1.5.0\n# pkg.go.dev: https://pkg.go.dev/github.com/kangopenbanking/sdk-go" },
-                { language: "bash", label: "Ruby", code: "# Community guide via openapi-generator-cli (ruby)\n# GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB\n# Docs:   https://kangopenbanking.com/developer/guides/sdks#ruby" },
+                { language: "bash", label: "Go", code: `go get github.com/kangopenbanking/sdk-go@v${KOB_SDK_VERSIONS.go}\n# pkg.go.dev: https://pkg.go.dev/github.com/kangopenbanking/sdk-go` },
+                { language: "bash", label: "Ruby", code: "# Community SDK — generated from the OpenAPI spec.\n# Not officially maintained by Kang Open Banking.\nopenapi-generator-cli generate -i https://kangopenbanking.com/openapi.json -g ruby -o ./kang-ruby-client" },
               ]}
             />
             <p className="text-xs text-muted-foreground">

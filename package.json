@@ -13,6 +13,7 @@
     "test": "vitest run",
     "openapi:gates": "node scripts/openapi-quality-gates.mjs",
     "openapi:check-version": "node scripts/check-openapi-version.mjs",
+    "version:check-sync": "node scripts/check-version-sync.mjs",
     "version:print": "node scripts/print-expected-version.mjs",
     "audit:public": "node scripts/audit-public-access.mjs",
     "predeploy": "node scripts/predeploy.mjs",
