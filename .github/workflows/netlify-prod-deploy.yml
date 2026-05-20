@@ -1,0 +1,95 @@
+name: Netlify production deploy
+
+# Triggers a clean production rebuild of kangopenbanking.com whenever:
+#   1. Any commit lands on main that touches a version-bearing artifact
+#      (SSOT, OpenAPI spec, changelog, Postman, developer-portal pages).
+#   2. The auto-sync-version-artifacts workflow finishes successfully on main
+#      (covers the case where the bot commits regenerated artifacts).
+#   3. A maintainer dispatches it manually.
+#
+# Secret required (repo settings → Secrets → Actions):
+#   NETLIFY_BUILD_HOOK_URL  — created in Netlify under
+#     Site settings → Build & deploy → Build hooks (branch = main).
+#
+# Justification: Standing Order 6 (Version Gate) + ORDER P10 (Living Docs Rule).
+# Guarantees the deployed openapi.json and every /developer/* page reflect the
+# SSOT within minutes of merge, with no manual redeploy step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/config/version.ts'
+      - 'public/openapi.json'
+      - 'public/openapi.yaml'
+      - 'public/openapi-sandbox.json'
+      - 'public/openapi-sandbox.yaml'
+      - 'public/changelog.json'
+      - 'public/CHANGELOG.md'
+      - 'public/postman/**'
+      - 'src/pages/developer/**'
+      - 'docs/developer-portal/**'
+      - 'docs/public/**'
+      - 'index.html'
+      - 'netlify.toml'
+  workflow_run:
+    workflows: ['Auto-sync API version artifacts']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why are you triggering a manual prod deploy?'
+        required: false
+        default: 'Manual redeploy'
+
+concurrency:
+  group: netlify-prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    # When chained from workflow_run, only fire if the upstream succeeded.
+    if: >-
+      ${{ github.event_name != 'workflow_run'
+          || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Guard — secret present
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::NETLIFY_BUILD_HOOK_URL secret is not configured."
+            echo "Add it in repo Settings → Secrets and variables → Actions."
+            echo "See docs/netlify-build-hook.md for setup."
+            exit 1
+          fi
+
+      - name: POST Netlify build hook
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+        run: |
+          TITLE="Auto deploy · ${GITHUB_EVENT_NAME} · ${GITHUB_SHA::7}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            TITLE="Manual deploy · ${{ github.event.inputs.reason }} · ${GITHUB_SHA::7}"
+          fi
+          echo "Triggering Netlify build: ${TITLE}"
+          HTTP_CODE=$(curl -fsS -o /tmp/netlify.out -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' \
+            -d "{\"trigger_title\":\"${TITLE}\"}" \
+            "$HOOK")
+          echo "Netlify response: ${HTTP_CODE}"
+          cat /tmp/netlify.out || true
+          if [ "${HTTP_CODE}" != "200" ] && [ "${HTTP_CODE}" != "201" ] && [ "${HTTP_CODE}" != "204" ]; then
+            echo "::error::Netlify build hook returned ${HTTP_CODE}"
+            exit 1
+          fi
+
+      - name: Summary
+        run: |
+          echo "### Netlify production deploy triggered" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Event: \`${GITHUB_EVENT_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verify at /developer/deployment-status after deploy completes." >> "$GITHUB_STEP_SUMMARY"
