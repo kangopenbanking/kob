@@ -66,3 +66,35 @@ jobs:
 After triggering, visit `/developer/deployment-status` on the deployed site to
 verify all OpenAPI / Postman / changelog artifacts publish at the expected
 version.
+
+## 6. Automated post-merge deploy (wired)
+
+The repository already ships the workflow
+`.github/workflows/netlify-prod-deploy.yml`. It POSTs to
+`NETLIFY_BUILD_HOOK_URL` automatically in three cases:
+
+1. A push to `main` touches any version-bearing artifact — `src/config/version.ts`,
+   `public/openapi.{json,yaml}`, `public/openapi-sandbox.{json,yaml}`,
+   `public/changelog.json`, `public/CHANGELOG.md`, anything under
+   `public/postman/`, `src/pages/developer/`, `docs/developer-portal/`,
+   `docs/public/`, `index.html`, or `netlify.toml`.
+2. The `Auto-sync API version artifacts` workflow finishes successfully on
+   `main` (covers the case where the bot commits regenerated artifacts after
+   an SSOT bump).
+3. A maintainer dispatches it manually from the Actions tab.
+
+### One-time setup
+
+1. Create the Netlify build hook for the `main` branch (steps 1–2 above).
+2. Add it to the repo as a secret named `NETLIFY_BUILD_HOOK_URL`
+   (Settings → Secrets and variables → Actions → New repository secret).
+3. Done. The next merge that touches a covered path triggers a clean rebuild;
+   the deploy then re-runs `predeploy` (version-parity + public-access audit)
+   before publishing, so a stale spec cannot reach production.
+
+### Verifying it fired
+
+Open Actions → **Netlify production deploy** for the run, then check
+`/developer/deployment-status` on `kangopenbanking.com` once Netlify reports
+the build green.
+
