@@ -161,15 +161,27 @@ export const Footer = () => {
             <nav key={section.title} aria-label={section.ariaLabel}>
               <h3 className="font-semibold mb-4">{section.title}</h3>
               <ul className="space-y-1 text-sm text-muted-foreground">
-                {section.links.map((link) => (
+                {section.links.map((link: any) => (
                   <li key={link.to}>
-                    <Link
-                      to={link.to}
-                      title={link.title}
-                      className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.to}
+                        title={link.title}
+                        target="_blank"
+                        rel="noopener"
+                        className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.to}
+                        title={link.title}
+                        className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
