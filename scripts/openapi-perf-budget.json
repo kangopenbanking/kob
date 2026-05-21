@@ -1,21 +1,21 @@
 {
   "_comment": "Performance budget for public/openapi.json. Slice 5 baseline. Update via PR with Guardian sign-off (Standing Order 2).",
-  "_baselineRecordedAt": "2026-04-30",
-  "_baselineVersion": "4.26.9",
+  "_baselineRecordedAt": "2026-05-21",
+  "_baselineVersion": "4.40.0",
   "limits": {
     "rawBytesMax": 6000000,
     "gzipBytesMax": 200000,
     "operationsMax": 600,
     "schemasMax": 150,
     "paths": {
-      "minCount": 333,
+      "minCount": 346,
       "_note": "Ratchet floor — paths may grow but never drop below this without a major version bump."
     },
     "operations": {
-      "minCount": 391
+      "minCount": 405
     },
     "schemas": {
-      "minCount": 59
+      "minCount": 60
     }
   }
 }
