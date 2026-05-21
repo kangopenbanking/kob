@@ -126,6 +126,7 @@ const navSections = [
     title: "Tools & Testing",
     icon: Terminal,
     items: [
+      { title: "Sandbox Console", path: "/developer/sandbox/console" },
       { title: "API Keys", path: "/developer-tools/api-keys" },
       { title: "API Explorer", path: "/developer/api-explorer" },
       { title: "API Console", path: "/developer-tools/console" },
