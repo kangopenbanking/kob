@@ -114,6 +114,7 @@ const navSections = [
     title: "Open Banking APIs",
     icon: Database,
     items: [
+      { title: "Overview", path: "/developer/open-banking" },
       { title: "AISP (Accounts)", path: "/developer/api/aisp" },
       { title: "Banking Operations", path: "/developer/api/banking" },
       { title: "Transfers & Fund Movement", path: "/developer/api/transfers" },
@@ -125,6 +126,7 @@ const navSections = [
     title: "Tools & Testing",
     icon: Terminal,
     items: [
+      { title: "Sandbox Console", path: "/developer/sandbox/console" },
       { title: "API Keys", path: "/developer-tools/api-keys" },
       { title: "API Explorer", path: "/developer/api-explorer" },
       { title: "API Console", path: "/developer-tools/console" },
@@ -151,6 +153,7 @@ const navSections = [
     title: "Integration Guides",
     icon: Globe,
     items: [
+      { title: "Go-Live Checklist", path: "/developer/guides/go-live" },
       { title: "Web Applications", path: "/developer/guides/web" },
       { title: "Mobile Applications", path: "/developer/guides/mobile" },
       { title: "Pay by Bank (SCA)", path: "/developer/pay-by-bank" },
