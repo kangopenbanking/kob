@@ -9,6 +9,17 @@ export default function GoLiveChecklist() {
         <title>Go-Live Checklist | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Pre-production checklist for launching with the Kang Open Banking API. Security, integration, compliance, and go-live action items." />
         <link rel="canonical" href="https://kangopenbanking.com/developer/guides/go-live" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/guides/go-live" />
+        <meta property="og:title" content="Go-Live Checklist | Kang Open Banking" />
+        <meta property="og:description" content="Pre-production launch checklist — security, integration, compliance, and operational readiness." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta name="twitter:title" content="Go-Live Checklist | Kang Open Banking" />
+        <meta name="twitter:description" content="Pre-production launch checklist for the Kang Open Banking API." />
       </Helmet>
 
       <div className="max-w-4xl space-y-10">
