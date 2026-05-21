@@ -114,6 +114,7 @@ const navSections = [
     title: "Open Banking APIs",
     icon: Database,
     items: [
+      { title: "Overview", path: "/developer/open-banking" },
       { title: "AISP (Accounts)", path: "/developer/api/aisp" },
       { title: "Banking Operations", path: "/developer/api/banking" },
       { title: "Transfers & Fund Movement", path: "/developer/api/transfers" },
