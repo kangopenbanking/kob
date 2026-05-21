@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Building2,
   Smartphone,
@@ -15,11 +16,21 @@ import {
   BarChart3,
   X,
   ChevronRight,
+  Wallet,
+  Repeat,
+  Receipt,
+  ScrollText,
+  Send,
+  KeyRound,
+  Webhook,
+  Network,
+  Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
+import { KOB_API_VERSION } from "@/config/version";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type NodeId =
@@ -393,6 +404,217 @@ const FLOWS = [
   },
 ];
 
+// ── Apple-grade Hero ──────────────────────────────────────────────────────
+function HeroSection() {
+  const reduce = useReducedMotion();
+  return (
+    <section className="relative overflow-hidden bg-[hsl(217_91%_10%)] py-24 px-6 text-center">
+      {/* Quiet animated orb */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 60% 45% at 50% 45%, hsl(217 91% 55% / 0.35), transparent 70%)",
+        }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={reduce ? { opacity: 0.6 } : { opacity: [0.5, 0.75, 0.5], scale: [0.95, 1.05, 0.95] }}
+        transition={reduce ? { duration: 0.6 } : { duration: 9, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Subtle grid */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(0 0% 100%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 0% 100%) 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent 80%)",
+        }}
+      />
+      <motion.div
+        className="relative max-w-4xl mx-auto space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+      >
+        <motion.div variants={fadeUp}>
+          <Badge className="bg-[hsl(142_76%_36%/0.18)] text-[hsl(142_76%_70%)] border border-[hsl(142_76%_45%/0.4)] uppercase tracking-[0.18em] text-[10px] font-semibold">
+            <Wifi size={10} className="mr-1.5" /> Platform Architecture · v{KOB_API_VERSION}
+          </Badge>
+        </motion.div>
+        <motion.h1
+          variants={fadeUp}
+          className="text-5xl md:text-7xl font-semibold text-white leading-[1.02] tracking-tight"
+          style={{ fontFeatureSettings: "'ss01', 'cv11'" }}
+        >
+          One API.{" "}
+          <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(180deg,hsl(142 76% 75%),hsl(142 76% 50%))" }}>
+            Every connection.
+          </span>
+        </motion.h1>
+        <motion.p variants={fadeUp} className="text-[hsl(217_40%_78%)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          KOB normalises data from banks, mobile money operators, and payment rails into a single, secure surface — engineered for fintechs, regulators, and developers across Cameroon and the CEMAC region.
+        </motion.p>
+        <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 flex-wrap pt-2">
+          <Button asChild size="lg" className="bg-white text-[hsl(217_91%_15%)] hover:bg-white/90">
+            <Link to="/developer/quick-start">Start building <ArrowRight size={16} className="ml-1.5" /></Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="border-white/25 text-white bg-transparent hover:bg-white/10 hover:text-white">
+            <a href="/openapi.json" target="_blank" rel="noopener">Download OpenAPI</a>
+          </Button>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
+};
+
+// ── API Surface (the full API at a glance) ────────────────────────────────
+type Pillar = {
+  group: "Accept" | "Move money" | "Open Banking" | "Trust" | "Build";
+  title: string;
+  desc: string;
+  icon: React.ElementType;
+  endpoints: number;
+  to: string;
+};
+
+const API_PILLARS: Pillar[] = [
+  { group: "Accept",       title: "Charges & Gateway",        desc: "Cards, mobile money, USSD, bank transfer, Apple Pay, Google Pay.", icon: CreditCard, endpoints: 38, to: "/developer/gateway/charges" },
+  { group: "Accept",       title: "Payment Links & Checkout", desc: "Hosted checkout, payment links, subscriptions, marketplace splits.", icon: Receipt,    endpoints: 26, to: "/developer/gateway/payment-links" },
+  { group: "Accept",       title: "Wallets & Escrow",         desc: "Custodial wallets, virtual accounts, merchant float, escrow.",       icon: Wallet,     endpoints: 22, to: "/developer/gateway/wallets" },
+  { group: "Move money",   title: "Payouts & Disbursements",  desc: "Instant payouts, Visa Direct, Mastercard Send, bulk transfers.",     icon: Send,       endpoints: 19, to: "/developer/gateway/payouts" },
+  { group: "Move money",   title: "Transfers & Beneficiaries",desc: "P2P, P2B, B2B, beneficiary management, ISO 20022 interbank.",        icon: Repeat,     endpoints: 24, to: "/developer/api/transfers" },
+  { group: "Move money",   title: "Settlements & Treasury",   desc: "Settlement reports, 24/7 treasury float, daily reconciliation.",     icon: BarChart3,  endpoints: 14, to: "/developer/gateway/settlements" },
+  { group: "Open Banking", title: "AISP — Accounts",          desc: "Account information, balances, transactions under FAPI 1.0 Advanced.",icon: Landmark,   endpoints: 17, to: "/developer/open-banking/aisp" },
+  { group: "Open Banking", title: "PISP — Payment Initiation",desc: "Domestic payments, SCA challenge, pay-by-bank consent flows.",       icon: Network,    endpoints: 21, to: "/developer/open-banking/pisp" },
+  { group: "Trust",        title: "Identity, KYC & KYB",      desc: "Customer onboarding, document verification, sanctions screening.",   icon: Shield,     endpoints: 28, to: "/developer/gateway/verification" },
+  { group: "Trust",        title: "Compliance & Risk",        desc: "AML screening, risk scoring, SAR workflow, dispute lifecycle.",      icon: Lock,       endpoints: 23, to: "/developer/gateway/compliance" },
+  { group: "Build",        title: "Webhooks v2",              desc: "Multi-endpoint delivery, per-endpoint secrets, 7-attempt retry.",    icon: Webhook,    endpoints: 12, to: "/developer/gateway/webhooks-v2" },
+  { group: "Build",        title: "Auth, Keys & Sandbox",     desc: "OAuth 2.0 PKCE, DCR, restricted keys, sandbox console.",             icon: KeyRound,   endpoints: 18, to: "/developer/sandbox/console" },
+];
+
+const GROUPS = ["All", "Accept", "Move money", "Open Banking", "Trust", "Build"] as const;
+
+function ApiSurfaceSection() {
+  const [group, setGroup] = useState<(typeof GROUPS)[number]>("All");
+  const items = group === "All" ? API_PILLARS : API_PILLARS.filter((p) => p.group === group);
+
+  return (
+    <section className="bg-background border-y py-20 px-6">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-2xl mx-auto mb-10"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">The full API at a glance</p>
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-[1.05]">
+            Twelve products. <span className="text-muted-foreground">One contract.</span>
+          </h2>
+          <p className="mt-4 text-muted-foreground text-base md:text-lg leading-relaxed">
+            Every pillar is documented, versioned (<span className="font-mono text-foreground">v{KOB_API_VERSION}</span>), and reachable from the same OAuth 2.0 + FAPI 1.0 Advanced base URL.
+          </p>
+        </motion.div>
+
+        {/* Filter chips */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {GROUPS.map((g) => (
+            <button
+              key={g}
+              onClick={() => setGroup(g)}
+              className={cn(
+                "text-xs font-medium px-3.5 py-1.5 rounded-full border transition-all duration-200",
+                group === g
+                  ? "bg-foreground text-background border-foreground shadow-sm"
+                  : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
+              )}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+
+        {/* Pillar grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence mode="popLayout">
+            {items.map((p, i) => (
+              <motion.div
+                key={p.title}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, delay: i * 0.025, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Link
+                  to={p.to}
+                  className="group block h-full rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-12px_hsl(217_91%_35%/0.25)] hover:border-primary/40"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-center transition-colors group-hover:border-primary/50 group-hover:bg-primary/10">
+                      <p.icon size={18} className="text-primary" />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{p.group}</span>
+                  </div>
+                  <h3 className="font-semibold text-foreground text-lg leading-snug">{p.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{p.desc}</p>
+                  <div className="mt-5 pt-4 border-t flex items-center justify-between text-xs">
+                    <span className="font-mono text-muted-foreground">
+                      <CountUp to={p.endpoints} /> endpoints
+                    </span>
+                    <span className="text-primary font-medium inline-flex items-center gap-1 transition-transform group-hover:translate-x-0.5">
+                      Explore <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer rail */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5"><Layers size={12} /> 346 total endpoints</span>
+          <span className="inline-flex items-center gap-1.5"><Globe size={12} /> 6 SDKs · cURL, Node, Python, PHP, Java, Go</span>
+          <span className="inline-flex items-center gap-1.5"><Lock size={12} /> mTLS · OAuth 2.0 · FAPI 1.0 Advanced</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CountUp({ to }: { to: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const reduce = useReducedMotion();
+  const [n, setN] = useState(reduce ? to : 0);
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const start = performance.now();
+    const dur = 900;
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setN(Math.round(eased * to));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, to, reduce]);
+  return <span ref={ref}>{n}</span>;
+}
+
+
+
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function Architecture() {
   const [selected, setSelected] = useState<NodeId | null>("kob-core");
@@ -416,34 +638,18 @@ export default function Architecture() {
   return (
     <>
       <SEO
-        title="Platform Architecture | KOB Open Banking"
-        description="Visual diagram of how KOB connects banks, mobile money operators, fintechs, and regulators in one unified platform."
+        title="Platform Architecture"
+        description="The full Kang Open Banking platform architecture — banks, mobile money, payment rails, AISP, PISP, compliance, and the unified developer API surface (v4.40.0) at a glance."
+        canonical="https://kangopenbanking.com/architecture"
+        keywords="open banking architecture, AISP, PISP, mobile money, FAPI 1.0, COBAC, CEMAC, payment gateway"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Architecture", url: "/architecture" },
+        ]}
       />
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-[hsl(217_91%_12%)] py-16 px-6 text-center">
-        <div
-          className="absolute inset-0 opacity-15"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(217 91% 55%), transparent)",
-          }}
-        />
-        <div className="relative max-w-3xl mx-auto space-y-4">
-          <Badge className="bg-[hsl(142_76%_36%/0.2)] text-[hsl(142_76%_60%)] border border-[hsl(142_76%_36%/0.4)] uppercase tracking-widest text-xs">
-            <Wifi size={10} className="mr-1" /> Platform Architecture
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-            One API.{" "}
-            <span className="text-[hsl(142_76%_60%)]">Every Connection.</span>
-          </h1>
-          <p className="text-[hsl(217_40%_72%)] text-lg max-w-2xl mx-auto">
-            KOB sits at the centre of the financial ecosystem — normalising data
-            from banks, mobile money, and payment rails into a single secure API
-            surface for fintechs and regulators alike.
-          </p>
-        </div>
-      </section>
+      {/* ── Hero (Apple-grade) ── */}
+      <HeroSection />
 
       {/* ── Stats strip ── */}
       <div className="border-b bg-muted/30 py-4 px-6 overflow-x-auto">
@@ -457,6 +663,10 @@ export default function Architecture() {
           ))}
         </div>
       </div>
+
+      {/* ── The full API at a glance (Apple-style) ── */}
+      <ApiSurfaceSection />
+
 
       {/* ── Main diagram ── */}
       <section className="max-w-7xl mx-auto px-4 py-10">

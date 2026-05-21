@@ -275,6 +275,18 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
       <Helmet>
         <title>Sandbox Console | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Self-service sandbox console for Kang Open Banking API. Register, get API keys, seed test data, and validate bank connectors -- all without manual key issuance." />
+        <link rel="canonical" href="https://kangopenbanking.com/developer/sandbox/console" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/sandbox/console" />
+        <meta property="og:title" content="Sandbox Console | Kang Open Banking" />
+        <meta property="og:description" content="Self-service sandbox console — instant API keys, test data seeding, and connector validation." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta name="twitter:title" content="Sandbox Console | Kang Open Banking" />
+        <meta name="twitter:description" content="Self-service sandbox console — instant API keys, test data, connector validation." />
       </Helmet>
 
       <div className="max-w-4xl space-y-8">

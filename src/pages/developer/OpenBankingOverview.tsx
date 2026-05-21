@@ -75,9 +75,20 @@ export default function OpenBankingOverview() {
   return (
     <>
       <Helmet>
-        <title>Open Banking Overview | Kang Open Banking Developer Docs</title>
-        <meta name="description" content="Open Banking APIs for Cameroon and CEMAC. AISP (Account Information) and PISP (Payment Initiation) with FAPI 1.0 security. Consent lifecycle and integration guides." />
+        <title>Open Banking APIs — AISP & PISP | Kang Open Banking</title>
+        <meta name="description" content="Open Banking APIs for Cameroon and CEMAC. AISP (Account Information) and PISP (Payment Initiation) with FAPI 1.0 Advanced security, consent lifecycle, and pay-by-bank flows." />
         <link rel="canonical" href="https://kangopenbanking.com/developer/open-banking" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/open-banking" />
+        <meta property="og:title" content="Open Banking APIs — AISP & PISP | Kang Open Banking" />
+        <meta property="og:description" content="AISP, PISP, consent, and pay-by-bank for Cameroon and CEMAC over a unified OAuth 2.0 + FAPI 1.0 Advanced API." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta name="twitter:title" content="Open Banking APIs — AISP & PISP" />
+        <meta name="twitter:description" content="AISP, PISP, consent, and pay-by-bank for Cameroon and CEMAC." />
       </Helmet>
 
       <div className="max-w-4xl space-y-10">

@@ -72,8 +72,13 @@ const footerSections = [
     links: [
       { label: "API Reference", to: "/documentation", title: "Complete API documentation" },
       { label: "Developer Portal", to: "/developer", title: "Developer tools and resources" },
+      { label: "Developer Sitemap", to: "/sitemap.xml", title: "Full crawlable map of every developer page", external: true },
+      { label: "OpenAPI Spec (JSON)", to: "/openapi.json", title: "Machine-readable OpenAPI 3.1 specification", external: true },
       { label: "SDKs & Libraries", to: "/developer/guides/sdks", title: "Software development kits and libraries" },
-      { label: "Webhooks", to: "/developer/api/webhooks", title: "Webhook event notifications" },
+      { label: "Sandbox Console", to: "/developer/sandbox/console", title: "Self-service sandbox console" },
+      { label: "Webhooks v2", to: "/developer/gateway/webhooks-v2", title: "Multi-endpoint webhook management" },
+      { label: "Open Banking", to: "/developer/open-banking", title: "AISP and PISP open banking APIs" },
+      { label: "Go-Live Checklist", to: "/developer/guides/go-live", title: "Pre-production launch checklist" },
       { label: "Sandbox", to: "/developer/sandbox", title: "API testing sandbox environment" },
       { label: "Changelog", to: "/developer/changelog", title: "API version changelog" },
       { label: "API Explorer", to: "/developer/api-explorer", title: "Interactive API explorer tool" },
@@ -156,15 +161,27 @@ export const Footer = () => {
             <nav key={section.title} aria-label={section.ariaLabel}>
               <h3 className="font-semibold mb-4">{section.title}</h3>
               <ul className="space-y-1 text-sm text-muted-foreground">
-                {section.links.map((link) => (
+                {section.links.map((link: any) => (
                   <li key={link.to}>
-                    <Link
-                      to={link.to}
-                      title={link.title}
-                      className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.to}
+                        title={link.title}
+                        target="_blank"
+                        rel="noopener"
+                        className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.to}
+                        title={link.title}
+                        className="hover:text-primary transition-colors inline-flex items-center min-h-[44px] py-1.5"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

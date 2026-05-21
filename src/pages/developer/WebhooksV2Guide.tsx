@@ -8,7 +8,18 @@ import { Info } from "lucide-react";
 
 const WebhooksV2Guide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
-    <SEO title="Webhooks v2 API | Kang Open Banking" description="Multi-endpoint webhook management with per-endpoint signing secrets, event filtering, delivery logs, retry policies, and secret rotation." />
+    <SEO
+      title="Webhooks v2 API"
+      description="Multi-endpoint webhook management with per-endpoint signing secrets, event filtering, delivery logs, retry policies, and secret rotation."
+      canonical="https://kangopenbanking.com/developer/gateway/webhooks-v2"
+      keywords="webhooks v2, hmac sha256, idempotent delivery, retry, signing secret rotation"
+      breadcrumbs={[
+        { name: "Home", url: "/" },
+        { name: "Developer", url: "/developer" },
+        { name: "Gateway", url: "/developer/gateway" },
+        { name: "Webhooks v2", url: "/developer/gateway/webhooks-v2" },
+      ]}
+    />
     <div>
       <Badge variant="outline" className="mb-2">Webhooks</Badge>
       <h1 className="text-3xl font-bold">Webhooks v2 — Multi-Endpoint Management</h1>

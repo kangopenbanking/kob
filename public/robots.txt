@@ -34,9 +34,25 @@ Allow: /developer/playground
 Allow: /developer/changelog
 Allow: /guides/
 Allow: /developer/gateway/
+Allow: /developer/gateway/webhooks-v2
+Allow: /developer/sandbox/console
+Allow: /developer/guides/go-live
+Allow: /developer/open-banking
+Allow: /developer/open-banking/aisp
+Allow: /developer/open-banking/pisp
+Allow: /developer/open-banking/pay-by-bank
+Allow: /developer/open-banking/standards
+Allow: /developer/sdk-examples
+Allow: /developer/forum
 Allow: /openapi.json
+Allow: /openapi.yaml
+Allow: /openapi-sandbox.json
+Allow: /openapi-sandbox.yaml
+Allow: /changelog.json
+Allow: /apis.json
 Allow: /for-developers
 Allow: /api-catalog
+Allow: /sitemap.xml
 
 # Admin-only operational pages (not public documentation)
 Disallow: /developer/deployment-status
