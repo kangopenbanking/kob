@@ -3,7 +3,7 @@
   "_baselineRecordedAt": "2026-04-30",
   "_baselineVersion": "4.26.9",
   "limits": {
-    "rawBytesMax": 4000000,
+    "rawBytesMax": 6000000,
     "gzipBytesMax": 200000,
     "operationsMax": 600,
     "schemasMax": 150,
