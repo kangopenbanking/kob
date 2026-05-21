@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Building2,
   Smartphone,
@@ -15,11 +16,21 @@ import {
   BarChart3,
   X,
   ChevronRight,
+  Wallet,
+  Repeat,
+  Receipt,
+  ScrollText,
+  Send,
+  KeyRound,
+  Webhook,
+  Network,
+  Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
+import { KOB_API_VERSION } from "@/config/version";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type NodeId =
