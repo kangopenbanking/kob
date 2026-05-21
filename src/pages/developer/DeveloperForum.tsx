@@ -128,6 +128,17 @@ export default function DeveloperForum() {
         <title>Developer Forum | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Community forum for Kang Open Banking API developers. Ask questions, share solutions, and collaborate with other integrators." />
         <link rel="canonical" href="https://kangopenbanking.com/developer/forum" />
+        {/* Explicit og:image override — do NOT inherit a stale or external (GCS) image */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kangopenbanking.com/developer/forum" />
+        <meta property="og:title" content="Developer Forum | Kang Open Banking" />
+        <meta property="og:description" content="Community forum for Kang Open Banking API developers." />
+        <meta property="og:image" content="https://kangopenbanking.com/images/og-social.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kangopenbanking.com/images/og-social.png" />
       </Helmet>
 
       <div className="max-w-4xl space-y-8">
