@@ -427,34 +427,18 @@ export default function Architecture() {
   return (
     <>
       <SEO
-        title="Platform Architecture | KOB Open Banking"
-        description="Visual diagram of how KOB connects banks, mobile money operators, fintechs, and regulators in one unified platform."
+        title="Platform Architecture"
+        description="The full Kang Open Banking platform architecture — banks, mobile money, payment rails, AISP, PISP, compliance, and the unified developer API surface (v4.40.0) at a glance."
+        canonical="https://kangopenbanking.com/architecture"
+        keywords="open banking architecture, AISP, PISP, mobile money, FAPI 1.0, COBAC, CEMAC, payment gateway"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Architecture", url: "/architecture" },
+        ]}
       />
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-[hsl(217_91%_12%)] py-16 px-6 text-center">
-        <div
-          className="absolute inset-0 opacity-15"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 70% 50% at 50% 50%, hsl(217 91% 55%), transparent)",
-          }}
-        />
-        <div className="relative max-w-3xl mx-auto space-y-4">
-          <Badge className="bg-[hsl(142_76%_36%/0.2)] text-[hsl(142_76%_60%)] border border-[hsl(142_76%_36%/0.4)] uppercase tracking-widest text-xs">
-            <Wifi size={10} className="mr-1" /> Platform Architecture
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-            One API.{" "}
-            <span className="text-[hsl(142_76%_60%)]">Every Connection.</span>
-          </h1>
-          <p className="text-[hsl(217_40%_72%)] text-lg max-w-2xl mx-auto">
-            KOB sits at the centre of the financial ecosystem — normalising data
-            from banks, mobile money, and payment rails into a single secure API
-            surface for fintechs and regulators alike.
-          </p>
-        </div>
-      </section>
+      {/* ── Hero (Apple-grade) ── */}
+      <HeroSection />
 
       {/* ── Stats strip ── */}
       <div className="border-b bg-muted/30 py-4 px-6 overflow-x-auto">
@@ -468,6 +452,10 @@ export default function Architecture() {
           ))}
         </div>
       </div>
+
+      {/* ── The full API at a glance (Apple-style) ── */}
+      <ApiSurfaceSection />
+
 
       {/* ── Main diagram ── */}
       <section className="max-w-7xl mx-auto px-4 py-10">
