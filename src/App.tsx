@@ -665,6 +665,7 @@ const CustomerTravelTicket = lazy(() => import("./pages/customer-app/CustomerTra
 const CustomerTravelHistory = lazy(() => import("./pages/customer-app/CustomerTravelHistory"));
 const CustomerStores = lazy(() => import("./pages/customer-app/CustomerStores"));
 const CustomerStoreDetail = lazy(() => import("./pages/customer-app/CustomerStoreDetail"));
+const CustomerBudget = lazy(() => import("./pages/customer-app/CustomerBudget"));
 const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
 const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
 const CustomerSendMoney = lazy(() => import("./pages/customer-app/CustomerSendMoney"));
