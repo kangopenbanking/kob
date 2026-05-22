@@ -1,9 +1,29 @@
 {
-  "apiVersion": "4.40.0",
+  "apiVersion": "4.41.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
-  "lastUpdated": "2026-05-19",
+  "lastUpdated": "2026-05-21",
   "entries": [
+    {
+      "version": "4.41.0",
+      "date": "2026-05-21",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Smart Budgeting — new /v1/budgeting/* endpoint group with trilingual AI adviser (EN/FR/Pidgin), savings goals, Njangi integration, and XAF-native spending analytics.",
+      "highlights": [
+        "Added 23 new /v1/budgeting/* endpoints (Budgets, Categories, Goals, Njangi, AI Adviser, Analytics).",
+        "Added 15 new schemas to components/schemas — all referenced by at least one operation (Standing Order 5).",
+        "Added 8 new webhook events: budget.threshold_reached, budget.overspent, budget.period_ended, goal.milestone_reached, goal.completed, njangi.contribution_due, insight.new, budget.unusual_transaction.",
+        "Added new Budgeting tag with externalDocs pointing to /developer/guides/budgeting.",
+        "AI insights endpoint supports lang=en|fr|pid query parameter; ask endpoint rate-limited to 10 requests/day per consumer.",
+        "All changes additive — no operationId, path, schema, or required field renamed or removed (Standing Orders 1 & 4)."
+      ],
+      "standard_citations": [
+        "KOB Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 5 (Dead Code), 6 (Version Gate)",
+        "KOB Docs Standing Order P7 (Changelog Rule), P9 (Multi-Language Rule), P10 (Living Docs Rule)",
+        "BEAC instruction n°01/2018/CR — XAF zero-decimal currency precision"
+      ]
+    },
     {
       "version": "4.40.0",
       "date": "2026-05-17",
