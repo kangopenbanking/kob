@@ -1,12 +1,32 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.40.0** · Last updated: **2026-05-19**
+Current API version: **4.41.0** · Last updated: **2026-05-22**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.41.0 — 2026-05-21
+**Type:** minor · **Breaking changes:** none
+
+Smart Budgeting — new /v1/budgeting/* endpoint group with trilingual AI adviser (EN/FR/Pidgin), savings goals, Njangi integration, and XAF-native spending analytics.
+
+### Highlights
+- Added 23 new /v1/budgeting/* endpoints (Budgets, Categories, Goals, Njangi, AI Adviser, Analytics).
+- Added 15 new schemas to components/schemas — all referenced by at least one operation (Standing Order 5).
+- Added 8 new webhook events: budget.threshold_reached, budget.overspent, budget.period_ended, goal.milestone_reached, goal.completed, njangi.contribution_due, insight.new, budget.unusual_transaction.
+- Added new Budgeting tag with externalDocs pointing to /developer/guides/budgeting.
+- AI insights endpoint supports lang=en|fr|pid query parameter; ask endpoint rate-limited to 10 requests/day per consumer.
+- All changes additive — no operationId, path, schema, or required field renamed or removed (Standing Orders 1 & 4).
+
+### Standards & citations
+- KOB Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 5 (Dead Code), 6 (Version Gate)
+- KOB Docs Standing Order P7 (Changelog Rule), P9 (Multi-Language Rule), P10 (Living Docs Rule)
+- BEAC instruction n°01/2018/CR — XAF zero-decimal currency precision
 
 ---
 
