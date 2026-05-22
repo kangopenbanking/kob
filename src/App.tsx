@@ -1488,6 +1488,7 @@ function App() {
             <Route path="/app/:institutionId/*" element={<Navigate to="/app" replace />} />
             <Route path="/app" element={<CustomerAppLayout />}>
               <Route path="home" element={<CustomerHome />} />
+              <Route path="budget" element={<CustomerBudget />} />
               <Route path="activity" element={<CustomerActivity />} />
               <Route path="scan" element={<CustomerScan />} />
               <Route path="cards" element={<CustomerCards />} />
