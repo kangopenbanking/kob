@@ -4491,6 +4491,178 @@ export type Database = {
           },
         ]
       }
+      budget_alerts: {
+        Row: {
+          alert_type: string
+          budget_id: string | null
+          category_key: string | null
+          consumer_id: string
+          created_at: string
+          dismissed: boolean
+          id: string
+          message: string
+          severity: string
+        }
+        Insert: {
+          alert_type: string
+          budget_id?: string | null
+          category_key?: string | null
+          consumer_id: string
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          message: string
+          severity?: string
+        }
+        Update: {
+          alert_type?: string
+          budget_id?: string | null
+          category_key?: string | null
+          consumer_id?: string
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          message?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_alerts_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_categories: {
+        Row: {
+          budget_id: string
+          category_key: string
+          category_limit: number
+          colour: string
+          consumer_id: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          spent: number
+          updated_at: string
+        }
+        Insert: {
+          budget_id: string
+          category_key: string
+          category_limit?: number
+          colour?: string
+          consumer_id: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          spent?: number
+          updated_at?: string
+        }
+        Update: {
+          budget_id?: string
+          category_key?: string
+          category_limit?: number
+          colour?: string
+          consumer_id?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          spent?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_categories_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_insights: {
+        Row: {
+          answer: string
+          confidence: number
+          consumer_id: string
+          created_at: string
+          generated_at: string
+          id: string
+          lang: string
+          question: string | null
+          suggested_action: Json | null
+        }
+        Insert: {
+          answer: string
+          confidence?: number
+          consumer_id: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          lang?: string
+          question?: string | null
+          suggested_action?: Json | null
+        }
+        Update: {
+          answer?: string
+          confidence?: number
+          consumer_id?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          lang?: string
+          question?: string | null
+          suggested_action?: Json | null
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          consumer_id: string
+          created_at: string
+          currency: string
+          end_date: string
+          id: string
+          name: string
+          period: string
+          start_date: string
+          status: string
+          total_limit: number
+          updated_at: string
+        }
+        Insert: {
+          consumer_id: string
+          created_at?: string
+          currency?: string
+          end_date: string
+          id?: string
+          name?: string
+          period?: string
+          start_date: string
+          status?: string
+          total_limit?: number
+          updated_at?: string
+        }
+        Update: {
+          consumer_id?: string
+          created_at?: string
+          currency?: string
+          end_date?: string
+          id?: string
+          name?: string
+          period?: string
+          start_date?: string
+          status?: string
+          total_limit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bulk_communications: {
         Row: {
           body: string
@@ -20858,6 +21030,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      savings_goals: {
+        Row: {
+          colour: string
+          consumer_id: string
+          created_at: string
+          current_amount: number
+          deadline: string | null
+          icon: string
+          id: string
+          linked_piggy_bank_id: string | null
+          name: string
+          round_up_enabled: boolean
+          round_up_nearest: number | null
+          status: string
+          target_amount: number
+          updated_at: string
+        }
+        Insert: {
+          colour?: string
+          consumer_id: string
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          icon?: string
+          id?: string
+          linked_piggy_bank_id?: string | null
+          name: string
+          round_up_enabled?: boolean
+          round_up_nearest?: number | null
+          status?: string
+          target_amount: number
+          updated_at?: string
+        }
+        Update: {
+          colour?: string
+          consumer_id?: string
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          icon?: string
+          id?: string
+          linked_piggy_bank_id?: string | null
+          name?: string
+          round_up_enabled?: boolean
+          round_up_nearest?: number | null
+          status?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       savings_interest_calculations: {
         Row: {

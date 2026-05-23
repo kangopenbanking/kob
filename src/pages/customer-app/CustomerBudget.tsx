@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { ChartDonut, Sparkle, ArrowsClockwise } from "@phosphor-icons/react";
+import { ChartDonut, Sparkle, ArrowsClockwise, Plus, PencilSimple } from "@phosphor-icons/react";
 import { DonutRing } from "@/components/budget/DonutRing";
 import { AnimatedAmount } from "@/components/budget/AnimatedAmount";
 import { LanguageSelector } from "@/components/budget/LanguageSelector";
+import { BudgetSetupSheet } from "@/components/budget/BudgetSetupSheet";
+import { CategoryEditSheet } from "@/components/budget/CategoryEditSheet";
+import { GoalCreateSheet } from "@/components/budget/GoalCreateSheet";
+import { SpendingChart } from "@/components/budget/SpendingChart";
+import { NjangiWidget } from "@/components/budget/NjangiWidget";
 import { useBudget, useInsight, useGoals, useBudgetAlerts, useDismissAlert } from "@/hooks/budget/useBudgetApi";
 import { getCategory, localiseCategoryName } from "@/lib/budget/budgetCategories";
 import { formatXAF } from "@/lib/budget/formatXAF";
@@ -20,11 +25,15 @@ export default function CustomerBudget() {
     try { localStorage.setItem(LANG_KEY, l); } catch { /* noop */ }
   };
 
-  const { data: budget, isLoading } = useBudget();
+  const { data: budget, isLoading, refetch: refetchBudget } = useBudget();
   const { data: goalsData } = useGoals();
   const { data: alertsData } = useBudgetAlerts();
   const { data: insight, refetch: refetchInsight, isFetching: insightLoading } = useInsight(lang);
   const dismissAlert = useDismissAlert();
+
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
 
   const summary = budget?.summary;
   const goals = goalsData?.goals ?? [];
@@ -40,8 +49,10 @@ export default function CustomerBudget() {
       </Helmet>
 
       <div className="min-h-screen bg-[#0A0F1E] px-4 pb-24 pt-6 text-[#E2EAF4]" style={{ fontFamily: "DM Sans, sans-serif" }}>
-        {empty ? (
-          <EmptyState />
+        {isLoading ? (
+          <LoadingState />
+        ) : empty ? (
+          <EmptyState onStart={() => setSetupOpen(true)} />
         ) : (
           <div className="space-y-5">
             {/* Header */}
@@ -52,7 +63,13 @@ export default function CustomerBudget() {
                   {summary ? `${summary.days_remaining} days remaining this period` : "Loading…"}
                 </p>
               </div>
-              <ChartDonut size={28} weight="regular" className="text-sky-400" />
+              <button
+                onClick={() => setSetupOpen(true)}
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-sky-300 hover:bg-white/10"
+                aria-label="Reset budget"
+              >
+                <ChartDonut size={20} weight="regular" />
+              </button>
             </header>
 
             {/* Alerts */}
@@ -77,7 +94,7 @@ export default function CustomerBudget() {
                 <DonutRing
                   size={200}
                   segments={
-                    summary
+                    summary && summary.categories.some((c) => c.spent > 0)
                       ? summary.categories.map((c) => ({ value: c.spent, colour: getCategory(c.id).colour }))
                       : [{ value: 1, colour: "#1f2937" }]
                   }
@@ -122,17 +139,23 @@ export default function CustomerBudget() {
               </div>
             </section>
 
+            <NjangiWidget />
+
             {/* Categories */}
             <section>
               <h2 className="mb-3 font-[Sora,sans-serif] text-base font-semibold">Spending</h2>
               <div className="space-y-2">
-                {(summary?.categories ?? []).slice(0, 5).map((c) => {
+                {(summary?.categories ?? []).slice(0, 8).map((c) => {
                   const meta = getCategory(c.id);
                   const pct = Math.min(100, Math.round(c.percentage_used ?? 0));
                   const tone =
                     pct >= 100 ? "#FB7185" : pct >= 80 ? "#F59E0B" : pct >= 60 ? "#0EA5E9" : "#10D9A0";
                   return (
-                    <div key={c.id} className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                    <button
+                      key={c.id}
+                      onClick={() => setEditCat({ id: c.id, name: c.name, limit: c.limit, colour: meta.colour })}
+                      className="w-full text-left rounded-2xl border border-white/5 bg-[#111827] p-4 hover:border-white/10 transition-colors"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <span
@@ -148,12 +171,15 @@ export default function CustomerBudget() {
                             </div>
                           </div>
                         </div>
-                        <span
-                          className="rounded-full px-2 py-0.5 text-[11px]"
-                          style={{ background: `${tone}1f`, color: tone }}
-                        >
-                          {pct}%
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px]"
+                            style={{ background: `${tone}1f`, color: tone }}
+                          >
+                            {pct}%
+                          </span>
+                          <PencilSimple size={14} className="text-slate-500" />
+                        </div>
                       </div>
                       <div className="mt-3 h-[5px] w-full overflow-hidden rounded-full bg-white/5">
                         <div
@@ -161,19 +187,36 @@ export default function CustomerBudget() {
                           style={{ width: `${pct}%`, background: tone }}
                         />
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             </section>
 
+            {/* Spending history */}
+            <section>
+              <h2 className="mb-3 font-[Sora,sans-serif] text-base font-semibold">Recent months</h2>
+              <SpendingChart />
+            </section>
+
             {/* Goals */}
             <section>
-              <h2 className="mb-3 font-[Sora,sans-serif] text-base font-semibold">Goals</h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-[Sora,sans-serif] text-base font-semibold">Goals</h2>
+                <button
+                  onClick={() => setGoalOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-sky-300 hover:bg-white/10"
+                >
+                  <Plus size={12} weight="bold" /> New
+                </button>
+              </div>
               {goals.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-400">
+                <button
+                  onClick={() => setGoalOpen(true)}
+                  className="w-full rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-400 hover:border-white/20"
+                >
                   Set your first savings goal
-                </div>
+                </button>
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {goals.map((g) => {
@@ -197,6 +240,15 @@ export default function CustomerBudget() {
           </div>
         )}
       </div>
+
+      <BudgetSetupSheet open={setupOpen} onOpenChange={setSetupOpen} lang={lang} onCreated={() => refetchBudget()} />
+      <GoalCreateSheet open={goalOpen} onOpenChange={setGoalOpen} />
+      <CategoryEditSheet
+        open={!!editCat}
+        onOpenChange={(v) => !v && setEditCat(null)}
+        budgetId={budget?.budget?.id ?? ""}
+        category={editCat}
+      />
     </>
   );
 }
@@ -213,14 +265,27 @@ const Chip: React.FC<{ label: string; tone: "green" | "blue"; value: number }> =
   </div>
 );
 
-const EmptyState: React.FC = () => (
+const LoadingState: React.FC = () => (
+  <div className="space-y-4 pt-6">
+    <div className="h-7 w-32 rounded-md bg-white/5 animate-pulse" />
+    <div className="h-64 rounded-3xl bg-white/5 animate-pulse" />
+    <div className="h-28 rounded-2xl bg-white/5 animate-pulse" />
+    <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+    <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+  </div>
+);
+
+const EmptyState: React.FC<{ onStart: () => void }> = ({ onStart }) => (
   <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
     <ChartDonut size={72} weight="regular" className="mb-4 text-sky-500/60" />
     <h2 className="font-[Sora,sans-serif] text-2xl">Start budgeting smarter</h2>
     <p className="mt-2 max-w-xs text-sm text-slate-400">
       Set a budget in 2 minutes. Track every XAF automatically across all your accounts.
     </p>
-    <button className="mt-6 rounded-2xl bg-sky-500 px-6 py-3 text-sm font-medium text-white hover:bg-sky-600">
+    <button
+      onClick={onStart}
+      className="mt-6 rounded-2xl bg-sky-500 px-6 py-3 text-sm font-medium text-white hover:bg-sky-600"
+    >
       Set up my budget
     </button>
   </div>

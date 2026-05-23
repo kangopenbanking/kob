@@ -207,6 +207,7 @@ const navSections = [
       { title: "Code Examples", path: "/developer/examples" },
       { title: "Real-World Integrations", path: "/developer/examples/real-world" },
       { title: "Go-Live Checklist", path: "/developer/guides/go-live" },
+      { title: "Smart Budgeting", path: "/developer/guides/budgeting" },
       { title: "Migration Guide", path: "/developer/migrate" },
       { title: "Web Integration", path: "/developer/guides/web" },
       { title: "Mobile Integration", path: "/developer/guides/mobile" },
