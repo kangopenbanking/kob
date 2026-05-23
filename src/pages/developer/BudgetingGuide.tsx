@@ -94,9 +94,9 @@ export default function BudgetingGuide() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Quickstart — create a budget</h2>
-          <CodeBlock
+          <CodeBlock examples={[{
             language="bash"
-            code={`curl -X POST https://api.kangopenbanking.com/v1/budgeting/budgets \\
+            code: `curl -X POST https://api.kangopenbanking.com/v1/budgeting/budgets \\
   -H "Authorization: Bearer $KOB_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -H "Content-Type: application/json" \\
@@ -116,9 +116,9 @@ export default function BudgetingGuide() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Ask the AI Adviser (Node.js)</h2>
-          <CodeBlock
+          <CodeBlock examples={[{
             language="javascript"
-            code={`import fetch from "node-fetch";
+            code: `import fetch from "node-fetch";
 
 const r = await fetch("https://api.kangopenbanking.com/v1/budgeting/insights/ask", {
   method: "POST",
@@ -138,9 +138,9 @@ console.log(answer);`}
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Ask the AI Adviser (Python)</h2>
-          <CodeBlock
+          <CodeBlock examples={[{
             language="python"
-            code={`import os, requests
+            code: `import os, requests
 
 r = requests.post(
     "https://api.kangopenbanking.com/v1/budgeting/insights/ask",
