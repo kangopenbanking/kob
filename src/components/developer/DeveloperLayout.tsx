@@ -154,6 +154,7 @@ const navSections = [
     icon: Globe,
     items: [
       { title: "Go-Live Checklist", path: "/developer/guides/go-live" },
+      { title: "Smart Budgeting", path: "/developer/guides/budgeting" },
       { title: "Web Applications", path: "/developer/guides/web" },
       { title: "Mobile Applications", path: "/developer/guides/mobile" },
       { title: "Pay by Bank (SCA)", path: "/developer/pay-by-bank" },
