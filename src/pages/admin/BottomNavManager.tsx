@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Save, RotateCcw, Layout } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Save, RotateCcw, Layout, Upload, Loader2, X } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { NAV_ICON_OPTIONS, resolveLucideIcon } from "@/lib/lucideIconMap";
+import { NAV_ICON_OPTIONS, parseNavIcon } from "@/lib/lucideIconMap";
+import { NavIcon } from "@/components/nav/NavIcon";
 import type { BottomNavApp, BottomNavItem } from "@/hooks/useBottomNavItems";
 import { DEFAULT_NAV_ITEMS } from "@/hooks/useBottomNavItems";
 
@@ -177,7 +178,6 @@ export default function BottomNavManager() {
                     <div className="text-sm text-muted-foreground">No items configured. Use "Add item" or "Load defaults".</div>
                   )}
                   {items.map((it, idx) => {
-                    const Icon = resolveLucideIcon(it.icon);
                     return (
                       <div key={(it.id || "new") + idx} className="flex items-center gap-3 rounded-lg border bg-card p-3">
                         <div className="flex flex-col">
@@ -189,7 +189,7 @@ export default function BottomNavManager() {
                           </Button>
                         </div>
                         <button onClick={() => openEdit(idx)} className="flex items-center gap-3 flex-1 text-left">
-                          <Icon className="h-5 w-5 text-foreground" />
+                          <NavIcon icon={it.icon} className="h-5 w-5 text-foreground" />
                           <div>
                             <div className="text-sm font-medium">{it.label}</div>
                             <div className="text-xs text-muted-foreground">{it.path}</div>
