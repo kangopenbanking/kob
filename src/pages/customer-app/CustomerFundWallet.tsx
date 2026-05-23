@@ -21,7 +21,6 @@ const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
 
 const providerTypeToMethod = (providerType: string): string => {
-  const tr = useHarvestedT('customer');
   switch (providerType) {
     case 'mobile_money': return 'mobile_money';
     case 'card': return 'card';
@@ -30,6 +29,7 @@ const providerTypeToMethod = (providerType: string): string => {
     default: return 'bank_transfer';
   }
 };
+
 
 const providerTypeIcon = (providerType: string) => {
   switch (providerType) {
