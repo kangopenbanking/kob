@@ -37,6 +37,7 @@ Allow: /developer/gateway/
 Allow: /developer/gateway/webhooks-v2
 Allow: /developer/sandbox/console
 Allow: /developer/guides/go-live
+Allow: /developer/guides/budgeting
 Allow: /developer/open-banking
 Allow: /developer/open-banking/aisp
 Allow: /developer/open-banking/pisp
