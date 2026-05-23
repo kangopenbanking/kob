@@ -418,36 +418,6 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Saving Vault — Featured Rectangle Card ─── */}
-      <motion.button
-        {...fadeUp}
-        transition={{ duration: 0.3, delay: 0.08 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => go('savings-vault')}
-        className="relative flex w-full items-center gap-4 overflow-hidden rounded-3xl border-2 border-foreground bg-[hsl(180,40%,92%)] p-5 text-left shadow-sm"
-        aria-label="Open Saving Vault"
-      >
-        <motion.img
-          src={vaultIcon}
-          alt=""
-          className="h-16 w-16 shrink-0 select-none"
-          draggable={false}
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(180,60%,30%)]">
-            {tr('Saving Vault')}
-          </p>
-          <p className="mt-0.5 text-base font-bold text-foreground">
-            {vaultBalance.toLocaleString()} <span className="text-[11px] font-semibold text-muted-foreground">XAF</span>
-          </p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">
-            {tr('Round-up spare change · Free withdrawals to wallet or bank')}
-          </p>
-        </div>
-        <ChevronRight className="h-5 w-5 text-foreground shrink-0" strokeWidth={2} />
-      </motion.button>
 
       {/* ─── Savings & Goals (horizontal carousel) ─── */}
       {visibleSavings.length > 0 && (
