@@ -20349,6 +20349,159 @@ export type Database = {
           },
         ]
       }
+      roundup_events: {
+        Row: {
+          consumer_id: string
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          transaction_id: string | null
+        }
+        Insert: {
+          consumer_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          transaction_id?: string | null
+        }
+        Update: {
+          consumer_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roundup_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "roundup_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roundup_settings: {
+        Row: {
+          consecutive_failures: number
+          consumer_id: string
+          created_at: string
+          daily_cap: number
+          default_goal_id: string | null
+          enabled: boolean
+          max_save: number
+          min_balance_floor: number
+          min_save: number
+          paused_until: string | null
+          threshold: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          consumer_id: string
+          created_at?: string
+          daily_cap?: number
+          default_goal_id?: string | null
+          enabled?: boolean
+          max_save?: number
+          min_balance_floor?: number
+          min_save?: number
+          paused_until?: string | null
+          threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_failures?: number
+          consumer_id?: string
+          created_at?: string
+          daily_cap?: number
+          default_goal_id?: string | null
+          enabled?: boolean
+          max_save?: number
+          min_balance_floor?: number
+          min_save?: number
+          paused_until?: string | null
+          threshold?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roundup_settings_default_goal_id_fkey"
+            columns: ["default_goal_id"]
+            isOneToOne: false
+            referencedRelation: "savings_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roundup_transactions: {
+        Row: {
+          consumer_id: string
+          created_at: string
+          goal_id: string | null
+          id: string
+          idempotency_key: string
+          next_retry_at: string | null
+          original_amount: number
+          provider_ref: string | null
+          retry_count: number
+          rounded_amount: number
+          roundup_amount: number
+          skip_reason: string | null
+          source_tx_id: string
+          state: string
+          threshold_used: number
+          updated_at: string
+        }
+        Insert: {
+          consumer_id: string
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          idempotency_key: string
+          next_retry_at?: string | null
+          original_amount: number
+          provider_ref?: string | null
+          retry_count?: number
+          rounded_amount: number
+          roundup_amount: number
+          skip_reason?: string | null
+          source_tx_id: string
+          state?: string
+          threshold_used: number
+          updated_at?: string
+        }
+        Update: {
+          consumer_id?: string
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          idempotency_key?: string
+          next_retry_at?: string | null
+          original_amount?: number
+          provider_ref?: string | null
+          retry_count?: number
+          rounded_amount?: number
+          roundup_amount?: number
+          skip_reason?: string | null
+          source_tx_id?: string
+          state?: string
+          threshold_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roundup_transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "savings_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safeguarding_ledger: {
         Row: {
           amount: number
