@@ -572,35 +572,51 @@ Deno.serve(async (req) => {
       return json({ original_amount: amount, rounded_amount: rounded, roundup_amount: roundup, threshold_used: threshold });
     }
 
-    if (method === "POST" && path === "/roundup/process") {
-      const body = await req.json().catch(() => ({}));
-      const sourceTxId = String(body.source_tx_id ?? "");
-      const idempotencyKey = String(body.idempotency_key ?? crypto.randomUUID());
-      const amount = Number(body.amount) || 0;
-      const walletBalance = Number(body.wallet_balance ?? 0);
-      if (!sourceTxId || amount <= 0) return json({ error: "invalid_request" }, 400);
+    // Internal processor shared between wallet + bank-tx flows.
+    async function processRoundup(opts: {
+      sourceTxId: string;
+      amount: number;
+      walletBalance: number;
+      sourceKind: "wallet" | "bank" | "manual";
+      sourceAccountId?: string | null;
+      bankId?: string | null;
+      merchantName?: string | null;
+      idempotencyKey?: string;
+    }) {
+      const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID();
+      const settings = await getOrCreateSettings();
 
-      // Idempotency: check for existing row on (consumer_id, source_tx_id)
+      // Source filter gate (bank vs wallet)
+      if (settings.source_filter === "wallet" && opts.sourceKind === "bank") {
+        return { skipped: true, reason: "source_filtered" as const };
+      }
+      if (settings.source_filter === "bank" && opts.sourceKind === "wallet") {
+        return { skipped: true, reason: "source_filtered" as const };
+      }
+
+      // Idempotency on (consumer_id, source_tx_id)
       const { data: existing } = await sb
         .from("roundup_transactions")
         .select("*")
         .eq("consumer_id", user.id)
-        .eq("source_tx_id", sourceTxId)
+        .eq("source_tx_id", opts.sourceTxId)
         .maybeSingle();
-      if (existing) return json({ transaction: existing, replayed: true });
+      if (existing) return { transaction: existing, replayed: true as const };
 
-      const settings = await getOrCreateSettings();
-      await logEvent("TRANSACTION_DETECTED", { source_tx_id: sourceTxId, amount });
+      await logEvent("TRANSACTION_DETECTED", {
+        source_tx_id: opts.sourceTxId,
+        amount: opts.amount,
+        source_kind: opts.sourceKind,
+      });
 
       const roundup = calculateRoundUp({
-        amount,
+        amount: opts.amount,
         threshold: settings.threshold,
         minSave: settings.min_save,
         maxSave: settings.max_save,
       });
-      const rounded = amount + roundup;
+      const rounded = opts.amount + roundup;
 
-      // Today's saved total (for daily cap)
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
       const { data: todays } = await sb
@@ -616,27 +632,30 @@ Deno.serve(async (req) => {
         pausedUntil: settings.paused_until,
         roundUpAmount: roundup,
         minSave: settings.min_save,
-        walletBalance,
+        walletBalance: opts.walletBalance,
         minBalanceFloor: settings.min_balance_floor,
         todaysSavedTotal: todaysTotal,
         dailyCap: settings.daily_cap,
       });
 
-      const insertRow: any = {
-        consumer_id: user.id,
-        source_tx_id: sourceTxId,
-        goal_id: settings.default_goal_id,
-        original_amount: amount,
-        rounded_amount: rounded,
-        roundup_amount: Math.max(roundup, 0),
-        threshold_used: settings.threshold,
-        idempotency_key: idempotencyKey,
-        state: skipReason ? "skipped" : "pending",
-        skip_reason: skipReason,
-      };
       const { data: tx, error: insErr } = await sb
         .from("roundup_transactions")
-        .insert(insertRow)
+        .insert({
+          consumer_id: user.id,
+          source_tx_id: opts.sourceTxId,
+          source_kind: opts.sourceKind,
+          source_account_id: opts.sourceAccountId ?? null,
+          bank_id: opts.bankId ?? null,
+          merchant_name: opts.merchantName ?? null,
+          goal_id: settings.default_goal_id,
+          original_amount: opts.amount,
+          rounded_amount: rounded,
+          roundup_amount: Math.max(roundup, 0),
+          threshold_used: settings.threshold,
+          idempotency_key: idempotencyKey,
+          state: skipReason ? "skipped" : "pending",
+          skip_reason: skipReason,
+        })
         .select()
         .single();
       if (insErr) throw insErr;
@@ -653,14 +672,11 @@ Deno.serve(async (req) => {
             ? "BELOW_MIN_SKIPPED"
             : "PAUSED";
         await logEvent(evt, { reason: skipReason }, tx.id);
-        return json({ transaction: tx, skipped: true, reason: skipReason });
+        return { transaction: tx, skipped: true, reason: skipReason };
       }
 
       await logEvent("SAVE_PENDING", { roundup }, tx.id);
 
-      // Atomic credit: move to successful + credit goal current_amount.
-      // Wallet debit is delegated to wallet-ops in production; here we
-      // mark the savings as confirmed once the parent tx is confirmed.
       const { data: updated } = await sb
         .from("roundup_transactions")
         .update({ state: "successful" })
@@ -684,14 +700,108 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Credit-score hook: emit a SAVINGS_ROUNDUP credit event for the engine.
+      let creditEventId: string | null = null;
+      if (settings.credit_boost_enabled && roundup > 0) {
+        const { data: ce } = await sb
+          .from("credit_events")
+          .insert({
+            user_id: user.id,
+            event_type: "SAVINGS_ROUNDUP",
+            event_time: new Date().toISOString(),
+            value_numeric: roundup,
+            source: "budgeting-ops/roundup",
+            description: `Round-up saving of ${roundup} XAF from ${opts.sourceKind} transaction`,
+            metadata: {
+              roundup_transaction_id: tx.id,
+              source_kind: opts.sourceKind,
+              source_tx_id: opts.sourceTxId,
+              bank_id: opts.bankId ?? null,
+              goal_id: settings.default_goal_id,
+            },
+          })
+          .select("id")
+          .single();
+        creditEventId = ce?.id ?? null;
+        if (creditEventId) {
+          await sb
+            .from("roundup_transactions")
+            .update({ credit_event_id: creditEventId })
+            .eq("id", tx.id);
+        }
+      }
+
       await sb
         .from("roundup_settings")
         .update({ consecutive_failures: 0 })
         .eq("consumer_id", user.id);
 
-      await logEvent("SAVE_SUCCESS", { roundup }, tx.id);
-      return json({ transaction: updated, success: true });
+      await logEvent("SAVE_SUCCESS", { roundup, credit_event_id: creditEventId }, tx.id);
+      return { transaction: updated, success: true, credit_event_id: creditEventId };
     }
+
+    if (method === "POST" && path === "/roundup/process") {
+      const body = await req.json().catch(() => ({}));
+      const sourceTxId = String(body.source_tx_id ?? "");
+      const amount = Number(body.amount) || 0;
+      if (!sourceTxId || amount <= 0) return json({ error: "invalid_request" }, 400);
+      const result = await processRoundup({
+        sourceTxId,
+        amount,
+        walletBalance: Number(body.wallet_balance ?? 0),
+        sourceKind: (body.source_kind as any) ?? "wallet",
+        merchantName: body.merchant_name ?? null,
+        idempotencyKey: body.idempotency_key,
+      });
+      return json(result);
+    }
+
+    // Process a round-up from a real bank-sourced transaction (Open Banking / KOB connector).
+    if (method === "POST" && path === "/roundup/process-bank-tx") {
+      const body = await req.json().catch(() => ({}));
+      const bankTxId = String(body.bank_tx_id ?? "");
+      if (!bankTxId) return json({ error: "invalid_request" }, 400);
+
+      // Resolve the bank-sourced transaction and verify the account belongs to this consumer.
+      const { data: btx } = await sb
+        .from("bank_sourced_transactions")
+        .select("id, account_id, external_tx_id, amount, credit_debit, description, booking_date")
+        .eq("id", bankTxId)
+        .maybeSingle();
+      if (!btx) return json({ error: "bank_tx_not_found" }, 404);
+      if (btx.credit_debit && btx.credit_debit !== "DEBIT") {
+        return json({ error: "not_a_debit", credit_debit: btx.credit_debit }, 400);
+      }
+
+      const { data: acct } = await sb
+        .from("bank_sourced_accounts")
+        .select("id, bank_id, customer_id")
+        .eq("id", btx.account_id)
+        .maybeSingle();
+      if (!acct) return json({ error: "bank_account_not_found" }, 404);
+
+      const { data: bankCustomer } = await sb
+        .from("bank_customers")
+        .select("id, user_id")
+        .eq("id", acct.customer_id)
+        .maybeSingle();
+      if (!bankCustomer || bankCustomer.user_id !== user.id) {
+        return json({ error: "forbidden" }, 403);
+      }
+
+      const result = await processRoundup({
+        sourceTxId: `bank:${btx.id}`,
+        amount: Number(btx.amount) || 0,
+        walletBalance: Number(body.wallet_balance ?? Infinity), // bank flow trusts caller balance
+        sourceKind: "bank",
+        sourceAccountId: acct.id,
+        bankId: acct.bank_id,
+        merchantName: btx.description ?? null,
+        idempotencyKey: body.idempotency_key,
+      });
+      return json(result);
+    }
+
 
     if (method === "GET" && path === "/roundup/transactions") {
       const limit = Math.min(Number(url.searchParams.get("limit")) || 25, 100);
