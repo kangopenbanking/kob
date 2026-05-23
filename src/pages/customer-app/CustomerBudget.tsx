@@ -25,11 +25,15 @@ export default function CustomerBudget() {
     try { localStorage.setItem(LANG_KEY, l); } catch { /* noop */ }
   };
 
-  const { data: budget, isLoading } = useBudget();
+  const { data: budget, isLoading, refetch: refetchBudget } = useBudget();
   const { data: goalsData } = useGoals();
   const { data: alertsData } = useBudgetAlerts();
   const { data: insight, refetch: refetchInsight, isFetching: insightLoading } = useInsight(lang);
   const dismissAlert = useDismissAlert();
+
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
 
   const summary = budget?.summary;
   const goals = goalsData?.goals ?? [];
