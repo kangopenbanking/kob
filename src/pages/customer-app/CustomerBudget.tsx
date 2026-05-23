@@ -43,16 +43,16 @@ import type { BudgetLang } from "@/types/budget";
 
 const LANG_KEY = "kob_adviser_lang";
 
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+const ICON_MAP: Record<string, any> = {
   ShoppingCart: ShoppingBag,
-  Car: Car,
+  Car,
   DeviceMobile: Smartphone,
-  GraduationCap: GraduationCap,
+  GraduationCap,
   FirstAid: HeartPulse,
   Lightning: Zap,
   UsersThree: Users,
   ArrowsLeftRight: Send,
-  PiggyBank: PiggyBank,
+  PiggyBank,
   MusicNote: Music2,
   DotsThree: MoreHorizontal,
 };
