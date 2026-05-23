@@ -430,29 +430,73 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
           </div>
         </TabsContent>
 
-        <TabsContent value="flaticon" className="space-y-2">
-          <Input
-            placeholder="e.g. home (renders fi fi-rs-home)"
-            value={parsed.kind === "flaticon" ? parsed.value : ""}
-            onChange={(e) => onChange(`fl:${e.target.value.replace(/^fi\s+fi-rs-/, "").trim()}`)}
-          />
+        <TabsContent value="flaticon" className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Select
+              value={flStyle}
+              onValueChange={(v) => {
+                const s = v as FlaticonStyleKey;
+                setFlStyle(s);
+                if (parsed.kind === "flaticon" && parsed.value) {
+                  onChange(`fl:${s}:${parsed.value}`);
+                }
+              }}
+            >
+              <SelectTrigger className="sm:w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FLATICON_STYLE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="e.g. wallet"
+              value={parsed.kind === "flaticon" ? parsed.value : ""}
+              onChange={(e) => {
+                const name = e.target.value.replace(/^fi\s+fi-[a-z]{2}-/, "").trim();
+                onChange(`fl:${flStyle}:${name}`);
+              }}
+            />
+          </div>
           <p className="text-xs text-muted-foreground">
-            Enter any Flaticon Uicons name without the <code>fi fi-rs-</code> prefix.
+            Pick a weight/style, then choose an icon. Renders as <code>fi fi-{flStyle}-{`{name}`}</code>.
           </p>
-          <div className="grid grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
-            {FLATICON_SUGGESTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onChange(`fl:${n}`)}
-                className="flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs"
-              >
-                <i className={`fi fi-rs-${n}`} style={{ fontSize: "1rem" }} aria-hidden="true" />
-                <span className="truncate w-full text-center text-[10px]">{n}</span>
-              </button>
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+            {FLATICON_CATEGORIES.map((cat) => (
+              <div key={cat.label} className="space-y-1.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {cat.label}
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {cat.icons.map((n) => {
+                    const selected =
+                      parsed.kind === "flaticon" && parsed.value === n && (parsed.style ?? "rs") === flStyle;
+                    return (
+                      <button
+                        key={`${cat.label}-${n}`}
+                        type="button"
+                        onClick={() => onChange(`fl:${flStyle}:${n}`)}
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs transition-colors",
+                          selected && "border-primary ring-1 ring-primary"
+                        )}
+                        title={n}
+                      >
+                        <i
+                          className={`fi fi-${flStyle}-${n}`}
+                          style={{ fontSize: "1.1rem", lineHeight: 1 }}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate w-full text-center text-[10px]">{n}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
         </TabsContent>
+
 
         <TabsContent value="image" className="space-y-2">
           <div className="flex gap-2">
