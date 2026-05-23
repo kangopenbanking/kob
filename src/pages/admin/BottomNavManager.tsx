@@ -217,19 +217,18 @@ export default function BottomNavManager() {
                       <div className="w-full border-t bg-background rounded-b-2xl">
                         <div className="flex h-16 items-center justify-around px-1">
                           {items.filter((i) => i.is_enabled).map((it) => {
-                            const Icon = resolveLucideIcon(it.icon);
                             if (it.is_center) {
                               return (
                                 <div key={it.id || it.label} className="flex flex-col items-center -mt-6">
                                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow">
-                                    <Icon className="h-5 w-5 text-primary-foreground" />
+                                    <NavIcon icon={it.icon} className="h-5 w-5 text-primary-foreground" />
                                   </div>
                                 </div>
                               );
                             }
                             return (
                               <div key={it.id || it.label} className="flex flex-1 flex-col items-center gap-0.5">
-                                <Icon className="h-5 w-5 text-foreground" />
+                                <NavIcon icon={it.icon} className="h-5 w-5 text-foreground" />
                                 <span className="text-[9px] font-medium">{it.label}</span>
                               </div>
                             );
