@@ -21514,6 +21514,30 @@ export type Database = {
           },
         ]
       }
+      savings_vaults: {
+        Row: {
+          balance: number
+          consumer_id: string
+          created_at: string
+          currency: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          consumer_id: string
+          created_at?: string
+          currency?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          consumer_id?: string
+          created_at?: string
+          currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sca_challenges: {
         Row: {
           attempts: number | null
@@ -24652,6 +24676,51 @@ export type Database = {
           revoked_at?: string | null
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      vault_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          consumer_id: string
+          created_at: string
+          description: string | null
+          destination_account_id: string | null
+          destination_kind: string | null
+          id: string
+          idempotency_key: string | null
+          kind: string
+          source: string | null
+          source_ref: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          consumer_id: string
+          created_at?: string
+          description?: string | null
+          destination_account_id?: string | null
+          destination_kind?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind: string
+          source?: string | null
+          source_ref?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          consumer_id?: string
+          created_at?: string
+          description?: string | null
+          destination_account_id?: string | null
+          destination_kind?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind?: string
+          source?: string | null
+          source_ref?: string | null
         }
         Relationships: []
       }
