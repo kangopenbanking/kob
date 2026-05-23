@@ -21520,6 +21520,8 @@ export type Database = {
           consumer_id: string
           created_at: string
           currency: string
+          daily_withdrawal_limit: number
+          monthly_withdrawal_limit: number
           updated_at: string
         }
         Insert: {
@@ -21527,6 +21529,8 @@ export type Database = {
           consumer_id: string
           created_at?: string
           currency?: string
+          daily_withdrawal_limit?: number
+          monthly_withdrawal_limit?: number
           updated_at?: string
         }
         Update: {
@@ -21534,6 +21538,8 @@ export type Database = {
           consumer_id?: string
           created_at?: string
           currency?: string
+          daily_withdrawal_limit?: number
+          monthly_withdrawal_limit?: number
           updated_at?: string
         }
         Relationships: []
@@ -24691,6 +24697,7 @@ export type Database = {
           id: string
           idempotency_key: string | null
           kind: string
+          reference_code: string | null
           source: string | null
           source_ref: string | null
         }
@@ -24705,6 +24712,7 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           kind: string
+          reference_code?: string | null
           source?: string | null
           source_ref?: string | null
         }
@@ -24719,6 +24727,7 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           kind?: string
+          reference_code?: string | null
           source?: string | null
           source_ref?: string | null
         }
