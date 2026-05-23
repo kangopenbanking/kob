@@ -259,17 +259,7 @@ export default function BottomNavManager() {
                 <Label>Path</Label>
                 <Input value={editing.path} onChange={(e) => setEditing({ ...editing, path: e.target.value })} placeholder="/app/home" />
               </div>
-              <div className="space-y-2">
-                <Label>Icon (Lucide name)</Label>
-                <Select value={editing.icon} onValueChange={(v) => setEditing({ ...editing, icon: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {NAV_ICON_OPTIONS.map((n) => (
-                      <SelectItem key={n} value={n}>{n}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <IconPicker value={editing.icon} onChange={(v) => setEditing({ ...editing, icon: v })} />
               <div className="space-y-2">
                 <Label>Badge key (optional)</Label>
                 <Input value={editing.badge_key || ""} onChange={(e) => setEditing({ ...editing, badge_key: e.target.value || null })} placeholder="unread_alerts" />
