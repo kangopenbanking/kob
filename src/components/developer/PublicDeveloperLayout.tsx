@@ -208,6 +208,7 @@ const navSections = [
       { title: "Real-World Integrations", path: "/developer/examples/real-world" },
       { title: "Go-Live Checklist", path: "/developer/guides/go-live" },
       { title: "Smart Budgeting", path: "/developer/guides/budgeting" },
+      { title: "Round-Up Savings", path: "/developer/guides/roundup" },
       { title: "Migration Guide", path: "/developer/migrate" },
       { title: "Web Integration", path: "/developer/guides/web" },
       { title: "Mobile Integration", path: "/developer/guides/mobile" },

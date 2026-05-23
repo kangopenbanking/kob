@@ -313,6 +313,7 @@ const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
 const Iso20022Overview = lazy(() => import("./pages/developer/Iso20022Overview"));
 const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
 const BudgetingGuide = lazy(() => import("./pages/developer/BudgetingGuide"));
+const RoundupGuide = lazy(() => import("./pages/developer/RoundupGuide"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const SecurityCompliancePage = lazy(() => import("./pages/developer/SecurityCompliancePage"));
@@ -1241,6 +1242,7 @@ function App() {
               <Route path="guides/go-live" element={<GoLiveChecklist />} />
               {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT */}
               <Route path="guides/budgeting" element={<BudgetingGuide />} />
+              <Route path="guides/roundup" element={<RoundupGuide />} />
               <Route path="guides/postman" element={<PostmanGuide />} />
               <Route path="guides/migrate" element={<MigrationGuide />} />
               <Route path="guides/webhooks" element={<Navigate to="/developer/api-reference/webhook-retry" replace />} />

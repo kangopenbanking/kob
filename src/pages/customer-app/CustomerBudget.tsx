@@ -32,6 +32,8 @@ import { CategoryEditSheet } from "@/components/budget/CategoryEditSheet";
 import { GoalCreateSheet } from "@/components/budget/GoalCreateSheet";
 import { SpendingChart } from "@/components/budget/SpendingChart";
 import { NjangiWidget } from "@/components/budget/NjangiWidget";
+import { RoundupCard } from "@/components/budget/RoundupCard";
+import { RoundupSettingsSheet } from "@/components/budget/RoundupSettingsSheet";
 import {
   useBudget,
   useInsight,
@@ -88,6 +90,7 @@ export default function CustomerBudget() {
 
   const [setupOpen, setSetupOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
+  const [roundupOpen, setRoundupOpen] = useState(false);
   const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
 
   const summary = budget?.summary;
@@ -348,6 +351,8 @@ export default function CustomerBudget() {
               </div>
             </section>
 
+            <RoundupCard onOpenSettings={() => setRoundupOpen(true)} theme={theme} />
+
             <NjangiWidget />
 
             {/* Categories */}
@@ -573,6 +578,7 @@ export default function CustomerBudget() {
         onCreated={() => refetchBudget()}
       />
       <GoalCreateSheet open={goalOpen} onOpenChange={setGoalOpen} />
+      <RoundupSettingsSheet open={roundupOpen} onOpenChange={setRoundupOpen} />
       <CategoryEditSheet
         open={!!editCat}
         onOpenChange={(v) => !v && setEditCat(null)}
