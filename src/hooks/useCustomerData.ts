@@ -193,6 +193,25 @@ export function useCustomerCreditScore(userId?: string) {
         body: { user_id: userId, include_report: false },
       });
       if (error) throw error;
+
+      // Basic-check gate: customer has no score until the basic identity
+      // check is complete. Surface the checklist so the UI can prompt the user.
+      if (data?.source === 'basic_check_required' || (!data?.score && data?.basic_check)) {
+        return {
+          score: null,
+          score_band: null,
+          updated_at: null,
+          score_factors: null,
+          payment_history_score: 0,
+          amounts_owed_score: 0,
+          credit_history_length_score: 0,
+          new_credit_score: 0,
+          credit_mix_score: 0,
+          source: 'basic_check_required' as string,
+          basic_check: data.basic_check,
+        };
+      }
+
       if (!data?.score) return null;
 
       // Handle both legacy (nested components) and event-sourced (flat factors array) responses
@@ -217,6 +236,7 @@ export function useCustomerCreditScore(userId?: string) {
         new_credit_score: components.new_credit_score ?? components.new_credit?.score ?? getFactorFromArray(['HARD_INQUIRY']),
         credit_mix_score: components.credit_mix_score ?? components.credit_mix?.score ?? getFactorFromArray(['SAVINGS', 'NJANGI', 'PIGGYBANK', 'RENT']),
         source: (data.source || 'edge_function') as string,
+        basic_check: undefined,
       };
     },
     staleTime: 5 * 60 * 1000,

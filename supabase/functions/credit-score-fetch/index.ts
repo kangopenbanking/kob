@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { evaluateBasicCheck, persistBasicCheckFlag } from "../_shared/credit-basic-check.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,6 +17,28 @@ Deno.serve(async (req) => {
     const { user_id, force_refresh = false, include_report = false } = body;
 
     console.log('Fetching credit score for user:', user_id);
+
+    // ── Basic check gate ─────────────────────────────────────────
+    // Customers do not have a score until the basic identity check completes.
+    const basicCheck = await evaluateBasicCheck(supabase, user_id);
+    await persistBasicCheckFlag(supabase, user_id, basicCheck.passed);
+    if (!basicCheck.passed) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          score: null,
+          score_range: 'Unknown',
+          score_band: null,
+          calculated_at: null,
+          expires_at: null,
+          score_factors: null,
+          source: 'basic_check_required',
+          basic_check: basicCheck,
+          recent_events: [],
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     // ── Try event-sourced system first (preferred) ──
     const { data: eventProfile } = await supabase

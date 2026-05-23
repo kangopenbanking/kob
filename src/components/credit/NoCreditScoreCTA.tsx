@@ -35,7 +35,11 @@ export function NoCreditScoreCTA({
       return data;
     },
     onSuccess: (data: any) => {
-      if (data?.score) {
+      if (data?.error === 'basic_check_required') {
+        toast.info('Complete your basic identity check', {
+          description: 'We need a few details before we can build your CrediQ score.',
+        });
+      } else if (data?.score) {
         toast.success(`Your CrediQ score is ${data.score}`, {
           description: "We've started building your credit profile.",
         });

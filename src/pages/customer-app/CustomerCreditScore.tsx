@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { NoCreditScoreCTA } from '@/components/credit/NoCreditScoreCTA';
+import { BasicCheckChecklist } from '@/components/credit/BasicCheckChecklist';
 import { CrediQPremiumCard } from '@/components/credit/CrediQPremiumCard';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
@@ -339,8 +340,13 @@ const CustomerCreditScore: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* No-score CTA — shown only when the user hasn't been assessed yet */}
-      {score === 0 && (
+      {/* Basic-check gate — show checklist instead of a generic CTA when identity is incomplete */}
+      {score === 0 && (scoreData as any)?.source === 'basic_check_required' && (
+        <BasicCheckChecklist missing={(scoreData as any)?.basic_check?.missing} variant="customer" />
+      )}
+
+      {/* No-score CTA — once basic check passes but no events yet */}
+      {score === 0 && (scoreData as any)?.source !== 'basic_check_required' && (
         <NoCreditScoreCTA
           variant="customer"
           invalidateKeys={[['customer-credit-score', user?.id], ['credit-events', user?.id]]}

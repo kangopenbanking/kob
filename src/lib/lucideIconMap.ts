@@ -13,3 +13,19 @@ export const NAV_ICON_OPTIONS: string[] = [
   "ShoppingBag", "Bell", "Building2", "Briefcase", "QrCode", "ArrowLeftRight",
   "PiggyBank", "LineChart", "Search", "Plus", "MapPin", "Globe",
 ];
+
+/**
+ * Icon source classifier for the unified <NavIcon> component.
+ * Supports:
+ *  - "Home"                   -> Lucide icon by name
+ *  - "fa:user"                -> Font Awesome 4 (fa-user)
+ *  - "url:https://…/icon.png" -> uploaded image (PNG/SVG)
+ */
+export type NavIconKind = "lucide" | "fa4" | "image";
+
+export function parseNavIcon(value: string | null | undefined): { kind: NavIconKind; value: string } {
+  const v = (value || "").trim();
+  if (v.startsWith("url:")) return { kind: "image", value: v.slice(4) };
+  if (v.startsWith("fa:")) return { kind: "fa4", value: v.slice(3) };
+  return { kind: "lucide", value: v || "Circle" };
+}
