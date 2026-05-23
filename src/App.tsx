@@ -312,6 +312,7 @@ const ComplianceAml = lazy(() => import("./pages/developer/ComplianceAml"));
 const ComplianceFapi = lazy(() => import("./pages/developer/ComplianceFapi"));
 const Iso20022Overview = lazy(() => import("./pages/developer/Iso20022Overview"));
 const GoLiveChecklist = lazy(() => import("./pages/developer/GoLiveChecklist"));
+const BudgetingGuide = lazy(() => import("./pages/developer/BudgetingGuide"));
 const AccessPolicy = lazy(() => import("./pages/developer/AccessPolicy"));
 const DeveloperSupport = lazy(() => import("./pages/developer/DeveloperSupport"));
 const SecurityCompliancePage = lazy(() => import("./pages/developer/SecurityCompliancePage"));
