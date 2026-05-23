@@ -635,6 +635,7 @@ const CustomerSplash = lazy(() => import("./pages/customer-app/CustomerSplash"))
 const CustomerAuth = lazy(() => import("./pages/customer-app/CustomerAuth"));
 const CustomerOnboarding = lazy(() => import("./pages/customer-app/CustomerOnboarding"));
 const CustomerRegister = lazy(() => import("./pages/customer-app/CustomerRegister"));
+const CustomerSavingsVault = lazy(() => import("./pages/customer-app/CustomerSavingsVault"));
 const CustomerHome = lazy(() => import("./pages/customer-app/CustomerHome"));
 const CustomerScan = lazy(() => import("./pages/customer-app/CustomerScan"));
 const CustomerActivity = lazy(() => import("./pages/customer-app/CustomerActivity"));
@@ -1512,6 +1513,7 @@ function App() {
               <Route path="rewards" element={<CustomerRewards />} />
               <Route path="piggybank" element={<CustomerPiggyBank />} />
               <Route path="njangi" element={<CustomerNjangi />} />
+              <Route path="savings-vault" element={<CustomerSavingsVault />} />
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
               <Route path="settings" element={<CustomerSettings />} />
