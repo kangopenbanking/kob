@@ -10,7 +10,8 @@ interface NavIconProps {
 
 /**
  * Unified icon renderer for navigation. Supports Lucide names, Font Awesome 4
- * (prefix "fa:"), and uploaded image URLs (prefix "url:").
+ * (prefix "fa:"), Flaticon Uicons (prefix "fl:"), and uploaded image URLs
+ * (prefix "url:").
  */
 export const NavIcon: React.FC<NavIconProps> = ({ icon, className, strokeWidth = 1.75 }) => {
   const parsed = parseNavIcon(icon);
@@ -30,6 +31,16 @@ export const NavIcon: React.FC<NavIconProps> = ({ icon, className, strokeWidth =
     return (
       <i
         className={cn("fa", `fa-${parsed.value}`, "text-foreground", className)}
+        aria-hidden="true"
+        style={{ fontSize: "1.25rem", lineHeight: 1 }}
+      />
+    );
+  }
+
+  if (parsed.kind === "flaticon") {
+    return (
+      <i
+        className={cn("fi fi-rs-", parsed.value, "text-foreground", className)}
         aria-hidden="true"
         style={{ fontSize: "1.25rem", lineHeight: 1 }}
       />

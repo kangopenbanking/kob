@@ -285,7 +285,8 @@ export default function BottomNavManager() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Icon picker — supports Lucide, Font Awesome 4, and uploaded images */
+/* Icon picker — supports Lucide, Font Awesome 4, Flaticon Uicons,    */
+/* and uploaded images                                                 */
 /* ------------------------------------------------------------------ */
 
 const FA4_SUGGESTIONS: string[] = [
@@ -296,9 +297,17 @@ const FA4_SUGGESTIONS: string[] = [
   "gift", "globe", "map-marker", "phone", "rocket", "trophy", "shield",
 ];
 
+const FLATICON_SUGGESTIONS: string[] = [
+  "home", "user", "users", "settings", "bell", "credit-card", "wallet",
+  "shopping-bag", "search", "scan", "camera", "calendar", "comment",
+  "envelope", "heart", "star", "tag", "apps", "menu-burger", "chart-pie-alt",
+  "lock", "unlock", "key", "globe", "marker", "phone-call", "rocket",
+  "trophy", "shield", "bank", "money", "receipt", "invoice", "transfer",
+];
+
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const parsed = parseNavIcon(value);
-  const [tab, setTab] = useState<"lucide" | "fa4" | "image">(parsed.kind);
+  const [tab, setTab] = useState<"lucide" | "fa4" | "flaticon" | "image">(parsed.kind);
   const [uploading, setUploading] = useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -334,9 +343,10 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
         <div className="text-xs text-muted-foreground break-all">{value || "(none)"}</div>
       </div>
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="lucide">Lucide</TabsTrigger>
-          <TabsTrigger value="fa4">Font Awesome 4</TabsTrigger>
+          <TabsTrigger value="fa4">FA 4</TabsTrigger>
+          <TabsTrigger value="flaticon">Flaticon</TabsTrigger>
           <TabsTrigger value="image">Upload</TabsTrigger>
         </TabsList>
 
@@ -372,6 +382,30 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
                 className="flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs"
               >
                 <i className={`fa fa-${n}`} style={{ fontSize: "1rem" }} aria-hidden="true" />
+                <span className="truncate w-full text-center text-[10px]">{n}</span>
+              </button>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="flaticon" className="space-y-2">
+          <Input
+            placeholder="e.g. home (renders fi fi-rs-home)"
+            value={parsed.kind === "flaticon" ? parsed.value : ""}
+            onChange={(e) => onChange(`fl:${e.target.value.replace(/^fi\s+fi-rs-/, "").trim()}`)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter any Flaticon Uicons name without the <code>fi fi-rs-</code> prefix.
+          </p>
+          <div className="grid grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
+            {FLATICON_SUGGESTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onChange(`fl:${n}`)}
+                className="flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs"
+              >
+                <i className={`fi fi-rs-${n}`} style={{ fontSize: "1rem" }} aria-hidden="true" />
                 <span className="truncate w-full text-center text-[10px]">{n}</span>
               </button>
             ))}
