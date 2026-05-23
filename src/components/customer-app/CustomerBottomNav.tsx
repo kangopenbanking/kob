@@ -11,7 +11,7 @@ import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 interface NavItem {
   label: string;
   iconSrc?: string;
-  Icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  Icon?: React.ComponentType<any>;
   isCenter?: boolean;
   path: string;
 }
