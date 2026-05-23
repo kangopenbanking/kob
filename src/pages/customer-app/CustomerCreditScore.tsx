@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw, Vault, Coins, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCreditScore } from '@/hooks/useCustomerData';
@@ -112,6 +112,34 @@ const CustomerCreditScore: React.FC = () => {
     },
   });
 
+  const { data: hasBudget } = useQuery({
+    queryKey: ['has-budget', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('budgets')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('status', 'active')
+        .limit(1)
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
+  const { data: hasRoundup } = useQuery({
+    queryKey: ['has-roundup', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('roundup_settings')
+        .select('enabled')
+        .eq('consumer_id', user!.id)
+        .maybeSingle();
+      return !!data?.enabled;
+    },
+  });
+
   const score = scoreData?.score ?? 0;
   const maxScore = 850;
   const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
@@ -200,6 +228,28 @@ const CustomerCreditScore: React.FC = () => {
       iconBg: 'bg-[hsl(45,70%,90%)]',
       iconColor: 'text-[hsl(45,60%,35%)]',
       route: '/app/rent-reporting',
+    });
+  }
+  if (hasBudget === false) {
+    proposals.push({
+      title: 'Set Up a Budget',
+      desc: 'Active budgeting demonstrates financial discipline — a key positive signal for lenders',
+      impact: '+3–8 pts/mo',
+      icon: BarChart3,
+      iconBg: 'bg-[hsl(190,60%,90%)]',
+      iconColor: 'text-[hsl(200,70%,35%)]',
+      route: '/app/budget',
+    });
+  }
+  if (hasRoundup === false) {
+    proposals.push({
+      title: 'Enable Round-Up Savings',
+      desc: 'Automatically save spare change into your Saving Vault — every deposit boosts your score',
+      impact: '+2–5 pts/mo',
+      icon: Coins,
+      iconBg: 'bg-[hsl(180,40%,92%)]',
+      iconColor: 'text-[hsl(180,60%,30%)]',
+      route: '/app/budget',
     });
   }
 
@@ -431,6 +481,51 @@ const CustomerCreditScore: React.FC = () => {
         </motion.div>
       )}
 
+      {/* Budgeting & Round-Up — Education */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
+        className="rounded-3xl border border-foreground bg-[hsl(190,60%,96%)] p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Info className="h-4 w-4 text-[hsl(200,70%,35%)]" strokeWidth={1.75} />
+          <p className="text-sm font-bold text-foreground">{tr('How Budgeting & Round-Up Boost Your Score')}</p>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+          Lenders look for proof that you can manage money consistently. A live budget and
+          automated savings show steady cash-flow discipline — two of the strongest signals in
+          your CrediQ profile.
+        </p>
+        <div className="space-y-2">
+          {[
+            { icon: BarChart3, iconBg: 'bg-[hsl(190,60%,90%)]', iconColor: 'text-[hsl(200,70%,35%)]', title: 'Budgeting builds discipline', desc: 'Staying within category limits each month strengthens Payment History and Credit Utilization — together 65% of your score.' },
+            { icon: Coins, iconBg: 'bg-[hsl(180,40%,92%)]', iconColor: 'text-[hsl(180,60%,30%)]', title: 'Round-Up adds positive events', desc: 'Each successful round-up posts a SAVINGS_ROUNDUP credit event, gradually improving your Credit Mix and Account Age factors.' },
+            { icon: Vault, iconBg: 'bg-[hsl(180,40%,92%)]', iconColor: 'text-[hsl(180,60%,30%)]', title: 'Saving Vault keeps balances visible', desc: 'A growing Vault balance signals reserves and lowers perceived risk — useful for pre-approved loan tiering.' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-2xl bg-card border border-border p-3">
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.iconBg}`}>
+                <item.icon className={`h-4 w-4 ${item.iconColor}`} strokeWidth={1.75} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-foreground">{item.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => navigate('/app/budget')}
+            className="flex-1 rounded-xl bg-foreground py-2 text-[11px] font-bold text-background active:scale-[0.98] transition-transform"
+          >
+            {hasBudget ? tr('Open Budget') : tr('Set Up Budget')}
+          </button>
+          <button
+            onClick={() => navigate('/app/savings-vault')}
+            className="flex-1 rounded-xl border border-foreground bg-card py-2 text-[11px] font-bold text-foreground active:scale-[0.98] transition-transform"
+          >
+            {hasRoundup ? tr('View Vault') : tr('Start Round-Up')}
+          </button>
+        </div>
+      </motion.div>
+
       {/* Tips */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
         <div className="flex items-center gap-2 mb-3">
@@ -439,6 +534,8 @@ const CustomerCreditScore: React.FC = () => {
         </div>
         <div className="space-y-2">
           {[
+            'Stay within your monthly budget categories',
+            'Enable Round-Up to save spare change automatically',
             'Pay Njangi contributions on time',
             'Make regular Piggy Bank deposits',
             'Report rent payments monthly',

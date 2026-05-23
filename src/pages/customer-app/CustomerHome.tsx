@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import vaultIcon from '@/assets/saving-vault-icon.png';
+import { useVaultBalance } from '@/hooks/savings/useSavingsVault';
 import rentKobImage from '@/assets/rent-kob.png';
 import travelCardBg from '@/assets/travel-card-bg.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
@@ -70,7 +72,6 @@ const paymentsBills: FeatureItem[] = [
 const savingsGoals: FeatureItem[] = [
   { label: 'Piggy Bank', description: 'Explore bank savings & personal goals', icon: PiggyBank, path: 'piggybank', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-foreground', featureKey: 'piggy_bank' },
   { label: 'Njangi', description: 'Group savings circles', icon: CircleDollarSign, path: 'njangi', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', borderColor: 'border-foreground', featureKey: 'njangi' },
-  { label: 'Saving Vault', description: 'Round-up spare change · free withdrawals', icon: Vault, path: 'savings-vault', color: 'bg-[hsl(180,40%,92%)]', iconColor: 'text-[hsl(180,60%,30%)]', borderColor: 'border-foreground' },
   { label: 'Rewards', description: 'Earn & redeem points', icon: Gift, path: 'rewards', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-foreground', featureKey: 'rewards' },
 ];
 
@@ -144,6 +145,8 @@ const CustomerHome: React.FC = () => {
   const visibleMoney = moneyMovement.filter(isVisible);
   const visiblePayments = paymentsBills.filter(isVisible);
   const visibleSavings = savingsGoals.filter(isVisible);
+  const { data: vaultData } = useVaultBalance();
+  const vaultBalance = vaultData?.balance ?? 0;
   const visibleHealth = financialHealth.filter(isVisible);
 
   // Quick action buttons for hero card
@@ -414,6 +417,37 @@ const CustomerHome: React.FC = () => {
           </div>
         </motion.div>
       )}
+
+      {/* ─── Saving Vault — Featured Rectangle Card ─── */}
+      <motion.button
+        {...fadeUp}
+        transition={{ duration: 0.3, delay: 0.08 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => go('savings-vault')}
+        className="relative flex w-full items-center gap-4 overflow-hidden rounded-3xl border-2 border-foreground bg-[hsl(180,40%,92%)] p-5 text-left shadow-sm"
+        aria-label="Open Saving Vault"
+      >
+        <motion.img
+          src={vaultIcon}
+          alt=""
+          className="h-16 w-16 shrink-0 select-none"
+          draggable={false}
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(180,60%,30%)]">
+            {tr('Saving Vault')}
+          </p>
+          <p className="mt-0.5 text-base font-bold text-foreground">
+            {vaultBalance.toLocaleString()} <span className="text-[11px] font-semibold text-muted-foreground">XAF</span>
+          </p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">
+            {tr('Round-up spare change · Free withdrawals to wallet or bank')}
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 text-foreground shrink-0" strokeWidth={2} />
+      </motion.button>
 
       {/* ─── Savings & Goals (horizontal carousel) ─── */}
       {visibleSavings.length > 0 && (
