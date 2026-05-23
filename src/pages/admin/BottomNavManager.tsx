@@ -283,3 +283,146 @@ export default function BottomNavManager() {
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Icon picker — supports Lucide, Font Awesome 4, and uploaded images */
+/* ------------------------------------------------------------------ */
+
+const FA4_SUGGESTIONS: string[] = [
+  "home", "user", "users", "cog", "bell", "credit-card", "money", "bank",
+  "shopping-cart", "shopping-bag", "search", "qrcode", "camera", "calendar",
+  "comment", "envelope", "heart", "star", "tag", "tags", "th", "th-list",
+  "bar-chart", "line-chart", "pie-chart", "lock", "unlock", "key", "wrench",
+  "gift", "globe", "map-marker", "phone", "rocket", "trophy", "shield",
+];
+
+function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parsed = parseNavIcon(value);
+  const [tab, setTab] = useState<"lucide" | "fa4" | "image">(parsed.kind);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleUpload = async (file: File) => {
+    if (file.size > 1 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Icons must be under 1MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("nav-icons").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("nav-icons").getPublicUrl(path);
+      onChange(`url:${publicUrl}`);
+      toast({ title: "Icon uploaded" });
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <Label>Icon</Label>
+      <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background border">
+          <NavIcon icon={value} className="h-5 w-5 text-foreground" />
+        </div>
+        <div className="text-xs text-muted-foreground break-all">{value || "(none)"}</div>
+      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="lucide">Lucide</TabsTrigger>
+          <TabsTrigger value="fa4">Font Awesome 4</TabsTrigger>
+          <TabsTrigger value="image">Upload</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lucide" className="space-y-2">
+          <Select
+            value={parsed.kind === "lucide" ? parsed.value : "Home"}
+            onValueChange={(v) => onChange(v)}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              {NAV_ICON_OPTIONS.map((n) => (
+                <SelectItem key={n} value={n}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TabsContent>
+
+        <TabsContent value="fa4" className="space-y-2">
+          <Input
+            placeholder="e.g. user (renders fa-user)"
+            value={parsed.kind === "fa4" ? parsed.value : ""}
+            onChange={(e) => onChange(`fa:${e.target.value.replace(/^fa-/, "").trim()}`)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter any Font Awesome 4 name without the <code>fa-</code> prefix.
+          </p>
+          <div className="grid grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
+            {FA4_SUGGESTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onChange(`fa:${n}`)}
+                className="flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs"
+              >
+                <i className={`fa fa-${n}`} style={{ fontSize: "1rem" }} aria-hidden="true" />
+                <span className="truncate w-full text-center text-[10px]">{n}</span>
+              </button>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="image" className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://… (PNG, SVG, JPG)"
+              value={parsed.kind === "image" ? parsed.value : ""}
+              onChange={(e) => onChange(`url:${e.target.value.trim()}`)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              aria-label="Upload icon"
+            >
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            </Button>
+            {parsed.kind === "image" && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onChange("Circle")}
+                aria-label="Clear icon"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/svg+xml,image/jpeg,image/webp"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleUpload(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            PNG/SVG recommended, square, under 1MB. Stored in the public <code>nav-icons</code> bucket.
+          </p>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
