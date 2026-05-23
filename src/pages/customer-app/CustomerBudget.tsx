@@ -578,6 +578,7 @@ export default function CustomerBudget() {
         onCreated={() => refetchBudget()}
       />
       <GoalCreateSheet open={goalOpen} onOpenChange={setGoalOpen} />
+      <RoundupSettingsSheet open={roundupOpen} onOpenChange={setRoundupOpen} />
       <CategoryEditSheet
         open={!!editCat}
         onOpenChange={(v) => !v && setEditCat(null)}
