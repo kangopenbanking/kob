@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { useBottomNavItems, DEFAULT_NAV_ITEMS } from '@/hooks/useBottomNavItems';
-import { resolveLucideIcon } from '@/lib/lucideIconMap';
+import { NavIcon } from '@/components/nav/NavIcon';
 
 interface CustomerBottomNavProps {
   basePath: string;
