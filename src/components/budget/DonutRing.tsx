@@ -10,8 +10,8 @@ interface Props {
   segments: Segment[];
   size?: number;
   strokeWidth?: number;
-  centerLabel?: string;
-  centerSub?: string;
+  centerLabel?: React.ReactNode;
+  centerSub?: React.ReactNode;
 }
 
 /**
