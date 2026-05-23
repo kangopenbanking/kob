@@ -74,6 +74,7 @@ const savingsGoals: FeatureItem[] = [
 ];
 
 const financialHealth: FeatureItem[] = [
+  { label: 'Budget', description: 'Smart spending limits & AI tips', icon: BarChart3, path: 'budget', color: 'bg-[hsl(190,60%,90%)]', iconColor: 'text-[hsl(200,70%,35%)]', borderColor: 'border-[hsl(200,70%,55%)]', featureKey: 'budget' },
   { label: 'Credit Score', description: 'Check', subtitle: 'Know your score today', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
   { label: 'Rent Report', description: 'Open', subtitle: 'Start a rent profile', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
 ];
