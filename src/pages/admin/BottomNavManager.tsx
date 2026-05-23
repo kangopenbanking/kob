@@ -351,6 +351,9 @@ const FLATICON_CATEGORIES: { label: string; icons: string[] }[] = [
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const parsed = parseNavIcon(value);
   const [tab, setTab] = useState<"lucide" | "fa4" | "flaticon" | "image">(parsed.kind);
+  const [flStyle, setFlStyle] = useState<FlaticonStyleKey>(
+    (parsed.kind === "flaticon" ? parsed.style ?? "rs" : "rs") as FlaticonStyleKey,
+  );
   const [uploading, setUploading] = useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
