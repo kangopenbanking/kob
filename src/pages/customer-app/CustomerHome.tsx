@@ -145,6 +145,8 @@ const CustomerHome: React.FC = () => {
   const visibleMoney = moneyMovement.filter(isVisible);
   const visiblePayments = paymentsBills.filter(isVisible);
   const visibleSavings = savingsGoals.filter(isVisible);
+  const { data: vaultData } = useVaultBalance();
+  const vaultBalance = vaultData?.balance ?? 0;
   const visibleHealth = financialHealth.filter(isVisible);
 
   // Quick action buttons for hero card
