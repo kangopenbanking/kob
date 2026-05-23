@@ -14,6 +14,7 @@ import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Save, RotateCcw, Layout,
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { NAV_ICON_OPTIONS, parseNavIcon } from "@/lib/lucideIconMap";
 import { NavIcon } from "@/components/nav/NavIcon";
+import { cn } from "@/lib/utils";
 import type { BottomNavApp, BottomNavItem } from "@/hooks/useBottomNavItems";
 import { DEFAULT_NAV_ITEMS } from "@/hooks/useBottomNavItems";
 
