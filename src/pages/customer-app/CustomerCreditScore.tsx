@@ -230,6 +230,28 @@ const CustomerCreditScore: React.FC = () => {
       route: '/app/rent-reporting',
     });
   }
+  if (hasBudget === false) {
+    proposals.push({
+      title: 'Set Up a Budget',
+      desc: 'Active budgeting demonstrates financial discipline — a key positive signal for lenders',
+      impact: '+3–8 pts/mo',
+      icon: BarChart3,
+      iconBg: 'bg-[hsl(190,60%,90%)]',
+      iconColor: 'text-[hsl(200,70%,35%)]',
+      route: '/app/budget',
+    });
+  }
+  if (hasRoundup === false) {
+    proposals.push({
+      title: 'Enable Round-Up Savings',
+      desc: 'Automatically save spare change into your Saving Vault — every deposit boosts your score',
+      impact: '+2–5 pts/mo',
+      icon: Coins,
+      iconBg: 'bg-[hsl(180,40%,92%)]',
+      iconColor: 'text-[hsl(180,60%,30%)]',
+      route: '/app/budget',
+    });
+  }
 
   if (isLoading) {
     return (
