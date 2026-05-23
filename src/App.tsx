@@ -1512,6 +1512,7 @@ function App() {
               <Route path="rewards" element={<CustomerRewards />} />
               <Route path="piggybank" element={<CustomerPiggyBank />} />
               <Route path="njangi" element={<CustomerNjangi />} />
+              <Route path="savings-vault" element={<CustomerSavingsVault />} />
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
               <Route path="settings" element={<CustomerSettings />} />
