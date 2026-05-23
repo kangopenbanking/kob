@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import vaultIcon from '@/assets/saving-vault-icon.png';
+import { useVaultBalance } from '@/hooks/savings/useSavingsVault';
 import rentKobImage from '@/assets/rent-kob.png';
 import travelCardBg from '@/assets/travel-card-bg.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
