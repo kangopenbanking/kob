@@ -162,6 +162,62 @@ export function RoundupSettingsSheet({ open, onOpenChange }: Props) {
             </select>
           </div>
 
+          {/* Source filter — wallet vs bank vs both */}
+          <div>
+            <Label>Transaction sources</Label>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[
+                { v: "both", label: "Wallet + Bank" },
+                { v: "wallet", label: "Wallet only" },
+                { v: "bank", label: "Bank only" },
+              ].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setSourceFilter(opt.v as any)}
+                  className="h-11 rounded-xl text-[12px] font-medium transition-colors"
+                  style={{
+                    background: sourceFilter === opt.v ? "var(--bud-cta-bg)" : "var(--bud-surface)",
+                    color: sourceFilter === opt.v ? "var(--bud-cta-fg)" : "var(--bud-text)",
+                    border: "1px solid var(--bud-border)",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px]" style={{ color: "var(--bud-text-3)" }}>
+              Round up spend from your KOB wallet, connected bank accounts, or both.
+            </p>
+          </div>
+
+          {/* Credit score boost */}
+          <div
+            className="flex items-center justify-between rounded-2xl border p-4"
+            style={{ borderColor: "var(--bud-border)", background: "var(--bud-surface)" }}
+          >
+            <div className="pr-3">
+              <div className="text-[14px] font-medium" style={{ color: "var(--bud-text)" }}>
+                Credit score boost
+              </div>
+              <div className="mt-0.5 text-[12px]" style={{ color: "var(--bud-text-2)" }}>
+                Each successful round-up records a positive savings event toward your CrediQ score.
+              </div>
+            </div>
+            <button
+              role="switch"
+              aria-checked={creditBoost}
+              onClick={() => setCreditBoost((v) => !v)}
+              className="relative h-7 w-12 shrink-0 rounded-full transition-colors"
+              style={{ background: creditBoost ? "var(--bud-cta-bg)" : "var(--bud-track)" }}
+            >
+              <span
+                className="absolute top-1 h-5 w-5 rounded-full bg-white transition-transform"
+                style={{ left: creditBoost ? "26px" : "4px" }}
+              />
+            </button>
+          </div>
+
+
           {/* Pause */}
           {enabled && (
             <button
