@@ -84,7 +84,7 @@ export const DonutRing: React.FC<Props> = ({
           cy={cy}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.05)"
+          stroke="var(--bud-ring-track, rgba(255,255,255,0.05))"
           strokeWidth={strokeWidth}
         />
         {arcs}
