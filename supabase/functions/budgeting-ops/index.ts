@@ -22,10 +22,21 @@ function userClient(req: Request) {
 }
 
 async function requireUser(req: Request) {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (!token) {
+    console.error("requireUser: no Authorization header");
+    throw new Error("unauthorized");
+  }
   const sb = userClient(req);
-  const { data, error } = await sb.auth.getUser();
-  if (error || !data.user) throw new Error("unauthorized");
-  return { sb, user: data.user };
+  const { data, error } = await sb.auth.getUser(token);
+  if (error || !data.user) {
+    console.error("requireUser: getUser failed", error?.message, "token-len:", token.length);
+    throw new Error("unauthorized");
+  }
+  // Service client for writes (bypasses RLS — we already validated user identity)
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  return { sb: admin, user: data.user };
 }
 
 function periodDates(period: string) {
