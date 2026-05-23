@@ -116,7 +116,7 @@ const CustomerCreditScore: React.FC = () => {
     queryKey: ['has-budget', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('budgets')
         .select('id')
         .eq('user_id', user!.id)
@@ -131,7 +131,7 @@ const CustomerCreditScore: React.FC = () => {
     queryKey: ['has-roundup', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('roundup_settings')
         .select('enabled')
         .eq('consumer_id', user!.id)
