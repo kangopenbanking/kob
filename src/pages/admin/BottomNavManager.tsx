@@ -297,12 +297,54 @@ const FA4_SUGGESTIONS: string[] = [
   "gift", "globe", "map-marker", "phone", "rocket", "trophy", "shield",
 ];
 
-const FLATICON_SUGGESTIONS: string[] = [
-  "home", "user", "users", "settings", "bell", "credit-card", "wallet",
-  "shopping-bag", "search", "scan", "camera", "calendar", "comment",
-  "envelope", "heart", "star", "tag", "apps", "menu-burger", "chart-pie-alt",
-  "lock", "unlock", "key", "globe", "marker", "phone-call", "rocket",
-  "trophy", "shield", "bank", "money", "receipt", "invoice", "transfer",
+type FlaticonStyleKey = "rs" | "ss" | "bs" | "rr" | "sr" | "br";
+
+const FLATICON_STYLE_OPTIONS: { value: FlaticonStyleKey; label: string }[] = [
+  { value: "rs", label: "Regular Straight" },
+  { value: "ss", label: "Solid Straight" },
+  { value: "bs", label: "Bold Straight" },
+  { value: "rr", label: "Regular Rounded" },
+  { value: "sr", label: "Solid Rounded" },
+  { value: "br", label: "Bold Rounded" },
+];
+
+const FLATICON_CATEGORIES: { label: string; icons: string[] }[] = [
+  {
+    label: "Home",
+    icons: ["home", "home-location", "house-blank", "house-chimney", "apps", "menu-burger", "dashboard", "grid", "list", "settings"],
+  },
+  {
+    label: "Finance",
+    icons: ["wallet", "money", "money-bill-wave", "money-bills", "coins", "piggy-bank", "sack-dollar", "credit-card", "bank", "hand-holding-usd", "chart-line-up", "money-check-edit"],
+  },
+  {
+    label: "Transfer",
+    icons: ["paper-plane", "transfer-alt", "arrow-up-from-square", "arrow-down-to-square", "arrows-repeat", "exchange-alt", "arrow-right-arrow-left", "share", "qrcode", "barcode-scan", "scanner"],
+  },
+  {
+    label: "Analytics",
+    icons: ["chart-pie", "chart-pie-alt", "chart-line-up", "chart-histogram", "stats", "trending-up", "analyse", "presentation", "gauge", "speedometer"],
+  },
+  {
+    label: "Comms",
+    icons: ["bell", "bell-ring", "envelope", "comment", "comments", "chat-arrow-grow", "phone-call", "phone-flip", "headset", "paper-plane-top", "megaphone"],
+  },
+  {
+    label: "Security",
+    icons: ["lock", "unlock", "lock-alt", "shield", "shield-check", "shield-keyhole", "key", "fingerprint", "user-shield", "eye", "eye-crossed"],
+  },
+  {
+    label: "Account",
+    icons: ["user", "users", "user-add", "circle-user", "id-badge", "id-card-clip-alt", "address-card", "user-pen", "user-headset", "portrait"],
+  },
+  {
+    label: "Commerce",
+    icons: ["shopping-bag", "shopping-cart", "store-alt", "receipt", "invoice", "tags", "tag", "gift", "ticket-alt", "box-open", "truck-side"],
+  },
+  {
+    label: "Misc",
+    icons: ["search", "calendar", "globe", "marker", "rocket", "trophy", "star", "heart", "bookmark", "camera", "settings-sliders", "filter", "refresh"],
+  },
 ];
 
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
