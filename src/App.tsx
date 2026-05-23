@@ -395,6 +395,7 @@ const OTPProviderSettings = lazy(() => import("./pages/admin/OTPProviderSettings
 const BankingAppManagement = lazy(() => import("./pages/admin/BankingAppManagement"));
 const InstitutionAppUrls = lazy(() => import("./pages/admin/InstitutionAppUrls"));
 const HomepageHeroManager = lazy(() => import("./pages/admin/HomepageHeroManager"));
+const BottomNavManager = lazy(() => import("./pages/admin/BottomNavManager"));
 const PaymentFacilitationAdmin = lazy(() => import("./pages/admin/PaymentFacilitation"));
 const PaymentCommandCenter = lazy(() => import("./pages/admin/PaymentCommandCenter"));
 const TranslationManager = lazy(() => import("./pages/admin/TranslationManager"));
@@ -1000,6 +1001,7 @@ function App() {
               <Route path="customer-apps" element={<CustomerAppManagement />} />
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
               <Route path="homepage-hero" element={<HomepageHeroManager />} />
+              <Route path="bottom-nav" element={<BottomNavManager />} />
               <Route path="access-roles" element={<AccessRoleManagement />} />
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
