@@ -32,7 +32,9 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
         {items.map((item) => {
           const path = resolvePath(item.path);
           const active = isActive(path);
-          const Icon = resolveLucideIcon(item.icon);
+          const renderIcon = (extraClass = '') => (
+            <NavIcon icon={item.icon} className={extraClass} />
+          );
 
           if (item.is_center) {
             return (
