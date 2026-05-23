@@ -32,6 +32,8 @@ import { CategoryEditSheet } from "@/components/budget/CategoryEditSheet";
 import { GoalCreateSheet } from "@/components/budget/GoalCreateSheet";
 import { SpendingChart } from "@/components/budget/SpendingChart";
 import { NjangiWidget } from "@/components/budget/NjangiWidget";
+import { RoundupCard } from "@/components/budget/RoundupCard";
+import { RoundupSettingsSheet } from "@/components/budget/RoundupSettingsSheet";
 import {
   useBudget,
   useInsight,
