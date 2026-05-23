@@ -43,9 +43,11 @@ import { getCategory, localiseCategoryName } from "@/lib/budget/budgetCategories
 import { formatXAF } from "@/lib/budget/formatXAF";
 import type { BudgetLang } from "@/types/budget";
 
+import { useBudgetTheme, type BudgetTheme } from "@/lib/budget/theme";
+
 const LANG_KEY = "kob_adviser_lang";
-const THEME_KEY = "kob_budget_theme";
-type BudgetTheme = "light" | "dark";
+
+
 
 const ICON_MAP: Record<string, any> = {
   ShoppingCart: ShoppingBag,
