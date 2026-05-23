@@ -351,6 +351,8 @@ export default function CustomerBudget() {
               </div>
             </section>
 
+            <RoundupCard onOpenSettings={() => setRoundupOpen(true)} theme={theme} />
+
             <NjangiWidget />
 
             {/* Categories */}
