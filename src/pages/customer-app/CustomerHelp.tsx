@@ -59,7 +59,7 @@ const CustomerHelp: React.FC = () => {
   const quickLinks = [
     { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('Help Centre'), path: '/help-centre' },
     { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('FAQ'), path: '/faq' },
-    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('Terms & Privacy'), path: '/legal' },
+    { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: tr('Terms & Privacy'), path: '/terms' },
     { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: tr('Contact Support'), path: '/contact' },
   ];
 
