@@ -14,6 +14,7 @@ import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Save, RotateCcw, Layout,
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { NAV_ICON_OPTIONS, parseNavIcon } from "@/lib/lucideIconMap";
 import { NavIcon } from "@/components/nav/NavIcon";
+import { cn } from "@/lib/utils";
 import type { BottomNavApp, BottomNavItem } from "@/hooks/useBottomNavItems";
 import { DEFAULT_NAV_ITEMS } from "@/hooks/useBottomNavItems";
 
@@ -297,17 +298,62 @@ const FA4_SUGGESTIONS: string[] = [
   "gift", "globe", "map-marker", "phone", "rocket", "trophy", "shield",
 ];
 
-const FLATICON_SUGGESTIONS: string[] = [
-  "home", "user", "users", "settings", "bell", "credit-card", "wallet",
-  "shopping-bag", "search", "scan", "camera", "calendar", "comment",
-  "envelope", "heart", "star", "tag", "apps", "menu-burger", "chart-pie-alt",
-  "lock", "unlock", "key", "globe", "marker", "phone-call", "rocket",
-  "trophy", "shield", "bank", "money", "receipt", "invoice", "transfer",
+type FlaticonStyleKey = "rs" | "ss" | "bs" | "rr" | "sr" | "br";
+
+const FLATICON_STYLE_OPTIONS: { value: FlaticonStyleKey; label: string }[] = [
+  { value: "rs", label: "Regular Straight" },
+  { value: "ss", label: "Solid Straight" },
+  { value: "bs", label: "Bold Straight" },
+  { value: "rr", label: "Regular Rounded" },
+  { value: "sr", label: "Solid Rounded" },
+  { value: "br", label: "Bold Rounded" },
+];
+
+const FLATICON_CATEGORIES: { label: string; icons: string[] }[] = [
+  {
+    label: "Home",
+    icons: ["home", "home-location", "house-blank", "house-chimney", "apps", "menu-burger", "dashboard", "grid", "list", "settings"],
+  },
+  {
+    label: "Finance",
+    icons: ["wallet", "money", "money-bill-wave", "money-bills", "coins", "piggy-bank", "sack-dollar", "credit-card", "bank", "hand-holding-usd", "chart-line-up", "money-check-edit"],
+  },
+  {
+    label: "Transfer",
+    icons: ["paper-plane", "transfer-alt", "arrow-up-from-square", "arrow-down-to-square", "arrows-repeat", "exchange-alt", "arrow-right-arrow-left", "share", "qrcode", "barcode-scan", "scanner"],
+  },
+  {
+    label: "Analytics",
+    icons: ["chart-pie", "chart-pie-alt", "chart-line-up", "chart-histogram", "stats", "trending-up", "analyse", "presentation", "gauge", "speedometer"],
+  },
+  {
+    label: "Comms",
+    icons: ["bell", "bell-ring", "envelope", "comment", "comments", "chat-arrow-grow", "phone-call", "phone-flip", "headset", "paper-plane-top", "megaphone"],
+  },
+  {
+    label: "Security",
+    icons: ["lock", "unlock", "lock-alt", "shield", "shield-check", "shield-keyhole", "key", "fingerprint", "user-shield", "eye", "eye-crossed"],
+  },
+  {
+    label: "Account",
+    icons: ["user", "users", "user-add", "circle-user", "id-badge", "id-card-clip-alt", "address-card", "user-pen", "user-headset", "portrait"],
+  },
+  {
+    label: "Commerce",
+    icons: ["shopping-bag", "shopping-cart", "store-alt", "receipt", "invoice", "tags", "tag", "gift", "ticket-alt", "box-open", "truck-side"],
+  },
+  {
+    label: "Misc",
+    icons: ["search", "calendar", "globe", "marker", "rocket", "trophy", "star", "heart", "bookmark", "camera", "settings-sliders", "filter", "refresh"],
+  },
 ];
 
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const parsed = parseNavIcon(value);
   const [tab, setTab] = useState<"lucide" | "fa4" | "flaticon" | "image">(parsed.kind);
+  const [flStyle, setFlStyle] = useState<FlaticonStyleKey>(
+    (parsed.kind === "flaticon" ? parsed.style ?? "rs" : "rs") as FlaticonStyleKey,
+  );
   const [uploading, setUploading] = useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -388,29 +434,73 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
           </div>
         </TabsContent>
 
-        <TabsContent value="flaticon" className="space-y-2">
-          <Input
-            placeholder="e.g. home (renders fi fi-rs-home)"
-            value={parsed.kind === "flaticon" ? parsed.value : ""}
-            onChange={(e) => onChange(`fl:${e.target.value.replace(/^fi\s+fi-rs-/, "").trim()}`)}
-          />
+        <TabsContent value="flaticon" className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Select
+              value={flStyle}
+              onValueChange={(v) => {
+                const s = v as FlaticonStyleKey;
+                setFlStyle(s);
+                if (parsed.kind === "flaticon" && parsed.value) {
+                  onChange(`fl:${s}:${parsed.value}`);
+                }
+              }}
+            >
+              <SelectTrigger className="sm:w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FLATICON_STYLE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="e.g. wallet"
+              value={parsed.kind === "flaticon" ? parsed.value : ""}
+              onChange={(e) => {
+                const name = e.target.value.replace(/^fi\s+fi-[a-z]{2}-/, "").trim();
+                onChange(`fl:${flStyle}:${name}`);
+              }}
+            />
+          </div>
           <p className="text-xs text-muted-foreground">
-            Enter any Flaticon Uicons name without the <code>fi fi-rs-</code> prefix.
+            Pick a weight/style, then choose an icon. Renders as <code>fi fi-{flStyle}-{`{name}`}</code>.
           </p>
-          <div className="grid grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
-            {FLATICON_SUGGESTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onChange(`fl:${n}`)}
-                className="flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs"
-              >
-                <i className={`fi fi-rs-${n}`} style={{ fontSize: "1rem" }} aria-hidden="true" />
-                <span className="truncate w-full text-center text-[10px]">{n}</span>
-              </button>
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+            {FLATICON_CATEGORIES.map((cat) => (
+              <div key={cat.label} className="space-y-1.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {cat.label}
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {cat.icons.map((n) => {
+                    const selected =
+                      parsed.kind === "flaticon" && parsed.value === n && (parsed.style ?? "rs") === flStyle;
+                    return (
+                      <button
+                        key={`${cat.label}-${n}`}
+                        type="button"
+                        onClick={() => onChange(`fl:${flStyle}:${n}`)}
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-md border bg-background p-2 hover:bg-muted text-xs transition-colors",
+                          selected && "border-primary ring-1 ring-primary"
+                        )}
+                        title={n}
+                      >
+                        <i
+                          className={`fi fi-${flStyle}-${n}`}
+                          style={{ fontSize: "1.1rem", lineHeight: 1 }}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate w-full text-center text-[10px]">{n}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
         </TabsContent>
+
 
         <TabsContent value="image" className="space-y-2">
           <div className="flex gap-2">
