@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { evaluateBasicCheck, persistBasicCheckFlag } from "../_shared/credit-basic-check.ts";
 
 /**
  * credit-recompute
@@ -29,6 +30,22 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceKey);
+
+    // ── Basic check gate: refuse to compute until the user passes ──
+    const basicCheck = await evaluateBasicCheck(admin, user.id);
+    await persistBasicCheckFlag(admin, user.id, basicCheck.passed);
+    if (!basicCheck.passed) {
+      return new Response(
+        JSON.stringify({
+          error: 'basic_check_required',
+          message: 'Complete the basic identity check to unlock your CrediQ score.',
+          basic_check: basicCheck,
+          score: null,
+          band: null,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     // Rate limit: 1 recompute per 60s per user
     const { data: profile } = await admin
