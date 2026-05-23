@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { evaluateBasicCheck, persistBasicCheckFlag } from "../_shared/credit-basic-check.ts";
 
 // Scoring rules (MVP defaults)
 const SCORING_RULES: Record<string, { min: number; max: number }> = {
@@ -57,6 +58,34 @@ Deno.serve(async (req) => {
 
     const { user_id } = await req.json();
     if (!user_id) throw new Error('user_id required');
+
+    // ── Basic check gate ──────────────────────────────────────────
+    // No score is computed until profile + KYC basic check passes.
+    const basicCheck = await evaluateBasicCheck(supabase, user_id);
+    await persistBasicCheckFlag(supabase, user_id, basicCheck.passed);
+
+    if (!basicCheck.passed) {
+      // Make sure no stale score is presented while ungated.
+      await supabase
+        .from('credit_profiles')
+        .update({
+          current_score: null,
+          last_computed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user_id);
+
+      return new Response(
+        JSON.stringify({
+          error: 'basic_check_required',
+          message: 'Complete the basic identity check to unlock your CrediQ score.',
+          basic_check: basicCheck,
+          score: null,
+          band: null,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     // Get previous score
     const { data: existingProfile } = await supabase
