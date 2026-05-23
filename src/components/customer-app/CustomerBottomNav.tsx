@@ -32,9 +32,6 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
         {items.map((item) => {
           const path = resolvePath(item.path);
           const active = isActive(path);
-          const renderIcon = (extraClass = '') => (
-            <NavIcon icon={item.icon} className={extraClass} />
-          );
 
           if (item.is_center) {
             return (
@@ -45,7 +42,7 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
                 className="flex flex-col items-center justify-center -mt-6"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg">
-                  <Icon className="h-6 w-6 text-primary-foreground" strokeWidth={2} />
+                  <NavIcon icon={item.icon} className="h-6 w-6 text-primary-foreground" strokeWidth={2} />
                 </div>
               </button>
             );
@@ -61,7 +58,7 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
                 active ? 'opacity-100' : 'opacity-40'
               )}
             >
-              <Icon className="h-6 w-6 text-foreground" strokeWidth={1.75} />
+              <NavIcon icon={item.icon} className="h-6 w-6 text-foreground" />
               <span className="text-[10px] font-medium text-foreground">{tr(item.label)}</span>
             </button>
           );
