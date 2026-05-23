@@ -188,7 +188,7 @@ export default function CustomerBudget() {
                       style={{ fontFamily: "Sora, Inter, sans-serif", letterSpacing: "-0.03em" }}
                     >
                       {pct}%
-                    </span> as any
+                    </span>
                   }
                   centerSub={pct >= 100 ? "Over budget" : "of budget used"}
                 />
