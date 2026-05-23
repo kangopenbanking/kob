@@ -2,6 +2,12 @@
 // Path-based routing: every read/write the Budget tab needs goes through here.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  ALLOWED_THRESHOLDS,
+  calculateRoundUp,
+  classifySkip,
+  nextRetry,
+} from "../_shared/roundup-engine.ts";
 
 const LOVABLE_AI_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
