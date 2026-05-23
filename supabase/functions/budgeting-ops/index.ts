@@ -363,13 +363,42 @@ Deno.serve(async (req) => {
         on_track: pct >= 50 || !g.deadline,
         milestones_reached: [25, 50, 75, 100].filter((m) => pct >= m),
         next_milestone: [25, 50, 75, 100].find((m) => pct < m) ?? null,
-        round_up_total_this_month: 0,
+        round_up_total_this_month: await (async () => {
+          const start = new Date();
+          start.setDate(1);
+          start.setHours(0, 0, 0, 0);
+          const { data: rups } = await sb
+            .from("roundup_transactions")
+            .select("roundup_amount")
+            .eq("consumer_id", user.id)
+            .eq("goal_id", g.id)
+            .eq("state", "successful")
+            .gte("created_at", start.toISOString());
+          return (rups ?? []).reduce((s: number, r: any) => s + Number(r.roundup_amount), 0);
+        })(),
       });
     }
 
-    // --- Njangi
+    // --- Njangi (real schedule from njangi_contributions)
     if (method === "GET" && path === "/njangi/schedule") {
-      return json({ schedules: [] });
+      const { data: contribs } = await sb
+        .from("njangi_contributions")
+        .select("group_id, due_date, amount, status, group_name, reminder_enabled")
+        .eq("user_id", user.id)
+        .in("status", ["pending", "due", "scheduled"])
+        .order("due_date", { ascending: true })
+        .limit(10);
+      const today = Date.now();
+      const schedules = (contribs ?? []).map((c: any) => ({
+        group_id: c.group_id,
+        group_name: c.group_name ?? "Njangi group",
+        next_contribution_date: c.due_date,
+        next_contribution_amount: Number(c.amount) || 0,
+        days_until_due: Math.max(0, Math.round((+new Date(c.due_date) - today) / 86400000)),
+        budget_impact_xaf: Number(c.amount) || 0,
+        reminder_enabled: !!c.reminder_enabled,
+      }));
+      return json({ schedules });
     }
 
     // --- Insights
@@ -393,7 +422,6 @@ Deno.serve(async (req) => {
       const budget = await getCurrentBudget(sb, user.id);
       const summary = budget ? (await buildSummary(sb, budget)).summary : null;
       const result = await aiInsight({ lang, summary, question: body.question });
-      // persist
       await sb.from("budget_insights").insert({
         consumer_id: user.id,
         lang,
@@ -410,13 +438,58 @@ Deno.serve(async (req) => {
       });
     }
 
-    // --- Analytics
+    // --- Analytics (real data)
     if (method === "GET" && path === "/analytics/merchants") {
-      return json({ merchants: [] });
+      const start = new Date();
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      const { data: tx } = await sb
+        .from("transactions")
+        .select("amount, merchant_details, metadata")
+        .eq("user_id", user.id)
+        .gte("booking_datetime", start.toISOString())
+        .limit(1000);
+      const agg: Record<string, { total: number; count: number; cat: string }> = {};
+      for (const t of tx ?? []) {
+        const name = (t.merchant_details as any)?.name;
+        if (!name) continue;
+        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const slot = (agg[name] ??= { total: 0, count: 0, cat });
+        slot.total += Number(t.amount) || 0;
+        slot.count += 1;
+      }
+      const merchants = Object.entries(agg)
+        .map(([name, v]) => ({ name, category_id: v.cat, total_spent: v.total, transaction_count: v.count }))
+        .sort((a, b) => b.total_spent - a.total_spent)
+        .slice(0, 20);
+      return json({ merchants });
     }
     if (method === "GET" && path === "/analytics/monthly") {
-      return json({ months: [] });
+      const months = Math.min(Number(url.searchParams.get("months")) || 3, 12);
+      const start = new Date();
+      start.setMonth(start.getMonth() - months + 1, 1);
+      start.setHours(0, 0, 0, 0);
+      const { data: tx } = await sb
+        .from("transactions")
+        .select("amount, metadata, booking_datetime")
+        .eq("user_id", user.id)
+        .gte("booking_datetime", start.toISOString())
+        .limit(5000);
+      const buckets: Record<string, { total: number; by_category: Record<string, number> }> = {};
+      for (const t of tx ?? []) {
+        const d = new Date(t.booking_datetime);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const slot = (buckets[key] ??= { total: 0, by_category: {} });
+        slot.total += Number(t.amount) || 0;
+        slot.by_category[cat] = (slot.by_category[cat] ?? 0) + Number(t.amount) || 0;
+      }
+      const out = Object.entries(buckets)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, v]) => ({ month, total_spent: v.total, by_category: v.by_category }));
+      return json({ months: out });
     }
+
 
     // ============================================================
     // ROUND-UP SAVINGS
