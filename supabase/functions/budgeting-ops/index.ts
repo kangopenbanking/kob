@@ -67,11 +67,33 @@ async function buildSummary(sb: any, budget: any) {
     .eq("budget_id", budget.id)
     .order("category_limit", { ascending: false });
 
+  // Pull this period's transactions for per-category counts + top merchant
+  const { data: periodTx } = await sb
+    .from("transactions")
+    .select("amount, merchant_details, metadata, credit_debit_indicator, booking_datetime")
+    .eq("user_id", budget.consumer_id)
+    .gte("booking_datetime", new Date(budget.start_date).toISOString())
+    .lte("booking_datetime", new Date(budget.end_date + "T23:59:59").toISOString());
+
+  const byCat: Record<string, { count: number; merchants: Record<string, number> }> = {};
+  for (const t of periodTx ?? []) {
+    if (t.credit_debit_indicator && t.credit_debit_indicator !== "DEBIT") continue;
+    const catKey = (t.metadata as any)?.budget_category ?? "other";
+    const m = (t.merchant_details as any)?.name ?? null;
+    const slot = (byCat[catKey] ??= { count: 0, merchants: {} });
+    slot.count += 1;
+    if (m) slot.merchants[m] = (slot.merchants[m] ?? 0) + Number(t.amount || 0);
+  }
+
   const categories = (cats ?? []).map((c: any) => {
     const limit = Number(c.category_limit) || 0;
     const spent = Number(c.spent) || 0;
     const remaining = Math.max(0, limit - spent);
     const pct = limit > 0 ? (spent / limit) * 100 : 0;
+    const agg = byCat[c.category_key];
+    const topMerchant = agg
+      ? Object.entries(agg.merchants).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+      : null;
     return {
       id: c.category_key,
       name: c.name,
@@ -81,8 +103,8 @@ async function buildSummary(sb: any, budget: any) {
       spent,
       remaining,
       percentage_used: pct,
-      transaction_count: 0,
-      top_merchant: null,
+      transaction_count: agg?.count ?? 0,
+      top_merchant: topMerchant,
     };
   });
 
@@ -115,6 +137,7 @@ async function buildSummary(sb: any, budget: any) {
   const fullBudget = { ...budget, categories };
   return { budget: fullBudget, summary };
 }
+
 
 async function getCurrentBudget(sb: any, userId: string) {
   const { data } = await sb
