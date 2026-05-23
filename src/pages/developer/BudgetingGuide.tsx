@@ -139,7 +139,7 @@ console.log(answer);`
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Ask the AI Adviser (Python)</h2>
           <CodeBlock examples={[{
-            language="python"
+            language: "python",
             code: `import os, requests
 
 r = requests.post(
@@ -148,8 +148,8 @@ r = requests.post(
     json={"lang": "fr", "question": "Comment réduire mes dépenses de transport ?"},
     timeout=30,
 )
-print(r.json()["answer"])`}
-          />
+print(r.json()["answer"])`
+          }]} />
         </section>
 
         <section className="space-y-3">
