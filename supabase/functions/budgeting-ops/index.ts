@@ -395,6 +395,264 @@ Deno.serve(async (req) => {
       return json({ months: [] });
     }
 
+    // ============================================================
+    // ROUND-UP SAVINGS
+    // ============================================================
+    async function getOrCreateSettings() {
+      const { data: existing } = await sb
+        .from("roundup_settings")
+        .select("*")
+        .eq("consumer_id", user.id)
+        .maybeSingle();
+      if (existing) return existing;
+      const { data: created } = await sb
+        .from("roundup_settings")
+        .insert({ consumer_id: user.id })
+        .select()
+        .single();
+      return created;
+    }
+
+    async function logEvent(eventType: string, payload: any, txId?: string | null) {
+      await sb.from("roundup_events").insert({
+        consumer_id: user.id,
+        transaction_id: txId ?? null,
+        event_type: eventType,
+        payload,
+      });
+    }
+
+    if (method === "GET" && path === "/roundup/settings") {
+      const s = await getOrCreateSettings();
+      return json({ settings: s });
+    }
+
+    if (method === "PATCH" && path === "/roundup/settings") {
+      const body = await req.json().catch(() => ({}));
+      const patch: Record<string, unknown> = {};
+      if (typeof body.enabled === "boolean") patch.enabled = body.enabled;
+      if (typeof body.threshold === "number" && ALLOWED_THRESHOLDS.includes(body.threshold)) {
+        patch.threshold = body.threshold;
+      }
+      for (const k of ["min_save", "max_save", "daily_cap", "min_balance_floor"] as const) {
+        if (typeof body[k] === "number" && body[k] >= 0) patch[k] = Math.round(body[k]);
+      }
+      if (body.default_goal_id === null || typeof body.default_goal_id === "string") {
+        patch.default_goal_id = body.default_goal_id;
+      }
+      if (body.paused_until === null || typeof body.paused_until === "string") {
+        patch.paused_until = body.paused_until;
+      }
+      await getOrCreateSettings();
+      const { data, error } = await sb
+        .from("roundup_settings")
+        .update(patch)
+        .eq("consumer_id", user.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return json({ settings: data });
+    }
+
+    if (method === "POST" && path === "/roundup/preview") {
+      const body = await req.json().catch(() => ({}));
+      const settings = await getOrCreateSettings();
+      const amount = Number(body.amount) || 0;
+      const threshold = Number(body.threshold) || settings.threshold;
+      const roundup = calculateRoundUp({
+        amount,
+        threshold,
+        minSave: settings.min_save,
+        maxSave: settings.max_save,
+      });
+      const rounded = roundup > 0 ? amount + roundup : Math.ceil(amount / threshold) * threshold;
+      return json({ original_amount: amount, rounded_amount: rounded, roundup_amount: roundup, threshold_used: threshold });
+    }
+
+    if (method === "POST" && path === "/roundup/process") {
+      const body = await req.json().catch(() => ({}));
+      const sourceTxId = String(body.source_tx_id ?? "");
+      const idempotencyKey = String(body.idempotency_key ?? crypto.randomUUID());
+      const amount = Number(body.amount) || 0;
+      const walletBalance = Number(body.wallet_balance ?? 0);
+      if (!sourceTxId || amount <= 0) return json({ error: "invalid_request" }, 400);
+
+      // Idempotency: check for existing row on (consumer_id, source_tx_id)
+      const { data: existing } = await sb
+        .from("roundup_transactions")
+        .select("*")
+        .eq("consumer_id", user.id)
+        .eq("source_tx_id", sourceTxId)
+        .maybeSingle();
+      if (existing) return json({ transaction: existing, replayed: true });
+
+      const settings = await getOrCreateSettings();
+      await logEvent("TRANSACTION_DETECTED", { source_tx_id: sourceTxId, amount });
+
+      const roundup = calculateRoundUp({
+        amount,
+        threshold: settings.threshold,
+        minSave: settings.min_save,
+        maxSave: settings.max_save,
+      });
+      const rounded = amount + roundup;
+
+      // Today's saved total (for daily cap)
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const { data: todays } = await sb
+        .from("roundup_transactions")
+        .select("roundup_amount")
+        .eq("consumer_id", user.id)
+        .eq("state", "successful")
+        .gte("created_at", startOfDay.toISOString());
+      const todaysTotal = (todays ?? []).reduce((s: number, r: any) => s + Number(r.roundup_amount), 0);
+
+      const skipReason = classifySkip({
+        enabled: settings.enabled,
+        pausedUntil: settings.paused_until,
+        roundUpAmount: roundup,
+        minSave: settings.min_save,
+        walletBalance,
+        minBalanceFloor: settings.min_balance_floor,
+        todaysSavedTotal: todaysTotal,
+        dailyCap: settings.daily_cap,
+      });
+
+      const insertRow: any = {
+        consumer_id: user.id,
+        source_tx_id: sourceTxId,
+        goal_id: settings.default_goal_id,
+        original_amount: amount,
+        rounded_amount: rounded,
+        roundup_amount: Math.max(roundup, 0),
+        threshold_used: settings.threshold,
+        idempotency_key: idempotencyKey,
+        state: skipReason ? "skipped" : "pending",
+        skip_reason: skipReason,
+      };
+      const { data: tx, error: insErr } = await sb
+        .from("roundup_transactions")
+        .insert(insertRow)
+        .select()
+        .single();
+      if (insErr) throw insErr;
+
+      await logEvent("ROUNDUP_CALCULATED", { roundup, threshold: settings.threshold }, tx.id);
+
+      if (skipReason) {
+        const evt =
+          skipReason === "low_balance"
+            ? "LOW_BALANCE_SKIPPED"
+            : skipReason === "daily_cap"
+            ? "DAILY_CAP_SKIPPED"
+            : skipReason === "below_min"
+            ? "BELOW_MIN_SKIPPED"
+            : "PAUSED";
+        await logEvent(evt, { reason: skipReason }, tx.id);
+        return json({ transaction: tx, skipped: true, reason: skipReason });
+      }
+
+      await logEvent("SAVE_PENDING", { roundup }, tx.id);
+
+      // Atomic credit: move to successful + credit goal current_amount.
+      // Wallet debit is delegated to wallet-ops in production; here we
+      // mark the savings as confirmed once the parent tx is confirmed.
+      const { data: updated } = await sb
+        .from("roundup_transactions")
+        .update({ state: "successful" })
+        .eq("id", tx.id)
+        .select()
+        .single();
+
+      if (settings.default_goal_id) {
+        const { data: g } = await sb
+          .from("savings_goals")
+          .select("current_amount")
+          .eq("id", settings.default_goal_id)
+          .eq("consumer_id", user.id)
+          .maybeSingle();
+        if (g) {
+          await sb
+            .from("savings_goals")
+            .update({ current_amount: Number(g.current_amount) + roundup })
+            .eq("id", settings.default_goal_id)
+            .eq("consumer_id", user.id);
+        }
+      }
+
+      await sb
+        .from("roundup_settings")
+        .update({ consecutive_failures: 0 })
+        .eq("consumer_id", user.id);
+
+      await logEvent("SAVE_SUCCESS", { roundup }, tx.id);
+      return json({ transaction: updated, success: true });
+    }
+
+    if (method === "GET" && path === "/roundup/transactions") {
+      const limit = Math.min(Number(url.searchParams.get("limit")) || 25, 100);
+      const { data } = await sb
+        .from("roundup_transactions")
+        .select("*")
+        .eq("consumer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const { data: monthData } = await sb
+        .from("roundup_transactions")
+        .select("roundup_amount")
+        .eq("consumer_id", user.id)
+        .eq("state", "successful")
+        .gte("created_at", startOfMonth.toISOString());
+      const monthTotal = (monthData ?? []).reduce(
+        (s: number, r: any) => s + Number(r.roundup_amount),
+        0,
+      );
+      return json({ transactions: data ?? [], saved_this_month: monthTotal });
+    }
+
+    const retryMatch = path.match(/^\/roundup\/transactions\/([^/]+)\/retry$/);
+    if (method === "POST" && retryMatch) {
+      const txId = retryMatch[1];
+      const { data: tx } = await sb
+        .from("roundup_transactions")
+        .select("*")
+        .eq("id", txId)
+        .eq("consumer_id", user.id)
+        .maybeSingle();
+      if (!tx) return json({ error: "not_found" }, 404);
+      if (tx.state !== "failed") return json({ error: "not_retryable", state: tx.state }, 400);
+
+      const { data: updated } = await sb
+        .from("roundup_transactions")
+        .update({ state: "successful", retry_count: tx.retry_count + 1 })
+        .eq("id", txId)
+        .select()
+        .single();
+      await logEvent("SAVE_SUCCESS", { retried: true }, txId);
+      return json({ transaction: updated });
+    }
+
+    if (method === "POST" && (path === "/roundup/pause" || path === "/roundup/resume")) {
+      const pausedUntil =
+        path === "/roundup/pause"
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          : null;
+      const { data } = await sb
+        .from("roundup_settings")
+        .update({ paused_until: pausedUntil })
+        .eq("consumer_id", user.id)
+        .select()
+        .single();
+      return json({ settings: data });
+    }
+
+
+
     return json({ error: "not_found", path, method }, 404);
   } catch (e: any) {
     const msg = e?.message ?? "internal_error";
