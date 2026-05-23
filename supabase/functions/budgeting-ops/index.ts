@@ -539,6 +539,12 @@ Deno.serve(async (req) => {
       if (body.paused_until === null || typeof body.paused_until === "string") {
         patch.paused_until = body.paused_until;
       }
+      if (typeof body.source_filter === "string" && ["wallet", "bank", "both"].includes(body.source_filter)) {
+        patch.source_filter = body.source_filter;
+      }
+      if (typeof body.credit_boost_enabled === "boolean") {
+        patch.credit_boost_enabled = body.credit_boost_enabled;
+      }
       await getOrCreateSettings();
       const { data, error } = await sb
         .from("roundup_settings")
@@ -549,6 +555,7 @@ Deno.serve(async (req) => {
       if (error) throw error;
       return json({ settings: data });
     }
+
 
     if (method === "POST" && path === "/roundup/preview") {
       const body = await req.json().catch(() => ({}));
