@@ -25,11 +25,17 @@ export interface RoundupSettings {
   default_goal_id: string | null;
   paused_until: string | null;
   consecutive_failures: number;
+  source_filter: "wallet" | "bank" | "both";
+  credit_boost_enabled: boolean;
 }
 
 export interface RoundupTransaction {
   id: string;
   source_tx_id: string;
+  source_kind: "wallet" | "bank" | "manual";
+  source_account_id: string | null;
+  bank_id: string | null;
+  merchant_name: string | null;
   goal_id: string | null;
   original_amount: number;
   rounded_amount: number;
@@ -38,6 +44,7 @@ export interface RoundupTransaction {
   state: "pending" | "processing" | "successful" | "failed" | "reversed" | "skipped";
   skip_reason: string | null;
   retry_count: number;
+  credit_event_id: string | null;
   created_at: string;
 }
 
@@ -92,3 +99,17 @@ export function usePauseRoundup() {
     onSuccess: () => qc.refetchQueries({ queryKey: ["roundup"] }),
   });
 }
+
+// Process a real bank-sourced transaction through the round-up engine.
+export function useProcessBankTx() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { bank_tx_id: string; idempotency_key?: string; wallet_balance?: number }) =>
+      callFn<{ transaction?: RoundupTransaction; skipped?: boolean; reason?: string; credit_event_id?: string | null }>(
+        "/roundup/process-bank-tx",
+        { method: "POST", body: JSON.stringify(body) },
+      ),
+    onSuccess: () => qc.refetchQueries({ queryKey: ["roundup"] }),
+  });
+}
+

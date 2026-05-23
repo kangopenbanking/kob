@@ -67,11 +67,33 @@ async function buildSummary(sb: any, budget: any) {
     .eq("budget_id", budget.id)
     .order("category_limit", { ascending: false });
 
+  // Pull this period's transactions for per-category counts + top merchant
+  const { data: periodTx } = await sb
+    .from("transactions")
+    .select("amount, merchant_details, metadata, credit_debit_indicator, booking_datetime")
+    .eq("user_id", budget.consumer_id)
+    .gte("booking_datetime", new Date(budget.start_date).toISOString())
+    .lte("booking_datetime", new Date(budget.end_date + "T23:59:59").toISOString());
+
+  const byCat: Record<string, { count: number; merchants: Record<string, number> }> = {};
+  for (const t of periodTx ?? []) {
+    if (t.credit_debit_indicator && t.credit_debit_indicator !== "DEBIT") continue;
+    const catKey = (t.metadata as any)?.budget_category ?? "other";
+    const m = (t.merchant_details as any)?.name ?? null;
+    const slot = (byCat[catKey] ??= { count: 0, merchants: {} });
+    slot.count += 1;
+    if (m) slot.merchants[m] = (slot.merchants[m] ?? 0) + Number(t.amount || 0);
+  }
+
   const categories = (cats ?? []).map((c: any) => {
     const limit = Number(c.category_limit) || 0;
     const spent = Number(c.spent) || 0;
     const remaining = Math.max(0, limit - spent);
     const pct = limit > 0 ? (spent / limit) * 100 : 0;
+    const agg = byCat[c.category_key];
+    const topMerchant = agg
+      ? Object.entries(agg.merchants).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+      : null;
     return {
       id: c.category_key,
       name: c.name,
@@ -81,8 +103,8 @@ async function buildSummary(sb: any, budget: any) {
       spent,
       remaining,
       percentage_used: pct,
-      transaction_count: 0,
-      top_merchant: null,
+      transaction_count: agg?.count ?? 0,
+      top_merchant: topMerchant,
     };
   });
 
@@ -115,6 +137,7 @@ async function buildSummary(sb: any, budget: any) {
   const fullBudget = { ...budget, categories };
   return { budget: fullBudget, summary };
 }
+
 
 async function getCurrentBudget(sb: any, userId: string) {
   const { data } = await sb
@@ -340,13 +363,42 @@ Deno.serve(async (req) => {
         on_track: pct >= 50 || !g.deadline,
         milestones_reached: [25, 50, 75, 100].filter((m) => pct >= m),
         next_milestone: [25, 50, 75, 100].find((m) => pct < m) ?? null,
-        round_up_total_this_month: 0,
+        round_up_total_this_month: await (async () => {
+          const start = new Date();
+          start.setDate(1);
+          start.setHours(0, 0, 0, 0);
+          const { data: rups } = await sb
+            .from("roundup_transactions")
+            .select("roundup_amount")
+            .eq("consumer_id", user.id)
+            .eq("goal_id", g.id)
+            .eq("state", "successful")
+            .gte("created_at", start.toISOString());
+          return (rups ?? []).reduce((s: number, r: any) => s + Number(r.roundup_amount), 0);
+        })(),
       });
     }
 
-    // --- Njangi
+    // --- Njangi (real schedule from njangi_contributions)
     if (method === "GET" && path === "/njangi/schedule") {
-      return json({ schedules: [] });
+      const { data: contribs } = await sb
+        .from("njangi_contributions")
+        .select("group_id, due_date, amount, status, group_name, reminder_enabled")
+        .eq("user_id", user.id)
+        .in("status", ["pending", "due", "scheduled"])
+        .order("due_date", { ascending: true })
+        .limit(10);
+      const today = Date.now();
+      const schedules = (contribs ?? []).map((c: any) => ({
+        group_id: c.group_id,
+        group_name: c.group_name ?? "Njangi group",
+        next_contribution_date: c.due_date,
+        next_contribution_amount: Number(c.amount) || 0,
+        days_until_due: Math.max(0, Math.round((+new Date(c.due_date) - today) / 86400000)),
+        budget_impact_xaf: Number(c.amount) || 0,
+        reminder_enabled: !!c.reminder_enabled,
+      }));
+      return json({ schedules });
     }
 
     // --- Insights
@@ -370,7 +422,6 @@ Deno.serve(async (req) => {
       const budget = await getCurrentBudget(sb, user.id);
       const summary = budget ? (await buildSummary(sb, budget)).summary : null;
       const result = await aiInsight({ lang, summary, question: body.question });
-      // persist
       await sb.from("budget_insights").insert({
         consumer_id: user.id,
         lang,
@@ -387,13 +438,58 @@ Deno.serve(async (req) => {
       });
     }
 
-    // --- Analytics
+    // --- Analytics (real data)
     if (method === "GET" && path === "/analytics/merchants") {
-      return json({ merchants: [] });
+      const start = new Date();
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      const { data: tx } = await sb
+        .from("transactions")
+        .select("amount, merchant_details, metadata")
+        .eq("user_id", user.id)
+        .gte("booking_datetime", start.toISOString())
+        .limit(1000);
+      const agg: Record<string, { total: number; count: number; cat: string }> = {};
+      for (const t of tx ?? []) {
+        const name = (t.merchant_details as any)?.name;
+        if (!name) continue;
+        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const slot = (agg[name] ??= { total: 0, count: 0, cat });
+        slot.total += Number(t.amount) || 0;
+        slot.count += 1;
+      }
+      const merchants = Object.entries(agg)
+        .map(([name, v]) => ({ name, category_id: v.cat, total_spent: v.total, transaction_count: v.count }))
+        .sort((a, b) => b.total_spent - a.total_spent)
+        .slice(0, 20);
+      return json({ merchants });
     }
     if (method === "GET" && path === "/analytics/monthly") {
-      return json({ months: [] });
+      const months = Math.min(Number(url.searchParams.get("months")) || 3, 12);
+      const start = new Date();
+      start.setMonth(start.getMonth() - months + 1, 1);
+      start.setHours(0, 0, 0, 0);
+      const { data: tx } = await sb
+        .from("transactions")
+        .select("amount, metadata, booking_datetime")
+        .eq("user_id", user.id)
+        .gte("booking_datetime", start.toISOString())
+        .limit(5000);
+      const buckets: Record<string, { total: number; by_category: Record<string, number> }> = {};
+      for (const t of tx ?? []) {
+        const d = new Date(t.booking_datetime);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const slot = (buckets[key] ??= { total: 0, by_category: {} });
+        slot.total += Number(t.amount) || 0;
+        slot.by_category[cat] = (slot.by_category[cat] ?? 0) + Number(t.amount) || 0;
+      }
+      const out = Object.entries(buckets)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, v]) => ({ month, total_spent: v.total, by_category: v.by_category }));
+      return json({ months: out });
     }
+
 
     // ============================================================
     // ROUND-UP SAVINGS
@@ -443,6 +539,12 @@ Deno.serve(async (req) => {
       if (body.paused_until === null || typeof body.paused_until === "string") {
         patch.paused_until = body.paused_until;
       }
+      if (typeof body.source_filter === "string" && ["wallet", "bank", "both"].includes(body.source_filter)) {
+        patch.source_filter = body.source_filter;
+      }
+      if (typeof body.credit_boost_enabled === "boolean") {
+        patch.credit_boost_enabled = body.credit_boost_enabled;
+      }
       await getOrCreateSettings();
       const { data, error } = await sb
         .from("roundup_settings")
@@ -453,6 +555,7 @@ Deno.serve(async (req) => {
       if (error) throw error;
       return json({ settings: data });
     }
+
 
     if (method === "POST" && path === "/roundup/preview") {
       const body = await req.json().catch(() => ({}));
@@ -469,35 +572,51 @@ Deno.serve(async (req) => {
       return json({ original_amount: amount, rounded_amount: rounded, roundup_amount: roundup, threshold_used: threshold });
     }
 
-    if (method === "POST" && path === "/roundup/process") {
-      const body = await req.json().catch(() => ({}));
-      const sourceTxId = String(body.source_tx_id ?? "");
-      const idempotencyKey = String(body.idempotency_key ?? crypto.randomUUID());
-      const amount = Number(body.amount) || 0;
-      const walletBalance = Number(body.wallet_balance ?? 0);
-      if (!sourceTxId || amount <= 0) return json({ error: "invalid_request" }, 400);
+    // Internal processor shared between wallet + bank-tx flows.
+    async function processRoundup(opts: {
+      sourceTxId: string;
+      amount: number;
+      walletBalance: number;
+      sourceKind: "wallet" | "bank" | "manual";
+      sourceAccountId?: string | null;
+      bankId?: string | null;
+      merchantName?: string | null;
+      idempotencyKey?: string;
+    }) {
+      const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID();
+      const settings = await getOrCreateSettings();
 
-      // Idempotency: check for existing row on (consumer_id, source_tx_id)
+      // Source filter gate (bank vs wallet)
+      if (settings.source_filter === "wallet" && opts.sourceKind === "bank") {
+        return { skipped: true, reason: "source_filtered" as const };
+      }
+      if (settings.source_filter === "bank" && opts.sourceKind === "wallet") {
+        return { skipped: true, reason: "source_filtered" as const };
+      }
+
+      // Idempotency on (consumer_id, source_tx_id)
       const { data: existing } = await sb
         .from("roundup_transactions")
         .select("*")
         .eq("consumer_id", user.id)
-        .eq("source_tx_id", sourceTxId)
+        .eq("source_tx_id", opts.sourceTxId)
         .maybeSingle();
-      if (existing) return json({ transaction: existing, replayed: true });
+      if (existing) return { transaction: existing, replayed: true as const };
 
-      const settings = await getOrCreateSettings();
-      await logEvent("TRANSACTION_DETECTED", { source_tx_id: sourceTxId, amount });
+      await logEvent("TRANSACTION_DETECTED", {
+        source_tx_id: opts.sourceTxId,
+        amount: opts.amount,
+        source_kind: opts.sourceKind,
+      });
 
       const roundup = calculateRoundUp({
-        amount,
+        amount: opts.amount,
         threshold: settings.threshold,
         minSave: settings.min_save,
         maxSave: settings.max_save,
       });
-      const rounded = amount + roundup;
+      const rounded = opts.amount + roundup;
 
-      // Today's saved total (for daily cap)
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
       const { data: todays } = await sb
@@ -513,27 +632,30 @@ Deno.serve(async (req) => {
         pausedUntil: settings.paused_until,
         roundUpAmount: roundup,
         minSave: settings.min_save,
-        walletBalance,
+        walletBalance: opts.walletBalance,
         minBalanceFloor: settings.min_balance_floor,
         todaysSavedTotal: todaysTotal,
         dailyCap: settings.daily_cap,
       });
 
-      const insertRow: any = {
-        consumer_id: user.id,
-        source_tx_id: sourceTxId,
-        goal_id: settings.default_goal_id,
-        original_amount: amount,
-        rounded_amount: rounded,
-        roundup_amount: Math.max(roundup, 0),
-        threshold_used: settings.threshold,
-        idempotency_key: idempotencyKey,
-        state: skipReason ? "skipped" : "pending",
-        skip_reason: skipReason,
-      };
       const { data: tx, error: insErr } = await sb
         .from("roundup_transactions")
-        .insert(insertRow)
+        .insert({
+          consumer_id: user.id,
+          source_tx_id: opts.sourceTxId,
+          source_kind: opts.sourceKind,
+          source_account_id: opts.sourceAccountId ?? null,
+          bank_id: opts.bankId ?? null,
+          merchant_name: opts.merchantName ?? null,
+          goal_id: settings.default_goal_id,
+          original_amount: opts.amount,
+          rounded_amount: rounded,
+          roundup_amount: Math.max(roundup, 0),
+          threshold_used: settings.threshold,
+          idempotency_key: idempotencyKey,
+          state: skipReason ? "skipped" : "pending",
+          skip_reason: skipReason,
+        })
         .select()
         .single();
       if (insErr) throw insErr;
@@ -550,14 +672,11 @@ Deno.serve(async (req) => {
             ? "BELOW_MIN_SKIPPED"
             : "PAUSED";
         await logEvent(evt, { reason: skipReason }, tx.id);
-        return json({ transaction: tx, skipped: true, reason: skipReason });
+        return { transaction: tx, skipped: true, reason: skipReason };
       }
 
       await logEvent("SAVE_PENDING", { roundup }, tx.id);
 
-      // Atomic credit: move to successful + credit goal current_amount.
-      // Wallet debit is delegated to wallet-ops in production; here we
-      // mark the savings as confirmed once the parent tx is confirmed.
       const { data: updated } = await sb
         .from("roundup_transactions")
         .update({ state: "successful" })
@@ -581,14 +700,108 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Credit-score hook: emit a SAVINGS_ROUNDUP credit event for the engine.
+      let creditEventId: string | null = null;
+      if (settings.credit_boost_enabled && roundup > 0) {
+        const { data: ce } = await sb
+          .from("credit_events")
+          .insert({
+            user_id: user.id,
+            event_type: "SAVINGS_ROUNDUP",
+            event_time: new Date().toISOString(),
+            value_numeric: roundup,
+            source: "budgeting-ops/roundup",
+            description: `Round-up saving of ${roundup} XAF from ${opts.sourceKind} transaction`,
+            metadata: {
+              roundup_transaction_id: tx.id,
+              source_kind: opts.sourceKind,
+              source_tx_id: opts.sourceTxId,
+              bank_id: opts.bankId ?? null,
+              goal_id: settings.default_goal_id,
+            },
+          })
+          .select("id")
+          .single();
+        creditEventId = ce?.id ?? null;
+        if (creditEventId) {
+          await sb
+            .from("roundup_transactions")
+            .update({ credit_event_id: creditEventId })
+            .eq("id", tx.id);
+        }
+      }
+
       await sb
         .from("roundup_settings")
         .update({ consecutive_failures: 0 })
         .eq("consumer_id", user.id);
 
-      await logEvent("SAVE_SUCCESS", { roundup }, tx.id);
-      return json({ transaction: updated, success: true });
+      await logEvent("SAVE_SUCCESS", { roundup, credit_event_id: creditEventId }, tx.id);
+      return { transaction: updated, success: true, credit_event_id: creditEventId };
     }
+
+    if (method === "POST" && path === "/roundup/process") {
+      const body = await req.json().catch(() => ({}));
+      const sourceTxId = String(body.source_tx_id ?? "");
+      const amount = Number(body.amount) || 0;
+      if (!sourceTxId || amount <= 0) return json({ error: "invalid_request" }, 400);
+      const result = await processRoundup({
+        sourceTxId,
+        amount,
+        walletBalance: Number(body.wallet_balance ?? 0),
+        sourceKind: (body.source_kind as any) ?? "wallet",
+        merchantName: body.merchant_name ?? null,
+        idempotencyKey: body.idempotency_key,
+      });
+      return json(result);
+    }
+
+    // Process a round-up from a real bank-sourced transaction (Open Banking / KOB connector).
+    if (method === "POST" && path === "/roundup/process-bank-tx") {
+      const body = await req.json().catch(() => ({}));
+      const bankTxId = String(body.bank_tx_id ?? "");
+      if (!bankTxId) return json({ error: "invalid_request" }, 400);
+
+      // Resolve the bank-sourced transaction and verify the account belongs to this consumer.
+      const { data: btx } = await sb
+        .from("bank_sourced_transactions")
+        .select("id, account_id, external_tx_id, amount, credit_debit, description, booking_date")
+        .eq("id", bankTxId)
+        .maybeSingle();
+      if (!btx) return json({ error: "bank_tx_not_found" }, 404);
+      if (btx.credit_debit && btx.credit_debit !== "DEBIT") {
+        return json({ error: "not_a_debit", credit_debit: btx.credit_debit }, 400);
+      }
+
+      const { data: acct } = await sb
+        .from("bank_sourced_accounts")
+        .select("id, bank_id, customer_id")
+        .eq("id", btx.account_id)
+        .maybeSingle();
+      if (!acct) return json({ error: "bank_account_not_found" }, 404);
+
+      const { data: bankCustomer } = await sb
+        .from("bank_customers")
+        .select("id, user_id")
+        .eq("id", acct.customer_id)
+        .maybeSingle();
+      if (!bankCustomer || bankCustomer.user_id !== user.id) {
+        return json({ error: "forbidden" }, 403);
+      }
+
+      const result = await processRoundup({
+        sourceTxId: `bank:${btx.id}`,
+        amount: Number(btx.amount) || 0,
+        walletBalance: Number(body.wallet_balance ?? Infinity), // bank flow trusts caller balance
+        sourceKind: "bank",
+        sourceAccountId: acct.id,
+        bankId: acct.bank_id,
+        merchantName: btx.description ?? null,
+        idempotencyKey: body.idempotency_key,
+      });
+      return json(result);
+    }
+
 
     if (method === "GET" && path === "/roundup/transactions") {
       const limit = Math.min(Number(url.searchParams.get("limit")) || 25, 100);

@@ -20389,6 +20389,7 @@ export type Database = {
           consecutive_failures: number
           consumer_id: string
           created_at: string
+          credit_boost_enabled: boolean
           daily_cap: number
           default_goal_id: string | null
           enabled: boolean
@@ -20396,6 +20397,7 @@ export type Database = {
           min_balance_floor: number
           min_save: number
           paused_until: string | null
+          source_filter: string
           threshold: number
           updated_at: string
         }
@@ -20403,6 +20405,7 @@ export type Database = {
           consecutive_failures?: number
           consumer_id: string
           created_at?: string
+          credit_boost_enabled?: boolean
           daily_cap?: number
           default_goal_id?: string | null
           enabled?: boolean
@@ -20410,6 +20413,7 @@ export type Database = {
           min_balance_floor?: number
           min_save?: number
           paused_until?: string | null
+          source_filter?: string
           threshold?: number
           updated_at?: string
         }
@@ -20417,6 +20421,7 @@ export type Database = {
           consecutive_failures?: number
           consumer_id?: string
           created_at?: string
+          credit_boost_enabled?: boolean
           daily_cap?: number
           default_goal_id?: string | null
           enabled?: boolean
@@ -20424,6 +20429,7 @@ export type Database = {
           min_balance_floor?: number
           min_save?: number
           paused_until?: string | null
+          source_filter?: string
           threshold?: number
           updated_at?: string
         }
@@ -20439,11 +20445,14 @@ export type Database = {
       }
       roundup_transactions: {
         Row: {
+          bank_id: string | null
           consumer_id: string
           created_at: string
+          credit_event_id: string | null
           goal_id: string | null
           id: string
           idempotency_key: string
+          merchant_name: string | null
           next_retry_at: string | null
           original_amount: number
           provider_ref: string | null
@@ -20451,17 +20460,22 @@ export type Database = {
           rounded_amount: number
           roundup_amount: number
           skip_reason: string | null
+          source_account_id: string | null
+          source_kind: string
           source_tx_id: string
           state: string
           threshold_used: number
           updated_at: string
         }
         Insert: {
+          bank_id?: string | null
           consumer_id: string
           created_at?: string
+          credit_event_id?: string | null
           goal_id?: string | null
           id?: string
           idempotency_key: string
+          merchant_name?: string | null
           next_retry_at?: string | null
           original_amount: number
           provider_ref?: string | null
@@ -20469,17 +20483,22 @@ export type Database = {
           rounded_amount: number
           roundup_amount: number
           skip_reason?: string | null
+          source_account_id?: string | null
+          source_kind?: string
           source_tx_id: string
           state?: string
           threshold_used: number
           updated_at?: string
         }
         Update: {
+          bank_id?: string | null
           consumer_id?: string
           created_at?: string
+          credit_event_id?: string | null
           goal_id?: string | null
           id?: string
           idempotency_key?: string
+          merchant_name?: string | null
           next_retry_at?: string | null
           original_amount?: number
           provider_ref?: string | null
@@ -20487,6 +20506,8 @@ export type Database = {
           rounded_amount?: number
           roundup_amount?: number
           skip_reason?: string | null
+          source_account_id?: string | null
+          source_kind?: string
           source_tx_id?: string
           state?: string
           threshold_used?: number
@@ -26352,6 +26373,7 @@ export type Database = {
         | "SAVINGS_DEPOSIT"
         | "SAVINGS_WITHDRAWAL"
         | "SAVINGS_BALANCE_STABLE"
+        | "SAVINGS_ROUNDUP"
       credit_score_band: "A" | "B" | "C" | "D" | "F"
       inbox_event_status: "received" | "processed" | "ignored" | "failed"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
@@ -26722,6 +26744,7 @@ export const Constants = {
         "SAVINGS_DEPOSIT",
         "SAVINGS_WITHDRAWAL",
         "SAVINGS_BALANCE_STABLE",
+        "SAVINGS_ROUNDUP",
       ],
       credit_score_band: ["A", "B", "C", "D", "F"],
       inbox_event_status: ["received", "processed", "ignored", "failed"],
