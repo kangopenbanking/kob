@@ -38,9 +38,10 @@ export const NavIcon: React.FC<NavIconProps> = ({ icon, className, strokeWidth =
   }
 
   if (parsed.kind === "flaticon") {
+    const style = parsed.style ?? "rs";
     return (
       <i
-        className={cn("fi fi-rs-", parsed.value, "text-foreground", className)}
+        className={cn("fi", `fi-${style}-${parsed.value}`, "text-foreground", className)}
         aria-hidden="true"
         style={{ fontSize: "1.25rem", lineHeight: 1 }}
       />
