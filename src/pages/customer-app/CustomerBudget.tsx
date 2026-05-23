@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { ChartDonut, Sparkle, ArrowsClockwise } from "@phosphor-icons/react";
+import { ChartDonut, Sparkle, ArrowsClockwise, Plus, PencilSimple } from "@phosphor-icons/react";
 import { DonutRing } from "@/components/budget/DonutRing";
 import { AnimatedAmount } from "@/components/budget/AnimatedAmount";
 import { LanguageSelector } from "@/components/budget/LanguageSelector";
+import { BudgetSetupSheet } from "@/components/budget/BudgetSetupSheet";
+import { CategoryEditSheet } from "@/components/budget/CategoryEditSheet";
+import { GoalCreateSheet } from "@/components/budget/GoalCreateSheet";
+import { SpendingChart } from "@/components/budget/SpendingChart";
+import { NjangiWidget } from "@/components/budget/NjangiWidget";
 import { useBudget, useInsight, useGoals, useBudgetAlerts, useDismissAlert } from "@/hooks/budget/useBudgetApi";
 import { getCategory, localiseCategoryName } from "@/lib/budget/budgetCategories";
 import { formatXAF } from "@/lib/budget/formatXAF";
