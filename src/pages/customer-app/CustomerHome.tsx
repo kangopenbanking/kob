@@ -415,48 +415,40 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Savings & Goals ─── */}
+      {/* ─── Savings & Goals (horizontal carousel) ─── */}
       {visibleSavings.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Savings & Goals')}</p>
-          <motion.div className="flex flex-col gap-3" variants={staggerContainer} initial="initial" animate="animate">
-            {visibleSavings[0] && (() => {
-              const FirstIcon = visibleSavings[0].icon;
+          <motion.div
+            className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-none"
+            style={{ scrollbarWidth: 'none' }}
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {visibleSavings.map((item) => {
+              const ItemIcon = item.icon;
               return (
-                <motion.button
-                  variants={staggerItem}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => go(visibleSavings[0].path)}
-                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor} shadow-sm`}
-                >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-background/50">
-                    <FirstIcon className={`h-7 w-7 ${visibleSavings[0].iconColor}`} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{tr(visibleSavings[0].label)}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(visibleSavings[0].description || '')}</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-                </motion.button>
-              );
-            })()}
-            <div className="grid grid-cols-2 gap-3">
-              {visibleSavings.slice(1).map((item) => (
                 <motion.button
                   key={item.path}
                   variants={staggerItem}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => go(item.path)}
-                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor} shadow-sm`}
+                  className={`flex-shrink-0 w-[78%] snap-start flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left border-2 ${item.borderColor} shadow-sm`}
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/60">
+                    <ItemIcon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
-                  <p className="text-xs font-bold text-foreground">{tr(item.label)}</p>
-                  <p className="text-[10px] text-muted-foreground text-center">{tr(item.description || '')}</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-foreground">{tr(item.label)}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{tr(item.description || '')}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-foreground">
+                    {tr('Open')} <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+                  </div>
                 </motion.button>
-              ))}
-            </div>
+              );
+            })}
           </motion.div>
         </motion.div>
       )}
