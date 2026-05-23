@@ -112,6 +112,34 @@ const CustomerCreditScore: React.FC = () => {
     },
   });
 
+  const { data: hasBudget } = useQuery({
+    queryKey: ['has-budget', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('budgets')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('status', 'active')
+        .limit(1)
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
+  const { data: hasRoundup } = useQuery({
+    queryKey: ['has-roundup', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('roundup_settings')
+        .select('enabled')
+        .eq('consumer_id', user!.id)
+        .maybeSingle();
+      return !!data?.enabled;
+    },
+  });
+
   const score = scoreData?.score ?? 0;
   const maxScore = 850;
   const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
