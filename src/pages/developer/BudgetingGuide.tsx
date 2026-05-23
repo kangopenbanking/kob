@@ -95,7 +95,7 @@ export default function BudgetingGuide() {
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Quickstart — create a budget</h2>
           <CodeBlock examples={[{
-            language="bash"
+            language: "bash",
             code: `curl -X POST https://api.kangopenbanking.com/v1/budgeting/budgets \\
   -H "Authorization: Bearer $KOB_TOKEN" \\
   -H "Idempotency-Key: $(uuidgen)" \\
@@ -110,8 +110,8 @@ export default function BudgetingGuide() {
       { "id": "cat_utilities", "limit": 25000 },
       { "id": "cat_savings",   "limit": 25000 }
     ]
-  }'`}
-          />
+  }'`
+          }]} />
         </section>
 
         <section className="space-y-3">
