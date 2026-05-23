@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useUpdateCategory } from "@/hooks/budget/useBudgetApi";
 import { formatXAF } from "@/lib/budget/formatXAF";
 
@@ -28,26 +26,61 @@ export function CategoryEditSheet({ open, onOpenChange, budgetId, category }: Pr
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="bg-[#0F172A] border-t border-white/10 text-[#E2EAF4] rounded-t-3xl">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl border-0 p-6"
+        style={{
+          background: "var(--bud-bg)",
+          color: "var(--bud-text)",
+          borderTop: "1px solid var(--bud-border)",
+        }}
+      >
         <SheetHeader>
-          <SheetTitle className="text-[#E2EAF4]">{category ? `Edit ${category.name}` : "Edit category"}</SheetTitle>
+          <SheetTitle style={{ color: "var(--bud-text)" }}>
+            {category ? `Edit ${category.name}` : "Edit category"}
+          </SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-4">
-          <label className="block text-xs uppercase tracking-wider text-slate-400">Monthly limit (XAF)</label>
-          <Input
+          <label
+            className="block text-xs uppercase tracking-wider"
+            style={{ color: "var(--bud-text-3)" }}
+          >
+            Monthly limit (XAF)
+          </label>
+          <input
             inputMode="numeric"
             value={limit}
             onChange={(e) => setLimit(e.target.value.replace(/[^0-9]/g, ""))}
-            className="h-14 text-lg bg-white/5 border-white/10 text-white"
+            className="h-14 w-full rounded-2xl px-4 text-lg outline-none focus:ring-2 focus:ring-sky-500/40"
+            style={{
+              background: "var(--bud-input-bg)",
+              border: "1px solid var(--bud-border)",
+              color: "var(--bud-text)",
+            }}
           />
-          <div className="text-xs text-slate-500">{formatXAF(Number(limit) || 0)}</div>
+          <div className="text-xs" style={{ color: "var(--bud-text-3)" }}>
+            {formatXAF(Number(limit) || 0)}
+          </div>
           <div className="flex gap-2 pt-3">
-            <Button variant="outline" className="flex-1 h-12 rounded-2xl border-white/15 bg-transparent text-white hover:bg-white/5" onClick={() => onOpenChange(false)}>
+            <button
+              className="flex-1 h-12 rounded-2xl text-sm font-medium"
+              style={{
+                border: "1px solid var(--bud-border)",
+                background: "transparent",
+                color: "var(--bud-text)",
+              }}
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
-            </Button>
-            <Button className="flex-1 h-12 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white" disabled={update.isPending} onClick={save}>
+            </button>
+            <button
+              className="flex-1 h-12 rounded-2xl text-sm font-semibold disabled:opacity-50 transition-transform active:scale-[0.98]"
+              style={{ background: "var(--bud-cta-bg)", color: "var(--bud-cta-fg)" }}
+              disabled={update.isPending}
+              onClick={save}
+            >
               {update.isPending ? "Saving…" : "Save"}
-            </Button>
+            </button>
           </div>
         </div>
       </SheetContent>
