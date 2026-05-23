@@ -31,6 +31,8 @@ export function RoundupSettingsSheet({ open, onOpenChange }: Props) {
   const [dailyCap, setDailyCap] = useState("5000");
   const [minFloor, setMinFloor] = useState("0");
   const [goalId, setGoalId] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<"wallet" | "bank" | "both">("both");
+  const [creditBoost, setCreditBoost] = useState(true);
 
   useEffect(() => {
     if (!s) return;
@@ -41,6 +43,8 @@ export function RoundupSettingsSheet({ open, onOpenChange }: Props) {
     setDailyCap(String(s.daily_cap));
     setMinFloor(String(s.min_balance_floor));
     setGoalId(s.default_goal_id);
+    setSourceFilter(s.source_filter ?? "both");
+    setCreditBoost(s.credit_boost_enabled ?? true);
   }, [s, open]);
 
   async function save() {
@@ -52,9 +56,12 @@ export function RoundupSettingsSheet({ open, onOpenChange }: Props) {
       daily_cap: Number(dailyCap) || 0,
       min_balance_floor: Number(minFloor) || 0,
       default_goal_id: goalId,
+      source_filter: sourceFilter,
+      credit_boost_enabled: creditBoost,
     });
     onOpenChange(false);
   }
+
 
   const recentTx = txData?.transactions ?? [];
   const isPaused = !!s?.paused_until && new Date(s.paused_until).getTime() > Date.now();
