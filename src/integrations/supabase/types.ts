@@ -6765,8 +6765,10 @@ export type Database = {
       }
       credit_profiles: {
         Row: {
+          basic_check_completed_at: string | null
+          basic_check_passed: boolean
           created_at: string
-          current_score: number
+          current_score: number | null
           id: string
           institution_id: string | null
           last_computed_at: string | null
@@ -6775,8 +6777,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          basic_check_completed_at?: string | null
+          basic_check_passed?: boolean
           created_at?: string
-          current_score?: number
+          current_score?: number | null
           id?: string
           institution_id?: string | null
           last_computed_at?: string | null
@@ -6785,8 +6789,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          basic_check_completed_at?: string | null
+          basic_check_passed?: boolean
           created_at?: string
-          current_score?: number
+          current_score?: number | null
           id?: string
           institution_id?: string | null
           last_computed_at?: string | null
