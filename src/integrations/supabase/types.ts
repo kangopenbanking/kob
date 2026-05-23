@@ -4369,6 +4369,51 @@ export type Database = {
           },
         ]
       }
+      bottom_nav_items: {
+        Row: {
+          app: Database["public"]["Enums"]["bottom_nav_app"]
+          badge_key: string | null
+          created_at: string
+          icon: string
+          id: string
+          is_center: boolean
+          is_enabled: boolean
+          label: string
+          path: string
+          position: number
+          required_role: string | null
+          updated_at: string
+        }
+        Insert: {
+          app: Database["public"]["Enums"]["bottom_nav_app"]
+          badge_key?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          is_center?: boolean
+          is_enabled?: boolean
+          label: string
+          path: string
+          position?: number
+          required_role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          app?: Database["public"]["Enums"]["bottom_nav_app"]
+          badge_key?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          is_center?: boolean
+          is_enabled?: boolean
+          label?: string
+          path?: string
+          position?: number
+          required_role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           address: Json
@@ -26126,6 +26171,7 @@ export type Database = {
         | "expired"
         | "executed"
         | "cancelled"
+      bottom_nav_app: "customer" | "business" | "banking"
       card_funding_status:
         | "pending"
         | "processing"
@@ -26493,6 +26539,7 @@ export const Constants = {
         "executed",
         "cancelled",
       ],
+      bottom_nav_app: ["customer", "business", "banking"],
       card_funding_status: [
         "pending",
         "processing",

@@ -201,6 +201,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "OTP Providers", path: "/admin/otp-providers", icon: Smartphone },
       { title: "Supported Countries", path: "/admin/supported-countries", icon: Globe },
       { title: "Homepage Hero", path: "/admin/homepage-hero", icon: Palette },
+      { title: "Bottom Navigation", path: "/admin/bottom-nav", icon: Palette },
       { title: "Auth Branding", path: "/admin/auth-branding", icon: Palette },
       { title: "Translations", path: "/admin/translations", icon: Languages },
       { title: "Compliance Dashboard", path: "/admin/compliance-dashboard", icon: ScrollText },
