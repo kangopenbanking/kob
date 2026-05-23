@@ -684,21 +684,31 @@ Deno.serve(async (req) => {
         .select()
         .single();
 
-      if (settings.default_goal_id) {
-        const { data: g } = await sb
-          .from("savings_goals")
-          .select("current_amount")
-          .eq("id", settings.default_goal_id)
-          .eq("consumer_id", user.id)
-          .maybeSingle();
-        if (g) {
-          await sb
-            .from("savings_goals")
-            .update({ current_amount: Number(g.current_amount) + roundup })
-            .eq("id", settings.default_goal_id)
-            .eq("consumer_id", user.id);
-        }
+      // Credit the independent Saving Vault (round-ups are kept separate from goals)
+      const { data: vault } = await sb
+        .from("savings_vaults")
+        .select("balance")
+        .eq("consumer_id", user.id)
+        .maybeSingle();
+      const prevBal = Number(vault?.balance ?? 0);
+      const newBal = prevBal + roundup;
+      if (vault) {
+        await sb.from("savings_vaults")
+          .update({ balance: newBal })
+          .eq("consumer_id", user.id);
+      } else {
+        await sb.from("savings_vaults")
+          .insert({ consumer_id: user.id, balance: newBal });
       }
+      await sb.from("vault_transactions").insert({
+        consumer_id: user.id,
+        kind: "credit",
+        amount: roundup,
+        balance_after: newBal,
+        source: "roundup",
+        source_ref: tx.id,
+        description: `Round-up from ${opts.sourceKind} transaction`,
+      });
 
       // Credit-score hook: emit a SAVINGS_ROUNDUP credit event for the engine.
       let creditEventId: string | null = null;
