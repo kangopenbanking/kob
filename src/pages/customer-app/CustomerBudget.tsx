@@ -117,11 +117,11 @@ export default function CustomerBudget() {
       <div
         className="min-h-screen px-5 pb-28 pt-5 transition-colors duration-300"
         style={{
-          ...themeVars,
           background: "var(--bud-bg)",
           color: "var(--bud-text)",
           fontFamily: "DM Sans, Inter, system-ui, sans-serif",
         }}
+
       >
         {isLoading ? (
           <LoadingState />
