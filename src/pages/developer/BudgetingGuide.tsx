@@ -117,7 +117,7 @@ export default function BudgetingGuide() {
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Ask the AI Adviser (Node.js)</h2>
           <CodeBlock examples={[{
-            language="javascript"
+            language: "javascript",
             code: `import fetch from "node-fetch";
 
 const r = await fetch("https://api.kangopenbanking.com/v1/budgeting/insights/ask", {
@@ -132,8 +132,8 @@ const r = await fetch("https://api.kangopenbanking.com/v1/budgeting/insights/ask
   })
 });
 const { answer, confidence } = await r.json();
-console.log(answer);`}
-          />
+console.log(answer);`
+          }]} />
         </section>
 
         <section className="space-y-3">
