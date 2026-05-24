@@ -22,6 +22,7 @@ import {
   type WithdrawResult,
 } from "@/hooks/savings/useSavingsVault";
 import { extractEdgeFunctionError } from "@/lib/edge-function-error";
+import { PinConfirmDialog } from "@/components/pwa/PinConfirmDialog";
 
 const fmt = (n: number, c = "XAF") =>
   new Intl.NumberFormat("fr-CM").format(Math.round(n)) + " " + c;
@@ -45,6 +46,7 @@ const CustomerSavingsVault: React.FC = () => {
   const [amount, setAmount] = useState("");
   const [destAccount, setDestAccount] = useState<string>("");
   const [receipt, setReceipt] = useState<WithdrawResult | null>(null);
+  const [showPin, setShowPin] = useState(false);
 
   const [limitsOpen, setLimitsOpen] = useState(false);
   const [dailyInput, setDailyInput] = useState("");
@@ -97,6 +99,13 @@ const CustomerSavingsVault: React.FC = () => {
   };
 
   const submitWithdraw = async () => {
+    // PIN gate: every withdrawal from the Saving Vault is a financial mutation
+    // and must be re-authenticated. The actual debit runs in runWithdraw after
+    // the user successfully confirms their PIN.
+    setShowPin(true);
+  };
+
+  const runWithdraw = async () => {
     try {
       const res = await withdraw.mutateAsync({
         amount: amt,
@@ -498,6 +507,12 @@ const CustomerSavingsVault: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={setShowPin}
+        onConfirmed={runWithdraw}
+      />
     </div>
   );
 };

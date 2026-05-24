@@ -1,0 +1,30 @@
+name: Help/Legal Link Health (P2 Zero-404)
+
+# Order P2 — THE ZERO-404 RULE.
+# Continuously verifies that public help/legal links resolve to real content
+# in production. Runs on every push, every 30 minutes, and on manual dispatch.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  link-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check production help/legal links
+        env:
+          AUDIT_BASE: https://kob.lovable.app
+        run: node scripts/check-help-legal-links.mjs
+      - name: Check custom domain help/legal links
+        env:
+          AUDIT_BASE: https://kangopenbanking.com
+        continue-on-error: true
+        run: node scripts/check-help-legal-links.mjs

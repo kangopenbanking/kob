@@ -1354,6 +1354,45 @@ export type Database = {
         }
         Relationships: []
       }
+      balance_reconciliation_events: {
+        Row: {
+          activity_derived: number
+          created_at: string
+          currency: string
+          delta_home_vs_activity: number
+          delta_home_vs_transfer: number
+          home_total: number
+          id: string
+          reasons: Json
+          transfer_total: number
+          user_id: string | null
+        }
+        Insert: {
+          activity_derived?: number
+          created_at?: string
+          currency?: string
+          delta_home_vs_activity?: number
+          delta_home_vs_transfer?: number
+          home_total?: number
+          id?: string
+          reasons?: Json
+          transfer_total?: number
+          user_id?: string | null
+        }
+        Update: {
+          activity_derived?: number
+          created_at?: string
+          currency?: string
+          delta_home_vs_activity?: number
+          delta_home_vs_transfer?: number
+          home_total?: number
+          id?: string
+          reasons?: Json
+          transfer_total?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bank_api_endpoints: {
         Row: {
           auth_config_encrypted: Json | null
