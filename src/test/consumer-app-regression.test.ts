@@ -24,7 +24,7 @@ const FNS_DIR = path.join(ROOT, 'supabase/functions');
 type ImportMap = Map<string, string>;
 function buildImportMap(): ImportMap {
   const map: ImportMap = new Map();
-  // Matches both default + named imports.
+  // Static imports: default + named.
   const RE = /import\s+(?:(\w+)|{([^}]+)})\s+from\s+['"]([^'"]+)['"]/g;
   for (const m of APP_TSX.matchAll(RE)) {
     const def = m[1];
@@ -37,6 +37,11 @@ function buildImportMap(): ImportMap {
         if (name) map.set(name, source);
       }
     }
+  }
+  // Lazy imports: `const X = lazy(() => import("path")...)`
+  const LAZY_RE = /const\s+(\w+)\s*=\s*lazy\(\s*\(\)\s*=>\s*import\(\s*['"]([^'"]+)['"]/g;
+  for (const m of APP_TSX.matchAll(LAZY_RE)) {
+    map.set(m[1], m[2]);
   }
   return map;
 }
