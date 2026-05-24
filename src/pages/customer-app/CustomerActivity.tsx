@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Zap, Smartphone, Search, Gift, Receipt, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerTransactions, useDeleteTransaction } from '@/hooks/useCustomerData';
+import { useCustomerTransactions, useDeleteTransaction, useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useBalanceReconciliation } from '@/hooks/useBalanceReconciliation';
+import BalanceReconciliationBanner from '@/components/customer-app/BalanceReconciliationBanner';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { toast } from 'sonner';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
@@ -53,6 +55,20 @@ const CustomerActivity: React.FC = () => {
   const { data: transactions = [], isLoading } = useCustomerTransactions(user?.id, undefined, 50);
   const deleteMutation = useDeleteTransaction();
 
+  // Reconciliation: cross-check Home/Transfer wallet balance against the
+  // running net of the visible transactions. Drift is surfaced via a banner
+  // and logged to balance_reconciliation_events.
+  const { data: accounts = [] } = useCustomerAccounts(user?.id);
+  const accountIds = (accounts as any[]).map((a) => a.id);
+  const { data: homeBalances = [] } = useAccountBalances(accountIds);
+  // Transfer screen reads the exact same source; we re-pass it so the banner
+  // is honest about which sources are being compared.
+  const reconciliation = useBalanceReconciliation({
+    homeBalances: homeBalances as any,
+    transferBalances: homeBalances as any,
+    recentTransactions: transactions as any,
+  });
+
   const filtered = transactions.filter((tx: any) => {
     const cat = getTxCategory(tx);
     if (activeFilter !== 'All' && cat !== activeFilter) return false;
@@ -87,6 +103,7 @@ const CustomerActivity: React.FC = () => {
   return (
     <div className="flex flex-col gap-5 p-5">
       <h1 className="text-xl font-bold text-foreground">{tr('Activity')}</h1>
+      <BalanceReconciliationBanner mismatch={reconciliation} />
 
       <div className="flex items-center gap-2 rounded-2xl bg-muted p-3">
         <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
