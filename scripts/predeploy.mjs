@@ -78,7 +78,7 @@ await run(
 );
 
 if (OFFLINE) {
-  console.log('\nSkipping public-access audit (offline mode).');
+  console.log('\nSkipping public-access + link-health audits (offline mode).');
   process.exit(0);
 }
 
@@ -87,6 +87,13 @@ await run(
   'node',
   ['scripts/audit-public-access.mjs'],
   { AUDIT_BASE, EXPECTED_OPENAPI_VERSION: EXPECTED }
+);
+
+await run(
+  `Help/Legal link health against ${AUDIT_BASE} (Order P2)`,
+  'node',
+  ['scripts/check-help-legal-links.mjs'],
+  { AUDIT_BASE }
 );
 
 console.log('\nAll pre-deploy checks passed. Safe to push.');
