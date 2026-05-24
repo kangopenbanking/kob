@@ -507,6 +507,12 @@ const CustomerSavingsVault: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={setShowPin}
+        onConfirmed={runWithdraw}
+      />
     </div>
   );
 };
