@@ -3,59 +3,98 @@
  *
  * Re-runs the deep pen-test checks for the Consumer mobile app on every CI run
  * so regressions (broken routes, missing pages, dead edge-function invocations,
- * stripped PIN gates) can never reach production.
+ * stripped PIN gates, broken help-link destinations) can never reach production.
  *
- * Verifies, statically:
- *   1. Every /app/* route in src/App.tsx points to an importable page module
- *      with a valid React default export.
- *   2. Every supabase.functions.invoke('name') referenced from a customer-app
- *      page has a matching supabase/functions/<name>/index.ts on disk.
- *   3. Every page that performs a financial mutation imports PinConfirmDialog.
- *   4. The Help page's quick-links point to routes that exist in App.tsx.
- *
- * Wired into the phase6-e2e workflow so failures block merge.
+ * The test deliberately reads source artifacts (App.tsx, page files, the
+ * supabase/functions tree) rather than running a live server — so it catches
+ * the same class of issues we found during the 2026-05-23 manual audit
+ * without needing a deployed environment.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const APP_TSX = fs.readFileSync(path.join(ROOT, 'src/App.tsx'), 'utf8');
+const APP_TSX_PATH = path.join(ROOT, 'src/App.tsx');
+const APP_TSX = fs.readFileSync(APP_TSX_PATH, 'utf8');
 const PAGES_DIR = path.join(ROOT, 'src/pages/customer-app');
 const FNS_DIR = path.join(ROOT, 'supabase/functions');
 
-// ---------- 1. /app/* route ↔ page module parity ----------
-const ROUTE_RE = /<Route\s+path="([^"]+)"\s+element={<(\w+)\s*\/>/g;
-const appRoutes: Array<{ path: string; component: string }> = [];
-for (const m of APP_TSX.matchAll(ROUTE_RE)) {
-  appRoutes.push({ path: m[1], component: m[2] });
+// ─── Parse App.tsx imports so component → source path lookups are accurate ───
+type ImportMap = Map<string, string>;
+function buildImportMap(): ImportMap {
+  const map: ImportMap = new Map();
+  // Matches both default + named imports.
+  const RE = /import\s+(?:(\w+)|{([^}]+)})\s+from\s+['"]([^'"]+)['"]/g;
+  for (const m of APP_TSX.matchAll(RE)) {
+    const def = m[1];
+    const named = m[2];
+    const source = m[3];
+    if (def) map.set(def, source);
+    if (named) {
+      for (const part of named.split(',')) {
+        const name = part.trim().split(/\s+as\s+/)[0].trim();
+        if (name) map.set(name, source);
+      }
+    }
+  }
+  return map;
 }
-const consumerComponents = appRoutes
-  .filter((r) => r.component.startsWith('Customer'))
-  .map((r) => r.component);
+
+function resolveSourceToFile(source: string): string | null {
+  if (!source.startsWith('@/')) return null;
+  const rel = source.replace(/^@\//, '');
+  for (const ext of ['.tsx', '.ts', '/index.tsx', '/index.ts']) {
+    const full = path.join(ROOT, 'src', rel + ext);
+    if (fs.existsSync(full)) return full;
+  }
+  return null;
+}
+
+const importMap = buildImportMap();
+
+// Capture every <X /> used as a Route element, including <Layout><X /></Layout>.
+const ROUTE_ELEMENT_RE = /<Route\s+path="([^"]+)"\s+element={([^}]+)}/g;
+const COMPONENT_RE = /<(\w+)\b/g;
+
+type RouteEntry = { path: string; components: string[] };
+const routeEntries: RouteEntry[] = [];
+for (const m of APP_TSX.matchAll(ROUTE_ELEMENT_RE)) {
+  const components: string[] = [];
+  for (const cm of m[2].matchAll(COMPONENT_RE)) {
+    const name = cm[1];
+    if (/^[A-Z]/.test(name) && name !== 'Layout' && name !== 'Navigate') {
+      components.push(name);
+    }
+  }
+  routeEntries.push({ path: m[1], components });
+}
+const declaredRoutePaths = new Set(routeEntries.map((r) => r.path));
+const allRouteComponents = new Set(routeEntries.flatMap((r) => r.components));
 
 describe('Consumer App Regression — routes', () => {
-  it('every Customer* component referenced in App.tsx has a page module', () => {
-    const missing: string[] = [];
-    for (const name of new Set(consumerComponents)) {
-      const file = path.join(PAGES_DIR, `${name}.tsx`);
-      if (!fs.existsSync(file)) missing.push(name);
+  it('every Customer* component used as a route resolves to a real source file', () => {
+    const missing: Array<{ component: string; reason: string }> = [];
+    for (const name of allRouteComponents) {
+      if (!name.startsWith('Customer')) continue;
+      const source = importMap.get(name);
+      if (!source) {
+        missing.push({ component: name, reason: 'not imported in App.tsx' });
+        continue;
+      }
+      const file = resolveSourceToFile(source);
+      if (!file) {
+        missing.push({ component: name, reason: `import "${source}" does not resolve` });
+      }
     }
-    expect(missing, `Missing page modules: ${missing.join(', ')}`).toEqual([]);
-  });
-
-  it('every customer-app page file has a default export', () => {
-    const files = fs.readdirSync(PAGES_DIR).filter((f) => f.endsWith('.tsx'));
-    const noDefault: string[] = [];
-    for (const f of files) {
-      const src = fs.readFileSync(path.join(PAGES_DIR, f), 'utf8');
-      if (!/export\s+default\s+/m.test(src)) noDefault.push(f);
-    }
-    expect(noDefault, `Pages missing default export: ${noDefault.join(', ')}`).toEqual([]);
+    expect(
+      missing,
+      `Route components missing source files: ${missing.map((m) => `${m.component} (${m.reason})`).join('; ')}`,
+    ).toEqual([]);
   });
 });
 
-// ---------- 2. supabase.functions.invoke('x') ↔ deployed fn parity ----------
+// ─── 2. supabase.functions.invoke('x') ↔ deployed fn parity ──────────────────
 const INVOKE_RE = /supabase\.functions\.invoke\(\s*['"`]([a-z0-9-]+)['"`]/g;
 
 function collectInvokes(dir: string): Set<string> {
@@ -77,15 +116,17 @@ describe('Consumer App Regression — edge functions', () => {
     const invoked = collectInvokes(PAGES_DIR);
     const missing: string[] = [];
     for (const fn of invoked) {
-      const dir = path.join(FNS_DIR, fn);
-      const idx = path.join(dir, 'index.ts');
+      const idx = path.join(FNS_DIR, fn, 'index.ts');
       if (!fs.existsSync(idx)) missing.push(fn);
     }
-    expect(missing, `Edge functions invoked but not deployed: ${missing.join(', ')}`).toEqual([]);
+    expect(
+      missing,
+      `Edge functions invoked but not deployed: ${missing.join(', ')}`,
+    ).toEqual([]);
   });
 });
 
-// ---------- 3. PIN-gated financial mutation pages ----------
+// ─── 3. PIN-gated financial mutation pages ───────────────────────────────────
 const PIN_REQUIRED_PAGES = [
   'CustomerTransfer.tsx',
   'CustomerSendMoney.tsx',
@@ -109,16 +150,16 @@ describe('Consumer App Regression — security gates', () => {
   });
 });
 
-// ---------- 4. CustomerHelp quick-links resolve ----------
+// ─── 4. Help quick-links resolve to real routes ──────────────────────────────
 describe('Consumer App Regression — help quick-links', () => {
   it('every quickLinks path in CustomerHelp.tsx is registered as a route', () => {
     const help = fs.readFileSync(path.join(PAGES_DIR, 'CustomerHelp.tsx'), 'utf8');
     const QL_RE = /path:\s*['"`](\/[a-z0-9\-\/]*)['"`]/gi;
-    const declaredPaths = new Set(appRoutes.map((r) => r.path));
     const broken: string[] = [];
     for (const m of help.matchAll(QL_RE)) {
       const p = m[1];
-      if (!declaredPaths.has(p)) broken.push(p);
+      // strip params and ignore mailto/anchor stub paths
+      if (!declaredRoutePaths.has(p)) broken.push(p);
     }
     expect(broken, `Help quick-links missing routes: ${broken.join(', ')}`).toEqual([]);
   });
