@@ -47,8 +47,10 @@ function buildImportMap(): ImportMap {
 }
 
 function resolveSourceToFile(source: string): string | null {
-  if (!source.startsWith('@/')) return null;
-  const rel = source.replace(/^@\//, '');
+  let rel: string;
+  if (source.startsWith('@/')) rel = source.replace(/^@\//, '');
+  else if (source.startsWith('./')) rel = source.replace(/^\.\//, '');
+  else return null;
   for (const ext of ['.tsx', '.ts', '/index.tsx', '/index.ts']) {
     const full = path.join(ROOT, 'src', rel + ext);
     if (fs.existsSync(full)) return full;
