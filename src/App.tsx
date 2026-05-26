@@ -1622,6 +1622,7 @@ function App() {
 
             <Route path="/pay/authorize" element={<PayByBankAuthorize />} />
             <Route path="/pay/m/:slug" element={<PayMerchantSlug />} />
+            <Route path="/pay/invoice/:invoiceId" element={<PayInvoice />} />
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
