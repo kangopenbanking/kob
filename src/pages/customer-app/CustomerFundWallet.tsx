@@ -140,13 +140,18 @@ const CustomerFundWallet: React.FC = () => {
     try {
       const { data: kobInstitutions } = await supabase
         .from('institutions' as any)
-        .select('id, institution_name, institution_type, swift_bic_code')
+        .select('id, institution_name, institution_type, swift_bic_code, logo_url')
         .eq('is_active', true)
         .order('institution_name');
 
       if (kobInstitutions?.length) {
         kobInstitutions.forEach((inst: any) => {
-          allBanks.push({ code: inst.swift_bic_code || inst.id, name: inst.institution_name, source: 'kob' });
+          allBanks.push({
+            code: inst.swift_bic_code || inst.id,
+            name: inst.institution_name,
+            source: 'kob',
+            logoUrl: inst.logo_url ?? null,
+          });
         });
       }
     } catch (err) {
@@ -161,7 +166,12 @@ const CustomerFundWallet: React.FC = () => {
         fwData.banks.forEach((bank: any) => {
           const isDuplicate = allBanks.some(b => b.name.toLowerCase().includes(bank.name?.toLowerCase()?.slice(0, 10)));
           if (!isDuplicate) {
-            allBanks.push({ code: bank.code, name: bank.name, source: 'flutterwave' });
+            allBanks.push({
+              code: bank.code,
+              name: bank.name,
+              source: 'flutterwave',
+              logoUrl: bank.logo || bank.logo_url || null,
+            });
           }
         });
       }
@@ -171,7 +181,7 @@ const CustomerFundWallet: React.FC = () => {
 
     CM_BANKS.forEach((bank) => {
       const exists = allBanks.some((b) => b.code === bank.code || b.name.toLowerCase() === bank.name.toLowerCase());
-      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory' });
+      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory', logoUrl: null });
     });
 
     setBanks(allBanks);
