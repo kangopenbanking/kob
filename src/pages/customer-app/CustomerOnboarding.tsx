@@ -65,6 +65,8 @@ const accountOptions: AccountOption[] = [
   },
 ];
 
+const onboardingAccountOptions = accountOptions.filter((option) => !['bank_account', 'bank_iban'].includes(option.id));
+
 /* ─── Bank list (Cameroon) ─── */
 const CM_BANKS = [
   { code: '10005', name: 'Afriland First Bank' },
@@ -362,7 +364,7 @@ const CustomerOnboarding: React.FC = () => {
               <p className="mb-6 text-sm text-muted-foreground">{tr('Choose how you\'d like to manage your money on Kang')}</p>
 
               <div className="space-y-2.5">
-                {accountOptions.map((option) => {
+                {onboardingAccountOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = selected === option.id;
                   const isViewOnly = option.id === 'none';

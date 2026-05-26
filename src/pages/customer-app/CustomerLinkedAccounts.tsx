@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, Globe, Clock, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -39,14 +39,23 @@ interface AccountTypeConfig {
   fields: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }[];
 }
 
+interface VerifiedBankOption {
+  id: string;
+  code: string;
+  display_name: string;
+  provider: 'kob' | 'flutterwave';
+  bank_code?: string | null;
+  swift_bic?: string | null;
+}
+
 const accountTypes: AccountTypeConfig[] = [
   {
-    key: 'bank_account', label: 'Bank Account (RIB)', description: 'Link via 23-digit Cameroon RIB',
+    key: 'bank_account', label: 'Verified Bank Account', description: 'Verify with Kang Open Banking or Flutterwave',
     icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', providerType: 'bank',
     fields: [
-      { key: 'account_name', label: 'Account Holder Name', placeholder: 'Full name on account' },
       { key: 'bank_code', label: 'Bank', placeholder: 'Select your bank' },
-      { key: 'account_number', label: 'RIB Number (23 digits)', placeholder: '10005-00100-01234567890-23' },
+      { key: 'account_number', label: 'Account Number or RIB', placeholder: 'Enter your real bank account number' },
+      { key: 'account_name', label: 'Account Holder Name', placeholder: 'Full name registered with the bank' },
     ],
   },
   {
@@ -98,6 +107,8 @@ const getIconForType = (type: string) => {
   const found = accountTypes.find(t => t.key === type);
   return found || accountTypes[0];
 };
+
+const linkableAccountTypes = accountTypes.filter((t) => t.key !== 'bank_iban');
 
 // Formatting helpers
 const formatRibInput = (value: string): string => {
@@ -425,14 +436,41 @@ const LinkedAccountCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
 const CustomerLinkedAccounts: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedType, setSelectedType] = useState<AccountTypeConfig | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [verifiedBanks, setVerifiedBanks] = useState<VerifiedBankOption[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [validationMsg, setValidationMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  const selectedVerifiedBank = useMemo(() => verifiedBanks.find((b) => b.id === formData.bank_code), [verifiedBanks, formData.bank_code]);
+
+  const loadVerifiedBanks = useCallback(async () => {
+    setBanksLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('consumer-bank-link', { body: { action: 'list_banks' } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      setVerifiedBanks((data?.banks || []) as VerifiedBankOption[]);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Unable to load verified banks'));
+    } finally {
+      setBanksLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const requestedBank = searchParams.get('bank');
+    if (!requestedBank) return;
+    setShowAdd(true);
+    setSelectedType(accountTypes[0]);
+    void loadVerifiedBanks();
+  }, [searchParams, loadVerifiedBanks]);
 
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
@@ -489,28 +527,25 @@ const CustomerLinkedAccounts: React.FC = () => {
     setShowAdd(true);
   };
 
+  const handleSelectType = (type: AccountTypeConfig) => {
+    setSelectedType(type);
+    setFormData({});
+    setValidationMsg(null);
+    if (type.key === 'bank_account') void loadVerifiedBanks();
+  };
+
   const handleAccountNumberChange = useCallback((value: string) => {
     if (!selectedType) return;
     setValidationMsg(null);
 
     if (selectedType.key === 'bank_account') {
-      const formatted = formatRibInput(value);
+      const formatted = value.replace(/[^0-9A-Za-z\-\s]/g, '').toUpperCase().substring(0, 34);
       setFormData(prev => ({ ...prev, account_number: formatted }));
-      const digits = formatted.replace(/\D/g, '');
-      if (digits.length === 23) {
-        const { valid, expectedKey } = validateRibChecksum(digits);
-        if (valid) {
-          const bankCode = digits.substring(0, 5);
-          const bank = CM_BANKS.find(b => b.code === bankCode);
-          setValidationMsg({ text: `✓ Valid RIB${bank ? ` — ${bank.name}` : ''}`, isError: false });
-          if (bank && !formData.bank_code) {
-            setFormData(prev => ({ ...prev, bank_code: bankCode }));
-          }
-        } else {
-          setValidationMsg({ text: `Invalid RIB key: expected ${expectedKey}, got ${digits.substring(21, 23)}`, isError: true });
-        }
-      } else if (digits.length > 0) {
-        setValidationMsg({ text: `${digits.length}/23 digits`, isError: false });
+      const clean = formatted.replace(/[^0-9A-Za-z]/g, '');
+      if (clean.length >= 6) {
+        setValidationMsg({ text: 'Ready for bank verification', isError: false });
+      } else if (clean.length > 0) {
+        setValidationMsg({ text: 'Enter the account number shown by your bank', isError: false });
       }
     } else if (selectedType.key === 'bank_iban') {
       const formatted = formatIbanInput(value);
@@ -558,13 +593,12 @@ const CustomerLinkedAccounts: React.FC = () => {
       if (!formData[f.key]?.trim()) { toast.error(`Enter ${f.label.toLowerCase()}`); return; }
     }
 
-    // RIB validation
+    // Verified bank account validation
     if (selectedType.key === 'bank_account') {
-      const digits = (formData.account_number || '').replace(/\D/g, '');
-      if (digits.length !== 23) { toast.error('RIB must be exactly 23 digits'); return; }
-      const { valid } = validateRibChecksum(digits);
-      if (!valid) { toast.error('Invalid RIB checksum'); return; }
-      if (!formData.bank_code) { toast.error('Please select your bank'); return; }
+      const raw = (formData.account_number || '').replace(/[^0-9A-Za-z]/g, '');
+      if (!selectedVerifiedBank) { toast.error('Select a listed bank'); return; }
+      if (raw.length < 6 || raw.length > 34) { toast.error('Enter a valid bank account number'); return; }
+      if (!formData.account_name?.trim()) { toast.error('Enter the account holder name registered with the bank'); return; }
     }
 
     // IBAN validation
@@ -605,6 +639,29 @@ const CustomerLinkedAccounts: React.FC = () => {
       const last4 = rawNumber.slice(-4);
       const bank = CM_BANKS.find(b => b.code === formData.bank_code);
       const accountType = selectedType.key === 'bank_iban' ? 'bank_account' : selectedType.key;
+
+      if (selectedType.key === 'bank_account') {
+        const { data, error } = await supabase.functions.invoke('consumer-bank-link', {
+          body: {
+            action: 'link_account',
+            provider: selectedVerifiedBank!.provider,
+            bank_id: selectedVerifiedBank!.provider === 'flutterwave' ? selectedVerifiedBank!.code : selectedVerifiedBank!.id,
+            bank_name: selectedVerifiedBank!.display_name,
+            account_number: rawNumber,
+            account_name: formData.account_name,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.message || data.detail || data.error);
+        toast.success(data?.status === 'pending_review' ? 'Verified bank account submitted for admin approval' : 'Verified bank account linked successfully');
+        queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['linked-account-requests'] });
+        setShowAdd(false);
+        setSelectedType(null);
+        setFormData({});
+        setValidationMsg(null);
+        return;
+      }
 
       let metadata: any = undefined;
       if (selectedType.key === 'bank_account') {
@@ -728,19 +785,27 @@ const CustomerLinkedAccounts: React.FC = () => {
   const renderField = (f: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }) => {
     // Bank selector
     if (f.key === 'bank_code' && selectedType?.key === 'bank_account') {
+      const alreadyLinkedBankKeys = new Set((linkedAccounts as any[])
+        .filter((a) => a.account_type === 'bank_account' && (a.status ?? 'active') === 'active')
+        .flatMap((a) => [a.institution_id, a.external_bank_code, (a.metadata as any)?.flutterwave_bank_code].filter(Boolean)));
+      const availableBanks = verifiedBanks.filter((b) => !alreadyLinkedBankKeys.has(b.id) && !alreadyLinkedBankKeys.has(b.code));
       return (
         <div key={f.key} className="space-y-1">
           <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
-          <Select value={formData.bank_code || ''} onValueChange={(v) => setFormData({ ...formData, bank_code: v })}>
+          <Select value={formData.bank_code || ''} onValueChange={(v) => setFormData({ ...formData, bank_code: v })} disabled={banksLoading}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder={tr('Select your bank')} />
+              <SelectValue placeholder={banksLoading ? tr('Loading verified banks...') : tr('Select your bank')} />
             </SelectTrigger>
             <SelectContent>
-              {CM_BANKS.map(b => (
-                <SelectItem key={b.code} value={b.code}>{b.name} ({b.code})</SelectItem>
+              {availableBanks.map(b => (
+                <SelectItem key={b.id} value={b.id}>{b.display_name} · {b.provider === 'kob' ? 'KOB API' : 'Flutterwave'}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <p className="text-[10px] text-muted-foreground">{tr('Only banks available through Kang Open Banking or Flutterwave verification can be linked.')}</p>
+          {!banksLoading && availableBanks.length === 0 && (
+            <p className="text-[10px] text-muted-foreground">{tr('All currently available banks are already linked or no verified bank directory is available.')}</p>
+          )}
         </div>
       );
     }
@@ -821,7 +886,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </p>
           )}
           {selectedType?.key === 'bank_account' && (
-            <p className="text-[10px] text-muted-foreground">{tr('Format: Bank (5) - Branch (5) - Account (11) - Key (2)')}</p>
+                    <p className="text-[10px] text-muted-foreground">{tr('The selected bank must confirm the account number and holder name before linking.')}</p>
           )}
         </div>
       );
@@ -1024,8 +1089,8 @@ const CustomerLinkedAccounts: React.FC = () => {
           <AnimatePresence mode="wait">
             {!selectedType ? (
               <motion.div key="types" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-                {accountTypes.map((t) => (
-                  <button key={t.key} onClick={() => { setSelectedType(t); setFormData({}); setValidationMsg(null); }}
+                {linkableAccountTypes.map((t) => (
+                  <button key={t.key} onClick={() => handleSelectType(t)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-border p-3 text-left hover:bg-muted/50 transition-colors">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${t.color}`}>
                       <t.icon className={`h-5 w-5 ${t.iconColor}`} strokeWidth={1.5} />

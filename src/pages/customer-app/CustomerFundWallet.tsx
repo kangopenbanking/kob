@@ -345,12 +345,17 @@ const CustomerFundWallet: React.FC = () => {
     if (!selectedPbbBank) return null;
     const list = linkedAccounts as any[];
     if (selectedPbbBank.source === 'kob') {
-      const m = list.find((a) => a.institution_id === selectedPbbBank.code && (a.status ?? 'active') === 'active');
+      const m = list.find((a) =>
+        (a.institution_id === selectedPbbBank.code || a.external_bank_code === selectedPbbBank.code) &&
+        (a.status ?? 'active') === 'active' &&
+        a.verification_status === 'verified'
+      );
       if (m) return m;
     }
     const needle = selectedPbbBank.name.toLowerCase();
     return list.find((a) =>
       (a.status ?? 'active') === 'active' &&
+      a.verification_status === 'verified' &&
       ((a.provider_name || '').toLowerCase().includes(needle) || needle.includes((a.provider_name || '').toLowerCase()))
     ) || null;
   }, [selectedPbbBank, linkedAccounts]);

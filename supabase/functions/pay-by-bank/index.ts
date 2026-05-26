@@ -124,10 +124,11 @@ Deno.serve(async (req) => {
         if (source_bank.network === 'kob' && source_bank.code) {
           const { data } = await supabase
             .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id')
+            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
             .eq('user_id', resolvedCustomerUserId)
             .eq('status', 'active')
-            .eq('institution_id', source_bank.code)
+            .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
+            .eq('verification_status', 'verified')
             .limit(1);
           matched = data?.[0] || null;
         }
@@ -135,9 +136,10 @@ Deno.serve(async (req) => {
           const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
           const { data } = await supabase
             .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id')
+            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
             .eq('user_id', resolvedCustomerUserId)
             .eq('status', 'active')
+            .eq('verification_status', 'verified')
             .ilike('provider_name', `%${safeName}%`)
             .limit(1);
           matched = data?.[0] || null;
@@ -336,10 +338,10 @@ Deno.serve(async (req) => {
         // Confirm the linked account still belongs to this user and is active
         const { data: linkRow } = await supabase
           .from('customer_linked_accounts')
-          .select('id, user_id, status, last4, account_number')
+          .select('id, user_id, status, last4, account_number, verification_status')
           .eq('id', expectedLinkedId)
           .maybeSingle();
-        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active') {
+        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active' || linkRow.verification_status !== 'verified') {
           return new Response(JSON.stringify({
             error: 'linked_account_invalid',
             message: 'The selected bank account is no longer linked or active. Please link it again.',
