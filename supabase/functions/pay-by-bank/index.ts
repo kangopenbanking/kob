@@ -124,10 +124,11 @@ Deno.serve(async (req) => {
         if (source_bank.network === 'kob' && source_bank.code) {
           const { data } = await supabase
             .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id')
+            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
             .eq('user_id', resolvedCustomerUserId)
             .eq('status', 'active')
-            .eq('institution_id', source_bank.code)
+            .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
+            .eq('verification_status', 'verified')
             .limit(1);
           matched = data?.[0] || null;
         }
@@ -135,9 +136,10 @@ Deno.serve(async (req) => {
           const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
           const { data } = await supabase
             .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id')
+            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
             .eq('user_id', resolvedCustomerUserId)
             .eq('status', 'active')
+            .eq('verification_status', 'verified')
             .ilike('provider_name', `%${safeName}%`)
             .limit(1);
           matched = data?.[0] || null;
