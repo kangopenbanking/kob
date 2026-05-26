@@ -693,8 +693,8 @@ const CustomerFundWallet: React.FC = () => {
               <>
             {selectedPbbBank && (
               <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Building2 className="h-4 w-4 text-primary" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                  <BankLogo logoUrl={selectedPbbBank.logoUrl} name={selectedPbbBank.name} iconClassName="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-foreground truncate">{selectedPbbBank.name}</p>
