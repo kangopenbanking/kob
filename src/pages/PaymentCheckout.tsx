@@ -32,6 +32,10 @@ export default function PaymentCheckout() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<'success' | 'failed' | null>(null);
+  // Customer P2P pay link (set when slug resolves to a customer_pay_links row)
+  const [customerLink, setCustomerLink] = useState<any | null>(null);
+  const [customerAmount, setCustomerAmount] = useState<string>("");
+  const [resolveError, setResolveError] = useState<'expired' | 'inactive' | 'not_found' | null>(null);
 
   // OTP state
   const [otpRequired, setOtpRequired] = useState(false);
