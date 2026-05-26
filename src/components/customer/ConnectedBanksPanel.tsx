@@ -211,7 +211,7 @@ export const ConnectedBanksPanel: React.FC = () => {
                 return (
                   <button
                     key={bank.id}
-                    onClick={() => handleConnect(bank.id)}
+                    onClick={() => setSelectedBank(bank)}
                     disabled={busy || !!connectingBankId}
                     className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left hover:bg-muted/50 transition-colors disabled:opacity-50"
                   >
