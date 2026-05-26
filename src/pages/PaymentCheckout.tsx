@@ -26,6 +26,7 @@ interface PaymentLink {
 
 export default function PaymentCheckout() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [link, setLink] = useState<PaymentLink | null>(null);
   const [loading, setLoading] = useState(true);
