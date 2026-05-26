@@ -318,6 +318,22 @@ const CustomerFundWallet: React.FC = () => {
               </div>
             </div>
 
+            {/* Pay by Bank (Instant) tile — PISP wallet top-up */}
+            <button
+              onClick={handlePayByBankStart}
+              className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary/40 bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
+                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">{tr('Pay by Bank (Instant)')}</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Top up directly from your bank — no card needed. Open Banking secured.')}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
+
+
             {accountsLoading ? (
               <div className="flex justify-center py-10">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
