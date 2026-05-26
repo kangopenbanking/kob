@@ -7489,6 +7489,8 @@ export type Database = {
           account_number: string | null
           account_type: string
           created_at: string | null
+          external_account_ref: string | null
+          external_bank_code: string | null
           id: string
           institution_id: string | null
           is_active: boolean | null
@@ -7502,12 +7504,18 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_id: string
+          verification_provider: string | null
+          verification_reference: string | null
+          verification_status: string
+          verified_at: string | null
         }
         Insert: {
           account_name?: string | null
           account_number?: string | null
           account_type: string
           created_at?: string | null
+          external_account_ref?: string | null
+          external_bank_code?: string | null
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
@@ -7521,12 +7529,18 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id: string
+          verification_provider?: string | null
+          verification_reference?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Update: {
           account_name?: string | null
           account_number?: string | null
           account_type?: string
           created_at?: string | null
+          external_account_ref?: string | null
+          external_bank_code?: string | null
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
@@ -7540,6 +7554,10 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string
+          verification_provider?: string | null
+          verification_reference?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
