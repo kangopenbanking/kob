@@ -86,15 +86,35 @@ export default function PayByBankAuthorize() {
     setStep("approve");
   };
 
-  const handleApprove = async () => {
+  const handleApprove = () => {
+    // Move to the bank's own authentication step. The actual authorize call
+    // only fires after the user proves ownership of the source bank account.
+    setBankAuthError(null);
+    setBankLast4("");
+    setStep("bank_auth");
+  };
+
+  const handleBankConfirm = async () => {
+    if (!/^\d{4}$/.test(bankLast4)) {
+      setBankAuthError("Enter the last 4 digits of your bank account.");
+      return;
+    }
+    setBankAuthError(null);
     setStep("processing");
     const { data, error } = await supabase.functions.invoke("pay-by-bank", {
-      body: { action: "authorize", intent_id: intentId, user_id: userId },
+      body: {
+        action: "authorize",
+        intent_id: intentId,
+        user_id: userId,
+        bank_verification: { last4: bankLast4 },
+      },
     });
 
     if (error || data?.error) {
-      toast.error(data?.error || "Authorization failed");
-      setStep("error");
+      const msg = data?.message || data?.error || "Authorization failed";
+      setBankAuthError(msg);
+      setStep("bank_auth");
+      toast.error(msg);
       return;
     }
 
