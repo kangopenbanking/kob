@@ -455,7 +455,7 @@ const CustomerFundWallet: React.FC = () => {
               ) : (
                 <>
                   {filteredBanks.some(b => b.source === 'kob') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">{tr('🏦 KOB Partner Banks')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">{tr('KOB Partner Banks')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'kob').map((bank) => (
                     <button key={`kob-${bank.code}`} onClick={() => handleBankSelect(bank)}
@@ -474,7 +474,7 @@ const CustomerFundWallet: React.FC = () => {
                   ))}
 
                   {filteredBanks.some(b => b.source === 'flutterwave') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('🌍 Other Banks via Flutterwave')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('Other Banks via Flutterwave')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'flutterwave').map((bank) => (
                     <button key={`fw-${bank.code}`} onClick={() => handleBankSelect(bank)}
