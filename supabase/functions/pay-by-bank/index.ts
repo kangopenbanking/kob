@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
         consent_id: consentId,
         client_id: merchant?.id ?? resolvedCustomerUserId ?? 'consumer',
         user_id: resolvedCustomerUserId,
-        payment_type: 'domestic-payments',
+        payment_type: 'domestic',
         status: 'AwaitingAuthorisation',
         creditor: {
           name: creditor_name || resolvedMerchantName,
