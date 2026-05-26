@@ -87,16 +87,27 @@ const CustomerFundWallet: React.FC = () => {
   const [selectedBank, setSelectedBank] = useState<BankOption | null>(null);
   const [bankSearch, setBankSearch] = useState('');
 
-  // Invalidate caches on redirect return (e.g. after Flutterwave/PayPal redirect)
+  // Invalidate caches on redirect return (e.g. after Flutterwave/PayPal/Pay-by-Bank)
   useEffect(() => {
     const status = searchParams.get('status') || searchParams.get('transaction_status');
-    if (status) {
-      queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
-      queryClient.refetchQueries({ queryKey: ['account-balances'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+    const source = searchParams.get('source');
+    if (!status && source !== 'pay_by_bank') return;
+
+    queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
+    queryClient.refetchQueries({ queryKey: ['account-balances'] });
+    queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
+    if (status === 'completed' || status === 'successful') {
+      toast.success('Wallet funded successfully. Returning to your wallet…');
+      const t = setTimeout(() => navigate('/app', { replace: true }), 1500);
+      return () => clearTimeout(t);
+    }
+    if (status === 'rejected' || status === 'failed') {
+      toast.error('Payment was not completed');
+    } else if (status) {
       toast.info('Checking payment status...');
     }
-  }, [searchParams, queryClient]);
+  }, [searchParams, queryClient, navigate]);
 
   const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
