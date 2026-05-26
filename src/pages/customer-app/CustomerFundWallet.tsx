@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { PayByBankLogo } from '@/components/PayByBankLogo';
+import { CM_BANKS } from '@/constants/cameroon-banks';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -55,7 +56,7 @@ const providerTypeColors = (providerType: string, selected: boolean) => {
 interface BankOption {
   code: string;
   name: string;
-  source: 'kob' | 'flutterwave';
+  source: 'kob' | 'flutterwave' | 'directory';
 }
 
 const CustomerFundWallet: React.FC = () => {
@@ -73,8 +74,10 @@ const CustomerFundWallet: React.FC = () => {
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [pbbAmount, setPbbAmount] = useState('');
-  const [pbbStep, setPbbStep] = useState<'tile' | 'amount' | 'redirecting'>('tile');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'redirecting'>('tile');
   const [pbbProcessing, setPbbProcessing] = useState(false);
+  const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
+  const [pbbBankSearch, setPbbBankSearch] = useState('');
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
@@ -164,6 +167,11 @@ const CustomerFundWallet: React.FC = () => {
       console.warn('[FundWallet] Flutterwave banks fetch failed:', err);
     }
 
+    CM_BANKS.forEach((bank) => {
+      const exists = allBanks.some((b) => b.code === bank.code || b.name.toLowerCase() === bank.name.toLowerCase());
+      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory' });
+    });
+
     setBanks(allBanks);
     setBanksLoading(false);
   }, []);
@@ -186,7 +194,8 @@ const CustomerFundWallet: React.FC = () => {
 
   const handlePayByBankStart = () => {
     if (!primaryAccount?.id) { toast.error('No wallet account found. Please contact support.'); return; }
-    setPbbStep('amount');
+    fetchBanks();
+    setPbbStep('bank');
     setStep('pay_by_bank');
   };
 
@@ -194,6 +203,7 @@ const CustomerFundWallet: React.FC = () => {
     const amt = Number(pbbAmount);
     if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
     if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
+    if (!selectedPbbBank) { toast.error('Please select your bank'); return; }
     setPbbProcessing(true);
     try {
       const state = crypto.randomUUID();
@@ -208,6 +218,11 @@ const CustomerFundWallet: React.FC = () => {
           redirect_uri: returnUrl,
           state,
           description: 'KANG Wallet top-up',
+          source_bank: {
+            code: selectedPbbBank.code,
+            name: selectedPbbBank.name,
+            network: selectedPbbBank.source,
+          },
         },
       });
       if (error) throw error;
@@ -219,7 +234,7 @@ const CustomerFundWallet: React.FC = () => {
       window.location.assign(data.authorization_url);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Could not start Pay-by-Bank'));
-      setPbbStep('amount');
+      setPbbStep(selectedPbbBank ? 'amount' : 'bank');
     } finally {
       setPbbProcessing(false);
     }
@@ -287,12 +302,13 @@ const CustomerFundWallet: React.FC = () => {
       if (method === 'bank_transfer') { setStep('bank_select'); setSelectedBank(null); }
       else setStep('source');
     }
-    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); }
+    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); setSelectedPbbBank(null); }
     else if (step === 'result') { setStep('source'); setFundingResult(null); setSelectedBank(null); }
     else navigate(-1);
   };
 
   const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
+  const filteredPbbBanks = banks.filter(b => b.name.toLowerCase().includes(pbbBankSearch.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
