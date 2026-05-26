@@ -95,10 +95,41 @@ serve(async (req) => {
 </body>
 </html>`;
 
+    // Get or create unsubscribe token for this recipient (required by Lovable email API for transactional)
+    const normalizedEmail = String(invoice.client_email).toLowerCase();
+    let unsubscribeToken: string | null = null;
+    const { data: existingToken } = await supabase
+      .from('email_unsubscribe_tokens')
+      .select('token, used_at')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+    if (existingToken && !existingToken.used_at) {
+      unsubscribeToken = existingToken.token;
+    } else {
+      const newToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+      await supabase
+        .from('email_unsubscribe_tokens')
+        .upsert({ token: newToken, email: normalizedEmail }, { onConflict: 'email', ignoreDuplicates: true });
+      const { data: storedToken } = await supabase
+        .from('email_unsubscribe_tokens')
+        .select('token')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+      unsubscribeToken = storedToken?.token ?? newToken;
+    }
+
     // Send email via Lovable email queue
     let emailSent = false;
     const messageId = crypto.randomUUID();
     const emailSubject = `Invoice ${invoice.invoice_number} from ${senderName} — ${Number(invoice.amount).toLocaleString()} ${invoice.currency}`;
+
+    // Log pending BEFORE enqueue so we have a record even if enqueue crashes
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: 'customer-invoice',
+      recipient_email: invoice.client_email,
+      status: 'pending',
+    });
 
     const { error: enqueueError } = await supabase.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
@@ -113,6 +144,7 @@ serve(async (req) => {
         purpose: 'transactional',
         label: 'customer-invoice',
         idempotency_key: `invoice-${invoice_id}-${messageId}`,
+        unsubscribe_token: unsubscribeToken,
         queued_at: new Date().toISOString(),
       },
     });
@@ -123,6 +155,7 @@ serve(async (req) => {
       emailSent = true;
       console.log(`Invoice email enqueued for ${invoice.client_email}`);
     }
+
 
     // Create app notification for the sender
     await supabase.from('app_notifications').insert({
