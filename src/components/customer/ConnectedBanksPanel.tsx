@@ -105,7 +105,8 @@ export const ConnectedBanksPanel: React.FC = () => {
     try {
       await invoke('revoke', { link_id: linkId });
       toast.success(`${bankName || 'Bank'} disconnected`);
-      qc.invalidateQueries({ queryKey: ['consumer-bank-psu-links'] });
+      qc.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+      qc.invalidateQueries({ queryKey: ['customer-linked-accounts', 'verified-banks'] });
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Failed to disconnect'));
     }
