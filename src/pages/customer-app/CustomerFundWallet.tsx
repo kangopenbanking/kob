@@ -526,6 +526,12 @@ const CustomerFundWallet: React.FC = () => {
               )}
             </div>
 
+            <Button asChild variant="outline" className="w-full rounded-2xl h-11 text-xs font-bold">
+              <Link to="/app/linked-accounts">
+                <LinkIcon className="h-4 w-4 mr-2" /> {tr("Don't see your bank? Link an Account")}
+              </Link>
+            </Button>
+
             <p className="text-center text-[10px] text-muted-foreground">
               {banks.length} banks available • KOB + Flutterwave networks
             </p>
