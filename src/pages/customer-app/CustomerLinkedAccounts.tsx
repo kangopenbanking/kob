@@ -783,19 +783,27 @@ const CustomerLinkedAccounts: React.FC = () => {
   const renderField = (f: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }) => {
     // Bank selector
     if (f.key === 'bank_code' && selectedType?.key === 'bank_account') {
+      const alreadyLinkedBankKeys = new Set((linkedAccounts as any[])
+        .filter((a) => a.account_type === 'bank_account' && (a.status ?? 'active') === 'active')
+        .flatMap((a) => [a.institution_id, a.external_bank_code, (a.metadata as any)?.flutterwave_bank_code].filter(Boolean)));
+      const availableBanks = verifiedBanks.filter((b) => !alreadyLinkedBankKeys.has(b.id) && !alreadyLinkedBankKeys.has(b.code));
       return (
         <div key={f.key} className="space-y-1">
           <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
-          <Select value={formData.bank_code || ''} onValueChange={(v) => setFormData({ ...formData, bank_code: v })}>
+          <Select value={formData.bank_code || ''} onValueChange={(v) => setFormData({ ...formData, bank_code: v })} disabled={banksLoading}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder={tr('Select your bank')} />
+              <SelectValue placeholder={banksLoading ? tr('Loading verified banks...') : tr('Select your bank')} />
             </SelectTrigger>
             <SelectContent>
-              {CM_BANKS.map(b => (
-                <SelectItem key={b.code} value={b.code}>{b.name} ({b.code})</SelectItem>
+              {availableBanks.map(b => (
+                <SelectItem key={b.id} value={b.id}>{b.display_name} · {b.provider === 'kob' ? 'KOB API' : 'Flutterwave'}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <p className="text-[10px] text-muted-foreground">{tr('Only banks available through Kang Open Banking or Flutterwave verification can be linked.')}</p>
+          {!banksLoading && availableBanks.length === 0 && (
+            <p className="text-[10px] text-muted-foreground">{tr('All currently available banks are already linked or no verified bank directory is available.')}</p>
+          )}
         </div>
       );
     }
