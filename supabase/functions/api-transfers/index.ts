@@ -174,9 +174,12 @@ serve(async (req) => {
       }
     }
 
-    // Tier 1.6: KANG ID lookup (e.g. "KANG-7H3K9PXM2A")
-    if (!destAccount && /^KANG-[A-Z0-9]+$/i.test(destination_account_id.trim())) {
-      const kangIdNorm = destination_account_id.trim().toUpperCase();
+    // Tier 1.6: KANG ID lookup (e.g. "KANG-7H3K9PXM2A" or bare digits "85090541")
+    const rawDest = destination_account_id.trim();
+    const isKangPrefixed = /^KANG-[A-Z0-9]+$/i.test(rawDest);
+    const isBareDigits = /^\d{6,12}$/.test(rawDest);
+    if (!destAccount && (isKangPrefixed || isBareDigits)) {
+      const kangIdNorm = isKangPrefixed ? rawDest.toUpperCase() : `KANG-${rawDest}`;
       const { data: kangProfile } = await supabase
         .from('profiles')
         .select('id, full_name')

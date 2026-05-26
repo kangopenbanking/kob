@@ -205,8 +205,12 @@ const CustomerTransfer: React.FC = () => {
       case 'rib': return 'DOMESTIC_RIB';
       case 'iban': return 'IBAN';
       case 'name': return 'NAME';
-      case 'account':
-        return /^KANG-/i.test(recipient.trim()) ? 'KANG_ID' : 'LOCAL_BANK';
+      case 'account': {
+        const r = recipient.trim();
+        // Accept "KANG-XXXXXXXX" or bare 6-12 digit numbers as Kang ID
+        if (/^KANG-/i.test(r) || /^\d{6,12}$/.test(r)) return 'KANG_ID';
+        return 'LOCAL_BANK';
+      }
       default: return 'LOCAL_BANK';
     }
   };
@@ -584,7 +588,7 @@ const CustomerTransfer: React.FC = () => {
                       : recipientType === 'name' ? 'Search by name...'
                       : recipientType === 'rib' ? '10005-00100-01234567890-23'
                       : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
-                      : 'KANG-XXXXXXXX, ACC-... or account number'
+                      : 'KANG-XXXXXXXX, 8 digits, ACC-... or account number'
                     }
                     className={`h-12 rounded-2xl pl-10 text-sm ${recipientType === 'rib' || recipientType === 'iban' ? 'font-mono tracking-wider' : ''}`}
                   />
