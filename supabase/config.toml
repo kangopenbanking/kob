@@ -1,5 +1,9 @@
 project_id = "wdzkzeahdtxlynetndqw"
 
+[functions.customer-invoice-public-resolve]
+verify_jwt = false
+
+
 [functions.admin-resend-verification]
 verify_jwt = false
 

@@ -711,6 +711,7 @@ const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDis
 const BusinessTrustScore = lazy(() => import("./pages/business-app/BusinessTrustScore"));
 const BusinessQRCode = lazy(() => import("./pages/business-app/BusinessQRCode"));
 const PayMerchantSlug = lazy(() => import("./pages/PayMerchantSlug"));
+const PayInvoice = lazy(() => import("./pages/PayInvoice"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
@@ -1621,6 +1622,7 @@ function App() {
 
             <Route path="/pay/authorize" element={<PayByBankAuthorize />} />
             <Route path="/pay/m/:slug" element={<PayMerchantSlug />} />
+            <Route path="/pay/invoice/:invoiceId" element={<PayInvoice />} />
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
