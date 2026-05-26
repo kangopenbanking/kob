@@ -183,6 +183,47 @@ const CustomerFundWallet: React.FC = () => {
     setStep('amount');
   };
 
+  const handlePayByBankStart = () => {
+    if (!primaryAccount?.id) { toast.error('No wallet account found. Please contact support.'); return; }
+    setPbbStep('amount');
+    setStep('pay_by_bank');
+  };
+
+  const handlePayByBankSubmit = async () => {
+    const amt = Number(pbbAmount);
+    if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
+    if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
+    setPbbProcessing(true);
+    try {
+      const state = crypto.randomUUID();
+      const returnUrl = `${window.location.origin}/app/fund-wallet?source=pay_by_bank`;
+      const { data, error } = await supabase.functions.invoke('pay-by-bank', {
+        body: {
+          action: 'create_intent',
+          target_type: 'consumer_wallet',
+          target_account_id: primaryAccount.id,
+          amount: amt,
+          currency: 'XAF',
+          redirect_uri: returnUrl,
+          state,
+          description: 'KANG Wallet top-up',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      if (!data?.authorization_url || !data?.intent_id) throw new Error('Invalid response from server');
+      setPbbStep('redirecting');
+      // Persist state so /pay/authorize can validate when user returns
+      try { sessionStorage.setItem(`pbb_state_${data.intent_id}`, state); } catch {}
+      window.location.assign(data.authorization_url);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not start Pay-by-Bank'));
+      setPbbStep('amount');
+    } finally {
+      setPbbProcessing(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!numAmount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
     if (method === 'mobile_money' && !phone) { toast.error('Phone number is required'); return; }
