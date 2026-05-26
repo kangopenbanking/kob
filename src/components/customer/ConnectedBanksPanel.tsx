@@ -195,7 +195,27 @@ export const ConnectedBanksPanel: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {banksLoading ? (
+          {selectedBank ? (
+            <div className="space-y-3">
+              <button onClick={() => setSelectedBank(null)} className="text-xs font-semibold text-primary">Back to bank list</button>
+              <div className="rounded-2xl border border-border bg-muted/30 p-3">
+                <p className="text-sm font-semibold text-foreground">{selectedBank.display_name}</p>
+                <p className="text-[11px] text-muted-foreground">{selectedBank.provider === 'kob' ? 'Kang Open Banking API' : 'Flutterwave bank verification'}</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-muted-foreground">Account Number</label>
+                <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Enter your bank account number" className="rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-muted-foreground">Account Holder Name</label>
+                <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Full name registered with the bank" className="rounded-xl" />
+              </div>
+              <Button onClick={handleLink} disabled={connectingBankId === selectedBank.id} className="w-full rounded-2xl h-11">
+                {connectingBankId === selectedBank.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Verify and Link Bank
+              </Button>
+            </div>
+          ) : banksLoading ? (
             <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : connectable.length === 0 ? (
             <div className="py-8 text-center">
