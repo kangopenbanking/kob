@@ -338,10 +338,10 @@ Deno.serve(async (req) => {
         // Confirm the linked account still belongs to this user and is active
         const { data: linkRow } = await supabase
           .from('customer_linked_accounts')
-          .select('id, user_id, status, last4, account_number')
+          .select('id, user_id, status, last4, account_number, verification_status')
           .eq('id', expectedLinkedId)
           .maybeSingle();
-        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active') {
+        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active' || linkRow.verification_status !== 'verified') {
           return new Response(JSON.stringify({
             error: 'linked_account_invalid',
             message: 'The selected bank account is no longer linked or active. Please link it again.',
