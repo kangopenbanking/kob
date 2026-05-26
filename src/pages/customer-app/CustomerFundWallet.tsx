@@ -218,6 +218,13 @@ const CustomerFundWallet: React.FC = () => {
     if (!selectedPbbBank) { toast.error('Please select your bank'); return; }
     setPbbProcessing(true);
     try {
+      const { data: userCheck, error: userCheckError } = await supabase.auth.getUser();
+      if (userCheckError || !userCheck?.user) {
+        toast.error('Please sign in again before starting Pay by Bank.');
+        navigate('/app/auth');
+        return;
+      }
+
       const state = crypto.randomUUID();
       const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
       const { data, error } = await supabase.functions.invoke('pay-by-bank', {
