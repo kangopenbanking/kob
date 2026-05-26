@@ -77,11 +77,13 @@ Deno.serve(async (req) => {
           });
         }
         const userClient = createClient(supabaseUrl, anonKey, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
           global: { headers: { Authorization: `Bearer ${jwt}` } },
         });
         const { data: authData, error: authErr } = await userClient.auth.getUser();
         if (authErr || !authData?.user) {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          console.warn('[pay-by-bank] create_intent auth failed', authErr);
+          return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Please sign in again before starting Pay by Bank.' }), {
             status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
