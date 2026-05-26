@@ -107,6 +107,54 @@ Deno.serve(async (req) => {
         resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
+      // ─── SECURITY: For consumer wallet top-ups, the user MUST have a
+      // verified linked account at the chosen source bank. Without this
+      // check, anyone could pick any bank and credit themselves. ─────
+      let linkedAccountId: string | null = null;
+      let linkedLast4: string | null = null;
+      if (target_type === 'consumer_wallet') {
+        if (!source_bank || (!source_bank.name && !source_bank.code)) {
+          return new Response(JSON.stringify({
+            error: 'source_bank_required',
+            message: 'Please select the bank you are paying from.',
+          }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        let matched: any = null;
+        if (source_bank.network === 'kob' && source_bank.code) {
+          const { data } = await supabase
+            .from('customer_linked_accounts')
+            .select('id, account_number, last4, provider_name, institution_id')
+            .eq('user_id', resolvedCustomerUserId)
+            .eq('status', 'active')
+            .eq('institution_id', source_bank.code)
+            .limit(1);
+          matched = data?.[0] || null;
+        }
+        if (!matched && source_bank.name) {
+          const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
+          const { data } = await supabase
+            .from('customer_linked_accounts')
+            .select('id, account_number, last4, provider_name, institution_id')
+            .eq('user_id', resolvedCustomerUserId)
+            .eq('status', 'active')
+            .ilike('provider_name', `%${safeName}%`)
+            .limit(1);
+          matched = data?.[0] || null;
+        }
+
+        if (!matched) {
+          return new Response(JSON.stringify({
+            error: 'bank_not_linked',
+            action: 'link_account',
+            message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        linkedAccountId = matched.id;
+        linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+      }
+
       // Create PISP consent. Consumer wallet top-ups are initiated by the
       // platform PISP client, not by the end-user UUID, because pisp_consents
       // enforces client_id against registered TPP clients.
