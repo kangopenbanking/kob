@@ -711,6 +711,7 @@ const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDis
 const BusinessTrustScore = lazy(() => import("./pages/business-app/BusinessTrustScore"));
 const BusinessQRCode = lazy(() => import("./pages/business-app/BusinessQRCode"));
 const PayMerchantSlug = lazy(() => import("./pages/PayMerchantSlug"));
+const PayInvoice = lazy(() => import("./pages/PayInvoice"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
