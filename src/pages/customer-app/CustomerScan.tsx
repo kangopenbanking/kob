@@ -426,6 +426,30 @@ const CustomerScan: React.FC = () => {
             ) : (
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
+                {parseHint && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full rounded-2xl border border-amber-500/30 bg-amber-50 p-4 dark:bg-amber-950/20"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                      {tr('We could not read that QR')}
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">{parseHint.suggestion}</p>
+                    <p className="mt-1 text-[10px] font-mono text-muted-foreground">{parseHint.code}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Button variant="outline" className="rounded-xl h-10 text-xs font-bold" onClick={handleRescan}>
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
+                        {tr('Rescan')}
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-10 text-xs font-bold" onClick={() => { setParseHint(null); setShowManualEntry(true); }}>
+                        <Keyboard className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
+                        {tr('Enter Code')}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Scanner viewport — uses width calc to stay within safe area */}
                 <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
                   {/* html5-qrcode container — always in DOM, hidden when not needed */}
