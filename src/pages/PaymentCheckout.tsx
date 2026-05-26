@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, CheckCircle, XCircle, CreditCard } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, CreditCard, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 
 interface PaymentLink {
   id: string;
@@ -25,11 +26,16 @@ interface PaymentLink {
 
 export default function PaymentCheckout() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [link, setLink] = useState<PaymentLink | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<'success' | 'failed' | null>(null);
+  // Customer P2P pay link (set when slug resolves to a customer_pay_links row)
+  const [customerLink, setCustomerLink] = useState<any | null>(null);
+  const [customerAmount, setCustomerAmount] = useState<string>("");
+  const [resolveError, setResolveError] = useState<'expired' | 'inactive' | 'not_found' | null>(null);
 
   // OTP state
   const [otpRequired, setOtpRequired] = useState(false);
@@ -59,22 +65,50 @@ export default function PaymentCheckout() {
 
   const fetchLink = async () => {
     try {
+      // 1. Try the merchant gateway payment link first.
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-query?action=get-payment-link&slug=${slug}`,
         { headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
       );
-      const linkData = await res.json();
-      if (linkData?.error || !linkData?.id) {
-        setLink(null);
-      } else {
+      const linkData = await res.json().catch(() => null);
+      if (linkData?.id && !linkData?.error) {
         setLink(linkData);
+        return;
       }
+
+      // 2. Fall back to the consumer-created pay link (shared from the mobile app).
+      const r2 = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-paylink-public-resolve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ slug }),
+        }
+      );
+      const cData = await r2.json().catch(() => null);
+      if (r2.ok && cData?.link) {
+        setCustomerLink({ ...cData.link, receiver: cData.receiver });
+        if (cData.link.amount) setCustomerAmount(String(cData.link.amount));
+        return;
+      }
+      if (cData?.error === 'expired' || cData?.error === 'inactive' || cData?.error === 'not_found') {
+        setResolveError(cData.error);
+      } else {
+        setResolveError('not_found');
+      }
+      setLink(null);
     } catch {
       setLink(null);
+      setResolveError('not_found');
     } finally {
       setLoading(false);
     }
   };
+
 
   const getDisplayAmount = () => {
     if (!link) return 0;
@@ -184,19 +218,98 @@ export default function PaymentCheckout() {
     );
   }
 
+  // Customer (P2P) pay link — render Kang Wallet payment flow
+  if (customerLink) {
+    const amountNum = Number(customerAmount || 0);
+    const canPay = customerLink.receiver?.kang_id && amountNum > 0;
+
+    const handleCustomerPay = () => {
+      if (!customerLink.receiver?.kang_id) {
+        toast({ title: 'Cannot pay this link yet', description: 'The link owner has not set up their wallet.', variant: 'destructive' });
+        return;
+      }
+      if (!amountNum || amountNum <= 0) {
+        toast({ title: 'Enter an amount', description: 'Please enter the amount you want to send.', variant: 'destructive' });
+        return;
+      }
+      const prefill = {
+        recipient: customerLink.receiver.kang_id,
+        amount: amountNum,
+        note: customerLink.name,
+      };
+      if (walletSession) {
+        navigate('/app/transfer', { state: { prefill } });
+      } else {
+        sessionStorage.setItem('post_login_redirect', `/pay/${slug}`);
+        navigate('/app/auth');
+      }
+    };
+
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle>{customerLink.name}</CardTitle>
+            {customerLink.description && <CardDescription>{customerLink.description}</CardDescription>}
+            <p className="text-xs text-muted-foreground mt-2">
+              Pay {customerLink.receiver?.full_name || 'a Kang user'}
+            </p>
+            {!customerLink.is_open_amount && customerLink.amount && (
+              <div className="text-3xl font-bold text-primary mt-3">
+                {new Intl.NumberFormat('fr-FR').format(Number(customerLink.amount))} {customerLink.currency}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {customerLink.is_open_amount && (
+              <div>
+                <Label htmlFor="customer-amount">Amount ({customerLink.currency})</Label>
+                <Input
+                  id="customer-amount"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  placeholder="Enter amount"
+                  value={customerAmount}
+                  onChange={(e) => setCustomerAmount(e.target.value)}
+                />
+              </div>
+            )}
+            <Button className="w-full h-12 rounded-2xl text-sm font-bold" onClick={handleCustomerPay} disabled={!canPay}>
+              <Wallet className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              Pay with Kang Wallet
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Secure peer-to-peer payment · Powered by Kang
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!link || link.status !== 'active') {
+    const errorCopy =
+      resolveError === 'expired' ? 'This payment link has expired.'
+      : resolveError === 'inactive' ? 'This payment link has been deactivated by the owner.'
+      : 'This payment link is unavailable or no longer active.';
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h2 className="text-xl font-semibold">Payment Link Unavailable</h2>
-            <p className="text-muted-foreground mt-2">This payment link is no longer active or has expired.</p>
+            <p className="text-muted-foreground mt-2">{errorCopy}</p>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   if (result === 'success') {
     return (
