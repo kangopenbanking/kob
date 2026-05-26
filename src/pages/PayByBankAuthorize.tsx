@@ -40,6 +40,8 @@ export default function PayByBankAuthorize() {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [bankLast4, setBankLast4] = useState("");
+  const [bankAuthError, setBankAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!intentId) { setStep("error"); return; }
