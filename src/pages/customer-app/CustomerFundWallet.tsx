@@ -570,6 +570,67 @@ const CustomerFundWallet: React.FC = () => {
               <Shield className="h-3 w-3" /> End-to-end encrypted
             </p>
           </motion.div>
+        ) : step === 'pay_by_bank' ? (
+          <motion.div key="pay_by_bank" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
+            <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
+                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">{tr('Pay by Bank — Instant Top-up')}</p>
+                <p className="text-[10px] text-muted-foreground">{tr('You will be redirected to your bank to confirm.')}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 rounded-3xl bg-primary p-8">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-foreground/60">{tr('Top-up Amount')}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-bold text-primary-foreground/60">XAF</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={pbbAmount}
+                  onChange={(e) => setPbbAmount(e.target.value.replace(/\D/g, ''))}
+                  placeholder="0"
+                  className="bg-transparent text-4xl font-bold text-primary-foreground outline-none w-full text-center placeholder:text-primary-foreground/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {quickAmounts.map(a => (
+                <button
+                  key={a}
+                  onClick={() => setPbbAmount(String(a))}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${pbbAmount === String(a) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                >
+                  {a.toLocaleString()}
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-2xl bg-muted/50 p-4 space-y-1">
+              <p className="text-[11px] text-muted-foreground">
+                {tr('Funds are credited to your KANG wallet after your bank confirms the transfer. No fees from KOB on Pay-by-Bank top-ups.')}
+              </p>
+            </div>
+
+            <Button
+              onClick={handlePayByBankSubmit}
+              disabled={pbbProcessing || pbbStep === 'redirecting' || !Number(pbbAmount)}
+              className="w-full rounded-2xl h-12 text-sm font-bold"
+            >
+              {pbbProcessing || pbbStep === 'redirecting' ? (
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Redirecting to your bank...')}</span>
+              ) : (
+                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {tr('Continue to Bank')}</span>
+              )}
+            </Button>
+
+            <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
+            </p>
+          </motion.div>
         ) : null}
       </AnimatePresence>
 
