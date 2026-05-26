@@ -319,6 +319,43 @@ Deno.serve(async (req) => {
           });
         }
 
+        // ─── SECURITY: Verify the user actually controls the source bank
+        // account by matching the linked account stored on the intent and
+        // requiring confirmation of its last 4 digits. ─────────────────
+        const intentMeta = (intent.metadata || {}) as any;
+        const expectedLinkedId = intentMeta.linked_account_id as string | undefined;
+        const expectedLast4 = intentMeta.linked_last4 as string | undefined;
+        if (!expectedLinkedId) {
+          return new Response(JSON.stringify({
+            error: 'bank_not_linked',
+            action: 'link_account',
+            message: 'Source bank is not linked. Please link this bank account before authorising.',
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // Confirm the linked account still belongs to this user and is active
+        const { data: linkRow } = await supabase
+          .from('customer_linked_accounts')
+          .select('id, user_id, status, last4, account_number')
+          .eq('id', expectedLinkedId)
+          .maybeSingle();
+        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active') {
+          return new Response(JSON.stringify({
+            error: 'linked_account_invalid',
+            message: 'The selected bank account is no longer linked or active. Please link it again.',
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        const submittedLast4 = String(bank_verification?.last4 || '').trim();
+        const trueLast4 = String(expectedLast4 || linkRow.last4 || (linkRow.account_number ? String(linkRow.account_number).slice(-4) : '')).trim();
+        if (!/^\d{4}$/.test(submittedLast4) || !trueLast4 || submittedLast4 !== trueLast4) {
+          return new Response(JSON.stringify({
+            error: 'bank_verification_failed',
+            message: 'Bank account verification failed. Enter the last 4 digits of your linked bank account.',
+          }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+
         const paymentId = `PAY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
         await supabase.from('pisp_consents')
           .update({ status: 'Authorised', user_id })
