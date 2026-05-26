@@ -16,8 +16,10 @@ import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { logQrEvent, classifyParseError } from '@/lib/qr-telemetry';
 
 type Tab = 'scan' | 'receive';
+type ParseHint = { code: string; suggestion: string } | null;
 
 const CustomerScan: React.FC = () => {
   const tr = useHarvestedT('customer');
@@ -37,6 +39,8 @@ const CustomerScan: React.FC = () => {
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [storeChoice, setStoreChoice] = useState<any>(null); // v2 kob_store payload — show Visit/Pay chooser
+  const [parseHint, setParseHint] = useState<ParseHint>(null);
+  const [payAttempt, setPayAttempt] = useState(0);
   const queryClient = useQueryClient();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,8 +51,9 @@ const CustomerScan: React.FC = () => {
 
   /* ─── Scan handler — ref-based to avoid stale closures ─── */
   const handleScanDetected = useCallback((data: any) => {
+    setParseHint(null);
     if (data.type === 'kob_store' && data.merchant_id) {
-      // v2: store QR carries an optional signed pay payload — let the user choose.
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_store', surface: 'CustomerScan', merchant_id: data.merchant_id });
       if (data.v === 2 && data.pay_enabled && data.pay?.decoded) {
         setStoreChoice(data);
         return;
@@ -61,15 +66,23 @@ const CustomerScan: React.FC = () => {
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_pos_pay', surface: 'CustomerScan', merchant_id: data.merchant_id, amount: data.amount });
       toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
     } else if (data.type === 'kob_pay' && (data.account || data.kang_id)) {
       const acct = data.account || data.kang_id;
       setScanResult({ account: acct, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_pay', surface: 'CustomerScan', amount: data.amount });
       toast.success(data.name ? `Pay ${data.name}` : 'QR Code scanned successfully!');
     } else {
-      toast.error('Invalid QR code format');
+      const hint = classifyParseError(data);
+      setParseHint(hint);
+      logQrEvent({
+        event_type: 'parse', status: 'error', surface: 'CustomerScan',
+        error_code: hint.code, error_message: hint.suggestion,
+        qr_type: data?.type, client_meta: { raw_keys: data && typeof data === 'object' ? Object.keys(data) : [] },
+      });
     }
   }, [navigate]);
 
@@ -78,7 +91,15 @@ const CustomerScan: React.FC = () => {
       const parsed = JSON.parse(rawValue);
       handleScanDetected(parsed);
     } catch {
-      handleScanDetected({ type: 'kob_pay', account: rawValue });
+      // Try the legacy bare-account fallback. If it doesn't look like an
+      // account code either, surface a parse hint instead of guessing.
+      if (/^[A-Z0-9-]{4,32}$/i.test(rawValue.trim())) {
+        handleScanDetected({ type: 'kob_pay', account: rawValue.trim() });
+      } else {
+        const hint = { code: 'QR_PARSE_INVALID_JSON', suggestion: 'This QR is not a Kang code. Tap Rescan to try another.' };
+        setParseHint(hint);
+        logQrEvent({ event_type: 'parse', status: 'error', surface: 'CustomerScan', error_code: hint.code, error_message: hint.suggestion });
+      }
     }
   }, [handleScanDetected]);
 
@@ -89,13 +110,10 @@ const CustomerScan: React.FC = () => {
     if (!prefill || prefillConsumedRef.current) return;
     prefillConsumedRef.current = true;
     handleScanDetected(prefill);
-    // Clear navigation state so a re-render doesn't re-trigger
     window.history.replaceState({}, '');
   }, [location.state, handleScanDetected]);
 
-
-
-  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess && !parseHint;
 
   const {
     videoRef: qrVideoRef,
@@ -111,6 +129,24 @@ const CustomerScan: React.FC = () => {
     containerId: 'customer-qr-scanner',
   });
 
+  const handleRescan = useCallback(() => {
+    setParseHint(null);
+    setScanResult(null);
+    setMerchantQR(null);
+    setPayAmount('');
+    resetProcessed();
+  }, [resetProcessed]);
+
+  // Surface camera errors to telemetry once per session.
+  const cameraErrLoggedRef = useRef(false);
+  useEffect(() => {
+    if (qrCameraError && !cameraErrLoggedRef.current) {
+      cameraErrLoggedRef.current = true;
+      const code = /denied|permission/i.test(qrCameraError) ? 'QR_SCAN_CAMERA_DENIED' : 'QR_SCAN_NO_CAMERA';
+      logQrEvent({ event_type: 'scan', status: 'error', surface: 'CustomerScan', error_code: code, error_message: qrCameraError });
+    }
+  }, [qrCameraError]);
+
   /* ─── Handlers ─── */
   const handleManualSubmit = () => {
     if (!manualCode.trim()) return;
@@ -125,13 +161,20 @@ const CustomerScan: React.FC = () => {
 
   const handlePayNow = () => {
     if (!scanResult) return;
-    if (!payAmount || Number(payAmount) <= 0) { toast.error('Enter a valid amount'); return; }
+    if (!payAmount || Number(payAmount) <= 0) {
+      logQrEvent({ event_type: 'payment', status: 'error', surface: 'CustomerScan', error_code: 'QR_PAY_INVALID_AMOUNT' });
+      toast.error('Enter a valid amount');
+      return;
+    }
     setShowPin(true);
   };
 
   const executePayment = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
+    const attempt = payAttempt + 1;
+    setPayAttempt(attempt);
+    const t0 = Date.now();
 
     if (merchantQR) {
       setProcessing(true);
@@ -142,16 +185,26 @@ const CustomerScan: React.FC = () => {
             merchant_id: merchantQR.merchant_id,
             amount: finalAmount,
             order_id: merchantQR.order_id,
-            // v2: forward signed payload so the server can verify HMAC + canonical amount
             decoded: merchantQR.sig ? merchantQR : undefined,
           },
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
         if (data?.error) {
+          logQrEvent({
+            event_type: 'payment', status: attempt > 1 ? 'retry' : 'error',
+            surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+            error_code: 'QR_PAY_EDGE_ERROR', error_message: data.message || data.error,
+            merchant_id: merchantQR.merchant_id, amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+          });
           toast.error(data.message || data.error);
           return;
         }
+        logQrEvent({
+          event_type: 'payment', status: 'success', surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+          merchant_id: merchantQR.merchant_id, amount: finalAmount, currency: data.currency || 'XAF',
+          latency_ms: Date.now() - t0, attempt,
+        });
         setPaymentSuccess({
           merchantName: merchantQR.merchant_name || 'Merchant',
           amount: finalAmount || data.amount,
@@ -161,18 +214,30 @@ const CustomerScan: React.FC = () => {
           timestamp: new Date().toISOString(),
         });
         setScanResult(null);
+        setPayAttempt(0);
         await Promise.all([
           queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
           queryClient.refetchQueries({ queryKey: ['account-balances'] }),
         ]);
       } catch (err: any) {
-        toast.error(extractEdgeFunctionError(err, 'Payment failed'));
+        const msg = extractEdgeFunctionError(err, 'Payment failed');
+        logQrEvent({
+          event_type: 'payment', status: attempt > 1 ? 'retry' : 'error',
+          surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+          error_code: 'QR_PAY_EDGE_ERROR', error_message: msg,
+          merchant_id: merchantQR.merchant_id, amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+        });
+        toast.error(msg);
       } finally {
         setProcessing(false);
       }
       return;
     }
 
+    logQrEvent({
+      event_type: 'payment', status: 'success', surface: 'CustomerScan', qr_type: 'kob_pay',
+      amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+    });
     navigate('/app/transfer', {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
@@ -361,6 +426,30 @@ const CustomerScan: React.FC = () => {
             ) : (
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
+                {parseHint && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full rounded-2xl border border-amber-500/30 bg-amber-50 p-4 dark:bg-amber-950/20"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                      {tr('We could not read that QR')}
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">{parseHint.suggestion}</p>
+                    <p className="mt-1 text-[10px] font-mono text-muted-foreground">{parseHint.code}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Button variant="outline" className="rounded-xl h-10 text-xs font-bold" onClick={handleRescan}>
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
+                        {tr('Rescan')}
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-10 text-xs font-bold" onClick={() => { setParseHint(null); setShowManualEntry(true); }}>
+                        <Keyboard className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
+                        {tr('Enter Code')}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Scanner viewport — uses width calc to stay within safe area */}
                 <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
                   {/* html5-qrcode container — always in DOM, hidden when not needed */}

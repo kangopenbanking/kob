@@ -18864,6 +18864,99 @@ export type Database = {
           },
         ]
       }
+      qr_telemetry_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          count: number
+          created_at: string
+          details: Json
+          error_code: string | null
+          id: string
+          threshold: number
+          window_minutes: number
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          count: number
+          created_at?: string
+          details?: Json
+          error_code?: string | null
+          id?: string
+          threshold: number
+          window_minutes: number
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          count?: number
+          created_at?: string
+          details?: Json
+          error_code?: string | null
+          id?: string
+          threshold?: number
+          window_minutes?: number
+        }
+        Relationships: []
+      }
+      qr_telemetry_events: {
+        Row: {
+          amount: number | null
+          attempt: number
+          client_meta: Json
+          created_at: string
+          currency: string | null
+          error_code: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          latency_ms: number | null
+          merchant_id: string | null
+          qr_type: string | null
+          status: string
+          surface: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          attempt?: number
+          client_meta?: Json
+          created_at?: string
+          currency?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          latency_ms?: number | null
+          merchant_id?: string | null
+          qr_type?: string | null
+          status: string
+          surface?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          attempt?: number
+          client_meta?: Json
+          created_at?: string
+          currency?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          latency_ms?: number | null
+          merchant_id?: string | null
+          qr_type?: string | null
+          status?: string
+          surface?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           client_id: string
