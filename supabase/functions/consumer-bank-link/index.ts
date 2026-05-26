@@ -280,12 +280,12 @@ Deno.serve(async (req) => {
       const linkId = body.link_id as string;
       if (!linkId) return json({ error: 'missing_link_id' }, 400);
       const { error } = await supa
-        .from('bank_psu_links')
-        .update({ status: 'revoked' })
+        .from('customer_linked_accounts')
+        .update({ status: 'removed', is_active: false, removed_at: new Date().toISOString() })
         .eq('id', linkId)
         .eq('user_id', user.id);
       if (error) return json({ error: 'revoke_failed', detail: error.message }, 500);
-      return json({ link_id: linkId, status: 'revoked' });
+      return json({ link_id: linkId, status: 'removed' });
     }
 
     return json({ error: 'invalid_action', message: 'Use list_banks | list_links | link_account | revoke' }, 400);
