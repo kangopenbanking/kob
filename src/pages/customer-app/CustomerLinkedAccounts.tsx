@@ -50,12 +50,12 @@ interface VerifiedBankOption {
 
 const accountTypes: AccountTypeConfig[] = [
   {
-    key: 'bank_account', label: 'Bank Account (RIB)', description: 'Link via 23-digit Cameroon RIB',
+    key: 'bank_account', label: 'Verified Bank Account', description: 'Verify with Kang Open Banking or Flutterwave',
     icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', providerType: 'bank',
     fields: [
-      { key: 'account_name', label: 'Account Holder Name', placeholder: 'Full name on account' },
       { key: 'bank_code', label: 'Bank', placeholder: 'Select your bank' },
-      { key: 'account_number', label: 'RIB Number (23 digits)', placeholder: '10005-00100-01234567890-23' },
+      { key: 'account_number', label: 'Account Number or RIB', placeholder: 'Enter your real bank account number' },
+      { key: 'account_name', label: 'Account Holder Name', placeholder: 'Full name registered with the bank' },
     ],
   },
   {
