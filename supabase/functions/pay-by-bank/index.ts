@@ -183,71 +183,154 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Update consent to Authorised
+      // ─── REAL MONEY MOVEMENT (consumer KANG wallet → merchant wallet) ───
+      // Resolve consumer's primary active KANG wallet
+      const { data: walletAccount } = await supabase
+        .from('accounts')
+        .select('id, currency')
+        .eq('user_id', user_id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (!walletAccount) {
+        return new Response(JSON.stringify({
+          error: 'no_wallet_account',
+          message: 'Consumer wallet not found. Please complete onboarding first.',
+        }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const amountNum = Number(intent.amount);
+      const currency = intent.currency || 'XAF';
+
+      // Mark consent Authorised + create pending payment
       await supabase.from('pisp_consents')
         .update({ status: 'Authorised', user_id })
         .eq('consent_id', intent.consent_id);
 
-      // Create payment record
       const paymentId = `PAY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       await supabase.from('payments').insert({
         payment_id: paymentId,
         consent_id: intent.consent_id,
         status: 'AcceptedSettlementInProcess',
         payment_type: 'domestic',
-        instructed_amount: JSON.stringify({ amount: String(intent.amount), currency: intent.currency }),
+        instructed_amount: JSON.stringify({ amount: String(amountNum), currency }),
         creditor_account: intent.creditor_account ? JSON.stringify({ identification: intent.creditor_account }) : '{}',
-        debtor_account: debtor_account ? JSON.stringify({ identification: debtor_account }) : '{}',
+        debtor_account: JSON.stringify({ identification: walletAccount.id, scheme: 'KANG_WALLET' }),
       });
 
-      // Update intent
       await supabase.from('pay_by_bank_intents').update({
         status: 'authorized',
         customer_user_id: user_id,
-        debtor_account,
+        debtor_account: debtor_account || walletAccount.id,
       }).eq('id', intent_id);
 
-      // Move to submitted → processing
-      await supabase.from('pay_by_bank_intents').update({ status: 'submitted' }).eq('id', intent_id);
-
-      // Fire submitted webhook
-      await supabase.rpc('trigger_webhooks', {
-        _event_type: 'pay_by_bank.submitted',
-        _event_data: JSON.stringify({
-          intent_id, payment_id: paymentId, amount: intent.amount, currency: intent.currency,
-          merchant_id: intent.merchant_id, status: 'submitted',
-        }),
-      });
-
-      await supabase.from('pay_by_bank_intents').update({ status: 'processing' }).eq('id', intent_id);
-
-      // Fire webhook
       await supabase.rpc('trigger_webhooks', {
         _event_type: 'pay_by_bank.authorized',
         _event_data: JSON.stringify({
-          intent_id, payment_id: paymentId, amount: intent.amount, currency: intent.currency,
+          intent_id, payment_id: paymentId, amount: amountNum, currency,
           merchant_id: intent.merchant_id, status: 'authorized',
         }),
       });
 
-      // For KOB wallet / internal: auto-complete
+      // 1) Atomic debit of consumer wallet (raises on insufficient funds)
+      const { data: debitRes, error: debitErr } = await supabase.rpc('atomic_debit_balance', {
+        _account_id: walletAccount.id,
+        _amount: amountNum,
+        _currency: currency,
+      });
+
+      if (debitErr || !debitRes?.success) {
+        const msg = debitErr?.message || debitRes?.error || 'Debit failed';
+        const insufficient = /insufficient/i.test(msg);
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'failed',
+          failure_reason: insufficient ? 'insufficient_funds' : msg,
+        }).eq('id', intent_id);
+        await supabase.from('payments').update({ status: 'Rejected' }).eq('payment_id', paymentId);
+        await supabase.from('pisp_consents').update({ status: 'Rejected' }).eq('consent_id', intent.consent_id);
+        await supabase.rpc('trigger_webhooks', {
+          _event_type: 'pay_by_bank.failed',
+          _event_data: JSON.stringify({
+            intent_id, payment_id: paymentId, merchant_id: intent.merchant_id,
+            status: 'failed', reason: insufficient ? 'insufficient_funds' : 'debit_failed',
+          }),
+        });
+        return new Response(JSON.stringify({
+          error: insufficient ? 'insufficient_funds' : 'debit_failed',
+          message: insufficient ? 'Insufficient wallet balance to authorise this payment.' : msg,
+        }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // 2) Credit the merchant wallet
+      const { error: creditErr } = await supabase.rpc('update_merchant_wallet', {
+        _merchant_id: intent.merchant_id,
+        _currency: currency,
+        _available_delta: amountNum,
+        _ledger_delta: amountNum,
+      });
+
+      if (creditErr) {
+        // Reverse the consumer debit
+        await supabase.rpc('atomic_credit_balance', {
+          _account_id: walletAccount.id,
+          _amount: amountNum,
+          _currency: currency,
+        }).catch((e: any) => console.error('[pay-by-bank] reversal failed', e));
+
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'failed',
+          failure_reason: `merchant_credit_failed:${creditErr.message}`,
+        }).eq('id', intent_id);
+        await supabase.from('payments').update({ status: 'Rejected' }).eq('payment_id', paymentId);
+        await supabase.rpc('trigger_webhooks', {
+          _event_type: 'pay_by_bank.failed',
+          _event_data: JSON.stringify({
+            intent_id, payment_id: paymentId, merchant_id: intent.merchant_id,
+            status: 'failed', reason: 'merchant_credit_failed',
+          }),
+        });
+        return new Response(JSON.stringify({
+          error: 'merchant_credit_failed',
+          message: 'Could not credit merchant wallet. Your wallet has been refunded.',
+        }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // 3) Audit transactions (best-effort, non-blocking on errors)
+      const nowIso = new Date().toISOString();
+      await supabase.from('transactions').insert([
+        {
+          user_id,
+          account_id: walletAccount.id,
+          amount: amountNum,
+          currency,
+          credit_debit_indicator: 'Debit',
+          transaction_type: 'pay_by_bank',
+          transaction_information: `Pay-by-Bank to ${intent.merchant_name || 'merchant'}`,
+          booking_datetime: nowIso,
+          status: 'Booked',
+          metadata: { intent_id, payment_id: paymentId, merchant_id: intent.merchant_id },
+        },
+      ]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
+
+      // 4) Mark everything completed
       await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
       await supabase.from('payments').update({ status: 'AcceptedSettlementCompleted' }).eq('payment_id', paymentId);
 
       await supabase.rpc('trigger_webhooks', {
         _event_type: 'pay_by_bank.completed',
         _event_data: JSON.stringify({
-          intent_id, payment_id: paymentId, amount: intent.amount, currency: intent.currency,
+          intent_id, payment_id: paymentId, amount: amountNum, currency,
           merchant_id: intent.merchant_id, status: 'completed',
         }),
       });
 
-      // Send notification to user
       await supabase.from('app_notifications').insert({
         user_id,
         type: 'success',
         title: 'Payment Authorized',
-        message: `You authorized a payment of ${intent.currency} ${Number(intent.amount).toLocaleString()} to ${intent.merchant_name || 'merchant'}.`,
+        message: `You paid ${currency} ${amountNum.toLocaleString()} to ${intent.merchant_name || 'merchant'}.`,
         icon: 'pay_by_bank',
         metadata: { intent_id, payment_id: paymentId },
       });
