@@ -16,8 +16,10 @@ import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { logQrEvent, classifyParseError } from '@/lib/qr-telemetry';
 
 type Tab = 'scan' | 'receive';
+type ParseHint = { code: string; suggestion: string } | null;
 
 const CustomerScan: React.FC = () => {
   const tr = useHarvestedT('customer');
@@ -37,6 +39,8 @@ const CustomerScan: React.FC = () => {
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [storeChoice, setStoreChoice] = useState<any>(null); // v2 kob_store payload — show Visit/Pay chooser
+  const [parseHint, setParseHint] = useState<ParseHint>(null);
+  const [payAttempt, setPayAttempt] = useState(0);
   const queryClient = useQueryClient();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,8 +51,9 @@ const CustomerScan: React.FC = () => {
 
   /* ─── Scan handler — ref-based to avoid stale closures ─── */
   const handleScanDetected = useCallback((data: any) => {
+    setParseHint(null);
     if (data.type === 'kob_store' && data.merchant_id) {
-      // v2: store QR carries an optional signed pay payload — let the user choose.
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_store', surface: 'CustomerScan', merchant_id: data.merchant_id });
       if (data.v === 2 && data.pay_enabled && data.pay?.decoded) {
         setStoreChoice(data);
         return;
@@ -61,15 +66,23 @@ const CustomerScan: React.FC = () => {
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_pos_pay', surface: 'CustomerScan', merchant_id: data.merchant_id, amount: data.amount });
       toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
     } else if (data.type === 'kob_pay' && (data.account || data.kang_id)) {
       const acct = data.account || data.kang_id;
       setScanResult({ account: acct, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
+      logQrEvent({ event_type: 'scan', status: 'success', qr_type: 'kob_pay', surface: 'CustomerScan', amount: data.amount });
       toast.success(data.name ? `Pay ${data.name}` : 'QR Code scanned successfully!');
     } else {
-      toast.error('Invalid QR code format');
+      const hint = classifyParseError(data);
+      setParseHint(hint);
+      logQrEvent({
+        event_type: 'parse', status: 'error', surface: 'CustomerScan',
+        error_code: hint.code, error_message: hint.suggestion,
+        qr_type: data?.type, client_meta: { raw_keys: data && typeof data === 'object' ? Object.keys(data) : [] },
+      });
     }
   }, [navigate]);
 
@@ -78,9 +91,25 @@ const CustomerScan: React.FC = () => {
       const parsed = JSON.parse(rawValue);
       handleScanDetected(parsed);
     } catch {
-      handleScanDetected({ type: 'kob_pay', account: rawValue });
+      // Try the legacy bare-account fallback. If it doesn't look like an
+      // account code either, surface a parse hint instead of guessing.
+      if (/^[A-Z0-9-]{4,32}$/i.test(rawValue.trim())) {
+        handleScanDetected({ type: 'kob_pay', account: rawValue.trim() });
+      } else {
+        const hint = { code: 'QR_PARSE_INVALID_JSON', suggestion: 'This QR is not a Kang code. Tap Rescan to try another.' };
+        setParseHint(hint);
+        logQrEvent({ event_type: 'parse', status: 'error', surface: 'CustomerScan', error_code: hint.code, error_message: hint.suggestion });
+      }
     }
   }, [handleScanDetected]);
+
+  const handleRescan = useCallback(() => {
+    setParseHint(null);
+    setScanResult(null);
+    setMerchantQR(null);
+    resetProcessedRef.current?.();
+  }, []);
+  const resetProcessedRef = useRef<(() => void) | null>(null);
 
   // Consume prefillQR from deep-links (e.g. PayMerchantSlug → /app/scan)
   const prefillConsumedRef = useRef(false);
