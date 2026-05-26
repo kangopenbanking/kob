@@ -65,22 +65,50 @@ export default function PaymentCheckout() {
 
   const fetchLink = async () => {
     try {
+      // 1. Try the merchant gateway payment link first.
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-query?action=get-payment-link&slug=${slug}`,
         { headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
       );
-      const linkData = await res.json();
-      if (linkData?.error || !linkData?.id) {
-        setLink(null);
-      } else {
+      const linkData = await res.json().catch(() => null);
+      if (linkData?.id && !linkData?.error) {
         setLink(linkData);
+        return;
       }
+
+      // 2. Fall back to the consumer-created pay link (shared from the mobile app).
+      const r2 = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-paylink-public-resolve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ slug }),
+        }
+      );
+      const cData = await r2.json().catch(() => null);
+      if (r2.ok && cData?.link) {
+        setCustomerLink({ ...cData.link, receiver: cData.receiver });
+        if (cData.link.amount) setCustomerAmount(String(cData.link.amount));
+        return;
+      }
+      if (cData?.error === 'expired' || cData?.error === 'inactive' || cData?.error === 'not_found') {
+        setResolveError(cData.error);
+      } else {
+        setResolveError('not_found');
+      }
+      setLink(null);
     } catch {
       setLink(null);
+      setResolveError('not_found');
     } finally {
       setLoading(false);
     }
   };
+
 
   const getDisplayAmount = () => {
     if (!link) return 0;
