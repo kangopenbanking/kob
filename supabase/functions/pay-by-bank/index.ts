@@ -109,13 +109,16 @@ Deno.serve(async (req) => {
         resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
-      // Create PISP consent
+      // Create PISP consent. Consumer wallet top-ups are initiated by the
+      // platform PISP client, not by the end-user UUID, because pisp_consents
+      // enforces client_id against registered TPP clients.
+      const platformPispClientId = 'kang_consumer_wallet_pisp';
       const consentId = `PBB-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
       const { error: consentErr } = await supabase.from('pisp_consents').insert({
         consent_id: consentId,
-        client_id: merchant?.id ?? resolvedCustomerUserId ?? 'consumer',
+        client_id: target_type === 'consumer_wallet' ? platformPispClientId : merchant?.id,
         user_id: resolvedCustomerUserId,
         payment_type: 'domestic',
         status: 'AwaitingAuthorisation',
