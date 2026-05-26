@@ -224,7 +224,11 @@ export default function PaymentCheckout() {
     const canPay = customerLink.receiver?.kang_id && amountNum > 0;
 
     const handleCustomerPay = () => {
-      if (!canPay) {
+      if (!customerLink.receiver?.kang_id) {
+        toast({ title: 'Cannot pay this link yet', description: 'The link owner has not set up their wallet.', variant: 'destructive' });
+        return;
+      }
+      if (!amountNum || amountNum <= 0) {
         toast({ title: 'Enter an amount', description: 'Please enter the amount you want to send.', variant: 'destructive' });
         return;
       }
@@ -236,12 +240,11 @@ export default function PaymentCheckout() {
       if (walletSession) {
         navigate('/app/transfer', { state: { prefill } });
       } else {
-        // Send the user to login, then forward to /app/transfer with prefill.
-        sessionStorage.setItem('post_login_redirect', '/app/transfer');
-        sessionStorage.setItem('post_login_transfer_prefill', JSON.stringify(prefill));
-        navigate('/app/login');
+        sessionStorage.setItem('post_login_redirect', `/pay/${slug}`);
+        navigate('/app/auth');
       }
     };
+
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
