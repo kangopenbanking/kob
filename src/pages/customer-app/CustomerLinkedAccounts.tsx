@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, Globe, Clock, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,15 @@ interface AccountTypeConfig {
   iconColor: string;
   providerType: string;
   fields: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }[];
+}
+
+interface VerifiedBankOption {
+  id: string;
+  code: string;
+  display_name: string;
+  provider: 'kob' | 'flutterwave';
+  bank_code?: string | null;
+  swift_bic?: string | null;
 }
 
 const accountTypes: AccountTypeConfig[] = [
