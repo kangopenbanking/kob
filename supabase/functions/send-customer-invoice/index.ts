@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const SITE_NAME = "Kang OB";
-const SENDER_DOMAIN = "notify.kangopenbanking.com";
-const FROM_DOMAIN = "support.kangopenbanking.com";
+const SENDER_DOMAIN = "notify.info.kangfintechsolutions.com";
+const FROM_DOMAIN = "info.kangfintechsolutions.com";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
