@@ -493,8 +493,8 @@ const CustomerFundWallet: React.FC = () => {
                       className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
                         selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
                       )}>
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                        <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
