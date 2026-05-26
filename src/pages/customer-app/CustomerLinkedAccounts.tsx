@@ -434,14 +434,41 @@ const LinkedAccountCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }
 const CustomerLinkedAccounts: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedType, setSelectedType] = useState<AccountTypeConfig | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [verifiedBanks, setVerifiedBanks] = useState<VerifiedBankOption[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [validationMsg, setValidationMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  const selectedVerifiedBank = useMemo(() => verifiedBanks.find((b) => b.id === formData.bank_code), [verifiedBanks, formData.bank_code]);
+
+  const loadVerifiedBanks = useCallback(async () => {
+    setBanksLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('consumer-bank-link', { body: { action: 'list_banks' } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      setVerifiedBanks((data?.banks || []) as VerifiedBankOption[]);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Unable to load verified banks'));
+    } finally {
+      setBanksLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const requestedBank = searchParams.get('bank');
+    if (!requestedBank) return;
+    setShowAdd(true);
+    setSelectedType(accountTypes[0]);
+    void loadVerifiedBanks();
+  }, [searchParams, loadVerifiedBanks]);
 
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
