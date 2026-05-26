@@ -25,7 +25,7 @@ type Intent = {
   state: string;
 };
 
-type Step = "loading" | "login" | "approve" | "processing" | "success" | "rejected" | "error" | "expired";
+type Step = "loading" | "login" | "approve" | "bank_auth" | "processing" | "success" | "rejected" | "error" | "expired";
 
 export default function PayByBankAuthorize() {
   const tr = useHarvestedT('customer');
