@@ -525,6 +525,13 @@ const CustomerLinkedAccounts: React.FC = () => {
     setShowAdd(true);
   };
 
+  const handleSelectType = (type: AccountTypeConfig) => {
+    setSelectedType(type);
+    setFormData({});
+    setValidationMsg(null);
+    if (type.key === 'bank_account') void loadVerifiedBanks();
+  };
+
   const handleAccountNumberChange = useCallback((value: string) => {
     if (!selectedType) return;
     setValidationMsg(null);
