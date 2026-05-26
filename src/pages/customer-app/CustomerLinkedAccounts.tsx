@@ -18,6 +18,7 @@ import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { KangIdBadge } from '@/components/identity/KangIdBadge';
+import { ConnectedBanksPanel } from '@/components/customer/ConnectedBanksPanel';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
