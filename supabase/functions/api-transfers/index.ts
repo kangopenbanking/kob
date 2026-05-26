@@ -174,7 +174,54 @@ serve(async (req) => {
       }
     }
 
+    // Tier 1.6: KANG ID lookup (e.g. "KANG-7H3K9PXM2A")
+    if (!destAccount && /^KANG-[A-Z0-9]+$/i.test(destination_account_id.trim())) {
+      const kangIdNorm = destination_account_id.trim().toUpperCase();
+      const { data: kangProfile } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('kang_id', kangIdNorm)
+        .maybeSingle();
+
+      if (kangProfile && kangProfile.id !== user.id) {
+        const { data: existing } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+          .eq('user_id', kangProfile.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          destAccount = existing;
+        } else {
+          const newAccountId = `ACC-${kangProfile.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+          const { data: created, error: createErr } = await supabase
+            .from('accounts')
+            .insert({
+              user_id: kangProfile.id,
+              account_id: newAccountId,
+              account_holder_name: kangProfile.full_name || 'Kang User',
+              account_type: 'Personal',
+              account_subtype: 'CurrentAccount',
+              currency: currency || 'XAF',
+              identification_scheme: 'IBAN',
+              identification_value: newAccountId,
+              is_active: true,
+            })
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .single();
+          if (!createErr && created) {
+            destAccount = created;
+            console.log('Auto-provisioned destination wallet via KANG ID:', kangIdNorm);
+          }
+        }
+      }
+    }
+
     // Fallback: try by human-readable account_id (e.g. ACC-...)
+
     if (!destAccount) {
       const { data } = await supabase
         .from('accounts')

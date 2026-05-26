@@ -17,6 +17,7 @@ import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { KangIdBadge } from '@/components/identity/KangIdBadge';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -903,6 +904,9 @@ const CustomerLinkedAccounts: React.FC = () => {
           <Plus className={`h-4 w-4 ${atLimit ? 'text-muted-foreground' : 'text-primary-foreground'}`} strokeWidth={2} />
         </button>
       </div>
+
+      {/* KANG ID — permanent identifier, tap to copy */}
+      {user?.kangId && <KangIdBadge kangId={user.kangId} variant="card" />}
 
       {/* Account limit banner */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
