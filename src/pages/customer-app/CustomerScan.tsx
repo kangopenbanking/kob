@@ -82,6 +82,19 @@ const CustomerScan: React.FC = () => {
     }
   }, [handleScanDetected]);
 
+  // Consume prefillQR from deep-links (e.g. PayMerchantSlug → /app/scan)
+  const prefillConsumedRef = useRef(false);
+  useEffect(() => {
+    const prefill = (location.state as any)?.prefillQR;
+    if (!prefill || prefillConsumedRef.current) return;
+    prefillConsumedRef.current = true;
+    handleScanDetected(prefill);
+    // Clear navigation state so a re-render doesn't re-trigger
+    window.history.replaceState({}, '');
+  }, [location.state, handleScanDetected]);
+
+
+
   const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
 
   const {
