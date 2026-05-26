@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { PayByBankLogo } from '@/components/PayByBankLogo';
+import { BankLogo } from '@/components/BankLogo';
 import { CM_BANKS } from '@/constants/cameroon-banks';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
@@ -57,6 +58,7 @@ interface BankOption {
   code: string;
   name: string;
   source: 'kob' | 'flutterwave' | 'directory';
+  logoUrl?: string | null;
 }
 
 const CustomerFundWallet: React.FC = () => {
@@ -138,13 +140,18 @@ const CustomerFundWallet: React.FC = () => {
     try {
       const { data: kobInstitutions } = await supabase
         .from('institutions' as any)
-        .select('id, institution_name, institution_type, swift_bic_code')
+        .select('id, institution_name, institution_type, swift_bic_code, logo_url')
         .eq('is_active', true)
         .order('institution_name');
 
       if (kobInstitutions?.length) {
         kobInstitutions.forEach((inst: any) => {
-          allBanks.push({ code: inst.swift_bic_code || inst.id, name: inst.institution_name, source: 'kob' });
+          allBanks.push({
+            code: inst.swift_bic_code || inst.id,
+            name: inst.institution_name,
+            source: 'kob',
+            logoUrl: inst.logo_url ?? null,
+          });
         });
       }
     } catch (err) {
@@ -159,7 +166,12 @@ const CustomerFundWallet: React.FC = () => {
         fwData.banks.forEach((bank: any) => {
           const isDuplicate = allBanks.some(b => b.name.toLowerCase().includes(bank.name?.toLowerCase()?.slice(0, 10)));
           if (!isDuplicate) {
-            allBanks.push({ code: bank.code, name: bank.name, source: 'flutterwave' });
+            allBanks.push({
+              code: bank.code,
+              name: bank.name,
+              source: 'flutterwave',
+              logoUrl: bank.logo || bank.logo_url || null,
+            });
           }
         });
       }
@@ -169,7 +181,7 @@ const CustomerFundWallet: React.FC = () => {
 
     CM_BANKS.forEach((bank) => {
       const exists = allBanks.some((b) => b.code === bank.code || b.name.toLowerCase() === bank.name.toLowerCase());
-      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory' });
+      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory', logoUrl: null });
     });
 
     setBanks(allBanks);
@@ -462,8 +474,8 @@ const CustomerFundWallet: React.FC = () => {
                       className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
                         selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
                       )}>
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <Building2 className="h-4 w-4 text-primary" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                        <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
@@ -481,8 +493,8 @@ const CustomerFundWallet: React.FC = () => {
                       className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
                         selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
                       )}>
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                        <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
@@ -500,8 +512,8 @@ const CustomerFundWallet: React.FC = () => {
                       className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
                         selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
                       )}>
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                        <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
@@ -513,6 +525,12 @@ const CustomerFundWallet: React.FC = () => {
                 </>
               )}
             </div>
+
+            <Button asChild variant="outline" className="w-full rounded-2xl h-11 text-xs font-bold">
+              <Link to="/app/linked-accounts">
+                <LinkIcon className="h-4 w-4 mr-2" /> {tr("Don't see your bank? Link an Account")}
+              </Link>
+            </Button>
 
             <p className="text-center text-[10px] text-muted-foreground">
               {banks.length} banks available • KOB + Flutterwave networks
@@ -651,8 +669,8 @@ const CustomerFundWallet: React.FC = () => {
                     filteredPbbBanks.map((bank) => (
                       <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                          <Building2 className="h-4 w-4 text-primary" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                          <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
@@ -663,13 +681,20 @@ const CustomerFundWallet: React.FC = () => {
                     ))
                   )}
                 </div>
+
+                <Button asChild variant="outline" className="w-full rounded-2xl h-11 text-xs font-bold">
+                  <Link to="/app/linked-accounts">
+                    <LinkIcon className="h-4 w-4 mr-2" /> {tr("Don't see your bank? Link an Account")}
+                  </Link>
+                </Button>
               </>
+
             ) : (
               <>
             {selectedPbbBank && (
               <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Building2 className="h-4 w-4 text-primary" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                  <BankLogo logoUrl={selectedPbbBank.logoUrl} name={selectedPbbBank.name} iconClassName="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-foreground truncate">{selectedPbbBank.name}</p>
