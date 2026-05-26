@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
 
       const { error: consentErr } = await supabase.from('pisp_consents').insert({
         consent_id: consentId,
-        client_id: target_type === 'consumer_wallet' ? platformPispClientId : merchant?.id,
+        client_id: platformPispClientId,
         user_id: resolvedCustomerUserId,
         payment_type: 'domestic',
         status: 'AwaitingAuthorisation',
