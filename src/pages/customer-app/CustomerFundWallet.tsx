@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe, Search, ChevronRight, AlertCircle, LinkIcon } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe, Search, ChevronRight, AlertCircle, LinkIcon, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,10 +67,13 @@ const CustomerFundWallet: React.FC = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>('source');
+  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'pay_by_bank' | 'processing' | 'result'>('source');
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
+  const [pbbAmount, setPbbAmount] = useState('');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'amount' | 'redirecting'>('tile');
+  const [pbbProcessing, setPbbProcessing] = useState(false);
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
@@ -180,6 +183,47 @@ const CustomerFundWallet: React.FC = () => {
     setStep('amount');
   };
 
+  const handlePayByBankStart = () => {
+    if (!primaryAccount?.id) { toast.error('No wallet account found. Please contact support.'); return; }
+    setPbbStep('amount');
+    setStep('pay_by_bank');
+  };
+
+  const handlePayByBankSubmit = async () => {
+    const amt = Number(pbbAmount);
+    if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
+    if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
+    setPbbProcessing(true);
+    try {
+      const state = crypto.randomUUID();
+      const returnUrl = `${window.location.origin}/app/fund-wallet?source=pay_by_bank`;
+      const { data, error } = await supabase.functions.invoke('pay-by-bank', {
+        body: {
+          action: 'create_intent',
+          target_type: 'consumer_wallet',
+          target_account_id: primaryAccount.id,
+          amount: amt,
+          currency: 'XAF',
+          redirect_uri: returnUrl,
+          state,
+          description: 'KANG Wallet top-up',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
+      if (!data?.authorization_url || !data?.intent_id) throw new Error('Invalid response from server');
+      setPbbStep('redirecting');
+      // Persist state so /pay/authorize can validate when user returns
+      try { sessionStorage.setItem(`pbb_state_${data.intent_id}`, state); } catch {}
+      window.location.assign(data.authorization_url);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not start Pay-by-Bank'));
+      setPbbStep('amount');
+    } finally {
+      setPbbProcessing(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!numAmount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
     if (method === 'mobile_money' && !phone) { toast.error('Phone number is required'); return; }
@@ -242,6 +286,7 @@ const CustomerFundWallet: React.FC = () => {
       if (method === 'bank_transfer') { setStep('bank_select'); setSelectedBank(null); }
       else setStep('source');
     }
+    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); }
     else if (step === 'result') { setStep('source'); setFundingResult(null); setSelectedBank(null); }
     else navigate(-1);
   };
@@ -272,6 +317,22 @@ const CustomerFundWallet: React.FC = () => {
                 <p className="text-[11px] text-muted-foreground">{tr('Select one of your linked accounts as the funding source. All payments are processed securely.')}</p>
               </div>
             </div>
+
+            {/* Pay by Bank (Instant) tile — PISP wallet top-up */}
+            <button
+              onClick={handlePayByBankStart}
+              className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary/40 bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
+                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">{tr('Pay by Bank (Instant)')}</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Top up directly from your bank — no card needed. Open Banking secured.')}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
+
 
             {accountsLoading ? (
               <div className="flex justify-center py-10">
@@ -507,6 +568,67 @@ const CustomerFundWallet: React.FC = () => {
 
             <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
               <Shield className="h-3 w-3" /> End-to-end encrypted
+            </p>
+          </motion.div>
+        ) : step === 'pay_by_bank' ? (
+          <motion.div key="pay_by_bank" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
+            <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
+                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">{tr('Pay by Bank — Instant Top-up')}</p>
+                <p className="text-[10px] text-muted-foreground">{tr('You will be redirected to your bank to confirm.')}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 rounded-3xl bg-primary p-8">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-foreground/60">{tr('Top-up Amount')}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-bold text-primary-foreground/60">XAF</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={pbbAmount}
+                  onChange={(e) => setPbbAmount(e.target.value.replace(/\D/g, ''))}
+                  placeholder="0"
+                  className="bg-transparent text-4xl font-bold text-primary-foreground outline-none w-full text-center placeholder:text-primary-foreground/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {quickAmounts.map(a => (
+                <button
+                  key={a}
+                  onClick={() => setPbbAmount(String(a))}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${pbbAmount === String(a) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                >
+                  {a.toLocaleString()}
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-2xl bg-muted/50 p-4 space-y-1">
+              <p className="text-[11px] text-muted-foreground">
+                {tr('Funds are credited to your KANG wallet after your bank confirms the transfer. No fees from KOB on Pay-by-Bank top-ups.')}
+              </p>
+            </div>
+
+            <Button
+              onClick={handlePayByBankSubmit}
+              disabled={pbbProcessing || pbbStep === 'redirecting' || !Number(pbbAmount)}
+              className="w-full rounded-2xl h-12 text-sm font-bold"
+            >
+              {pbbProcessing || pbbStep === 'redirecting' ? (
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Redirecting to your bank...')}</span>
+              ) : (
+                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {tr('Continue to Bank')}</span>
+              )}
+            </Button>
+
+            <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
             </p>
           </motion.div>
         ) : null}

@@ -13,13 +13,50 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+
+  const url = new URL(req.url);
 
   try {
     const supa = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
+
+    // ─── GET / authorize_callback (production SCA redirect from bank) ───
+    // The bank redirects the user's browser here with link_id + status.
+    // No JWT — this is the redirect leg of an OAuth-style flow.
+    const qsAction = url.searchParams.get('action');
+    if (req.method === 'GET' || qsAction === 'authorize_callback') {
+      const linkId = url.searchParams.get('link_id');
+      const intentId = url.searchParams.get('intent_id');
+      const status = (url.searchParams.get('status') || 'success').toLowerCase();
+      const errorCode = url.searchParams.get('error');
+      const ok = !errorCode && (status === 'success' || status === 'authorized' || status === 'completed');
+      const appOrigin = Deno.env.get('APP_PUBLIC_URL') || (req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : 'https://kob.lovable.app');
+
+      // Bank-link confirmation
+      if (linkId) {
+        const { data: link } = await supa.from('bank_psu_links').select('id, status').eq('id', linkId).maybeSingle();
+        if (!link) {
+          return Response.redirect(`${appOrigin}/app/linked-accounts?bank_link=not_found`, 302);
+        }
+        await supa.from('bank_psu_links').update({
+          status: ok ? 'active' : 'revoked',
+          linked_at: ok ? new Date().toISOString() : null,
+        }).eq('id', linkId);
+        return Response.redirect(`${appOrigin}/app/linked-accounts?bank_link=${ok ? 'success' : 'failed'}`, 302);
+      }
+
+      // Pay-by-bank intent SCA completion (forward to /pay/authorize for the in-app authorize action)
+      if (intentId) {
+        return Response.redirect(`${appOrigin}/pay/authorize?intent_id=${intentId}&sca=${ok ? 'success' : 'failed'}`, 302);
+      }
+
+      return json({ error: 'missing_link_id_or_intent_id' }, 400);
+    }
+
+    // ─── POST actions require JWT ───
+    if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) return json({ error: 'unauthorized' }, 401);

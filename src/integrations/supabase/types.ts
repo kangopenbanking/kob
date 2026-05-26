@@ -15766,13 +15766,15 @@ export type Database = {
           expires_at: string
           failure_reason: string | null
           id: string
-          merchant_id: string
+          merchant_id: string | null
           merchant_logo_url: string | null
           merchant_name: string | null
           metadata: Json | null
           redirect_uri: string
           state: string
           status: string
+          target_account_id: string | null
+          target_type: string
           updated_at: string
         }
         Insert: {
@@ -15790,13 +15792,15 @@ export type Database = {
           expires_at?: string
           failure_reason?: string | null
           id?: string
-          merchant_id: string
+          merchant_id?: string | null
           merchant_logo_url?: string | null
           merchant_name?: string | null
           metadata?: Json | null
           redirect_uri: string
           state: string
           status?: string
+          target_account_id?: string | null
+          target_type?: string
           updated_at?: string
         }
         Update: {
@@ -15814,13 +15818,15 @@ export type Database = {
           expires_at?: string
           failure_reason?: string | null
           id?: string
-          merchant_id?: string
+          merchant_id?: string | null
           merchant_logo_url?: string | null
           merchant_name?: string | null
           metadata?: Json | null
           redirect_uri?: string
           state?: string
           status?: string
+          target_account_id?: string | null
+          target_type?: string
           updated_at?: string
         }
         Relationships: [

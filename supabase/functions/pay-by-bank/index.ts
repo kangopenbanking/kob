@@ -18,25 +18,94 @@ Deno.serve(async (req) => {
 
     // ─── create_intent ────────────────────────────────────────
     if (action === 'create_intent') {
-      const { merchant_id, amount, currency, redirect_uri, state, description, creditor_account, creditor_name, customer_email } = body;
+      const {
+        merchant_id,
+        amount,
+        currency,
+        redirect_uri,
+        state,
+        description,
+        creditor_account,
+        creditor_name,
+        customer_email,
+        target_type: rawTargetType,
+        target_account_id,
+      } = body;
 
-      if (!merchant_id || !amount || !redirect_uri || !state) {
-        return new Response(JSON.stringify({ error: 'Missing required fields: merchant_id, amount, redirect_uri, state' }), {
+      const target_type: 'merchant' | 'consumer_wallet' =
+        rawTargetType === 'consumer_wallet' ? 'consumer_wallet' : 'merchant';
+
+      if (!amount || !redirect_uri || !state) {
+        return new Response(JSON.stringify({ error: 'Missing required fields: amount, redirect_uri, state' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
-      // Verify merchant exists
-      const { data: merchant, error: merchantErr } = await supabase
-        .from('gateway_merchants')
-        .select('id, business_name, logo_url')
-        .eq('id', merchant_id)
-        .single();
+      let merchant: { id: string; business_name: string | null; logo_url: string | null } | null = null;
+      let resolvedTargetAccountId: string | null = null;
+      let resolvedCustomerUserId: string | null = null;
+      let resolvedMerchantName: string | null = null;
+      let resolvedLogo: string | null = null;
 
-      if (merchantErr || !merchant) {
-        return new Response(JSON.stringify({ error: 'Merchant not found' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      if (target_type === 'merchant') {
+        if (!merchant_id) {
+          return new Response(JSON.stringify({ error: 'merchant_id required when target_type=merchant' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        const { data: m, error: merchantErr } = await supabase
+          .from('gateway_merchants')
+          .select('id, business_name, logo_url')
+          .eq('id', merchant_id)
+          .single();
+        if (merchantErr || !m) {
+          return new Response(JSON.stringify({ error: 'Merchant not found' }), {
+            status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        merchant = m;
+        resolvedMerchantName = m.business_name;
+        resolvedLogo = m.logo_url;
+      } else {
+        // consumer_wallet — require authenticated user, resolve their wallet
+        const authHeader = req.headers.get('Authorization') || '';
+        const jwt = authHeader.replace('Bearer ', '');
+        if (!jwt) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        const userClient = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: `Bearer ${jwt}` } },
         });
+        const { data: authData, error: authErr } = await userClient.auth.getUser();
+        if (authErr || !authData?.user) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        resolvedCustomerUserId = authData.user.id;
+
+        let accountId: string | null = target_account_id ?? null;
+        if (!accountId) {
+          const { data: walletAcc } = await supabase
+            .from('accounts')
+            .select('id')
+            .eq('user_id', resolvedCustomerUserId)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          accountId = walletAcc?.id ?? null;
+        }
+        if (!accountId) {
+          return new Response(JSON.stringify({
+            error: 'no_wallet_account',
+            message: 'No active wallet found for this user.',
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        resolvedTargetAccountId = accountId;
+        resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
       // Create PISP consent
@@ -45,14 +114,14 @@ Deno.serve(async (req) => {
 
       const { error: consentErr } = await supabase.from('pisp_consents').insert({
         consent_id: consentId,
-        client_id: merchant_id,
+        client_id: merchant?.id ?? resolvedCustomerUserId ?? 'consumer',
         status: 'AwaitingAuthorisation',
         creditor_account: creditor_account ? JSON.stringify({ identification: creditor_account }) : '{}',
-        creditor_name: creditor_name || merchant.business_name,
+        creditor_name: creditor_name || resolvedMerchantName,
         instructed_amount: JSON.stringify({ amount: String(amount), currency: currency || 'XAF' }),
         currency_of_transfer: currency || 'XAF',
         expires_at: expiresAt,
-        risk: JSON.stringify({ payment_context: 'pay_by_bank' }),
+        risk: JSON.stringify({ payment_context: target_type === 'consumer_wallet' ? 'wallet_topup' : 'pay_by_bank' }),
       });
 
       if (consentErr) {
@@ -60,23 +129,24 @@ Deno.serve(async (req) => {
         return safeErrorResponse(consentErr, corsHeaders, 'create_consent');
       }
 
-      const authUrl = `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/pay/authorize?intent_id=PLACEHOLDER&state=${encodeURIComponent(state)}`;
-
       // Create pay_by_bank_intent
       const { data: intent, error: intentErr } = await supabase
         .from('pay_by_bank_intents')
         .insert({
-          merchant_id,
+          merchant_id: merchant?.id ?? null,
+          target_type,
+          target_account_id: resolvedTargetAccountId,
+          customer_user_id: resolvedCustomerUserId,
           consent_id: consentId,
           amount,
           currency: currency || 'XAF',
           redirect_uri,
           state,
           status: 'awaiting_auth',
-          merchant_name: merchant.business_name,
-          merchant_logo_url: merchant.logo_url,
+          merchant_name: resolvedMerchantName,
+          merchant_logo_url: resolvedLogo,
           creditor_account,
-          creditor_name: creditor_name || merchant.business_name,
+          creditor_name: creditor_name || resolvedMerchantName,
           description,
           expires_at: expiresAt,
           customer_email,
@@ -88,7 +158,6 @@ Deno.serve(async (req) => {
         return safeErrorResponse(intentErr, corsHeaders, 'create_intent');
       }
 
-      // Update authorization_url with actual intent_id
       const finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
       await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
 
@@ -98,6 +167,7 @@ Deno.serve(async (req) => {
         authorization_url: finalAuthUrl,
         expires_at: expiresAt,
         status: 'awaiting_auth',
+        target_type,
       }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -183,7 +253,102 @@ Deno.serve(async (req) => {
         });
       }
 
-      // ─── REAL MONEY MOVEMENT (consumer KANG wallet → merchant wallet) ───
+      const targetType = intent.target_type === 'consumer_wallet' ? 'consumer_wallet' : 'merchant';
+      const amountNum = Number(intent.amount);
+      const currency = intent.currency || 'XAF';
+
+      // ─── Branch: CONSUMER WALLET TOP-UP (PISP funding from external bank) ───
+      if (targetType === 'consumer_wallet') {
+        const walletId = intent.target_account_id;
+        if (!walletId) {
+          return new Response(JSON.stringify({ error: 'no_target_account' }), {
+            status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const paymentId = `PAY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+        await supabase.from('pisp_consents')
+          .update({ status: 'Authorised', user_id })
+          .eq('consent_id', intent.consent_id);
+        await supabase.from('payments').insert({
+          payment_id: paymentId,
+          consent_id: intent.consent_id,
+          status: 'AcceptedSettlementInProcess',
+          payment_type: 'wallet_topup',
+          instructed_amount: JSON.stringify({ amount: String(amountNum), currency }),
+          creditor_account: JSON.stringify({ identification: walletId, scheme: 'KANG_WALLET' }),
+          debtor_account: JSON.stringify({ identification: debtor_account || 'external_bank', scheme: 'BANK' }),
+        });
+
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'authorized',
+          customer_user_id: user_id,
+          debtor_account: debtor_account || null,
+        }).eq('id', intent_id);
+
+        // Credit consumer wallet (funds arriving from external bank rails)
+        const { data: creditRes, error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+          _account_id: walletId,
+          _amount: amountNum,
+          _currency: currency,
+        });
+
+        if (creditErr || (creditRes && !creditRes.success)) {
+          const msg = creditErr?.message || creditRes?.error || 'Credit failed';
+          await supabase.from('pay_by_bank_intents').update({
+            status: 'failed', failure_reason: msg,
+          }).eq('id', intent_id);
+          await supabase.from('payments').update({ status: 'Rejected' }).eq('payment_id', paymentId);
+          await supabase.from('pisp_consents').update({ status: 'Rejected' }).eq('consent_id', intent.consent_id);
+          await supabase.rpc('trigger_webhooks', {
+            _event_type: 'pay_by_bank.failed',
+            _event_data: JSON.stringify({ intent_id, payment_id: paymentId, status: 'failed', reason: 'wallet_credit_failed' }),
+          });
+          return new Response(JSON.stringify({ error: 'wallet_credit_failed', message: msg }), {
+            status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        await supabase.from('transactions').insert([{
+          user_id,
+          account_id: walletId,
+          amount: amountNum,
+          currency,
+          credit_debit_indicator: 'Credit',
+          transaction_type: 'pay_by_bank_topup',
+          transaction_information: 'Wallet top-up via Pay-by-Bank',
+          booking_datetime: new Date().toISOString(),
+          status: 'Booked',
+          metadata: { intent_id, payment_id: paymentId, source: 'external_bank' },
+        }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
+
+        await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+        await supabase.from('payments').update({ status: 'AcceptedSettlementCompleted' }).eq('payment_id', paymentId);
+
+        await supabase.rpc('trigger_webhooks', {
+          _event_type: 'pay_by_bank.completed',
+          _event_data: JSON.stringify({
+            intent_id, payment_id: paymentId, amount: amountNum, currency,
+            target_type: 'consumer_wallet', target_account_id: walletId, status: 'completed',
+          }),
+        });
+
+        await supabase.from('app_notifications').insert({
+          user_id,
+          type: 'success',
+          title: 'Wallet Topped Up',
+          message: `Your wallet was credited ${currency} ${amountNum.toLocaleString()} via Pay-by-Bank.`,
+          icon: 'pay_by_bank',
+          metadata: { intent_id, payment_id: paymentId },
+        });
+
+        const redirectUrl = `${intent.redirect_uri}${intent.redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent_id}&payment_id=${paymentId}&status=completed&state=${encodeURIComponent(intent.state)}`;
+        return new Response(JSON.stringify({
+          status: 'completed', intent_id, payment_id: paymentId, redirect_url: redirectUrl,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // ─── Branch: MERCHANT PAY (consumer KANG wallet → merchant wallet) ───
       // Resolve consumer's primary active KANG wallet
       const { data: walletAccount } = await supabase
         .from('accounts')
@@ -200,9 +365,6 @@ Deno.serve(async (req) => {
           message: 'Consumer wallet not found. Please complete onboarding first.',
         }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-
-      const amountNum = Number(intent.amount);
-      const currency = intent.currency || 'XAF';
 
       // Mark consent Authorised + create pending payment
       await supabase.from('pisp_consents')

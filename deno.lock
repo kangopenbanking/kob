@@ -205,6 +205,7 @@
       "dependencies": [
         "npm:@eslint/js@^9.32.0",
         "npm:@hookform/resolvers@^3.10.0",
+        "npm:@phosphor-icons/react@^2.1.10",
         "npm:@playwright/test@^1.59.1",
         "npm:@radix-ui/react-accordion@^1.2.11",
         "npm:@radix-ui/react-alert-dialog@^1.1.14",
@@ -240,6 +241,7 @@
         "npm:@tanstack/react-query@^5.83.0",
         "npm:@testing-library/jest-dom@^6.9.1",
         "npm:@testing-library/react@^16.3.2",
+        "npm:@types/canvas-confetti@^1.9.0",
         "npm:@types/dompurify@^3.0.5",
         "npm:@types/js-yaml@^4.0.9",
         "npm:@types/node@^22.16.5",
@@ -250,6 +252,7 @@
         "npm:ajv@^8.20.0",
         "npm:autoprefixer@^10.4.21",
         "npm:bcryptjs@^3.0.2",
+        "npm:canvas-confetti@^1.9.4",
         "npm:class-variance-authority@~0.7.1",
         "npm:clsx@^2.1.1",
         "npm:cmdk@^1.1.1",
