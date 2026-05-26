@@ -20,6 +20,7 @@ type RecipientType = 'phone' | 'account' | 'name' | 'rib' | 'iban';
 const CustomerTransfer: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
