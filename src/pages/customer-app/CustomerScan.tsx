@@ -43,7 +43,7 @@ const CustomerScan: React.FC = () => {
 
   // Receive tab state
   const [receiveAmount, setReceiveAmount] = useState('');
-  const userAccountId = profile?.kang_id || accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
+  const userAccountId = user?.kangId || accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
   /* ─── Scan handler — ref-based to avoid stale closures ─── */
   const handleScanDetected = useCallback((data: any) => {
