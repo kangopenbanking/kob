@@ -76,11 +76,7 @@ Deno.serve(async (req) => {
             status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
-        const userClient = createClient(supabaseUrl, anonKey, {
-          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-          global: { headers: { Authorization: `Bearer ${jwt}` } },
-        });
-        const { data: authData, error: authErr } = await userClient.auth.getUser();
+        const { data: authData, error: authErr } = await supabase.auth.getUser(jwt);
         if (authErr || !authData?.user) {
           console.warn('[pay-by-bank] create_intent auth failed', authErr);
           return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Please sign in again before starting Pay by Bank.' }), {
@@ -218,11 +214,7 @@ Deno.serve(async (req) => {
       // Require authenticated user for state-changing payment authorization
       const authHeader = req.headers.get('Authorization') || '';
       const jwt = authHeader.replace('Bearer ', '');
-      const userClient = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-        global: { headers: { Authorization: `Bearer ${jwt}` } },
-      });
-      const { data: authData, error: authErr } = await userClient.auth.getUser();
+      const { data: authData, error: authErr } = await supabase.auth.getUser(jwt);
       if (authErr || !authData?.user) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -523,11 +515,7 @@ Deno.serve(async (req) => {
       // Require authenticated user for state-changing payment rejection
       const authHeader = req.headers.get('Authorization') || '';
       const jwt = authHeader.replace('Bearer ', '');
-      const userClient = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-        global: { headers: { Authorization: `Bearer ${jwt}` } },
-      });
-      const { data: authData, error: authErr } = await userClient.auth.getUser();
+      const { data: authData, error: authErr } = await supabase.auth.getUser(jwt);
       if (authErr || !authData?.user) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
