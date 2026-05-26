@@ -169,6 +169,10 @@ const CustomerTransfer: React.FC = () => {
     const raw = e.target.value;
     if (recipientType === 'rib') setRecipient(formatRibDisplay(raw));
     else if (recipientType === 'iban') setRecipient(formatIbanDisplay(raw));
+    else if (recipientType === 'account') {
+      // Auto-uppercase KANG IDs for consistent server-side lookup
+      setRecipient(/^kang-/i.test(raw) ? raw.toUpperCase() : raw);
+    }
     else setRecipient(raw);
 
     // For name type: clear selected state and trigger debounced search
