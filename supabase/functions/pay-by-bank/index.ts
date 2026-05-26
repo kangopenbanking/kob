@@ -115,13 +115,16 @@ Deno.serve(async (req) => {
       const { error: consentErr } = await supabase.from('pisp_consents').insert({
         consent_id: consentId,
         client_id: merchant?.id ?? resolvedCustomerUserId ?? 'consumer',
+        user_id: resolvedCustomerUserId,
+        payment_type: 'domestic',
         status: 'AwaitingAuthorisation',
-        creditor_account: creditor_account ? JSON.stringify({ identification: creditor_account }) : '{}',
-        creditor_name: creditor_name || resolvedMerchantName,
-        instructed_amount: JSON.stringify({ amount: String(amount), currency: currency || 'XAF' }),
-        currency_of_transfer: currency || 'XAF',
+        creditor: {
+          name: creditor_name || resolvedMerchantName,
+          ...(creditor_account ? { identification: creditor_account } : {}),
+        },
+        instructed_amount: { amount: String(amount), currency: currency || 'XAF' },
         expires_at: expiresAt,
-        risk: JSON.stringify({ payment_context: target_type === 'consumer_wallet' ? 'wallet_topup' : 'pay_by_bank' }),
+        risk: { payment_context: target_type === 'consumer_wallet' ? 'wallet_topup' : 'pay_by_bank' },
       });
 
       if (consentErr) {
