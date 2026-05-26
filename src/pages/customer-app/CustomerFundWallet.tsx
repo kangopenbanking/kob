@@ -16,6 +16,7 @@ import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { PayByBankLogo } from '@/components/PayByBankLogo';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -323,8 +324,8 @@ const CustomerFundWallet: React.FC = () => {
               onClick={handlePayByBankStart}
               className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary/40 bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
-                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-white">
+                <PayByBankLogo className="h-7 w-7" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">{tr('Pay by Bank (Instant)')}</p>
@@ -573,8 +574,8 @@ const CustomerFundWallet: React.FC = () => {
         ) : step === 'pay_by_bank' ? (
           <motion.div key="pay_by_bank" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
             <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-primary/5">
-                <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-white">
+                <PayByBankLogo className="h-6 w-6" />
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">{tr('Pay by Bank — Instant Top-up')}</p>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { PayByBankLogo } from '@/components/PayByBankLogo';
 
 type Intent = {
   id: string;
@@ -89,9 +90,10 @@ export default function PayByBankApproval() {
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
 
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 flex flex-col items-center gap-2">
+          <PayByBankLogo className="h-12 w-12" />
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm">
-            <Shield className="h-3.5 w-3.5" /> Payment Authorization
+            <Shield className="h-3.5 w-3.5" /> {tr('Pay by Bank Authorization')}
           </div>
         </div>
 

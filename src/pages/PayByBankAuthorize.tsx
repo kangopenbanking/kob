@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { PayByBankLogo } from '@/components/PayByBankLogo';
 
 type Intent = {
   id: string;
@@ -148,6 +149,7 @@ export default function PayByBankAuthorize() {
             <Shield className="h-4 w-4" />
             <span className="text-sm font-medium">{tr('Secure Payment Authorization')}</span>
           </div>
+          <PayByBankLogo className="h-14 w-14 mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-foreground">{tr('Kang Open Banking')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{tr('Pay by Bank')}</p>
         </div>
