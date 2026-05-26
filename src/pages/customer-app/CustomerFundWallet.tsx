@@ -599,6 +599,67 @@ const CustomerFundWallet: React.FC = () => {
               </div>
             </div>
 
+            {pbbStep === 'bank' ? (
+              <>
+                <div className="rounded-2xl bg-muted/50 p-4 space-y-1">
+                  <p className="text-xs font-semibold text-foreground">{tr('Choose your bank')}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {tr('Search the listed banks below. If your bank is not listed, use Link an Account so support can validate availability before transfer initiation.')}
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder={tr('Search listed banks...')} value={pbbBankSearch} onChange={(e) => setPbbBankSearch(e.target.value)} className="h-11 rounded-xl pl-9" />
+                </div>
+
+                <div className="flex flex-col gap-1.5 max-h-[44vh] overflow-y-auto">
+                  {banksLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-xs text-muted-foreground">{tr('Fetching listed banks...')}</p>
+                    </div>
+                  ) : filteredPbbBanks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-2 rounded-2xl border border-dashed border-border bg-muted/30">
+                      <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-xs font-semibold text-foreground">{tr('Bank not listed')}</p>
+                      <p className="max-w-xs text-center text-[11px] text-muted-foreground">{tr('Check the spelling or connect the account from Linked Accounts so the bank can be reviewed.')}</p>
+                      <Button asChild variant="outline" className="mt-2 rounded-xl h-9 text-xs">
+                        <Link to="/app/linked-accounts">{tr('Open Linked Accounts')}</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    filteredPbbBanks.map((bank) => (
+                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
+                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <Building2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{bank.source === 'kob' ? tr('KOB Network') : bank.source === 'flutterwave' ? tr('Partner network') : tr('Listed bank directory')}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+            {selectedPbbBank && (
+              <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground truncate">{selectedPbbBank.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{tr('Selected funding bank')}</p>
+                </div>
+                <button onClick={() => setPbbStep('bank')} className="text-[10px] font-bold text-primary">{tr('Change')}</button>
+              </div>
+            )}
+
             <div className="flex flex-col items-center gap-2 rounded-3xl bg-primary p-8">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-foreground/60">{tr('Top-up Amount')}</p>
               <div className="flex items-baseline gap-1">
@@ -647,6 +708,8 @@ const CustomerFundWallet: React.FC = () => {
             <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
               <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
             </p>
+              </>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
