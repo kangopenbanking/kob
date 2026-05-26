@@ -253,7 +253,102 @@ Deno.serve(async (req) => {
         });
       }
 
-      // ─── REAL MONEY MOVEMENT (consumer KANG wallet → merchant wallet) ───
+      const targetType = intent.target_type === 'consumer_wallet' ? 'consumer_wallet' : 'merchant';
+      const amountNum = Number(intent.amount);
+      const currency = intent.currency || 'XAF';
+
+      // ─── Branch: CONSUMER WALLET TOP-UP (PISP funding from external bank) ───
+      if (targetType === 'consumer_wallet') {
+        const walletId = intent.target_account_id;
+        if (!walletId) {
+          return new Response(JSON.stringify({ error: 'no_target_account' }), {
+            status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const paymentId = `PAY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+        await supabase.from('pisp_consents')
+          .update({ status: 'Authorised', user_id })
+          .eq('consent_id', intent.consent_id);
+        await supabase.from('payments').insert({
+          payment_id: paymentId,
+          consent_id: intent.consent_id,
+          status: 'AcceptedSettlementInProcess',
+          payment_type: 'wallet_topup',
+          instructed_amount: JSON.stringify({ amount: String(amountNum), currency }),
+          creditor_account: JSON.stringify({ identification: walletId, scheme: 'KANG_WALLET' }),
+          debtor_account: JSON.stringify({ identification: debtor_account || 'external_bank', scheme: 'BANK' }),
+        });
+
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'authorized',
+          customer_user_id: user_id,
+          debtor_account: debtor_account || null,
+        }).eq('id', intent_id);
+
+        // Credit consumer wallet (funds arriving from external bank rails)
+        const { data: creditRes, error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+          _account_id: walletId,
+          _amount: amountNum,
+          _currency: currency,
+        });
+
+        if (creditErr || (creditRes && !creditRes.success)) {
+          const msg = creditErr?.message || creditRes?.error || 'Credit failed';
+          await supabase.from('pay_by_bank_intents').update({
+            status: 'failed', failure_reason: msg,
+          }).eq('id', intent_id);
+          await supabase.from('payments').update({ status: 'Rejected' }).eq('payment_id', paymentId);
+          await supabase.from('pisp_consents').update({ status: 'Rejected' }).eq('consent_id', intent.consent_id);
+          await supabase.rpc('trigger_webhooks', {
+            _event_type: 'pay_by_bank.failed',
+            _event_data: JSON.stringify({ intent_id, payment_id: paymentId, status: 'failed', reason: 'wallet_credit_failed' }),
+          });
+          return new Response(JSON.stringify({ error: 'wallet_credit_failed', message: msg }), {
+            status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        await supabase.from('transactions').insert([{
+          user_id,
+          account_id: walletId,
+          amount: amountNum,
+          currency,
+          credit_debit_indicator: 'Credit',
+          transaction_type: 'pay_by_bank_topup',
+          transaction_information: 'Wallet top-up via Pay-by-Bank',
+          booking_datetime: new Date().toISOString(),
+          status: 'Booked',
+          metadata: { intent_id, payment_id: paymentId, source: 'external_bank' },
+        }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
+
+        await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+        await supabase.from('payments').update({ status: 'AcceptedSettlementCompleted' }).eq('payment_id', paymentId);
+
+        await supabase.rpc('trigger_webhooks', {
+          _event_type: 'pay_by_bank.completed',
+          _event_data: JSON.stringify({
+            intent_id, payment_id: paymentId, amount: amountNum, currency,
+            target_type: 'consumer_wallet', target_account_id: walletId, status: 'completed',
+          }),
+        });
+
+        await supabase.from('app_notifications').insert({
+          user_id,
+          type: 'success',
+          title: 'Wallet Topped Up',
+          message: `Your wallet was credited ${currency} ${amountNum.toLocaleString()} via Pay-by-Bank.`,
+          icon: 'pay_by_bank',
+          metadata: { intent_id, payment_id: paymentId },
+        });
+
+        const redirectUrl = `${intent.redirect_uri}${intent.redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent_id}&payment_id=${paymentId}&status=completed&state=${encodeURIComponent(intent.state)}`;
+        return new Response(JSON.stringify({
+          status: 'completed', intent_id, payment_id: paymentId, redirect_url: redirectUrl,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // ─── Branch: MERCHANT PAY (consumer KANG wallet → merchant wallet) ───
       // Resolve consumer's primary active KANG wallet
       const { data: walletAccount } = await supabase
         .from('accounts')
@@ -270,9 +365,6 @@ Deno.serve(async (req) => {
           message: 'Consumer wallet not found. Please complete onboarding first.',
         }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-
-      const amountNum = Number(intent.amount);
-      const currency = intent.currency || 'XAF';
 
       // Mark consent Authorised + create pending payment
       await supabase.from('pisp_consents')
