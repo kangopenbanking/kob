@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User, Landmark, Smartphone, Mail, History, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ type RecipientType = 'phone' | 'account' | 'name' | 'rib' | 'iban';
 const CustomerTransfer: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
@@ -65,6 +66,26 @@ const CustomerTransfer: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+
+  // Consume prefill from QR scan / pay-link deep-link (one-shot)
+  const prefillConsumedRef = useRef(false);
+  useEffect(() => {
+    const prefill = (location.state as any)?.prefill;
+    if (!prefill || prefillConsumedRef.current) return;
+    prefillConsumedRef.current = true;
+    if (prefill.recipient) {
+      const raw = String(prefill.recipient);
+      setRecipient(raw);
+      // KANG- IDs are routed via "account" recipient type
+      if (/^KANG-/i.test(raw)) setRecipientType('account');
+      else if (/^\+?\d{7,}$/.test(raw)) setRecipientType('phone');
+      else setRecipientType('account');
+    }
+    if (prefill.amount) setAmount(String(prefill.amount));
+    window.history.replaceState({}, '');
+  }, [location.state]);
+
+
 
   // Debounced name search
   const searchByName = useCallback(async (query: string) => {

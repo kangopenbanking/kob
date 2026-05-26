@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ScanLine, Keyboard, QrCode, Camera, Share2, Copy, CheckCircle2, X, RefreshCw, Store, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ type Tab = 'scan' | 'receive';
 const CustomerScan: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
   const { data: profile } = useCustomerProfile(user?.id);
@@ -42,7 +43,7 @@ const CustomerScan: React.FC = () => {
 
   // Receive tab state
   const [receiveAmount, setReceiveAmount] = useState('');
-  const userAccountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
+  const userAccountId = user?.kangId || accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
   /* ─── Scan handler — ref-based to avoid stale closures ─── */
   const handleScanDetected = useCallback((data: any) => {
@@ -61,11 +62,12 @@ const CustomerScan: React.FC = () => {
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
       toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
-    } else if (data.type === 'kob_pay' && data.account) {
-      setScanResult({ account: data.account, amount: data.amount });
+    } else if (data.type === 'kob_pay' && (data.account || data.kang_id)) {
+      const acct = data.account || data.kang_id;
+      setScanResult({ account: acct, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
-      toast.success('QR Code scanned successfully!');
+      toast.success(data.name ? `Pay ${data.name}` : 'QR Code scanned successfully!');
     } else {
       toast.error('Invalid QR code format');
     }
@@ -79,6 +81,19 @@ const CustomerScan: React.FC = () => {
       handleScanDetected({ type: 'kob_pay', account: rawValue });
     }
   }, [handleScanDetected]);
+
+  // Consume prefillQR from deep-links (e.g. PayMerchantSlug → /app/scan)
+  const prefillConsumedRef = useRef(false);
+  useEffect(() => {
+    const prefill = (location.state as any)?.prefillQR;
+    if (!prefill || prefillConsumedRef.current) return;
+    prefillConsumedRef.current = true;
+    handleScanDetected(prefill);
+    // Clear navigation state so a re-render doesn't re-trigger
+    window.history.replaceState({}, '');
+  }, [location.state, handleScanDetected]);
+
+
 
   const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
 
