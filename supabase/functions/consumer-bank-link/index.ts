@@ -1,7 +1,6 @@
-// Consumer Bank Link — AISP-style first-party account linking
-// Lets a consumer link an external bank (registered in `banks`) to their KOB profile.
-// Backed by the existing `bank_psu_links` table. Sandbox flow auto-authorises;
-// production flow would redirect the user to the bank for SCA before activation.
+// Consumer Bank Link — verified first-party account linking
+// Bank accounts must be verified against a KOB connector/account source or
+// Flutterwave account resolution before being persisted as usable funding sources.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -10,6 +9,15 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+
+const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const cleanAccount = (value: unknown) => String(value || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase().slice(0, 34);
+const cleanName = (value: unknown) => String(value || '').trim().replace(/\s+/g, ' ').slice(0, 120);
+const namesMatch = (expected: string, actual: string) => {
+  const a = cleanName(expected).toLowerCase();
+  const b = cleanName(actual).toLowerCase();
+  return !!a && !!b && (a.includes(b) || b.includes(a));
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
