@@ -272,7 +272,7 @@ Deno.serve(async (req) => {
       }
       const authedUserId = authData.user.id;
 
-      const { intent_id, debtor_account } = body;
+      const { intent_id, debtor_account, bank_verification } = body;
       const user_id = authedUserId; // Always use authenticated user, never trust body
       if (!intent_id) {
         return new Response(JSON.stringify({ error: 'intent_id required' }), {
