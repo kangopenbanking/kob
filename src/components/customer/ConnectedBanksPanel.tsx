@@ -189,9 +189,9 @@ export const ConnectedBanksPanel: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle>Connect a Bank</DialogTitle>
+            <DialogTitle>{selectedBank ? 'Verify Bank Account' : 'Connect a Bank'}</DialogTitle>
             <DialogDescription>
-              Securely link your bank via Open Banking. You will be redirected to your bank to authorise read access to your accounts.
+              Select a listed bank, enter your real account details, and the bank must verify them before the account is linked.
             </DialogDescription>
           </DialogHeader>
 
