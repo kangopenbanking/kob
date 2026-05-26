@@ -601,13 +601,12 @@ const CustomerLinkedAccounts: React.FC = () => {
       if (!formData[f.key]?.trim()) { toast.error(`Enter ${f.label.toLowerCase()}`); return; }
     }
 
-    // RIB validation
+    // Verified bank account validation
     if (selectedType.key === 'bank_account') {
-      const digits = (formData.account_number || '').replace(/\D/g, '');
-      if (digits.length !== 23) { toast.error('RIB must be exactly 23 digits'); return; }
-      const { valid } = validateRibChecksum(digits);
-      if (!valid) { toast.error('Invalid RIB checksum'); return; }
-      if (!formData.bank_code) { toast.error('Please select your bank'); return; }
+      const raw = (formData.account_number || '').replace(/[^0-9A-Za-z]/g, '');
+      if (!selectedVerifiedBank) { toast.error('Select a listed bank'); return; }
+      if (raw.length < 6 || raw.length > 34) { toast.error('Enter a valid bank account number'); return; }
+      if (!formData.account_name?.trim()) { toast.error('Enter the account holder name registered with the bank'); return; }
     }
 
     // IBAN validation
@@ -648,6 +647,29 @@ const CustomerLinkedAccounts: React.FC = () => {
       const last4 = rawNumber.slice(-4);
       const bank = CM_BANKS.find(b => b.code === formData.bank_code);
       const accountType = selectedType.key === 'bank_iban' ? 'bank_account' : selectedType.key;
+
+      if (selectedType.key === 'bank_account') {
+        const { data, error } = await supabase.functions.invoke('consumer-bank-link', {
+          body: {
+            action: 'link_account',
+            provider: selectedVerifiedBank!.provider,
+            bank_id: selectedVerifiedBank!.provider === 'flutterwave' ? selectedVerifiedBank!.code : selectedVerifiedBank!.id,
+            bank_name: selectedVerifiedBank!.display_name,
+            account_number: rawNumber,
+            account_name: formData.account_name,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.message || data.detail || data.error);
+        toast.success(data?.status === 'pending_review' ? 'Verified bank account submitted for admin approval' : 'Verified bank account linked successfully');
+        queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['linked-account-requests'] });
+        setShowAdd(false);
+        setSelectedType(null);
+        setFormData({});
+        setValidationMsg(null);
+        return;
+      }
 
       let metadata: any = undefined;
       if (selectedType.key === 'bank_account') {
