@@ -537,23 +537,13 @@ const CustomerLinkedAccounts: React.FC = () => {
     setValidationMsg(null);
 
     if (selectedType.key === 'bank_account') {
-      const formatted = formatRibInput(value);
+      const formatted = value.replace(/[^0-9A-Za-z\-\s]/g, '').toUpperCase().substring(0, 34);
       setFormData(prev => ({ ...prev, account_number: formatted }));
-      const digits = formatted.replace(/\D/g, '');
-      if (digits.length === 23) {
-        const { valid, expectedKey } = validateRibChecksum(digits);
-        if (valid) {
-          const bankCode = digits.substring(0, 5);
-          const bank = CM_BANKS.find(b => b.code === bankCode);
-          setValidationMsg({ text: `✓ Valid RIB${bank ? ` — ${bank.name}` : ''}`, isError: false });
-          if (bank && !formData.bank_code) {
-            setFormData(prev => ({ ...prev, bank_code: bankCode }));
-          }
-        } else {
-          setValidationMsg({ text: `Invalid RIB key: expected ${expectedKey}, got ${digits.substring(21, 23)}`, isError: true });
-        }
-      } else if (digits.length > 0) {
-        setValidationMsg({ text: `${digits.length}/23 digits`, isError: false });
+      const clean = formatted.replace(/[^0-9A-Za-z]/g, '');
+      if (clean.length >= 6) {
+        setValidationMsg({ text: 'Ready for bank verification', isError: false });
+      } else if (clean.length > 0) {
+        setValidationMsg({ text: 'Enter the account number shown by your bank', isError: false });
       }
     } else if (selectedType.key === 'bank_iban') {
       const formatted = formatIbanInput(value);
