@@ -103,14 +103,6 @@ const CustomerScan: React.FC = () => {
     }
   }, [handleScanDetected]);
 
-  const handleRescan = useCallback(() => {
-    setParseHint(null);
-    setScanResult(null);
-    setMerchantQR(null);
-    resetProcessedRef.current?.();
-  }, []);
-  const resetProcessedRef = useRef<(() => void) | null>(null);
-
   // Consume prefillQR from deep-links (e.g. PayMerchantSlug → /app/scan)
   const prefillConsumedRef = useRef(false);
   useEffect(() => {
@@ -118,13 +110,10 @@ const CustomerScan: React.FC = () => {
     if (!prefill || prefillConsumedRef.current) return;
     prefillConsumedRef.current = true;
     handleScanDetected(prefill);
-    // Clear navigation state so a re-render doesn't re-trigger
     window.history.replaceState({}, '');
   }, [location.state, handleScanDetected]);
 
-
-
-  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess && !parseHint;
 
   const {
     videoRef: qrVideoRef,
@@ -139,6 +128,24 @@ const CustomerScan: React.FC = () => {
     enabled: scanEnabled,
     containerId: 'customer-qr-scanner',
   });
+
+  const handleRescan = useCallback(() => {
+    setParseHint(null);
+    setScanResult(null);
+    setMerchantQR(null);
+    setPayAmount('');
+    resetProcessed();
+  }, [resetProcessed]);
+
+  // Surface camera errors to telemetry once per session.
+  const cameraErrLoggedRef = useRef(false);
+  useEffect(() => {
+    if (qrCameraError && !cameraErrLoggedRef.current) {
+      cameraErrLoggedRef.current = true;
+      const code = /denied|permission/i.test(qrCameraError) ? 'QR_SCAN_CAMERA_DENIED' : 'QR_SCAN_NO_CAMERA';
+      logQrEvent({ event_type: 'scan', status: 'error', surface: 'CustomerScan', error_code: code, error_message: qrCameraError });
+    }
+  }, [qrCameraError]);
 
   /* ─── Handlers ─── */
   const handleManualSubmit = () => {
