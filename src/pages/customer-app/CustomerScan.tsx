@@ -62,11 +62,12 @@ const CustomerScan: React.FC = () => {
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
       toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
-    } else if (data.type === 'kob_pay' && data.account) {
-      setScanResult({ account: data.account, amount: data.amount });
+    } else if (data.type === 'kob_pay' && (data.account || data.kang_id)) {
+      const acct = data.account || data.kang_id;
+      setScanResult({ account: acct, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
-      toast.success('QR Code scanned successfully!');
+      toast.success(data.name ? `Pay ${data.name}` : 'QR Code scanned successfully!');
     } else {
       toast.error('Invalid QR code format');
     }
