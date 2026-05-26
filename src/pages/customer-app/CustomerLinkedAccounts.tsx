@@ -17,6 +17,7 @@ import { CM_BANKS } from '@/constants/cameroon-banks';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { KangIdBadge } from '@/components/identity/KangIdBadge';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
