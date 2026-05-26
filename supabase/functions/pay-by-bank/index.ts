@@ -219,6 +219,7 @@ Deno.serve(async (req) => {
       const authHeader = req.headers.get('Authorization') || '';
       const jwt = authHeader.replace('Bearer ', '');
       const userClient = createClient(supabaseUrl, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
         global: { headers: { Authorization: `Bearer ${jwt}` } },
       });
       const { data: authData, error: authErr } = await userClient.auth.getUser();
@@ -523,6 +524,7 @@ Deno.serve(async (req) => {
       const authHeader = req.headers.get('Authorization') || '';
       const jwt = authHeader.replace('Bearer ', '');
       const userClient = createClient(supabaseUrl, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
         global: { headers: { Authorization: `Bearer ${jwt}` } },
       });
       const { data: authData, error: authErr } = await userClient.auth.getUser();
