@@ -205,6 +205,8 @@ const CustomerTransfer: React.FC = () => {
       case 'rib': return 'DOMESTIC_RIB';
       case 'iban': return 'IBAN';
       case 'name': return 'NAME';
+      case 'account':
+        return /^KANG-/i.test(recipient.trim()) ? 'KANG_ID' : 'LOCAL_BANK';
       default: return 'LOCAL_BANK';
     }
   };
