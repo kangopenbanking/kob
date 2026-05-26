@@ -669,8 +669,8 @@ const CustomerFundWallet: React.FC = () => {
                     filteredPbbBanks.map((bank) => (
                       <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                          <Building2 className="h-4 w-4 text-primary" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                          <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
@@ -681,7 +681,14 @@ const CustomerFundWallet: React.FC = () => {
                     ))
                   )}
                 </div>
+
+                <Button asChild variant="outline" className="w-full rounded-2xl h-11 text-xs font-bold">
+                  <Link to="/app/linked-accounts">
+                    <LinkIcon className="h-4 w-4 mr-2" /> {tr("Don't see your bank? Link an Account")}
+                  </Link>
+                </Button>
               </>
+
             ) : (
               <>
             {selectedPbbBank && (
