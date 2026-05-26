@@ -340,6 +340,21 @@ const CustomerFundWallet: React.FC = () => {
   const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
   const filteredPbbBanks = banks.filter(b => b.name.toLowerCase().includes(pbbBankSearch.toLowerCase()));
 
+  // SECURITY: A Pay-by-Bank top-up may only originate from a bank the user has linked.
+  const selectedPbbBankLinked = React.useMemo(() => {
+    if (!selectedPbbBank) return null;
+    const list = linkedAccounts as any[];
+    if (selectedPbbBank.source === 'kob') {
+      const m = list.find((a) => a.institution_id === selectedPbbBank.code && (a.status ?? 'active') === 'active');
+      if (m) return m;
+    }
+    const needle = selectedPbbBank.name.toLowerCase();
+    return list.find((a) =>
+      (a.status ?? 'active') === 'active' &&
+      ((a.provider_name || '').toLowerCase().includes(needle) || needle.includes((a.provider_name || '').toLowerCase()))
+    ) || null;
+  }, [selectedPbbBank, linkedAccounts]);
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
