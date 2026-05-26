@@ -67,7 +67,7 @@ const CustomerFundWallet: React.FC = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>('source');
+  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'pay_by_bank' | 'processing' | 'result'>('source');
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
