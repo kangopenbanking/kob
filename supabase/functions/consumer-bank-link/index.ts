@@ -95,61 +95,145 @@ Deno.serve(async (req) => {
       return json({ links: links || [] });
     }
 
-    // ─── INIT a new link ───
-    if (action === 'init') {
-      const bankId = body.bank_id as string;
-      if (!bankId) return json({ error: 'missing_bank_id' }, 400);
+    // ─── LINK verified bank account ───
+    if (action === 'link_account') {
+      const bankId = String(body.bank_id || '');
+      const provider = String(body.provider || 'kob').toLowerCase();
+      const accountNumber = cleanAccount(body.account_number);
+      const submittedName = cleanName(body.account_name);
+      const branchCode = cleanAccount(body.branch_code).slice(0, 12);
 
-      const { data: bank } = await supa.from('banks').select('id, display_name, status').eq('id', bankId).maybeSingle();
-      if (!bank || bank.status !== 'active') return json({ error: 'bank_unavailable' }, 404);
+      if (!accountNumber || accountNumber.length < 6) return json({ error: 'invalid_account_number', message: 'Enter a valid bank account number.' }, 400);
+      if (!submittedName) return json({ error: 'missing_account_name', message: 'Enter the account holder name registered with the bank.' }, 400);
+      if (!['kob', 'flutterwave'].includes(provider)) return json({ error: 'invalid_provider', message: 'Bank linking must use Kang Open Banking or Flutterwave verification.' }, 400);
 
-      const { data: existing } = await supa
-        .from('bank_psu_links')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .eq('bank_id', bankId)
-        .maybeSingle();
+      let verifiedName = '';
+      let bankName = '';
+      let externalBankCode = bankId;
+      let verificationProvider = provider;
+      let metadata: Record<string, unknown> = {};
 
-      if (existing?.status === 'active') return json({ link_id: existing.id, status: 'active', message: 'Already linked' });
+      if (provider === 'kob') {
+        if (!isUuid(bankId)) return json({ error: 'invalid_bank_id', message: 'Select a Kang Open Banking partner bank.' }, 400);
+        const { data: bank } = await supa.from('banks').select('id, display_name, status, bank_code, swift_bic').eq('id', bankId).maybeSingle();
+        if (!bank || bank.status !== 'active') return json({ error: 'bank_unavailable', message: 'This bank is not available for verified linking.' }, 404);
 
-      const linkId = existing?.id ?? crypto.randomUUID();
-      const upsert = {
-        id: linkId,
+        const { data: bankAccount } = await supa
+          .from('bank_sourced_accounts')
+          .select('id, external_account_id, identification_value, status, currency, account_type, nickname, bank_customers(name)')
+          .eq('bank_id', bankId)
+          .eq('identification_value', accountNumber)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        const { data: kobAccount } = bankAccount ? { data: null } : await supa
+          .from('accounts')
+          .select('id, account_id, account_holder_name, is_active, currency, account_type, account_subtype, institution_id')
+          .eq('institution_id', bankId)
+          .eq('identification_value', accountNumber)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        verifiedName = cleanName((bankAccount as any)?.bank_customers?.name || (kobAccount as any)?.account_holder_name || '');
+        if (!verifiedName || !namesMatch(verifiedName, submittedName)) {
+          return json({ error: 'bank_verification_failed', message: 'The bank could not verify these account details. Check the bank, account number, and account holder name.' }, 422);
+        }
+
+        bankName = bank.display_name;
+        externalBankCode = bank.id;
+        metadata = {
+          verification_provider: 'kob',
+          bank_id: bank.id,
+          bank_code: bank.bank_code,
+          swift_bic: bank.swift_bic,
+          source_account_id: (bankAccount as any)?.id || (kobAccount as any)?.id,
+          source: bankAccount ? 'bank_sourced_accounts' : 'accounts',
+        };
+      } else {
+        const flutterwaveSecretKey = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+        if (!flutterwaveSecretKey) return json({ error: 'verification_unavailable', message: 'Flutterwave bank verification is not configured.' }, 503);
+        if (!bankId || bankId.length > 20) return json({ error: 'invalid_bank_code', message: 'Select a Flutterwave-supported bank.' }, 400);
+
+        const fwRes = await fetch('https://api.flutterwave.com/v3/accounts/resolve', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${flutterwaveSecretKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_number: accountNumber, account_bank: bankId }),
+        });
+        const fwData = await fwRes.json().catch(() => ({}));
+        if (!fwRes.ok || fwData?.status !== 'success') {
+          return json({ error: 'bank_verification_failed', message: fwData?.message || 'The bank could not verify these account details.' }, 422);
+        }
+
+        verifiedName = cleanName(fwData?.data?.account_name || '');
+        if (!namesMatch(verifiedName, submittedName)) {
+          return json({ error: 'bank_name_mismatch', message: 'The account holder name does not match the bank record.' }, 422);
+        }
+        bankName = cleanName(body.bank_name) || `Flutterwave Bank ${bankId}`;
+        externalBankCode = bankId;
+        metadata = {
+          verification_provider: 'flutterwave',
+          flutterwave_bank_code: bankId,
+          resolved_account_number: fwData?.data?.account_number,
+        };
+      }
+
+      const now = new Date().toISOString();
+      const accountData = {
         user_id: user.id,
-        bank_id: bankId,
-        status: 'pending',
+        institution_id: provider === 'kob' && isUuid(bankId) ? bankId : null,
+        account_type: 'bank_account',
+        account_number: accountNumber,
+        account_name: verifiedName,
+        provider_name: bankName,
+        provider_type: 'bank',
+        last4: accountNumber.slice(-4),
+        is_active: true,
+        status: 'active',
+        verification_status: 'verified',
+        verification_provider: verificationProvider,
+        verified_at: now,
+        external_bank_code: externalBankCode,
+        external_account_ref: accountNumber,
+        verification_reference: crypto.randomUUID(),
+        metadata: { ...metadata, branch_code: branchCode || null, linked_via: 'consumer-bank-link' },
       };
-      const { error: upErr } = await supa.from('bank_psu_links').upsert(upsert, { onConflict: 'user_id,bank_id' });
-      if (upErr) return json({ error: 'init_failed', detail: upErr.message }, 500);
 
-      // Build authorization redirect (production: real bank SCA URL via bank_connector_instances)
-      const baseUrl = Deno.env.get('SUPABASE_URL')!;
-      const authorizationUrl = `${baseUrl}/functions/v1/consumer-bank-link?action=authorize_callback&link_id=${linkId}`;
+      const { data: activeAccounts } = await supa.from('customer_linked_accounts').select('id').eq('user_id', user.id).eq('is_active', true).eq('status', 'active');
+      const hasPrimary = (activeAccounts || []).length > 0;
+      const { data: existing } = await supa
+        .from('customer_linked_accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('account_type', 'bank_account')
+        .eq('verification_provider', verificationProvider)
+        .eq('external_bank_code', externalBankCode)
+        .eq('external_account_ref', accountNumber)
+        .eq('is_active', true)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (existing) return json({ error: 'already_linked', message: 'This verified bank account is already linked.' }, 409);
 
-      return json({
-        link_id: linkId,
-        bank_id: bankId,
-        bank_name: bank.display_name,
-        status: 'pending',
-        authorization_url: authorizationUrl,
-      });
-    }
+      const { data: removals } = await supa.from('customer_linked_accounts').select('id').eq('user_id', user.id).eq('status', 'removed').limit(1);
+      if (removals?.length) {
+        const { error } = await supa.from('linked_account_change_requests').insert({
+          user_id: user.id,
+          request_type: 'add_after_removal',
+          requested_account_data: { ...accountData, is_primary: !hasPrimary },
+          status: 'pending',
+        });
+        if (error) return json({ error: 'request_failed', detail: error.message }, 500);
+        return json({ status: 'pending_review', bank_name: bankName, account_name: verifiedName, last4: accountNumber.slice(-4) });
+      }
 
-    // ─── CONFIRM (sandbox auto-authorise) ───
-    if (action === 'confirm') {
-      const linkId = body.link_id as string;
-      if (!linkId) return json({ error: 'missing_link_id' }, 400);
+      const { data: inserted, error: insertErr } = await supa
+        .from('customer_linked_accounts')
+        .insert({ ...accountData, is_primary: !hasPrimary })
+        .select('id, provider_name, account_name, last4')
+        .single();
+      if (insertErr) return json({ error: 'link_failed', detail: insertErr.message }, 500);
 
-      const { data: link } = await supa.from('bank_psu_links').select('id, user_id, status').eq('id', linkId).maybeSingle();
-      if (!link || link.user_id !== user.id) return json({ error: 'not_found' }, 404);
-
-      const { error: updErr } = await supa
-        .from('bank_psu_links')
-        .update({ status: 'active', linked_at: new Date().toISOString() })
-        .eq('id', linkId);
-      if (updErr) return json({ error: 'confirm_failed', detail: updErr.message }, 500);
-
-      return json({ link_id: linkId, status: 'active' });
+      await supa.from('profiles').update({ linked_account_type: 'bank_account' }).eq('id', user.id);
+      return json({ status: 'active', account: inserted });
     }
 
     // ─── REVOKE ───
