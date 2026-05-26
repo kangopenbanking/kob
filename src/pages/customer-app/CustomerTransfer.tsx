@@ -205,8 +205,12 @@ const CustomerTransfer: React.FC = () => {
       case 'rib': return 'DOMESTIC_RIB';
       case 'iban': return 'IBAN';
       case 'name': return 'NAME';
-      case 'account':
-        return /^KANG-/i.test(recipient.trim()) ? 'KANG_ID' : 'LOCAL_BANK';
+      case 'account': {
+        const r = recipient.trim();
+        // Accept "KANG-XXXXXXXX" or bare 6-12 digit numbers as Kang ID
+        if (/^KANG-/i.test(r) || /^\d{6,12}$/.test(r)) return 'KANG_ID';
+        return 'LOCAL_BANK';
+      }
       default: return 'LOCAL_BANK';
     }
   };
