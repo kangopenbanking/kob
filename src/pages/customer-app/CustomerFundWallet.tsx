@@ -71,6 +71,9 @@ const CustomerFundWallet: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
+  const [pbbAmount, setPbbAmount] = useState('');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'amount' | 'redirecting'>('tile');
+  const [pbbProcessing, setPbbProcessing] = useState(false);
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
