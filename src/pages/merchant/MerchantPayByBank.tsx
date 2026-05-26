@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CreditCard, Copy, RefreshCw, Code2 } from "lucide-react";
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { PayByBankLogo } from '@/components/PayByBankLogo';
 
 export default function MerchantPayByBank() {
   const tr = useHarvestedT('merchant');
@@ -76,7 +77,7 @@ $intent = $kob->payByBank->createIntent([
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> {tr('Pay by Bank')}</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><PayByBankLogo className="h-7 w-7" /> {tr('Pay by Bank')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{tr('Accept direct bank payments with redirect-based SCA')}</p>
         </div>
         <Button variant="outline" size="sm" onClick={loadMerchantAndIntents}><RefreshCw className="h-4 w-4 mr-2" /> {tr('Refresh')}</Button>
