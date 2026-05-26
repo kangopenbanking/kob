@@ -67,6 +67,26 @@ const CustomerTransfer: React.FC = () => {
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
 
+  // Consume prefill from QR scan / pay-link deep-link (one-shot)
+  const prefillConsumedRef = useRef(false);
+  useEffect(() => {
+    const prefill = (location.state as any)?.prefill;
+    if (!prefill || prefillConsumedRef.current) return;
+    prefillConsumedRef.current = true;
+    if (prefill.recipient) {
+      const raw = String(prefill.recipient);
+      setRecipient(raw);
+      // KANG- IDs are routed via "account" recipient type
+      if (/^KANG-/i.test(raw)) setRecipientType('account');
+      else if (/^\+?\d{7,}$/.test(raw)) setRecipientType('phone');
+      else setRecipientType('account');
+    }
+    if (prefill.amount) setAmount(String(prefill.amount));
+    window.history.replaceState({}, '');
+  }, [location.state]);
+
+
+
   // Debounced name search
   const searchByName = useCallback(async (query: string) => {
     if (query.length < 2 || !user) {
