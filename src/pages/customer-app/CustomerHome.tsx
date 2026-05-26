@@ -468,7 +468,7 @@ const CustomerHome: React.FC = () => {
                   variants={staggerItem}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => go(item.path)}
-                  className={`flex-shrink-0 w-[78%] snap-start flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left border-2 ${item.borderColor} shadow-sm`}
+                  className={`flex-shrink-0 w-[calc(50%-6px)] snap-start flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left border-2 ${item.borderColor} shadow-sm`}
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/60">
                     <ItemIcon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
