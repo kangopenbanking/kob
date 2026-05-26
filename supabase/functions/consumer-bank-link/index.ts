@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
       const now = new Date().toISOString();
       const accountData = {
         user_id: user.id,
-        institution_id: provider === 'kob' && isUuid(bankId) ? bankId : null,
+        institution_id: null,
         account_type: 'bank_account',
         account_number: accountNumber,
         account_name: verifiedName,
