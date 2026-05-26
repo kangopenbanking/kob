@@ -884,7 +884,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </p>
           )}
           {selectedType?.key === 'bank_account' && (
-            <p className="text-[10px] text-muted-foreground">{tr('Format: Bank (5) - Branch (5) - Account (11) - Key (2)')}</p>
+                    <p className="text-[10px] text-muted-foreground">{tr('The selected bank must confirm the account number and holder name before linking.')}</p>
           )}
         </div>
       );
