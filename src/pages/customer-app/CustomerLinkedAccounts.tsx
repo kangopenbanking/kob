@@ -925,6 +925,9 @@ const CustomerLinkedAccounts: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Open Banking — Connected Banks (AISP) */}
+      <ConnectedBanksPanel />
+
       {/* Admin approval warning */}
       {hasRemovals && !atLimit && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
