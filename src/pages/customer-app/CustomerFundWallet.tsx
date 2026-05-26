@@ -770,9 +770,23 @@ const CustomerFundWallet: React.FC = () => {
               </p>
             </div>
 
+            {selectedPbbBank && !selectedPbbBankLinked && (
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+                <p className="text-xs font-semibold text-destructive">{tr('This bank is not linked to your account')}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {tr('For your security, you can only pay from a bank account you have already linked and verified. Link your account at')} <span className="font-semibold text-foreground">{selectedPbbBank.name}</span> {tr('to continue.')}
+                </p>
+                <Button asChild variant="outline" className="rounded-xl h-9 text-xs w-full">
+                  <Link to={`/app/linked-accounts?bank=${encodeURIComponent(selectedPbbBank.name)}`}>
+                    <LinkIcon className="h-3.5 w-3.5 mr-2" /> {tr('Link this Bank')}
+                  </Link>
+                </Button>
+              </div>
+            )}
+
             <Button
               onClick={handlePayByBankSubmit}
-              disabled={pbbProcessing || pbbStep === 'redirecting' || !Number(pbbAmount)}
+              disabled={pbbProcessing || pbbStep === 'redirecting' || !Number(pbbAmount) || !selectedPbbBankLinked}
               className="w-full rounded-2xl h-12 text-sm font-bold"
             >
               {pbbProcessing || pbbStep === 'redirecting' ? (
@@ -783,7 +797,7 @@ const CustomerFundWallet: React.FC = () => {
             </Button>
 
             <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
+              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking · Linked account verified')}
             </p>
               </>
             )}
