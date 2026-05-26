@@ -75,14 +75,53 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = body.action as string;
 
-    // ─── LIST banks available for linking ───
+    // ─── LIST banks available for verified linking ───
     if (action === 'list_banks') {
       const { data: banks } = await supa
         .from('banks')
-        .select('id, display_name, status')
+        .select('id, display_name, status, bank_code, swift_bic')
         .eq('status', 'active')
         .order('display_name');
-      return json({ banks: banks || [] });
+      const directory = (banks || []).map((b: any) => ({
+        id: b.id,
+        code: b.id,
+        display_name: b.display_name,
+        provider: 'kob',
+        bank_code: b.bank_code,
+        swift_bic: b.swift_bic,
+        status: b.status,
+      }));
+
+      const flutterwaveSecretKey = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+      if (flutterwaveSecretKey) {
+        try {
+          const fwRes = await fetch('https://api.flutterwave.com/v3/banks/CM', {
+            headers: { Authorization: `Bearer ${flutterwaveSecretKey}`, 'Content-Type': 'application/json' },
+          });
+          const fwData = await fwRes.json().catch(() => ({}));
+          if (fwRes.ok && Array.isArray(fwData?.data)) {
+            for (const bank of fwData.data) {
+              const name = cleanName(bank.name);
+              if (!name) continue;
+              const duplicate = directory.some((b) => b.display_name.toLowerCase() === name.toLowerCase());
+              if (!duplicate) {
+                directory.push({
+                  id: `flutterwave:${bank.code}`,
+                  code: String(bank.code),
+                  display_name: name,
+                  provider: 'flutterwave',
+                  bank_code: String(bank.code),
+                  status: 'active',
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Flutterwave bank list unavailable', err);
+        }
+      }
+
+      return json({ banks: directory });
     }
 
     // ─── LIST current links ───
@@ -249,7 +288,7 @@ Deno.serve(async (req) => {
       return json({ link_id: linkId, status: 'revoked' });
     }
 
-    return json({ error: 'invalid_action', message: 'Use list_banks | list_links | init | confirm | revoke' }, 400);
+    return json({ error: 'invalid_action', message: 'Use list_banks | list_links | link_account | revoke' }, 400);
   } catch (err: any) {
     console.error('consumer-bank-link error:', err);
     return json({ error: 'internal_error', detail: err?.message }, 500);
