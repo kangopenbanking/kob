@@ -159,7 +159,7 @@ export const ConnectedBanksPanel: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
-                    {link.banks?.display_name || 'Bank'}
+                    {link.provider_name || 'Bank'}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {link.status === 'active' ? (
@@ -175,7 +175,7 @@ export const ConnectedBanksPanel: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => handleRevoke(link.id, link.banks?.display_name)}
+                onClick={() => handleRevoke(link.id, link.provider_name)}
                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted hover:bg-destructive/10 transition-colors"
                 aria-label="Disconnect bank"
               >
