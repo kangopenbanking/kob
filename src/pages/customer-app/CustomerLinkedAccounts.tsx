@@ -1088,7 +1088,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             {!selectedType ? (
               <motion.div key="types" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                 {accountTypes.map((t) => (
-                  <button key={t.key} onClick={() => { setSelectedType(t); setFormData({}); setValidationMsg(null); }}
+                  <button key={t.key} onClick={() => handleSelectType(t)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-border p-3 text-left hover:bg-muted/50 transition-colors">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${t.color}`}>
                       <t.icon className={`h-5 w-5 ${t.iconColor}`} strokeWidth={1.5} />
