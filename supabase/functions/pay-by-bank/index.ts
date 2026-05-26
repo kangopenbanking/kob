@@ -107,6 +107,54 @@ Deno.serve(async (req) => {
         resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
+      // ─── SECURITY: For consumer wallet top-ups, the user MUST have a
+      // verified linked account at the chosen source bank. Without this
+      // check, anyone could pick any bank and credit themselves. ─────
+      let linkedAccountId: string | null = null;
+      let linkedLast4: string | null = null;
+      if (target_type === 'consumer_wallet') {
+        if (!source_bank || (!source_bank.name && !source_bank.code)) {
+          return new Response(JSON.stringify({
+            error: 'source_bank_required',
+            message: 'Please select the bank you are paying from.',
+          }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        let matched: any = null;
+        if (source_bank.network === 'kob' && source_bank.code) {
+          const { data } = await supabase
+            .from('customer_linked_accounts')
+            .select('id, account_number, last4, provider_name, institution_id')
+            .eq('user_id', resolvedCustomerUserId)
+            .eq('status', 'active')
+            .eq('institution_id', source_bank.code)
+            .limit(1);
+          matched = data?.[0] || null;
+        }
+        if (!matched && source_bank.name) {
+          const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
+          const { data } = await supabase
+            .from('customer_linked_accounts')
+            .select('id, account_number, last4, provider_name, institution_id')
+            .eq('user_id', resolvedCustomerUserId)
+            .eq('status', 'active')
+            .ilike('provider_name', `%${safeName}%`)
+            .limit(1);
+          matched = data?.[0] || null;
+        }
+
+        if (!matched) {
+          return new Response(JSON.stringify({
+            error: 'bank_not_linked',
+            action: 'link_account',
+            message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        linkedAccountId = matched.id;
+        linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+      }
+
       // Create PISP consent. Consumer wallet top-ups are initiated by the
       // platform PISP client, not by the end-user UUID, because pisp_consents
       // enforces client_id against registered TPP clients.
@@ -155,7 +203,9 @@ Deno.serve(async (req) => {
           description,
           expires_at: expiresAt,
           customer_email,
-          metadata: source_bank ? { source_bank } : {},
+          metadata: source_bank
+            ? { source_bank, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
+            : {},
         })
         .select('id')
         .single();
@@ -222,7 +272,7 @@ Deno.serve(async (req) => {
       }
       const authedUserId = authData.user.id;
 
-      const { intent_id, debtor_account } = body;
+      const { intent_id, debtor_account, bank_verification } = body;
       const user_id = authedUserId; // Always use authenticated user, never trust body
       if (!intent_id) {
         return new Response(JSON.stringify({ error: 'intent_id required' }), {
@@ -268,6 +318,43 @@ Deno.serve(async (req) => {
             status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+
+        // ─── SECURITY: Verify the user actually controls the source bank
+        // account by matching the linked account stored on the intent and
+        // requiring confirmation of its last 4 digits. ─────────────────
+        const intentMeta = (intent.metadata || {}) as any;
+        const expectedLinkedId = intentMeta.linked_account_id as string | undefined;
+        const expectedLast4 = intentMeta.linked_last4 as string | undefined;
+        if (!expectedLinkedId) {
+          return new Response(JSON.stringify({
+            error: 'bank_not_linked',
+            action: 'link_account',
+            message: 'Source bank is not linked. Please link this bank account before authorising.',
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // Confirm the linked account still belongs to this user and is active
+        const { data: linkRow } = await supabase
+          .from('customer_linked_accounts')
+          .select('id, user_id, status, last4, account_number')
+          .eq('id', expectedLinkedId)
+          .maybeSingle();
+        if (!linkRow || linkRow.user_id !== user_id || linkRow.status !== 'active') {
+          return new Response(JSON.stringify({
+            error: 'linked_account_invalid',
+            message: 'The selected bank account is no longer linked or active. Please link it again.',
+          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        const submittedLast4 = String(bank_verification?.last4 || '').trim();
+        const trueLast4 = String(expectedLast4 || linkRow.last4 || (linkRow.account_number ? String(linkRow.account_number).slice(-4) : '')).trim();
+        if (!/^\d{4}$/.test(submittedLast4) || !trueLast4 || submittedLast4 !== trueLast4) {
+          return new Response(JSON.stringify({
+            error: 'bank_verification_failed',
+            message: 'Bank account verification failed. Enter the last 4 digits of your linked bank account.',
+          }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
 
         const paymentId = `PAY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
         await supabase.from('pisp_consents')

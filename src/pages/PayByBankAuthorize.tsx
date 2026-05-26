@@ -25,7 +25,7 @@ type Intent = {
   state: string;
 };
 
-type Step = "loading" | "login" | "approve" | "processing" | "success" | "rejected" | "error" | "expired";
+type Step = "loading" | "login" | "approve" | "bank_auth" | "processing" | "success" | "rejected" | "error" | "expired";
 
 export default function PayByBankAuthorize() {
   const tr = useHarvestedT('customer');
@@ -40,6 +40,8 @@ export default function PayByBankAuthorize() {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [bankLast4, setBankLast4] = useState("");
+  const [bankAuthError, setBankAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!intentId) { setStep("error"); return; }
@@ -84,15 +86,35 @@ export default function PayByBankAuthorize() {
     setStep("approve");
   };
 
-  const handleApprove = async () => {
+  const handleApprove = () => {
+    // Move to the bank's own authentication step. The actual authorize call
+    // only fires after the user proves ownership of the source bank account.
+    setBankAuthError(null);
+    setBankLast4("");
+    setStep("bank_auth");
+  };
+
+  const handleBankConfirm = async () => {
+    if (!/^\d{4}$/.test(bankLast4)) {
+      setBankAuthError("Enter the last 4 digits of your bank account.");
+      return;
+    }
+    setBankAuthError(null);
     setStep("processing");
     const { data, error } = await supabase.functions.invoke("pay-by-bank", {
-      body: { action: "authorize", intent_id: intentId, user_id: userId },
+      body: {
+        action: "authorize",
+        intent_id: intentId,
+        user_id: userId,
+        bank_verification: { last4: bankLast4 },
+      },
     });
 
     if (error || data?.error) {
-      toast.error(data?.error || "Authorization failed");
-      setStep("error");
+      const msg = data?.message || data?.error || "Authorization failed";
+      setBankAuthError(msg);
+      setStep("bank_auth");
+      toast.error(msg);
       return;
     }
 
@@ -239,6 +261,54 @@ export default function PayByBankAuthorize() {
                   <p className="text-xs text-center text-muted-foreground">
                     By approving, you authorize Kang Open Banking to debit your account for this payment.
                   </p>
+                </motion.div>
+              )}
+
+              {/* BANK AUTH — user must authenticate with their bank by
+                  confirming the last 4 digits of the linked account. */}
+              {step === "bank_auth" && intent && (
+                <motion.div key="bank_auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+                  <div className="text-center space-y-2">
+                    <div className="h-14 w-14 mx-auto rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-7 w-7 text-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-foreground">{tr('Confirm with your bank')}</h2>
+                    <p className="text-xs text-muted-foreground">
+                      {tr('For your security, enter the last 4 digits of the bank account you are paying from. We will match this against your linked account.')}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-muted/50 p-4 space-y-1">
+                    <p className="text-[11px] text-muted-foreground">{tr('Authorising payment of')}</p>
+                    <p className="text-lg font-bold text-foreground">{intent.currency} {Number(intent.amount).toLocaleString()}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="last4">{tr('Last 4 digits of your bank account')}</Label>
+                    <Input
+                      id="last4"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={bankLast4}
+                      onChange={(e) => { setBankLast4(e.target.value.replace(/\D/g, '').slice(0, 4)); setBankAuthError(null); }}
+                      placeholder="••••"
+                      className="text-center tracking-[0.5em] text-lg font-bold"
+                      onKeyDown={(e) => e.key === 'Enter' && handleBankConfirm()}
+                    />
+                    {bankAuthError && (
+                      <p className="text-xs text-destructive">{bankAuthError}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setStep('approve')} className="flex-1" size="lg">
+                      {tr('Back')}
+                    </Button>
+                    <Button onClick={handleBankConfirm} className="flex-1" size="lg" disabled={bankLast4.length !== 4}>
+                      <Shield className="h-4 w-4 mr-2" /> {tr('Confirm & Pay')}
+                    </Button>
+                  </div>
                 </motion.div>
               )}
 
