@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { PayByBankLogo } from '@/components/PayByBankLogo';
+import { CM_BANKS } from '@/constants/cameroon-banks';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -55,7 +56,7 @@ const providerTypeColors = (providerType: string, selected: boolean) => {
 interface BankOption {
   code: string;
   name: string;
-  source: 'kob' | 'flutterwave';
+  source: 'kob' | 'flutterwave' | 'directory';
 }
 
 const CustomerFundWallet: React.FC = () => {
@@ -73,8 +74,10 @@ const CustomerFundWallet: React.FC = () => {
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [pbbAmount, setPbbAmount] = useState('');
-  const [pbbStep, setPbbStep] = useState<'tile' | 'amount' | 'redirecting'>('tile');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'redirecting'>('tile');
   const [pbbProcessing, setPbbProcessing] = useState(false);
+  const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
+  const [pbbBankSearch, setPbbBankSearch] = useState('');
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
@@ -164,6 +167,11 @@ const CustomerFundWallet: React.FC = () => {
       console.warn('[FundWallet] Flutterwave banks fetch failed:', err);
     }
 
+    CM_BANKS.forEach((bank) => {
+      const exists = allBanks.some((b) => b.code === bank.code || b.name.toLowerCase() === bank.name.toLowerCase());
+      if (!exists) allBanks.push({ code: bank.code, name: bank.name, source: 'directory' });
+    });
+
     setBanks(allBanks);
     setBanksLoading(false);
   }, []);
@@ -186,7 +194,8 @@ const CustomerFundWallet: React.FC = () => {
 
   const handlePayByBankStart = () => {
     if (!primaryAccount?.id) { toast.error('No wallet account found. Please contact support.'); return; }
-    setPbbStep('amount');
+    fetchBanks();
+    setPbbStep('bank');
     setStep('pay_by_bank');
   };
 
@@ -194,6 +203,7 @@ const CustomerFundWallet: React.FC = () => {
     const amt = Number(pbbAmount);
     if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
     if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
+    if (!selectedPbbBank) { toast.error('Please select your bank'); return; }
     setPbbProcessing(true);
     try {
       const state = crypto.randomUUID();
@@ -208,6 +218,11 @@ const CustomerFundWallet: React.FC = () => {
           redirect_uri: returnUrl,
           state,
           description: 'KANG Wallet top-up',
+          source_bank: {
+            code: selectedPbbBank.code,
+            name: selectedPbbBank.name,
+            network: selectedPbbBank.source,
+          },
         },
       });
       if (error) throw error;
@@ -219,7 +234,7 @@ const CustomerFundWallet: React.FC = () => {
       window.location.assign(data.authorization_url);
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Could not start Pay-by-Bank'));
-      setPbbStep('amount');
+      setPbbStep(selectedPbbBank ? 'amount' : 'bank');
     } finally {
       setPbbProcessing(false);
     }
@@ -287,12 +302,13 @@ const CustomerFundWallet: React.FC = () => {
       if (method === 'bank_transfer') { setStep('bank_select'); setSelectedBank(null); }
       else setStep('source');
     }
-    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); }
+    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); setSelectedPbbBank(null); }
     else if (step === 'result') { setStep('source'); setFundingResult(null); setSelectedBank(null); }
     else navigate(-1);
   };
 
   const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
+  const filteredPbbBanks = banks.filter(b => b.name.toLowerCase().includes(pbbBankSearch.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -439,7 +455,7 @@ const CustomerFundWallet: React.FC = () => {
               ) : (
                 <>
                   {filteredBanks.some(b => b.source === 'kob') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">{tr('🏦 KOB Partner Banks')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">{tr('KOB Partner Banks')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'kob').map((bank) => (
                     <button key={`kob-${bank.code}`} onClick={() => handleBankSelect(bank)}
@@ -458,7 +474,7 @@ const CustomerFundWallet: React.FC = () => {
                   ))}
 
                   {filteredBanks.some(b => b.source === 'flutterwave') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('🌍 Other Banks via Flutterwave')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('Other Banks via Flutterwave')}</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'flutterwave').map((bank) => (
                     <button key={`fw-${bank.code}`} onClick={() => handleBankSelect(bank)}
@@ -471,6 +487,25 @@ const CustomerFundWallet: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
                         <p className="text-[10px] text-muted-foreground">{tr('Standard • Flutterwave')}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+
+                  {filteredBanks.some(b => b.source === 'directory') && (
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">{tr('Listed Banks')}</p>
+                  )}
+                  {filteredBanks.filter(b => b.source === 'directory').map((bank) => (
+                    <button key={`directory-${bank.code}`} onClick={() => handleBankSelect(bank)}
+                      className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
+                        selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
+                      )}>
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{tr('Listed bank directory')}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
@@ -583,6 +618,67 @@ const CustomerFundWallet: React.FC = () => {
               </div>
             </div>
 
+            {pbbStep === 'bank' ? (
+              <>
+                <div className="rounded-2xl bg-muted/50 p-4 space-y-1">
+                  <p className="text-xs font-semibold text-foreground">{tr('Choose your bank')}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {tr('Search the listed banks below. If your bank is not listed, use Link an Account so support can validate availability before transfer initiation.')}
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder={tr('Search listed banks...')} value={pbbBankSearch} onChange={(e) => setPbbBankSearch(e.target.value)} className="h-11 rounded-xl pl-9" />
+                </div>
+
+                <div className="flex flex-col gap-1.5 max-h-[44vh] overflow-y-auto">
+                  {banksLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-xs text-muted-foreground">{tr('Fetching listed banks...')}</p>
+                    </div>
+                  ) : filteredPbbBanks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-2 rounded-2xl border border-dashed border-border bg-muted/30">
+                      <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-xs font-semibold text-foreground">{tr('Bank not listed')}</p>
+                      <p className="max-w-xs text-center text-[11px] text-muted-foreground">{tr('Check the spelling or connect the account from Linked Accounts so the bank can be reviewed.')}</p>
+                      <Button asChild variant="outline" className="mt-2 rounded-xl h-9 text-xs">
+                        <Link to="/app/linked-accounts">{tr('Open Linked Accounts')}</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    filteredPbbBanks.map((bank) => (
+                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
+                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <Building2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{bank.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{bank.source === 'kob' ? tr('KOB Network') : bank.source === 'flutterwave' ? tr('Partner network') : tr('Listed bank directory')}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+            {selectedPbbBank && (
+              <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground truncate">{selectedPbbBank.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{tr('Selected funding bank')}</p>
+                </div>
+                <button onClick={() => setPbbStep('bank')} className="text-[10px] font-bold text-primary">{tr('Change')}</button>
+              </div>
+            )}
+
             <div className="flex flex-col items-center gap-2 rounded-3xl bg-primary p-8">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-foreground/60">{tr('Top-up Amount')}</p>
               <div className="flex items-baseline gap-1">
@@ -631,6 +727,8 @@ const CustomerFundWallet: React.FC = () => {
             <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
               <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
             </p>
+              </>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>

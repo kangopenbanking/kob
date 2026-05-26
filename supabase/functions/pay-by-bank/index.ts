@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
         creditor_account,
         creditor_name,
         customer_email,
+        source_bank,
         target_type: rawTargetType,
         target_account_id,
       } = body;
@@ -153,6 +154,7 @@ Deno.serve(async (req) => {
           description,
           expires_at: expiresAt,
           customer_email,
+          metadata: source_bank ? { source_bank } : {},
         })
         .select('id')
         .single();
