@@ -218,19 +218,95 @@ export default function PaymentCheckout() {
     );
   }
 
+  // Customer (P2P) pay link — render Kang Wallet payment flow
+  if (customerLink) {
+    const amountNum = Number(customerAmount || 0);
+    const canPay = customerLink.receiver?.kang_id && amountNum > 0;
+
+    const handleCustomerPay = () => {
+      if (!canPay) {
+        toast({ title: 'Enter an amount', description: 'Please enter the amount you want to send.', variant: 'destructive' });
+        return;
+      }
+      const prefill = {
+        recipient: customerLink.receiver.kang_id,
+        amount: amountNum,
+        note: customerLink.name,
+      };
+      if (walletSession) {
+        navigate('/app/transfer', { state: { prefill } });
+      } else {
+        // Send the user to login, then forward to /app/transfer with prefill.
+        sessionStorage.setItem('post_login_redirect', '/app/transfer');
+        sessionStorage.setItem('post_login_transfer_prefill', JSON.stringify(prefill));
+        navigate('/app/login');
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle>{customerLink.name}</CardTitle>
+            {customerLink.description && <CardDescription>{customerLink.description}</CardDescription>}
+            <p className="text-xs text-muted-foreground mt-2">
+              Pay {customerLink.receiver?.full_name || 'a Kang user'}
+            </p>
+            {!customerLink.is_open_amount && customerLink.amount && (
+              <div className="text-3xl font-bold text-primary mt-3">
+                {new Intl.NumberFormat('fr-FR').format(Number(customerLink.amount))} {customerLink.currency}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {customerLink.is_open_amount && (
+              <div>
+                <Label htmlFor="customer-amount">Amount ({customerLink.currency})</Label>
+                <Input
+                  id="customer-amount"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  placeholder="Enter amount"
+                  value={customerAmount}
+                  onChange={(e) => setCustomerAmount(e.target.value)}
+                />
+              </div>
+            )}
+            <Button className="w-full h-12 rounded-2xl text-sm font-bold" onClick={handleCustomerPay} disabled={!canPay}>
+              <Wallet className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              Pay with Kang Wallet
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Secure peer-to-peer payment · Powered by Kang
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!link || link.status !== 'active') {
+    const errorCopy =
+      resolveError === 'expired' ? 'This payment link has expired.'
+      : resolveError === 'inactive' ? 'This payment link has been deactivated by the owner.'
+      : 'This payment link is unavailable or no longer active.';
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h2 className="text-xl font-semibold">Payment Link Unavailable</h2>
-            <p className="text-muted-foreground mt-2">This payment link is no longer active or has expired.</p>
+            <p className="text-muted-foreground mt-2">{errorCopy}</p>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   if (result === 'success') {
     return (
