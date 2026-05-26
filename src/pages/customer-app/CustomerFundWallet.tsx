@@ -58,6 +58,7 @@ interface BankOption {
   code: string;
   name: string;
   source: 'kob' | 'flutterwave' | 'directory';
+  logoUrl?: string | null;
 }
 
 const CustomerFundWallet: React.FC = () => {
