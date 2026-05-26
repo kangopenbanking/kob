@@ -82,12 +82,16 @@ serve(async (req) => {
         </tr></thead>
         <tbody>${itemsHtml}</tbody>
       </table>
-      <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:12px;padding:20px;text-align:right;margin-top:16px;">
+      <div style="background:#1e3a8a;border-radius:12px;padding:20px;text-align:right;margin-top:16px;">
         <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0 0 4px;">Amount Due</p>
         <p style="color:#fff;font-size:28px;font-weight:800;margin:0;">${Number(invoice.amount).toLocaleString()} ${invoice.currency}</p>
       </div>
       ${invoice.notes ? `<p style="margin-top:16px;font-size:13px;color:#666;font-style:italic;border-left:3px solid #e2e8f0;padding-left:12px;">${invoice.notes}</p>` : ''}
-      <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid #f0f0f0;">
+      <div style="text-align:center;margin:28px 0 8px;">
+        <a href="https://info.kangfintechsolutions.com/pay/invoice/${invoice.id}" style="display:inline-block;background:#1e3a8a;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;letter-spacing:0.3px;">Pay this invoice</a>
+        <p style="margin:10px 0 0;font-size:11px;color:#999;">Opens the Kang wallet — pay securely with your PIN</p>
+      </div>
+      <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid #f0f0f0;">
         <p style="font-size:12px;color:#999;margin:0;">Sent via <strong>Kang Open Banking</strong></p>
       </div>
     </div>
