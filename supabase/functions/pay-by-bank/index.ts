@@ -203,7 +203,9 @@ Deno.serve(async (req) => {
           description,
           expires_at: expiresAt,
           customer_email,
-          metadata: source_bank ? { source_bank } : {},
+          metadata: source_bank
+            ? { source_bank, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
+            : {},
         })
         .select('id')
         .single();
