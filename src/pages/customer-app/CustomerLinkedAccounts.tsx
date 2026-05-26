@@ -905,6 +905,9 @@ const CustomerLinkedAccounts: React.FC = () => {
         </button>
       </div>
 
+      {/* KANG ID — permanent identifier, tap to copy */}
+      {user?.kangId && <KangIdBadge kangId={user.kangId} variant="card" />}
+
       {/* Account limit banner */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-start gap-3 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
