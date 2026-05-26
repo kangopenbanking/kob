@@ -286,6 +286,7 @@ const CustomerFundWallet: React.FC = () => {
       if (method === 'bank_transfer') { setStep('bank_select'); setSelectedBank(null); }
       else setStep('source');
     }
+    else if (step === 'pay_by_bank') { setStep('source'); setPbbStep('tile'); setPbbAmount(''); }
     else if (step === 'result') { setStep('source'); setFundingResult(null); setSelectedBank(null); }
     else navigate(-1);
   };
