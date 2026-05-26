@@ -161,13 +161,20 @@ const CustomerScan: React.FC = () => {
 
   const handlePayNow = () => {
     if (!scanResult) return;
-    if (!payAmount || Number(payAmount) <= 0) { toast.error('Enter a valid amount'); return; }
+    if (!payAmount || Number(payAmount) <= 0) {
+      logQrEvent({ event_type: 'payment', status: 'error', surface: 'CustomerScan', error_code: 'QR_PAY_INVALID_AMOUNT' });
+      toast.error('Enter a valid amount');
+      return;
+    }
     setShowPin(true);
   };
 
   const executePayment = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
+    const attempt = payAttempt + 1;
+    setPayAttempt(attempt);
+    const t0 = Date.now();
 
     if (merchantQR) {
       setProcessing(true);
@@ -178,16 +185,26 @@ const CustomerScan: React.FC = () => {
             merchant_id: merchantQR.merchant_id,
             amount: finalAmount,
             order_id: merchantQR.order_id,
-            // v2: forward signed payload so the server can verify HMAC + canonical amount
             decoded: merchantQR.sig ? merchantQR : undefined,
           },
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
         if (data?.error) {
+          logQrEvent({
+            event_type: 'payment', status: attempt > 1 ? 'retry' : 'error',
+            surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+            error_code: 'QR_PAY_EDGE_ERROR', error_message: data.message || data.error,
+            merchant_id: merchantQR.merchant_id, amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+          });
           toast.error(data.message || data.error);
           return;
         }
+        logQrEvent({
+          event_type: 'payment', status: 'success', surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+          merchant_id: merchantQR.merchant_id, amount: finalAmount, currency: data.currency || 'XAF',
+          latency_ms: Date.now() - t0, attempt,
+        });
         setPaymentSuccess({
           merchantName: merchantQR.merchant_name || 'Merchant',
           amount: finalAmount || data.amount,
@@ -197,18 +214,30 @@ const CustomerScan: React.FC = () => {
           timestamp: new Date().toISOString(),
         });
         setScanResult(null);
+        setPayAttempt(0);
         await Promise.all([
           queryClient.refetchQueries({ queryKey: ['customer-accounts'] }),
           queryClient.refetchQueries({ queryKey: ['account-balances'] }),
         ]);
       } catch (err: any) {
-        toast.error(extractEdgeFunctionError(err, 'Payment failed'));
+        const msg = extractEdgeFunctionError(err, 'Payment failed');
+        logQrEvent({
+          event_type: 'payment', status: attempt > 1 ? 'retry' : 'error',
+          surface: 'CustomerScan', qr_type: 'kob_pos_pay',
+          error_code: 'QR_PAY_EDGE_ERROR', error_message: msg,
+          merchant_id: merchantQR.merchant_id, amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+        });
+        toast.error(msg);
       } finally {
         setProcessing(false);
       }
       return;
     }
 
+    logQrEvent({
+      event_type: 'payment', status: 'success', surface: 'CustomerScan', qr_type: 'kob_pay',
+      amount: finalAmount, latency_ms: Date.now() - t0, attempt,
+    });
     navigate('/app/transfer', {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
