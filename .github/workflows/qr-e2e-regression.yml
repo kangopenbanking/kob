@@ -1,0 +1,57 @@
+name: QR E2E Regression (post-deploy gate)
+
+# Re-runs the QR-focused regression checks after every deployment.
+# A failure here BLOCKS the release (workflow exits non-zero, and downstream
+# promotion jobs depend on its success).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/pages/customer-app/CustomerScan.tsx'
+      - 'src/pages/customer-app/CustomerTransfer.tsx'
+      - 'src/pages/customer-app/CustomerRequest.tsx'
+      - 'src/hooks/useQRScanner.ts'
+      - 'src/lib/emvco-qr.ts'
+      - 'src/lib/qr-telemetry.ts'
+      - 'src/test/qr-system-regression.test.ts'
+      - 'supabase/functions/pos-qr-payment/**'
+      - 'supabase/functions/merchant-qr/**'
+      - 'supabase/functions/merchants-qr-directory/**'
+      - 'supabase/functions/merchants-qr-get/**'
+      - 'supabase/functions/qr-initiate-payment/**'
+      - 'supabase/functions/qr-cancel-payment/**'
+      - 'supabase/functions/qr-telemetry-alert/**'
+      - '.github/workflows/qr-e2e-regression.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *' # post-deploy + drift safety net
+
+jobs:
+  qr-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: TypeScript clean build
+        run: bunx tsc --noEmit -p tsconfig.app.json
+      - name: QR regression suite (vitest)
+        run: bunx vitest run src/test/qr-system-regression.test.ts src/test/consumer-app-regression.test.ts --reporter=verbose
+      - name: QR live edge probes (public)
+        env:
+          AUDIT_BASE: https://wdzkzeahdtxlynetndqw.supabase.co
+        run: node scripts/qr-smoke-probes.mjs
+
+  release-gate:
+    runs-on: ubuntu-latest
+    needs: qr-regression
+    if: failure()
+    steps:
+      - name: Block release
+        run: |
+          echo "::error::QR regression failed — release blocked. See qr-regression job."
+          exit 1
