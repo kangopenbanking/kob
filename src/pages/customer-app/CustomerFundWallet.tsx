@@ -219,7 +219,7 @@ const CustomerFundWallet: React.FC = () => {
     setPbbProcessing(true);
     try {
       const state = crypto.randomUUID();
-      const returnUrl = `${window.location.origin}/app/fund-wallet?source=pay_by_bank`;
+      const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
       const { data, error } = await supabase.functions.invoke('pay-by-bank', {
         body: {
           action: 'create_intent',
