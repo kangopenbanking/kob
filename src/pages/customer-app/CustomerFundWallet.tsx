@@ -140,14 +140,14 @@ const CustomerFundWallet: React.FC = () => {
     try {
       const { data: kobInstitutions } = await supabase
         .from('institutions' as any)
-        .select('id, institution_name, institution_type, swift_bic_code, logo_url')
-        .eq('is_active', true)
+        .select('id, institution_name, institution_type, logo_url')
+        .eq('status', 'approved')
         .order('institution_name');
 
       if (kobInstitutions?.length) {
         kobInstitutions.forEach((inst: any) => {
           allBanks.push({
-            code: inst.swift_bic_code || inst.id,
+            code: inst.id,
             name: inst.institution_name,
             source: 'kob',
             logoUrl: inst.logo_url ?? null,
