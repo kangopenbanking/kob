@@ -23,7 +23,7 @@ const CustomerScan: React.FC = () => {
   const tr = useHarvestedT('customer');
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useCustomerAuth();
+  const { user, kangId } = useCustomerAuth();
   const { data: accounts } = useCustomerAccounts(user?.id);
   const { data: profile } = useCustomerProfile(user?.id);
 
