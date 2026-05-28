@@ -18,7 +18,53 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action } = body;
 
+    // ─── list_payment_banks ────────────────────────────────────
+    // Returns banks usable for Pay-by-Bank, tagged by rail.
+    if (action === 'list_payment_banks') {
+      const banks: Array<{ code: string; name: string; rail: 'kob' | 'flutterwave'; logo_url: string | null; bank_code?: string | null; swift_bic?: string | null }> = [];
+
+      // KOB partner banks (only approved + with healthy connector configs)
+      try {
+        const { data: kob } = await supabase
+          .from('institutions')
+          .select('id, institution_name, logo_url, status')
+          .eq('status', 'approved')
+          .order('institution_name');
+        (kob || []).forEach((i: any) => banks.push({
+          code: i.id,
+          name: i.institution_name,
+          rail: 'kob',
+          logo_url: i.logo_url || null,
+        }));
+      } catch (e) { console.warn('[pay-by-bank] kob list failed', e); }
+
+      // Flutterwave banks (Cameroon)
+      try {
+        const { data: fw } = await supabase.functions.invoke('flutterwave-list-banks', { body: { country: 'CM' } });
+        (fw?.banks || []).forEach((b: any) => {
+          // dedupe by name vs KOB
+          const exists = banks.some(x => x.name.toLowerCase() === String(b.name || '').toLowerCase());
+          if (!exists && b.code && b.name) {
+            banks.push({
+              code: String(b.code),
+              name: String(b.name),
+              rail: 'flutterwave',
+              logo_url: b.logo || b.logo_url || null,
+              bank_code: String(b.code),
+            });
+          }
+        });
+      } catch (e) { console.warn('[pay-by-bank] flutterwave list failed', e); }
+
+      return new Response(JSON.stringify({
+        banks,
+        kob_available: banks.some(b => b.rail === 'kob'),
+        flutterwave_available: banks.some(b => b.rail === 'flutterwave'),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // ─── create_intent ────────────────────────────────────────
+
     if (action === 'create_intent') {
       const {
         merchant_id,
