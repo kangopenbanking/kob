@@ -276,8 +276,54 @@ Deno.serve(async (req) => {
         return safeErrorResponse(intentErr, corsHeaders, 'create_intent');
       }
 
-      const finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
-      await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
+      // Branch authorisation URL by rail:
+      //   - KOB: internal authorize page (acts as PISP authorize endpoint;
+      //     verifies linked-account ownership).
+      //   - Flutterwave: real FW hosted bank-transfer page — user enters
+      //     their bank credentials on FW's domain and is redirected back.
+      let finalAuthUrl: string;
+      if (sourceRail === 'flutterwave' && target_type === 'consumer_wallet') {
+        try {
+          const flwTxRef = `pbb_${intent.id.replace(/-/g, '').slice(0, 16)}_${Date.now().toString().slice(-6)}`;
+          const flw = await createFlutterwaveCharge({
+            amount: Number(amount),
+            currency: currency || 'XAF',
+            channel: 'bank_transfer',
+            customer_email: customer_email || 'customer@kob.cm',
+            customer_name: creditor_name || 'KANG Customer',
+            customer_phone: '',
+            tx_ref: flwTxRef,
+            metadata: {
+              pay_by_bank_intent_id: intent.id,
+              bank_code: source_bank?.code || null,
+              bank_name: source_bank?.name || null,
+              redirect_url: redirect_uri,
+            },
+          });
+          finalAuthUrl = flw.redirect_url || `${redirect_uri}${redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent.id}&status=pending&source=pay_by_bank`;
+          await supabase.from('pay_by_bank_intents').update({
+            authorization_url: finalAuthUrl,
+            metadata: {
+              source_bank, rail: sourceRail,
+              flw_tx_ref: flwTxRef,
+              flw_provider_ref: flw.provider_ref,
+              flw_raw: flw.provider_raw,
+            },
+          }).eq('id', intent.id);
+        } catch (e: any) {
+          console.error('[pay-by-bank] flutterwave charge failed', e);
+          await supabase.from('pay_by_bank_intents').update({
+            status: 'failed', failure_reason: `flutterwave_init_failed:${e?.message || e}`,
+          }).eq('id', intent.id);
+          return new Response(JSON.stringify({
+            error: 'flutterwave_init_failed',
+            message: 'Could not start Pay-by-Bank with this bank. Please try another bank or try again later.',
+          }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      } else {
+        finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
+        await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
+      }
 
       return new Response(JSON.stringify({
         intent_id: intent.id,
@@ -286,8 +332,10 @@ Deno.serve(async (req) => {
         expires_at: expiresAt,
         status: 'awaiting_auth',
         target_type,
+        rail: sourceRail,
       }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
 
     // ─── get_intent ───────────────────────────────────────────
     if (action === 'get_intent') {
