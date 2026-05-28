@@ -155,11 +155,19 @@ Deno.serve(async (req) => {
         resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
-      // ─── SECURITY: For consumer wallet top-ups, the user MUST have a
-      // verified linked account at the chosen source bank. Without this
-      // check, anyone could pick any bank and credit themselves. ─────
+      // ─── SECURITY: For consumer wallet top-ups via the KOB rail, the
+      // user MUST have a verified linked account at the chosen source bank
+      // (sandbox banks have no live OAuth, so the linked-account check is
+      // our proof of ownership). For the Flutterwave rail, the user
+      // authenticates directly on Flutterwave's hosted page — no pre-link
+      // required, mirroring Capital One / Trustly / Token PSD2 flows. ──
       let linkedAccountId: string | null = null;
       let linkedLast4: string | null = null;
+      const sourceRail: 'kob' | 'flutterwave' | null =
+        source_bank?.network === 'flutterwave' ? 'flutterwave'
+        : source_bank?.network === 'kob' ? 'kob'
+        : null;
+
       if (target_type === 'consumer_wallet') {
         if (!source_bank || (!source_bank.name && !source_bank.code)) {
           return new Response(JSON.stringify({
@@ -168,42 +176,45 @@ Deno.serve(async (req) => {
           }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        let matched: any = null;
-        if (source_bank.network === 'kob' && source_bank.code) {
-          const { data } = await supabase
-            .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
-            .eq('user_id', resolvedCustomerUserId)
-            .eq('status', 'active')
-            .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
-            .eq('verification_status', 'verified')
-            .limit(1);
-          matched = data?.[0] || null;
-        }
-        if (!matched && source_bank.name) {
-          const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
-          const { data } = await supabase
-            .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
-            .eq('user_id', resolvedCustomerUserId)
-            .eq('status', 'active')
-            .eq('verification_status', 'verified')
-            .ilike('provider_name', `%${safeName}%`)
-            .limit(1);
-          matched = data?.[0] || null;
-        }
+        if (sourceRail === 'kob') {
+          let matched: any = null;
+          if (source_bank.code) {
+            const { data } = await supabase
+              .from('customer_linked_accounts')
+              .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
+              .eq('user_id', resolvedCustomerUserId)
+              .eq('status', 'active')
+              .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
+              .eq('verification_status', 'verified')
+              .limit(1);
+            matched = data?.[0] || null;
+          }
+          if (!matched && source_bank.name) {
+            const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
+            const { data } = await supabase
+              .from('customer_linked_accounts')
+              .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
+              .eq('user_id', resolvedCustomerUserId)
+              .eq('status', 'active')
+              .eq('verification_status', 'verified')
+              .ilike('provider_name', `%${safeName}%`)
+              .limit(1);
+            matched = data?.[0] || null;
+          }
 
-        if (!matched) {
-          return new Response(JSON.stringify({
-            error: 'bank_not_linked',
-            action: 'link_account',
-            message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
-          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
+          if (!matched) {
+            return new Response(JSON.stringify({
+              error: 'bank_not_linked',
+              action: 'link_account',
+              message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+            }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
 
-        linkedAccountId = matched.id;
-        linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+          linkedAccountId = matched.id;
+          linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+        }
       }
+
 
       // Create PISP consent. Consumer wallet top-ups are initiated by the
       // platform PISP client, not by the end-user UUID, because pisp_consents
