@@ -93,11 +93,33 @@ const CustomerFundWallet: React.FC = () => {
   useEffect(() => {
     const status = searchParams.get('status') || searchParams.get('transaction_status');
     const source = searchParams.get('source');
+    const intentId = searchParams.get('intent_id');
     if (!status && source !== 'pay_by_bank') return;
 
     queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
     queryClient.refetchQueries({ queryKey: ['account-balances'] });
     queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
+    // Reconcile Flutterwave-rail Pay-by-Bank on return
+    if (source === 'pay_by_bank' && intentId && status !== 'rejected' && status !== 'failed') {
+      (async () => {
+        try {
+          const { data } = await supabase.functions.invoke('pay-by-bank', {
+            body: { action: 'verify_external', intent_id: intentId },
+          });
+          if (data?.status === 'completed') {
+            toast.success('Wallet funded successfully. Returning to your wallet…');
+            queryClient.refetchQueries({ queryKey: ['account-balances'] });
+            setTimeout(() => navigate('/app', { replace: true }), 1500);
+            return;
+          }
+          if (data?.status === 'pending') {
+            toast.info(data.message || 'Waiting for your bank to confirm the transfer.');
+            return;
+          }
+        } catch (e) { /* fall through to status handling below */ }
+      })();
+    }
 
     if (status === 'completed' || status === 'successful') {
       toast.success('Wallet funded successfully. Returning to your wallet…');
@@ -110,6 +132,7 @@ const CustomerFundWallet: React.FC = () => {
       toast.info('Checking payment status...');
     }
   }, [searchParams, queryClient, navigate]);
+
 
   const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
