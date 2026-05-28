@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
+import { createFlutterwaveCharge } from '../_shared/gateway-adapters.ts';
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
