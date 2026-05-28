@@ -831,7 +831,119 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── verify_external (Flutterwave-rail reconciliation) ────
+    // Called by the frontend when the user returns from FW. Verifies the
+    // FW transaction by tx_ref and, on success, credits the wallet using
+    // the same atomic path as the KOB rail.
+    if (action === 'verify_external') {
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.replace('Bearer ', '');
+      const { data: authData } = await supabase.auth.getUser(jwt);
+      if (!authData?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const user_id = authData.user.id;
+
+      const { intent_id } = body;
+      if (!intent_id) {
+        return new Response(JSON.stringify({ error: 'intent_id required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const { data: intent } = await supabase
+        .from('pay_by_bank_intents').select('*').eq('id', intent_id).single();
+      if (!intent) {
+        return new Response(JSON.stringify({ error: 'intent_not_found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      if (intent.customer_user_id && intent.customer_user_id !== user_id) {
+        return new Response(JSON.stringify({ error: 'forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      if (intent.status === 'completed') {
+        return new Response(JSON.stringify({ status: 'completed', intent_id }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const meta = (intent.metadata || {}) as any;
+      const txRef = meta.flw_tx_ref as string | undefined;
+      if (!txRef) {
+        return new Response(JSON.stringify({ error: 'not_a_flutterwave_intent' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Verify with Flutterwave
+      const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+      if (!FLW_SECRET) {
+        return new Response(JSON.stringify({ error: 'flutterwave_not_configured' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`, {
+        headers: { Authorization: `Bearer ${FLW_SECRET}` },
+      });
+      const verifyData = await verifyRes.json().catch(() => ({}));
+      const flwStatus = String(verifyData?.data?.status || '').toLowerCase();
+
+      if (flwStatus !== 'successful') {
+        return new Response(JSON.stringify({
+          status: flwStatus || 'pending',
+          intent_id,
+          message: flwStatus ? `Bank reports status: ${flwStatus}` : 'Waiting for your bank to confirm the transfer.',
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Idempotent credit
+      const walletId = intent.target_account_id;
+      const amountNum = Number(intent.amount);
+      const currency = intent.currency || 'XAF';
+
+      const { data: creditRes, error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+        _account_id: walletId,
+        _amount: amountNum,
+        _currency: currency,
+      });
+      if (creditErr || (creditRes && !creditRes.success)) {
+        const msg = creditErr?.message || creditRes?.error || 'Credit failed';
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'failed', failure_reason: msg,
+        }).eq('id', intent_id);
+        return new Response(JSON.stringify({ error: 'wallet_credit_failed', message: msg }), {
+          status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      await supabase.from('transactions').insert([{
+        user_id, account_id: walletId, amount: amountNum, currency,
+        credit_debit_indicator: 'Credit', transaction_type: 'pay_by_bank_topup',
+        transaction_information: 'Wallet top-up via Pay-by-Bank (Flutterwave)',
+        booking_datetime: new Date().toISOString(), status: 'Booked',
+        metadata: { intent_id, flw_tx_ref: txRef, source: 'flutterwave_bank' },
+      }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
+
+      await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+
+      await supabase.from('app_notifications').insert({
+        user_id, type: 'success',
+        title: 'Wallet Topped Up',
+        message: `Your wallet was credited ${currency} ${amountNum.toLocaleString()} via Pay-by-Bank.`,
+        icon: 'pay_by_bank', metadata: { intent_id, flw_tx_ref: txRef },
+      }).then(() => {}, () => {});
+
+      return new Response(JSON.stringify({ status: 'completed', intent_id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
+
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
