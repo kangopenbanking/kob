@@ -365,18 +365,19 @@ const CustomerFundWallet: React.FC = () => {
   const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
   const filteredPbbBanks = banks.filter(b => b.name.toLowerCase().includes(pbbBankSearch.toLowerCase()));
 
-  // SECURITY: A Pay-by-Bank top-up may only originate from a bank the user has linked.
+  // SECURITY (KOB rail only): A KOB-network top-up may only originate from a
+  // bank the user has linked and verified. For the Flutterwave rail, the user
+  // authenticates directly on Flutterwave's hosted page — no pre-link needed.
   const selectedPbbBankLinked = React.useMemo(() => {
     if (!selectedPbbBank) return null;
+    if (selectedPbbBank.source !== 'kob') return { ok: true } as any; // FW / directory handled at provider
     const list = linkedAccounts as any[];
-    if (selectedPbbBank.source === 'kob') {
-      const m = list.find((a) =>
-        (a.institution_id === selectedPbbBank.code || a.external_bank_code === selectedPbbBank.code) &&
-        (a.status ?? 'active') === 'active' &&
-        a.verification_status === 'verified'
-      );
-      if (m) return m;
-    }
+    const m = list.find((a) =>
+      (a.institution_id === selectedPbbBank.code || a.external_bank_code === selectedPbbBank.code) &&
+      (a.status ?? 'active') === 'active' &&
+      a.verification_status === 'verified'
+    );
+    if (m) return m;
     const needle = selectedPbbBank.name.toLowerCase();
     return list.find((a) =>
       (a.status ?? 'active') === 'active' &&
@@ -384,6 +385,7 @@ const CustomerFundWallet: React.FC = () => {
       ((a.provider_name || '').toLowerCase().includes(needle) || needle.includes((a.provider_name || '').toLowerCase()))
     ) || null;
   }, [selectedPbbBank, linkedAccounts]);
+
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
