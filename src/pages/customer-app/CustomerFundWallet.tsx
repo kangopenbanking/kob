@@ -76,10 +76,12 @@ const CustomerFundWallet: React.FC = () => {
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [pbbAmount, setPbbAmount] = useState('');
-  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'redirecting'>('tile');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'confirm' | 'redirecting' | 'verifying'>('tile');
   const [pbbProcessing, setPbbProcessing] = useState(false);
   const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
   const [pbbBankSearch, setPbbBankSearch] = useState('');
+  const [pbbReference] = useState(() => `PBB${Date.now().toString().slice(-10)}`);
+
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
