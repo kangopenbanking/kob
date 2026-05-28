@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
+import { createFlutterwaveCharge } from '../_shared/gateway-adapters.ts';
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,7 +18,53 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action } = body;
 
+    // ─── list_payment_banks ────────────────────────────────────
+    // Returns banks usable for Pay-by-Bank, tagged by rail.
+    if (action === 'list_payment_banks') {
+      const banks: Array<{ code: string; name: string; rail: 'kob' | 'flutterwave'; logo_url: string | null; bank_code?: string | null; swift_bic?: string | null }> = [];
+
+      // KOB partner banks (only approved + with healthy connector configs)
+      try {
+        const { data: kob } = await supabase
+          .from('institutions')
+          .select('id, institution_name, logo_url, status')
+          .eq('status', 'approved')
+          .order('institution_name');
+        (kob || []).forEach((i: any) => banks.push({
+          code: i.id,
+          name: i.institution_name,
+          rail: 'kob',
+          logo_url: i.logo_url || null,
+        }));
+      } catch (e) { console.warn('[pay-by-bank] kob list failed', e); }
+
+      // Flutterwave banks (Cameroon)
+      try {
+        const { data: fw } = await supabase.functions.invoke('flutterwave-list-banks', { body: { country: 'CM' } });
+        (fw?.banks || []).forEach((b: any) => {
+          // dedupe by name vs KOB
+          const exists = banks.some(x => x.name.toLowerCase() === String(b.name || '').toLowerCase());
+          if (!exists && b.code && b.name) {
+            banks.push({
+              code: String(b.code),
+              name: String(b.name),
+              rail: 'flutterwave',
+              logo_url: b.logo || b.logo_url || null,
+              bank_code: String(b.code),
+            });
+          }
+        });
+      } catch (e) { console.warn('[pay-by-bank] flutterwave list failed', e); }
+
+      return new Response(JSON.stringify({
+        banks,
+        kob_available: banks.some(b => b.rail === 'kob'),
+        flutterwave_available: banks.some(b => b.rail === 'flutterwave'),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // ─── create_intent ────────────────────────────────────────
+
     if (action === 'create_intent') {
       const {
         merchant_id,
@@ -107,11 +155,19 @@ Deno.serve(async (req) => {
         resolvedMerchantName = 'KANG Wallet Top-up';
       }
 
-      // ─── SECURITY: For consumer wallet top-ups, the user MUST have a
-      // verified linked account at the chosen source bank. Without this
-      // check, anyone could pick any bank and credit themselves. ─────
+      // ─── SECURITY: For consumer wallet top-ups via the KOB rail, the
+      // user MUST have a verified linked account at the chosen source bank
+      // (sandbox banks have no live OAuth, so the linked-account check is
+      // our proof of ownership). For the Flutterwave rail, the user
+      // authenticates directly on Flutterwave's hosted page — no pre-link
+      // required, mirroring Capital One / Trustly / Token PSD2 flows. ──
       let linkedAccountId: string | null = null;
       let linkedLast4: string | null = null;
+      const sourceRail: 'kob' | 'flutterwave' | null =
+        source_bank?.network === 'flutterwave' ? 'flutterwave'
+        : source_bank?.network === 'kob' ? 'kob'
+        : null;
+
       if (target_type === 'consumer_wallet') {
         if (!source_bank || (!source_bank.name && !source_bank.code)) {
           return new Response(JSON.stringify({
@@ -120,42 +176,45 @@ Deno.serve(async (req) => {
           }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        let matched: any = null;
-        if (source_bank.network === 'kob' && source_bank.code) {
-          const { data } = await supabase
-            .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
-            .eq('user_id', resolvedCustomerUserId)
-            .eq('status', 'active')
-            .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
-            .eq('verification_status', 'verified')
-            .limit(1);
-          matched = data?.[0] || null;
-        }
-        if (!matched && source_bank.name) {
-          const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
-          const { data } = await supabase
-            .from('customer_linked_accounts')
-            .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
-            .eq('user_id', resolvedCustomerUserId)
-            .eq('status', 'active')
-            .eq('verification_status', 'verified')
-            .ilike('provider_name', `%${safeName}%`)
-            .limit(1);
-          matched = data?.[0] || null;
-        }
+        if (sourceRail === 'kob') {
+          let matched: any = null;
+          if (source_bank.code) {
+            const { data } = await supabase
+              .from('customer_linked_accounts')
+              .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
+              .eq('user_id', resolvedCustomerUserId)
+              .eq('status', 'active')
+              .or(`institution_id.eq.${source_bank.code},external_bank_code.eq.${source_bank.code}`)
+              .eq('verification_status', 'verified')
+              .limit(1);
+            matched = data?.[0] || null;
+          }
+          if (!matched && source_bank.name) {
+            const safeName = String(source_bank.name).replace(/[%_,]/g, ' ').trim().slice(0, 60);
+            const { data } = await supabase
+              .from('customer_linked_accounts')
+              .select('id, account_number, last4, provider_name, institution_id, external_bank_code, verification_status')
+              .eq('user_id', resolvedCustomerUserId)
+              .eq('status', 'active')
+              .eq('verification_status', 'verified')
+              .ilike('provider_name', `%${safeName}%`)
+              .limit(1);
+            matched = data?.[0] || null;
+          }
 
-        if (!matched) {
-          return new Response(JSON.stringify({
-            error: 'bank_not_linked',
-            action: 'link_account',
-            message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
-          }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
+          if (!matched) {
+            return new Response(JSON.stringify({
+              error: 'bank_not_linked',
+              action: 'link_account',
+              message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+            }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
 
-        linkedAccountId = matched.id;
-        linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+          linkedAccountId = matched.id;
+          linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
+        }
       }
+
 
       // Create PISP consent. Consumer wallet top-ups are initiated by the
       // platform PISP client, not by the end-user UUID, because pisp_consents
@@ -206,8 +265,9 @@ Deno.serve(async (req) => {
           expires_at: expiresAt,
           customer_email,
           metadata: source_bank
-            ? { source_bank, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
+            ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
             : {},
+
         })
         .select('id')
         .single();
@@ -216,8 +276,54 @@ Deno.serve(async (req) => {
         return safeErrorResponse(intentErr, corsHeaders, 'create_intent');
       }
 
-      const finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
-      await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
+      // Branch authorisation URL by rail:
+      //   - KOB: internal authorize page (acts as PISP authorize endpoint;
+      //     verifies linked-account ownership).
+      //   - Flutterwave: real FW hosted bank-transfer page — user enters
+      //     their bank credentials on FW's domain and is redirected back.
+      let finalAuthUrl: string;
+      if (sourceRail === 'flutterwave' && target_type === 'consumer_wallet') {
+        try {
+          const flwTxRef = `pbb_${intent.id.replace(/-/g, '').slice(0, 16)}_${Date.now().toString().slice(-6)}`;
+          const flw = await createFlutterwaveCharge({
+            amount: Number(amount),
+            currency: currency || 'XAF',
+            channel: 'bank_transfer',
+            customer_email: customer_email || 'customer@kob.cm',
+            customer_name: creditor_name || 'KANG Customer',
+            customer_phone: '',
+            tx_ref: flwTxRef,
+            metadata: {
+              pay_by_bank_intent_id: intent.id,
+              bank_code: source_bank?.code || null,
+              bank_name: source_bank?.name || null,
+              redirect_url: redirect_uri,
+            },
+          });
+          finalAuthUrl = flw.redirect_url || `${redirect_uri}${redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent.id}&status=pending&source=pay_by_bank`;
+          await supabase.from('pay_by_bank_intents').update({
+            authorization_url: finalAuthUrl,
+            metadata: {
+              source_bank, rail: sourceRail,
+              flw_tx_ref: flwTxRef,
+              flw_provider_ref: flw.provider_ref,
+              flw_raw: flw.provider_raw,
+            },
+          }).eq('id', intent.id);
+        } catch (e: any) {
+          console.error('[pay-by-bank] flutterwave charge failed', e);
+          await supabase.from('pay_by_bank_intents').update({
+            status: 'failed', failure_reason: `flutterwave_init_failed:${e?.message || e}`,
+          }).eq('id', intent.id);
+          return new Response(JSON.stringify({
+            error: 'flutterwave_init_failed',
+            message: 'Could not start Pay-by-Bank with this bank. Please try another bank or try again later.',
+          }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      } else {
+        finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
+        await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
+      }
 
       return new Response(JSON.stringify({
         intent_id: intent.id,
@@ -226,8 +332,10 @@ Deno.serve(async (req) => {
         expires_at: expiresAt,
         status: 'awaiting_auth',
         target_type,
+        rail: sourceRail,
       }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
 
     // ─── get_intent ───────────────────────────────────────────
     if (action === 'get_intent') {
@@ -723,7 +831,119 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── verify_external (Flutterwave-rail reconciliation) ────
+    // Called by the frontend when the user returns from FW. Verifies the
+    // FW transaction by tx_ref and, on success, credits the wallet using
+    // the same atomic path as the KOB rail.
+    if (action === 'verify_external') {
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.replace('Bearer ', '');
+      const { data: authData } = await supabase.auth.getUser(jwt);
+      if (!authData?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const user_id = authData.user.id;
+
+      const { intent_id } = body;
+      if (!intent_id) {
+        return new Response(JSON.stringify({ error: 'intent_id required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const { data: intent } = await supabase
+        .from('pay_by_bank_intents').select('*').eq('id', intent_id).single();
+      if (!intent) {
+        return new Response(JSON.stringify({ error: 'intent_not_found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      if (intent.customer_user_id && intent.customer_user_id !== user_id) {
+        return new Response(JSON.stringify({ error: 'forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      if (intent.status === 'completed') {
+        return new Response(JSON.stringify({ status: 'completed', intent_id }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const meta = (intent.metadata || {}) as any;
+      const txRef = meta.flw_tx_ref as string | undefined;
+      if (!txRef) {
+        return new Response(JSON.stringify({ error: 'not_a_flutterwave_intent' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Verify with Flutterwave
+      const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+      if (!FLW_SECRET) {
+        return new Response(JSON.stringify({ error: 'flutterwave_not_configured' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`, {
+        headers: { Authorization: `Bearer ${FLW_SECRET}` },
+      });
+      const verifyData = await verifyRes.json().catch(() => ({}));
+      const flwStatus = String(verifyData?.data?.status || '').toLowerCase();
+
+      if (flwStatus !== 'successful') {
+        return new Response(JSON.stringify({
+          status: flwStatus || 'pending',
+          intent_id,
+          message: flwStatus ? `Bank reports status: ${flwStatus}` : 'Waiting for your bank to confirm the transfer.',
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Idempotent credit
+      const walletId = intent.target_account_id;
+      const amountNum = Number(intent.amount);
+      const currency = intent.currency || 'XAF';
+
+      const { data: creditRes, error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+        _account_id: walletId,
+        _amount: amountNum,
+        _currency: currency,
+      });
+      if (creditErr || (creditRes && !creditRes.success)) {
+        const msg = creditErr?.message || creditRes?.error || 'Credit failed';
+        await supabase.from('pay_by_bank_intents').update({
+          status: 'failed', failure_reason: msg,
+        }).eq('id', intent_id);
+        return new Response(JSON.stringify({ error: 'wallet_credit_failed', message: msg }), {
+          status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      await supabase.from('transactions').insert([{
+        user_id, account_id: walletId, amount: amountNum, currency,
+        credit_debit_indicator: 'Credit', transaction_type: 'pay_by_bank_topup',
+        transaction_information: 'Wallet top-up via Pay-by-Bank (Flutterwave)',
+        booking_datetime: new Date().toISOString(), status: 'Booked',
+        metadata: { intent_id, flw_tx_ref: txRef, source: 'flutterwave_bank' },
+      }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
+
+      await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+
+      await supabase.from('app_notifications').insert({
+        user_id, type: 'success',
+        title: 'Wallet Topped Up',
+        message: `Your wallet was credited ${currency} ${amountNum.toLocaleString()} via Pay-by-Bank.`,
+        icon: 'pay_by_bank', metadata: { intent_id, flw_tx_ref: txRef },
+      }).then(() => {}, () => {});
+
+      return new Response(JSON.stringify({ status: 'completed', intent_id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
+
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 

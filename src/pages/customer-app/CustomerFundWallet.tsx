@@ -76,10 +76,12 @@ const CustomerFundWallet: React.FC = () => {
   const [fundingResult, setFundingResult] = useState<any>(null);
   const [showPin, setShowPin] = useState(false);
   const [pbbAmount, setPbbAmount] = useState('');
-  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'redirecting'>('tile');
+  const [pbbStep, setPbbStep] = useState<'tile' | 'bank' | 'amount' | 'confirm' | 'redirecting' | 'verifying'>('tile');
   const [pbbProcessing, setPbbProcessing] = useState(false);
   const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
   const [pbbBankSearch, setPbbBankSearch] = useState('');
+  const [pbbReference] = useState(() => `PBB${Date.now().toString().slice(-10)}`);
+
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
@@ -91,11 +93,33 @@ const CustomerFundWallet: React.FC = () => {
   useEffect(() => {
     const status = searchParams.get('status') || searchParams.get('transaction_status');
     const source = searchParams.get('source');
+    const intentId = searchParams.get('intent_id');
     if (!status && source !== 'pay_by_bank') return;
 
     queryClient.refetchQueries({ queryKey: ['customer-accounts'] });
     queryClient.refetchQueries({ queryKey: ['account-balances'] });
     queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
+    // Reconcile Flutterwave-rail Pay-by-Bank on return
+    if (source === 'pay_by_bank' && intentId && status !== 'rejected' && status !== 'failed') {
+      (async () => {
+        try {
+          const { data } = await supabase.functions.invoke('pay-by-bank', {
+            body: { action: 'verify_external', intent_id: intentId },
+          });
+          if (data?.status === 'completed') {
+            toast.success('Wallet funded successfully. Returning to your wallet…');
+            queryClient.refetchQueries({ queryKey: ['account-balances'] });
+            setTimeout(() => navigate('/app', { replace: true }), 1500);
+            return;
+          }
+          if (data?.status === 'pending') {
+            toast.info(data.message || 'Waiting for your bank to confirm the transfer.');
+            return;
+          }
+        } catch (e) { /* fall through to status handling below */ }
+      })();
+    }
 
     if (status === 'completed' || status === 'successful') {
       toast.success('Wallet funded successfully. Returning to your wallet…');
@@ -108,6 +132,7 @@ const CustomerFundWallet: React.FC = () => {
       toast.info('Checking payment status...');
     }
   }, [searchParams, queryClient, navigate]);
+
 
   const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
@@ -340,18 +365,19 @@ const CustomerFundWallet: React.FC = () => {
   const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
   const filteredPbbBanks = banks.filter(b => b.name.toLowerCase().includes(pbbBankSearch.toLowerCase()));
 
-  // SECURITY: A Pay-by-Bank top-up may only originate from a bank the user has linked.
+  // SECURITY (KOB rail only): A KOB-network top-up may only originate from a
+  // bank the user has linked and verified. For the Flutterwave rail, the user
+  // authenticates directly on Flutterwave's hosted page — no pre-link needed.
   const selectedPbbBankLinked = React.useMemo(() => {
     if (!selectedPbbBank) return null;
+    if (selectedPbbBank.source !== 'kob') return { ok: true } as any; // FW / directory handled at provider
     const list = linkedAccounts as any[];
-    if (selectedPbbBank.source === 'kob') {
-      const m = list.find((a) =>
-        (a.institution_id === selectedPbbBank.code || a.external_bank_code === selectedPbbBank.code) &&
-        (a.status ?? 'active') === 'active' &&
-        a.verification_status === 'verified'
-      );
-      if (m) return m;
-    }
+    const m = list.find((a) =>
+      (a.institution_id === selectedPbbBank.code || a.external_bank_code === selectedPbbBank.code) &&
+      (a.status ?? 'active') === 'active' &&
+      a.verification_status === 'verified'
+    );
+    if (m) return m;
     const needle = selectedPbbBank.name.toLowerCase();
     return list.find((a) =>
       (a.status ?? 'active') === 'active' &&
@@ -359,6 +385,7 @@ const CustomerFundWallet: React.FC = () => {
       ((a.provider_name || '').toLowerCase().includes(needle) || needle.includes((a.provider_name || '').toLowerCase()))
     ) || null;
   }, [selectedPbbBank, linkedAccounts]);
+
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -727,6 +754,80 @@ const CustomerFundWallet: React.FC = () => {
                 </Button>
               </>
 
+            ) : pbbStep === 'confirm' ? (
+              <>
+                {/* Capital-One-style "Confirm and continue to your bank" summary */}
+                <div className="text-center pt-2">
+                  <h2 className="text-lg font-bold text-foreground">{tr('Confirm and continue to your bank')}</h2>
+                  <p className="text-[11px] text-muted-foreground mt-1">{tr('Review the details below. You will be redirected to your bank to authorise the payment.')}</p>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">{tr('Amount')}</span>
+                    <span className="text-base font-extrabold text-foreground">{fmt(Number(pbbAmount) || 0)}</span>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">{tr('Reference')}</span>
+                    <span className="text-xs font-mono text-foreground">{pbbReference}</span>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">{tr('From')}</span>
+                    <span className="text-xs font-semibold text-foreground text-right truncate ml-2">{selectedPbbBank?.name}</span>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs text-muted-foreground">{tr('To')}</span>
+                      <span className="text-xs font-semibold text-foreground">KANG Open Banking</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{tr('Account Name')}</span><span>KANG Wallet</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{tr('Account')}</span><span className="font-mono">{primaryAccount?.id?.slice(0, 8) || '••••••'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                  {selectedPbbBank?.source === 'kob'
+                    ? tr('Kang Open Banking is a payment initiation service regulated under PSD2. By selecting Continue you authorise your bank to debit the amount above.')
+                    : tr('You will be securely redirected to Flutterwave to enter your bank credentials and confirm this payment.')}
+                </p>
+
+                {selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked && (
+                  <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+                    <p className="text-xs font-semibold text-destructive">{tr('This bank is not linked to your account')}</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {tr('For your security, KOB partner banks require a verified linked account before authorising Pay-by-Bank.')}
+                    </p>
+                    <Button asChild variant="outline" className="rounded-xl h-9 text-xs w-full">
+                      <Link to={`/app/linked-accounts?bank=${encodeURIComponent(selectedPbbBank.name)}`}>
+                        <LinkIcon className="h-3.5 w-3.5 mr-2" /> {tr('Link this Bank')}
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handlePayByBankSubmit}
+                  disabled={pbbProcessing || (selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked)}
+                  className="w-full rounded-2xl h-12 text-sm font-bold"
+                >
+                  {pbbProcessing ? (
+                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Redirecting to your bank...')}</span>
+                  ) : (
+                    <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {tr('Continue to your bank')}</span>
+                  )}
+                </Button>
+
+                <Button variant="outline" onClick={() => setPbbStep('amount')} className="w-full rounded-2xl h-10 text-xs">
+                  {tr('Back')}
+                </Button>
+              </>
             ) : (
               <>
             {selectedPbbBank && (
@@ -736,7 +837,9 @@ const CustomerFundWallet: React.FC = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-foreground truncate">{selectedPbbBank.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{tr('Selected funding bank')}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {selectedPbbBank.source === 'kob' ? tr('KOB Open Banking — direct bank redirect') : tr('Flutterwave — bank authentication on Flutterwave')}
+                  </p>
                 </div>
                 <button onClick={() => setPbbStep('bank')} className="text-[10px] font-bold text-primary">{tr('Change')}</button>
               </div>
@@ -775,37 +878,23 @@ const CustomerFundWallet: React.FC = () => {
               </p>
             </div>
 
-            {selectedPbbBank && !selectedPbbBankLinked && (
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
-                <p className="text-xs font-semibold text-destructive">{tr('This bank is not linked to your account')}</p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {tr('For your security, you can only pay from a bank account you have already linked and verified. Link your account at')} <span className="font-semibold text-foreground">{selectedPbbBank.name}</span> {tr('to continue.')}
-                </p>
-                <Button asChild variant="outline" className="rounded-xl h-9 text-xs w-full">
-                  <Link to={`/app/linked-accounts?bank=${encodeURIComponent(selectedPbbBank.name)}`}>
-                    <LinkIcon className="h-3.5 w-3.5 mr-2" /> {tr('Link this Bank')}
-                  </Link>
-                </Button>
-              </div>
-            )}
-
             <Button
-              onClick={handlePayByBankSubmit}
-              disabled={pbbProcessing || pbbStep === 'redirecting' || !Number(pbbAmount) || !selectedPbbBankLinked}
+              onClick={() => {
+                if (!Number(pbbAmount) || Number(pbbAmount) <= 0) { toast.error('Enter a valid amount'); return; }
+                setPbbStep('confirm');
+              }}
+              disabled={!Number(pbbAmount)}
               className="w-full rounded-2xl h-12 text-sm font-bold"
             >
-              {pbbProcessing || pbbStep === 'redirecting' ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Redirecting to your bank...')}</span>
-              ) : (
-                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {tr('Continue to Bank')}</span>
-              )}
+              <span className="flex items-center gap-2">{tr('Review and continue')} <ChevronRight className="h-4 w-4" /></span>
             </Button>
 
             <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking · Linked account verified')}
+              <Shield className="h-3 w-3" /> {tr('PSD2 SCA · Open Banking')}
             </p>
               </>
             )}
+
           </motion.div>
         ) : null}
       </AnimatePresence>
