@@ -814,15 +814,16 @@ const CustomerFundWallet: React.FC = () => {
 
                 <Button
                   onClick={handlePayByBankSubmit}
-                  disabled={pbbProcessing || pbbStep === 'redirecting' || (selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked)}
+                  disabled={pbbProcessing || (selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked)}
                   className="w-full rounded-2xl h-12 text-sm font-bold"
                 >
-                  {pbbProcessing || pbbStep === 'redirecting' ? (
+                  {pbbProcessing ? (
                     <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {tr('Redirecting to your bank...')}</span>
                   ) : (
                     <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {tr('Continue to your bank')}</span>
                   )}
                 </Button>
+
                 <Button variant="outline" onClick={() => setPbbStep('amount')} className="w-full rounded-2xl h-10 text-xs">
                   {tr('Back')}
                 </Button>
