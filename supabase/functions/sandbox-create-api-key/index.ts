@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
       merchant_id: merchantId,
       webhook_secret: webhookSecret,
       environment: 'sandbox',
+      tier,
       rate_limits: limits,
       message: 'Save these credentials now. The secret key and webhook secret will not be shown again. The publishable key and merchant ID can be retrieved later.',
       // Backward-compatible alias
