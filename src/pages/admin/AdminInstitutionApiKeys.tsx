@@ -236,7 +236,7 @@ export default function AdminInstitutionApiKeys() {
                   <TableBody>
                     {filtered.map((k) => (
                       <TableRow key={k.id}>
-                        <TableCell className="font-mono text-xs">{k.key_prefix ?? "—"}</TableCell>
+                        <TableCell className="font-mono text-xs">{k.api_key_prefix ?? "—"}</TableCell>
                         <TableCell>{k.label ?? "—"}</TableCell>
                         <TableCell><Badge variant="outline">{k.environment ?? "sandbox"}</Badge></TableCell>
                         <TableCell>
@@ -296,7 +296,7 @@ export default function AdminInstitutionApiKeys() {
                     const u = usage[k.id];
                     return (
                       <TableRow key={k.id}>
-                        <TableCell className="font-mono text-xs">{k.key_prefix ?? "—"}</TableCell>
+                        <TableCell className="font-mono text-xs">{k.api_key_prefix ?? "—"}</TableCell>
                         <TableCell>{k.label ?? "—"}</TableCell>
                         <TableCell className="text-right">{u?.calls_24h ?? "—"}</TableCell>
                         <TableCell className="text-right">{u?.calls_7d ?? "—"}</TableCell>
