@@ -96,12 +96,12 @@ const DOC_ROUTES: DocRoute[] = [
     content: `<h2>Quick Start Guide</h2>
 <p>Get your sandbox API key and make your first API call in under 5 minutes. No signup required. Field names below match the canonical OpenAPI 3.1 specification (v${KOB_API_VERSION}): the GatewayCharge schema requires <code>channel</code> and <code>customer_phone</code>.</p>
 <h3>Step 1: Get Your Sandbox Key</h3>
-<p>Use the instant key generator on this page or use the default test key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<p>Create your own sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console. Sandbox keys are free, never expire, and follow the <code>sbx_*</code> format. OWASP ASVS v4.0 V2.6 and NIST SP 800-63B §5.1.3 discourage shared lookup secrets; the previously documented <code>sk_test_kob_sandbox_demo_key_2024</code> literal is no longer documented but remains accepted by the public <em>Try-It</em> button on <a href="/developer/examples/real-world">Real-World Examples</a> for unauthenticated visitors.</p>
 <h3>Step 2: Make Your First API Call</h3>
 <pre><code>curl -i https://api.kangopenbanking.com/v1/health</code></pre>
 <h3>Step 3: Create a Mobile Money Charge (Sandbox)</h3>
 <pre><code>curl -X POST https://sandbox-api.kangopenbanking.com/v1/gateway/charges \\
-  -H "Authorization: Bearer sk_test_kob_sandbox_demo_key_2024" \\
+  -H "Authorization: Bearer YOUR_SBX_KEY" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: $(uuidgen)" \\
   -d '{
@@ -189,7 +189,7 @@ Content-Type: application/problem+json
   <li><a href="/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json">Postman Collection v${KOB_API_VERSION} (immutable)</a></li>
   <li><a href="/postman/manifest.json">Postman manifest (current version + URLs)</a></li>
 </ul>
-<p>Authentication: Bearer token or OAuth 2.0. Sandbox key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>`
+<p>Authentication: Bearer token or OAuth 2.0. Create your sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console (free, format <code>sbx_*</code>).</p>`
   },
   {
     path: '/developer/examples/real-world',
@@ -362,7 +362,7 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <h3>Sandbox Base URL</h3>
 <p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
 <h3>Default Test Credentials</h3>
-<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<p>Create your free sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console. Format <code>sbx_*</code>; keys never expire and are scoped per developer.</p>
 <h3>Test Coverage</h3>
 <table>
   <tr><th>Area</th><th>Supported</th></tr>
@@ -389,7 +389,7 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
   <li><code>POST /v1/sandbox/webhooks/send-test</code> — Trigger a test webhook delivery</li>
 </ul>
 <h3>Default Test Credentials</h3>
-<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<p>Create your free sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console. Format <code>sbx_*</code>; one key per developer.</p>
 <h3>Test Phone Numbers (Mobile Money)</h3>
 <table>
   <tr><th>Number</th><th>Provider</th><th>Behavior</th></tr>

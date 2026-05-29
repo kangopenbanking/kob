@@ -1,12 +1,30 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.43.0** · Last updated: **2026-05-29**
+Current API version: **4.44.0** · Last updated: **2026-05-29**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.44.0 — 2026-05-29
+**Type:** minor · **Breaking changes:** none
+
+Phase 10.1 — CEMAC coverage & inclusion (additive). Closes audit gaps for mobile-money provider coverage, virtual-account regional examples, CEMAC identity verification, RTP SLA hints, credit-score data sources, bilingual error catalogue, and LoanScheduleItem deprecated-field cleanup.
+
+### Highlights
+- Extended MobileMoneyCharge.provider enum to include Airtel, ExpressUnion, and CamPost (GSMA MMA v1.2 §4.2). Added ExpressUnionPickup and CamPostAccount sibling schemas.
+- Added POST /v1/verify/nin and POST /v1/verify/cni for CEMAC national identity verification (ICAO 9303; CIPRES). /v1/gateway/resolve-bvn retained for NG with RFC 8594 Deprecation + RFC 8288 Link: successor-version headers.
+- Added RtpSla schema and X-Confirmation-Eta response header. next_action surfaces sub-30s p50 confirmation targets per provider (see /developer/reference/rtp-sla).
+- Added CreditScore.data_sources (mobile_money_history, njangi_participation, cobac_registry, bureau_creditinfo, ...) and locale_band (cemac_v1 / fico_us / experian_eu) — COBAC R-93/13.
+- Added Accept-Language request parameter and Content-Language response header on every operation (BCP 47; RFC 7231 §5.3.5). New GET /v1/errors/{code}?lang=fr lookup endpoint with EN/FR catalogue.
+- GatewayVirtualAccount example corrected: Afriland First Bank / XAF / 23-digit RIB. Added bank_country field (CM default; CEMAC + NG/GH/KE/ZA enum).
+- LoanScheduleItem.required[] loosened: deprecated float fields (principal, interest, total_due) stay present but are no longer required ahead of v5.0.0 removal. x-deprecation block added (RFC 6648 §3).
+- Standing Orders #1-#6 honoured: no renames, no removals, every new component referenced, audit trail in docs/audits/2026-05-29-cemac-coverage-gap-report.md.
+- Spec mutator: scripts/phase10-spec-hardening.mjs (sole writer to openapi.{json,yaml} for this phase).
 
 ---
 

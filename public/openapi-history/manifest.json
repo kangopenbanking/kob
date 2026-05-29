@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.43.0",
+  "current": "4.44.0",
   "versions": [
+    {
+      "version": "4.44.0",
+      "released_at": "2026-05-29T02:47:48.208Z",
+      "type": "snapshot",
+      "file": "openapi-4.44.0.json",
+      "notes": "Phase 10.1 — CEMAC coverage & inclusion (additive). Closes audit gaps for mobile-money provider coverage, virtual-account regional examples, CEMAC identity verification, RTP SLA hints, credit-score data sources, bilingual error catalogue, and LoanScheduleItem deprecated-field cleanup."
+    },
     {
       "version": "4.43.0",
       "released_at": "2026-05-29T00:47:13.699Z",
