@@ -77,6 +77,12 @@ await run(
   { EXPECTED_OPENAPI_VERSION: EXPECTED }
 );
 
+await run(
+  'Version source-drift gate (no stale current-version literals in UI)',
+  'npx',
+  ['vitest', 'run', 'src/test/version-source-drift.test.ts', 'src/test/version-consistency.test.ts', '--reporter=basic']
+);
+
 if (OFFLINE) {
   console.log('\nSkipping public-access + link-health audits (offline mode).');
   process.exit(0);
