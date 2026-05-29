@@ -8724,6 +8724,32 @@ paths:
               description: Distributed trace identifier for this request. Echoes the inbound X-Trace-Id or W3C traceparent when present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+    post:
+      tags:
+        - Consents
+      summary: Create consent
+      description: Rail-agnostic consent factory. Routes to `aisp-create-consent`, `pisp-create-consent`, or the CBPII module based on `type`.
+      operationId: createConsent
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/Tracestate'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentCreate'
+      responses:
+        '201':
+          description: Consent created in AwaitingAuthorisation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+          headers:
+            traceparent:
+              $ref: '#/components/headers/Traceparent'
   /v1/credit/score:
     get:
       tags:
