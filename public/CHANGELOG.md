@@ -1,12 +1,28 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.41.0** · Last updated: **2026-05-29**
+Current API version: **4.43.0** · Last updated: **2026-05-29**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.43.0 — 2026-05-29
+**Type:** minor · **Breaking changes:** none
+
+High-priority gaps #6-#9 + per-tier rate-limit publication. All additive; zero removals.
+
+### Highlights
+- Added /v1/consents rail-agnostic consent lifecycle façade (create/get/list/revoke/extend).
+- Added /v1/statements + /v1/statements/{id}/content producing ISO 20022 camt.053.001.08 XML.
+- Added /v1/rate-limits publishing per-tier numbers (free, pro, enterprise).
+- Added MobileMoneyErrorCode + MobileMoneyProviderError schemas; wired RFC 7807 422 envelope onto every /v1/mobile-money/* POST.
+- Added W3C Trace Context (traceparent + tracestate) as optional request headers on every operation and echoed on every 2xx.
+- Edge functions: consents-lifecycle, statements-camt053, rate-limits-info; shared helpers _shared/momo-errors.ts and _shared/tracing.ts.
+- Standing Orders #1-#6 honoured: no renames, no removals, every new component referenced, audit trail in docs/audits/phase-9-high-priority-gaps.md.
 
 ---
 

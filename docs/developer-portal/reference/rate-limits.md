@@ -1,60 +1,30 @@
 # Rate Limits
 
-## Per-Endpoint Limits
+Published per-tier numbers — fetched live from `GET /v1/rate-limits`.
 
-| Endpoint Category | Sandbox | Production | Window |
-|---|---|---|---|
-| Charges (POST) | 100 | 1,000 | 1 minute |
-| Payouts (POST) | 50 | 500 | 1 minute |
-| Wallets (CRUD) | 200 | 2,000 | 1 minute |
-| Read endpoints (GET) | 500 | 5,000 | 1 minute |
-| Webhooks v2 management | 30 | 100 | 1 minute |
-| Compliance screening | 50 | 500 | 1 minute |
-| OIDC / Token | 60 | 120 | 1 minute |
+| Tier | Req/min | Burst | Concurrent | Webhooks/min | Idempotency window |
+|---|---|---|---|---|---|
+| `free` | 60 | 120 | 10 | 30 | 24 h |
+| `pro` | 600 | 1 200 | 100 | 300 | 24 h |
+| `enterprise` | 6 000 | 12 000 | 1 000 | 3 000 | 168 h |
 
-## Rate Limit Headers
+Every response carries enforcement headers:
 
-Every response includes rate limit headers:
-
-```
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 847
-X-RateLimit-Reset: 1709290800
+```text
+X-RateLimit-Limit:     600
+X-RateLimit-Remaining: 599
+X-RateLimit-Reset:     1748540400
+Retry-After:           60   # only on 429
 ```
 
-On `429` responses, a `Retry-After` header is also present:
-
-```
-Retry-After: 12
+```bash
+curl https://api.kangopenbanking.com/v1/rate-limits
 ```
 
-## 429 Response Schema (RateLimitError)
-
-When rate limited, you receive an RFC 7807 Problem Details response:
-
-```json
-{
-  "type": "https://kangopenbanking.com/errors/rate-limited",
-  "title": "Rate Limit Exceeded",
-  "status": 429,
-  "detail": "You have exceeded your rate limit of 1000 requests per minute. Retry after 30 seconds.",
-  "error_code": "AUTH_005",
-  "error_id": "err_abc123def456",
-  "timestamp": "2026-04-10T10:00:00Z"
-}
+```ts
+const tiers = await fetch("https://api.kangopenbanking.com/v1/rate-limits").then(r => r.json());
 ```
 
-## Retry Strategy
-
-- Read the `Retry-After` header for wait time in seconds
-- Implement exponential backoff: 1s → 2s → 4s → 8s (max 60s)
-- Add jitter to prevent thundering herd
-- Use the same `Idempotency-Key` when retrying write operations
-
-## Best Practices
-
-- Implement exponential backoff on 429 responses
-- Cache responses where possible
-- Use webhooks instead of polling for status updates
-- Batch operations where supported (e.g., batch payouts)
-- Contact support for higher rate limits on enterprise plans
+```py
+tiers = requests.get("https://api.kangopenbanking.com/v1/rate-limits").json()
+```
