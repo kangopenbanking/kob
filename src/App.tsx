@@ -347,6 +347,9 @@ const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay")
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 // Phase 5 follow-up — interactive merchant API key management page
 const MerchantApiKeysManager = lazy(() => import("./pages/developer/MerchantApiKeysManager"));
+// Phase 11 — admin institution-API-key console + per-version spec downloads
+const AdminInstitutionApiKeys = lazy(() => import("./pages/admin/AdminInstitutionApiKeys"));
+const DeveloperSpecVersions = lazy(() => import("./pages/developer/DeveloperSpecVersions"));
 
 // Admin Portal
 const Admin = lazy(() => import("./pages/Admin"));
