@@ -42,7 +42,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { key_name } = await req.json().catch(() => ({}));
+    const { key_name, tier: requestedTier } = await req.json().catch(() => ({}));
+    const VALID_TIERS = new Set(['free', 'pro', 'enterprise']);
+    const tier = (typeof requestedTier === 'string' && VALID_TIERS.has(requestedTier)) ? requestedTier : 'free';
 
     const { data: account, error: accountError } = await supabase
       .from('developer_sandbox_accounts')
@@ -103,6 +105,7 @@ Deno.serve(async (req) => {
         webhook_secret_preview: webhookSecret.slice(0, 16) + '…',
         rate_limit_per_minute: limits.per_minute,
         rate_limit_per_day: limits.per_day,
+        tier,
       }])
       .select()
       .single();
@@ -119,6 +122,7 @@ Deno.serve(async (req) => {
       merchant_id: merchantId,
       webhook_secret: webhookSecret,
       environment: 'sandbox',
+      tier,
       rate_limits: limits,
       message: 'Save these credentials now. The secret key and webhook secret will not be shown again. The publishable key and merchant ID can be retrieved later.',
       // Backward-compatible alias

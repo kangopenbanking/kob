@@ -1,87 +1,147 @@
+# Production Blockers — Additive Remediation Plan
 
-# Pay-by-Bank E2E Audit & Capital One-Style Rebuild
+Scope: gaps #1–5 from the audit. All changes are additive per Standing Order #4. OpenAPI bumps: `4.20.x → 4.21.0` (minor — new endpoints, new component schemas/headers).
 
-## Goal
-Rework the Pay-by-Bank flow (top-up + merchant pay) to mirror Capital One's UX, with strict separation between **KOB-registered banks** (real bank app redirect via our KOB connector / PISP rail) and **non-KOB banks** (Flutterwave bank-account payout/charge rail). Remove any path that lets a user "pay" without actually authenticating at their bank.
+Outcome: every claim in the public docs is backed by a spec field, a runtime behavior, and a CI ratchet test.
 
-## Target Flow (matches screenshots)
+---
+
+## Gap 1 — Idempotency: tighten spec & wire replay header everywhere
+
+The runtime is already correct (UUID v4 + 255-char ceiling + SHA-256 hash + 5 outcomes). The spec under-describes it, and the replay-response header is only on 1 of ~33 operations.
+
+**Changes**
+1. `public/openapi.json` + `openapi.yaml`:
+   - Add `pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'` and `maxLength: 255` to `components.parameters.IdempotencyKey.schema` and `components.headers.IdempotencyKey.schema`.
+   - New `components.headers.XIdempotentReplay` (`schema: { type: boolean }`) and `XIdempotencyStatus` (`enum: [first_request, replayed, conflict_rejected]`).
+   - Reference both on the 2xx response of every financial mutating operation (re-use the same allow-list as `openapi-idempotency-coverage.test.ts`).
+2. `docs/developer-portal/reference/idempotency.md` + `docs/public/idempotency.md` (new mirror): reconcile the "any string" wording with the spec's UUID v4 contract; document the 24 h DB TTL vs. 60 s in-flight TTL; document the three `X-Idempotency-Status` values.
+3. New ratchet test `src/test/openapi-idempotency-response-headers.test.ts`: asserts every operation that declares `Idempotency-Key` also declares `X-Idempotent-Replay` on its 2xx.
+
+No runtime/edge-function change needed.
+
+---
+
+## Gap 2 — Async Payment Intent (canonical resource)
+
+Today `pay-by-bank/intents` and `gateway/funding-intents` exist but are per-rail. Add a rail-agnostic façade.
+
+**Changes**
+1. New edge function `supabase/functions/payment-intents/index.ts` thin orchestrator that delegates to `payment-orchestrator` per `payment_method_types`.
+2. New DB table `public.payment_intents` (id, merchant_id, amount, currency, status, payment_method_types[], next_action jsonb, last_error jsonb, idempotency_key, child_intent_id, child_resource, timestamps). RLS by merchant ownership. State enum: `requires_payment_method | requires_confirmation | processing | requires_action | succeeded | canceled | failed`.
+3. OpenAPI: add `/v1/payment-intents` POST/GET, `/v1/payment-intents/{id}` GET, `/v1/payment-intents/{id}/confirm` POST, `/v1/payment-intents/{id}/cancel` POST. All return `202 Accepted` on create. Schema `PaymentIntent` with explicit `status` enum + `next_action` discriminator (`redirect_to_url`, `display_qr`, `use_stk_push`).
+4. New webhook event types: `payment_intent.created`, `payment_intent.requires_action`, `payment_intent.processing`, `payment_intent.succeeded`, `payment_intent.failed`.
+5. Docs: `docs/developer-portal/guides/payment-intents.md` with the state-machine diagram (ASCII), cURL+Node+Python examples.
+
+`pay-by-bank/intents` and `funding-intents` remain untouched (Standing Order #1).
+
+---
+
+## Gap 3 — Webhook signature/timestamp + canonical replay path
+
+Runtime currently sends `X-Webhook-Signature: <hex>` with no timestamp header — spec prose claims `v1=<hex>` + `X-Webhook-Timestamp`.
+
+**Changes**
+1. Runtime `supabase/functions/gateway-webhook-deliver-v2/index.ts`:
+   - Compute `ts = Math.floor(Date.now()/1000)`; signed payload = `${ts}.${rawBody}`.
+   - Emit both headers: `X-Webhook-Timestamp: <ts>` and `X-Webhook-Signature: t=<ts>,v1=<hex>` (Stripe-style).
+   - **Back-compat:** also emit legacy `X-Webhook-Signature-Legacy: <hex>` of the raw body for one deprecation window so existing receivers don't break.
+2. Same change in `pisp-webhook`, `flutterwave-webhook`, and any other outbound sender (sweep via rg `X-Webhook-Signature`).
+3. OpenAPI:
+   - Add `components.headers.XWebhookSignature` (with `pattern: '^t=\\d{10},v1=[0-9a-f]{64}$'`) and `XWebhookTimestamp`.
+   - Add `components.securitySchemes.WebhookSignature` referencing the format.
+   - Add new path `POST /v1/webhooks/events/{eventId}/replay` as a façade over the existing nested `/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay` (looks up endpoint+delivery from event_id).
+   - Document DLQ explicitly: new `GET /v1/webhooks/dlq` and `POST /v1/webhooks/dlq/{deliveryId}/requeue` (admin scope) — wires to existing `admin-webhook-dlq-replay` function.
+4. SDK snippets in `public/docs/snippets/auth-and-payments.md` and `packages/sdk-{node,python,php}` verify helper: parse `t=…,v1=…`, reject if `|now-t| > 300`, constant-time compare.
+5. Tests: extend `src/test/openapi-idempotency-coverage.test.ts` pattern with `openapi-webhook-signature-coverage.test.ts` (every webhook-receiver doc references `WebhookSignature` security scheme).
+
+---
+
+## Gap 4 — Sandbox isolation: surface what exists in the spec + add fault injection facade
+
+Runtime already issues per-developer `sbx_` keys via `sandbox-create-api-key`. Spec hides this.
+
+**Changes**
+1. OpenAPI:
+   - `POST /v1/sandbox/api-keys` 201 response: tighten schema — `api_key: { type: string, pattern: '^sbx_[0-9a-f]{64}$', example: 'sbx_…' }`, add `tier: { enum: ['free', 'pro', 'enterprise'] }`.
+   - Add `POST /v1/sandbox/trigger` façade with body `{ event: 'bank_timeout' | 'network_unreachable' | 'insufficient_funds' | 'operator_unavailable' | …, target_id?: string, delay_ms?: integer }` — delegates to existing `sandbox-provider-simulator`.
+   - Add `POST /v1/sandbox/charges/{chargeId}/simulate` as a charge-scoped façade over `/v1/sandbox/payments/simulate`.
+2. Runtime: extend `sandbox-create-api-key` to accept `{ tier }` (default `free`) and persist it on `sandbox_api_keys`. Migration: add `tier` column with default `'free'`, GRANTs to authenticated + service_role per memory rule.
+3. Docs: `docs/developer-portal/sandbox/isolation.md` — explain per-developer scoping, key format, tier matrix, fault-injection catalog.
+
+---
+
+## Gap 5 — RFC 7807 promotion: docs + examples + ratchet (no removal)
+
+The `ProblemDetails` schema is already wired into 2,406 error responses alongside the legacy `Error` envelope. Dual-format stays (Standing Order #1 forbids removing `Error`). Only docs and examples are stale.
+
+**Changes**
+1. Rewrite `docs/developer-portal/reference/errors.md` and `docs/public/errors.md`:
+   - Lead with RFC 7807 Problem Details format and `application/problem+json` content type.
+   - Document content-negotiation: clients sending `Accept: application/problem+json` get RFC 7807; default `application/json` continues to receive the legacy envelope.
+   - Publish the complete error-code registry (the "63 codes") as a table grouped by domain prefix.
+2. Add `components.examples`:
+   - `ProblemDetailsConflict` (409 idempotency replay conflict, full RFC 7807 shape).
+   - `ProblemDetailsValidation` (422 with `errors[]`).
+   - `ProblemDetailsRateLimited` (429 with `retry_after`).
+   - Reference these examples on the matching error responses (drop-in via `$ref`, no removals).
+3. Runtime sweep of edge functions:
+   - Audit `extractEdgeFunctionError` callers — when caller sends `Accept: application/problem+json`, response must use that content-type + ProblemDetails shape. Implement via a `problemResponse()` helper in `_shared/integration-layer/`.
+4. New ratchet test `src/test/openapi-problem-details-coverage.test.ts`: every 4xx/5xx in financial domains MUST declare `application/problem+json` → `ProblemDetails`; legacy `application/json` → `Error` may coexist but never alone.
+
+---
+
+## Cross-cutting / Audit Trail (Standing Order #3)
+
+| Change | Cited standard |
+|---|---|
+| Idempotency key pattern + replay header | Stripe API Reference §"Idempotent Requests"; PSD2 RTS Art. 36(1)(b) |
+| Payment Intent state machine | Stripe API Reference §payment_intents; UK Open Banking Read/Write API v3.1.10 |
+| Webhook `t=,v1=` + 5-min tolerance | Stripe webhooks signing convention; OWASP webhook security cheat-sheet |
+| `POST /v1/webhooks/events/{id}/replay` | Stripe `/v1/webhook_endpoints/{id}/events/{eventId}/replay` |
+| RFC 7807 `application/problem+json` | RFC 7807; OpenAPI 3.1 content-negotiation guidance |
+| Sandbox `sbx_` pattern, per-dev isolation | Plaid sandbox model; Stripe restricted test keys |
+
+`info.version` bumped once: `4.20.x → 4.21.0` (minor; additive only). Changelog entry added under ORDER P7. JSON↔YAML parity verified by existing CI.
+
+---
+
+## File-level execution map
 
 ```text
-1. Enter amount                       (existing CustomerFundWallet / merchant checkout)
-2. Choose Pay-by-Bank from options    (Payment Options screen)
-3. Select your bank                   (NEW unified bank picker)
-        ├── KOB bank   → PISP consent → redirect to real bank app/web
-        └── Other bank → Flutterwave "bank" charge → Flutterwave hosted auth
-4. Confirm amount + bank              (Capital-One style summary)
-5. Authenticate at bank (external)    (bank app / Flutterwave page)
-6. Bank debits user → notifies us via webhook
-7. Return to Kang app → success / pending screen
+public/openapi.json                    [edit] — all spec additions above
+public/openapi.yaml                    [edit] — parity
+docs/developer-portal/reference/idempotency.md   [edit]
+docs/developer-portal/reference/errors.md        [rewrite]
+docs/developer-portal/guides/payment-intents.md  [new]
+docs/developer-portal/sandbox/isolation.md       [new]
+docs/public/idempotency.md             [new mirror]
+docs/public/errors.md                  [rewrite]
+docs/audits/phase-8-production-blockers.md       [new]
+supabase/functions/payment-intents/index.ts      [new]
+supabase/functions/gateway-webhook-deliver-v2/index.ts   [edit — t=,v1= format + ts header]
+supabase/functions/pisp-webhook/index.ts                 [edit if outbound]
+supabase/functions/flutterwave-webhook/index.ts          [edit if outbound]
+supabase/functions/sandbox-create-api-key/index.ts       [edit — accept tier]
+supabase/functions/sandbox-trigger/index.ts              [new façade]
+supabase/functions/sandbox-charge-simulate/index.ts      [new façade]
+supabase/functions/_shared/integration-layer/problem.ts  [new — problemResponse() helper]
+supabase/migrations/<ts>_payment_intents.sql             [new table + RLS + GRANTs]
+supabase/migrations/<ts>_sandbox_api_keys_tier.sql       [new column]
+src/test/openapi-idempotency-response-headers.test.ts    [new ratchet]
+src/test/openapi-webhook-signature-coverage.test.ts      [new ratchet]
+src/test/openapi-problem-details-coverage.test.ts        [new ratchet]
+src/test/webhook-signature-runtime-contract.test.ts      [new — verify t=,v1= emission]
 ```
 
-## Audit Findings (current gaps)
+## Out of scope (deferred)
 
-| # | Area | Gap | Fix |
-|---|---|---|---|
-| G1 | Bank picker | Currently filters to *linked* accounts only; doesn't expose full KOB+Flutterwave bank directory at the Pay-by-Bank step | New `list_payment_banks` action returning both rails with `rail: 'kob' \| 'flutterwave'` |
-| G2 | KOB routing | `pay-by-bank` Edge Function falls through to a generic "authorize" even when no real PISP consent exists | Require `consent_id` from `pisp-domestic-payment` create_consent; reject if KOB connector unhealthy |
-| G3 | Flutterwave routing | No Flutterwave bank-charge path — currently uses same fake "authorize" | New branch calling Flutterwave `/charges?type=account` (NG/account_debit) or hosted `/payments` with `payment_options=account` for Cameroon; redirect to FLW `link` |
-| G4 | Confirm screen | Missing the Capital-One style "Confirm and continue to your bank" summary (amount, ref, from bank, to account) | New `PayByBankConfirm` step |
-| G5 | Auth simulation | `PayByBankAuthorize` lets the user "Approve" without ever leaving our app — this is the security hole the user flagged | Replace with **redirect-out**: KOB → bank `authorization_url`, FLW → `link`; our page becomes a passive "Waiting for your bank…" poller |
-| G6 | Last-4 check | Last-4 verification was a band-aid; not needed once we require real bank auth | Remove from happy path; keep only as fallback for sandbox |
-| G7 | Empty state | When no KOB banks are registered AND Flutterwave is disabled, UI silently shows "no banks" | Explicit empty state: "No banks available for Pay-by-Bank in your region" |
-| G8 | Return URL | Some flows return to `/app/fund` without a status param | Standardise `?source=pay_by_bank&status=…&intent_id=…` and handle on both fund + merchant return pages |
-| G9 | Webhook authoritative | Wallet credit currently happens in `authorize` action; should happen only on KOB/FLW webhook confirming bank-side debit | Move `atomic_credit_balance` into webhook handler; `authorize` only marks `submitted` |
-| G10 | Merchant Pay-by-Bank | Only top-up uses this flow; merchant checkout still bypasses bank picker | Add Pay-by-Bank option to merchant checkout using same shared component |
-
-## Implementation
-
-### Backend
-1. **`pay-by-bank` edge function** — restructure into actions:
-   - `list_payment_banks` → returns `[{ id, name, logo_url, rail, bank_code, swift_bic }]` merging KOB `banks` (where enabled+healthy connector exists) and Flutterwave Cameroon bank directory. Returns `{ banks: [], reason: 'no_rails_available' }` when empty.
-   - `create_intent` → requires `selected_bank_id` + `rail`. Branches:
-     - `rail='kob'` → calls `pisp-domestic-payment` create_consent, returns `authorization_url`.
-     - `rail='flutterwave'` → calls Flutterwave standard `/payments` with `payment_options=account`, returns `link`.
-   - `poll_status` → checks PISP/FLW status; returns `pending|completed|failed`.
-   - **Removes** in-app `authorize` short-circuit; status changes only via webhook or poll.
-2. **Webhook**: extend existing FLW + KOB PISP webhooks to credit wallet via `atomic_credit_balance` when intent reaches `completed`, with idempotency on `intent_id`.
-
-### Frontend
-1. **New shared component**: `src/components/paybybank/PayByBankFlow.tsx`
-   - Step 1: `BankPicker` — fetches `list_payment_banks`, search + logos, two sections "Open Banking" / "Other Banks", empty state.
-   - Step 2: `ConfirmAndContinue` — Capital-One style summary card (Amount, Reference, From bank, To account), regulatory blurb, "Continue to your bank" button.
-   - Step 3: External redirect (`window.location.href = authorization_url|link`).
-2. **`PayByBankAuthorize.tsx`** → repurposed as **`PayByBankReturn.tsx`**: poll status, show "Waiting / Submitted / Completed / Failed", "Done" button returns to `/app` or merchant return URL.
-3. **`CustomerFundWallet.tsx`**: replace inline bank list + fake authorize with `<PayByBankFlow mode="topup" amount={...} />`.
-4. **Merchant checkout** (`CheckoutPage` / equivalent): add Pay-by-Bank tile using same component with `mode="merchant"`.
-
-### Empty-state contract
-- No KOB banks + Flutterwave disabled → hide Pay-by-Bank tile entirely on Payment Options.
-- Only Flutterwave available → show with "via Flutterwave" subtitle.
-- KOB available → show "Pay directly from your bank" subtitle, Flutterwave banks listed under "Other banks".
-
-## Files
-
-**New**
-- `src/components/paybybank/PayByBankFlow.tsx`
-- `src/components/paybybank/BankPicker.tsx`
-- `src/components/paybybank/ConfirmAndContinue.tsx`
-- `src/pages/PayByBankReturn.tsx` (replaces Authorize)
-- `docs/audit/2026-05-pay-by-bank-e2e-audit.md`
-
-**Edited**
-- `supabase/functions/pay-by-bank/index.ts` (action restructure)
-- `supabase/functions/flutterwave-webhook/index.ts` (credit on confirmation)
-- `supabase/functions/pisp-webhook/index.ts` (credit on confirmation)
-- `src/pages/customer-app/CustomerFundWallet.tsx` (use shared flow)
-- `src/pages/PayByBankAuthorize.tsx` (becomes Return / status poller)
-- `src/App.tsx` (route for `/pay-by-bank/return`)
-- Merchant checkout page (add tile)
-
-## Out of scope
-- New KOB bank registrations (admin task).
-- Flutterwave account-charge live credentials (uses existing FW secret).
-- Card "Pay-by Card" audit — user wrote "Pay-by Card" but full context is Pay-by-Bank; will treat as typo.
+- Gaps #6–9 and the 5 differentiators (per your selection).
+- Removing the legacy `Error` envelope or legacy `X-Webhook-Signature: <hex>` header (would require v5 major bump).
+- New "tier" UI in the sandbox console — only the API layer is added now.
 
 ## Risks
-- Flutterwave's account-debit product availability for XAF/Cameroon is limited; fallback is FLW hosted "bank transfer" with manual reconciliation via FLW webhook.
-- Removing in-app authorize breaks any existing pending intents; we'll mark them `expired` on deploy.
+
+- **Webhook receivers parsing the legacy raw-hex header**: mitigated by emitting the legacy header in parallel for one deprecation window; changelog entry + email to active webhook tenants.
+- **`payment_intents` becoming a third intent concept**: documented explicitly as a rail-agnostic façade; pay-by-bank and funding-intents remain unchanged underneath.
+- **Spec size growth**: ~40 KB additional. Within existing perf budget (`scripts/openapi-perf-budget.json`).
