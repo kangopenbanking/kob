@@ -1263,6 +1263,8 @@ function App() {
               <Route path="widgets" element={<WidgetSDKPage />} />
               <Route path="open-banking/standards" element={<OpenBankingStandards />} />
               <Route path="bank-onboarding" element={<BankOnboardingGuide />} />
+              <Route path="ussd" element={<USSDIntegrationGuide />} />
+              <Route path="agents" element={<AgentBankingGuide />} />
               <Route path="test-report" element={<TestReport />} />
               {/* Remittance API Docs */}
               <Route path="remittance" element={<DevRemittanceOverview />} />
