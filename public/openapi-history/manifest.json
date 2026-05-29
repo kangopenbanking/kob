@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.40.0",
+  "current": "4.43.0",
   "versions": [
+    {
+      "version": "4.43.0",
+      "released_at": "2026-05-29T00:47:13.699Z",
+      "type": "snapshot",
+      "file": "openapi-4.43.0.json",
+      "notes": "Phase 9 — High-priority gaps #6-#9 + per-tier rate limits. /v1/consents lifecycle façade, /v1/statements (camt.053.001.08), /v1/rate-limits, MobileMoneyErrorCode normalization, W3C Trace Context (traceparent/tracestate) on every operation."
+    },
     {
       "version": "4.40.0",
       "released_at": "2026-05-17T20:32:00.000Z",
