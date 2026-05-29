@@ -631,6 +631,9 @@ for (const file of SPECS) {
   const wired = wireReplayHeaderEverywhere(spec);
   spec.info.version = FINAL_VERSION;
   fs.writeFileSync(file, JSON.stringify(spec, null, 2) + "\n", "utf-8");
+  // Mirror to YAML for parity (openapi-parity.test.ts).
+  const yamlPath = file.replace(/\.json$/, ".yaml");
+  fs.writeFileSync(yamlPath, yaml.dump(spec, { noRefs: true, lineWidth: 200 }), "utf-8");
   console.log(`[phase8] ${path.basename(file)}: ${prev} → ${FINAL_VERSION} (wired replay headers on ${wired} 2xx responses)`);
 }
 console.log("[phase8] Production blockers spec hardening complete.");
