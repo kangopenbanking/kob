@@ -5698,6 +5698,170 @@ export type Database = {
         }
         Relationships: []
       }
+      cemac_remittance_corridors: {
+        Row: {
+          created_at: string
+          fee_fixed: number
+          fee_percent_bps: number
+          fx_margin_bps: number
+          id: string
+          is_active: boolean
+          max_amount: number
+          min_amount: number
+          payout_channels: string[]
+          receive_country: string
+          receive_currency: string
+          send_country: string
+          send_currency: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee_fixed?: number
+          fee_percent_bps?: number
+          fx_margin_bps?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          min_amount?: number
+          payout_channels?: string[]
+          receive_country: string
+          receive_currency?: string
+          send_country: string
+          send_currency?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee_fixed?: number
+          fee_percent_bps?: number
+          fx_margin_bps?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          min_amount?: number
+          payout_channels?: string[]
+          receive_country?: string
+          receive_currency?: string
+          send_country?: string
+          send_currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cemac_remittance_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          remittance_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          remittance_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          remittance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cemac_remittance_events_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "cemac_remittances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cemac_remittances: {
+        Row: {
+          compliance_status: string
+          created_at: string
+          fee_amount: number
+          fx_rate: number
+          id: string
+          idempotency_key: string
+          metadata: Json
+          paid_at: string | null
+          payout_channel: string
+          payout_reference: string | null
+          purpose_code: string
+          receive_amount: number
+          receive_country: string
+          receive_currency: string
+          recipient_bank_account: string | null
+          recipient_id_number: string | null
+          recipient_msisdn: string | null
+          recipient_name: string
+          reference: string
+          send_amount: number
+          send_country: string
+          send_currency: string
+          sender_user_id: string
+          status: string
+        }
+        Insert: {
+          compliance_status?: string
+          created_at?: string
+          fee_amount?: number
+          fx_rate?: number
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          paid_at?: string | null
+          payout_channel: string
+          payout_reference?: string | null
+          purpose_code?: string
+          receive_amount: number
+          receive_country: string
+          receive_currency?: string
+          recipient_bank_account?: string | null
+          recipient_id_number?: string | null
+          recipient_msisdn?: string | null
+          recipient_name: string
+          reference: string
+          send_amount: number
+          send_country: string
+          send_currency?: string
+          sender_user_id: string
+          status?: string
+        }
+        Update: {
+          compliance_status?: string
+          created_at?: string
+          fee_amount?: number
+          fx_rate?: number
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          paid_at?: string | null
+          payout_channel?: string
+          payout_reference?: string | null
+          purpose_code?: string
+          receive_amount?: number
+          receive_country?: string
+          receive_currency?: string
+          recipient_bank_account?: string | null
+          recipient_id_number?: string | null
+          recipient_msisdn?: string | null
+          recipient_name?: string
+          reference?: string
+          send_amount?: number
+          send_country?: string
+          send_currency?: string
+          sender_user_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       charge_dlq: {
         Row: {
           attempts: number
@@ -15775,6 +15939,54 @@ export type Database = {
         }
         Relationships: []
       }
+      offline_payment_tokens: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string
+          id: string
+          issuer_user_id: string
+          metadata: Json
+          nonce: string
+          redeemed_at: string | null
+          redeemed_by_user_id: string | null
+          signature: string
+          status: string
+          token: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at: string
+          id?: string
+          issuer_user_id: string
+          metadata?: Json
+          nonce: string
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          signature: string
+          status?: string
+          token: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          id?: string
+          issuer_user_id?: string
+          metadata?: Json
+          nonce?: string
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          signature?: string
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
       onboarding_applications: {
         Row: {
           created_at: string
@@ -19077,6 +19289,57 @@ export type Database = {
           },
         ]
       }
+      qr_codes: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          merchant_name: string
+          merchant_user_id: string
+          payload: Json
+          qr_code: string
+          qr_type: string
+          reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          merchant_name: string
+          merchant_user_id: string
+          payload?: Json
+          qr_code: string
+          qr_type?: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          merchant_name?: string
+          merchant_user_id?: string
+          payload?: Json
+          qr_code?: string
+          qr_type?: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       qr_external_merchants: {
         Row: {
           country_code: string | null
@@ -19163,6 +19426,62 @@ export type Database = {
             columns: ["qr_card_payment_id"]
             isOneToOne: false
             referencedRelation: "qr_card_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_payments: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          payer_msisdn: string | null
+          payer_user_id: string | null
+          provider: string | null
+          provider_reference: string | null
+          qr_code_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          payer_msisdn?: string | null
+          payer_user_id?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          qr_code_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          payer_msisdn?: string | null
+          payer_user_id?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          qr_code_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_payments_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
             referencedColumns: ["id"]
           },
         ]
