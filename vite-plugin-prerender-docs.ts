@@ -189,7 +189,7 @@ Content-Type: application/problem+json
   <li><a href="/postman/Kang_Open_Banking_API_v${KOB_API_VERSION}.postman_collection.json">Postman Collection v${KOB_API_VERSION} (immutable)</a></li>
   <li><a href="/postman/manifest.json">Postman manifest (current version + URLs)</a></li>
 </ul>
-<p>Authentication: Bearer token or OAuth 2.0. Sandbox key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>`
+<p>Authentication: Bearer token or OAuth 2.0. Create your sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console (free, format <code>sbx_*</code>).</p>`
   },
   {
     path: '/developer/examples/real-world',
