@@ -76,22 +76,19 @@ Deno.serve(async (req) => {
   const hash = await sha256(plaintext);
 
   const { data: row, error } = await supabase
+  const { data: row, error } = await supabase
     .from("gateway_merchant_api_keys")
     .insert({
       merchant_id: body.merchant_id,
       api_key_hash: hash,
-      key_prefix: plaintext.slice(0, 12),
+      api_key_prefix: plaintext.slice(0, 12),
       label: body.label ?? `Key ${new Date().toISOString().slice(0, 10)}`,
       environment: env,
       status: "active",
-      created_by: user.id,
+      is_active: true,
     })
-    .select("id, key_prefix, environment, label, status, created_at")
+    .select("id, api_key_prefix, environment, label, status, created_at")
     .maybeSingle();
-
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
