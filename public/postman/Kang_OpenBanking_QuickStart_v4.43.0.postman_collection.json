@@ -1,0 +1,295 @@
+{
+  "info": {
+    "_postman_id": "9c1a4b80-f4d3-4e6f-bd2a-quickstart43",
+    "name": "Kang Open Banking — QuickStart v4.43.0",
+    "description": "Focused, ready-to-run examples for the three critical production flows: payment intents, webhook replay, and idempotent retries. All requests use the documented Idempotency-Key, X-Request-Id, and webhook signature headers. Import the matching Sandbox or Production environment file to get base_url + KOB_API_KEY pre-filled.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{KOB_API_KEY}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.kangopenbanking.com/v1" },
+    { "key": "idempotency_key", "value": "" },
+    { "key": "request_id", "value": "" },
+    { "key": "intent_id", "value": "" },
+    { "key": "event_id", "value": "" },
+    { "key": "endpoint_id", "value": "" },
+    { "key": "delivery_id", "value": "" },
+    { "key": "webhook_secret", "value": "whsec_replace_me" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-generate UUID v4 idempotency + request ids when blank.",
+          "function uuid(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16)});}",
+          "if(!pm.collectionVariables.get('idempotency_key')) pm.collectionVariables.set('idempotency_key', uuid());",
+          "if(!pm.collectionVariables.get('request_id')) pm.collectionVariables.set('request_id', uuid());"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Payment Intents",
+      "description": "Rail-agnostic async charge lifecycle. Create → poll until status=succeeded or requires_action → confirm next_action if needed.",
+      "item": [
+        {
+          "name": "1. Create payment intent (idempotent)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}", "description": "UUID v4. Replays with same key return the original response and add X-Idempotent-Replay: true." },
+              { "key": "X-Request-Id", "value": "{{request_id}}" },
+              { "key": "traceparent", "value": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01", "description": "W3C Trace Context (optional)." }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"50000\",\n  \"currency\": \"XAF\",\n  \"customer\": {\n    \"phone\": \"+237699000001\",\n    \"email\": \"customer@example.com\"\n  },\n  \"payment_method\": {\n    \"type\": \"mobile_money\",\n    \"channel\": \"mtn_momo_cm\"\n  },\n  \"capture_method\": \"automatic\",\n  \"metadata\": { \"order_id\": \"ord_demo_001\" }\n}"
+            },
+            "url": { "raw": "{{base_url}}/payment-intents", "host": ["{{base_url}}"], "path": ["payment-intents"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 created', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('intent_id', j.id);",
+                  "pm.test('status is processing|requires_action|succeeded', () => pm.expect(['processing','requires_action','succeeded']).to.include(j.status));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Retrieve payment intent",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Request-Id", "value": "{{request_id}}" }],
+            "url": { "raw": "{{base_url}}/payment-intents/{{intent_id}}", "host": ["{{base_url}}"], "path": ["payment-intents", "{{intent_id}}"] }
+          }
+        },
+        {
+          "name": "3. Confirm next_action (when requires_action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}-confirm" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"otp\": \"123456\"\n}" },
+            "url": { "raw": "{{base_url}}/payment-intents/{{intent_id}}/confirm", "host": ["{{base_url}}"], "path": ["payment-intents", "{{intent_id}}", "confirm"] }
+          }
+        },
+        {
+          "name": "4. Cancel payment intent",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Idempotency-Key", "value": "{{idempotency_key}}-cancel" }],
+            "url": { "raw": "{{base_url}}/payment-intents/{{intent_id}}/cancel", "host": ["{{base_url}}"], "path": ["payment-intents", "{{intent_id}}", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Replay",
+      "description": "Resend a webhook event to a registered endpoint. Replays produce a new delivery row with X-Webhook-Replay: true and Stripe-style t=,v1= signature over `${timestamp}.${body}`.",
+      "item": [
+        {
+          "name": "List endpoints",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/webhooks/endpoints", "host": ["{{base_url}}"], "path": ["webhooks", "endpoints"] }
+          }
+        },
+        {
+          "name": "List recent events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/webhooks/events?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "events"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data[0]) pm.collectionVariables.set('event_id', j.data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replay event by eventId",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}-replay" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"endpoint_ids\": []\n}" },
+            "url": { "raw": "{{base_url}}/webhooks/events/{{event_id}}/replay", "host": ["{{base_url}}"], "path": ["webhooks", "events", "{{event_id}}", "replay"] }
+          }
+        },
+        {
+          "name": "List deliveries for endpoint",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/webhooks/endpoints/{{endpoint_id}}/deliveries?status=failed&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "endpoints", "{{endpoint_id}}", "deliveries"],
+              "query": [
+                { "key": "status", "value": "failed" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify signature (receiver-side example)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Webhook-Timestamp", "value": "1748563200" },
+              { "key": "X-Webhook-Signature", "value": "t=1748563200,v1=<hex-hmac-sha256-of(timestamp + '.' + body)>" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"id\": \"evt_demo_001\", \"type\": \"payment_intent.succeeded\", \"data\": { } }" },
+            "url": { "raw": "https://your-endpoint.example.com/webhooks/kang", "protocol": "https", "host": ["your-endpoint", "example", "com"], "path": ["webhooks", "kang"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Compute v1 signature locally for the sample payload",
+                  "const secret = pm.collectionVariables.get('webhook_secret');",
+                  "const body = pm.request.body.raw || '';",
+                  "const ts = Math.floor(Date.now()/1000).toString();",
+                  "const sig = CryptoJS.HmacSHA256(ts + '.' + body, secret).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({ key: 'X-Webhook-Timestamp', value: ts });",
+                  "pm.request.headers.upsert({ key: 'X-Webhook-Signature', value: 't=' + ts + ',v1=' + sig });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Idempotency Patterns",
+      "description": "Three reference scenarios for safe retries. The same Idempotency-Key value MUST be reused across retries of the same intent.",
+      "item": [
+        {
+          "name": "A. Safe retry — same key, same body",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('idempotency_key', '11111111-1111-4111-8111-111111111111');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('replay returns 200 with X-Idempotent-Replay: true on retry', () => {",
+                  "  const replay = pm.response.headers.get('X-Idempotent-Replay');",
+                  "  pm.expect(['true', null]).to.include(replay);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"amount\": \"10000\", \"currency\": \"XAF\", \"payment_method\": { \"type\": \"mobile_money\", \"channel\": \"mtn_momo_cm\" }, \"customer\": { \"phone\": \"+237699000001\" } }" },
+            "url": { "raw": "{{base_url}}/payment-intents", "host": ["{{base_url}}"], "path": ["payment-intents"] }
+          }
+        },
+        {
+          "name": "B. Conflict — same key, different body (must 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "11111111-1111-4111-8111-111111111111" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"amount\": \"99999\", \"currency\": \"XAF\", \"payment_method\": { \"type\": \"mobile_money\", \"channel\": \"orange_momo_cm\" }, \"customer\": { \"phone\": \"+237699000099\" } }" },
+            "url": { "raw": "{{base_url}}/payment-intents", "host": ["{{base_url}}"], "path": ["payment-intents"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409 idempotency_conflict (RFC 7807)', () => {",
+                  "  pm.response.to.have.status(409);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.type).to.include('idempotency-conflict');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "C. New operation — fresh key",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function uuid(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16)});}",
+                  "pm.collectionVariables.set('idempotency_key', uuid());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"amount\": \"25000\", \"currency\": \"XAF\", \"payment_method\": { \"type\": \"mobile_money\", \"channel\": \"mtn_momo_cm\" }, \"customer\": { \"phone\": \"+237699000002\" } }" },
+            "url": { "raw": "{{base_url}}/payment-intents", "host": ["{{base_url}}"], "path": ["payment-intents"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status & Health",
+      "item": [
+        {
+          "name": "GET /v1/status",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/status", "host": ["{{base_url}}"], "path": ["status"] } }
+        },
+        {
+          "name": "GET /v1/health",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] } }
+        }
+      ]
+    }
+  ]
+}

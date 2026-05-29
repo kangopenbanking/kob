@@ -85,20 +85,38 @@ Deno.serve(async (req) => {
       }
     }
 
-    const [flutterwaveOk, dbOk, oauthOk, aispOk, pispOk, posOk] = await Promise.all([
+    async function checkWebhookSignerHealth(): Promise<boolean> {
+      try {
+        const { error } = await supabase.rpc('compute_endpoint_hmac', {
+          p_endpoint_id: '00000000-0000-0000-0000-000000000000',
+          p_payload: 'health-probe',
+        });
+        // RPC reachable: either succeeds or returns controlled error
+        return !error || (error.code !== 'PGRST301' && error.code !== '08006');
+      } catch {
+        return false;
+      }
+    }
+
+    const [flutterwaveOk, dbOk, oauthOk, aispOk, pispOk, posOk, signerOk] = await Promise.all([
       checkFlutterwaveHealth(),
       checkDatabaseHealth(),
       checkOAuthHealth(),
       checkAispHealth(),
       checkPispHealth(),
       checkPosHealth(),
+      checkWebhookSignerHealth(),
     ]);
 
-    const allServicesOk = flutterwaveOk && dbOk && oauthOk && aispOk && pispOk && posOk;
+    const allServicesOk = flutterwaveOk && dbOk && oauthOk && aispOk && pispOk && posOk && signerOk;
+    const SPEC_VERSION = '4.43.0';
+    const RATCHET_VERSION = 'phase-9';
 
     const health = {
       status: allServicesOk ? 'operational' : 'degraded',
       version: '1.0.0',
+      spec_version: SPEC_VERSION,
+      ratchet_version: RATCHET_VERSION,
       timestamp: new Date().toISOString(),
       services: {
         oauth: oauthOk ? 'operational' : 'degraded',
@@ -111,6 +129,7 @@ Deno.serve(async (req) => {
         pos: posOk ? 'operational' : 'degraded',
         virtual_cards: 'dormant',
         webhooks: dbOk ? 'operational' : 'degraded',
+        webhook_signer: signerOk ? 'operational' : 'degraded',
         database: dbOk ? 'operational' : 'degraded'
       },
       documentation: (() => {
