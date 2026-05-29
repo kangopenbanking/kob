@@ -1,147 +1,86 @@
-# Production Blockers — Additive Remediation Plan
 
-Scope: gaps #1–5 from the audit. All changes are additive per Standing Order #4. OpenAPI bumps: `4.20.x → 4.21.0` (minor — new endpoints, new component schemas/headers).
+# Phase 10 — CEMAC Coverage & Inclusion Modules
 
-Outcome: every claim in the public docs is backed by a spec field, a runtime behavior, and a CI ratchet test.
+Goal: close all 12 gaps and ship 4 new modules (USSD, Agents, QR-offline, CEMAC remittance) under Standing Orders #1–#7 + P1–P10. Additive only; version bump `4.43.0 → 4.44.0` (minor — new endpoints + schemas; no removals).
 
----
+## Why phased
 
-## Gap 1 — Idempotency: tighten spec & wire replay header everywhere
-
-The runtime is already correct (UUID v4 + 255-char ceiling + SHA-256 hash + 5 outcomes). The spec under-describes it, and the replay-response header is only on 1 of ~33 operations.
-
-**Changes**
-1. `public/openapi.json` + `openapi.yaml`:
-   - Add `pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'` and `maxLength: 255` to `components.parameters.IdempotencyKey.schema` and `components.headers.IdempotencyKey.schema`.
-   - New `components.headers.XIdempotentReplay` (`schema: { type: boolean }`) and `XIdempotencyStatus` (`enum: [first_request, replayed, conflict_rejected]`).
-   - Reference both on the 2xx response of every financial mutating operation (re-use the same allow-list as `openapi-idempotency-coverage.test.ts`).
-2. `docs/developer-portal/reference/idempotency.md` + `docs/public/idempotency.md` (new mirror): reconcile the "any string" wording with the spec's UUID v4 contract; document the 24 h DB TTL vs. 60 s in-flight TTL; document the three `X-Idempotency-Status` values.
-3. New ratchet test `src/test/openapi-idempotency-response-headers.test.ts`: asserts every operation that declares `Idempotency-Key` also declares `X-Idempotent-Replay` on its 2xx.
-
-No runtime/edge-function change needed.
+This touches the OpenAPI spec, ~10 new edge functions, ~12 new tables with RLS+GRANTs, multiple guides, Postman additions, SDKs, and a full audit report. Shipping it all in one turn is unsafe (migration rollbacks, spec parity gates, smoke tests). I'll deliver in 5 phases and pause for approval between each.
 
 ---
 
-## Gap 2 — Async Payment Intent (canonical resource)
+## Phase 10.0 — Audit report (this turn)
 
-Today `pay-by-bank/intents` and `gateway/funding-intents` exist but are per-rail. Add a rail-agnostic façade.
+- `docs/audits/2026-05-29-cemac-coverage-gap-report.md`: each of the 12 gaps mapped to file, schema, RFC/standard cited, fix plan, risk, and phase assignment. Roadmap table for the 4 new modules. No code changes.
 
-**Changes**
-1. New edge function `supabase/functions/payment-intents/index.ts` thin orchestrator that delegates to `payment-orchestrator` per `payment_method_types`.
-2. New DB table `public.payment_intents` (id, merchant_id, amount, currency, status, payment_method_types[], next_action jsonb, last_error jsonb, idempotency_key, child_intent_id, child_resource, timestamps). RLS by merchant ownership. State enum: `requires_payment_method | requires_confirmation | processing | requires_action | succeeded | canceled | failed`.
-3. OpenAPI: add `/v1/payment-intents` POST/GET, `/v1/payment-intents/{id}` GET, `/v1/payment-intents/{id}/confirm` POST, `/v1/payment-intents/{id}/cancel` POST. All return `202 Accepted` on create. Schema `PaymentIntent` with explicit `status` enum + `next_action` discriminator (`redirect_to_url`, `display_qr`, `use_stk_push`).
-4. New webhook event types: `payment_intent.created`, `payment_intent.requires_action`, `payment_intent.processing`, `payment_intent.succeeded`, `payment_intent.failed`.
-5. Docs: `docs/developer-portal/guides/payment-intents.md` with the state-machine diagram (ASCII), cURL+Node+Python examples.
+## Phase 10.1 — Pure additive spec fixes (no new modules)
 
-`pay-by-bank/intents` and `funding-intents` remain untouched (Standing Order #1).
+Covers gaps: provider enum, Wema/NGN copy-paste, BVN aliasing, LoanScheduleItem deprecated required[], RTP SLA doc, Accept-Language header, French ProblemDetails examples, sandbox demo-key warning, credit-score `data_sources` field.
 
----
+- `scripts/phase10-spec-hardening.mjs` — sole mutator
+- `MobileMoneyCharge.provider` enum → `["MTN","Orange","Airtel","ExpressUnion","CamPost"]`
+- `GatewayVirtualAccount` example → `Afriland First Bank`, currency `XAF`
+- New `/v1/verify/nin` + `/v1/verify/cni` operations; `/v1/verify/bvn` stays (Nigeria), deprecation note added pointing to NIN/CNI for CEMAC
+- `LoanScheduleItem.required[]` — keep deprecated fields *non-required*; add migration note in description (cannot remove per Standing Order #1; only loosen required[] which is additive-safe per #2 ratchet rule — required[] removal is the one ratchet exception we'll document)
+- New `Accept-Language` header parameter (en|fr|fr-CM|en-CM) on all ops; helper `_shared/i18n-errors.ts` with FR/EN catalog for the 63 RFC 7807 codes
+- `CreditScore.data_sources` enum: `mobile_money_history`, `bank_transactions`, `utility_payments`, `njangi_participation`, `merchant_sales`, `bureau_creditinfo`, `cobac_registry`
+- RTP SLA doc: `docs/developer-portal/reference/rtp-sla.md` (sub-30s mobile-money confirmation target, T+0 settlement)
+- Replace hardcoded `sk_test_kob_sandbox_demo_key_2024` references with "create your own sandbox key in the developer portal" + 410-Gone redirect note
+- `src/config/version.ts` + `public/changelog.json` → 4.44.0
+- Ratchet guard: `src/test/openapi-phase10-coverage.test.ts`
 
-## Gap 3 — Webhook signature/timestamp + canonical replay path
+## Phase 10.2 — USSD session engine
 
-Runtime currently sends `X-Webhook-Signature: <hex>` with no timestamp header — spec prose claims `v1=<hex>` + `X-Webhook-Timestamp`.
+- Tables: `ussd_sessions` (TTL-tracked), `ussd_menu_nodes`, `ussd_callbacks` (all with GRANTs + RLS, service_role + authenticated merchant scoping)
+- Edge function: `ussd-session/` with `POST /v1/ussd/sessions`, `GET /v1/ussd/sessions/{id}`, `POST /v1/ussd/sessions/{id}/respond`, `DELETE /v1/ussd/sessions/{id}`, `POST /v1/ussd/callbacks` (telco inbound)
+- Schemas: `UssdSession`, `UssdMenuNode`, `UssdCallback`, `UssdSessionState` enum
+- Stateful menu-tree renderer; 180s TTL per GSMA USSD guidance
+- Guide: `docs/developer-portal/guides/ussd-sessions.md` (cURL + Node + Python + PHP)
 
-**Changes**
-1. Runtime `supabase/functions/gateway-webhook-deliver-v2/index.ts`:
-   - Compute `ts = Math.floor(Date.now()/1000)`; signed payload = `${ts}.${rawBody}`.
-   - Emit both headers: `X-Webhook-Timestamp: <ts>` and `X-Webhook-Signature: t=<ts>,v1=<hex>` (Stripe-style).
-   - **Back-compat:** also emit legacy `X-Webhook-Signature-Legacy: <hex>` of the raw body for one deprecation window so existing receivers don't break.
-2. Same change in `pisp-webhook`, `flutterwave-webhook`, and any other outbound sender (sweep via rg `X-Webhook-Signature`).
-3. OpenAPI:
-   - Add `components.headers.XWebhookSignature` (with `pattern: '^t=\\d{10},v1=[0-9a-f]{64}$'`) and `XWebhookTimestamp`.
-   - Add `components.securitySchemes.WebhookSignature` referencing the format.
-   - Add new path `POST /v1/webhooks/events/{eventId}/replay` as a façade over the existing nested `/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay` (looks up endpoint+delivery from event_id).
-   - Document DLQ explicitly: new `GET /v1/webhooks/dlq` and `POST /v1/webhooks/dlq/{deliveryId}/requeue` (admin scope) — wires to existing `admin-webhook-dlq-replay` function.
-4. SDK snippets in `public/docs/snippets/auth-and-payments.md` and `packages/sdk-{node,python,php}` verify helper: parse `t=…,v1=…`, reject if `|now-t| > 300`, constant-time compare.
-5. Tests: extend `src/test/openapi-idempotency-coverage.test.ts` pattern with `openapi-webhook-signature-coverage.test.ts` (every webhook-receiver doc references `WebhookSignature` security scheme).
+## Phase 10.3 — Agent banking module
 
----
+- Tables: `agents`, `agent_floats`, `agent_float_movements`, `agent_cash_transactions`, `agent_kyc_documents`
+- Edge function: `agents-lifecycle/` with `POST /v1/agents` (register), `GET /v1/agents` (list w/ geo filter), `GET /v1/agents/{id}`, `POST /v1/agents/{id}/float/topup`, `POST /v1/agents/{id}/float/withdraw`, `GET /v1/agents/{id}/float`, `POST /v1/agents/{id}/cash-in`, `POST /v1/agents/{id}/cash-out`, `GET /v1/agents/{id}/transactions`
+- Float-limit-alert webhook events: `agent.float.low`, `agent.float.depleted`
+- Schemas: `Agent`, `AgentFloat`, `AgentFloatMovement`, `AgentCashTransaction`, `AgentStatus` enum
+- Geo discovery: lat/lng + radius_km
+- Guide: `docs/developer-portal/guides/agent-banking.md`
 
-## Gap 4 — Sandbox isolation: surface what exists in the spec + add fault injection facade
+## Phase 10.4 — QR + offline payments
 
-Runtime already issues per-developer `sbx_` keys via `sandbox-create-api-key`. Spec hides this.
+- Tables: `gateway_qr_tokens` (signed payload, redeemable status), `gateway_qr_offline_queue`
+- Edge function: `gateway-qr/` with `POST /v1/gateway/qr` (generate), `GET /v1/gateway/qr/{token}` (decode), `POST /v1/gateway/qr/redeem`, `POST /v1/gateway/qr/queue` (offline merchant batch flush)
+- EMV-compatible payload (TLV format, CRC-16/CCITT-FALSE per EMVCo QRCPS v1.1)
+- Ed25519-signed offline tokens with 24h validity for connectivity-resilient redemption
+- Schemas: `QrToken`, `QrRedeemRequest`, `QrOfflineBatch`
+- Guide: `docs/developer-portal/guides/qr-payments-offline.md`
 
-**Changes**
-1. OpenAPI:
-   - `POST /v1/sandbox/api-keys` 201 response: tighten schema — `api_key: { type: string, pattern: '^sbx_[0-9a-f]{64}$', example: 'sbx_…' }`, add `tier: { enum: ['free', 'pro', 'enterprise'] }`.
-   - Add `POST /v1/sandbox/trigger` façade with body `{ event: 'bank_timeout' | 'network_unreachable' | 'insufficient_funds' | 'operator_unavailable' | …, target_id?: string, delay_ms?: integer }` — delegates to existing `sandbox-provider-simulator`.
-   - Add `POST /v1/sandbox/charges/{chargeId}/simulate` as a charge-scoped façade over `/v1/sandbox/payments/simulate`.
-2. Runtime: extend `sandbox-create-api-key` to accept `{ tier }` (default `free`) and persist it on `sandbox_api_keys`. Migration: add `tier` column with default `'free'`, GRANTs to authenticated + service_role per memory rule.
-3. Docs: `docs/developer-portal/sandbox/isolation.md` — explain per-developer scoping, key format, tier matrix, fault-injection catalog.
+## Phase 10.5 — CEMAC cross-border remittance
 
----
+- Tables: `cemac_remittances`, `beac_corridor_routes`, `beac_statistical_reports`
+- Edge function: `remittance-cemac/` with `POST /v1/remittance/cemac` (initiate), `GET /v1/remittance/cemac/{id}`, `POST /v1/remittance/cemac/{id}/cancel`, `GET /v1/remittance/cemac/corridors`, `POST /v1/remittance/cemac/reports/g10` (BEAC G10/S31 generator)
+- Country-pair compliance pre-checks for CM/GA/CG/TD/CF/GQ
+- Schemas: `CemacRemittance`, `BeacCorridor`, `BeacStatisticalReport`
+- Webhook: `remittance.beac.report.generated`
+- Guide: `docs/developer-portal/guides/cemac-remittance.md`
 
-## Gap 5 — RFC 7807 promotion: docs + examples + ratchet (no removal)
+## Cross-cutting per phase
 
-The `ProblemDetails` schema is already wired into 2,406 error responses alongside the legacy `Error` envelope. Dual-format stays (Standing Order #1 forbids removing `Error`). Only docs and examples are stale.
+Each implementation phase ships with: spec mutator script, edge function code, migration with GRANTs+RLS, vitest ratchet guard, public guide (cURL + Node + Python minimum), Postman additions, changelog entry, version bump if needed.
 
-**Changes**
-1. Rewrite `docs/developer-portal/reference/errors.md` and `docs/public/errors.md`:
-   - Lead with RFC 7807 Problem Details format and `application/problem+json` content type.
-   - Document content-negotiation: clients sending `Accept: application/problem+json` get RFC 7807; default `application/json` continues to receive the legacy envelope.
-   - Publish the complete error-code registry (the "63 codes") as a table grouped by domain prefix.
-2. Add `components.examples`:
-   - `ProblemDetailsConflict` (409 idempotency replay conflict, full RFC 7807 shape).
-   - `ProblemDetailsValidation` (422 with `errors[]`).
-   - `ProblemDetailsRateLimited` (429 with `retry_after`).
-   - Reference these examples on the matching error responses (drop-in via `$ref`, no removals).
-3. Runtime sweep of edge functions:
-   - Audit `extractEdgeFunctionError` callers — when caller sends `Accept: application/problem+json`, response must use that content-type + ProblemDetails shape. Implement via a `problemResponse()` helper in `_shared/integration-layer/`.
-4. New ratchet test `src/test/openapi-problem-details-coverage.test.ts`: every 4xx/5xx in financial domains MUST declare `application/problem+json` → `ProblemDetails`; legacy `application/json` → `Error` may coexist but never alone.
+## Standing Orders compliance
 
----
+- #1 LOCK: no renames, no removals
+- #2 RATCHET: only `LoanScheduleItem.required[]` loosened — documented in audit report with cited justification (was scheduled for v5.0.0 removal; loosening required[] is the safe transition path)
+- #3 AUDIT: every change cites GSMA Mobile Money v1.2, EMVCo QRCPS v1.1, BEAC Règlement 02/18/CEMAC, ISO 4217, RFC 7807, FAPI-1.0-ADV
+- #4 SURGEON: all additive
+- #5 DEAD CODE: every new schema wired to ≥1 op
+- #6 VERSION: minor 4.43.0 → 4.44.0
+- #7 ROLES: Guardian/Architect/Surgeon/Auditor/Scorekeeper applied per phase
+- P1–P10: public docs, working snippets in cURL/Node/Python (PHP/Java/Go for go-live guides), changelog within 48h
 
-## Cross-cutting / Audit Trail (Standing Order #3)
+## What I need from you
 
-| Change | Cited standard |
-|---|---|
-| Idempotency key pattern + replay header | Stripe API Reference §"Idempotent Requests"; PSD2 RTS Art. 36(1)(b) |
-| Payment Intent state machine | Stripe API Reference §payment_intents; UK Open Banking Read/Write API v3.1.10 |
-| Webhook `t=,v1=` + 5-min tolerance | Stripe webhooks signing convention; OWASP webhook security cheat-sheet |
-| `POST /v1/webhooks/events/{id}/replay` | Stripe `/v1/webhook_endpoints/{id}/events/{eventId}/replay` |
-| RFC 7807 `application/problem+json` | RFC 7807; OpenAPI 3.1 content-negotiation guidance |
-| Sandbox `sbx_` pattern, per-dev isolation | Plaid sandbox model; Stripe restricted test keys |
+Approve this plan and I'll start with **Phase 10.0 (audit report)** in the next turn, then pause for your go-ahead before Phase 10.1.
 
-`info.version` bumped once: `4.20.x → 4.21.0` (minor; additive only). Changelog entry added under ORDER P7. JSON↔YAML parity verified by existing CI.
-
----
-
-## File-level execution map
-
-```text
-public/openapi.json                    [edit] — all spec additions above
-public/openapi.yaml                    [edit] — parity
-docs/developer-portal/reference/idempotency.md   [edit]
-docs/developer-portal/reference/errors.md        [rewrite]
-docs/developer-portal/guides/payment-intents.md  [new]
-docs/developer-portal/sandbox/isolation.md       [new]
-docs/public/idempotency.md             [new mirror]
-docs/public/errors.md                  [rewrite]
-docs/audits/phase-8-production-blockers.md       [new]
-supabase/functions/payment-intents/index.ts      [new]
-supabase/functions/gateway-webhook-deliver-v2/index.ts   [edit — t=,v1= format + ts header]
-supabase/functions/pisp-webhook/index.ts                 [edit if outbound]
-supabase/functions/flutterwave-webhook/index.ts          [edit if outbound]
-supabase/functions/sandbox-create-api-key/index.ts       [edit — accept tier]
-supabase/functions/sandbox-trigger/index.ts              [new façade]
-supabase/functions/sandbox-charge-simulate/index.ts      [new façade]
-supabase/functions/_shared/integration-layer/problem.ts  [new — problemResponse() helper]
-supabase/migrations/<ts>_payment_intents.sql             [new table + RLS + GRANTs]
-supabase/migrations/<ts>_sandbox_api_keys_tier.sql       [new column]
-src/test/openapi-idempotency-response-headers.test.ts    [new ratchet]
-src/test/openapi-webhook-signature-coverage.test.ts      [new ratchet]
-src/test/openapi-problem-details-coverage.test.ts        [new ratchet]
-src/test/webhook-signature-runtime-contract.test.ts      [new — verify t=,v1= emission]
-```
-
-## Out of scope (deferred)
-
-- Gaps #6–9 and the 5 differentiators (per your selection).
-- Removing the legacy `Error` envelope or legacy `X-Webhook-Signature: <hex>` header (would require v5 major bump).
-- New "tier" UI in the sandbox console — only the API layer is added now.
-
-## Risks
-
-- **Webhook receivers parsing the legacy raw-hex header**: mitigated by emitting the legacy header in parallel for one deprecation window; changelog entry + email to active webhook tenants.
-- **`payment_intents` becoming a third intent concept**: documented explicitly as a rail-agnostic façade; pay-by-bank and funding-intents remain unchanged underneath.
-- **Spec size growth**: ~40 KB additional. Within existing perf budget (`scripts/openapi-perf-budget.json`).
+If you want a different ordering, tell me which phase to do first.
