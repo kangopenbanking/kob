@@ -61,6 +61,19 @@ interface ApiKeyRow {
   suspended_at: string | null;
   suspended_reason: string | null;
 }
+
+interface UsageRow {
+  api_key_id: string;
+  calls_24h: number;
+  calls_7d: number;
+  error_rate_pct: number;
+  last_rate_limited_at: string | null;
+}
+
+export default function AdminInstitutionApiKeys() {
+  const [tab, setTab] = useState<"keys" | "usage">("keys");
+  const [keys, setKeys] = useState<ApiKeyRow[]>([]);
+  const [usage, setUsage] = useState<Record<string, UsageRow>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -70,7 +83,6 @@ interface ApiKeyRow {
   const [newKeyPlaintext, setNewKeyPlaintext] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  async function load() {
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
