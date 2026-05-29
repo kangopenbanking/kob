@@ -76,7 +76,6 @@ Deno.serve(async (req) => {
   const hash = await sha256(plaintext);
 
   const { data: row, error } = await supabase
-  const { data: row, error } = await supabase
     .from("gateway_merchant_api_keys")
     .insert({
       merchant_id: body.merchant_id,
@@ -89,6 +88,10 @@ Deno.serve(async (req) => {
     })
     .select("id, api_key_prefix, environment, label, status, created_at")
     .maybeSingle();
+
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
