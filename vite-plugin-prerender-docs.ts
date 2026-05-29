@@ -362,7 +362,7 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 <h3>Sandbox Base URL</h3>
 <p><code>https://sandbox-api.kangopenbanking.com/v1</code></p>
 <h3>Default Test Credentials</h3>
-<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<p>Create your free sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console. Format <code>sbx_*</code>; keys never expire and are scoped per developer.</p>
 <h3>Test Coverage</h3>
 <table>
   <tr><th>Area</th><th>Supported</th></tr>
