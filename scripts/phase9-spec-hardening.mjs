@@ -251,94 +251,96 @@ function addConsentLifecyclePaths(spec) {
     ? [{ $ref: "#/components/parameters/IdempotencyKey" }]
     : [];
 
-  spec.paths["/v1/consents"] ||= {
-    get: {
-      tags: ["Consents"],
-      summary: "List consents",
-      operationId: "listConsents",
-      parameters: [
-        ...traceParams,
-        { name: "type", in: "query", schema: { type: "string", enum: ["AISP", "PISP", "CBPII"] } },
-        { name: "status", in: "query", schema: { type: "string", enum: ["AwaitingAuthorisation", "Authorised", "Rejected", "Consumed", "Expired", "Revoked"] } },
-        { name: "cursor", in: "query", schema: { type: "string" } },
-        { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 25 } },
-      ],
-      responses: {
-        "200": {
-          description: "Paginated list of consents.",
-          content: { "application/json": { schema: { $ref: "#/components/schemas/ConsentList" } } },
-        },
+  const consentsRoot = (spec.paths["/v1/consents"] ||= {});
+  consentsRoot.get ||= {
+    tags: ["Consents"],
+    summary: "List consents",
+    operationId: "listConsents",
+    parameters: [
+      ...traceParams,
+      { name: "type", in: "query", schema: { type: "string", enum: ["AISP", "PISP", "CBPII"] } },
+      { name: "status", in: "query", schema: { type: "string", enum: ["AwaitingAuthorisation", "Authorised", "Rejected", "Consumed", "Expired", "Revoked"] } },
+      { name: "cursor", in: "query", schema: { type: "string" } },
+      { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 25 } },
+    ],
+    responses: {
+      "200": {
+        description: "Paginated list of consents.",
+        content: { "application/json": { schema: { $ref: "#/components/schemas/ConsentList" } } },
       },
     },
-    post: {
-      tags: ["Consents"],
-      summary: "Create consent",
-      description: "Rail-agnostic consent factory. Routes to `aisp-create-consent`, `pisp-create-consent`, or the CBPII module based on `type`.",
-      operationId: "createConsent",
-      parameters: [...traceParams, ...idem],
-      requestBody: {
-        required: true,
-        content: { "application/json": { schema: { $ref: "#/components/schemas/ConsentCreate" } } },
-      },
-      responses: {
-        "201": {
-          description: "Consent created in AwaitingAuthorisation.",
-          content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
-        },
+  };
+  consentsRoot.post ||= {
+    tags: ["Consents"],
+    summary: "Create consent",
+    description: "Rail-agnostic consent factory. Routes to `aisp-create-consent`, `pisp-create-consent`, or the CBPII module based on `type`.",
+    operationId: "createConsent",
+    parameters: [...traceParams, ...idem],
+    requestBody: {
+      required: true,
+      content: { "application/json": { schema: { $ref: "#/components/schemas/ConsentCreate" } } },
+    },
+    responses: {
+      "201": {
+        description: "Consent created in AwaitingAuthorisation.",
+        content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
       },
     },
   };
 
-  spec.paths["/v1/consents/{consentId}"] ||= {
+  const consentById = (spec.paths["/v1/consents/{consentId}"] ||= {
     parameters: [{ name: "consentId", in: "path", required: true, schema: { type: "string" } }],
-    get: {
-      tags: ["Consents"],
-      summary: "Get consent",
-      operationId: "getConsent",
-      parameters: traceParams,
-      responses: {
-        "200": {
-          description: "Consent record.",
-          content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
-        },
+  });
+  consentById.parameters ||= [{ name: "consentId", in: "path", required: true, schema: { type: "string" } }];
+  consentById.get ||= {
+    tags: ["Consents"],
+    summary: "Get consent",
+    operationId: "getConsent",
+    parameters: traceParams,
+    responses: {
+      "200": {
+        description: "Consent record.",
+        content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
       },
     },
-    delete: {
-      tags: ["Consents"],
-      summary: "Revoke consent",
-      operationId: "revokeConsent",
-      parameters: [...traceParams, ...idem],
-      responses: { "204": { description: "Consent revoked." } },
-    },
+  };
+  consentById.delete ||= {
+    tags: ["Consents"],
+    summary: "Revoke consent",
+    operationId: "revokeConsent",
+    parameters: [...traceParams, ...idem],
+    responses: { "204": { description: "Consent revoked." } },
   };
 
-  spec.paths["/v1/consents/{consentId}/extend"] ||= {
+  const consentExtend = (spec.paths["/v1/consents/{consentId}/extend"] ||= {
     parameters: [{ name: "consentId", in: "path", required: true, schema: { type: "string" } }],
-    post: {
-      tags: ["Consents"],
-      summary: "Extend consent expiration",
-      operationId: "extendConsent",
-      parameters: [...traceParams, ...idem],
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              required: ["expiration_date"],
-              properties: { expiration_date: { type: "string", format: "date-time" } },
-            },
+  });
+  consentExtend.parameters ||= [{ name: "consentId", in: "path", required: true, schema: { type: "string" } }];
+  consentExtend.post ||= {
+    tags: ["Consents"],
+    summary: "Extend consent expiration",
+    operationId: "extendConsent",
+    parameters: [...traceParams, ...idem],
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["expiration_date"],
+            properties: { expiration_date: { type: "string", format: "date-time" } },
           },
         },
       },
-      responses: {
-        "200": {
-          description: "Consent extended.",
-          content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
-        },
+    },
+    responses: {
+      "200": {
+        description: "Consent extended.",
+        content: { "application/json": { schema: { $ref: "#/components/schemas/Consent" } } },
       },
     },
   };
+}
 }
 
 // ---------------------------------------------------------------------------
