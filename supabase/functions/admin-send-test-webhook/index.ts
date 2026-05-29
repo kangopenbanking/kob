@@ -128,13 +128,11 @@ Deno.serve(async (req) => {
     .eq("id", endpointId)
     .maybeSingle();
   if (epErr || !endpoint) {
-    return new Response(JSON.stringify({ error: "Webhook endpoint not found" }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const eventId = `evt_test_${uuid()}`;
+  const { data: endpoint, error: epErr } = await supabase
+    .from("gateway_webhook_endpoints")
+    .select("id, merchant_id, url, secret, is_active")
+    .eq("id", endpointId)
+    .maybeSingle();
   const event = {
     id: eventId,
     type: eventType,
