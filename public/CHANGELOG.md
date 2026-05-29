@@ -1,12 +1,35 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.46.0** · Last updated: **2026-05-29**
+Current API version: **4.49.0** · Last updated: **2026-05-29**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.49.0 — 2026-05-29
+**Type:** minor · **Breaking changes:** none
+
+Phase 11 — integrator experience & governance. Adds enriched Postman environments (sandbox + production), admin send-test-webhook flow, institution API key admin console (create/rotate/suspend/revoke + usage), per-version OpenAPI export (JSON + YAML) with Postman 'Import Spec' UX, and ratchet tests for phases 10.2-10.5.
+
+### Highlights
+- Postman: Sandbox and Production environments now prefill base_url, api_key, webhook_secret, idempotency_key, accept_language, spec_url, spec_version, postman_import_url, key_issuer_url, merchant_id. README_postman.md documents the import flow.
+- Admin: 'Send test webhook' button on /admin/webhook-deliveries fires a signed (HMAC-SHA256) synthetic event to any registered endpoint and records the delivery row with is_test=true. New edge function admin-send-test-webhook.
+- Admin: new console /admin/institution-api-keys to create, rotate, suspend/resume, and revoke institution-scoped API keys. New edge functions api-keys-create and api-keys-suspend; reuses api-keys-rotate and api-keys-revoke. Per-key calls (24h/7d), error rate, last 429 timestamp.
+- Spec: new public page /developer/spec-versions lists every ratchet/spec_version with copy-able JSON + YAML download URLs. Includes Postman 'Import → Link' instructions and copy buttons.
+- Spec: scripts/snapshot-openapi-yaml-history.mjs mirrors every JSON snapshot to a sibling YAML file. Wired into sync-version-artifacts.mjs.
+- Tests: src/test/openapi-phase10-modules-ratchet.test.ts ratchets USSD, Agents, QR + offline, and CEMAC remittance paths/schemas/required Idempotency-Key. Deno test cemac-remittance/quote_test.ts covers quote math.
+- Spec: additive /v1/admin/webhooks/test, /v1/admin/api-keys, /v1/admin/api-keys/{id}/rotate, /suspend, /revoke operations and schemas (AdminTestWebhookRequest, AdminApiKey, …). No removals; Standing Order #2 honoured.
+- DB: gateway_webhook_deliveries(_v2).is_test flag; gateway_merchant_api_keys.status / suspended_at / suspended_reason.
+
+### Standards & citations
+- RFC 6920 (HMAC-SHA-256 named information signatures)
+- OWASP API Security Top 10 — 2023 (API2: Broken Authentication; API8: Security Misconfiguration)
+- OpenAPI Specification 3.1.0
+- RFC 7807 (Problem Details for HTTP APIs)
 
 ---
 
