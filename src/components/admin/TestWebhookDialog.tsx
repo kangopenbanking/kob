@@ -33,12 +33,13 @@ const EVENT_TYPES = [
   "payment.failed",
   "payment.refunded",
   "qr.paid",
-interface Endpoint {
-  id: string;
-  url: string;
-  merchant_id: string | null;
-  is_active: boolean | null;
-}
+  "qr.expired",
+  "remittance.cemac.quoted",
+  "remittance.cemac.paid",
+  "remittance.cemac.cancelled",
+  "agent.cashin.completed",
+  "agent.cashout.completed",
+  "agent.float.low",
   "ussd.session.started",
   "ussd.session.ended",
   "transfer.completed",
@@ -50,7 +51,7 @@ interface Endpoint {
   id: string;
   url: string;
   merchant_id: string | null;
-  status: string | null;
+  is_active: boolean | null;
 }
 
 interface DeliveryResult {

@@ -116,7 +116,11 @@ interface ApiKeyRow {
       /* ignore — table may not exist in this env */
     }
   }
-    () => keys.filter((k) => !filter || (k.label ?? "").toLowerCase().includes(filter.toLowerCase()) || (k.key_prefix ?? "").includes(filter)),
+
+  useEffect(() => { load(); }, []);
+
+  const filtered = useMemo(
+    () => keys.filter((k) => !filter || (k.label ?? "").toLowerCase().includes(filter.toLowerCase()) || (k.api_key_prefix ?? "").includes(filter)),
     [keys, filter],
   );
 
