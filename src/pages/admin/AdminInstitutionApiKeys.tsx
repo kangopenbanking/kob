@@ -41,18 +41,6 @@ import { format } from "date-fns";
 interface ApiKeyRow {
   id: string;
   merchant_id: string;
-  key_prefix: string | null;
-  label: string | null;
-  environment: string | null;
-  status: string;
-  created_at: string;
-  suspended_at: string | null;
-  suspended_reason: string | null;
-}
-
-interface ApiKeyRow {
-  id: string;
-  merchant_id: string;
   api_key_prefix: string | null;
   label: string | null;
   environment: string | null;
