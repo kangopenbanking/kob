@@ -84,6 +84,3 @@ export default function GatewayVerificationGuide() {
     </GuidePageShell>
   );
 }
-
-  );
-}
