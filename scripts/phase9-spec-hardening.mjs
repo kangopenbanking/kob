@@ -341,7 +341,7 @@ function addConsentLifecyclePaths(spec) {
     },
   };
 }
-}
+
 
 // ---------------------------------------------------------------------------
 // G9 — ISO 20022 camt.053.001.08 statement generation
