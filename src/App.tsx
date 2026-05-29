@@ -487,7 +487,10 @@ const EmbeddableVerificationWidget = lazy(() => import("./pages/widgets/Embeddab
 const WidgetSDKPage = lazy(() => import("./pages/developer/WidgetSDKPage"));
 const OpenBankingStandards = lazy(() => import("./pages/developer/OpenBankingStandards"));
 const BankOnboardingGuide = lazy(() => import("./pages/developer/BankOnboardingGuide"));
+const USSDIntegrationGuide = lazy(() => import("./pages/developer/USSDIntegrationGuide"));
+const AgentBankingGuide = lazy(() => import("./pages/developer/AgentBankingGuide"));
 const TestReport = lazy(() => import("./pages/developer/TestReport"));
+
 
 const FIPortal = lazy(() => import("./pages/FIPortal"));
 const InstitutionTransactions = lazy(() => import("./pages/institution/InstitutionTransactions"));
