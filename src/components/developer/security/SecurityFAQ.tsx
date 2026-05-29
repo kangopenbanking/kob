@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Is this production-ready?",
-    a: <>Yes. The current API version is v4.16.4. Confirm via the <a href="/developer/changelog" className="underline">changelog</a> and the <code className="mx-1 rounded bg-muted px-1">version</code> field returned by /healthz.</>,
+    a: <>Yes. The current API version is v{KOB_API_VERSION}. Confirm via the <a href="/developer/changelog" className="underline">changelog</a> and the <code className="mx-1 rounded bg-muted px-1">version</code> field returned by /healthz.</>,
   },
   {
     q: "Which SDK should I install?",
