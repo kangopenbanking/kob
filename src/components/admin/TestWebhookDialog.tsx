@@ -74,8 +74,6 @@ export function TestWebhookDialog({ onDelivered }: { onDelivered?: () => void })
 
   useEffect(() => {
     if (!open) return;
-  useEffect(() => {
-    if (!open) return;
     (async () => {
       const { data } = await supabase
         .from("gateway_webhook_endpoints")
@@ -87,6 +85,7 @@ export function TestWebhookDialog({ onDelivered }: { onDelivered?: () => void })
       if (rows[0]) setEndpointId(rows[0].id);
     })();
   }, [open]);
+
   async function send() {
     if (!endpointId) {
       toast.error("Pick an endpoint first");
