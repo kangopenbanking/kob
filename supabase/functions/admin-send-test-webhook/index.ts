@@ -124,15 +124,17 @@ Deno.serve(async (req) => {
 
   const { data: endpoint, error: epErr } = await supabase
     .from("gateway_webhook_endpoints")
-    .select("id, merchant_id, url, signing_secret, status")
-    .eq("id", endpointId)
-    .maybeSingle();
-  if (epErr || !endpoint) {
-  const { data: endpoint, error: epErr } = await supabase
-    .from("gateway_webhook_endpoints")
     .select("id, merchant_id, url, secret, is_active")
     .eq("id", endpointId)
     .maybeSingle();
+  if (epErr || !endpoint) {
+    return new Response(JSON.stringify({ error: "Webhook endpoint not found" }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const eventId = `evt_test_${uuid()}`;
   const event = {
     id: eventId,
     type: eventType,
@@ -143,7 +145,7 @@ Deno.serve(async (req) => {
   const payloadStr = JSON.stringify(event);
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signedPayload = `${timestamp}.${payloadStr}`;
-  const sigHex = await hmacSha256Hex(endpoint.signing_secret ?? "test_secret", signedPayload);
+  const sigHex = await hmacSha256Hex(endpoint.secret ?? "test_secret", signedPayload);
   const signatureHeader = `t=${timestamp},v1=${sigHex}`;
 
   const start = performance.now();
@@ -177,18 +179,18 @@ Deno.serve(async (req) => {
     .insert({
       webhook_id: endpoint.id,
       merchant_id: endpoint.merchant_id,
-      event_id: eventId,
       event_type: eventType,
-      payload: event,
+      payload: event as any,
       status: deliveryStatus,
-      http_status: httpStatus || null,
-      response_body: responseText,
-      latency_ms: latencyMs,
+      response_code: httpStatus || null,
+      response_body_snippet: responseText,
+      attempt_count: 1,
+      last_error: deliveryStatus === "failed" ? responseText.slice(0, 500) : null,
       is_test: true,
-      signature: signatureHeader,
     })
     .select("id")
     .maybeSingle();
+
 
   return new Response(
     JSON.stringify({
