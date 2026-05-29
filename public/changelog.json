@@ -22,6 +22,7 @@
         "Spec mutator: scripts/phase10-spec-hardening.mjs (sole writer to openapi.{json,yaml} for this phase)."
       ]
     },
+    {
       "version": "4.43.0",
       "date": "2026-05-29",
       "type": "minor",
