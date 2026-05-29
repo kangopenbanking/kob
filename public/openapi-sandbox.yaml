@@ -395,6 +395,12 @@ tags:
     description: >-
       Agent (cash-in/out) banking. CEMAC-wide registry, float management, customer cash transactions. See BIS Agent
       Banking Guidelines (2018) and Mojaloop v1.1.
+  - name: USSD
+    description: Session-based USSD menu engine for feature-phone banking. ETSI TS 102 226.
+  - name: QR & Offline
+    description: EMVCo-compliant QR + signed offline-payment tokens. EMVCo QR Spec v1.1.
+  - name: CEMAC Remittance
+    description: Cross-border XAF/XAF remittance inside the six BEAC-zone countries. BEAC Règlement N°02/CEMAC.
 components:
   securitySchemes:
     bearerAuth:
@@ -4263,6 +4269,427 @@ components:
         reason:
           type: string
           maxLength: 500
+    UssdSession:
+      type: object
+      required:
+        - id
+        - msisdn
+        - session_id
+        - state
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          example: USSD-3f9d2c
+        msisdn:
+          type: string
+          pattern: ^\+?[0-9]{8,15}$
+          example: '+237671234567'
+        service_code:
+          type: string
+          example: '*144#'
+        state:
+          type: string
+          enum:
+            - active
+            - ended
+            - expired
+        menu:
+          type: string
+          example: |-
+            1. Send Money
+            2. Buy Airtime
+            3. Balance
+        input:
+          type: string
+          nullable: true
+        language:
+          type: string
+          enum:
+            - en
+            - fr
+          example: fr
+        created_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+    UssdSessionRequest:
+      type: object
+      required:
+        - session_id
+        - msisdn
+        - service_code
+      properties:
+        session_id:
+          type: string
+        msisdn:
+          type: string
+          pattern: ^\+?[0-9]{8,15}$
+        service_code:
+          type: string
+        input:
+          type: string
+          nullable: true
+        language:
+          type: string
+          enum:
+            - en
+            - fr
+          default: fr
+    QrCode:
+      type: object
+      required:
+        - id
+        - payload
+        - amount
+        - currency
+        - merchant_id
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        payload:
+          type: string
+          description: EMVCo-compliant TLV payload (base64).
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+          example: '5000'
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+          example: XAF
+        merchant_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - active
+            - consumed
+            - expired
+            - revoked
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    OfflineToken:
+      type: object
+      required:
+        - token_id
+        - payer_id
+        - amount
+        - currency
+        - issued_at
+        - expires_at
+        - signature
+      properties:
+        token_id:
+          type: string
+          format: uuid
+        payer_id:
+          type: string
+          format: uuid
+        payee_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        signature:
+          type: string
+          description: Ed25519 detached signature (base64url).
+        redeemed_at:
+          type: string
+          format: date-time
+          nullable: true
+    OfflineTokenIssueRequest:
+      type: object
+      required:
+        - payer_id
+        - amount
+        - currency
+      properties:
+        payer_id:
+          type: string
+          format: uuid
+        payee_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+        ttl_seconds:
+          type: integer
+          minimum: 60
+          maximum: 86400
+          default: 3600
+    OfflineTokenRedeemRequest:
+      type: object
+      required:
+        - token_id
+        - signature
+      properties:
+        token_id:
+          type: string
+          format: uuid
+        signature:
+          type: string
+        payee_id:
+          type: string
+          format: uuid
+    CemacCorridor:
+      type: object
+      required:
+        - origin_country
+        - destination_country
+        - fee_bps
+        - fx_rate
+        - status
+      properties:
+        origin_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        destination_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        fee_bps:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          example: 100
+        fx_rate:
+          type: number
+          format: double
+          example: 1
+        status:
+          type: string
+          enum:
+            - active
+            - suspended
+    CemacRemittanceQuoteRequest:
+      type: object
+      required:
+        - origin_country
+        - destination_country
+        - amount
+      properties:
+        origin_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        destination_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+          example: '50000'
+    CemacRemittanceQuote:
+      type: object
+      required:
+        - amount
+        - fee
+        - net
+        - receive_amount
+        - fx_rate
+        - currency
+      properties:
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        fee:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        net:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        receive_amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        fx_rate:
+          type: number
+          format: double
+        currency:
+          type: string
+          enum:
+            - XAF
+        quote_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+    CemacRemittanceTransferRequest:
+      type: object
+      required:
+        - quote_id
+        - sender
+        - recipient
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+        sender:
+          type: object
+          required:
+            - full_name
+            - msisdn
+            - country
+          properties:
+            full_name:
+              type: string
+            msisdn:
+              type: string
+              pattern: ^\+?[0-9]{8,15}$
+            country:
+              type: string
+              enum:
+                - CM
+                - GA
+                - CG
+                - TD
+                - CF
+                - GQ
+        recipient:
+          type: object
+          required:
+            - full_name
+            - msisdn
+            - country
+          properties:
+            full_name:
+              type: string
+            msisdn:
+              type: string
+              pattern: ^\+?[0-9]{8,15}$
+            country:
+              type: string
+              enum:
+                - CM
+                - GA
+                - CG
+                - TD
+                - CF
+                - GQ
+        reference:
+          type: string
+          maxLength: 140
+          nullable: true
+    CemacRemittanceTransfer:
+      type: object
+      required:
+        - id
+        - status
+        - amount
+        - fee
+        - net
+        - origin_country
+        - destination_country
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - pending
+            - funded
+            - settled
+            - cancelled
+            - failed
+        amount:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        fee:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        net:
+          type: string
+          pattern: ^[0-9]{1,15}$
+        origin_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        destination_country:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        reference:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        settled_at:
+          type: string
+          format: date-time
+          nullable: true
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -56684,6 +57111,325 @@ paths:
           description: Forbidden
         '404':
           description: Not found
+  /v1/ussd/sessions:
+    post:
+      tags:
+        - USSD
+      summary: Open or advance a USSD session.
+      operationId: ussdSessionAdvance
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            default: en
+          description: BCP 47 language tag (en, fr).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UssdSessionRequest'
+      responses:
+        '200':
+          description: Session menu returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UssdSession'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/gateway/qr:
+    post:
+      tags:
+        - QR & Offline
+      summary: Create a merchant QR code.
+      operationId: qrCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - currency
+                - merchant_id
+              properties:
+                amount:
+                  type: string
+                  pattern: ^[0-9]{1,15}$
+                currency:
+                  type: string
+                  enum:
+                    - XAF
+                    - XOF
+                merchant_id:
+                  type: string
+                  format: uuid
+                ttl_seconds:
+                  type: integer
+                  minimum: 60
+                  maximum: 86400
+      responses:
+        '201':
+          description: QR code created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrCode'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/gateway/qr/offline/issue:
+    post:
+      tags:
+        - QR & Offline
+      summary: Issue a signed offline payment token.
+      operationId: qrOfflineIssue
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: RFC-compliant UUID v4 for safe retry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineTokenIssueRequest'
+      responses:
+        '201':
+          description: Offline token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineToken'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/gateway/qr/offline/redeem:
+    post:
+      tags:
+        - QR & Offline
+      summary: Redeem a signed offline payment token.
+      operationId: qrOfflineRedeem
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: RFC-compliant UUID v4 for safe retry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineTokenRedeemRequest'
+      responses:
+        '200':
+          description: Token redeemed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineToken'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '410':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/remittance/cemac/corridors:
+    get:
+      tags:
+        - CEMAC Remittance
+      summary: List active CEMAC remittance corridors.
+      operationId: cemacCorridorsList
+      responses:
+        '200':
+          description: Corridor list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CemacCorridor'
+  /v1/remittance/cemac/quote:
+    post:
+      tags:
+        - CEMAC Remittance
+      summary: Get a CEMAC remittance quote.
+      operationId: cemacRemittanceQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CemacRemittanceQuoteRequest'
+      responses:
+        '200':
+          description: Quote computed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CemacRemittanceQuote'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/remittance/cemac/transfers:
+    post:
+      tags:
+        - CEMAC Remittance
+      summary: Create a CEMAC remittance transfer.
+      operationId: cemacRemittanceCreate
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: RFC-compliant UUID v4 for safe retry.
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            default: en
+          description: BCP 47 language tag (en, fr).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CemacRemittanceTransferRequest'
+      responses:
+        '201':
+          description: Transfer accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CemacRemittanceTransfer'
+        '400':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/remittance/cemac/transfers/{id}:
+    get:
+      tags:
+        - CEMAC Remittance
+      summary: Retrieve a CEMAC remittance transfer.
+      operationId: cemacRemittanceGet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transfer detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CemacRemittanceTransfer'
+        '404':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /v1/remittance/cemac/transfers/{id}/cancel:
+    post:
+      tags:
+        - CEMAC Remittance
+      summary: Cancel a pending or funded CEMAC remittance transfer.
+      operationId: cemacRemittanceCancel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: RFC-compliant UUID v4 for safe retry.
+      responses:
+        '200':
+          description: Transfer cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CemacRemittanceTransfer'
+        '404':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Problem details (RFC 7807).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 externalDocs:
   description: Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console
   url: https://kangopenbanking.com/developer/sandbox

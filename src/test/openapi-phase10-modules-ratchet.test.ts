@@ -7,16 +7,15 @@
  * console.warn so the ratchet does not falsely "break" — but as soon as
  * the path/schema is added, every nested assertion is enforced.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-let spec: any;
-
-beforeAll(() => {
-  const p = path.resolve(process.cwd(), "public/openapi.json");
-  spec = JSON.parse(fs.readFileSync(p, "utf8"));
-});
+// Read the spec at collection time so conditional `it.skip` blocks can
+// inspect the live shape *before* test bodies run.
+const spec: any = JSON.parse(
+  fs.readFileSync(path.resolve(process.cwd(), "public/openapi.json"), "utf8"),
+);
 
 const has = (sel: () => unknown): boolean => {
   try {
