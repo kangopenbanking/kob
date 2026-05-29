@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { KOB_API_VERSION } from "@/config/version";
 import {
   Building2,
   ShieldCheck,
@@ -209,7 +210,7 @@ curl "https://api.kangopenbanking.com/v1/gateway/charges?cursor=eyJpZCI6IjEyMyJ9
     "page": 1, "limit": 20, "total": 142,
     "next_cursor": "eyJpZCI6IjE0MiJ9", "has_more": true
   },
-  "meta": { "request_id": "req_…", "api_version": "4.26.3" }
+  "meta": { "request_id": "req_…", "api_version": "${KOB_API_VERSION}" }
 }`}
           </pre>
           <p className="text-xs text-muted-foreground mt-2">

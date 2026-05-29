@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { KOB_SDK_VERSIONS } from "@/config/version";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -124,7 +125,7 @@ function StepInstallSDK({ onNext, onPrev }: StepProps) {
           { language: "bash", label: "Python", code: "pip install kang-openbanking" },
           { language: "bash", label: "PHP", code: "composer require kang/openbanking-php" },
           { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go" },
-          { language: "bash", label: "Java", code: '<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>4.28.1</version>\n</dependency>' },
+          { language: "bash", label: "Java", code: `<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>${KOB_SDK_VERSIONS.java}</version>\n</dependency>` },
         ]}
       />
       <div className="flex justify-between pt-2">

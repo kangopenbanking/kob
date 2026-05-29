@@ -16,6 +16,7 @@ import {
   Key, Database, Webhook, Play, Copy, Check, AlertCircle, Loader2,
   Shield, Server, RefreshCw, Terminal, Radio, ArrowRight, Clock
 } from "lucide-react";
+import { KOB_API_VERSION } from "@/config/version";
 
 interface SandboxAccount {
   id: string;
@@ -725,7 +726,7 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
                     ["Free Tier", "1,000 requests/day, no credit card"],
                     ["Instant API Keys", "Self-service via /v1/sandbox/api-keys (sbx_ prefix)"],
                     ["Data Resets", "Every 24 hours (or on demand via API)"],
-                    ["API Version", "Same as production (v4.9.2)"],
+                    ["API Version", `Same as production (v${KOB_API_VERSION})`],
                     ["Rate Limits", "60 req/min (free), 300 req/min (basic), 1000 req/min (pro)"],
                     ["Key Limit", "5 active keys per sandbox account"],
                     ["Connector Modes", "API Pull, DB Polling, File (CSV/MT940), Message Queue"],

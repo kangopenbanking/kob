@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Play, Copy, CheckCircle, Terminal, Clock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { KOB_API_VERSION } from "@/config/version";
 
 interface MockResponse {
   status: number;
@@ -45,7 +46,7 @@ const ENDPOINTS = [
           provider: "mtn_momo",
           created_at: new Date().toISOString(),
         },
-        meta: { request_id: "req_try_001", timestamp: new Date().toISOString(), api_version: "4.7.0" },
+        meta: { request_id: "req_try_001", timestamp: new Date().toISOString(), api_version: KOB_API_VERSION },
       },
     },
   },
@@ -64,7 +65,7 @@ const ENDPOINTS = [
           { account_id: "ACC-001", account_holder_name: "Jean Kamga", currency: "XAF", account_type: "personal", balance: "2500000" },
           { account_id: "ACC-002", account_holder_name: "Jean Kamga", currency: "XAF", account_type: "savings", balance: "8750000" },
         ],
-        meta: { request_id: "req_try_002", timestamp: new Date().toISOString(), api_version: "4.7.0", total_count: 2 },
+        meta: { request_id: "req_try_002", timestamp: new Date().toISOString(), api_version: KOB_API_VERSION, total_count: 2 },
       },
     },
   },
@@ -80,7 +81,7 @@ const ENDPOINTS = [
       statusText: "OK",
       body: {
         data: { base: "XAF", target: "EUR", rate: "0.001524", inverse_rate: "656.17", source: "BEAC", updated_at: new Date().toISOString() },
-        meta: { request_id: "req_try_003", timestamp: new Date().toISOString(), api_version: "4.7.0" },
+        meta: { request_id: "req_try_003", timestamp: new Date().toISOString(), api_version: KOB_API_VERSION },
       },
     },
   },
@@ -112,7 +113,7 @@ const ENDPOINTS = [
           narration: "Salary payout",
           estimated_arrival: new Date(Date.now() + 60000).toISOString(),
         },
-        meta: { request_id: "req_try_004", timestamp: new Date().toISOString(), api_version: "4.7.0" },
+        meta: { request_id: "req_try_004", timestamp: new Date().toISOString(), api_version: KOB_API_VERSION },
       },
     },
   },
@@ -136,7 +137,7 @@ const ENDPOINTS = [
           settled: true,
           settlement_id: "stl_m1n2o3",
         },
-        meta: { request_id: "req_try_005", timestamp: new Date().toISOString(), api_version: "4.7.0" },
+        meta: { request_id: "req_try_005", timestamp: new Date().toISOString(), api_version: KOB_API_VERSION },
       },
     },
   },
