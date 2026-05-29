@@ -1,9 +1,28 @@
 {
-  "apiVersion": "4.44.0",
+  "apiVersion": "4.46.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-05-29",
   "entries": [
+    {
+      "version": "4.46.0",
+      "date": "2026-05-29",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Phase 10.3 — Agent banking. Adds /v1/agents/* registry, float management, cash-in/cash-out and transaction history. Cites BIS Agent Banking Guidelines (2018), Mojaloop v1.1, GSMA Agent Network Management Toolkit v2.",
+      "highlights": [
+        "Added POST /v1/agents and GET /v1/agents (geo + region discovery, country_code filter restricted to CEMAC).",
+        "Added GET /v1/agents/{agentId} returning the agent plus embedded float balances.",
+        "Added POST /v1/agents/{agentId}/float/topup and /float/withdraw with mandatory Idempotency-Key (UUIDv4) and 409 on insufficient float.",
+        "Added POST /v1/agents/{agentId}/cash-in and /cash-out with X-Float-Warning: low_float response header when float drops below low_threshold.",
+        "Added GET /v1/agents/{agentId}/transactions for paginated cash-tx history.",
+        "New schemas: Agent, AgentRegisterRequest, AgentFloat, AgentFloatMutationRequest, AgentCashTransaction, AgentCashRequest.",
+        "New tables: agents, agent_floats, agent_cash_transactions, agent_kyc_documents. RLS scoped to admin + owning agent user + customer.",
+        "New edge function: agent-banking. UUID + E.164 + idempotency validation on every write.",
+        "Spec mutator: scripts/phase10-3-agents-spec.mjs."
+      ]
+    },
+
     {
       "version": "4.44.0",
       "date": "2026-05-29",
