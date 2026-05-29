@@ -389,7 +389,7 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
   <li><code>POST /v1/sandbox/webhooks/send-test</code> — Trigger a test webhook delivery</li>
 </ul>
 <h3>Default Test Credentials</h3>
-<p>API Key: <code>sk_test_kob_sandbox_demo_key_2024</code></p>
+<p>Create your free sandbox key in the <a href="/developer/registration">Developer Portal</a> &rarr; Sandbox Console. Format <code>sbx_*</code>; one key per developer.</p>
 <h3>Test Phone Numbers (Mobile Money)</h3>
 <table>
   <tr><th>Number</th><th>Provider</th><th>Behavior</th></tr>
