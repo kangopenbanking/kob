@@ -42,7 +42,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { key_name } = await req.json().catch(() => ({}));
+    const { key_name, tier: requestedTier } = await req.json().catch(() => ({}));
+    const VALID_TIERS = new Set(['free', 'pro', 'enterprise']);
+    const tier = (typeof requestedTier === 'string' && VALID_TIERS.has(requestedTier)) ? requestedTier : 'free';
 
     const { data: account, error: accountError } = await supabase
       .from('developer_sandbox_accounts')
