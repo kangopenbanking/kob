@@ -10291,6 +10291,9 @@ export type Database = {
           label: string | null
           last_used_at: string | null
           merchant_id: string
+          status: string
+          suspended_at: string | null
+          suspended_reason: string | null
           updated_at: string | null
         }
         Insert: {
@@ -10304,6 +10307,9 @@ export type Database = {
           label?: string | null
           last_used_at?: string | null
           merchant_id: string
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -10317,6 +10323,9 @@ export type Database = {
           label?: string | null
           last_used_at?: string | null
           merchant_id?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -11511,6 +11520,7 @@ export type Database = {
           created_at: string
           event_type: string
           id: string
+          is_test: boolean
           last_error: string | null
           merchant_id: string
           next_retry_at: string | null
@@ -11525,6 +11535,7 @@ export type Database = {
           created_at?: string
           event_type: string
           id?: string
+          is_test?: boolean
           last_error?: string | null
           merchant_id: string
           next_retry_at?: string | null
@@ -11539,6 +11550,7 @@ export type Database = {
           created_at?: string
           event_type?: string
           id?: string
+          is_test?: boolean
           last_error?: string | null
           merchant_id?: string
           next_retry_at?: string | null
@@ -11580,6 +11592,7 @@ export type Database = {
           endpoint_id: string
           event_type: string
           id: string
+          is_test: boolean
           max_attempts: number
           merchant_id: string
           next_retry_at: string | null
@@ -11595,6 +11608,7 @@ export type Database = {
           endpoint_id: string
           event_type: string
           id?: string
+          is_test?: boolean
           max_attempts?: number
           merchant_id: string
           next_retry_at?: string | null
@@ -11610,6 +11624,7 @@ export type Database = {
           endpoint_id?: string
           event_type?: string
           id?: string
+          is_test?: boolean
           max_attempts?: number
           merchant_id?: string
           next_retry_at?: string | null

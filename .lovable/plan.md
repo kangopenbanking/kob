@@ -1,86 +1,102 @@
+# Phase 11 — Integrator Experience & Governance
 
-# Phase 10 — CEMAC Coverage & Inclusion Modules
+System version bump: **4.48.0 → 4.49.0** (minor; pure additions, Standing Orders #1–#6 honoured).
 
-Goal: close all 12 gaps and ship 4 new modules (USSD, Agents, QR-offline, CEMAC remittance) under Standing Orders #1–#7 + P1–P10. Additive only; version bump `4.43.0 → 4.44.0` (minor — new endpoints + schemas; no removals).
+## 1. Enriched Postman environments (Sandbox + Production)
 
-## Why phased
+Update both files in `public/postman/`:
 
-This touches the OpenAPI spec, ~10 new edge functions, ~12 new tables with RLS+GRANTs, multiple guides, Postman additions, SDKs, and a full audit report. Shipping it all in one turn is unsafe (migration rollbacks, spec parity gates, smoke tests). I'll deliver in 5 phases and pause for approval between each.
+- `Kang_Open_Banking_Sandbox.postman_environment.json`
+- `Kang_Open_Banking_Production.postman_environment.json`
 
----
+Add variables (preserve `base_url` + `api_key`):
 
-## Phase 10.0 — Audit report (this turn)
+| Key | Sandbox default | Production default | Type |
+|---|---|---|---|
+| `base_url` | `https://sandbox-api.kangopenbanking.com/v1` | `https://api.kangopenbanking.com/v1` | default |
+| `api_key` | `sk_test_REPLACE_ME` | `sk_live_REPLACE_ME` | secret |
+| `key_issuer_url` | `…/developer/keys` | `…/admin/api-keys` | default |
+| `webhook_secret` | `whsec_test_REPLACE_ME` | `whsec_live_REPLACE_ME` | secret |
+| `idempotency_key` | `{{$guid}}` | `{{$guid}}` | default |
+| `accept_language` | `en` | `en` | default |
+| `spec_url` | `https://kangopenbanking.com/openapi-sandbox.json` | `https://kangopenbanking.com/openapi.json` | default |
+| `spec_version` | current `KOB_API_VERSION` | current `KOB_API_VERSION` | default |
+| `merchant_id` | `mer_sandbox_demo` | `` | default |
 
-- `docs/audits/2026-05-29-cemac-coverage-gap-report.md`: each of the 12 gaps mapped to file, schema, RFC/standard cited, fix plan, risk, and phase assignment. Roadmap table for the 4 new modules. No code changes.
+Add a small `README_postman.md` under `public/postman/` showing the import flow + how to retrieve the API key from `/developer/keys`.
 
-## Phase 10.1 — Pure additive spec fixes (no new modules)
+## 2. "Send test webhook" admin button
 
-Covers gaps: provider enum, Wema/NGN copy-paste, BVN aliasing, LoanScheduleItem deprecated required[], RTP SLA doc, Accept-Language header, French ProblemDetails examples, sandbox demo-key warning, credit-score `data_sources` field.
+- Add a `TestWebhookDialog` triggered from `AdminWebhookDeliveries.tsx` (Deliveries tab header).
+- Inputs: endpoint dropdown (loaded from `gateway_webhook_endpoints`), event type dropdown (curated CEMAC + gateway events: `payment.succeeded`, `qr.paid`, `remittance.cemac.paid`, `agent.cashin.completed`, `ussd.session.ended`, plus the existing set), optional custom JSON payload.
+- New edge function `admin-send-test-webhook` (admin-gated): generates a synthetic `event_id`, signs with the endpoint secret, writes a row to `gateway_webhook_deliveries` with `is_test=true` (add column), invokes the existing dispatcher, returns the delivery id + status + response code + latency.
+- After success, dialog shows confirmation card with delivery id, click-through to the Deliveries row.
 
-- `scripts/phase10-spec-hardening.mjs` — sole mutator
-- `MobileMoneyCharge.provider` enum → `["MTN","Orange","Airtel","ExpressUnion","CamPost"]`
-- `GatewayVirtualAccount` example → `Afriland First Bank`, currency `XAF`
-- New `/v1/verify/nin` + `/v1/verify/cni` operations; `/v1/verify/bvn` stays (Nigeria), deprecation note added pointing to NIN/CNI for CEMAC
-- `LoanScheduleItem.required[]` — keep deprecated fields *non-required*; add migration note in description (cannot remove per Standing Order #1; only loosen required[] which is additive-safe per #2 ratchet rule — required[] removal is the one ratchet exception we'll document)
-- New `Accept-Language` header parameter (en|fr|fr-CM|en-CM) on all ops; helper `_shared/i18n-errors.ts` with FR/EN catalog for the 63 RFC 7807 codes
-- `CreditScore.data_sources` enum: `mobile_money_history`, `bank_transactions`, `utility_payments`, `njangi_participation`, `merchant_sales`, `bureau_creditinfo`, `cobac_registry`
-- RTP SLA doc: `docs/developer-portal/reference/rtp-sla.md` (sub-30s mobile-money confirmation target, T+0 settlement)
-- Replace hardcoded `sk_test_kob_sandbox_demo_key_2024` references with "create your own sandbox key in the developer portal" + 410-Gone redirect note
-- `src/config/version.ts` + `public/changelog.json` → 4.44.0
-- Ratchet guard: `src/test/openapi-phase10-coverage.test.ts`
+## 3. Institution API key admin console
 
-## Phase 10.2 — USSD session engine
+New route `/admin/institution-api-keys` (page `AdminInstitutionApiKeys.tsx`):
 
-- Tables: `ussd_sessions` (TTL-tracked), `ussd_menu_nodes`, `ussd_callbacks` (all with GRANTs + RLS, service_role + authenticated merchant scoping)
-- Edge function: `ussd-session/` with `POST /v1/ussd/sessions`, `GET /v1/ussd/sessions/{id}`, `POST /v1/ussd/sessions/{id}/respond`, `DELETE /v1/ussd/sessions/{id}`, `POST /v1/ussd/callbacks` (telco inbound)
-- Schemas: `UssdSession`, `UssdMenuNode`, `UssdCallback`, `UssdSessionState` enum
-- Stateful menu-tree renderer; 180s TTL per GSMA USSD guidance
-- Guide: `docs/developer-portal/guides/ussd-sessions.md` (cURL + Node + Python + PHP)
+- Tabs: **Keys**, **Usage & rate limits**.
+- Keys tab: table of all institution-scoped keys with create / rotate / suspend / revoke actions. Reuses existing `api-keys-rotate` and `api-keys-revoke` functions. Adds `api-keys-create` and `api-keys-suspend` (new edge functions). One-time plaintext shown on create/rotate (already memory rule).
+- Usage tab: per-key counters (calls last 24h / 7d), success/error rate, last rate-limit hit, current bucket remaining. Reads from `gateway_request_logs` (existing) aggregated by `api_key_id`.
 
-## Phase 10.3 — Agent banking module
+New table column on `gateway_merchant_api_keys`: `status` enum (`active|suspended|revoked`) if not already present; `suspended_at`.
 
-- Tables: `agents`, `agent_floats`, `agent_float_movements`, `agent_cash_transactions`, `agent_kyc_documents`
-- Edge function: `agents-lifecycle/` with `POST /v1/agents` (register), `GET /v1/agents` (list w/ geo filter), `GET /v1/agents/{id}`, `POST /v1/agents/{id}/float/topup`, `POST /v1/agents/{id}/float/withdraw`, `GET /v1/agents/{id}/float`, `POST /v1/agents/{id}/cash-in`, `POST /v1/agents/{id}/cash-out`, `GET /v1/agents/{id}/transactions`
-- Float-limit-alert webhook events: `agent.float.low`, `agent.float.depleted`
-- Schemas: `Agent`, `AgentFloat`, `AgentFloatMovement`, `AgentCashTransaction`, `AgentStatus` enum
-- Geo discovery: lat/lng + radius_km
-- Guide: `docs/developer-portal/guides/agent-banking.md`
+## 4. Ratchet tests for phase 10 modules
 
-## Phase 10.4 — QR + offline payments
+New Vitest file `src/test/openapi-phase10-modules-ratchet.test.ts` asserting (against `public/openapi.json`):
 
-- Tables: `gateway_qr_tokens` (signed payload, redeemable status), `gateway_qr_offline_queue`
-- Edge function: `gateway-qr/` with `POST /v1/gateway/qr` (generate), `GET /v1/gateway/qr/{token}` (decode), `POST /v1/gateway/qr/redeem`, `POST /v1/gateway/qr/queue` (offline merchant batch flush)
-- EMV-compatible payload (TLV format, CRC-16/CCITT-FALSE per EMVCo QRCPS v1.1)
-- Ed25519-signed offline tokens with 24h validity for connectivity-resilient redemption
-- Schemas: `QrToken`, `QrRedeemRequest`, `QrOfflineBatch`
-- Guide: `docs/developer-portal/guides/qr-payments-offline.md`
+- USSD paths + schemas present (`/v1/ussd/sessions`, `UssdSession`, etc.)
+- Agents paths + schemas (`/v1/agents`, `Agent`, `AgentCashRequest`, …)
+- QR + offline (`/v1/gateway/qr`, `QrCode`, `OfflineToken`, …)
+- CEMAC remittance (`/v1/remittance/cemac/corridors`, `CemacRemittance`, …)
+- For each path: required `Idempotency-Key` where applicable, `Accept-Language` parameter, `200/201/4xx` responses present.
+- Standing Order #2 ratchet: required[] arrays never shrink vs the latest history snapshot.
 
-## Phase 10.5 — CEMAC cross-border remittance
+Plus a Deno test under `supabase/functions/cemac-remittance/quote_test.ts` exercising the quote math.
 
-- Tables: `cemac_remittances`, `beac_corridor_routes`, `beac_statistical_reports`
-- Edge function: `remittance-cemac/` with `POST /v1/remittance/cemac` (initiate), `GET /v1/remittance/cemac/{id}`, `POST /v1/remittance/cemac/{id}/cancel`, `GET /v1/remittance/cemac/corridors`, `POST /v1/remittance/cemac/reports/g10` (BEAC G10/S31 generator)
-- Country-pair compliance pre-checks for CM/GA/CG/TD/CF/GQ
-- Schemas: `CemacRemittance`, `BeacCorridor`, `BeacStatisticalReport`
-- Webhook: `remittance.beac.report.generated`
-- Guide: `docs/developer-portal/guides/cemac-remittance.md`
+## 5. Per-version OpenAPI export + Postman "Import Spec" flow
 
-## Cross-cutting per phase
+Already have `public/openapi-history/openapi-{version}.json`. Add:
 
-Each implementation phase ships with: spec mutator script, edge function code, migration with GRANTs+RLS, vitest ratchet guard, public guide (cURL + Node + Python minimum), Postman additions, changelog entry, version bump if needed.
+- New page `/developer/spec-versions` (`DeveloperSpecVersions.tsx`) listing every snapshot from `openapi-history/manifest.json`, with copy-URL + download-JSON + download-YAML buttons (YAML generated client-side via existing `js-yaml`).
+- A new server-side YAML mirror script `scripts/snapshot-openapi-yaml-history.mjs` writing `openapi-history/openapi-{version}.yaml` for each JSON snapshot that does not yet have a sibling YAML. Wire into `sync-version-artifacts.mjs`.
+- Add a Postman section on the new page: a copy-able "Import → Link" URL pointing to the per-version JSON, plus instructions screenshot. Add a `postman_import_url` variable to both environments.
+- Bump `KOB_API_VERSION` + Postman + changelog as usual.
 
-## Standing Orders compliance
+## Files
 
-- #1 LOCK: no renames, no removals
-- #2 RATCHET: only `LoanScheduleItem.required[]` loosened — documented in audit report with cited justification (was scheduled for v5.0.0 removal; loosening required[] is the safe transition path)
-- #3 AUDIT: every change cites GSMA Mobile Money v1.2, EMVCo QRCPS v1.1, BEAC Règlement 02/18/CEMAC, ISO 4217, RFC 7807, FAPI-1.0-ADV
-- #4 SURGEON: all additive
-- #5 DEAD CODE: every new schema wired to ≥1 op
-- #6 VERSION: minor 4.43.0 → 4.44.0
-- #7 ROLES: Guardian/Architect/Surgeon/Auditor/Scorekeeper applied per phase
-- P1–P10: public docs, working snippets in cURL/Node/Python (PHP/Java/Go for go-live guides), changelog within 48h
+**New**
+- `src/pages/admin/AdminInstitutionApiKeys.tsx`
+- `src/components/admin/TestWebhookDialog.tsx`
+- `src/pages/developer/DeveloperSpecVersions.tsx`
+- `supabase/functions/admin-send-test-webhook/index.ts`
+- `supabase/functions/api-keys-create/index.ts`
+- `supabase/functions/api-keys-suspend/index.ts`
+- `supabase/functions/cemac-remittance/quote_test.ts`
+- `scripts/snapshot-openapi-yaml-history.mjs`
+- `scripts/phase11-spec-additions.mjs` (adds `/v1/admin/webhooks/test`, `/v1/admin/api-keys/*` operations + schemas to spec, additive only)
+- `public/postman/README_postman.md`
+- `src/test/openapi-phase10-modules-ratchet.test.ts`
 
-## What I need from you
+**Edited**
+- `public/postman/Kang_Open_Banking_Sandbox.postman_environment.json`
+- `public/postman/Kang_Open_Banking_Production.postman_environment.json`
+- `src/pages/admin/AdminWebhookDeliveries.tsx` (mount TestWebhookDialog)
+- `src/App.tsx` (2 new routes)
+- `src/config/version.ts` → `4.49.0`
+- `public/changelog.json` (Phase 11 entry, cites RFC 6920 / OAS 3.1 / OWASP API Top 10 2023)
+- `scripts/sync-version-artifacts.mjs` (call YAML history mirror)
 
-Approve this plan and I'll start with **Phase 10.0 (audit report)** in the next turn, then pause for your go-ahead before Phase 10.1.
+**Migration**
+- Add `is_test BOOLEAN DEFAULT false` to `gateway_webhook_deliveries` (if absent).
+- Add `status` + `suspended_at` to `gateway_merchant_api_keys` (if absent) with the enum check.
 
-If you want a different ordering, tell me which phase to do first.
+## Verification
+
+- `node scripts/phase11-spec-additions.mjs && node scripts/sync-version-artifacts.mjs` — should pass.
+- `bunx vitest run src/test/openapi-phase10-modules-ratchet.test.ts` — green.
+- Live smoke: deploy `admin-send-test-webhook`, fire from the dialog against a sandbox endpoint, confirm row appears in Deliveries with `is_test=true`.
+- Spec snapshots verified: each entry in `openapi-history/manifest.json` has both `.json` and `.yaml` after sync.
+
+Approve to proceed?

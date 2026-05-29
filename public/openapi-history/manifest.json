@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.46.0",
+  "current": "4.49.0",
   "versions": [
+    {
+      "version": "4.49.0",
+      "released_at": "2026-05-29T03:27:09.582Z",
+      "type": "snapshot",
+      "file": "openapi-4.49.0.json",
+      "notes": "Phase 11 — integrator experience & governance. Adds enriched Postman environments (sandbox + production), admin send-test-webhook flow, institution API key admin console (create/rotate/suspend/revoke + usage), per-version OpenAPI export (JSON + YAML) with Postman 'Import Spec' UX, and ratchet tests for phases 10.2-10.5."
+    },
     {
       "version": "4.46.0",
       "released_at": "2026-05-29T02:59:39.362Z",
