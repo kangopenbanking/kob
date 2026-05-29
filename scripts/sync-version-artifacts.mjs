@@ -82,6 +82,8 @@ await import('./build-changelog-md.mjs');
 
 // 3b. Snapshot the OpenAPI build into openapi-history/ + register manifest entry
 await import('./snapshot-openapi-history.mjs');
+// 3c. Mirror every JSON snapshot to YAML for per-version downloads (Phase 11).
+await import('./snapshot-openapi-yaml-history.mjs');
 
 // 4. Postman manifest + versioned + latest collection
 const manifestPath = path.join(ROOT, 'public/postman/manifest.json');
