@@ -17,6 +17,7 @@ import { Loader2, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { extractEdgeFunctionError } from "@/lib/edge-function-error";
+import { TestWebhookDialog } from "@/components/admin/TestWebhookDialog";
 
 type DlqRow = {
   id: string;
@@ -114,6 +115,9 @@ export default function AdminWebhookDeliveries() {
         </TabsList>
 
         <TabsContent value="deliveries" className="space-y-4">
+          <div className="flex justify-end">
+            <TestWebhookDialog />
+          </div>
           <WebhookDeliveriesPanel scope="admin" />
         </TabsContent>
 
