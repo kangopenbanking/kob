@@ -50,18 +50,17 @@ interface ApiKeyRow {
   suspended_reason: string | null;
 }
 
-interface UsageRow {
-  api_key_id: string;
-  calls_24h: number;
-  calls_7d: number;
-  error_rate_pct: number;
-  last_rate_limited_at: string | null;
+interface ApiKeyRow {
+  id: string;
+  merchant_id: string;
+  api_key_prefix: string | null;
+  label: string | null;
+  environment: string | null;
+  status: string;
+  created_at: string | null;
+  suspended_at: string | null;
+  suspended_reason: string | null;
 }
-
-export default function AdminInstitutionApiKeys() {
-  const [tab, setTab] = useState<"keys" | "usage">("keys");
-  const [keys, setKeys] = useState<ApiKeyRow[]>([]);
-  const [usage, setUsage] = useState<Record<string, UsageRow>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -72,24 +71,26 @@ export default function AdminInstitutionApiKeys() {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
+  async function load() {
     setLoading(true);
     const { data, error } = await supabase
       .from("gateway_merchant_api_keys")
-      .select("id, merchant_id, key_prefix, label, environment, status, created_at, suspended_at, suspended_reason")
+      .select("id, merchant_id, api_key_prefix, label, environment, status, created_at, suspended_at, suspended_reason")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) toast.error(error.message);
-    setKeys((data as ApiKeyRow[] | null) ?? []);
+    setKeys(((data ?? []) as unknown) as ApiKeyRow[]);
     setLoading(false);
 
-    // Best-effort usage aggregation (last 24h / 7d). If gateway_request_logs
-    // is empty or absent, leave usage blank — UI shows "—".
+    // Best-effort usage aggregation (last 24h / 7d). The gateway_request_logs
+    // table may not exist in every environment — fail silently in that case.
     try {
       const since24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const sb = supabase as any;
       const [d24, d7] = await Promise.all([
-        supabase.from("gateway_request_logs").select("api_key_id, status_code").gte("created_at", since24).limit(10000),
-        supabase.from("gateway_request_logs").select("api_key_id").gte("created_at", since7).limit(10000),
+        sb.from("gateway_request_logs").select("api_key_id, status_code").gte("created_at", since24).limit(10000),
+        sb.from("gateway_request_logs").select("api_key_id").gte("created_at", since7).limit(10000),
       ]);
       const map: Record<string, UsageRow> = {};
       for (const r of (d24.data as any[]) ?? []) {
@@ -106,7 +107,6 @@ export default function AdminInstitutionApiKeys() {
         map[id] ??= { api_key_id: id, calls_24h: 0, calls_7d: 0, error_rate_pct: 0, last_rate_limited_at: null };
         map[id].calls_7d++;
       }
-      // Convert error counts to %
       for (const id of Object.keys(map)) {
         const u = map[id];
         u.error_rate_pct = u.calls_24h ? Math.round((u.error_rate_pct / u.calls_24h) * 100) : 0;
@@ -116,10 +116,6 @@ export default function AdminInstitutionApiKeys() {
       /* ignore — table may not exist in this env */
     }
   }
-
-  useEffect(() => { load(); }, []);
-
-  const filtered = useMemo(
     () => keys.filter((k) => !filter || (k.label ?? "").toLowerCase().includes(filter.toLowerCase()) || (k.key_prefix ?? "").includes(filter)),
     [keys, filter],
   );

@@ -33,13 +33,12 @@ const EVENT_TYPES = [
   "payment.failed",
   "payment.refunded",
   "qr.paid",
-  "qr.expired",
-  "remittance.cemac.quoted",
-  "remittance.cemac.paid",
-  "remittance.cemac.cancelled",
-  "agent.cashin.completed",
-  "agent.cashout.completed",
-  "agent.float.low",
+interface Endpoint {
+  id: string;
+  url: string;
+  merchant_id: string | null;
+  is_active: boolean | null;
+}
   "ussd.session.started",
   "ussd.session.ended",
   "transfer.completed",
@@ -74,17 +73,19 @@ export function TestWebhookDialog({ onDelivered }: { onDelivered?: () => void })
 
   useEffect(() => {
     if (!open) return;
+  useEffect(() => {
+    if (!open) return;
     (async () => {
       const { data } = await supabase
         .from("gateway_webhook_endpoints")
-        .select("id, url, merchant_id, status")
+        .select("id, url, merchant_id, is_active")
         .order("created_at", { ascending: false })
         .limit(100);
-      setEndpoints((data as Endpoint[] | null) ?? []);
-      if (data?.[0]) setEndpointId(data[0].id);
+      const rows = (data ?? []) as unknown as Endpoint[];
+      setEndpoints(rows);
+      if (rows[0]) setEndpointId(rows[0].id);
     })();
   }, [open]);
-
   async function send() {
     if (!endpointId) {
       toast.error("Pick an endpoint first");
