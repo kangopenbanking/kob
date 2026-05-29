@@ -138,13 +138,16 @@ serve(async (req) => {
           continue;
         }
 
-        // F6: sign via DB RPC — endpoint secret never leaves the database
+        // F6: sign via DB RPC — endpoint secret never leaves the database.
+        // Phase 8: timestamped Stripe-style signature + parallel legacy header.
+        const ts = Math.floor(Date.now() / 1000);
         const payloadStr = JSON.stringify(d.payload);
-        const { data: signature, error: sigErr } = await supabase.rpc('compute_endpoint_hmac', {
-          p_endpoint_id: d.endpoint_id,
-          p_payload: payloadStr,
-        });
-        if (sigErr || !signature) {
+        const signedPayload = `${ts}.${payloadStr}`;
+        const [{ data: tsSig, error: tsSigErr }, { data: legacySig }] = await Promise.all([
+          supabase.rpc('compute_endpoint_hmac', { p_endpoint_id: d.endpoint_id, p_payload: signedPayload }),
+          supabase.rpc('compute_endpoint_hmac', { p_endpoint_id: d.endpoint_id, p_payload: payloadStr }),
+        ]);
+        if (tsSigErr || !tsSig) {
           await supabase.from('gateway_webhook_deliveries_v2').update({ status: 'exhausted', response_body: 'signing_failed' }).eq('id', d.id);
           continue;
         }
@@ -156,7 +159,14 @@ serve(async (req) => {
         try {
           const resp = await fetch(ep.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': signature, 'X-Webhook-Event': d.event_type },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Webhook-Signature': `t=${ts},v1=${tsSig}`,
+              'X-Webhook-Timestamp': String(ts),
+              ...(legacySig ? { 'X-Webhook-Signature-Legacy': legacySig } : {}),
+              'X-Webhook-Event': d.event_type,
+              'X-Webhook-ID': crypto.randomUUID(),
+            },
             body: payloadStr,
             signal: AbortSignal.timeout(10000),
           });
