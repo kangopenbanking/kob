@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { KOB_API_VERSION } from "@/config/version";
+
 
 const HEALTHZ = "https://api.kangopenbanking.com/v1/healthz";
 const OIDC = "https://api.kangopenbanking.com/v1/oidc-config";
