@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
         webhook_secret_preview: webhookSecret.slice(0, 16) + '…',
         rate_limit_per_minute: limits.per_minute,
         rate_limit_per_day: limits.per_day,
+        tier,
       }])
       .select()
       .single();
