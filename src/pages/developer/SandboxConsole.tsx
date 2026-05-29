@@ -16,6 +16,7 @@ import {
   Key, Database, Webhook, Play, Copy, Check, AlertCircle, Loader2,
   Shield, Server, RefreshCw, Terminal, Radio, ArrowRight, Clock
 } from "lucide-react";
+import { KOB_API_VERSION } from "@/config/version";
 
 interface SandboxAccount {
   id: string;
