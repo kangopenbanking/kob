@@ -8,6 +8,7 @@
  * The CI gates `scripts/check-openapi-version.mjs` and
  * `scripts/check-version-sync.mjs` enforce parity between this value,
  * `public/openapi.json` info.version, and `public/changelog.json` apiVersion.
+ */
 export const KOB_API_VERSION = "4.44.0";
 export const KOB_API_VERSION_LABEL = `v${KOB_API_VERSION}`;
 /** Postman collection version — kept in lockstep with the API spec. */
