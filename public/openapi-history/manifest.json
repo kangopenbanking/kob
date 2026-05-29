@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.44.0",
+  "current": "4.46.0",
   "versions": [
+    {
+      "version": "4.46.0",
+      "released_at": "2026-05-29T02:59:39.362Z",
+      "type": "snapshot",
+      "file": "openapi-4.46.0.json",
+      "notes": "Phase 10.3 — Agent banking. Adds /v1/agents/* registry, float management, cash-in/cash-out and transaction history. Cites BIS Agent Banking Guidelines (2018), Mojaloop v1.1, GSMA Agent Network Management Toolkit v2."
+    },
     {
       "version": "4.44.0",
       "released_at": "2026-05-29T02:47:48.208Z",

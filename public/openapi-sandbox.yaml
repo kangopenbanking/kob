@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.44.0
+  version: 4.46.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -391,6 +391,10 @@ tags:
     description: ISO 20022 camt.053 + PDF + CSV statement generation.
   - name: Platform
     description: Platform-wide metadata (rate limits, health, capabilities).
+  - name: Agents
+    description: >-
+      Agent (cash-in/out) banking. CEMAC-wide registry, float management, customer cash transactions. See BIS Agent
+      Banking Guidelines (2018) and Mojaloop v1.1.
 components:
   securitySchemes:
     bearerAuth:
@@ -3877,6 +3881,259 @@ components:
         - match
         - score
         - verified_at
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_code:
+          type: string
+          example: AG3K7M2P
+        business_name:
+          type: string
+          example: Mama Africa Mobile Money
+        legal_name:
+          type: string
+          nullable: true
+        msisdn:
+          type: string
+          pattern: ^\+?[0-9]{8,15}$
+          example: '+237671234567'
+        email:
+          type: string
+          format: email
+          nullable: true
+        country_code:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+          example: CM
+        region:
+          type: string
+          nullable: true
+          example: Centre
+        city:
+          type: string
+          nullable: true
+          example: Yaoundé
+        address:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          example: 3.848
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          example: 11.502
+        status:
+          type: string
+          enum:
+            - pending
+            - active
+            - suspended
+            - terminated
+        tier:
+          type: string
+          enum:
+            - standard
+            - premium
+            - master
+        commission_rate:
+          type: number
+          format: double
+          example: 0.01
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - agent_code
+        - business_name
+        - msisdn
+        - country_code
+        - status
+        - tier
+    AgentRegisterRequest:
+      type: object
+      properties:
+        business_name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        legal_name:
+          type: string
+          maxLength: 200
+        msisdn:
+          type: string
+          pattern: ^\+?[0-9]{8,15}$
+        email:
+          type: string
+          format: email
+        country_code:
+          type: string
+          enum:
+            - CM
+            - GA
+            - CG
+            - TD
+            - CF
+            - GQ
+        region:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        tier:
+          type: string
+          enum:
+            - standard
+            - premium
+            - master
+      required:
+        - business_name
+        - msisdn
+    AgentFloat:
+      type: object
+      properties:
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+            - EUR
+            - USD
+        float_balance:
+          type: number
+          format: double
+          example: 250000
+        cash_balance:
+          type: number
+          format: double
+          example: 75000
+        low_threshold:
+          type: number
+          format: double
+          example: 50000
+        last_topup_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - currency
+        - float_balance
+        - cash_balance
+    AgentFloatMutationRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 1
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+            - EUR
+            - USD
+          default: XAF
+      required:
+        - amount
+    AgentCashTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+        customer_msisdn:
+          type: string
+          nullable: true
+        customer_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        tx_type:
+          type: string
+          enum:
+            - cash_in
+            - cash_out
+            - float_topup
+            - float_withdraw
+            - commission
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        commission_amount:
+          type: number
+          format: double
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - failed
+            - reversed
+        idempotency_key:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - agent_id
+        - tx_type
+        - amount
+        - currency
+        - status
+        - idempotency_key
+    AgentCashRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 1
+        currency:
+          type: string
+          enum:
+            - XAF
+            - XOF
+          default: XAF
+        customer_msisdn:
+          type: string
+          pattern: ^\+?[0-9]{8,15}$
+        customer_user_id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          maxLength: 64
+      required:
+        - amount
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -55811,6 +56068,353 @@ paths:
           description: Unauthorized
         '404':
           description: Not found in registry
+  /v1/agents:
+    get:
+      tags:
+        - Agents
+      summary: Discover agents (geo + region filter)
+      operationId: agentList
+      parameters:
+        - name: country_code
+          in: query
+          schema:
+            type: string
+            enum:
+              - CM
+              - GA
+              - CG
+              - TD
+              - CF
+              - GQ
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - pending
+              - suspended
+              - terminated
+            default: active
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      responses:
+        '200':
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+                  count:
+                    type: integer
+    post:
+      tags:
+        - Agents
+      summary: Register a new agent
+      operationId: agentRegister
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegisterRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          description: Validation error
+  /v1/agents/{agentId}:
+    get:
+      tags:
+        - Agents
+      summary: Read agent (including float balances)
+      operationId: agentGet
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      responses:
+        '200':
+          description: Agent with embedded floats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Agent'
+                  - type: object
+                    properties:
+                      agent_floats:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AgentFloat'
+        '404':
+          description: Not found
+  /v1/agents/{agentId}/float/topup:
+    post:
+      tags:
+        - Agents
+      summary: Top up agent float
+      operationId: agentFloatTopup
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUIDv4. Replays with the same key return the original transaction.
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentFloatMutationRequest'
+      responses:
+        '200':
+          description: Idempotent replay
+        '201':
+          description: Transaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCashTransaction'
+        '409':
+          description: Insufficient float
+  /v1/agents/{agentId}/float/withdraw:
+    post:
+      tags:
+        - Agents
+      summary: Withdraw from agent float
+      operationId: agentFloatWithdraw
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUIDv4. Replays with the same key return the original transaction.
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentFloatMutationRequest'
+      responses:
+        '200':
+          description: Idempotent replay
+        '201':
+          description: Transaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCashTransaction'
+        '409':
+          description: Insufficient float
+  /v1/agents/{agentId}/cash-in:
+    post:
+      tags:
+        - Agents
+      summary: Customer deposits cash with agent
+      operationId: agentCashIn
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUIDv4. Replays with the same key return the original transaction.
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCashRequest'
+      responses:
+        '200':
+          description: Idempotent replay
+        '201':
+          description: Transaction recorded
+          headers:
+            X-Float-Warning:
+              description: Set to 'low_float' when the agent's float balance falls below low_threshold.
+              schema:
+                type: string
+                enum:
+                  - low_float
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCashTransaction'
+        '409':
+          description: Insufficient float or cash
+  /v1/agents/{agentId}/cash-out:
+    post:
+      tags:
+        - Agents
+      summary: Customer withdraws cash from agent
+      operationId: agentCashOut
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUIDv4. Replays with the same key return the original transaction.
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCashRequest'
+      responses:
+        '200':
+          description: Idempotent replay
+        '201':
+          description: Transaction recorded
+          headers:
+            X-Float-Warning:
+              description: Set to 'low_float' when the agent's float balance falls below low_threshold.
+              schema:
+                type: string
+                enum:
+                  - low_float
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCashTransaction'
+        '409':
+          description: Insufficient float or cash
+  /v1/agents/{agentId}/transactions:
+    get:
+      tags:
+        - Agents
+      summary: List agent cash transactions
+      operationId: agentTransactionList
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+            example: fr
+      responses:
+        '200':
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentCashTransaction'
+                  count:
+                    type: integer
 externalDocs:
   description: Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console
   url: https://kangopenbanking.com/developer/sandbox

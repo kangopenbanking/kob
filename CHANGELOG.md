@@ -1,12 +1,30 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.44.0** · Last updated: **2026-05-29**
+Current API version: **4.46.0** · Last updated: **2026-05-29**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.46.0 — 2026-05-29
+**Type:** minor · **Breaking changes:** none
+
+Phase 10.3 — Agent banking. Adds /v1/agents/* registry, float management, cash-in/cash-out and transaction history. Cites BIS Agent Banking Guidelines (2018), Mojaloop v1.1, GSMA Agent Network Management Toolkit v2.
+
+### Highlights
+- Added POST /v1/agents and GET /v1/agents (geo + region discovery, country_code filter restricted to CEMAC).
+- Added GET /v1/agents/{agentId} returning the agent plus embedded float balances.
+- Added POST /v1/agents/{agentId}/float/topup and /float/withdraw with mandatory Idempotency-Key (UUIDv4) and 409 on insufficient float.
+- Added POST /v1/agents/{agentId}/cash-in and /cash-out with X-Float-Warning: low_float response header when float drops below low_threshold.
+- Added GET /v1/agents/{agentId}/transactions for paginated cash-tx history.
+- New schemas: Agent, AgentRegisterRequest, AgentFloat, AgentFloatMutationRequest, AgentCashTransaction, AgentCashRequest.
+- New tables: agents, agent_floats, agent_cash_transactions, agent_kyc_documents. RLS scoped to admin + owning agent user + customer.
+- New edge function: agent-banking. UUID + E.164 + idempotency validation on every write.
+- Spec mutator: scripts/phase10-3-agents-spec.mjs.
 
 ---
 

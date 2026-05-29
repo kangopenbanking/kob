@@ -529,6 +529,222 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_cash_transactions: {
+        Row: {
+          agent_id: string
+          amount: number
+          commission_amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_msisdn: string | null
+          customer_user_id: string | null
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          reference: string | null
+          status: string
+          tx_type: string
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          commission_amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_msisdn?: string | null
+          customer_user_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          reference?: string | null
+          status?: string
+          tx_type: string
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          commission_amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_msisdn?: string | null
+          customer_user_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          reference?: string | null
+          status?: string
+          tx_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_cash_transactions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_floats: {
+        Row: {
+          agent_id: string
+          cash_balance: number
+          created_at: string
+          currency: string
+          float_balance: number
+          id: string
+          last_topup_at: string | null
+          low_threshold: number
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          cash_balance?: number
+          created_at?: string
+          currency?: string
+          float_balance?: number
+          id?: string
+          last_topup_at?: string | null
+          low_threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          cash_balance?: number
+          created_at?: string
+          currency?: string
+          float_balance?: number
+          id?: string
+          last_topup_at?: string | null
+          low_threshold?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_floats_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_kyc_documents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          doc_type: string
+          file_path: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          doc_type: string
+          file_path: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          doc_type?: string
+          file_path?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_kyc_documents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          address: string | null
+          agent_code: string
+          approved_at: string | null
+          approved_by: string | null
+          business_name: string
+          city: string | null
+          commission_rate: number
+          country_code: string
+          created_at: string
+          email: string | null
+          id: string
+          latitude: number | null
+          legal_name: string | null
+          longitude: number | null
+          msisdn: string
+          region: string | null
+          status: string
+          tier: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          agent_code: string
+          approved_at?: string | null
+          approved_by?: string | null
+          business_name: string
+          city?: string | null
+          commission_rate?: number
+          country_code?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          latitude?: number | null
+          legal_name?: string | null
+          longitude?: number | null
+          msisdn: string
+          region?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          agent_code?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          business_name?: string
+          city?: string | null
+          commission_rate?: number
+          country_code?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          latitude?: number | null
+          legal_name?: string | null
+          longitude?: number | null
+          msisdn?: string
+          region?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_anomaly_reports: {
         Row: {
           ai_analysis: string
@@ -24910,6 +25126,141 @@ export type Database = {
           revoked_at?: string | null
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      ussd_callbacks: {
+        Row: {
+          aggregator: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          raw_payload: Json
+          response_text: string | null
+          session_id: string
+          status: string
+        }
+        Insert: {
+          aggregator?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          raw_payload?: Json
+          response_text?: string | null
+          session_id: string
+          status?: string
+        }
+        Update: {
+          aggregator?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          raw_payload?: Json
+          response_text?: string | null
+          session_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      ussd_menu_nodes: {
+        Row: {
+          action_handler: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          node_key: string
+          node_type: string
+          options: Json
+          parent_node: string | null
+          prompt_en: string
+          prompt_fr: string
+          service_code: string
+          updated_at: string
+          validation_regex: string | null
+        }
+        Insert: {
+          action_handler?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          node_key: string
+          node_type: string
+          options?: Json
+          parent_node?: string | null
+          prompt_en: string
+          prompt_fr: string
+          service_code: string
+          updated_at?: string
+          validation_regex?: string | null
+        }
+        Update: {
+          action_handler?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          node_key?: string
+          node_type?: string
+          options?: Json
+          parent_node?: string | null
+          prompt_en?: string
+          prompt_fr?: string
+          service_code?: string
+          updated_at?: string
+          validation_regex?: string | null
+        }
+        Relationships: []
+      }
+      ussd_sessions: {
+        Row: {
+          context: Json
+          created_at: string
+          current_node: string
+          expires_at: string
+          id: string
+          input_history: Json
+          locale: string
+          msisdn: string
+          network_code: string | null
+          service_code: string
+          session_id: string
+          state: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          current_node?: string
+          expires_at?: string
+          id?: string
+          input_history?: Json
+          locale?: string
+          msisdn: string
+          network_code?: string | null
+          service_code: string
+          session_id: string
+          state?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          current_node?: string
+          expires_at?: string
+          id?: string
+          input_history?: Json
+          locale?: string
+          msisdn?: string
+          network_code?: string | null
+          service_code?: string
+          session_id?: string
+          state?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

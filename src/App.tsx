@@ -487,7 +487,10 @@ const EmbeddableVerificationWidget = lazy(() => import("./pages/widgets/Embeddab
 const WidgetSDKPage = lazy(() => import("./pages/developer/WidgetSDKPage"));
 const OpenBankingStandards = lazy(() => import("./pages/developer/OpenBankingStandards"));
 const BankOnboardingGuide = lazy(() => import("./pages/developer/BankOnboardingGuide"));
+const USSDIntegrationGuide = lazy(() => import("./pages/developer/USSDIntegrationGuide"));
+const AgentBankingGuide = lazy(() => import("./pages/developer/AgentBankingGuide"));
 const TestReport = lazy(() => import("./pages/developer/TestReport"));
+
 
 const FIPortal = lazy(() => import("./pages/FIPortal"));
 const InstitutionTransactions = lazy(() => import("./pages/institution/InstitutionTransactions"));
@@ -1260,6 +1263,8 @@ function App() {
               <Route path="widgets" element={<WidgetSDKPage />} />
               <Route path="open-banking/standards" element={<OpenBankingStandards />} />
               <Route path="bank-onboarding" element={<BankOnboardingGuide />} />
+              <Route path="ussd" element={<USSDIntegrationGuide />} />
+              <Route path="agents" element={<AgentBankingGuide />} />
               <Route path="test-report" element={<TestReport />} />
               {/* Remittance API Docs */}
               <Route path="remittance" element={<DevRemittanceOverview />} />
