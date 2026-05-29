@@ -979,6 +979,7 @@ function App() {
               <Route path="loan-review-queue" element={<AdminLoanReviewQueue />} />
               <Route path="savings-anomaly-queue" element={<AdminSavingsAnomalyQueue />} />
               <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
+              <Route path="institution-api-keys" element={<AdminInstitutionApiKeys />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="institution-management" element={<InstitutionManagement />} />
@@ -1267,6 +1268,7 @@ function App() {
               <Route path="open-banking/standards" element={<OpenBankingStandards />} />
               <Route path="bank-onboarding" element={<BankOnboardingGuide />} />
               <Route path="ussd" element={<USSDIntegrationGuide />} />
+              <Route path="spec-versions" element={<DeveloperSpecVersions />} />
               <Route path="agents" element={<AgentBankingGuide />} />
               <Route path="test-report" element={<TestReport />} />
               {/* Remittance API Docs */}
