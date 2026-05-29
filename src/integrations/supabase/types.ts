@@ -15905,6 +15905,69 @@ export type Database = {
           },
         ]
       }
+      payment_intents: {
+        Row: {
+          amount: number
+          canceled_at: string | null
+          child_intent_id: string | null
+          child_resource: string | null
+          created_at: string
+          currency: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          idempotency_key: string | null
+          last_error: Json | null
+          merchant_id: string
+          metadata: Json
+          next_action: Json | null
+          payment_method_types: string[]
+          status: string
+          succeeded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          canceled_at?: string | null
+          child_intent_id?: string | null
+          child_resource?: string | null
+          created_at?: string
+          currency: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          idempotency_key?: string | null
+          last_error?: Json | null
+          merchant_id: string
+          metadata?: Json
+          next_action?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          canceled_at?: string | null
+          child_intent_id?: string | null
+          child_resource?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          idempotency_key?: string | null
+          last_error?: Json | null
+          merchant_id?: string
+          metadata?: Json
+          next_action?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_routes: {
         Row: {
           attempt_number: number
@@ -20893,6 +20956,7 @@ export type Database = {
           rate_limit_per_day: number
           rate_limit_per_minute: number
           sandbox_account_id: string
+          tier: string
           webhook_secret_hash: string | null
           webhook_secret_preview: string | null
         }
@@ -20909,6 +20973,7 @@ export type Database = {
           rate_limit_per_day?: number
           rate_limit_per_minute?: number
           sandbox_account_id: string
+          tier?: string
           webhook_secret_hash?: string | null
           webhook_secret_preview?: string | null
         }
@@ -20925,6 +20990,7 @@ export type Database = {
           rate_limit_per_day?: number
           rate_limit_per_minute?: number
           sandbox_account_id?: string
+          tier?: string
           webhook_secret_hash?: string | null
           webhook_secret_preview?: string | null
         }
