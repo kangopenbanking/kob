@@ -1,0 +1,78 @@
+name: Artifact smoke test (deployed)
+
+# Pulls the published artifacts from the live developer-portal URL and
+# re-validates SHA-256 + Ed25519 signatures. Catches CDN drift, broken
+# mirrors, or partial deploys that an in-tree predeploy check cannot see.
+#
+# Justification: Standing Orders P2 (Zero-404), P4 (Open Spec), P5 (Working Code).
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Base URL to probe'
+        required: false
+        default: 'https://kangopenbanking.com'
+  push:
+    paths:
+      - 'public/openapi*.json'
+      - 'public/openapi*.yaml'
+      - 'public/sdk-downloads/**'
+      - 'public/postman/**'
+      - 'public/artifacts.json'
+      - 'public/SHA256SUMS.txt*'
+      - 'scripts/kob-fetch.mjs'
+      - '.github/workflows/artifact-smoke-test.yml'
+
+jobs:
+  fetch-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      BASE: ${{ github.event.inputs.base || 'https://kangopenbanking.com' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch + verify all artifacts via kob-fetch
+        run: node scripts/kob-fetch.mjs --base "$BASE" --out ./smoke-artifacts all
+
+      - name: Cross-check published SHA256SUMS.txt
+        run: |
+          set -euo pipefail
+          curl -sSfL "$BASE/SHA256SUMS.txt" -o SHA256SUMS.txt
+          curl -sSfL "$BASE/SHA256SUMS.txt.sig" -o SHA256SUMS.txt.sig
+          curl -sSfL "$BASE/artifact-signing-pubkey.pem" -o pub.pem
+          node -e '
+            const fs=require("fs"),c=require("crypto");
+            const ok=c.verify(null,fs.readFileSync("SHA256SUMS.txt"),
+              c.createPublicKey({key:fs.readFileSync("pub.pem","utf8"),format:"pem"}),
+              Buffer.from(fs.readFileSync("SHA256SUMS.txt.sig","utf8").trim(),"base64"));
+            if(!ok){console.error("SHA256SUMS.txt signature invalid");process.exit(1)}
+            console.log("SHA256SUMS.txt signature OK");
+          '
+
+      - name: Probe metadata endpoint freshness
+        run: |
+          set -euo pipefail
+          curl -sSfL "$BASE/artifacts.json" -o artifacts.json
+          node -e '
+            const m=require("./artifacts.json");
+            const age=(Date.now()-new Date(m.generatedAt))/3600e3;
+            console.log(`metadata age: ${age.toFixed(1)}h, artifacts: ${m.artifacts.length}`);
+            if(!m.ssot?.apiVersion) process.exit(1);
+          '
+
+      - name: Notify on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -sX POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\":rotating_light: Artifact smoke test failed against $BASE (run $GITHUB_RUN_ID)\"}" \
+            "$SLACK_WEBHOOK_URL"

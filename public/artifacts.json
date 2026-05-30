@@ -9,7 +9,32 @@
   },
   "generatedAt": "2026-05-30T10:05:17.494Z",
   "algorithm": "sha256",
+  "signing": {
+    "algorithm": "ed25519",
+    "publicKeyUrl": "/artifact-signing-pubkey.pem",
+    "manifestSigUrl": "/SHA256SUMS.txt.sig",
+    "keySource": "local-dev",
+    "signedAt": "2026-05-30T10:05:17.717Z"
+  },
   "verifyHint": "curl -sSO https://kangopenbanking.com/SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt",
+  "releaseNotesUrl": "/sdk-downloads/SDK_RELEASE_NOTES.md",
+  "sdkChangelogs": {
+    "node": "/sdk-downloads/CHANGELOG-node.md",
+    "php": "/sdk-downloads/CHANGELOG-php.md",
+    "python": "/sdk-downloads/CHANGELOG-python.md"
+  },
+  "cli": {
+    "npx": "curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all",
+    "targets": [
+      "openapi",
+      "openapi-sandbox",
+      "postman",
+      "sdk-node",
+      "sdk-php",
+      "sdk-python",
+      "all"
+    ]
+  },
   "artifacts": [
     {
       "url": "/openapi.json",
@@ -239,12 +264,5 @@
         "sigUrl": "/changelog.json.sig"
       }
     }
-  ],
-  "signing": {
-    "algorithm": "ed25519",
-    "publicKeyUrl": "/artifact-signing-pubkey.pem",
-    "manifestSigUrl": "/SHA256SUMS.txt.sig",
-    "keySource": "local-dev",
-    "signedAt": "2026-05-30T10:05:17.717Z"
-  }
+  ]
 }

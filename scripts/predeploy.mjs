@@ -95,6 +95,24 @@ await run(
   ['scripts/generate-artifact-checksums.mjs']
 );
 
+await run(
+  'Sign download artifacts (Ed25519)',
+  'node',
+  ['scripts/sign-artifacts.mjs']
+);
+
+await run(
+  'Build /artifacts.json metadata endpoint',
+  'node',
+  ['scripts/build-artifacts-metadata.mjs']
+);
+
+await run(
+  'Verify artifact signatures',
+  'node',
+  ['scripts/verify-artifact-signatures.mjs']
+);
+
 if (OFFLINE) {
   console.log('\nSkipping public-access + link-health audits (offline mode).');
   process.exit(0);
