@@ -136,6 +136,7 @@ export default function KYCVerificationReview() {
       pending: { variant: "outline", icon: Clock, label: "Pending Review", className: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800" },
       approved: { variant: "outline", icon: CheckCircle, label: "Approved", className: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800" },
       rejected: { variant: "outline", icon: XCircle, label: "Rejected", className: "border-red-300 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800" },
+      info_requested: { variant: "outline", icon: HelpCircle, label: "Info Requested", className: "border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800" },
     };
     return configs[status] || configs.pending;
   };
