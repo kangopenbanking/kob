@@ -656,7 +656,78 @@ Deno.serve(async (req) => {
         target_type,
         rail: sourceRail,
         rail_descriptor: railDescriptor,
-      }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        trace_id: traceId,
+      }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+    }
+
+
+    // ─── get_timeline ─────────────────────────────────────────
+    // Returns the full webhook-driven status timeline + last webhook
+    // event metadata for a given intent_id, plus webhook_inbox retry/
+    // replay records that referenced this intent. Integrators poll this
+    // to render a status tracker without depending on redirects.
+    if (action === 'get_timeline') {
+      const { intent_id } = body;
+      if (!intent_id) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields', code: 'MISSING_FIELDS',
+          message: 'intent_id is required.', extra: { trace_id: traceId },
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
+      const { data: intent } = await supabase
+        .from('pay_by_bank_intents')
+        .select('id, status, amount, currency, created_at, updated_at, expires_at, failure_reason, metadata, target_type, customer_user_id, merchant_id')
+        .eq('id', intent_id)
+        .maybeSingle();
+      if (!intent) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'intent_not_found', code: 'INTENT_NOT_FOUND',
+          message: 'No Pay-by-Bank intent matches that id.', extra: { trace_id: traceId },
+        })), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
+      const meta = (intent.metadata || {}) as any;
+      const flwTxRef = meta.flw_tx_ref as string | undefined;
+
+      // Pull related inbox rows by intent id (most reliable) and by
+      // flw_tx_ref so we capture both KOB and Flutterwave deliveries.
+      const inboxRows: any[] = [];
+      try {
+        const { data: byIntent } = await supabase.from('webhook_inbox')
+          .select('id, source, event_id, event_type, status, attempt_count, max_attempts, next_retry_at, is_processed, processed_at, processing_error, created_at')
+          .or(`event_id.ilike.%${intent_id}%`)
+          .order('created_at', { ascending: false }).limit(25);
+        if (byIntent) inboxRows.push(...byIntent);
+        if (flwTxRef) {
+          const { data: byTxRef } = await supabase.from('webhook_inbox')
+            .select('id, source, event_id, event_type, status, attempt_count, max_attempts, next_retry_at, is_processed, processed_at, processing_error, created_at')
+            .ilike('event_id', `%${flwTxRef}%`)
+            .order('created_at', { ascending: false }).limit(25);
+          if (byTxRef) {
+            for (const r of byTxRef) if (!inboxRows.find(x => x.id === r.id)) inboxRows.push(r);
+          }
+        }
+      } catch (e) {
+        console.warn(`[pay-by-bank][get_timeline][trace=${traceId}] webhook_inbox lookup failed`, e);
+      }
+
+      const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
+      const lastWebhookEvent = inboxRows[0] || null;
+
+      return new Response(JSON.stringify({
+        intent_id: intent.id,
+        status: intent.status,
+        amount: intent.amount,
+        currency: intent.currency,
+        failure_reason: intent.failure_reason,
+        rail: meta.rail || null,
+        trace_id: meta.trace_id || null,
+        idempotency_key: meta.idempotency_key || null,
+        timeline,
+        last_webhook_event: lastWebhookEvent,
+        webhook_history: inboxRows,
+        kob_callback_at: meta.kob_callback_at || null,
+        flutterwave_webhook_at: meta.flw_webhook_at || null,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
 
