@@ -352,8 +352,8 @@ export default function HelpCentre() {
                 </div>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link to="/about">
-                    <Button size="lg" className="rounded-xl">
-                      Learn More About KOB
+                    <Button size="lg" className="rounded-xl" aria-label="About Kang Open Banking — company and platform overview">
+                      About Kang Open Banking
                     </Button>
                   </Link>
                   <Link to="/developer">

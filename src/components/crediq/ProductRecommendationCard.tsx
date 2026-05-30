@@ -102,7 +102,7 @@ export function ProductRecommendationCard({ recommendations, onApply }: ProductR
                     onClick={() => onApply(rec.id)}
                     disabled={rec.eligibility_score < 60}
                   >
-                    {rec.eligibility_score >= 80 ? 'Apply Now' : 'Learn More'}
+                    {rec.eligibility_score >= 80 ? `Apply for ${rec.product_name}` : `See ${rec.product_name} requirements`}
                   </Button>
                 )}
               </div>
