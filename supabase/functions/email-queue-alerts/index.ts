@@ -65,7 +65,20 @@ Deno.serve(async (req) => {
     const failures = (recentSends || []).filter((r) => r.status !== "sent").length;
     const failureRate = total > 0 ? failures / total : 0;
 
+    // ---- 4. Bounce / complaint rate over last 24h ----
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: deliveryWindow } = await admin
+      .from("email_send_log")
+      .select("status")
+      .gte("created_at", twentyFourHoursAgo)
+      .in("status", ["sent", "bounced", "complained"]);
+    const deliveryTotal = deliveryWindow?.length || 0;
+    const bounces = (deliveryWindow || []).filter((r) => r.status === "bounced").length;
+    const complaints = (deliveryWindow || []).filter((r) => r.status === "complained").length;
+    const bounceRate = deliveryTotal > 0 ? (bounces + complaints) / deliveryTotal : 0;
+
     const triggered: string[] = [];
+
 
     async function fire(type: string, severity: "warning" | "critical", title: string, message: string, metadata: any) {
       // Dedupe: skip if same alert_type fired in the last hour.
