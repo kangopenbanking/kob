@@ -23,12 +23,27 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useFirebasePhoneAuth } from "@/hooks/useFirebasePhoneAuth";
+import { useOTPTimers, formatMMSS } from "@/hooks/useOTPTimers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   ShieldCheck, PhoneCall, KeyRound, Timer, AlertCircle,
-  CheckCircle2, RefreshCw, BookOpen, ListChecks, Loader2,
+  CheckCircle2, RefreshCw, BookOpen, ListChecks, Loader2, Send,
 } from "lucide-react";
+
+/** Human-friendly mapping for the common failure categories. */
+const FRIENDLY_ERROR: Record<string, { title: string; hint: string }> = {
+  "invalid-phone":        { title: "Invalid phone number",   hint: "Use full international format, e.g. +16505551234." },
+  "too-many-requests":    { title: "Too many attempts",      hint: "Wait a few minutes before requesting another code." },
+  "unauthorized-domain":  { title: "Domain not authorized",  hint: "Add this host to Firebase Authorized domains." },
+  "recaptcha-disabled":   { title: "Security check failed",  hint: "reCAPTCHA could not load. Reload the page and retry." },
+  "billing-required":     { title: "Provider unavailable",   hint: "Firebase phone billing is not enabled for this project." },
+  "network":              { title: "Network error",          hint: "Check your connection and try again." },
+  "provider-disabled":    { title: "Phone sign-in disabled", hint: "Enable Phone provider in Firebase Console." },
+  "invalid-code":         { title: "Wrong verification code", hint: "Double-check the digits and try again." },
+  "expired-code":         { title: "Code expired",           hint: "Request a new code — codes are valid for 5 minutes." },
+  "unknown":              { title: "Verification failed",    hint: "Please try again or request a new code." },
+};
 
 type Scenario = "happy_path" | "wrong_code" | "expired_code" | "rate_limit";
 
