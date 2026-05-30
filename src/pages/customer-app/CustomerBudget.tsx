@@ -905,6 +905,9 @@ function MiniDonutStat({
   centerSub,
   colour,
   bg,
+  onClick,
+  ariaLabel,
+  testId,
 }: {
   label: string;
   percent: number;
@@ -912,31 +915,38 @@ function MiniDonutStat({
   centerSub?: string;
   colour: string;
   bg: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  testId?: string;
 }) {
   const safePct = Math.max(0, Math.min(100, percent));
   return (
-    <div
-      className="flex flex-col items-center rounded-2xl border px-2 py-3"
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel ?? label}
+      data-testid={testId}
+      className="flex flex-col items-center rounded-2xl border px-2 py-2.5 transition-all duration-200 active:scale-[0.97] hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
       style={{
         background: bg,
-        borderColor: "var(--bud-border-soft)",
+        borderColor: colour + "33",
       }}
     >
       <DonutRing
-        size={68}
-        strokeWidth={7}
+        size={64}
+        strokeWidth={6}
         segments={[
           { value: safePct, colour },
           { value: 100 - safePct, colour: "var(--bud-track)" },
         ]}
         centerLabel={
           <span
-            className="text-[12px] font-semibold tabular-nums"
+            className="flex flex-col items-center leading-none"
             style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
           >
-            {centerValue}
+            <span className="text-[10px] font-semibold tabular-nums">{centerValue}</span>
             {centerSub && (
-              <span className="text-[9px] font-normal" style={{ color: "var(--bud-text-3)" }}>
+              <span className="mt-0.5 text-[8px] font-normal" style={{ color: "var(--bud-text-3)" }}>
                 {centerSub}
               </span>
             )}
@@ -944,12 +954,12 @@ function MiniDonutStat({
         }
       />
       <div
-        className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
-        style={{ color: "var(--bud-text-2)" }}
+        className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.12em]"
+        style={{ color: colour }}
       >
         {label}
       </div>
-    </div>
+    </button>
   );
 }
 
