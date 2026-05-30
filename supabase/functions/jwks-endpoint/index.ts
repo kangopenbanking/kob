@@ -36,73 +36,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If no keys exist, generate a new RSA key pair and store it
+    // If no keys exist, we no longer auto-generate a private key into the
+    // database. RSA private signing material must be provisioned via a
+    // dedicated admin rotation flow (stored in Supabase Vault / KMS), and
+    // only the PUBLIC components (n, e, kid, alg, use, kty) get written to
+    // the `signing_keys` table. Returning an empty JWKS is the correct
+    // behaviour until an operator provisions the first key.
     if (!keys || keys.length === 0) {
-      try {
-        const keyPair = await crypto.subtle.generateKey(
-          {
-            name: 'RSASSA-PKCS1-v1_5',
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: 'SHA-256',
-          },
-          true,
-          ['sign', 'verify']
-        );
-
-        const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-        const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-
-        const kid = `kob-${Date.now()}`;
-
-        // Store the key in the database
-        const { error: insertError } = await supabase
-          .from('signing_keys')
-          .insert({
-            kid,
-            kty: 'RSA',
-            alg: 'RS256',
-            use: 'sig',
-            n: publicJwk.n!,
-            e: publicJwk.e!,
-            private_key: JSON.stringify(privateJwk),
-            is_active: true,
-          });
-
-        if (insertError) {
-          console.error('Error storing generated key:', insertError);
-          return new Response(
-            JSON.stringify({ keys: [] }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300' } }
-          );
-        }
-
-        // Return the newly generated key
-        const jwks = {
-          keys: [{
-            kty: 'RSA',
-            use: 'sig',
-            kid,
-            alg: 'RS256',
-            n: publicJwk.n,
-            e: publicJwk.e,
-          }]
-        };
-
-        return new Response(JSON.stringify(jwks), {
+      console.warn('[jwks-endpoint] No active signing keys present. Provision one via the admin rotation flow.');
+      return new Response(
+        JSON.stringify({ keys: [] }),
+        {
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=3600'
-          }
-        });
-      } catch (genError) {
-        console.error('Error generating RSA key pair:', genError);
-        return new Response(
-          JSON.stringify({ keys: [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+            'Cache-Control': 'public, max-age=60',
+          },
+        },
+      );
     }
 
     // Return existing keys
