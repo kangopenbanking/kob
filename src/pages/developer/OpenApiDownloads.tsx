@@ -124,13 +124,46 @@ curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="verify">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <ShieldCheck className="h-4 w-4" /> Verify signed artifacts (Ed25519)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
+            <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <KeyRound className="h-4 w-4" />
+                Current signing key
+                <Badge variant="outline" className="ml-auto">
+                  {(signing?.algorithm || 'ed25519').toUpperCase()}
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Fingerprint (SHA-256 of SPKI DER):
+              </div>
+              <code className="block text-xs break-all bg-background border border-border rounded px-2 py-1">
+                {signing?.publicKeyFingerprint || 'Loading from /artifacts.json…'}
+              </code>
+              {signing?.next?.publicKeyFingerprint && (
+                <>
+                  <div className="flex items-center gap-2 text-sm font-medium pt-2 border-t border-border">
+                    <KeyRound className="h-4 w-4" />
+                    Staged next key
+                    <Badge variant="secondary" className="ml-auto">
+                      {signing.next.status || 'staged'}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Pre-pin this fingerprint to survive the upcoming rotation
+                    without a code change. See the rotation procedure below.
+                  </div>
+                  <code className="block text-xs break-all bg-background border border-border rounded px-2 py-1">
+                    {signing.next.publicKeyFingerprint}
+                  </code>
+                </>
+              )}
+            </div>
             <p className="text-muted-foreground">
               Every artifact is signed with an Ed25519 detached signature using a
               stable build-time key. The public key is published at{' '}
@@ -138,6 +171,7 @@ curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
               <code>/artifacts.json</code>. Verify any download with either of the
               snippets below.
             </p>
+
             <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# 1) One-shot verifier (fetches spec, checksum, signature, public key)
 curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - openapi
 
