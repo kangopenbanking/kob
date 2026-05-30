@@ -706,14 +706,31 @@ Deno.serve(async (req) => {
     // event metadata for a given intent_id, plus webhook_inbox retry/
     // replay records that referenced this intent. Integrators poll this
     // to render a status tracker without depending on redirects.
-    if (action === 'get_timeline') {
-      const { intent_id } = body;
+    if (action === 'get_timeline' || action === 'admin_get_timeline' || action === 'admin_replay_webhook') {
+      const { intent_id, reason: replayReason } = body;
+      const isAdminAction = action === 'admin_get_timeline' || action === 'admin_replay_webhook' || body.admin === true;
+      let adminUserId: string | null = null;
+      if (isAdminAction) {
+        const caller = await resolveAdminCaller(req, supabase);
+        if (!caller.ok) {
+          return new Response(JSON.stringify(buildErrorBody({
+            error: 'forbidden',
+            code: caller.reason === 'not_admin' ? 'NOT_AUTHORIZED' : 'UNAUTHENTICATED',
+            message: caller.reason === 'not_admin'
+              ? 'Admin role required to access the Pay-by-Bank inspector.'
+              : 'A valid admin bearer token is required.',
+            extra: { trace_id: traceId, reason: caller.reason },
+          })), { status: caller.status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+        }
+        adminUserId = caller.userId;
+      }
       if (!intent_id) {
         return new Response(JSON.stringify(buildErrorBody({
           error: 'missing_fields', code: 'MISSING_FIELDS',
           message: 'intent_id is required.', extra: { trace_id: traceId },
         })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
+
       const { data: intent } = await supabase
         .from('pay_by_bank_intents')
         .select('id, status, amount, currency, created_at, updated_at, expires_at, failure_reason, metadata, target_type, customer_user_id, merchant_id')
