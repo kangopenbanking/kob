@@ -23,6 +23,8 @@ import {
   Target,
   Sun,
   Moon,
+  Filter,
+  Check,
 } from "lucide-react";
 import { DonutRing } from "@/components/budget/DonutRing";
 import { AnimatedAmount } from "@/components/budget/AnimatedAmount";
@@ -35,6 +37,21 @@ import { NjangiWidget } from "@/components/budget/NjangiWidget";
 import { RoundupCard } from "@/components/budget/RoundupCard";
 import { RoundupSettingsSheet } from "@/components/budget/RoundupSettingsSheet";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   useBudget,
   useInsight,
   useGoals,
@@ -46,6 +63,11 @@ import { formatXAF } from "@/lib/budget/formatXAF";
 import type { BudgetLang } from "@/types/budget";
 
 import { useBudgetTheme, type BudgetTheme } from "@/lib/budget/theme";
+
+type StatKey = "left" | "daily" | "days";
+type CatFilter = "all" | "over" | "near" | "ok";
+const SHOW_ALL_CATS_KEY = "kob_budget_show_all_cats";
+const CAT_FILTER_KEY = "kob_budget_cat_filter";
 
 const LANG_KEY = "kob_adviser_lang";
 
@@ -92,7 +114,25 @@ export default function CustomerBudget() {
   const [goalOpen, setGoalOpen] = useState(false);
   const [roundupOpen, setRoundupOpen] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
+  const [catFilter, setCatFilter] = useState<CatFilter>("all");
+  const [statSheet, setStatSheet] = useState<StatKey | null>(null);
   const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
+
+  // Persist category view + filter across mounts/scroll
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SHOW_ALL_CATS_KEY);
+      if (saved) setShowAllCats(saved === "1");
+      const f = localStorage.getItem(CAT_FILTER_KEY) as CatFilter | null;
+      if (f && ["all", "over", "near", "ok"].includes(f)) setCatFilter(f);
+    } catch { /* noop */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem(SHOW_ALL_CATS_KEY, showAllCats ? "1" : "0"); } catch { /* noop */ }
+  }, [showAllCats]);
+  useEffect(() => {
+    try { localStorage.setItem(CAT_FILTER_KEY, catFilter); } catch { /* noop */ }
+  }, [catFilter]);
 
   const summary = budget?.summary;
   const goals = goalsData?.goals ?? [];
@@ -278,31 +318,42 @@ export default function CustomerBudget() {
                 </div>
               </div>
 
-              {/* Hero stat row — mini donuts */}
+              {/* Hero stat row — mini donuts (tap to open detail sheet) */}
               <div
-                className="mt-6 grid grid-cols-3 gap-3"
+                className="mt-6 grid grid-cols-3 gap-2.5"
+                role="group"
+                aria-label="Budget summary metrics"
               >
                 <MiniDonutStat
+                  testId="mini-donut-left"
                   label="Left"
                   percent={leftPct}
                   centerValue={formatXAF(summary?.total_remaining ?? 0, true)}
-                  colour="#10D9A0"
-                  bg={theme === "light" ? "rgba(16,217,160,0.10)" : "rgba(16,217,160,0.14)"}
+                  colour={theme === "light" ? "#059669" : "#34D399"}
+                  bg={theme === "light" ? "rgba(5,150,105,0.10)" : "rgba(52,211,153,0.14)"}
+                  ariaLabel={`Remaining: ${formatXAF(summary?.total_remaining ?? 0)}, ${leftPct}% of budget`}
+                  onClick={() => setStatSheet("left")}
                 />
                 <MiniDonutStat
+                  testId="mini-donut-daily"
                   label="Daily"
                   percent={dailyPct}
                   centerValue={formatXAF(dailyAllowance, true)}
-                  colour="#38BDF8"
-                  bg={theme === "light" ? "rgba(56,189,248,0.10)" : "rgba(56,189,248,0.14)"}
+                  colour={theme === "light" ? "#0284C7" : "#38BDF8"}
+                  bg={theme === "light" ? "rgba(2,132,199,0.10)" : "rgba(56,189,248,0.14)"}
+                  ariaLabel={`Daily allowance: ${formatXAF(dailyAllowance)}, ${dailyPct}% of original daily target`}
+                  onClick={() => setStatSheet("daily")}
                 />
                 <MiniDonutStat
+                  testId="mini-donut-days"
                   label="Days left"
                   percent={daysLeftPct}
                   centerValue={String(daysLeft)}
                   centerSub={`/${totalDays}`}
-                  colour="#A78BFA"
-                  bg={theme === "light" ? "rgba(167,139,250,0.12)" : "rgba(167,139,250,0.16)"}
+                  colour={theme === "light" ? "#7C3AED" : "#A78BFA"}
+                  bg={theme === "light" ? "rgba(124,58,237,0.10)" : "rgba(167,139,250,0.16)"}
+                  ariaLabel={`${daysLeft} of ${totalDays} days remaining`}
+                  onClick={() => setStatSheet("days")}
                 />
               </div>
             </section>
@@ -365,13 +416,80 @@ export default function CustomerBudget() {
             <NjangiWidget />
 
             {/* Categories */}
-            <section>
-              <SectionHeader
-                title="Categories"
-                rightSlot={
-                  (summary?.categories?.length ?? 0) > 5 ? (
+            <section data-testid="categories-section">
+              <div
+                className="sticky top-0 z-10 -mx-5 mb-3 flex items-center justify-between gap-2 px-5 py-2 backdrop-blur"
+                style={{
+                  background:
+                    theme === "light"
+                      ? "rgba(255,255,255,0.78)"
+                      : "rgba(10,15,25,0.72)",
+                  borderBottom: "1px solid var(--bud-border-soft)",
+                }}
+              >
+                <h2
+                  className="text-[15px] font-semibold tracking-tight"
+                  style={{
+                    fontFamily: "Sora, Inter, sans-serif",
+                    letterSpacing: "-0.01em",
+                    color: "var(--bud-text)",
+                  }}
+                >
+                  Categories
+                </h2>
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        data-testid="categories-filter"
+                        aria-label="Filter categories"
+                        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors"
+                        style={{
+                          borderColor: "var(--bud-border)",
+                          background: "var(--bud-surface-2)",
+                          color: "var(--bud-text-2)",
+                        }}
+                      >
+                        <Filter className="h-3 w-3" strokeWidth={2} />
+                        {catFilter === "all"
+                          ? "All"
+                          : catFilter === "over"
+                          ? "Over budget"
+                          : catFilter === "near"
+                          ? "Near limit"
+                          : "On track"}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="min-w-[180px] animate-in fade-in-0 zoom-in-95 duration-150"
+                    >
+                      <DropdownMenuLabel>Filter</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {([
+                        { id: "all", label: "All categories" },
+                        { id: "over", label: "Over budget" },
+                        { id: "near", label: "Near limit (80%+)" },
+                        { id: "ok", label: "On track (<60%)" },
+                      ] as { id: CatFilter; label: string }[]).map((o) => (
+                        <DropdownMenuItem
+                          key={o.id}
+                          onSelect={() => setCatFilter(o.id)}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span>{o.label}</span>
+                          {catFilter === o.id && (
+                            <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {(summary?.categories?.length ?? 0) > 4 && (
                     <button
+                      data-testid="categories-toggle"
                       onClick={() => setShowAllCats((v) => !v)}
+                      aria-expanded={showAllCats}
                       className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors"
                       style={{
                         borderColor: "var(--bud-border)",
@@ -379,41 +497,47 @@ export default function CustomerBudget() {
                         color: "var(--bud-text-2)",
                       }}
                     >
-                      {showAllCats ? "Show less" : `View all ${summary?.categories?.length ?? 0}`}
+                      {showAllCats ? "Show less" : "View all"}
                       <ChevronRight
-                        className="h-3 w-3 transition-transform"
+                        className="h-3 w-3 transition-transform duration-200"
                         strokeWidth={2}
                         style={{ transform: showAllCats ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
                     </button>
-                  ) : (
-                    <span className="text-[11px]" style={{ color: "var(--bud-text-3)" }}>
-                      {summary?.categories?.length ?? 0} total
-                    </span>
-                  )
-                }
-              />
-              <div className="grid grid-cols-2 gap-3">
+                  )}
+                </div>
+              </div>
+              <div
+                className="grid grid-cols-2 gap-3 transition-all duration-300"
+                data-testid="categories-grid"
+              >
                 {(summary?.categories ?? [])
+                  .filter((c) => {
+                    const p = Math.round(c.percentage_used ?? 0);
+                    if (catFilter === "over") return p >= 100;
+                    if (catFilter === "near") return p >= 80 && p < 100;
+                    if (catFilter === "ok") return p < 60;
+                    return true;
+                  })
                   .slice(0, showAllCats ? undefined : 4)
                   .map((c) => {
                     const meta = getCategory(c.id);
                     const cpct = Math.min(100, Math.round(c.percentage_used ?? 0));
                     const tone =
                       cpct >= 100
-                        ? "#F87171"
+                        ? "#DC2626"
                         : cpct >= 80
-                        ? "#FBBF24"
+                        ? "#D97706"
                         : cpct >= 60
-                        ? "#60A5FA"
-                        : "#10D9A0";
+                        ? "#2563EB"
+                        : "#059669";
                     return (
                       <button
                         key={c.id}
                         onClick={() =>
                           setEditCat({ id: c.id, name: c.name, limit: c.limit, colour: meta.colour })
                         }
-                        className="group relative flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.98]"
+                        className="group relative flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all duration-200 active:scale-[0.98] hover:-translate-y-0.5"
                         style={{
                           background: "var(--bud-surface)",
                           borderColor: "var(--bud-border)",
@@ -607,6 +731,112 @@ export default function CustomerBudget() {
         budgetId={budget?.budget?.id ?? ""}
         category={editCat}
       />
+
+      {/* Mini-donut detail bottom sheet */}
+      <Sheet open={!!statSheet} onOpenChange={(v) => !v && setStatSheet(null)}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5"
+          data-testid="stat-sheet"
+        >
+          {statSheet && summary && (() => {
+            const config = {
+              left: {
+                title: "Remaining this month",
+                description: "What you have left to spend before your budget resets.",
+                value: formatXAF(summary.total_remaining ?? 0),
+                percent: leftPct,
+                tone: theme === "light" ? "#059669" : "#34D399",
+                rows: [
+                  { k: "Budget", v: formatXAF(summary.total_limit ?? 0) },
+                  { k: "Spent", v: formatXAF(summary.total_spent ?? 0) },
+                  { k: "Remaining", v: formatXAF(summary.total_remaining ?? 0) },
+                ],
+              },
+              daily: {
+                title: "Daily allowance",
+                description: "Your remaining balance divided by the days left in the cycle.",
+                value: formatXAF(dailyAllowance),
+                percent: dailyPct,
+                tone: theme === "light" ? "#0284C7" : "#38BDF8",
+                rows: [
+                  { k: "Daily target", v: formatXAF(dailyTarget) },
+                  { k: "Today's allowance", v: formatXAF(dailyAllowance) },
+                  { k: "vs. target", v: `${dailyPct}%` },
+                ],
+              },
+              days: {
+                title: "Days remaining",
+                description: "Days left in the current budget cycle.",
+                value: `${daysLeft} / ${totalDays}`,
+                percent: daysLeftPct,
+                tone: theme === "light" ? "#7C3AED" : "#A78BFA",
+                rows: [
+                  { k: "Days left", v: String(daysLeft) },
+                  { k: "Cycle length", v: `${totalDays} days` },
+                  { k: "Progress", v: `${100 - daysLeftPct}%` },
+                ],
+              },
+            }[statSheet];
+            return (
+              <>
+                <SheetHeader className="text-left">
+                  <SheetTitle style={{ fontFamily: "Sora, Inter, sans-serif" }}>
+                    {config.title}
+                  </SheetTitle>
+                  <SheetDescription>{config.description}</SheetDescription>
+                </SheetHeader>
+                <div className="mt-5 flex items-center gap-4">
+                  <DonutRing
+                    size={88}
+                    strokeWidth={10}
+                    segments={[
+                      { value: config.percent, colour: config.tone },
+                      { value: 100 - config.percent, colour: "var(--bud-track)" },
+                    ]}
+                    centerLabel={
+                      <span className="text-[14px] font-semibold" style={{ color: "var(--bud-text)" }}>
+                        {config.percent}%
+                      </span>
+                    }
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      style={{ color: "var(--bud-text-3)" }}
+                    >
+                      Exact value
+                    </div>
+                    <div
+                      data-testid="stat-sheet-value"
+                      className="mt-1 text-[24px] font-semibold tabular-nums"
+                      style={{
+                        fontFamily: "Sora, Inter, sans-serif",
+                        letterSpacing: "-0.02em",
+                        color: config.tone,
+                      }}
+                    >
+                      {config.value}
+                    </div>
+                  </div>
+                </div>
+                <dl className="mt-5 divide-y" style={{ borderColor: "var(--bud-border-soft)" }}>
+                  {config.rows.map((r) => (
+                    <div key={r.k} className="flex items-center justify-between py-2.5">
+                      <dt className="text-[12px]" style={{ color: "var(--bud-text-2)" }}>
+                        {r.k}
+                      </dt>
+                      <dd className="text-[13px] font-medium tabular-nums" style={{ color: "var(--bud-text)" }}>
+                        {r.v}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -675,6 +905,9 @@ function MiniDonutStat({
   centerSub,
   colour,
   bg,
+  onClick,
+  ariaLabel,
+  testId,
 }: {
   label: string;
   percent: number;
@@ -682,31 +915,38 @@ function MiniDonutStat({
   centerSub?: string;
   colour: string;
   bg: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  testId?: string;
 }) {
   const safePct = Math.max(0, Math.min(100, percent));
   return (
-    <div
-      className="flex flex-col items-center rounded-2xl border px-2 py-3"
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel ?? label}
+      data-testid={testId}
+      className="flex flex-col items-center rounded-2xl border px-2 py-2.5 transition-all duration-200 active:scale-[0.97] hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
       style={{
         background: bg,
-        borderColor: "var(--bud-border-soft)",
+        borderColor: colour + "33",
       }}
     >
       <DonutRing
-        size={68}
-        strokeWidth={7}
+        size={64}
+        strokeWidth={6}
         segments={[
           { value: safePct, colour },
           { value: 100 - safePct, colour: "var(--bud-track)" },
         ]}
         centerLabel={
           <span
-            className="text-[12px] font-semibold tabular-nums"
+            className="flex flex-col items-center leading-none"
             style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
           >
-            {centerValue}
+            <span className="text-[10px] font-semibold tabular-nums">{centerValue}</span>
             {centerSub && (
-              <span className="text-[9px] font-normal" style={{ color: "var(--bud-text-3)" }}>
+              <span className="mt-0.5 text-[8px] font-normal" style={{ color: "var(--bud-text-3)" }}>
                 {centerSub}
               </span>
             )}
@@ -714,12 +954,12 @@ function MiniDonutStat({
         }
       />
       <div
-        className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
-        style={{ color: "var(--bud-text-2)" }}
+        className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.12em]"
+        style={{ color: colour }}
       >
         {label}
       </div>
-    </div>
+    </button>
   );
 }
 
