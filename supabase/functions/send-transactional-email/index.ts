@@ -167,6 +167,16 @@ Deno.serve(async (req) => {
         status: 'failed',
         error_message: `rate_limited: ${limit}/hour cap exceeded for template`,
       })
+      await supabase.rpc('log_notification_event', {
+        _channel: 'email',
+        _status: 'rate_limited',
+        _provider: 'lovable_email',
+        _template_name: templateName,
+        _message_id: messageId,
+        _recipient_hash: recipientHash,
+        _error_code: 'rate_limited',
+        _error_message: `${limit}/hour cap exceeded`,
+      }).then(() => {}, () => {})
       console.warn('Email rate-limited', { templateName, effectiveRecipient, limit })
       return new Response(
         JSON.stringify({ success: false, reason: 'rate_limited', limit_per_hour: limit }),
