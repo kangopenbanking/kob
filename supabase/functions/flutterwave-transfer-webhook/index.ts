@@ -153,6 +153,68 @@ serve(async (req) => {
 
       console.log(`Transaction ${transactionRef} updated to ${updateStatus}`);
 
+      // ─── Pay-by-Bank reconciliation ──────────────────────────
+      // Flutterwave-hosted-checkout Pay-by-Bank intents prefix tx_ref
+      // with "pbb_" and carry meta.pay_by_bank_intent_id. When the
+      // charge webhook arrives, mark the intent + credit the wallet
+      // server-side so the user doesn't need to return through the
+      // redirect path. Idempotent — re-firing the webhook is safe.
+      if (event === 'charge.completed') {
+        const pbbIntentId = data?.meta?.pay_by_bank_intent_id
+          || (typeof transactionRef === 'string' && transactionRef.startsWith('pbb_') ? null : null);
+        if (pbbIntentId) {
+          try {
+            const { data: pbb } = await supabase
+              .from('pay_by_bank_intents')
+              .select('id, status, target_account_id, customer_user_id, amount, currency, metadata')
+              .eq('id', pbbIntentId)
+              .maybeSingle();
+            if (pbb && pbb.status !== 'completed' && pbb.status !== 'failed') {
+              if (updateStatus === 'completed' && pbb.target_account_id) {
+                const amountNum = Number(pbb.amount);
+                const ccy = pbb.currency || 'XAF';
+                const { error: cErr } = await supabase.rpc('atomic_credit_balance', {
+                  _account_id: pbb.target_account_id,
+                  _amount: amountNum,
+                  _currency: ccy,
+                });
+                if (!cErr) {
+                  await supabase.from('transactions').insert([{
+                    user_id: pbb.customer_user_id,
+                    account_id: pbb.target_account_id,
+                    amount: amountNum,
+                    currency: ccy,
+                    credit_debit_indicator: 'Credit',
+                    transaction_type: 'pay_by_bank_topup',
+                    transaction_information: 'Wallet top-up via Pay-by-Bank (Flutterwave webhook)',
+                    booking_datetime: new Date().toISOString(),
+                    status: 'Booked',
+                    metadata: { intent_id: pbbIntentId, flw_tx_ref: transactionRef, source: 'flutterwave_webhook' },
+                  }]).then(() => {}, () => {});
+                  await supabase.from('pay_by_bank_intents')
+                    .update({ status: 'completed', metadata: { ...(pbb.metadata || {}), flw_webhook_at: new Date().toISOString() } })
+                    .eq('id', pbbIntentId);
+                  await supabase.rpc('trigger_webhooks', {
+                    _event_type: 'pay_by_bank.completed',
+                    _event_data: JSON.stringify({ intent_id: pbbIntentId, amount: amountNum, currency: ccy, status: 'completed', source: 'flutterwave_webhook' }),
+                  }).catch(() => {});
+                }
+              } else if (updateStatus === 'failed') {
+                await supabase.from('pay_by_bank_intents')
+                  .update({ status: 'failed', failure_reason: data?.complete_message || data?.message || 'flutterwave_failed' })
+                  .eq('id', pbbIntentId);
+                await supabase.rpc('trigger_webhooks', {
+                  _event_type: 'pay_by_bank.failed',
+                  _event_data: JSON.stringify({ intent_id: pbbIntentId, status: 'failed', source: 'flutterwave_webhook' }),
+                }).catch(() => {});
+              }
+            }
+          } catch (e) {
+            console.error('[FLUTTERWAVE-WEBHOOK] pay-by-bank reconciliation failed', e);
+          }
+        }
+      }
+
       // If this is a completed mobile money charge for bank deposit, trigger auto-credit
       if (event === 'charge.completed' && updateStatus === 'completed') {
         const { data: mobileTransaction } = await supabase
@@ -170,6 +232,7 @@ serve(async (req) => {
           });
         }
       }
+
     }
 
     // Mark webhook as processed
