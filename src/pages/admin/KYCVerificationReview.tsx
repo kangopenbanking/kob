@@ -29,7 +29,7 @@ export default function KYCVerificationReview() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLabel, setPreviewLabel] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
-  const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
+  const [reviewAction, setReviewAction] = useState<"approved" | "rejected" | "info_requested">("approved");
   const [searchQuery, setSearchQuery] = useState("");
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
