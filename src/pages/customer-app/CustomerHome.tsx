@@ -298,14 +298,31 @@ const CustomerHome: React.FC = () => {
               {acctLoading ? (
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
               ) : (
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                <SecureField
+                  field="total_balance"
+                  revealed={balanceVisible && !isViewOnly}
+                  mask={
+                    <motion.p
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                      className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                      data-testid="balance-masked"
+                    >
+                      {'• • • • •'}
+                    </motion.p>
+                  }
                 >
-                  {isViewOnly || !balanceVisible ? '• • • • •' : `XAF ${animatedBalance.toLocaleString()}`}
-                </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                    className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                    data-testid="balance-value"
+                  >
+                    {`XAF ${animatedBalance.toLocaleString()}`}
+                  </motion.p>
+                </SecureField>
               )}
             </div>
 
