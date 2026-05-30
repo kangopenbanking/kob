@@ -404,19 +404,29 @@ Deno.serve(async (req) => {
           if (!matched) {
             const ccy = String(currency || 'XAF').toUpperCase();
             const hostedFallback = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
-            return new Response(JSON.stringify({
+            const railAvailable = [
+              { rail: 'kob_pisp', supported: false, reason: 'bank_not_linked' },
+              { rail: 'flutterwave_hosted', supported: hostedFallback, reason: hostedFallback ? undefined : 'currency_unsupported' },
+              { rail: 'flutterwave_bank_transfer', supported: ccy === 'NGN', reason: ccy === 'NGN' ? undefined : 'currency_unsupported' },
+            ];
+            return new Response(JSON.stringify(buildErrorBody({
               error: 'bank_not_linked',
-              action: 'link_account',
+              code: 'BANK_NOT_LINKED',
               message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
-              fallback: hostedFallback ? {
-                rail: 'flutterwave_hosted',
-                provider: 'flutterwave',
-                label: 'Continue via secure hosted checkout (card or Mobile Money)',
-                payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
-                retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
-              } : null,
-            }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              rail_available: railAvailable,
+              extra: {
+                action: 'link_account',
+                fallback: hostedFallback ? {
+                  rail: 'flutterwave_hosted',
+                  provider: 'flutterwave',
+                  label: 'Continue via secure hosted checkout (card or Mobile Money)',
+                  payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+                  retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
+                } : null,
+              },
+            })), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
+
 
 
           linkedAccountId = matched.id;
