@@ -107,6 +107,21 @@ export default function CustomerBudget() {
 
   const pct = summary ? Math.min(100, Math.round(summary.percentage_used)) : 0;
 
+  // Mini-donut metrics
+  const totalDays = useMemo(() => {
+    if (!summary?.period_start || !summary?.period_end) return 30;
+    const s = new Date(summary.period_start).getTime();
+    const e = new Date(summary.period_end).getTime();
+    const d = Math.round((e - s) / 86400000) + 1;
+    return d > 0 ? d : 30;
+  }, [summary?.period_start, summary?.period_end]);
+  const daysLeft = summary?.days_remaining ?? 0;
+  const daysLeftPct = Math.round(Math.min(100, (daysLeft / Math.max(1, totalDays)) * 100));
+  const leftPct = 100 - pct;
+  const dailyTarget = summary ? summary.total_limit / Math.max(1, totalDays) : 0;
+  const dailyAllowance = summary && daysLeft > 0 ? (summary.total_remaining ?? 0) / daysLeft : 0;
+  const dailyPct = dailyTarget > 0 ? Math.min(100, Math.round((dailyAllowance / dailyTarget) * 100)) : 0;
+
 
   return (
     <>
