@@ -189,6 +189,8 @@ export default function AdminCaptureEvents() {
         </p>
       </header>
 
+      <RetentionCard />
+
       <Card className="p-4">
         <div className="grid gap-3 sm:grid-cols-4">
           <div>
@@ -310,5 +312,91 @@ export default function AdminCaptureEvents() {
         </Table>
       </Card>
     </div>
+  );
+}
+
+/**
+ * RetentionCard — admin control for the configurable retention window
+ * applied to security_capture_events. Backed by system_config key
+ * `security_capture_events_retention_days`; nightly pg_cron job calls
+ * public.cleanup_security_capture_events() at 03:15 UTC.
+ */
+function RetentionCard() {
+  const [days, setDays] = useState<number | null>(null);
+  const [draft, setDraft] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "security_capture_events_retention_days")
+        .maybeSingle();
+      const v = typeof data?.value === "number" ? data.value : Number(data?.value ?? 90);
+      setDays(Number.isFinite(v) ? v : 90);
+      setDraft(String(Number.isFinite(v) ? v : 90));
+    })();
+  }, []);
+
+  const save = async () => {
+    const n = Math.max(1, Math.min(3650, Math.floor(Number(draft) || 0)));
+    setSaving(true);
+    setMsg(null);
+    const { error } = await supabase
+      .from("system_config")
+      .update({ value: n })
+      .eq("key", "security_capture_events_retention_days");
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    setDays(n);
+    setDraft(String(n));
+    setMsg("Retention updated. Nightly cleanup will apply the new window.");
+  };
+
+  const runNow = async () => {
+    setSaving(true);
+    setMsg(null);
+    const { data, error } = await supabase.rpc("cleanup_security_capture_events" as never);
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    const anyData = data as unknown as { deleted_count?: number; retention_days?: number } | Array<{ deleted_count?: number; retention_days?: number }> | null;
+    const row = Array.isArray(anyData) ? anyData[0] : anyData;
+    setMsg(`Cleanup complete. Deleted ${row?.deleted_count ?? 0} row(s) older than ${row?.retention_days ?? days} day(s).`);
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-sm font-semibold text-foreground">Retention schedule</h2>
+          <p className="text-xs text-muted-foreground">
+            Capture events older than the configured window are deleted automatically every night at 03:15 UTC.
+            Common values: 30, 90, 180, 365 days.
+          </p>
+        </div>
+        <div className="flex items-end gap-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Retention (days)</label>
+            <Input
+              type="number"
+              min={1}
+              max={3650}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="w-32"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={save} disabled={saving || draft === String(days)}>
+            Save
+          </Button>
+          <Button variant="outline" size="sm" onClick={runNow} disabled={saving}>
+            Run cleanup now
+          </Button>
+        </div>
+      </div>
+      {msg && <p className="mt-3 text-xs text-muted-foreground">{msg}</p>}
+    </Card>
   );
 }
