@@ -215,22 +215,26 @@ serve(async (req) => {
                     metadata: { intent_id: pbbIntentId, flw_tx_ref: transactionRef, source: 'flutterwave_webhook' },
                   }]).then(() => {}, () => {});
                   // Append confirmed event to intent timeline, preserving any
-                  // earlier 'created' / 'awaiting_webhook' entries.
+                  // earlier 'created' / 'awaiting_webhook' entries. The trace_id
+                  // attached to the intent at create_intent is correlated with
+                  // the FW-side trace echoed in `meta.trace_id`.
                   const prevMeta = (pbb.metadata || {}) as any;
                   const prevTl = Array.isArray(prevMeta.timeline) ? prevMeta.timeline : [];
+                  const fwTrace = data?.meta?.trace_id || traceId;
                   await supabase.from('pay_by_bank_intents')
                     .update({
                       status: 'completed',
                       metadata: {
                         ...prevMeta,
                         flw_webhook_at: new Date().toISOString(),
-                        timeline: [...prevTl, { status: 'confirmed', at: new Date().toISOString(), source: 'flutterwave_webhook', detail: `flw_tx_ref=${transactionRef}` }],
+                        flw_webhook_trace_id: fwTrace,
+                        timeline: [...prevTl, { status: 'confirmed', at: new Date().toISOString(), source: 'flutterwave_webhook', detail: `flw_tx_ref=${transactionRef} trace=${fwTrace}` }],
                       },
                     })
                     .eq('id', pbbIntentId);
                   await supabase.rpc('trigger_webhooks', {
                     _event_type: 'pay_by_bank.completed',
-                    _event_data: JSON.stringify({ intent_id: pbbIntentId, amount: amountNum, currency: ccy, status: 'completed', source: 'flutterwave_webhook' }),
+                    _event_data: JSON.stringify({ intent_id: pbbIntentId, amount: amountNum, currency: ccy, status: 'completed', source: 'flutterwave_webhook', trace_id: fwTrace }),
                   }).catch(() => {});
                 }
               } else if (updateStatus === 'failed') {
