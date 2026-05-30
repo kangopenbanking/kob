@@ -189,6 +189,8 @@ export default function AdminCaptureEvents() {
         </p>
       </header>
 
+      <RetentionCard />
+
       <Card className="p-4">
         <div className="grid gap-3 sm:grid-cols-4">
           <div>
