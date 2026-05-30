@@ -105,11 +105,22 @@ export default function CustomerBudget() {
 
   const [theme, toggleTheme] = useBudgetTheme();
 
-  const { data: budget, isLoading, refetch: refetchBudget } = useBudget();
+  const { data: budget, isLoading: budgetLoading, refetch: refetchBudget } = useBudget();
   const { data: goalsData } = useGoals();
   const { data: alertsData } = useBudgetAlerts();
   const { data: insight, refetch: refetchInsight, isFetching: insightLoading } = useInsight(lang);
   const dismissAlert = useDismissAlert();
+
+  // Hard cap the blocking spinner so a slow/cold edge function never freezes
+  // the page. After this, we render the EmptyState (or whatever data we have)
+  // instead of leaving the user on a loading screen indefinitely.
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  useEffect(() => {
+    if (!budgetLoading) return;
+    const t = window.setTimeout(() => setLoadingTimedOut(true), 3500);
+    return () => window.clearTimeout(t);
+  }, [budgetLoading]);
+  const isLoading = budgetLoading && !loadingTimedOut;
 
   const [setupOpen, setSetupOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
