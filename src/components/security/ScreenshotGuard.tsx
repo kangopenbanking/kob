@@ -25,8 +25,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-import { FINANCIAL_ROUTE_PATTERNS } from "./screenshot-guard-config";
+import {
+  FINANCIAL_ROUTE_PATTERNS,
+  SCREENSHOT_GUARD_OPT_OUT,
+  appContextForPath,
+} from "./screenshot-guard-config";
 import { useScreenshotIdentity } from "./useScreenshotIdentity";
+import { recordCaptureEvent, type CaptureKind } from "@/lib/security/recordCaptureEvent";
+import { SecureView, isNativeShell } from "@/lib/security/secureView";
 
 const CAPTURE_KEY_COMBOS: Array<(e: KeyboardEvent) => boolean> = [
   (e) => e.key === "PrintScreen",
@@ -41,10 +47,12 @@ const CAPTURE_KEY_COMBOS: Array<(e: KeyboardEvent) => boolean> = [
 ];
 
 function isFinancialRoute(pathname: string): boolean {
+  const optedOut = SCREENSHOT_GUARD_OPT_OUT.some((p) => matchPath({ path: p, end: false }, pathname) != null);
+  if (optedOut) return false;
   return FINANCIAL_ROUTE_PATTERNS.some((p) => matchPath({ path: p, end: false }, pathname) != null);
 }
 
-function emitAttempt(kind: string, pathname: string) {
+function emitAttempt(kind: CaptureKind | string, pathname: string) {
   const detail = { event: "kob:screenshot_attempt", kind, pathname, ts: Date.now() };
   logger.warn("[security] screenshot attempt", detail);
   try {
@@ -52,7 +60,13 @@ function emitAttempt(kind: string, pathname: string) {
   } catch {
     /* noop */
   }
+  recordCaptureEvent({
+    kind: kind as CaptureKind,
+    pathname,
+    appContext: appContextForPath(pathname),
+  });
 }
+
 
 export function ScreenshotGuard() {
   const { pathname } = useLocation();
@@ -122,11 +136,18 @@ export function ScreenshotGuard() {
     };
   }, [active, pathname]);
 
-  // ---- Blur on visibility/blur ---------------------------------------
+  // ---- Blur on visibility/blur + telemetry ---------------------------
   useEffect(() => {
     if (!active) return;
-    const onVis = () => setHidden(document.visibilityState !== "visible");
-    const onBlur = () => setHidden(true);
+    const onVis = () => {
+      const isHidden = document.visibilityState !== "visible";
+      setHidden(isHidden);
+      if (isHidden) emitAttempt("visibility:hidden", pathname);
+    };
+    const onBlur = () => {
+      setHidden(true);
+      emitAttempt("blur", pathname);
+    };
     const onFocus = () => setHidden(false);
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("blur", onBlur);
@@ -136,7 +157,35 @@ export function ScreenshotGuard() {
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
-  }, [active]);
+  }, [active, pathname]);
+
+  // ---- Native shell: toggle FLAG_SECURE / iOS blur overlay -----------
+  useEffect(() => {
+    if (!active || !isNativeShell()) return;
+    let cancelled = false;
+    let removeListener: (() => Promise<void>) | null = null;
+
+    (async () => {
+      try {
+        await SecureView.enable({ reason: `route:${pathname}` });
+        if (cancelled) return;
+        emitAttempt("native:secured", pathname);
+        const sub = await SecureView.addListener("captureStateChanged", (evt) => {
+          if (evt.captured) emitAttempt("native:capture_detected", pathname);
+        });
+        removeListener = sub.remove;
+      } catch (e) {
+        logger.warn("[ScreenshotGuard] SecureView.enable failed", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (removeListener) removeListener().catch(() => {});
+      SecureView.disable().then(() => emitAttempt("native:unsecured", pathname)).catch(() => {});
+    };
+  }, [active, pathname]);
+
 
   // ---- CSS injection (selection / callout / mask) --------------------
   useEffect(() => {

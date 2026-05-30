@@ -21,6 +21,7 @@ import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSp
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { SecureField } from '@/components/security/SecureField';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -102,7 +103,9 @@ const CustomerHome: React.FC = () => {
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
   const { unreadCount } = useNotifications(undefined, false, true);
-  const [balanceVisible, setBalanceVisible] = useState(true);
+  // Balances default to MASKED on mount and auto re-mask after 8s of
+  // visibility to reduce shoulder-surfing and casual screenshot risk.
+  const [balanceVisible, setBalanceVisible] = useState(false);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
   const tr = useHarvestedT('customer');
 
@@ -138,6 +141,25 @@ const CustomerHome: React.FC = () => {
   const earnings = summary?.earnings ?? 0;
   const spending = summary?.spending ?? 0;
   const animatedBalance = useAnimatedCounter(totalBalance);
+
+  // Auto re-mask the balance after 8 s of being visible.
+  React.useEffect(() => {
+    if (!balanceVisible) return;
+    const id = window.setTimeout(() => setBalanceVisible(false), 8000);
+    return () => window.clearTimeout(id);
+  }, [balanceVisible]);
+
+  // Always re-mask when the tab loses focus or visibility.
+  React.useEffect(() => {
+    const onVis = () => { if (document.visibilityState !== 'visible') setBalanceVisible(false); };
+    window.addEventListener('blur', () => setBalanceVisible(false));
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('blur', () => setBalanceVisible(false));
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
 
   const go = (path: string) => navigate(`/app/${path}`);
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
@@ -276,14 +298,31 @@ const CustomerHome: React.FC = () => {
               {acctLoading ? (
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
               ) : (
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                <SecureField
+                  field="total_balance"
+                  revealed={balanceVisible && !isViewOnly}
+                  mask={
+                    <motion.p
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                      className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                      data-testid="balance-masked"
+                    >
+                      {'• • • • •'}
+                    </motion.p>
+                  }
                 >
-                  {isViewOnly || !balanceVisible ? '• • • • •' : `XAF ${animatedBalance.toLocaleString()}`}
-                </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                    className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                    data-testid="balance-value"
+                  >
+                    {`XAF ${animatedBalance.toLocaleString()}`}
+                  </motion.p>
+                </SecureField>
               )}
             </div>
 
