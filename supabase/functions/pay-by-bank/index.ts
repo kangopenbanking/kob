@@ -253,11 +253,41 @@ Deno.serve(async (req) => {
       const target_type: 'merchant' | 'consumer_wallet' =
         rawTargetType === 'consumer_wallet' ? 'consumer_wallet' : 'merchant';
 
-      if (!amount || !redirect_uri || !state) {
-        return new Response(JSON.stringify({ error: 'Missing required fields: amount, redirect_uri, state' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      // ─── Idempotency replay (E2E) ───────────────────────────
+      // If the same Idempotency-Key was already used to create an intent
+      // (e.g. double-click, retry storm), return the existing intent
+      // verbatim instead of creating a second one.
+      if (idempotencyKey) {
+        const existing = await lookupIntentByIdempotencyKey(supabase, idempotencyKey, {
+          merchant_id: merchant_id || null,
         });
+        if (existing) {
+          const meta = (existing.metadata || {}) as any;
+          return new Response(JSON.stringify({
+            intent_id: existing.id,
+            consent_id: existing.consent_id,
+            authorization_url: existing.authorization_url,
+            expires_at: existing.expires_at,
+            status: existing.status,
+            target_type: existing.target_type,
+            rail: meta.rail || null,
+            rail_descriptor: meta.rail_descriptor || null,
+            idempotent_replay: true,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replay': 'true' },
+          });
+        }
       }
+
+      if (!amount || !redirect_uri || !state) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields',
+          code: 'MISSING_FIELDS',
+          message: 'Missing required fields: amount, redirect_uri, state',
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
 
       let merchant: { id: string; business_name: string | null; logo_url: string | null } | null = null;
       let resolvedTargetAccountId: string | null = null;
