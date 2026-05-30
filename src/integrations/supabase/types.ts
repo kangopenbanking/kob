@@ -19117,6 +19117,51 @@ export type Database = {
           },
         ]
       }
+      push_test_log: {
+        Row: {
+          created_at: string
+          elapsed_ms: number | null
+          error: Json | null
+          id: string
+          message: string
+          onesignal_id: string | null
+          recipients: number | null
+          status: string
+          target_external_user_id: string | null
+          title: string
+          triggered_by: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          elapsed_ms?: number | null
+          error?: Json | null
+          id?: string
+          message: string
+          onesignal_id?: string | null
+          recipients?: number | null
+          status?: string
+          target_external_user_id?: string | null
+          title: string
+          triggered_by: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          elapsed_ms?: number | null
+          error?: Json | null
+          id?: string
+          message?: string
+          onesignal_id?: string | null
+          recipients?: number | null
+          status?: string
+          target_external_user_id?: string | null
+          title?: string
+          triggered_by?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       push_to_card_transactions: {
         Row: {
           amount: number
