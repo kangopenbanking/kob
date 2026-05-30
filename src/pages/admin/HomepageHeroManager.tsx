@@ -185,16 +185,32 @@ export default function HomepageHeroManager() {
           <CardContent className="p-6">
             <div className="grid lg:grid-cols-[200px_1fr] gap-6">
               {/* Preview */}
-              <div className="relative rounded-lg overflow-hidden aspect-video bg-muted">
-                {slide.media_type === "video" ? (
-                  <video src={slide.media_url} className="w-full h-full object-cover" muted />
-                ) : (
-                  <img src={slide.media_url} alt="" className="w-full h-full object-cover" />
-                )}
-                <Badge className="absolute top-2 left-2" variant="secondary">
-                  {slide.media_type === "video" ? <Video className="h-3 w-3 mr-1" /> : <ImageIcon className="h-3 w-3 mr-1" />}
-                  {slide.media_type}
-                </Badge>
+              <div className="space-y-2">
+                <div className="relative rounded-lg overflow-hidden aspect-video bg-muted group">
+                  {slide.media_type === "video" ? (
+                    <video src={slide.media_url} className="w-full h-full object-cover" muted />
+                  ) : (
+                    <img src={slide.media_url} alt="" className="w-full h-full object-cover" />
+                  )}
+                  <Badge className="absolute top-2 left-2" variant="secondary">
+                    {slide.media_type === "video" ? <Video className="h-3 w-3 mr-1" /> : <ImageIcon className="h-3 w-3 mr-1" />}
+                    {slide.media_type}
+                  </Badge>
+                </div>
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && replaceMedia(slide.id, e.target.files[0])}
+                  />
+                  <Button asChild variant="outline" size="sm" className="w-full" disabled={uploading}>
+                    <span className="cursor-pointer">
+                      <Upload className="h-3.5 w-3.5 mr-2" />
+                      {uploading ? "Uploading..." : "Replace media"}
+                    </span>
+                  </Button>
+                </label>
               </div>
 
               {/* Fields */}
