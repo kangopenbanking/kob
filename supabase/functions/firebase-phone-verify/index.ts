@@ -294,6 +294,18 @@ serve(async (req) => {
     });
     await logOtp(phoneHash, countryCode, 'verified', null, { user_id: userId });
 
+    await supabase.rpc('log_notification_event', {
+      _channel: 'sms',
+      _status: 'delivered',
+      _provider: 'firebase',
+      _template_name: 'phone_otp_verify',
+      _recipient_hash: phoneHash,
+      _region: countryCode ?? null,
+      _user_id: userId,
+    }).then(() => {}, () => {});
+
+
+
 
     return new Response(
       JSON.stringify({
