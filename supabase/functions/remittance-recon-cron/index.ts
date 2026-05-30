@@ -34,16 +34,26 @@ serve(async (req) => {
     }
 
     // P0 AUTH GATE — require service-role/cron secret OR an authenticated admin.
-    // Previously the function was publicly executable (token-less requests passed).
     const cronAuth = verifyCronAuth(req);
     if (!cronAuth.authorized) {
       const authHeader = req.headers.get('Authorization') || '';
       const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-      if (!token) return json({ error: 'unauthorized' }, 401);
+      if (!token) {
+        await recordRemittanceAudit({ endpoint: 'remittance-recon-cron', action: action ?? undefined, decision: 'denied_unauthenticated', req });
+        return json({ error: 'unauthorized', code: 'CRON_SECRET_REQUIRED', message: 'Provide x-cron-secret or admin Bearer token' }, 401);
+      }
       const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
-      if (userErr || !user) return json({ error: 'unauthorized' }, 401);
+      if (userErr || !user) {
+        await recordRemittanceAudit({ endpoint: 'remittance-recon-cron', action: action ?? undefined, decision: 'denied_unauthenticated', req });
+        return json({ error: 'unauthorized', code: 'INVALID_TOKEN' }, 401);
+      }
       const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-      if (!isAdmin) return json({ error: 'forbidden' }, 403);
+      if (!isAdmin) {
+        await recordRemittanceAudit({ endpoint: 'remittance-recon-cron', action: action ?? undefined, decision: 'denied_unauthorized', userId: user.id, req });
+        return json({ error: 'forbidden', code: 'ADMIN_REQUIRED' }, 403);
+      }
+    } else {
+      await recordRemittanceAudit({ endpoint: 'remittance-recon-cron', action: action ?? undefined, decision: 'allowed', req, metadata: { source: 'cron_secret' } });
     }
 
     switch (action || 'run_recon') {
