@@ -2,6 +2,14 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail, getUserName, getUserEmail } from "../_shared/send-managed-email.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
+import {
+  reserveIdempotency,
+  storeIdempotency,
+  idempotencyResponse,
+  sha256,
+  validateIdempotencyKey,
+} from "../_shared/integration-layer/idempotency.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
