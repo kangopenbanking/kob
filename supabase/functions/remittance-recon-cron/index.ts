@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { safeErrorResponse } from "../_shared/errors.ts";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
 
 const STALE_HOURS_THRESHOLD = 48; // Flag after 48 hours without settlement
 
