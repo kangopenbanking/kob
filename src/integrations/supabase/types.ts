@@ -15513,6 +15513,36 @@ export type Database = {
           },
         ]
       }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          used_ip: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          used_ip?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          used_ip?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mfa_challenges: {
         Row: {
           challenge_code_hash: string
@@ -15977,6 +16007,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_delivery_events: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          message_id: string | null
+          metadata: Json
+          provider: string | null
+          recipient_hash: string | null
+          region: string | null
+          status: Database["public"]["Enums"]["notification_event_status"]
+          template_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          message_id?: string | null
+          metadata?: Json
+          provider?: string | null
+          recipient_hash?: string | null
+          region?: string | null
+          status: Database["public"]["Enums"]["notification_event_status"]
+          template_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          message_id?: string | null
+          metadata?: Json
+          provider?: string | null
+          recipient_hash?: string | null
+          region?: string | null
+          status?: Database["public"]["Enums"]["notification_event_status"]
+          template_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       notification_preferences: {
         Row: {
@@ -27500,6 +27581,23 @@ export type Database = {
         }
         Returns: string
       }
+      log_notification_event: {
+        Args: {
+          _channel: Database["public"]["Enums"]["notification_channel"]
+          _error_code?: string
+          _error_message?: string
+          _latency_ms?: number
+          _message_id?: string
+          _metadata?: Json
+          _provider?: string
+          _recipient_hash?: string
+          _region?: string
+          _status: Database["public"]["Enums"]["notification_event_status"]
+          _template_name?: string
+          _user_id?: string
+        }
+        Returns: string
+      }
       log_security_event: {
         Args: {
           _event_category: string
@@ -27555,6 +27653,22 @@ export type Database = {
       move_webhook_to_dlq: {
         Args: { p_inbox_id: string; p_reason: string }
         Returns: string
+      }
+      notification_delivery_kpis: {
+        Args: { _since?: string }
+        Returns: {
+          bounced: number
+          channel: Database["public"]["Enums"]["notification_channel"]
+          delivered: number
+          failed: number
+          p50_latency_ms: number
+          p95_latency_ms: number
+          rate_limited: number
+          sent: number
+          success_rate: number
+          suppressed: number
+          total: number
+        }[]
       }
       notify_subscription_expiry_warning: { Args: never; Returns: undefined }
       pos_adjust_inventory: {
@@ -27845,6 +27959,19 @@ export type Database = {
       njangi_member_status: "active" | "removed"
       njangi_payout_method: "random" | "manual"
       njangi_selection_method: "random" | "manual"
+      notification_channel: "email" | "push" | "sms"
+      notification_event_status:
+        | "queued"
+        | "sent"
+        | "delivered"
+        | "failed"
+        | "bounced"
+        | "complained"
+        | "opened"
+        | "clicked"
+        | "suppressed"
+        | "rate_limited"
+        | "expired"
       operational_role_type:
         | "teller"
         | "assistant_manager"
@@ -28224,6 +28351,20 @@ export const Constants = {
       njangi_member_status: ["active", "removed"],
       njangi_payout_method: ["random", "manual"],
       njangi_selection_method: ["random", "manual"],
+      notification_channel: ["email", "push", "sms"],
+      notification_event_status: [
+        "queued",
+        "sent",
+        "delivered",
+        "failed",
+        "bounced",
+        "complained",
+        "opened",
+        "clicked",
+        "suppressed",
+        "rate_limited",
+        "expired",
+      ],
       operational_role_type: [
         "teller",
         "assistant_manager",
