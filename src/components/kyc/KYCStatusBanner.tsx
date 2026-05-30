@@ -1,9 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { AlertCircle, Clock, MessageSquare, ShieldCheck, X, ArrowRight } from "lucide-react";
+import { AlertCircle, Bell, Clock, MessageSquare, ShieldCheck, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  SNOOZE_OPTIONS,
+  scheduleSnooze,
+  isSnoozed,
+  clearSnooze,
+  onRemindLaterFired,
+} from "@/lib/kyc/remindLater";
 
 type KycStatus = "pending" | "approved" | "rejected" | "info_requested";
 
@@ -17,22 +25,27 @@ interface KycRow {
 interface Props {
   /** Route the user should be taken to in order to act on the banner. Defaults to /kyc-verification. */
   verifyHref?: string;
+  /** Route to the in-app notifications center. */
+  notificationsHref?: string;
 }
-
-const DISMISS_KEY = "kyc-banner-dismissed-at";
 
 /**
  * Modern KYC status notification card.
- * - Shows for unverified, pending, info_requested, and rejected users.
- * - Hides entirely when status is `approved`.
- * - Dismissible per session for soft states (unverified / pending);
- *   info_requested and rejected cannot be dismissed.
+ * - Smaller, more compact typography.
+ * - Full keyboard navigation + ARIA labelling.
+ * - Non-blocking: pointer-events scoped to the card itself.
+ * - Soft states (unverified / pending) are dismissible and snoozable.
  */
-export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verification" }) => {
+export const KYCStatusBanner: React.FC<Props> = ({
+  verifyHref = "/kyc-verification",
+  notificationsHref = "/app/notifications",
+}) => {
   const { user, loading } = useAuthenticatedUser();
   const [row, setRow] = useState<KycRow | null | undefined>(undefined);
-  const [dismissed, setDismissed] = useState(false);
+  const [snoozed, setSnoozed] = useState<boolean>(() => isSnoozed());
   const [mounted, setMounted] = useState(false);
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -65,11 +78,14 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
     };
   }, [user, loading]);
 
+  // Animate in + listen for reminder firing.
   useEffect(() => {
-    const ts = sessionStorage.getItem(DISMISS_KEY);
-    if (ts) setDismissed(true);
     const t = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(t);
+    const off = onRemindLaterFired(() => setSnoozed(false));
+    return () => {
+      cancelAnimationFrame(t);
+      off();
+    };
   }, []);
 
   if (loading || row === undefined || !user) return null;
@@ -77,7 +93,7 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
 
   const status: KycStatus | "unverified" = row?.status ?? "unverified";
   const isHard = status === "info_requested" || status === "rejected";
-  if (!isHard && dismissed) return null;
+  if (!isHard && snoozed) return null;
 
   const config = (() => {
     switch (status) {
@@ -95,7 +111,7 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
           icon: Clock,
           label: "Under review",
           title: "Your identity verification is in progress",
-          message: "Our compliance team is reviewing your documents. You will be notified by email and in-app once a decision is made.",
+          message: "Our compliance team is reviewing your documents. You will be notified once a decision is made.",
           cta: "View status",
           tone: "info" as const,
         };
@@ -151,35 +167,46 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
   };
 
   const tone = toneClasses[config.tone];
+  const headingId = "kyc-banner-title";
+  const descId = "kyc-banner-desc";
+
+  const handleSnoozeChoice = (ms: number) => {
+    scheduleSnooze(ms);
+    setSnoozed(true);
+    setSnoozeOpen(false);
+  };
 
   return (
-    <div className="px-3 pt-3 sm:px-4 sm:pt-4">
-      <div
-        role="status"
-        aria-live="polite"
+    <div className="px-3 pt-3 sm:px-4 sm:pt-4 pointer-events-none">
+      <section
+        ref={containerRef}
+        role="region"
+        aria-labelledby={headingId}
+        aria-describedby={descId}
         className={[
-          "relative overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm",
+          "relative overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm pointer-events-auto",
           "transition-all duration-500 ease-out",
           mounted ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
           "before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-2xl",
+          "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1",
           tone.card,
           tone.accent,
         ].join(" ")}
       >
-        <div className="flex items-start gap-3 p-4 pl-5 sm:gap-4 sm:p-5 sm:pl-6">
+        <div className="flex items-start gap-2.5 p-3 pl-4 sm:gap-3 sm:p-4 sm:pl-5">
           <div
             className={[
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
               "ring-1 ring-inset ring-current/10",
               tone.iconWrap,
             ].join(" ")}
             aria-hidden="true"
           >
-            <Icon className="h-5 w-5" strokeWidth={1.75} />
+            <Icon className="h-4 w-4" strokeWidth={1.75} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span
                 className={[
                   "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -188,37 +215,81 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
               >
                 {config.label}
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground">
+              <span className="text-[10px] font-medium text-muted-foreground">
                 Identity verification
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-semibold leading-snug text-foreground">
+            <h3
+              id={headingId}
+              className="mt-1 text-[13px] font-semibold leading-snug text-foreground"
+            >
               {config.title}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
+            </h3>
+            <p id={descId} className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
               {config.message}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button asChild size="sm" variant="default" className="h-9 rounded-full px-4">
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <Button asChild size="sm" variant="default" className="h-8 rounded-full px-3 text-xs">
                 <Link to={verifyHref} aria-label={config.cta}>
                   {config.cta}
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" strokeWidth={2} />
+                  <ArrowRight className="ml-1 h-3 w-3" strokeWidth={2} aria-hidden="true" />
                 </Link>
               </Button>
+
+              <Button
+                asChild
+                size="sm"
+                variant="ghost"
+                className="h-8 rounded-full px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <Link to={notificationsHref} aria-label="Open notifications center">
+                  <Bell className="mr-1 h-3 w-3" strokeWidth={2} aria-hidden="true" />
+                  Notifications
+                </Link>
+              </Button>
+
               {!isHard && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
-                    setDismissed(true);
-                  }}
-                  className="h-9 rounded-full px-3 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Remind me later
-                </Button>
+                <Popover open={snoozeOpen} onOpenChange={setSnoozeOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Remind me later"
+                      aria-haspopup="menu"
+                      aria-expanded={snoozeOpen}
+                      className="h-8 rounded-full px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                    >
+                      Remind me later
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="start"
+                    className="w-52 p-1.5"
+                    role="menu"
+                    aria-label="Choose a reminder time"
+                  >
+                    <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Remind me
+                    </p>
+                    <ul className="flex flex-col">
+                      {SNOOZE_OPTIONS.map((opt) => (
+                        <li key={opt.id}>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => handleSnoozeChoice(opt.ms)}
+                            className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-foreground hover:bg-accent focus:bg-accent focus:outline-none"
+                          >
+                            <span>{opt.label}</span>
+                            <Clock className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
               )}
             </div>
           </div>
@@ -226,20 +297,23 @@ export const KYCStatusBanner: React.FC<Props> = ({ verifyHref = "/kyc-verificati
           {!isHard && (
             <button
               type="button"
-              aria-label="Dismiss notification"
+              aria-label="Dismiss verification notification"
               onClick={() => {
-                sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
-                setDismissed(true);
+                scheduleSnooze(24 * 60 * 60 * 1000);
+                setSnoozed(true);
               }}
-              className="absolute right-2 top-2 rounded-md p-1.5 text-muted-foreground/70 transition-colors hover:bg-background/60 hover:text-foreground"
+              className="absolute right-1.5 top-1.5 rounded-md p-1 text-muted-foreground/70 transition-colors hover:bg-background/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="h-4 w-4" strokeWidth={1.75} />
+              <X className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
             </button>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 };
 
 export default KYCStatusBanner;
+
+// Re-export so callers can clear snooze if needed (e.g. from the notifications center).
+export { clearSnooze as clearKycSnooze } from "@/lib/kyc/remindLater";
