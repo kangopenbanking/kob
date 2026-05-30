@@ -76,7 +76,7 @@ export default function FirebaseOTPTestSuite() {
   const [rateBurstCount, setRateBurstCount] = useState(0);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
-  const [sendStartedAt, setSendStartedAt] = useState<number | null>(null);
+  const [, setSendStartedAt] = useState<number | null>(null);
 
   const auth = useFirebasePhoneAuth({ otpType: "login" });
   const timers = useOTPTimers({ expirySeconds: 300, resendCooldownSeconds: 60 });
@@ -367,7 +367,7 @@ export default function FirebaseOTPTestSuite() {
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { auth.reset(); setCode(""); }}>Reset</Button>
+                <Button variant="outline" size="sm" onClick={() => { auth.reset(); setCode(""); timers.reset(); }}>Reset</Button>
               </div>
             </CardContent>
           </Card>
