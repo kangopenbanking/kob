@@ -75,15 +75,21 @@ export default function KYCVerificationReview() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { data, error } = await supabase.functions.invoke("admin-kyc-review", {
-        body: { kyc_id: id, action: status, rejection_reason: notes || undefined },
-      });
+      const body: Record<string, unknown> = { kyc_id: id, action: status };
+      if (status === "rejected") body.rejection_reason = notes;
+      if (status === "info_requested") body.info_request_message = notes;
+      const { data, error } = await supabase.functions.invoke("admin-kyc-review", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc-submissions-admin"] });
-      toast({ title: "KYC Review Complete", description: `Submission has been ${reviewAction}. Notification sent to customer.` });
+      const labels: Record<string, string> = {
+        approved: "approved",
+        rejected: "rejected",
+        info_requested: "marked as needing more information",
+      };
+      toast({ title: "KYC Review Complete", description: `Submission has been ${labels[reviewAction]}. Notification sent to customer.` });
       setReviewDialogOpen(false);
       setDetailOpen(false);
       setSelectedKYC(null);
@@ -94,7 +100,7 @@ export default function KYCVerificationReview() {
     },
   });
 
-  const handleReview = (kyc: any, action: "approved" | "rejected") => {
+  const handleReview = (kyc: any, action: "approved" | "rejected" | "info_requested") => {
     setSelectedKYC(kyc);
     setReviewAction(action);
     setReviewDialogOpen(true);
