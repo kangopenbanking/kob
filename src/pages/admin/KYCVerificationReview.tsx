@@ -283,7 +283,7 @@ export default function KYCVerificationReview() {
                       >
                         <Eye className="h-3.5 w-3.5" /> Review
                       </Button>
-                      {kyc.status === "pending" && (
+                      {kyc.status === "pending" && canReview && (
                         <>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleReview(kyc, "approved")} title="Approve">
                             <CheckCircle className="h-4 w-4" />
