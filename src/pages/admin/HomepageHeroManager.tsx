@@ -245,16 +245,30 @@ export default function HomepageHeroManager() {
   const moveSlide = async (index: number, direction: "up" | "down") => {
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= slides.length) return;
+    await applyNewOrder(arrayMove(slides, index, newIndex));
+  };
 
-    const updated = [...slides];
-    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-
+  const applyNewOrder = async (next: HeroSlide[]) => {
+    setSlides(next.map((s, i) => ({ ...s, sort_order: i })));
     await Promise.all(
-      updated.map((s, i) =>
-        supabase.from("homepage_hero_slides").update({ sort_order: i } as any).eq("id", s.id)
-      )
+      next.map((s, i) =>
+        supabase.from("homepage_hero_slides").update({ sort_order: i } as any).eq("id", s.id),
+      ),
     );
-    fetchSlides();
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = slides.findIndex((s) => s.id === active.id);
+    const to = slides.findIndex((s) => s.id === over.id);
+    if (from === -1 || to === -1) return;
+    await applyNewOrder(arrayMove(slides, from, to));
   };
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading slides...</div>;
