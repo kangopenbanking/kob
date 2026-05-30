@@ -344,6 +344,7 @@ const AdminSLO = lazy(() => import("./pages/admin/AdminSLO"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 const AdminPayByBankInspector = lazy(() => import("./pages/admin/AdminPayByBankInspector"));
+const AdminCaptureEvents = lazy(() => import("./pages/admin/AdminCaptureEvents"));
 // Phase 5 — additive merchants documentation hub
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 // Phase 5 follow-up — interactive merchant API key management page
