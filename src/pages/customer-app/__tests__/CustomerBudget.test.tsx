@@ -115,4 +115,91 @@ describe("CustomerBudget mobile regression", () => {
     renderAt(390, 844);
     expect(screen.getByTestId("categories-toggle")).toHaveTextContent(/Show less/i);
   });
+
+  // ---- Bottom sheet ARIA + keyboard ---------------------------------
+  it("bottom sheet exposes dialog role, aria-modal, and labelled/described ids", () => {
+    renderAt(390, 844);
+    fireEvent.click(screen.getByTestId("mini-donut-daily"));
+    const sheet = screen.getByTestId("stat-sheet");
+    expect(sheet.getAttribute("role")).toBe("dialog");
+    expect(sheet.getAttribute("aria-modal")).toBe("true");
+    expect(sheet.getAttribute("aria-labelledby")).toBe("stat-sheet-title");
+    expect(sheet.getAttribute("aria-describedby")).toBe("stat-sheet-desc");
+    expect(document.getElementById("stat-sheet-title")).toBeInTheDocument();
+    expect(document.getElementById("stat-sheet-desc")).toBeInTheDocument();
+  });
+
+  it("closes the bottom sheet when Escape is pressed", () => {
+    renderAt(390, 844);
+    fireEvent.click(screen.getByTestId("mini-donut-left"));
+    expect(screen.getByTestId("stat-sheet")).toBeInTheDocument();
+    fireEvent.keyDown(document.activeElement || document.body, { key: "Escape", code: "Escape" });
+    // Radix removes the content from the DOM after close animation; assert
+    // it is either gone or marked as closed.
+    const stillThere = screen.queryByTestId("stat-sheet");
+    if (stillThere) {
+      expect(stillThere.getAttribute("data-state")).toBe("closed");
+    }
+  });
+
+  // ---- Analytics events ---------------------------------------------
+  it("emits analytics events for tap + open + close of each mini-donut", () => {
+    const events: any[] = [];
+    const handler = (e: Event) => events.push((e as CustomEvent).detail);
+    window.addEventListener("kob:analytics", handler);
+    renderAt(390, 844);
+
+    (["left", "daily", "days"] as const).forEach((stat) => {
+      events.length = 0;
+      fireEvent.click(screen.getByTestId(`mini-donut-${stat}`));
+      const names = events.map((e) => e.event);
+      expect(names).toContain("budget.mini_donut.tap");
+      expect(names).toContain("budget.stat_sheet.open");
+      expect(events.find((e) => e.event === "budget.mini_donut.tap").stat).toBe(stat);
+
+      events.length = 0;
+      fireEvent.keyDown(document.activeElement || document.body, { key: "Escape" });
+      // Close fires either via onOpenChange(false) or onEscapeKeyDown — accept either.
+      expect(events.some((e) => e.event === "budget.stat_sheet.close")).toBe(true);
+    });
+
+    window.removeEventListener("kob:analytics", handler);
+  });
+
+  // ---- Filter / view-all persistence across screens + navigation ----
+  VIEWPORTS.forEach(([name, w, h]) => {
+    it(`persists "Show less / View all" toggle across ${name} viewport unmounts`, () => {
+      const first = renderAt(w, h);
+      fireEvent.click(screen.getByTestId("categories-toggle"));
+      expect(screen.getByTestId("categories-toggle")).toHaveTextContent(/Show less/i);
+      first.unmount();
+      // Simulate a navigation away + back by remounting at the same size.
+      const second = renderAt(w, h);
+      expect(screen.getByTestId("categories-toggle")).toHaveTextContent(/Show less/i);
+      second.unmount();
+    });
+
+    it(`persists category filter selection across ${name} viewport unmounts`, () => {
+      localStorage.setItem("kob_budget_cat_filter", "over");
+      renderAt(w, h);
+      const filter = screen.getByTestId("categories-filter");
+      // "Over budget" copy is rendered on the trigger when filter === "over".
+      expect(filter.textContent || "").toMatch(/Over/i);
+    });
+  });
+
+  it("retains filter + view-all state when navigating away and returning", () => {
+    const first = renderAt(390, 844);
+    fireEvent.click(screen.getByTestId("categories-toggle"));
+    expect(screen.getByTestId("categories-toggle")).toHaveTextContent(/Show less/i);
+    first.unmount();
+
+    // Render a different screen in between (simulated by an unrelated DOM mount).
+    const stub = render(<div data-testid="other-screen">other</div>);
+    expect(screen.getByTestId("other-screen")).toBeInTheDocument();
+    stub.unmount();
+
+    renderAt(390, 844);
+    expect(screen.getByTestId("categories-toggle")).toHaveTextContent(/Show less/i);
+  });
 });
