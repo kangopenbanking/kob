@@ -19,6 +19,9 @@ const DLQ_THRESHOLD = 5;        // > 5 DLQ rows in last 1h triggers alert
 const BACKLOG_THRESHOLD = 25;   // > 25 pending older than 30min triggers alert
 const FAILURE_RATE_THRESHOLD = 0.25;
 const FAILURE_MIN_SAMPLE = 8;
+const BOUNCE_RATE_THRESHOLD = 0.05;   // > 5% bounce rate over 24h
+const BOUNCE_MIN_SAMPLE = 20;
+
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
