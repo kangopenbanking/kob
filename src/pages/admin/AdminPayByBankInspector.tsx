@@ -116,14 +116,71 @@ export default function AdminPayByBankInspector() {
     setTimeline(null);
     setTimelineLoading(true);
     try {
-      const { data } = await supabase.functions.invoke("pay-by-bank", {
-        body: { action: "get_timeline", intent_id: i.id },
+      const { data, error } = await supabase.functions.invoke("pay-by-bank", {
+        body: { action: "admin_get_timeline", intent_id: i.id },
       });
+      if (error) throw error;
       setTimeline(data);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load timeline");
     } finally {
       setTimelineLoading(false);
     }
   };
+
+  const downloadBlob = (filename: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportTimelineJSON = () => {
+    if (!selected || !timeline) return;
+    const payload = {
+      exported_at: new Date().toISOString(),
+      intent: selected,
+      timeline: timeline.timeline || [],
+      webhook_history: timeline.webhook_history || [],
+      trace_id: timeline.trace_id,
+      idempotency_key: timeline.idempotency_key,
+    };
+    downloadBlob(`pbb-intent-${selected.id.slice(0, 8)}-${Date.now()}.json`, JSON.stringify(payload, null, 2), "application/json");
+    toast.success("Compliance export downloaded");
+  };
+
+  const exportTimelineCSV = () => {
+    if (!selected || !timeline) return;
+    const rows: string[] = [];
+    const esc = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    rows.push("section,timestamp,status_or_event,source,detail,attempts,processed,trace_id");
+    for (const e of timeline.timeline || []) {
+      rows.push(["timeline", esc(e.at), esc(e.status), esc(e.source || ""), esc(e.detail || ""), "", "", esc(timeline.trace_id || "")].join(","));
+    }
+    for (const w of timeline.webhook_history || []) {
+      rows.push(["webhook", esc(w.created_at), esc(w.event_type || w.event_id), esc(w.source), esc(w.processing_error || ""), esc(`${w.attempt_count ?? 0}/${w.max_attempts ?? ""}`), esc(w.is_processed ? "yes" : "no"), esc(timeline.trace_id || "")].join(","));
+    }
+    downloadBlob(`pbb-intent-${selected.id.slice(0, 8)}-${Date.now()}.csv`, rows.join("\n"), "text/csv");
+    toast.success("Compliance CSV downloaded");
+  };
+
+  if (authChecking) {
+    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader icon={ShieldAlert} title="Access denied" description="Admin role required to inspect Pay-by-Bank intents." />
+        <Card><CardContent className="py-8 text-center text-muted-foreground">You do not have permission to view this page.</CardContent></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,6 +189,7 @@ export default function AdminPayByBankInspector() {
         title="Pay-by-Bank Inspector"
         description="Inspect payment intents, idempotency-key usage, and webhook retry / replay history across the KOB PISP and Flutterwave rails."
       />
+
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardDescription>Total intents (last 200)</CardDescription><CardTitle>{idempotencyStats.total}</CardTitle></CardHeader></Card>
