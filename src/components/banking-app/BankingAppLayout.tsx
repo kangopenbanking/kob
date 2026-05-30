@@ -16,6 +16,7 @@ import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { loadAppNamespaces } from '@/lib/i18n/i18next';
+import { ScreenshotGuard } from '@/components/security/ScreenshotGuard';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
