@@ -22693,7 +22693,6 @@ export type Database = {
           kid: string
           kty: string
           n: string
-          private_key: string
           rotated_at: string | null
           use: string
         }
@@ -22706,7 +22705,6 @@ export type Database = {
           kid: string
           kty?: string
           n: string
-          private_key: string
           rotated_at?: string | null
           use?: string
         }
@@ -22719,7 +22717,6 @@ export type Database = {
           kid?: string
           kty?: string
           n?: string
-          private_key?: string
           rotated_at?: string | null
           use?: string
         }
