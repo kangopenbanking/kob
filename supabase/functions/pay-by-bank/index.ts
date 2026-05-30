@@ -1204,11 +1204,26 @@ Deno.serve(async (req) => {
 
     // ─── callback (internal — bank connector confirms) ────────
     if (action === 'callback') {
+      // Verify HMAC signature when KOB_INBOUND_WEBHOOK_SECRET is set.
+      const sigCheck = await verifyKobCallbackSignature(req, bodyText);
+      if (!sigCheck.ok) {
+        console.warn(`[pay-by-bank][callback][trace=${traceId}] signature rejected: ${sigCheck.reason}`);
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'invalid_signature',
+          code: sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID',
+          message: sigCheck.reason === 'missing_signature_header'
+            ? 'Missing X-KOB-Signature header on callback request.'
+            : 'Callback HMAC signature did not match the expected value.',
+          extra: { trace_id: traceId, reason: sigCheck.reason },
+        })), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
       const { intent_id, final_status, provider_reference } = body;
       if (!intent_id || !final_status) {
-        return new Response(JSON.stringify({ error: 'intent_id and final_status required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields', code: 'MISSING_FIELDS',
+          message: 'intent_id and final_status are required.',
+          extra: { trace_id: traceId },
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
 
       const { data: existing } = await supabase
