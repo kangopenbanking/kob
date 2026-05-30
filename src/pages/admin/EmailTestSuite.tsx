@@ -328,8 +328,8 @@ export default function EmailTestSuite() {
                   </TableHeader>
                   <TableBody>
                     {validation.results.map((r) => (
-                      <>
-                        <TableRow key={r.template}>
+                      <Fragment key={r.template}>
+                        <TableRow>
                           <TableCell>
                             {r.passed ? (
                               <CheckCircle2 className="h-4 w-4 text-primary" />
