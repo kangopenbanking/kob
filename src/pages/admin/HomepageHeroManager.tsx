@@ -114,26 +114,113 @@ export default function HomepageHeroManager() {
     setUploading(false);
   };
 
-  const replaceMedia = async (id: string, file: File) => {
+  // Crop dialog state
+  const [cropTarget, setCropTarget] = useState<{ slideId: string; url: string; fileName: string } | null>(null);
+
+  /**
+   * Persist a replacement via the admin edge function so the change is
+   * server-validated (type/size/aspect ratio) and written to audit_logs.
+   */
+  const persistReplacement = async (
+    slideId: string,
+    publicUrl: string,
+    mediaType: "image" | "video",
+    dims: { width: number; height: number } | null,
+  ) => {
+    const cacheBusted = `${publicUrl}?v=${Date.now()}`;
+    const { data, error } = await supabase.functions.invoke("hero-media-update", {
+      body: {
+        slide_id: slideId,
+        media_url: cacheBusted,
+        media_type: mediaType,
+        reported_width: dims?.width,
+        reported_height: dims?.height,
+      },
+    });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "Update failed";
+      toast({ title: "Replacement rejected", description: msg, variant: "destructive" });
+      return false;
+    }
+    setSlides((prev) =>
+      prev.map((s) => (s.id === slideId ? { ...s, media_url: cacheBusted, media_type: mediaType } : s)),
+    );
+    toast({ title: "Media replaced", description: "Change recorded in the audit log." });
+    return true;
+  };
+
+  const uploadAndPersist = async (
+    slideId: string,
+    blob: Blob,
+    fileName: string,
+    contentType: string,
+    mediaType: "image" | "video",
+    dims: { width: number; height: number } | null,
+  ) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `slide-${id}-${Date.now()}.${ext}`;
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
-
-    const { error: uploadError } = await supabase.storage
-      .from("homepage-hero")
-      .upload(path, file, { contentType: file.type, upsert: true });
-
-    if (uploadError) {
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+    try {
+      const ext = (fileName.split(".").pop() || (mediaType === "image" ? "jpg" : "mp4")).toLowerCase();
+      const path = `slide-${slideId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("homepage-hero")
+        .upload(path, blob, { contentType, upsert: true });
+      if (uploadError) {
+        toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
+      await persistReplacement(slideId, publicUrl, mediaType, dims);
+    } finally {
       setUploading(false);
+    }
+  };
+
+  const replaceMedia = async (id: string, file: File) => {
+    const v = classifyHeroMedia(file);
+    if (!v.ok || !v.kind) {
+      toast({ title: "Invalid file", description: v.error, variant: "destructive" });
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
-    await updateSlide(id, { media_url: `${publicUrl}?v=${Date.now()}`, media_type: mediaType });
-    toast({ title: "Media replaced" });
-    setUploading(false);
+    if (v.kind === "video") {
+      try {
+        const dims = await probeVideoDimensions(file);
+        if (!aspectWithinTolerance(dims.width, dims.height)) {
+          toast({
+            title: "Aspect ratio out of range",
+            description: `Video must be ~16:9 (got ${dims.width}×${dims.height}).`,
+            variant: "destructive",
+          });
+          return;
+        }
+        await uploadAndPersist(id, file, file.name, file.type, "video", dims);
+      } catch (e) {
+        toast({ title: "Could not read video", description: (e as Error).message, variant: "destructive" });
+      }
+      return;
+    }
+
+    // Images: open crop dialog targeting the hero's 16:9 layout.
+    const url = URL.createObjectURL(file);
+    setCropTarget({ slideId: id, url, fileName: file.name });
+  };
+
+  const handleCropConfirm = async (blob: Blob, fileName: string) => {
+    if (!cropTarget) return;
+    const dims = await probeImageDimensions(blob).catch(() => null);
+    if (dims && !aspectWithinTolerance(dims.width, dims.height)) {
+      toast({
+        title: "Crop aspect mismatch",
+        description: `Cropped image is ${dims.width}×${dims.height} (target 16:9).`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const contentType = /\.png$/i.test(fileName) ? "image/png" : "image/jpeg";
+    const target = cropTarget;
+    URL.revokeObjectURL(target.url);
+    setCropTarget(null);
+    await uploadAndPersist(target.slideId, blob, fileName, contentType, "image", dims);
   };
 
   const updateSlide = async (id: string, updates: Partial<HeroSlide>) => {
