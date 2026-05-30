@@ -1,0 +1,28 @@
+name: woocommerce-e2e
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/woocommerce-**"
+      - "supabase/functions/pos-woo-**"
+      - "scripts/woo-e2e-runner.mjs"
+      - ".github/workflows/woocommerce-e2e.yml"
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 */6 * * *" # every 6h
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run WooCommerce module probe
+        env:
+          WOO_E2E_BASE_URL: ${{ secrets.WOO_E2E_BASE_URL }}
+          WOO_E2E_ANON_KEY: ${{ secrets.WOO_E2E_ANON_KEY }}
+        run: node scripts/woo-e2e-runner.mjs
