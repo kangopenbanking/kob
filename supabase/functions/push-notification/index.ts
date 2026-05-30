@@ -152,19 +152,58 @@ serve(async (req) => {
       return json({ error: "Failed to create notification" }, 500);
     }
 
-    // ── OneSignal Push ────────────────────────────────────────
+    // ── OneSignal Push (with delivery logging + retry) ────────
     if (ONESIGNAL_APP_ID && ONESIGNAL_REST_API_KEY) {
-      await sendOneSignalPush(ONESIGNAL_APP_ID, ONESIGNAL_REST_API_KEY, {
+      const startedAt = Date.now();
+      const payloadMeta = {
         user_id,
-        institution_id,
+        institution_id: institution_id || null,
+        type: type || "info",
         title: safeTitle,
         message: safeMessage,
         title_fr: safeTitleFr,
         message_fr: safeMsgFr,
-        type: type || "info",
-        notificationId: notification.id,
         test_mode: !!test_mode,
-      });
+      };
+
+      const { data: logRow } = await admin
+        .from("push_delivery_log")
+        .insert({
+          user_id,
+          notification_id: notification.id,
+          triggered_by: callerId,
+          title: safeTitle,
+          message: safeMessage,
+          type: type || "info",
+          payload: payloadMeta,
+          status: "pending",
+          test_mode: !!test_mode,
+        })
+        .select("id")
+        .single();
+
+      const result = await sendOneSignalPushWithRetry(
+        ONESIGNAL_APP_ID,
+        ONESIGNAL_REST_API_KEY,
+        { ...payloadMeta, notificationId: notification.id },
+      );
+
+      if (logRow?.id) {
+        await admin
+          .from("push_delivery_log")
+          .update({
+            status: result.status,
+            http_status: result.httpStatus,
+            error_code: result.errorCode,
+            error_body: result.errorBody,
+            onesignal_id: result.onesignalId,
+            recipients: result.recipients,
+            attempts: result.attempts,
+            elapsed_ms: Date.now() - startedAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", logRow.id);
+      }
     }
 
     // ── Pusher realtime ───────────────────────────────────────
