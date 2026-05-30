@@ -370,12 +370,15 @@ export default function IntegrationWorkflow() {
 
   return (
     <>
-      {/* Top scroll-progress bar */}
-      <motion.div
-        aria-hidden
-        style={{ scaleX: progress, transformOrigin: "0% 50%" }}
-        className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-primary"
-      />
+      {/* Top scroll-progress bar — hidden when the OS requests reduced motion */}
+      {!reduceMotion && (
+        <motion.div
+          aria-hidden
+          style={{ scaleX: progress, transformOrigin: "0% 50%" }}
+          className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-primary"
+        />
+      )}
+
 
       <div className="container mx-auto px-4 py-10 max-w-6xl">
         {/* Announcement banner */}
