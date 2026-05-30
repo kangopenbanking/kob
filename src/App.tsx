@@ -583,6 +583,8 @@ const PushDeliveryLog = lazy(() => import("./pages/admin/PushDeliveryLog"));
 const FirebaseOTPTestSuite = lazy(() => import("./pages/admin/FirebaseOTPTestSuite"));
 const FirebaseOTPSecurityAudit = lazy(() => import("./pages/admin/FirebaseOTPSecurityAudit"));
 const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDashboard"));
+const NotificationDeliveryTelemetry = lazy(() => import("./pages/admin/NotificationDeliveryTelemetry"));
+const MfaBackupCodes = lazy(() => import("./pages/security/MfaBackupCodes"));
 const SignupNotificationsE2E = lazy(() => import("./pages/admin/SignupNotificationsE2E"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
@@ -1068,6 +1070,7 @@ function App() {
               <Route path="firebase-otp-security-audit" element={<FirebaseOTPSecurityAudit />} />
               <Route path="otp-monitoring" element={<OTPMonitoringDashboard />} />
               <Route path="signup-notifications-e2e" element={<SignupNotificationsE2E />} />
+              <Route path="notification-telemetry" element={<NotificationDeliveryTelemetry />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -1385,6 +1388,7 @@ function App() {
               <Route index element={<Dashboard />} />
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/security/backup-codes" element={<ProtectedRoute><DashboardLayout><MfaBackupCodes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/notification-history" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationHistory /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/mobile-money" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
