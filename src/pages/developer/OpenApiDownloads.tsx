@@ -1,9 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ShieldCheck, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
+import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
 
 const OpenApiDownloads = () => {
   return (
