@@ -4,7 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, useReducedMotion } from "framer-motion";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import {
   ArrowRight,
   UserCheck,
@@ -227,7 +230,7 @@ const statusConfig = {
   monitoring: { label: "Monitoring", class: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" },
 };
 
-// Reusable scroll-reveal wrapper
+// Reusable scroll-reveal wrapper — honours prefers-reduced-motion automatically.
 function Reveal({
   children,
   delay = 0,
@@ -237,6 +240,10 @@ function Reveal({
   delay?: number;
   className?: string;
 }) {
+  const reduce = useReducedMotion();
+  if (reduce) {
+    return <div className={className}>{children}</div>;
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -257,18 +264,121 @@ const highlightImagery: Record<number, string> = {
   11: kobCommunity,
 };
 
+// Per-phase configuration snippet placeholders for the expandable checklists.
+const phaseSnippets: Record<number, { language: string; label: string; code: string }> = {
+  1: {
+    language: "bash",
+    label: "Submit registration",
+    code: `# Placeholder — replace with your institution details
+curl -X POST https://api.kangopenbanking.com/v1/institutions/register \\
+  -H "Content-Type: application/json" \\
+  -d '{ "legal_name": "<YOUR LEGAL NAME>", "cobac_id": "<COBAC-ID>" }'`,
+  },
+  2: {
+    language: "bash",
+    label: "Exchange sandbox credentials",
+    code: `# Placeholder — values come from FI Portal → Credentials
+export KOB_CLIENT_ID="<CLIENT_ID>"
+export KOB_CLIENT_SECRET="<CLIENT_SECRET>"
+curl -u "$KOB_CLIENT_ID:$KOB_CLIENT_SECRET" \\
+  https://sandbox.kangopenbanking.com/oauth/token \\
+  -d 'grant_type=client_credentials&scope=accounts payments'`,
+  },
+  3: {
+    language: "ts",
+    label: "Initiate FAPI PAR request",
+    code: `// Placeholder — wire to your auth library
+const par = await kob.oauth.par({
+  client_id: process.env.KOB_CLIENT_ID!,
+  scope: "accounts payments",
+  redirect_uri: "https://app.example.com/callback",
+  code_challenge: pkce.challenge,
+  code_challenge_method: "S256",
+});`,
+  },
+  4: {
+    language: "ts",
+    label: "Create Mobile Money payment",
+    code: `// Placeholder — XAF Mobile Money via MTN/Orange
+await kob.payments.create({
+  channel: "mobile_money",
+  amount: "5000",
+  currency: "XAF",
+  msisdn: "+2376XXXXXXXX",
+  idempotency_key: crypto.randomUUID(),
+});`,
+  },
+  5: {
+    language: "json",
+    label: "KYC webhook payload",
+    code: `{
+  "event": "kyc.completed",
+  "data": { "customer_id": "<CUSTOMER_ID>", "status": "verified" }
+}`,
+  },
+  6: {
+    language: "json",
+    label: "Custom fee rule",
+    code: `{
+  "category": "pisp.payment",
+  "model": "hybrid",
+  "fixed": { "amount": "200", "currency": "XAF" },
+  "percentage": 0.003
+}`,
+  },
+  7: {
+    language: "bash",
+    label: "Install the SDK",
+    code: `# Pick your runtime
+npm install @kangopenbanking/sdk
+# composer require kangopenbanking/sdk
+# pip install kang-open-banking`,
+  },
+  8: {
+    language: "bash",
+    label: "Tail health metrics",
+    code: `curl -H "Authorization: Bearer $KOB_TOKEN" \\
+  https://api.kangopenbanking.com/v1/observability/health`,
+  },
+  9: {
+    language: "bash",
+    label: "Submit certification bundle",
+    code: `kob certification submit \\
+  --bundle ./out/certification.zip \\
+  --institution "<INSTITUTION_ID>"`,
+  },
+  10: {
+    language: "bash",
+    label: "Switch to production base URL",
+    code: `# Placeholder — flip after smoke tests pass
+export KOB_BASE_URL="https://api.kangopenbanking.com"
+export KOB_ENV="production"`,
+  },
+  11: {
+    language: "bash",
+    label: "Subscribe to changelog feed",
+    code: `curl https://kangopenbanking.com/CHANGELOG.md`,
+  },
+};
+
 export default function IntegrationWorkflow() {
   const { scrollYProgress } = useScroll();
+  const reduceMotion = useReducedMotion();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 25, mass: 0.4 });
+  const [openPhase, setOpenPhase] = useState<number | null>(null);
+
 
   return (
     <>
-      {/* Top scroll-progress bar */}
-      <motion.div
-        aria-hidden
-        style={{ scaleX: progress, transformOrigin: "0% 50%" }}
-        className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-primary"
-      />
+      {/* Top scroll-progress bar — hidden when the OS requests reduced motion */}
+      {!reduceMotion && (
+        <motion.div
+          aria-hidden
+          style={{ scaleX: progress, transformOrigin: "0% 50%" }}
+          className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-primary"
+        />
+      )}
+
 
       <div className="container mx-auto px-4 py-10 max-w-6xl">
         {/* Announcement banner */}
@@ -312,6 +422,7 @@ export default function IntegrationWorkflow() {
             aria-hidden
             className="pointer-events-none absolute -right-24 -top-24 h-[460px] w-[460px] object-cover opacity-40 dark:opacity-25 hidden md:block"
             loading="lazy"
+                decoding="async"
           />
           <div className="relative grid gap-10 p-8 md:grid-cols-[1.2fr_1fr] md:p-12">
             <div className="space-y-6">
@@ -388,7 +499,10 @@ export default function IntegrationWorkflow() {
                 src={kobSecurity}
                 alt="Signed, verified, encrypted credentials illustration"
                 className="h-full w-full object-cover"
-                loading="lazy"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+
               />
               <div className="absolute inset-x-4 bottom-4 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
                 <div className="flex items-center gap-2 font-medium">
@@ -442,6 +556,7 @@ export default function IntegrationWorkflow() {
                     aria-hidden
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
+                decoding="async"
                   />
                 </div>
                 <div className="space-y-2 p-5">
@@ -568,17 +683,75 @@ export default function IntegrationWorkflow() {
                         >
                           <div>
                             <p className="mb-4 text-muted-foreground">{phase.description}</p>
-                            <div className="space-y-2">
-                              <h4 className="text-sm font-semibold">Key tasks:</h4>
+                            <Collapsible
+                              open={openPhase === phase.number}
+                              onOpenChange={(v) => setOpenPhase(v ? phase.number : null)}
+                              className="space-y-3"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="text-sm font-semibold">Key tasks:</h4>
+                                <CollapsibleTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    aria-expanded={openPhase === phase.number}
+                                    aria-controls={`phase-${phase.number}-checklist`}
+                                    className="h-7 text-xs"
+                                  >
+                                    {openPhase === phase.number ? "Hide checklist" : "Step-by-step checklist"}
+                                    <ChevronDown
+                                      className={`ml-1 h-3.5 w-3.5 transition-transform motion-reduce:transition-none ${
+                                        openPhase === phase.number ? "rotate-180" : ""
+                                      }`}
+                                      aria-hidden
+                                    />
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </div>
                               <ul className="space-y-2">
                                 {phase.tasks.map((task, index) => (
                                   <li key={index} className="flex items-start gap-2 text-sm">
-                                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
                                     <span>{task}</span>
                                   </li>
                                 ))}
                               </ul>
-                            </div>
+                              <CollapsibleContent
+                                id={`phase-${phase.number}-checklist`}
+                                className="space-y-3 rounded-lg border border-border bg-muted/30 p-4"
+                              >
+                                <ol className="space-y-2 text-sm">
+                                  {phase.tasks.map((task, index) => (
+                                    <li key={index} className="flex items-start gap-3">
+                                      <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-primary text-[11px] font-semibold text-primary">
+                                        {index + 1}
+                                      </span>
+                                      <div>
+                                        <div className="font-medium">{task}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          Owner: integration engineer · Evidence: link the resulting artefact in your runbook.
+                                        </div>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ol>
+                                {phaseSnippets[phase.number] && (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+                                      <span>{phaseSnippets[phase.number].label}</span>
+                                      <span>{phaseSnippets[phase.number].language}</span>
+                                    </div>
+                                    <pre className="overflow-x-auto rounded-md border border-border bg-background p-3 text-xs">
+                                      <code>{phaseSnippets[phase.number].code}</code>
+                                    </pre>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Placeholder snippet — replace tokens before running against sandbox.
+                                    </p>
+                                  </div>
+                                )}
+                              </CollapsibleContent>
+                            </Collapsible>
                           </div>
                           {illustration && (
                             <div className="hidden overflow-hidden rounded-lg border border-border md:block">
@@ -588,10 +761,13 @@ export default function IntegrationWorkflow() {
                                 aria-hidden
                                 className="h-full w-full object-cover"
                                 loading="lazy"
+                                decoding="async"
+
                               />
                             </div>
                           )}
                         </div>
+
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -789,6 +965,7 @@ export default function IntegrationWorkflow() {
                     alt="Customers using Kang Open Banking on their phones"
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="lazy"
+                decoding="async"
                   />
                 </div>
               </div>

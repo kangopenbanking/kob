@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, ShieldCheck, FileText, Download, KeyRound } from 'lucide-react';
+import { ExternalLink, ShieldCheck, FileText, Download, KeyRound, Copy, Check, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
 import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
@@ -20,18 +20,113 @@ interface SigningMeta {
   } | null;
 }
 
+// Poll interval for /signing-key-updates.json (60s default).
+// Override via <meta name="kob-signing-poll-ms" content="30000" /> if needed.
+const DEFAULT_POLL_MS = 60_000;
+
+function CopyFingerprintButton({ value, label }: { value?: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const disabled = !value || value.startsWith('Loading') || value.startsWith('None');
+  const onCopy = useCallback(async () => {
+    if (!value || disabled) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }, [value, disabled]);
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onCopy}
+      disabled={disabled}
+      aria-label={copied ? `${label} copied to clipboard` : `Copy ${label} to clipboard`}
+      className="h-7 px-2 text-xs"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+      <span className="ml-1">{copied ? 'Copied' : 'Copy'}</span>
+    </Button>
+  );
+}
 
 const OpenApiDownloads = () => {
   const [signing, setSigning] = useState<SigningMeta | null>(null);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const pollRef = useRef<number | null>(null);
+
+  const applyUpdates = useCallback((updates: any) => {
+    if (!updates || typeof updates !== 'object') return;
+    setSigning((prev) => {
+      const current = updates.current || {};
+      const next = updates.next || null;
+      // Only update if fingerprints actually changed to avoid React thrash.
+      if (
+        prev &&
+        prev.publicKeyFingerprint === current.publicKeyFingerprint &&
+        (prev.next?.publicKeyFingerprint || null) === (next?.publicKeyFingerprint || null)
+      ) {
+        return prev;
+      }
+      return {
+        algorithm: current.algorithm || prev?.algorithm || 'ed25519',
+        publicKeyFingerprint: current.publicKeyFingerprint || prev?.publicKeyFingerprint,
+        publicKeyUrl: current.publicKeyUrl || prev?.publicKeyUrl,
+        next: next
+          ? {
+              publicKeyFingerprint: next.publicKeyFingerprint,
+              publicKeyUrl: next.publicKeyUrl,
+              status: next.status || 'staged',
+            }
+          : null,
+      };
+    });
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const r = await fetch('/signing-key-updates.json', { cache: 'no-store' });
+      if (r.ok) {
+        applyUpdates(await r.json());
+        setLastSynced(new Date());
+      }
+    } catch {
+      /* best-effort */
+    } finally {
+      setSyncing(false);
+    }
+  }, [applyUpdates]);
 
   useEffect(() => {
     let cancelled = false;
+    // Initial load: artifacts.json provides full metadata (algorithm + fingerprints).
     fetch('/artifacts.json', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((m) => { if (!cancelled && m?.signing) setSigning(m.signing); })
       .catch(() => { /* metadata is best-effort */ });
-    return () => { cancelled = true; };
-  }, []);
+    // Immediately fetch updates endpoint and prime lastSynced.
+    refresh();
+    // Poll for rotation changes.
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="kob-signing-poll-ms"]');
+    const interval = Math.max(15_000, Number(meta?.content) || DEFAULT_POLL_MS);
+    const tick = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    pollRef.current = window.setInterval(tick, interval);
+    const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      cancelled = true;
+      if (pollRef.current) window.clearInterval(pollRef.current);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [refresh]);
+
 
   return (
 
@@ -43,44 +138,66 @@ const OpenApiDownloads = () => {
       </Helmet>
 
       <div className="max-w-5xl mx-auto p-6 space-y-8" data-testid="openapi-downloads-page">
-        {/* Signing-key fingerprint banner */}
+        {/* Signing-key fingerprint banner — auto-refreshed via /signing-key-updates.json */}
         <div
           role="region"
           aria-label="Artifact signing key fingerprints"
+          aria-live="polite"
+          aria-atomic="true"
           className="rounded-lg border border-border bg-card overflow-hidden"
         >
           <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/40">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
             <span className="text-xs font-medium uppercase tracking-wide">
               Artifact signing keys ({(signing?.algorithm || 'ed25519').toUpperCase()})
             </span>
             <Badge variant={signing?.next ? 'secondary' : 'outline'} className="ml-auto text-[10px]">
               {signing?.next ? 'Rotation staged' : 'Steady state'}
             </Badge>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={refresh}
+              disabled={syncing}
+              aria-label="Refresh signing key fingerprints now"
+              className="h-7 px-2 text-xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden />
+              <span className="ml-1 hidden sm:inline">Refresh</span>
+            </Button>
           </div>
           <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-            <div className="p-4 space-y-1">
+            <div className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <KeyRound className="h-3.5 w-3.5" />
-                Current key
+                <KeyRound className="h-3.5 w-3.5" aria-hidden />
+                <span id="current-key-label">Current key</span>
+                <span className="ml-auto">
+                  <CopyFingerprintButton value={signing?.publicKeyFingerprint} label="current signing key fingerprint" />
+                </span>
               </div>
-              <code className="block text-xs break-all font-mono">
+              <code aria-labelledby="current-key-label" className="block text-xs break-all font-mono">
                 {signing?.publicKeyFingerprint || 'Loading from /artifacts.json…'}
               </code>
             </div>
-            <div className="p-4 space-y-1">
+            <div className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <KeyRound className="h-3.5 w-3.5" />
-                Next key (staged)
+                <KeyRound className="h-3.5 w-3.5" aria-hidden />
+                <span id="next-key-label">Next key (staged)</span>
+                <span className="ml-auto">
+                  <CopyFingerprintButton value={signing?.next?.publicKeyFingerprint} label="next signing key fingerprint" />
+                </span>
               </div>
-              <code className="block text-xs break-all font-mono text-muted-foreground">
+              <code aria-labelledby="next-key-label" className="block text-xs break-all font-mono text-muted-foreground">
                 {signing?.next?.publicKeyFingerprint || 'None — no rotation in progress'}
               </code>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-t border-border bg-muted/20 text-xs">
             <span className="text-muted-foreground">
-              Pin these fingerprints in your build pipeline to detect rotations safely.
+              {lastSynced
+                ? `Auto-refreshed at ${lastSynced.toLocaleTimeString()}. Pin these fingerprints in your build pipeline.`
+                : 'Pin these fingerprints in your build pipeline to detect rotations safely.'}
             </span>
             <div className="ml-auto flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild className="h-7 text-xs">
@@ -99,6 +216,7 @@ const OpenApiDownloads = () => {
             </div>
           </div>
         </div>
+
 
         <div>
           <h1 className="text-3xl font-bold">OpenAPI Specification</h1>
