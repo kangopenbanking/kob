@@ -228,16 +228,19 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
               label="Front of ID"
               file={idFront}
               inputRef={fileInputFront}
-              onFileChange={setIdFront}
+              onFileChange={setValidatedFile(setIdFront)}
             />
-            <UploadBox
-              label="Back of ID"
-              file={idBack}
-              inputRef={fileInputBack}
-              onFileChange={setIdBack}
-            />
+            {personalInfo.idType !== 'passport' && (
+              <UploadBox
+                label="Back of ID"
+                file={idBack}
+                inputRef={fileInputBack}
+                onFileChange={setValidatedFile(setIdBack)}
+              />
+            )}
           </div>
         );
+
 
       case 2:
         return (
