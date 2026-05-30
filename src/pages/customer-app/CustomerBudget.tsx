@@ -752,9 +752,7 @@ export default function CustomerBudget() {
       <Sheet
         open={!!statSheet}
         onOpenChange={(v) => {
-          if (v) {
-            trackBudgetEvent("budget.stat_sheet.open", { stat: statSheet ?? undefined });
-          } else {
+          if (!v) {
             trackBudgetEvent("budget.stat_sheet.close", { stat: statSheet ?? undefined });
             setStatSheet(null);
           }
@@ -764,9 +762,9 @@ export default function CustomerBudget() {
           side="bottom"
           className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5 focus:outline-none"
           data-testid="stat-sheet"
+          aria-modal="true"
           aria-labelledby="stat-sheet-title"
           aria-describedby="stat-sheet-desc"
-          onEscapeKeyDown={() => trackBudgetEvent("budget.stat_sheet.close", { stat: statSheet ?? undefined, source: "escape" })}
         >
           {statSheet && summary && (() => {
             const config = {
