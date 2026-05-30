@@ -35,7 +35,12 @@ export function LanguagePrompt() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) dismiss(); }}>
-      <DialogContent className="max-w-sm rounded-2xl">
+      <DialogContent
+        className="max-w-sm rounded-2xl"
+        onPointerDownOutside={(e) => { e.preventDefault(); dismiss(); }}
+        onEscapeKeyDown={() => dismiss()}
+        onInteractOutside={(e) => { e.preventDefault(); dismiss(); }}
+      >
         <DialogHeader>
           <DialogTitle>Choose your language</DialogTitle>
           <DialogDescription>
