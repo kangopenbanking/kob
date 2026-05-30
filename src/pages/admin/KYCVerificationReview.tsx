@@ -21,6 +21,7 @@ import {
   ArrowRight, Loader2, Download, MessageSquare, HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useKycReviewPermissions } from "@/hooks/useKycReviewPermissions";
 
 export default function KYCVerificationReview() {
   const [selectedKYC, setSelectedKYC] = useState<any | null>(null);
