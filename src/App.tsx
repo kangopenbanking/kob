@@ -582,6 +582,7 @@ const NotificationTemplateTester = lazy(() => import("./pages/admin/Notification
 const PushDeliveryLog = lazy(() => import("./pages/admin/PushDeliveryLog"));
 const FirebaseOTPTestSuite = lazy(() => import("./pages/admin/FirebaseOTPTestSuite"));
 const FirebaseOTPSecurityAudit = lazy(() => import("./pages/admin/FirebaseOTPSecurityAudit"));
+const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDashboard"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
