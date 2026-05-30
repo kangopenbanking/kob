@@ -962,34 +962,82 @@ Deno.serve(async (req) => {
         });
       }
 
-      const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
-
-      await supabase.from('pay_by_bank_intents').update({
-        status: mappedStatus,
-        metadata: { provider_reference },
-      }).eq('id', intent_id);
-
-      const { data: intent } = await supabase
+      const { data: existing } = await supabase
         .from('pay_by_bank_intents')
         .select('*')
         .eq('id', intent_id)
-        .single();
+        .maybeSingle();
 
-      if (intent) {
-        const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
-        await supabase.rpc('trigger_webhooks', {
-          _event_type: eventType,
-          _event_data: JSON.stringify({
-            intent_id, merchant_id: intent.merchant_id, amount: intent.amount,
-            currency: intent.currency, status: mappedStatus, provider_reference,
-          }),
+      if (!existing) {
+        return new Response(JSON.stringify({ error: 'intent_not_found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+
+      // Idempotent — return success if already terminal
+      if (existing.status === 'completed' || existing.status === 'failed') {
+        return new Response(JSON.stringify({ status: existing.status, idempotent: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
+
+      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref)
+      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString() };
+
+      await supabase.from('pay_by_bank_intents').update({
+        status: mappedStatus,
+        metadata: mergedMeta,
+      }).eq('id', intent_id);
+
+      // Wallet-rail credit on KOB callback success — covers the case where
+      // the bank confirmed via PISP webhook AFTER the redirect (e.g.
+      // delayed-settlement banks). Idempotent: only credits when intent
+      // wasn't already authorized through interactive flow.
+      if (mappedStatus === 'completed'
+          && existing.target_type === 'consumer_wallet'
+          && existing.target_account_id
+          && existing.status === 'awaiting_auth') {
+        const amountNum = Number(existing.amount);
+        const ccy = existing.currency || 'XAF';
+        const { error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+          _account_id: existing.target_account_id,
+          _amount: amountNum,
+          _currency: ccy,
+        });
+        if (!creditErr) {
+          await supabase.from('transactions').insert([{
+            user_id: existing.customer_user_id,
+            account_id: existing.target_account_id,
+            amount: amountNum,
+            currency: ccy,
+            credit_debit_indicator: 'Credit',
+            transaction_type: 'pay_by_bank_topup',
+            transaction_information: 'Wallet top-up via Pay-by-Bank (bank webhook)',
+            booking_datetime: new Date().toISOString(),
+            status: 'Booked',
+            metadata: { intent_id, provider_reference, source: 'kob_bank_webhook' },
+          }]).then(() => {}, () => {});
+        } else {
+          console.error('[pay-by-bank][callback] wallet credit failed', creditErr);
+        }
+      }
+
+      const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
+      await supabase.rpc('trigger_webhooks', {
+        _event_type: eventType,
+        _event_data: JSON.stringify({
+          intent_id, merchant_id: existing.merchant_id, amount: existing.amount,
+          currency: existing.currency, status: mappedStatus, provider_reference,
+        }),
+      });
 
       return new Response(JSON.stringify({ status: mappedStatus }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
 
     // ─── verify_external (Flutterwave-rail reconciliation) ────
     // Called by the frontend when the user returns from FW. Verifies the
