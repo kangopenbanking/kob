@@ -6,6 +6,10 @@ export default function PISP() {
       eyebrow="Open Banking"
       title="Payment Initiation Service Provider (PISP)"
       description="Initiate payments straight from a customer's bank account — no card required, with strong customer authentication."
+      seoTitle="PISP Guide — Bank Payment Initiation API for Cameroon | Kang Open Banking"
+      seoDescription="Initiate account-to-account payments with the Kang PISP API. SCA-compliant flows, instant settlement, no card fees — built for Cameroon and CEMAC."
+      seoKeywords="PISP, payment initiation service, open banking payments, account-to-account, SCA, Cameroon payments API"
+      canonicalPath="/guides/pisp"
       readTime="7 min read"
       level="Intermediate"
       primaryCta={{ label: "Open PISP reference", to: "/developer/api/pisp" }}

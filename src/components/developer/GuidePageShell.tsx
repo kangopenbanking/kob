@@ -22,6 +22,10 @@ interface GuidePageShellProps {
   seoTitle?: string;
   /** SEO meta description (defaults to description) */
   seoDescription?: string;
+  /** SEO canonical path (e.g. "/guides/aisp"). When omitted, derived from window.location.pathname. */
+  canonicalPath?: string;
+  /** Optional keywords for SEO */
+  seoKeywords?: string;
   /** Estimated reading time, e.g. "5 min read" */
   readTime?: string;
   /** Difficulty: Beginner / Intermediate / Advanced */
@@ -39,7 +43,7 @@ interface GuidePageShellProps {
 
 /**
  * Apple-style documentation shell used by every guide page.
- * Provides: SEO, animated hero, optional TOC, content area, prev/next nav.
+ * Provides: SEO (title, description, canonical, og:*), animated hero, optional TOC, content area, prev/next nav.
  */
 export function GuidePageShell({
   eyebrow,
@@ -47,6 +51,8 @@ export function GuidePageShell({
   description,
   seoTitle,
   seoDescription,
+  canonicalPath,
+  seoKeywords,
   readTime,
   level,
   toc,
@@ -74,9 +80,42 @@ export function GuidePageShell({
     return () => observer.disconnect();
   }, [toc]);
 
+  const resolvedPath =
+    canonicalPath ??
+    (typeof window !== "undefined" ? window.location.pathname : "/");
+  const canonicalUrl = `https://kangopenbanking.com${resolvedPath}`;
+  const finalTitle = seoTitle ?? `${title} | Kang Open Banking`;
+  const finalDescription = seoDescription ?? description;
+
   return (
     <>
-      <SEO title={seoTitle ?? `${title} | Kang Open Banking`} description={seoDescription ?? description} />
+      <SEO
+        title={finalTitle}
+        description={finalDescription}
+        canonical={canonicalUrl}
+        keywords={seoKeywords}
+        ogType="article"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          headline: title,
+          description: finalDescription,
+          url: canonicalUrl,
+          inLanguage: "en",
+          author: { "@type": "Organization", name: "Kang Open Banking" },
+          publisher: {
+            "@type": "Organization",
+            name: "Kang Open Banking",
+            logo: { "@type": "ImageObject", url: "https://kangopenbanking.com/kob-logo.png" },
+          },
+          mainEntityOfPage: canonicalUrl,
+        }}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Guides", url: "/guides" },
+          { name: title, url: resolvedPath },
+        ]}
+      />
 
       <div className="bg-background">
         {/* Hero */}

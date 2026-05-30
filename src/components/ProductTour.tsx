@@ -409,14 +409,15 @@ export const ProductTour = () => {
                   ))}
                 </div>
 
-                {/* Learn more link */}
+                {/* Descriptive deep link to the feature being highlighted */}
                 <Link
                   to={step.link}
                   onClick={() => setIsOpen(false)}
+                  aria-label={`Explore ${step.title}`}
                   className="inline-flex items-center gap-1 text-sm font-medium hover:underline transition-colors"
                   style={{ color: step.color }}
                 >
-                  Learn more <ArrowRight className="h-3.5 w-3.5" />
+                  Explore {step.title} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </motion.div>
             </AnimatePresence>

@@ -19,6 +19,10 @@ export default function Webhooks() {
       eyebrow="Events"
       title="Webhooks & Event Notifications"
       description="Real-time HTTP callbacks that keep your system in sync without polling."
+      seoTitle="Webhooks Guide — Event Notifications & Signature Verification | Kang Open Banking"
+      seoDescription="Receive payment, consent and account events via signed HTTPS webhooks. Verify signatures, handle retries and replay safely with the Kang Open Banking event bus."
+      seoKeywords="webhooks, event notifications, signature verification, idempotency, payment events, open banking webhooks"
+      canonicalPath="/guides/webhooks"
       readTime="6 min read"
       level="Intermediate"
       primaryCta={{ label: "Manage webhooks", to: "/developer/webhooks" }}

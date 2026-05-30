@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 export default function CrediQSettings() {
@@ -256,8 +256,8 @@ export default function CrediQSettings() {
               Your CrediQ score is calculated using data from your Kang Open Banking activities. 
               We never share your personal information without your explicit permission.
             </p>
-            <Button variant="outline" size="sm">
-              Learn More About Privacy
+            <Button asChild variant="outline" size="sm">
+              <Link to="/privacy" aria-label="Read the CrediQ privacy and data usage policy">Read the CrediQ privacy policy</Link>
             </Button>
           </Card>
         </div>

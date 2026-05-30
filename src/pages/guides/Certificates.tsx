@@ -7,6 +7,10 @@ export default function Certificates() {
       eyebrow="Security"
       title="mTLS Certificates"
       description="Mutual TLS authentication and FAPI 1.0 Advanced certificate-bound access tokens, explained."
+      seoTitle="mTLS Certificates Guide — FAPI 1.0 Advanced Setup | Kang Open Banking"
+      seoDescription="Provision, rotate and bind X.509 client certificates for mutual TLS with Kang Open Banking. Implements RFC 8705 certificate-bound access tokens per FAPI 1.0 Advanced."
+      seoKeywords="mTLS, mutual TLS, FAPI 1.0, RFC 8705, certificate-bound tokens, X.509 client certificates, open banking security"
+      canonicalPath="/guides/certificates"
       readTime="6 min read"
       level="Advanced"
       primaryCta={{ label: "Manage certificates", to: "/developer/certificates" }}

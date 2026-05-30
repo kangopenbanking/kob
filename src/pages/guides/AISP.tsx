@@ -6,6 +6,10 @@ export default function AISP() {
       eyebrow="Open Banking"
       title="Account Information Service Provider (AISP)"
       description="Read account, balance and transaction data with explicit customer consent — the foundation for budgeting, lending and analytics products."
+      seoTitle="AISP Guide — Account Information API for Cameroon | Kang Open Banking"
+      seoDescription="Build AISP integrations with Kang Open Banking. Read accounts, balances and transactions under explicit, time-bounded consent — COBAC and PSD2-aligned."
+      seoKeywords="AISP, account information service, open banking Cameroon, PSD2, account aggregation API, consent flow"
+      canonicalPath="/guides/aisp"
       readTime="7 min read"
       level="Intermediate"
       primaryCta={{ label: "Open AISP API reference", to: "/developer/api/aisp" }}
