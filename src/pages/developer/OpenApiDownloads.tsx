@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, ShieldCheck, FileText, Download, KeyRound } from 'lucide-react';
+import { ExternalLink, ShieldCheck, FileText, Download, KeyRound, Copy, Check, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
 import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
@@ -20,18 +20,113 @@ interface SigningMeta {
   } | null;
 }
 
+// Poll interval for /signing-key-updates.json (60s default).
+// Override via <meta name="kob-signing-poll-ms" content="30000" /> if needed.
+const DEFAULT_POLL_MS = 60_000;
+
+function CopyFingerprintButton({ value, label }: { value?: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const disabled = !value || value.startsWith('Loading') || value.startsWith('None');
+  const onCopy = useCallback(async () => {
+    if (!value || disabled) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }, [value, disabled]);
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onCopy}
+      disabled={disabled}
+      aria-label={copied ? `${label} copied to clipboard` : `Copy ${label} to clipboard`}
+      className="h-7 px-2 text-xs"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+      <span className="ml-1">{copied ? 'Copied' : 'Copy'}</span>
+    </Button>
+  );
+}
 
 const OpenApiDownloads = () => {
   const [signing, setSigning] = useState<SigningMeta | null>(null);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const pollRef = useRef<number | null>(null);
+
+  const applyUpdates = useCallback((updates: any) => {
+    if (!updates || typeof updates !== 'object') return;
+    setSigning((prev) => {
+      const current = updates.current || {};
+      const next = updates.next || null;
+      // Only update if fingerprints actually changed to avoid React thrash.
+      if (
+        prev &&
+        prev.publicKeyFingerprint === current.publicKeyFingerprint &&
+        (prev.next?.publicKeyFingerprint || null) === (next?.publicKeyFingerprint || null)
+      ) {
+        return prev;
+      }
+      return {
+        algorithm: current.algorithm || prev?.algorithm || 'ed25519',
+        publicKeyFingerprint: current.publicKeyFingerprint || prev?.publicKeyFingerprint,
+        publicKeyUrl: current.publicKeyUrl || prev?.publicKeyUrl,
+        next: next
+          ? {
+              publicKeyFingerprint: next.publicKeyFingerprint,
+              publicKeyUrl: next.publicKeyUrl,
+              status: next.status || 'staged',
+            }
+          : null,
+      };
+    });
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const r = await fetch('/signing-key-updates.json', { cache: 'no-store' });
+      if (r.ok) {
+        applyUpdates(await r.json());
+        setLastSynced(new Date());
+      }
+    } catch {
+      /* best-effort */
+    } finally {
+      setSyncing(false);
+    }
+  }, [applyUpdates]);
 
   useEffect(() => {
     let cancelled = false;
+    // Initial load: artifacts.json provides full metadata (algorithm + fingerprints).
     fetch('/artifacts.json', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((m) => { if (!cancelled && m?.signing) setSigning(m.signing); })
       .catch(() => { /* metadata is best-effort */ });
-    return () => { cancelled = true; };
-  }, []);
+    // Immediately fetch updates endpoint and prime lastSynced.
+    refresh();
+    // Poll for rotation changes.
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="kob-signing-poll-ms"]');
+    const interval = Math.max(15_000, Number(meta?.content) || DEFAULT_POLL_MS);
+    const tick = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    pollRef.current = window.setInterval(tick, interval);
+    const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      cancelled = true;
+      if (pollRef.current) window.clearInterval(pollRef.current);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [refresh]);
+
 
   return (
 
