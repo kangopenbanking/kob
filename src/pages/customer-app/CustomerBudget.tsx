@@ -668,6 +668,62 @@ function HeroStat({
   );
 }
 
+function MiniDonutStat({
+  label,
+  percent,
+  centerValue,
+  centerSub,
+  colour,
+  bg,
+}: {
+  label: string;
+  percent: number;
+  centerValue: string;
+  centerSub?: string;
+  colour: string;
+  bg: string;
+}) {
+  const safePct = Math.max(0, Math.min(100, percent));
+  return (
+    <div
+      className="flex flex-col items-center rounded-2xl border px-2 py-3"
+      style={{
+        background: bg,
+        borderColor: "var(--bud-border-soft)",
+      }}
+    >
+      <DonutRing
+        size={68}
+        strokeWidth={7}
+        segments={[
+          { value: safePct, colour },
+          { value: 100 - safePct, colour: "var(--bud-track)" },
+        ]}
+        centerLabel={
+          <span
+            className="text-[12px] font-semibold tabular-nums"
+            style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
+          >
+            {centerValue}
+            {centerSub && (
+              <span className="text-[9px] font-normal" style={{ color: "var(--bud-text-3)" }}>
+                {centerSub}
+              </span>
+            )}
+          </span>
+        }
+      />
+      <div
+        className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+        style={{ color: "var(--bud-text-2)" }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+
 function SectionHeader({
   title,
   action,
