@@ -592,11 +592,12 @@ Deno.serve(async (req) => {
                 pay_by_bank_intent_id: intent.id,
                 bank_code: source_bank?.code || null,
                 bank_name: source_bank?.name || null,
+                trace_id: traceId,
               },
             }),
           });
           const flwData = await flwRes.json();
-          console.log('[pay-by-bank][flw] status:', flwData?.status, 'msg:', flwData?.message);
+          console.log(`[pay-by-bank][flw][trace=${traceId}] status:`, flwData?.status, 'msg:', flwData?.message);
 
           if (flwData?.status !== 'success' || !flwData?.data?.link) {
             throw new Error(flwData?.message || 'Flutterwave did not return a checkout link');
