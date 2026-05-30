@@ -91,6 +91,7 @@ export default function CustomerBudget() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
   const [roundupOpen, setRoundupOpen] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
   const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
 
   const summary = budget?.summary;
