@@ -230,7 +230,7 @@ const statusConfig = {
   monitoring: { label: "Monitoring", class: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" },
 };
 
-// Reusable scroll-reveal wrapper
+// Reusable scroll-reveal wrapper — honours prefers-reduced-motion automatically.
 function Reveal({
   children,
   delay = 0,
@@ -240,6 +240,10 @@ function Reveal({
   delay?: number;
   className?: string;
 }) {
+  const reduce = useReducedMotion();
+  if (reduce) {
+    return <div className={className}>{children}</div>;
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -260,9 +264,109 @@ const highlightImagery: Record<number, string> = {
   11: kobCommunity,
 };
 
+// Per-phase configuration snippet placeholders for the expandable checklists.
+const phaseSnippets: Record<number, { language: string; label: string; code: string }> = {
+  1: {
+    language: "bash",
+    label: "Submit registration",
+    code: `# Placeholder — replace with your institution details
+curl -X POST https://api.kangopenbanking.com/v1/institutions/register \\
+  -H "Content-Type: application/json" \\
+  -d '{ "legal_name": "<YOUR LEGAL NAME>", "cobac_id": "<COBAC-ID>" }'`,
+  },
+  2: {
+    language: "bash",
+    label: "Exchange sandbox credentials",
+    code: `# Placeholder — values come from FI Portal → Credentials
+export KOB_CLIENT_ID="<CLIENT_ID>"
+export KOB_CLIENT_SECRET="<CLIENT_SECRET>"
+curl -u "$KOB_CLIENT_ID:$KOB_CLIENT_SECRET" \\
+  https://sandbox.kangopenbanking.com/oauth/token \\
+  -d 'grant_type=client_credentials&scope=accounts payments'`,
+  },
+  3: {
+    language: "ts",
+    label: "Initiate FAPI PAR request",
+    code: `// Placeholder — wire to your auth library
+const par = await kob.oauth.par({
+  client_id: process.env.KOB_CLIENT_ID!,
+  scope: "accounts payments",
+  redirect_uri: "https://app.example.com/callback",
+  code_challenge: pkce.challenge,
+  code_challenge_method: "S256",
+});`,
+  },
+  4: {
+    language: "ts",
+    label: "Create Mobile Money payment",
+    code: `// Placeholder — XAF Mobile Money via MTN/Orange
+await kob.payments.create({
+  channel: "mobile_money",
+  amount: "5000",
+  currency: "XAF",
+  msisdn: "+2376XXXXXXXX",
+  idempotency_key: crypto.randomUUID(),
+});`,
+  },
+  5: {
+    language: "json",
+    label: "KYC webhook payload",
+    code: `{
+  "event": "kyc.completed",
+  "data": { "customer_id": "<CUSTOMER_ID>", "status": "verified" }
+}`,
+  },
+  6: {
+    language: "json",
+    label: "Custom fee rule",
+    code: `{
+  "category": "pisp.payment",
+  "model": "hybrid",
+  "fixed": { "amount": "200", "currency": "XAF" },
+  "percentage": 0.003
+}`,
+  },
+  7: {
+    language: "bash",
+    label: "Install the SDK",
+    code: `# Pick your runtime
+npm install @kangopenbanking/sdk
+# composer require kangopenbanking/sdk
+# pip install kang-open-banking`,
+  },
+  8: {
+    language: "bash",
+    label: "Tail health metrics",
+    code: `curl -H "Authorization: Bearer $KOB_TOKEN" \\
+  https://api.kangopenbanking.com/v1/observability/health`,
+  },
+  9: {
+    language: "bash",
+    label: "Submit certification bundle",
+    code: `kob certification submit \\
+  --bundle ./out/certification.zip \\
+  --institution "<INSTITUTION_ID>"`,
+  },
+  10: {
+    language: "bash",
+    label: "Switch to production base URL",
+    code: `# Placeholder — flip after smoke tests pass
+export KOB_BASE_URL="https://api.kangopenbanking.com"
+export KOB_ENV="production"`,
+  },
+  11: {
+    language: "bash",
+    label: "Subscribe to changelog feed",
+    code: `curl https://kangopenbanking.com/CHANGELOG.md`,
+  },
+};
+
 export default function IntegrationWorkflow() {
   const { scrollYProgress } = useScroll();
+  const reduceMotion = useReducedMotion();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 25, mass: 0.4 });
+  const [openPhase, setOpenPhase] = useState<number | null>(null);
+
 
   return (
     <>
