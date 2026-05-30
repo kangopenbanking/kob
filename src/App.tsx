@@ -574,6 +574,7 @@ const MerchantWebhookDeliveries = lazy(() => import("./pages/merchant/MerchantWe
 const AdminKybReviewQueue = lazy(() => import("./pages/admin/AdminKybReviewQueue"));
 const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeliveries"));
 const AdminWooWebhooks = lazy(() => import("./pages/admin/AdminWooWebhooks"));
+const AdminRemittanceSecurity = lazy(() => import("./pages/admin/AdminRemittanceSecurity"));
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
 const EmailTestSuite = lazy(() => import("./pages/admin/EmailTestSuite"));
@@ -998,6 +999,7 @@ function App() {
               <Route path="savings-anomaly-queue" element={<AdminSavingsAnomalyQueue />} />
               <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
               <Route path="woo-webhooks" element={<AdminWooWebhooks />} />
+              <Route path="remittance-security" element={<AdminRemittanceSecurity />} />
               <Route path="institution-api-keys" element={<AdminInstitutionApiKeys />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />

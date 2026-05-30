@@ -1,0 +1,29 @@
+name: raas-e2e
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/remittance-**"
+      - "supabase/functions/_shared/remittance-*.ts"
+      - "supabase/functions/_shared/cron-auth.ts"
+      - "scripts/raas-e2e-runner.mjs"
+      - ".github/workflows/raas-e2e.yml"
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 */6 * * *" # every 6h
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Run RaaS regression suite
+        env:
+          RAAS_BASE_URL: ${{ secrets.RAAS_BASE_URL }}
+          RAAS_ANON_KEY: ${{ secrets.RAAS_ANON_KEY }}
+          RAAS_USER_JWT: ${{ secrets.RAAS_USER_JWT }}
+        run: node scripts/raas-e2e-runner.mjs

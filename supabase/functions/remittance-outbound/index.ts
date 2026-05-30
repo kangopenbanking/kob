@@ -2,6 +2,14 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail, getUserName, getUserEmail } from "../_shared/send-managed-email.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
+import {
+  reserveIdempotency,
+  storeIdempotency,
+  idempotencyResponse,
+  sha256,
+  validateIdempotencyKey,
+} from "../_shared/integration-layer/idempotency.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -34,7 +42,7 @@ serve(async (req) => {
       case "get_quote":
         return await getQuote(supabase, user, body);
       case "send":
-        return await sendRemittance(supabase, user, body);
+        return await sendRemittance(supabase, user, body, req);
       case "cancel":
         return await cancelRemittance(supabase, user, body);
       case "track":
@@ -155,7 +163,37 @@ async function getQuote(supabase: any, user: any, body: any) {
 }
 
 // ─── Send outbound remittance ────────────────────────────────
-async function sendRemittance(supabase: any, user: any, body: any) {
+async function sendRemittance(supabase: any, user: any, body: any, req?: Request) {
+  // ─── Idempotency-Key gate (UUID v4) ─────────────────────────
+  const headerKey = req?.headers.get("Idempotency-Key")?.trim() || null;
+  let commitIdem: ((status: number, payload: unknown) => Promise<void>) | null = null;
+  if (headerKey) {
+    const invalid = validateIdempotencyKey(headerKey);
+    if (invalid) {
+      const resp = idempotencyResponse(invalid, corsHeaders)!;
+      await recordRemittanceAudit({ endpoint: 'remittance-outbound', action: 'send', decision: 'denied_idempotency', userId: user?.id, req, metadata: { reason: invalid.reason } });
+      return resp;
+    }
+    const requestHash = await sha256(JSON.stringify(body));
+    const reservation = await reserveIdempotency({
+      key: headerKey,
+      merchantId: user?.id ?? null,
+      resource: "remittance.outbound.send",
+      requestHash,
+    });
+    if (reservation.kind !== "miss") {
+      const resp = idempotencyResponse(reservation, corsHeaders);
+      if (resp) {
+        await recordRemittanceAudit({ endpoint: 'remittance-outbound', action: 'send', decision: 'denied_idempotency', userId: user?.id, req, metadata: { kind: reservation.kind } });
+        return resp;
+      }
+    }
+    commitIdem = async (status, payload) => storeIdempotency({
+      key: headerKey, merchantId: user?.id ?? null, resource: "remittance.outbound.send",
+      requestHash, status, body: payload as Record<string, unknown>,
+    });
+  }
+
   const {
     quote_id, corridor_id, amount, currency_in = "XAF",
     receiver_name, receiver_phone, receiver_email, receiver_country,
@@ -336,7 +374,7 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     });
   }
 
-  return json({
+  const responseBody = {
     remittance_id: remittance.id,
     partner_reference: partnerRef,
     status: amount < 100000 ? "pending" : "created",
@@ -347,7 +385,14 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     currency_out: corridor.to_currency,
     fee_total: feeTotal,
     fx_rate: fxRate,
+  };
+  if (commitIdem) await commitIdem(200, responseBody);
+  await recordRemittanceAudit({
+    endpoint: 'remittance-outbound', action: 'send', decision: 'allowed',
+    userId: user.id, remittanceId: remittance.id, req,
+    metadata: { amount, currency_in, delivery_method, partner_reference: partnerRef },
   });
+  return json(responseBody);
 }
 
 // ─── Cancel outbound remittance ──────────────────────────────

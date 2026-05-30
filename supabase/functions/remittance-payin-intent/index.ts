@@ -15,6 +15,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { safeErrorResponse } from "../_shared/errors.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -22,6 +23,20 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // P0 AUTH GATE — verify JWT BEFORE parsing body so no contract/provider
+  // metadata can leak to anonymous callers via validation errors.
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    await recordRemittanceAudit({ endpoint: 'remittance-payin-intent', decision: 'denied_unauthenticated', req });
+    return json({ error: "unauthorized", code: "AUTH_REQUIRED" }, 401);
+  }
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) {
+    await recordRemittanceAudit({ endpoint: 'remittance-payin-intent', decision: 'denied_unauthenticated', req });
+    return json({ error: "unauthorized", code: "INVALID_TOKEN" }, 401);
+  }
 
   try {
     const url = new URL(req.url);
@@ -36,11 +51,6 @@ serve(async (req) => {
     if (!action) {
       return json({ error: "missing_action", message: "action parameter is required" }, 400);
     }
-
-    // Auth
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user } } = await supabase.auth.getUser(token);
 
     switch (action) {
       // ─── Create Stripe Pay-in Intent ───
@@ -115,6 +125,19 @@ serve(async (req) => {
       case "create_paypal_order": {
         if (!user) return json({ error: "unauthorized" }, 401);
 
+        // Configuration check — refuse the action when PayPal is not configured
+        // instead of writing a misleading "pending" stub intent.
+        const paypalClient = Deno.env.get("PAYPAL_CLIENT_ID");
+        const paypalSecret = Deno.env.get("PAYPAL_CLIENT_SECRET") || Deno.env.get("PAYPAL_SECRET");
+        if (!paypalClient || !paypalSecret) {
+          return json({
+            error: "paypal_not_configured",
+            code: "PROVIDER_NOT_CONFIGURED",
+            provider: "paypal",
+            message: "PayPal payouts are not enabled on this environment.",
+          }, 501);
+        }
+
         const { remittance_id } = body as { remittance_id: string };
         if (!remittance_id) return json({ error: "missing_remittance_id" }, 400);
 
@@ -130,7 +153,6 @@ serve(async (req) => {
           return json({ error: "invalid_status", message: "Remittance must be in created status" }, 409);
         }
 
-        // PayPal order creation stub — returns structured response
         const { data: intent, error: insertErr } = await supabase
           .from("remittance_payin_intents")
           .insert({
@@ -141,7 +163,6 @@ serve(async (req) => {
             amount: remittance.send_amount,
             currency: remittance.send_currency,
             status: "pending",
-            metadata: { note: "PayPal order creation requires PAYPAL_CLIENT_ID and PAYPAL_SECRET configuration" },
           })
           .select()
           .single();

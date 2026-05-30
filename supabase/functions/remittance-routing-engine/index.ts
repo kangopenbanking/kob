@@ -61,6 +61,8 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { safeErrorResponse } from "../_shared/errors.ts";
 import { REMITTANCE_LEDGER_CODES } from "../_shared/remittance-adapters.ts";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
+import { withRemittanceIdempotency } from "../_shared/remittance-idempotency.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
 
 // KOB fee percentage on remittances (configurable per corridor in future)
 const KOB_REMITTANCE_FEE_PCT = 0.5; // 0.5%
@@ -70,7 +72,14 @@ serve(async (req) => {
 
   // P0 AUTH GATE — internal-only: require service-role/cron secret.
   const cronAuth = verifyCronAuth(req);
-  if (!cronAuth.authorized) return cronAuth.response!;
+  if (!cronAuth.authorized) {
+    await recordRemittanceAudit({
+      endpoint: 'remittance-routing-engine',
+      decision: 'denied_unauthenticated',
+      req,
+    });
+    return cronAuth.response!;
+  }
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -78,9 +87,33 @@ serve(async (req) => {
     const body = await req.json();
     const remittanceId = body.remittance_id;
     if (!remittanceId) {
+      await recordRemittanceAudit({
+        endpoint: 'remittance-routing-engine',
+        decision: 'denied_validation',
+        req,
+        metadata: { reason: 'missing_remittance_id' },
+      });
       return new Response(JSON.stringify({ error: 'missing_remittance_id' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Idempotency gate — replay-safe per remittance.
+    const idem = await withRemittanceIdempotency({
+      resource: 'remittance.routing-engine',
+      defaultKey: remittanceId,
+      headerKey: req.headers.get('Idempotency-Key'),
+      payload: body,
+      corsHeaders,
+    });
+    if (!idem.proceed) {
+      await recordRemittanceAudit({
+        endpoint: 'remittance-routing-engine',
+        decision: 'denied_idempotency',
+        remittanceId,
+        req,
+      });
+      return idem.response;
     }
 
     // Load remittance
@@ -236,14 +269,25 @@ serve(async (req) => {
       },
     });
 
-    return new Response(JSON.stringify({
+    const responseBody = {
       success: credited,
       remittance_id: rem.id,
       destination_type: rem.destination_type,
       net_amount: netAmount,
       kob_fee: kobFee,
       journal_entry_id: journalEntry.id,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    };
+    await idem.commit(200, responseBody);
+    await recordRemittanceAudit({
+      endpoint: 'remittance-routing-engine',
+      decision: 'allowed',
+      remittanceId: rem.id,
+      req,
+      metadata: { destination_type: rem.destination_type, net_amount: netAmount, kob_fee: kobFee },
+    });
+    return new Response(JSON.stringify(responseBody), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (err) {
     return safeErrorResponse(err, corsHeaders, 'remittance-routing-engine');
