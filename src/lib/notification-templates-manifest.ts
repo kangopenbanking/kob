@@ -6,7 +6,12 @@
  * smoke-send any template without touching live triggers.
  */
 
-export type NotificationVariable = { key: string; sample: string; description?: string };
+export type NotificationVariable = {
+  key: string;
+  sample: string;
+  description?: string;
+  required?: boolean;
+};
 
 export type NotificationAction = { label_en: string; label_fr: string; url: string };
 
