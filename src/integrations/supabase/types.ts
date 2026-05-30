@@ -22424,6 +22424,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_capture_events: {
+        Row: {
+          app_context: string
+          created_at: string
+          id: string
+          ip_hash: string | null
+          kind: string
+          metadata: Json
+          pathname: string
+          trace_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_context: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          kind: string
+          metadata?: Json
+          pathname: string
+          trace_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_context?: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          kind?: string
+          metadata?: Json
+          pathname?: string
+          trace_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       seo_metadata: {
         Row: {
           canonical_url: string | null
