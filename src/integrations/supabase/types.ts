@@ -9450,6 +9450,51 @@ export type Database = {
           },
         ]
       }
+      firebase_otp_test_log: {
+        Row: {
+          created_at: string
+          elapsed_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          metadata: Json
+          phone_number: string
+          provider: string | null
+          scenario: string
+          status: string
+          step: string
+          tester_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          elapsed_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          phone_number: string
+          provider?: string | null
+          scenario: string
+          status: string
+          step: string
+          tester_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          elapsed_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          phone_number?: string
+          provider?: string | null
+          scenario?: string
+          status?: string
+          step?: string
+          tester_id?: string | null
+        }
+        Relationships: []
+      }
       forum_replies: {
         Row: {
           author_name: string
