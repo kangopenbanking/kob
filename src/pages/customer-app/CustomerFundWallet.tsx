@@ -81,6 +81,11 @@ const CustomerFundWallet: React.FC = () => {
   const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
   const [pbbBankSearch, setPbbBankSearch] = useState('');
   const [pbbReference] = useState(() => `PBB${Date.now().toString().slice(-10)}`);
+  const [pbbRailInfo, setPbbRailInfo] = useState<{
+    recommended_rail: string | null;
+    rails: Array<{ rail: string; provider: string; label: string; supported: boolean; reason?: string; requires_linked_account?: boolean }>;
+  } | null>(null);
+  const [pbbFallback, setPbbFallback] = useState<{ message: string; retry_with: any; label: string } | null>(null);
 
 
   // Bank selection state (for bank_transfer method)
@@ -247,12 +252,56 @@ const CustomerFundWallet: React.FC = () => {
     setStep('pay_by_bank');
   };
 
+  // Preflight which rails (KOB PISP / Flutterwave hosted / NGN bank_transfer)
+  // are actually supported for the selected bank + currency. Lets us hide
+  // or disable rails before checkout instead of failing on submit.
+  const runPreflight = useCallback(async (bank: BankOption, currency = 'XAF') => {
+    try {
+      const { data } = await supabase.functions.invoke('pay-by-bank', {
+        body: {
+          action: 'preflight_rails',
+          bank: { code: bank.code, name: bank.name, network: bank.source },
+          currency,
+        },
+      });
+      if (data?.rails) {
+        setPbbRailInfo({ recommended_rail: data.recommended_rail ?? null, rails: data.rails });
+      }
+    } catch (e) {
+      console.warn('[FundWallet] preflight_rails failed', e);
+    }
+  }, []);
+
+  // Attempt create_intent with provided source_bank. Returns the response
+  // (with error/fallback fields) so the caller can decide whether to
+  // auto-switch rails.
+  const submitPayByBankIntent = async (sourceBank: { code: string; name: string; network: string }, amt: number) => {
+    const state = crypto.randomUUID();
+    const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
+    const { data, error } = await supabase.functions.invoke('pay-by-bank', {
+      body: {
+        action: 'create_intent',
+        target_type: 'consumer_wallet',
+        target_account_id: primaryAccount!.id,
+        amount: amt,
+        currency: 'XAF',
+        redirect_uri: returnUrl,
+        state,
+        description: 'KANG Wallet top-up',
+        source_bank: sourceBank,
+      },
+    });
+    if (error) throw error;
+    return { data, state };
+  };
+
   const handlePayByBankSubmit = async () => {
     const amt = Number(pbbAmount);
     if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
     if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
     if (!selectedPbbBank) { toast.error('Please select your bank'); return; }
     setPbbProcessing(true);
+    setPbbFallback(null);
     try {
       const { data: userCheck, error: userCheckError } = await supabase.auth.getUser();
       if (userCheckError || !userCheck?.user) {
@@ -261,30 +310,31 @@ const CustomerFundWallet: React.FC = () => {
         return;
       }
 
-      const state = crypto.randomUUID();
-      const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
-      const { data, error } = await supabase.functions.invoke('pay-by-bank', {
-        body: {
-          action: 'create_intent',
-          target_type: 'consumer_wallet',
-          target_account_id: primaryAccount.id,
-          amount: amt,
-          currency: 'XAF',
-          redirect_uri: returnUrl,
-          state,
-          description: 'KANG Wallet top-up',
-          source_bank: {
-            code: selectedPbbBank.code,
-            name: selectedPbbBank.name,
-            network: selectedPbbBank.source,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.message || data.error);
+      let { data, state } = await submitPayByBankIntent({
+        code: selectedPbbBank.code,
+        name: selectedPbbBank.name,
+        network: selectedPbbBank.source,
+      }, amt);
+
+      // Backend declined KOB rail because the bank isn't linked → if a
+      // hosted-checkout fallback is offered, switch transparently for
+      // XAF/XOF where direct account debit is not yet available.
+      if (data?.error === 'bank_not_linked' && data?.fallback?.retry_with?.source_bank) {
+        setPbbFallback({
+          message: data.message,
+          retry_with: data.fallback.retry_with,
+          label: data.fallback.label,
+        });
+        const retry = await submitPayByBankIntent(data.fallback.retry_with.source_bank, amt);
+        data = retry.data;
+        state = retry.state;
+        toast.info('Switched to secure hosted checkout (card or Mobile Money).');
+      } else if (data?.error) {
+        throw new Error(data.message || data.error);
+      }
+
       if (!data?.authorization_url || !data?.intent_id) throw new Error('Invalid response from server');
       setPbbStep('redirecting');
-      // Persist state so /pay/authorize can validate when user returns
       try { sessionStorage.setItem(`pbb_state_${data.intent_id}`, state); } catch {}
       window.location.assign(data.authorization_url);
     } catch (err: any) {
@@ -294,6 +344,7 @@ const CustomerFundWallet: React.FC = () => {
       setPbbProcessing(false);
     }
   };
+
 
   const handleSubmit = async () => {
     if (!numAmount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
@@ -732,7 +783,7 @@ const CustomerFundWallet: React.FC = () => {
                     </div>
                   ) : (
                     filteredPbbBanks.map((bank) => (
-                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
+                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbRailInfo(null); setPbbFallback(null); runPreflight(bank, 'XAF'); setPbbStep('amount'); }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                           <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-primary" />
@@ -797,6 +848,42 @@ const CustomerFundWallet: React.FC = () => {
                     ? tr('Kang Open Banking is a payment initiation service regulated under PSD2. By selecting Continue you authorise your bank to debit the amount above.')
                     : tr('You will be securely redirected to Flutterwave to enter your bank credentials and confirm this payment.')}
                 </p>
+
+                {/* Rail capability summary from preflight — explains why a
+                    direct bank-debit rail may not be available and which
+                    rail will actually carry the payment. */}
+                {pbbRailInfo && (
+                  <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
+                    <p className="text-[11px] font-semibold text-foreground">{tr('Available rails for this bank')}</p>
+                    <ul className="space-y-1.5">
+                      {pbbRailInfo.rails.map((r) => (
+                        <li key={r.rail} className="flex items-start gap-2 text-[11px]">
+                          <span className={cn(
+                            'mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                            r.supported ? 'border-primary/60 text-primary' : 'border-muted-foreground/30 text-muted-foreground/50',
+                          )}>
+                            {r.supported ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                          </span>
+                          <span className="flex-1">
+                            <span className={cn('font-semibold', r.supported ? 'text-foreground' : 'text-muted-foreground line-through')}>{r.label}</span>
+                            {!r.supported && r.reason && (
+                              <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5">{r.reason}</span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {pbbFallback && (
+                  <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-3 text-[11px] text-foreground">
+                    <p className="font-semibold">{tr('Switched to secure hosted checkout')}</p>
+                    <p className="text-muted-foreground leading-snug">{pbbFallback.label}</p>
+                  </div>
+                )}
+
+
 
                 {selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked && (
                   <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">

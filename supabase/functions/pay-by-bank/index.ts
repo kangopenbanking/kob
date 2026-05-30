@@ -18,6 +18,83 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action } = body;
 
+    // ─── preflight_rails ──────────────────────────────────────
+    // Returns which Pay-by-Bank rails are available for a given bank +
+    // currency, so the client can disable/hide unsupported options
+    // before the user commits. Mirrors Plaid/Token capability probes.
+    if (action === 'preflight_rails') {
+      const { bank, currency } = body as { bank?: { code?: string; name?: string; network?: string }; currency?: string };
+      const ccy = String(currency || 'XAF').toUpperCase();
+
+      // KOB partner rail: only if institution exists & approved
+      let kobSupported = false;
+      let kobReason: string | undefined;
+      if (bank?.code) {
+        const { data: inst } = await supabase
+          .from('institutions')
+          .select('id, status')
+          .eq('id', bank.code)
+          .maybeSingle();
+        if (inst && inst.status === 'approved') kobSupported = true;
+        else kobReason = 'Bank is not a KOB partner — direct account debit unavailable.';
+      } else if (bank?.network === 'kob') {
+        kobSupported = true;
+      } else {
+        kobReason = 'No bank identifier supplied.';
+      }
+
+      // Flutterwave hosted (card + franco MoMo) — supported for XAF/XOF/NGN
+      const fwSupported = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
+      const fwReason = fwSupported ? undefined : `Hosted checkout is not available for ${ccy} in this region.`;
+
+      // Native Flutterwave bank_transfer — NGN only
+      const fwBankTransfer = ccy === 'NGN';
+      const fwBankTransferReason = fwBankTransfer ? undefined
+        : 'Native bank transfer (virtual account) is only available for NGN. XAF/XOF must use hosted checkout or a KOB partner bank.';
+
+      const rails = [
+        {
+          rail: 'kob_pisp',
+          provider: 'kob',
+          label: 'Direct bank account debit (PSD2 PISP)',
+          supported: kobSupported,
+          requires_linked_account: true,
+          reason: kobSupported ? undefined : kobReason,
+        },
+        {
+          rail: 'flutterwave_hosted',
+          provider: 'flutterwave',
+          label: 'Bank card or Mobile Money (Flutterwave hosted)',
+          supported: fwSupported,
+          requires_linked_account: false,
+          reason: fwReason,
+          payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+        },
+        {
+          rail: 'flutterwave_bank_transfer',
+          provider: 'flutterwave',
+          label: 'Virtual bank account (NGN only)',
+          supported: fwBankTransfer,
+          requires_linked_account: false,
+          reason: fwBankTransferReason,
+        },
+      ];
+
+      const recommended = rails.find(r => r.rail === 'kob_pisp' && r.supported)?.rail
+        ?? rails.find(r => r.rail === 'flutterwave_hosted' && r.supported)?.rail
+        ?? rails.find(r => r.supported)?.rail
+        ?? null;
+
+      return new Response(JSON.stringify({
+        currency: ccy,
+        bank: bank || null,
+        rails,
+        recommended_rail: recommended,
+        any_supported: rails.some(r => r.supported),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
     // ─── list_payment_banks ────────────────────────────────────
     // Returns banks usable for Pay-by-Bank, tagged by rail.
     if (action === 'list_payment_banks') {
@@ -203,12 +280,22 @@ Deno.serve(async (req) => {
           }
 
           if (!matched) {
+            const ccy = String(currency || 'XAF').toUpperCase();
+            const hostedFallback = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
             return new Response(JSON.stringify({
               error: 'bank_not_linked',
               action: 'link_account',
               message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+              fallback: hostedFallback ? {
+                rail: 'flutterwave_hosted',
+                provider: 'flutterwave',
+                label: 'Continue via secure hosted checkout (card or Mobile Money)',
+                payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+                retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
+              } : null,
             }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
+
 
           linkedAccountId = matched.id;
           linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
@@ -370,6 +457,20 @@ Deno.serve(async (req) => {
       }
 
 
+      // Detailed rail descriptor so integrators can render the right UI
+      // and troubleshoot which rail handled the intent.
+      const ccyOut = String(currency || 'XAF').toUpperCase();
+      const railDescriptor = sourceRail === 'flutterwave'
+        ? {
+            rail: 'flutterwave_hosted',
+            provider: 'flutterwave',
+            payment_options: ccyOut === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+            requires_linked_account: false,
+          }
+        : sourceRail === 'kob'
+          ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
+          : { rail: null, provider: null, requires_linked_account: false };
+
       return new Response(JSON.stringify({
         intent_id: intent.id,
         consent_id: consentId,
@@ -378,8 +479,10 @@ Deno.serve(async (req) => {
         status: 'awaiting_auth',
         target_type,
         rail: sourceRail,
+        rail_descriptor: railDescriptor,
       }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
 
 
     // ─── get_intent ───────────────────────────────────────────
@@ -409,7 +512,19 @@ Deno.serve(async (req) => {
         intent.status = 'expired';
       }
 
-      return new Response(JSON.stringify(intent), {
+      const meta = (intent.metadata || {}) as any;
+      const rail = meta.rail as string | null;
+      const ccyOut = String(intent.currency || 'XAF').toUpperCase();
+      const rail_descriptor = rail === 'flutterwave'
+        ? { rail: 'flutterwave_hosted', provider: 'flutterwave',
+            payment_options: meta.flw_payment_options || (ccyOut === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco'),
+            requires_linked_account: false }
+        : rail === 'kob'
+          ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
+          : { rail: null, provider: null, requires_linked_account: false };
+
+      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor }), {
+
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -847,34 +962,82 @@ Deno.serve(async (req) => {
         });
       }
 
-      const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
-
-      await supabase.from('pay_by_bank_intents').update({
-        status: mappedStatus,
-        metadata: { provider_reference },
-      }).eq('id', intent_id);
-
-      const { data: intent } = await supabase
+      const { data: existing } = await supabase
         .from('pay_by_bank_intents')
         .select('*')
         .eq('id', intent_id)
-        .single();
+        .maybeSingle();
 
-      if (intent) {
-        const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
-        await supabase.rpc('trigger_webhooks', {
-          _event_type: eventType,
-          _event_data: JSON.stringify({
-            intent_id, merchant_id: intent.merchant_id, amount: intent.amount,
-            currency: intent.currency, status: mappedStatus, provider_reference,
-          }),
+      if (!existing) {
+        return new Response(JSON.stringify({ error: 'intent_not_found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+
+      // Idempotent — return success if already terminal
+      if (existing.status === 'completed' || existing.status === 'failed') {
+        return new Response(JSON.stringify({ status: existing.status, idempotent: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
+
+      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref)
+      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString() };
+
+      await supabase.from('pay_by_bank_intents').update({
+        status: mappedStatus,
+        metadata: mergedMeta,
+      }).eq('id', intent_id);
+
+      // Wallet-rail credit on KOB callback success — covers the case where
+      // the bank confirmed via PISP webhook AFTER the redirect (e.g.
+      // delayed-settlement banks). Idempotent: only credits when intent
+      // wasn't already authorized through interactive flow.
+      if (mappedStatus === 'completed'
+          && existing.target_type === 'consumer_wallet'
+          && existing.target_account_id
+          && existing.status === 'awaiting_auth') {
+        const amountNum = Number(existing.amount);
+        const ccy = existing.currency || 'XAF';
+        const { error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+          _account_id: existing.target_account_id,
+          _amount: amountNum,
+          _currency: ccy,
+        });
+        if (!creditErr) {
+          await supabase.from('transactions').insert([{
+            user_id: existing.customer_user_id,
+            account_id: existing.target_account_id,
+            amount: amountNum,
+            currency: ccy,
+            credit_debit_indicator: 'Credit',
+            transaction_type: 'pay_by_bank_topup',
+            transaction_information: 'Wallet top-up via Pay-by-Bank (bank webhook)',
+            booking_datetime: new Date().toISOString(),
+            status: 'Booked',
+            metadata: { intent_id, provider_reference, source: 'kob_bank_webhook' },
+          }]).then(() => {}, () => {});
+        } else {
+          console.error('[pay-by-bank][callback] wallet credit failed', creditErr);
+        }
+      }
+
+      const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
+      await supabase.rpc('trigger_webhooks', {
+        _event_type: eventType,
+        _event_data: JSON.stringify({
+          intent_id, merchant_id: existing.merchant_id, amount: existing.amount,
+          currency: existing.currency, status: mappedStatus, provider_reference,
+        }),
+      });
 
       return new Response(JSON.stringify({ status: mappedStatus }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
 
     // ─── verify_external (Flutterwave-rail reconciliation) ────
     // Called by the frontend when the user returns from FW. Verifies the
