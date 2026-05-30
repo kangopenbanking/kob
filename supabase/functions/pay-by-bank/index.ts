@@ -1247,8 +1247,8 @@ Deno.serve(async (req) => {
 
       const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
 
-      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref)
-      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString() };
+      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref, trace_id)
+      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString(), kob_callback_trace_id: traceId };
 
       await supabase.from('pay_by_bank_intents').update({
         status: mappedStatus,
