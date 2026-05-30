@@ -76,7 +76,7 @@ export default function FirebaseOTPTestSuite() {
   const [rateBurstCount, setRateBurstCount] = useState(0);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
-  const [, setSendStartedAt] = useState<number | null>(null);
+  
 
   const auth = useFirebasePhoneAuth({ otpType: "login" });
   const timers = useOTPTimers({ expirySeconds: 300, resendCooldownSeconds: 60 });
