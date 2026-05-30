@@ -100,6 +100,45 @@ curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> Verify signed artifacts (Ed25519)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Every artifact is signed with an Ed25519 detached signature using a
+              stable build-time key. The public key is published at{' '}
+              <code>/artifact-signing-pubkey.pem</code> and pinned in{' '}
+              <code>/artifacts.json</code>. Verify any download with either of the
+              snippets below.
+            </p>
+            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# 1) One-shot verifier (fetches spec, checksum, signature, public key)
+curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - openapi
+
+# 2) Manual verification with curl + node (no install)
+curl -sSO https://kangopenbanking.com/openapi.json
+curl -sSO https://kangopenbanking.com/openapi.json.sig
+curl -sSO https://kangopenbanking.com/artifact-signing-pubkey.pem
+
+node -e "const c=require('crypto'),f=require('fs');\\
+ const pub=c.createPublicKey(f.readFileSync('artifact-signing-pubkey.pem'));\\
+ const sig=Buffer.from(f.readFileSync('openapi.json.sig','utf8').trim(),'base64');\\
+ const ok=c.verify(null,f.readFileSync('openapi.json'),pub,sig);\\
+ console.log(ok?'signature: OK':'signature: FAIL');process.exit(ok?0:1);"
+
+# 3) Manual verification with openssl
+openssl pkeyutl -verify -pubin -inkey artifact-signing-pubkey.pem \\
+  -rawin -in openapi.json -sigfile openapi.json.sig`}</code></pre>
+            <p className="text-xs text-muted-foreground">
+              Pin <code>/artifact-signing-pubkey.pem</code> in your build pipeline
+              and fail the build on signature mismatch. Key rotations are
+              announced in the changelog and SDK release notes.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
               <FileText className="h-4 w-4" /> SDK release notes & changelogs
             </CardTitle>
           </CardHeader>
