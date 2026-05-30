@@ -280,12 +280,22 @@ Deno.serve(async (req) => {
           }
 
           if (!matched) {
+            const ccy = String(currency || 'XAF').toUpperCase();
+            const hostedFallback = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
             return new Response(JSON.stringify({
               error: 'bank_not_linked',
               action: 'link_account',
               message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
+              fallback: hostedFallback ? {
+                rail: 'flutterwave_hosted',
+                provider: 'flutterwave',
+                label: 'Continue via secure hosted checkout (card or Mobile Money)',
+                payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+                retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
+              } : null,
             }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
+
 
           linkedAccountId = matched.id;
           linkedLast4 = matched.last4 || (matched.account_number ? String(matched.account_number).slice(-4) : null);
