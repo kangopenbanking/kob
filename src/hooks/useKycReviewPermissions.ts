@@ -49,7 +49,7 @@ export function useKycReviewPermissions(): KycReviewPermissions {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", KYC_REVIEWER_ROLES as unknown as string[]);
+        .in("role", KYC_REVIEWER_ROLES as unknown as KycReviewerRole[]);
 
       if (cancelled) return;
       if (error) {
