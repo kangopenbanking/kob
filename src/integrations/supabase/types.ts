@@ -19119,6 +19119,7 @@ export type Database = {
       }
       push_test_log: {
         Row: {
+          actions_tested: Json | null
           created_at: string
           elapsed_ms: number | null
           error: Json | null
@@ -19128,11 +19129,13 @@ export type Database = {
           recipients: number | null
           status: string
           target_external_user_id: string | null
+          template_id: string | null
           title: string
           triggered_by: string
           url: string | null
         }
         Insert: {
+          actions_tested?: Json | null
           created_at?: string
           elapsed_ms?: number | null
           error?: Json | null
@@ -19142,11 +19145,13 @@ export type Database = {
           recipients?: number | null
           status?: string
           target_external_user_id?: string | null
+          template_id?: string | null
           title: string
           triggered_by: string
           url?: string | null
         }
         Update: {
+          actions_tested?: Json | null
           created_at?: string
           elapsed_ms?: number | null
           error?: Json | null
@@ -19156,6 +19161,7 @@ export type Database = {
           recipients?: number | null
           status?: string
           target_external_user_id?: string | null
+          template_id?: string | null
           title?: string
           triggered_by?: string
           url?: string | null
