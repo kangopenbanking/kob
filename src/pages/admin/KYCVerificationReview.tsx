@@ -511,14 +511,18 @@ export default function KYCVerificationReview() {
             <DialogTitle className="flex items-center gap-2">
               {reviewAction === "approved" ? (
                 <CheckCircle className="h-5 w-5 text-emerald-600" />
+              ) : reviewAction === "info_requested" ? (
+                <MessageSquare className="h-5 w-5 text-sky-600" />
               ) : (
                 <XCircle className="h-5 w-5 text-destructive" />
               )}
-              {reviewAction === "approved" ? "Approve" : "Reject"} KYC Submission
+              {reviewAction === "approved" ? "Approve" : reviewAction === "info_requested" ? "Request More Information" : "Reject"} KYC Submission
             </DialogTitle>
             <DialogDescription>
               {reviewAction === "approved"
                 ? "Confirm identity verification approval. The customer will be notified."
+                : reviewAction === "info_requested"
+                ? "Describe what additional information or documents are required. The customer will receive an email and in-app notification with this message and can resubmit."
                 : "Provide a clear reason for rejection. The customer will be notified."}
             </DialogDescription>
           </DialogHeader>
@@ -535,14 +539,21 @@ export default function KYCVerificationReview() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="review-notes" className="text-xs font-semibold">
-                  Review Notes {reviewAction === "rejected" && <span className="text-destructive">*</span>}
+                  {reviewAction === "info_requested" ? "Message to customer" : "Review Notes"}
+                  {(reviewAction === "rejected" || reviewAction === "info_requested") && <span className="text-destructive ml-1">*</span>}
                 </Label>
                 <Textarea
                   id="review-notes"
-                  placeholder={reviewAction === "rejected" ? "Explain why this submission is being rejected…" : "Optional notes…"}
+                  placeholder={
+                    reviewAction === "rejected"
+                      ? "Explain why this submission is being rejected…"
+                      : reviewAction === "info_requested"
+                      ? "e.g. Please upload a clearer photo of the back of your ID and a fresh selfie holding the document."
+                      : "Optional notes…"
+                  }
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={3}
+                  rows={4}
                   className="text-sm resize-none"
                 />
               </div>
@@ -552,12 +563,15 @@ export default function KYCVerificationReview() {
             <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>Cancel</Button>
             <Button
               onClick={submitReview}
-              variant={reviewAction === "approved" ? "default" : "destructive"}
-              disabled={reviewMutation.isPending || (reviewAction === "rejected" && !reviewNotes.trim())}
+              variant={reviewAction === "rejected" ? "destructive" : "default"}
+              disabled={
+                reviewMutation.isPending ||
+                ((reviewAction === "rejected" || reviewAction === "info_requested") && !reviewNotes.trim())
+              }
               className="gap-2"
             >
               {reviewMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {reviewAction === "approved" ? "Approve" : "Reject"}
+              {reviewAction === "approved" ? "Approve" : reviewAction === "info_requested" ? "Send request" : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>
