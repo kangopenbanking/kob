@@ -678,17 +678,75 @@ export default function IntegrationWorkflow() {
                         >
                           <div>
                             <p className="mb-4 text-muted-foreground">{phase.description}</p>
-                            <div className="space-y-2">
-                              <h4 className="text-sm font-semibold">Key tasks:</h4>
+                            <Collapsible
+                              open={openPhase === phase.number}
+                              onOpenChange={(v) => setOpenPhase(v ? phase.number : null)}
+                              className="space-y-3"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="text-sm font-semibold">Key tasks:</h4>
+                                <CollapsibleTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    aria-expanded={openPhase === phase.number}
+                                    aria-controls={`phase-${phase.number}-checklist`}
+                                    className="h-7 text-xs"
+                                  >
+                                    {openPhase === phase.number ? "Hide checklist" : "Step-by-step checklist"}
+                                    <ChevronDown
+                                      className={`ml-1 h-3.5 w-3.5 transition-transform motion-reduce:transition-none ${
+                                        openPhase === phase.number ? "rotate-180" : ""
+                                      }`}
+                                      aria-hidden
+                                    />
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </div>
                               <ul className="space-y-2">
                                 {phase.tasks.map((task, index) => (
                                   <li key={index} className="flex items-start gap-2 text-sm">
-                                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
                                     <span>{task}</span>
                                   </li>
                                 ))}
                               </ul>
-                            </div>
+                              <CollapsibleContent
+                                id={`phase-${phase.number}-checklist`}
+                                className="space-y-3 rounded-lg border border-border bg-muted/30 p-4"
+                              >
+                                <ol className="space-y-2 text-sm">
+                                  {phase.tasks.map((task, index) => (
+                                    <li key={index} className="flex items-start gap-3">
+                                      <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-primary text-[11px] font-semibold text-primary">
+                                        {index + 1}
+                                      </span>
+                                      <div>
+                                        <div className="font-medium">{task}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          Owner: integration engineer · Evidence: link the resulting artefact in your runbook.
+                                        </div>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ol>
+                                {phaseSnippets[phase.number] && (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+                                      <span>{phaseSnippets[phase.number].label}</span>
+                                      <span>{phaseSnippets[phase.number].language}</span>
+                                    </div>
+                                    <pre className="overflow-x-auto rounded-md border border-border bg-background p-3 text-xs">
+                                      <code>{phaseSnippets[phase.number].code}</code>
+                                    </pre>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Placeholder snippet — replace tokens before running against sandbox.
+                                    </p>
+                                  </div>
+                                )}
+                              </CollapsibleContent>
+                            </Collapsible>
                           </div>
                           {illustration && (
                             <div className="hidden overflow-hidden rounded-lg border border-border md:block">
@@ -698,10 +756,12 @@ export default function IntegrationWorkflow() {
                                 aria-hidden
                                 className="h-full w-full object-cover"
                                 loading="lazy"
+                                decoding="async"
                               />
                             </div>
                           )}
                         </div>
+
                       </CardContent>
                     </Card>
                   </motion.div>
