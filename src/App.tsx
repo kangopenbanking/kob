@@ -1059,6 +1059,7 @@ function App() {
               <Route path="email-health" element={<EmailHealthDashboard />} />
               <Route path="onesignal-test-suite" element={<OneSignalTestSuite />} />
               <Route path="notification-template-tester" element={<NotificationTemplateTester />} />
+              <Route path="push-delivery-log" element={<PushDeliveryLog />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
