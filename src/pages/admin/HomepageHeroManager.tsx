@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,31 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Eye, EyeOff, Upload, ArrowUp, ArrowDown, LayoutDashboard} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { HeroImageCropDialog } from "@/components/admin/HeroImageCropDialog";
+import {
+  classifyHeroMedia,
+  probeImageDimensions,
+  probeVideoDimensions,
+  aspectWithinTolerance,
+  HERO_TARGET_ASPECT,
+} from "@/lib/admin/hero-media-validation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface HeroSlide {
   id: string;
@@ -89,26 +114,113 @@ export default function HomepageHeroManager() {
     setUploading(false);
   };
 
-  const replaceMedia = async (id: string, file: File) => {
+  // Crop dialog state
+  const [cropTarget, setCropTarget] = useState<{ slideId: string; url: string; fileName: string } | null>(null);
+
+  /**
+   * Persist a replacement via the admin edge function so the change is
+   * server-validated (type/size/aspect ratio) and written to audit_logs.
+   */
+  const persistReplacement = async (
+    slideId: string,
+    publicUrl: string,
+    mediaType: "image" | "video",
+    dims: { width: number; height: number } | null,
+  ) => {
+    const cacheBusted = `${publicUrl}?v=${Date.now()}`;
+    const { data, error } = await supabase.functions.invoke("hero-media-update", {
+      body: {
+        slide_id: slideId,
+        media_url: cacheBusted,
+        media_type: mediaType,
+        reported_width: dims?.width,
+        reported_height: dims?.height,
+      },
+    });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error ?? error?.message ?? "Update failed";
+      toast({ title: "Replacement rejected", description: msg, variant: "destructive" });
+      return false;
+    }
+    setSlides((prev) =>
+      prev.map((s) => (s.id === slideId ? { ...s, media_url: cacheBusted, media_type: mediaType } : s)),
+    );
+    toast({ title: "Media replaced", description: "Change recorded in the audit log." });
+    return true;
+  };
+
+  const uploadAndPersist = async (
+    slideId: string,
+    blob: Blob,
+    fileName: string,
+    contentType: string,
+    mediaType: "image" | "video",
+    dims: { width: number; height: number } | null,
+  ) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `slide-${id}-${Date.now()}.${ext}`;
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
-
-    const { error: uploadError } = await supabase.storage
-      .from("homepage-hero")
-      .upload(path, file, { contentType: file.type, upsert: true });
-
-    if (uploadError) {
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+    try {
+      const ext = (fileName.split(".").pop() || (mediaType === "image" ? "jpg" : "mp4")).toLowerCase();
+      const path = `slide-${slideId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("homepage-hero")
+        .upload(path, blob, { contentType, upsert: true });
+      if (uploadError) {
+        toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
+      await persistReplacement(slideId, publicUrl, mediaType, dims);
+    } finally {
       setUploading(false);
+    }
+  };
+
+  const replaceMedia = async (id: string, file: File) => {
+    const v = classifyHeroMedia(file);
+    if (!v.ok || !v.kind) {
+      toast({ title: "Invalid file", description: v.error, variant: "destructive" });
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
-    await updateSlide(id, { media_url: `${publicUrl}?v=${Date.now()}`, media_type: mediaType });
-    toast({ title: "Media replaced" });
-    setUploading(false);
+    if (v.kind === "video") {
+      try {
+        const dims = await probeVideoDimensions(file);
+        if (!aspectWithinTolerance(dims.width, dims.height)) {
+          toast({
+            title: "Aspect ratio out of range",
+            description: `Video must be ~16:9 (got ${dims.width}×${dims.height}).`,
+            variant: "destructive",
+          });
+          return;
+        }
+        await uploadAndPersist(id, file, file.name, file.type, "video", dims);
+      } catch (e) {
+        toast({ title: "Could not read video", description: (e as Error).message, variant: "destructive" });
+      }
+      return;
+    }
+
+    // Images: open crop dialog targeting the hero's 16:9 layout.
+    const url = URL.createObjectURL(file);
+    setCropTarget({ slideId: id, url, fileName: file.name });
+  };
+
+  const handleCropConfirm = async (blob: Blob, fileName: string) => {
+    if (!cropTarget) return;
+    const dims = await probeImageDimensions(blob).catch(() => null);
+    if (dims && !aspectWithinTolerance(dims.width, dims.height)) {
+      toast({
+        title: "Crop aspect mismatch",
+        description: `Cropped image is ${dims.width}×${dims.height} (target 16:9).`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const contentType = /\.png$/i.test(fileName) ? "image/png" : "image/jpeg";
+    const target = cropTarget;
+    URL.revokeObjectURL(target.url);
+    setCropTarget(null);
+    await uploadAndPersist(target.slideId, blob, fileName, contentType, "image", dims);
   };
 
   const updateSlide = async (id: string, updates: Partial<HeroSlide>) => {
@@ -133,16 +245,30 @@ export default function HomepageHeroManager() {
   const moveSlide = async (index: number, direction: "up" | "down") => {
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= slides.length) return;
+    await applyNewOrder(arrayMove(slides, index, newIndex));
+  };
 
-    const updated = [...slides];
-    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-
+  const applyNewOrder = async (next: HeroSlide[]) => {
+    setSlides(next.map((s, i) => ({ ...s, sort_order: i })));
     await Promise.all(
-      updated.map((s, i) =>
-        supabase.from("homepage_hero_slides").update({ sort_order: i } as any).eq("id", s.id)
-      )
+      next.map((s, i) =>
+        supabase.from("homepage_hero_slides").update({ sort_order: i } as any).eq("id", s.id),
+      ),
     );
-    fetchSlides();
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = slides.findIndex((s) => s.id === active.id);
+    const to = slides.findIndex((s) => s.id === over.id);
+    if (from === -1 || to === -1) return;
+    await applyNewOrder(arrayMove(slides, from, to));
   };
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading slides...</div>;
@@ -180,8 +306,11 @@ export default function HomepageHeroManager() {
         </Card>
       )}
 
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
       {slides.map((slide, index) => (
-        <Card key={slide.id} className={!slide.is_active ? "opacity-60" : ""}>
+        <SortableCardShell key={slide.id} id={slide.id} className={!slide.is_active ? "opacity-60" : ""}>
+          {(dragHandleProps) => (
           <CardContent className="p-6">
             <div className="grid lg:grid-cols-[200px_1fr] gap-6">
               {/* Preview */}
@@ -217,6 +346,14 @@ export default function HomepageHeroManager() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Drag to reorder"
+                      className="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-accent active:cursor-grabbing"
+                      {...dragHandleProps}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </button>
                     <Badge variant="outline">#{index + 1}</Badge>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveSlide(index, "up")} disabled={index === 0}>
@@ -378,8 +515,49 @@ export default function HomepageHeroManager() {
               </div>
             </div>
           </CardContent>
-        </Card>
+          )}
+        </SortableCardShell>
       ))}
+        </SortableContext>
+      </DndContext>
+
+      <HeroImageCropDialog
+        open={!!cropTarget}
+        imageUrl={cropTarget?.url ?? null}
+        fileName={cropTarget?.fileName ?? "image.jpg"}
+        onClose={() => {
+          if (cropTarget?.url) URL.revokeObjectURL(cropTarget.url);
+          setCropTarget(null);
+        }}
+        onConfirm={handleCropConfirm}
+      />
+    </div>
+  );
+}
+
+/**
+ * SortableCardShell — wraps a sortable Card and exposes drag handle
+ * props to its children via a render prop so the handle can live in
+ * the card header.
+ */
+function SortableCardShell({
+  id,
+  className,
+  children,
+}: {
+  id: string;
+  className?: string;
+  children: (handleProps: Record<string, unknown>) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={className}>{children({ ...attributes, ...listeners })}</Card>
     </div>
   );
 }
