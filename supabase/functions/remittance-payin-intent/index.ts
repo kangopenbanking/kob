@@ -125,6 +125,19 @@ serve(async (req) => {
       case "create_paypal_order": {
         if (!user) return json({ error: "unauthorized" }, 401);
 
+        // Configuration check — refuse the action when PayPal is not configured
+        // instead of writing a misleading "pending" stub intent.
+        const paypalClient = Deno.env.get("PAYPAL_CLIENT_ID");
+        const paypalSecret = Deno.env.get("PAYPAL_SECRET");
+        if (!paypalClient || !paypalSecret) {
+          return json({
+            error: "paypal_not_configured",
+            code: "PROVIDER_NOT_CONFIGURED",
+            provider: "paypal",
+            message: "PayPal payouts are not enabled on this environment.",
+          }, 501);
+        }
+
         const { remittance_id } = body as { remittance_id: string };
         if (!remittance_id) return json({ error: "missing_remittance_id" }, 400);
 
@@ -140,7 +153,6 @@ serve(async (req) => {
           return json({ error: "invalid_status", message: "Remittance must be in created status" }, 409);
         }
 
-        // PayPal order creation stub — returns structured response
         const { data: intent, error: insertErr } = await supabase
           .from("remittance_payin_intents")
           .insert({
@@ -151,7 +163,6 @@ serve(async (req) => {
             amount: remittance.send_amount,
             currency: remittance.send_currency,
             status: "pending",
-            metadata: { note: "PayPal order creation requires PAYPAL_CLIENT_ID and PAYPAL_SECRET configuration" },
           })
           .select()
           .single();
