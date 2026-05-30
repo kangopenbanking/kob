@@ -11,6 +11,31 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Eye, EyeOff, Upload, ArrowUp, ArrowDown, LayoutDashboard} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { HeroImageCropDialog } from "@/components/admin/HeroImageCropDialog";
+import {
+  classifyHeroMedia,
+  probeImageDimensions,
+  probeVideoDimensions,
+  aspectWithinTolerance,
+  HERO_TARGET_ASPECT,
+} from "@/lib/admin/hero-media-validation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface HeroSlide {
   id: string;
