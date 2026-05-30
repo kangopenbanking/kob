@@ -88,6 +88,37 @@ Deno.serve(async (req) => {
       selfie_url
     } = validatedData;
 
+    // ---------------------------------------------------------------
+    // Deduplication guard: block re-submission if user already has an
+    // approved or pending verification. Rejected/info_requested users
+    // may freely resubmit.
+    // ---------------------------------------------------------------
+    const { data: existing } = await supabase
+      .from('kyc_verifications')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'approved'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.status === 'approved') {
+      return new Response(
+        JSON.stringify({ error: 'Your identity is already verified. No further action is required.' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (existing?.status === 'pending') {
+      return new Response(
+        JSON.stringify({
+          error: 'A verification is already under review. Please wait for the outcome before submitting again.',
+          verification_id: existing.id,
+          status: 'pending',
+        }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Insert KYC verification record
     const { data: verification, error: verificationError } = await supabase
       .from('kyc_verifications')
@@ -123,13 +154,51 @@ Deno.serve(async (req) => {
       _metadata: { verification_id: verification.id, verification_type }
     });
 
-    // Notify all admins about new KYC submission
+    // Look up user profile for notifications
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, email')
       .eq('id', user.id)
       .single();
 
+    // Acknowledgment email to the submitting user (non-blocking)
+    if (profile?.email || user.email) {
+      try {
+        await supabase.functions.invoke('send-communication', {
+          body: {
+            template_key: 'kyc_submitted',
+            recipient_email: profile?.email || user.email,
+            recipient_id: user.id,
+            variables: {
+              recipient_name: profile?.full_name || 'Valued Customer',
+              verification_id: verification.id,
+              submitted_at: new Date().toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              }),
+            },
+          },
+        });
+      } catch (ackErr) {
+        console.error('Submission ack email failed (non-blocking):', ackErr);
+      }
+    }
+
+    // In-app notification for the user
+    try {
+      await supabase.from('app_notifications').insert({
+        user_id: user.id,
+        type: 'info',
+        title: 'Verification submitted',
+        message: 'Thanks — we received your documents and our team will review them shortly.',
+        icon: 'kyc',
+        metadata: { verification_id: verification.id, status: 'pending' },
+      });
+    } catch (notifErr) {
+      console.error('User in-app notification failed (non-blocking):', notifErr);
+    }
+
+    // Notify all admins about new KYC submission
     await notifyAdmins(supabase, {
       event_type: 'kyc_submitted',
       entity_type: 'kyc_verifications',
@@ -141,15 +210,9 @@ Deno.serve(async (req) => {
 
     // Trigger automated sanctions screening
     try {
-      const { data: userData } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
       await supabase.functions.invoke('sanctions-screen', {
         body: {
-          full_name: userData?.full_name || user.email,
+          full_name: profile?.full_name || user.email,
           date_of_birth: document_expiry_date,
           nationality: document_country,
           document_number
@@ -169,6 +232,7 @@ Deno.serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
 
   } catch (error) {
     console.error('Error in kyc-submit:', error);
