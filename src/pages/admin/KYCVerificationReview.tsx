@@ -18,7 +18,7 @@ import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import {
   Shield, FileText, CheckCircle, XCircle, Clock, Eye,
   Image as ImageIcon, Search, Users, User, Calendar, Hash,
-  ArrowRight, Loader2, Download,
+  ArrowRight, Loader2, Download, MessageSquare, HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 
