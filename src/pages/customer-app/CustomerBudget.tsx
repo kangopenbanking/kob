@@ -91,6 +91,7 @@ export default function CustomerBudget() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
   const [roundupOpen, setRoundupOpen] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
   const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
 
   const summary = budget?.summary;
@@ -105,6 +106,21 @@ export default function CustomerBudget() {
   }, []);
 
   const pct = summary ? Math.min(100, Math.round(summary.percentage_used)) : 0;
+
+  // Mini-donut metrics
+  const totalDays = useMemo(() => {
+    if (!summary?.period_start || !summary?.period_end) return 30;
+    const s = new Date(summary.period_start).getTime();
+    const e = new Date(summary.period_end).getTime();
+    const d = Math.round((e - s) / 86400000) + 1;
+    return d > 0 ? d : 30;
+  }, [summary?.period_start, summary?.period_end]);
+  const daysLeft = summary?.days_remaining ?? 0;
+  const daysLeftPct = Math.round(Math.min(100, (daysLeft / Math.max(1, totalDays)) * 100));
+  const leftPct = 100 - pct;
+  const dailyTarget = summary ? summary.total_limit / Math.max(1, totalDays) : 0;
+  const dailyAllowance = summary && daysLeft > 0 ? (summary.total_remaining ?? 0) / daysLeft : 0;
+  const dailyPct = dailyTarget > 0 ? Math.min(100, Math.round((dailyAllowance / dailyTarget) * 100)) : 0;
 
 
   return (
@@ -262,32 +278,31 @@ export default function CustomerBudget() {
                 </div>
               </div>
 
-              {/* Hero stat row */}
+              {/* Hero stat row — mini donuts */}
               <div
-                className="mt-6 grid grid-cols-3 rounded-2xl"
-                style={{ background: "var(--bud-surface-2)" }}
+                className="mt-6 grid grid-cols-3 gap-3"
               >
-                <HeroStat
+                <MiniDonutStat
                   label="Left"
-                  value={formatXAF(summary?.total_remaining ?? 0, true)}
-                  tone={theme === "light" ? "#059669" : "#34D399"}
-                  border
+                  percent={leftPct}
+                  centerValue={formatXAF(summary?.total_remaining ?? 0, true)}
+                  colour="#10D9A0"
+                  bg={theme === "light" ? "rgba(16,217,160,0.10)" : "rgba(16,217,160,0.14)"}
                 />
-                <HeroStat
+                <MiniDonutStat
                   label="Daily"
-                  value={formatXAF(
-                    summary && summary.days_remaining > 0
-                      ? Math.max(0, (summary.total_remaining ?? 0) / summary.days_remaining)
-                      : 0,
-                    true,
-                  )}
-                  tone={theme === "light" ? "#2563EB" : "#60A5FA"}
-                  border
+                  percent={dailyPct}
+                  centerValue={formatXAF(dailyAllowance, true)}
+                  colour="#38BDF8"
+                  bg={theme === "light" ? "rgba(56,189,248,0.10)" : "rgba(56,189,248,0.14)"}
                 />
-                <HeroStat
+                <MiniDonutStat
                   label="Days left"
-                  value={String(summary?.days_remaining ?? 0)}
-                  tone="var(--bud-text)"
+                  percent={daysLeftPct}
+                  centerValue={String(daysLeft)}
+                  centerSub={`/${totalDays}`}
+                  colour="#A78BFA"
+                  bg={theme === "light" ? "rgba(167,139,250,0.12)" : "rgba(167,139,250,0.16)"}
                 />
               </div>
             </section>
@@ -317,13 +332,7 @@ export default function CustomerBudget() {
                   </span>
                   <div>
                     <div className="text-[13px] font-medium" style={{ color: "var(--bud-text)" }}>
-                      AI Adviser
-                    </div>
-                    <div
-                      className="text-[10px] uppercase tracking-[0.14em]"
-                      style={{ color: "var(--bud-text-3)" }}
-                    >
-                      Personal insight
+                      Kang Adviser
                     </div>
                   </div>
                 </div>
@@ -357,90 +366,103 @@ export default function CustomerBudget() {
 
             {/* Categories */}
             <section>
-              <SectionHeader title="Categories" action={`${summary?.categories?.length ?? 0} total`} />
-              <div
-                className="overflow-hidden rounded-3xl border"
-                style={{
-                  background: "var(--bud-surface)",
-                  borderColor: "var(--bud-border)",
-                  boxShadow: theme === "light" ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
-                }}
-              >
-                {(summary?.categories ?? []).slice(0, 10).map((c, idx, arr) => {
-                  const meta = getCategory(c.id);
-                  const cpct = Math.min(100, Math.round(c.percentage_used ?? 0));
-                  const tone =
-                    cpct >= 100
-                      ? theme === "light" ? "#DC2626" : "#F87171"
-                      : cpct >= 80
-                      ? theme === "light" ? "#D97706" : "#FBBF24"
-                      : cpct >= 60
-                      ? theme === "light" ? "#2563EB" : "#60A5FA"
-                      : theme === "light" ? "#059669" : "#34D399";
-                  return (
+              <SectionHeader
+                title="Categories"
+                rightSlot={
+                  (summary?.categories?.length ?? 0) > 5 ? (
                     <button
-                      key={c.id}
-                      onClick={() =>
-                        setEditCat({ id: c.id, name: c.name, limit: c.limit, colour: meta.colour })
-                      }
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bud-hover)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      className="group flex w-full items-center gap-4 px-5 py-4 text-left transition-colors"
+                      onClick={() => setShowAllCats((v) => !v)}
+                      className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors"
                       style={{
-                        borderBottom:
-                          idx !== arr.length - 1 ? "1px solid var(--bud-border-soft)" : "none",
+                        borderColor: "var(--bud-border)",
+                        background: "var(--bud-surface-2)",
+                        color: "var(--bud-text-2)",
                       }}
                     >
-                      <span
-                        className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl"
-                        style={{ background: `${meta.colour}1F`, color: meta.colour }}
+                      {showAllCats ? "Show less" : `View all ${summary?.categories?.length ?? 0}`}
+                      <ChevronRight
+                        className="h-3 w-3 transition-transform"
+                        strokeWidth={2}
+                        style={{ transform: showAllCats ? "rotate(90deg)" : "rotate(0deg)" }}
+                      />
+                    </button>
+                  ) : (
+                    <span className="text-[11px]" style={{ color: "var(--bud-text-3)" }}>
+                      {summary?.categories?.length ?? 0} total
+                    </span>
+                  )
+                }
+              />
+              <div className="grid grid-cols-2 gap-3">
+                {(summary?.categories ?? [])
+                  .slice(0, showAllCats ? undefined : 4)
+                  .map((c) => {
+                    const meta = getCategory(c.id);
+                    const cpct = Math.min(100, Math.round(c.percentage_used ?? 0));
+                    const tone =
+                      cpct >= 100
+                        ? "#F87171"
+                        : cpct >= 80
+                        ? "#FBBF24"
+                        : cpct >= 60
+                        ? "#60A5FA"
+                        : "#10D9A0";
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() =>
+                          setEditCat({ id: c.id, name: c.name, limit: c.limit, colour: meta.colour })
+                        }
+                        className="group relative flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.98]"
+                        style={{
+                          background: "var(--bud-surface)",
+                          borderColor: "var(--bud-border)",
+                          boxShadow:
+                            theme === "light"
+                              ? "0 1px 2px rgba(15,23,42,0.04)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.03)",
+                        }}
                       >
-                        <CatIcon id={c.id} className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <div
-                            className="truncate text-[14px] font-medium"
-                            style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
-                          >
-                            {localiseCategoryName(c.id, lang)}
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <div
-                              className="text-[13px] font-medium tabular-nums"
-                              style={{ color: "var(--bud-text)" }}
-                            >
-                              {formatXAF(c.spent, true)}
-                            </div>
-                            <div
-                              className="text-[10px] tabular-nums"
-                              style={{ color: "var(--bud-text-3)" }}
-                            >
-                              of {formatXAF(c.limit, true)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-2 flex items-center gap-3">
-                          <div
-                            className="relative h-[6px] flex-1 overflow-hidden rounded-full"
-                            style={{ background: "var(--bud-track)" }}
-                          >
-                            <div
-                              className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
-                              style={{ width: `${cpct}%`, background: tone }}
-                            />
-                          </div>
+                        <div className="flex items-start justify-between">
                           <span
-                            className="w-9 text-right text-[11px] font-medium tabular-nums"
-                            style={{ color: tone }}
+                            className="grid h-10 w-10 place-items-center rounded-2xl"
+                            style={{ background: `${meta.colour}22`, color: meta.colour }}
+                          >
+                            <CatIcon id={c.id} className="h-5 w-5" />
+                          </span>
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums"
+                            style={{ background: `${tone}1F`, color: tone }}
                           >
                             {cpct}%
                           </span>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="min-w-0">
+                          <div
+                            className="truncate text-[13px] font-medium"
+                            style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
+                          >
+                            {localiseCategoryName(c.id, lang)}
+                          </div>
+                          <div
+                            className="mt-0.5 text-[11px] tabular-nums"
+                            style={{ color: "var(--bud-text-3)" }}
+                          >
+                            {formatXAF(c.spent, true)} / {formatXAF(c.limit, true)}
+                          </div>
+                        </div>
+                        <div
+                          className="relative h-[5px] overflow-hidden rounded-full"
+                          style={{ background: "var(--bud-track)" }}
+                        >
+                          <div
+                            className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
+                            style={{ width: `${cpct}%`, background: tone }}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
             </section>
 
@@ -645,6 +667,62 @@ function HeroStat({
     </div>
   );
 }
+
+function MiniDonutStat({
+  label,
+  percent,
+  centerValue,
+  centerSub,
+  colour,
+  bg,
+}: {
+  label: string;
+  percent: number;
+  centerValue: string;
+  centerSub?: string;
+  colour: string;
+  bg: string;
+}) {
+  const safePct = Math.max(0, Math.min(100, percent));
+  return (
+    <div
+      className="flex flex-col items-center rounded-2xl border px-2 py-3"
+      style={{
+        background: bg,
+        borderColor: "var(--bud-border-soft)",
+      }}
+    >
+      <DonutRing
+        size={68}
+        strokeWidth={7}
+        segments={[
+          { value: safePct, colour },
+          { value: 100 - safePct, colour: "var(--bud-track)" },
+        ]}
+        centerLabel={
+          <span
+            className="text-[12px] font-semibold tabular-nums"
+            style={{ fontFamily: "Sora, Inter, sans-serif", color: "var(--bud-text)" }}
+          >
+            {centerValue}
+            {centerSub && (
+              <span className="text-[9px] font-normal" style={{ color: "var(--bud-text-3)" }}>
+                {centerSub}
+              </span>
+            )}
+          </span>
+        }
+      />
+      <div
+        className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+        style={{ color: "var(--bud-text-2)" }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
 
 function SectionHeader({
   title,
