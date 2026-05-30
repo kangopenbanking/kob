@@ -19,6 +19,9 @@ const DLQ_THRESHOLD = 5;        // > 5 DLQ rows in last 1h triggers alert
 const BACKLOG_THRESHOLD = 25;   // > 25 pending older than 30min triggers alert
 const FAILURE_RATE_THRESHOLD = 0.25;
 const FAILURE_MIN_SAMPLE = 8;
+const BOUNCE_RATE_THRESHOLD = 0.05;   // > 5% bounce rate over 24h
+const BOUNCE_MIN_SAMPLE = 20;
+
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -62,7 +65,20 @@ Deno.serve(async (req) => {
     const failures = (recentSends || []).filter((r) => r.status !== "sent").length;
     const failureRate = total > 0 ? failures / total : 0;
 
+    // ---- 4. Bounce / complaint rate over last 24h ----
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: deliveryWindow } = await admin
+      .from("email_send_log")
+      .select("status")
+      .gte("created_at", twentyFourHoursAgo)
+      .in("status", ["sent", "bounced", "complained"]);
+    const deliveryTotal = deliveryWindow?.length || 0;
+    const bounces = (deliveryWindow || []).filter((r) => r.status === "bounced").length;
+    const complaints = (deliveryWindow || []).filter((r) => r.status === "complained").length;
+    const bounceRate = deliveryTotal > 0 ? (bounces + complaints) / deliveryTotal : 0;
+
     const triggered: string[] = [];
+
 
     async function fire(type: string, severity: "warning" | "critical", title: string, message: string, metadata: any) {
       // Dedupe: skip if same alert_type fired in the last hour.
@@ -153,6 +169,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (deliveryTotal >= BOUNCE_MIN_SAMPLE && bounceRate > BOUNCE_RATE_THRESHOLD) {
+      await fire(
+        "email_bounce_rate_high",
+        "critical",
+        "Email bounce rate exceeds threshold",
+        `${(bounceRate * 100).toFixed(2)}% of delivered emails bounced or were marked as spam in the last 24h (${bounces + complaints}/${deliveryTotal}, threshold: ${(BOUNCE_RATE_THRESHOLD * 100).toFixed(0)}%). Investigate template content, sender reputation, and recipient hygiene.`,
+        { bounce_rate: bounceRate, bounces, complaints, total: deliveryTotal, window: "24h", threshold: BOUNCE_RATE_THRESHOLD },
+      );
+    }
+
     return json({
       success: true,
       checked_at: new Date().toISOString(),
@@ -161,9 +187,14 @@ Deno.serve(async (req) => {
         backlog_over_30min: backlogCount || 0,
         sends_last_hour: total,
         failure_rate: failureRate,
+        bounce_rate_24h: bounceRate,
+        bounces_24h: bounces,
+        complaints_24h: complaints,
+        delivery_total_24h: deliveryTotal,
       },
       alerts_fired: triggered,
     });
+
   } catch (e: any) {
     console.error("email-queue-alerts error:", e);
     return json({ error: e?.message || "Internal error" }, 500);

@@ -8712,6 +8712,8 @@ export type Database = {
           recipient_email: string
           status: string
           template_name: string
+          triggered_by: string | null
+          user_id: string | null
         }
         Insert: {
           attempt_count?: number
@@ -8727,6 +8729,8 @@ export type Database = {
           recipient_email: string
           status: string
           template_name: string
+          triggered_by?: string | null
+          user_id?: string | null
         }
         Update: {
           attempt_count?: number
@@ -8742,6 +8746,8 @@ export type Database = {
           recipient_email?: string
           status?: string
           template_name?: string
+          triggered_by?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
