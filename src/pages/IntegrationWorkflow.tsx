@@ -499,8 +499,10 @@ export default function IntegrationWorkflow() {
                 src={kobSecurity}
                 alt="Signed, verified, encrypted credentials illustration"
                 className="h-full w-full object-cover"
-                loading="lazy"
+                loading="eager"
                 decoding="async"
+                fetchPriority="high"
+
               />
               <div className="absolute inset-x-4 bottom-4 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
                 <div className="flex items-center gap-2 font-medium">
