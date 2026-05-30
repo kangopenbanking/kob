@@ -169,6 +169,7 @@ export default function KYCVerificationReview() {
     pending: filterByStatus("pending").length,
     approved: filterByStatus("approved").length,
     rejected: filterByStatus("rejected").length,
+    info_requested: filterByStatus("info_requested").length,
   };
 
   // ── Loading skeleton ──
