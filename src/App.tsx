@@ -680,6 +680,7 @@ const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRe
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
+const CustomerNotifications = lazy(() => import("./pages/customer-app/CustomerNotifications"));
 const CustomerHelp = lazy(() => import("./pages/customer-app/CustomerHelp"));
 const CustomerTravelCategories = lazy(() => import("./pages/customer-app/CustomerTravelCategories"));
 const CustomerTravelAgencies = lazy(() => import("./pages/customer-app/CustomerTravelAgencies"));
@@ -1579,7 +1580,10 @@ function App() {
               <Route path="marketplace" element={<CustomerMarketplace />} />
               <Route path="reviews" element={<CustomerReviews />} />
               <Route path="wishlist" element={<CustomerWishlist />} />
+              <Route path="notifications" element={<CustomerNotifications />} />
+              <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
+
 
             {/* Business App PWA Routes */}
             <Route path="/biz" element={<BusinessSplash />} />
