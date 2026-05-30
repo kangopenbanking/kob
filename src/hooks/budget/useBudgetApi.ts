@@ -29,19 +29,18 @@ const FN = "budgeting-ops";
 const READ_TIMEOUT_MS = 12_000;
 
 async function callFn<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS);
-  try {
-    const { data, error } = await supabase.functions.invoke(`${FN}${path}`, {
-      method: (init.method as any) || "GET",
-      body: init.body ? JSON.parse(init.body as string) : undefined,
-    });
-    if (error) throw error;
-    return data as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  const invoke = supabase.functions.invoke(`${FN}${path}`, {
+    method: (init.method as any) || "GET",
+    body: init.body ? JSON.parse(init.body as string) : undefined,
+  });
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`budget: ${path} timed out after ${READ_TIMEOUT_MS}ms`)), READ_TIMEOUT_MS),
+  );
+  const { data, error } = (await Promise.race([invoke, timeout])) as any;
+  if (error) throw error;
+  return data as T;
 }
+
 
 // Wrap a read so a failure resolves to a fallback value instead of throwing.
 // This keeps `isLoading` honest and lets the UI render an empty/degraded
