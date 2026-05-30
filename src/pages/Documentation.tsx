@@ -778,8 +778,8 @@ Idempotency-Key: 550e8400-e29b-41d4-a716-446655440050
                   <item.icon className="h-8 w-8 text-primary" />
                   <h3 className="font-semibold">{item.title}</h3>
                   <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  <Link to={item.path} className="text-sm text-primary hover:underline flex items-center gap-1">
-                    Learn more <ChevronRight className="h-3.5 w-3.5" />
+                  <Link to={item.path} className="text-sm text-primary hover:underline flex items-center gap-1" aria-label={`Read the ${item.title} guide`}>
+                    Read the {item.title} guide <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </CardContent>
               </Card>

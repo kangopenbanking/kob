@@ -220,7 +220,7 @@ const Index = () => {
                 </ul>
                 <Link to="/for-merchants">
                   <Button size="lg" className="mt-2">
-                    Learn More <ArrowRight className="ml-2 h-4 w-4" />
+                    Explore merchant features <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
@@ -786,7 +786,7 @@ const Index = () => {
               </Link>
               <Link to="/crediq">
                 <Button size="lg" className="text-lg px-10 py-6 bg-crediq-green text-white hover:bg-crediq-green/90 border-0">
-                  Learn More
+                  Learn how CrediQ scoring works
                 </Button>
               </Link>
             </div>
@@ -865,8 +865,8 @@ const Index = () => {
                       </li>
                     ))}
                   </ul>
-                  <Link to={card.link}>
-                    <Button variant={card.variant} className="w-full">Learn More <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                  <Link to={card.link} aria-label={`Learn more about ${card.title}`}>
+                    <Button variant={card.variant} className="w-full">Explore {card.title} <ArrowRight className="ml-2 h-4 w-4" /></Button>
                   </Link>
                 </Card>
                 </ScrollReveal>

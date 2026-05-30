@@ -121,7 +121,7 @@ export default function CrediQ() {
                     onClick={() => navigate("/crediq/info")}
                     className="rounded-xl text-base px-8 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
                   >
-                    Learn More
+                    Learn how CrediQ scoring works
                   </Button>
                 </motion.div>
 

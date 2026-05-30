@@ -180,6 +180,7 @@ export default function Pricing() {
       </div>
 
       {/* Pricing Tiers */}
+      <h2 className="sr-only">Pricing plans</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {pricingTiers.map((tier) => {
           const Icon = tier.icon;

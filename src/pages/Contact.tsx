@@ -21,6 +21,33 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+
+const CONTACT_STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Kang Open Banking",
+  "description": "Unified Open Banking API platform for Cameroon and the CEMAC region.",
+  "url": "https://kangopenbanking.com",
+  "telephone": "+237 6 22 02 25 67",
+  "email": "info@kangopenbanking.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "CM",
+    "addressLocality": "Douala",
+    "addressRegion": "Littoral"
+  },
+  "areaServed": ["CM", "CF", "TD", "CG", "GA", "GQ"],
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "telephone": "+237 6 22 02 25 67",
+      "contactType": "customer support",
+      "availableLanguage": ["English", "French"],
+      "areaServed": "CM"
+    }
+  ]
+};
 
 export default function Contact() {
   const { toast } = useToast();
@@ -104,6 +131,12 @@ export default function Contact() {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <SEO
+        title="Contact Us"
+        description="Reach Kang Open Banking for technical support, sales, partnerships, compliance, and billing. 24/7 phone, email, live chat, and offices in Cameroon and Canada."
+        canonical="https://kangopenbanking.com/contact"
+        structuredData={CONTACT_STRUCTURED_DATA}
+      />
       <div className="max-w-6xl mx-auto">
         {/* Hero Section */}
         <section className="text-center mb-12">
@@ -115,7 +148,8 @@ export default function Contact() {
         </section>
 
         {/* Quick Contact Cards */}
-        <section className="grid md:grid-cols-4 gap-6 mb-12">
+        <h2 className="sr-only">Ways to reach our team</h2>
+        <section className="grid md:grid-cols-4 gap-6 mb-12" aria-labelledby="contact-channels">
           <Card className="p-6 text-center hover:shadow-lg transition-shadow">
             <HeadphonesIcon className="h-10 w-10 text-primary mx-auto mb-3" />
             <h3 className="font-semibold mb-2">24/7 Support</h3>

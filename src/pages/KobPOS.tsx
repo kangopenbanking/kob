@@ -477,7 +477,7 @@ export default function KobPOS() {
                     </div>
                     <Button size="lg" className="bg-fi-purple hover:bg-fi-purple/90 text-white rounded-xl px-8 flex-shrink-0" asChild>
                       <Link to="/woo-for-kang">
-                        Learn More
+                        Explore the WooCommerce plugin
                         <ArrowRight className="ml-2 h-5 w-5" />
                       </Link>
                     </Button>
