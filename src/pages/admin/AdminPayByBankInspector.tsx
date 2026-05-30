@@ -48,6 +48,8 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 export default function AdminPayByBankInspector() {
+  const [authChecking, setAuthChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [intents, setIntents] = useState<Intent[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -56,6 +58,16 @@ export default function AdminPayByBankInspector() {
   const [selected, setSelected] = useState<Intent | null>(null);
   const [timeline, setTimeline] = useState<any | null>(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setAuthChecking(false); setIsAdmin(false); return; }
+      const { data: ok } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any });
+      setIsAdmin(!!ok);
+      setAuthChecking(false);
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -68,7 +80,8 @@ export default function AdminPayByBankInspector() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+
 
   const filtered = useMemo(() => {
     return intents.filter((i) => {
