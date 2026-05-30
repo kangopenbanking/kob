@@ -131,6 +131,12 @@ export default function Contact() {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <SEO
+        title="Contact Us"
+        description="Reach Kang Open Banking for technical support, sales, partnerships, compliance, and billing. 24/7 phone, email, live chat, and offices in Cameroon and Canada."
+        canonical="https://kangopenbanking.com/contact"
+        structuredData={CONTACT_STRUCTURED_DATA}
+      />
       <div className="max-w-6xl mx-auto">
         {/* Hero Section */}
         <section className="text-center mb-12">
