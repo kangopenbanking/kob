@@ -92,6 +92,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Tenant Connectors (BYO)", path: "/admin/tenant-connectors", icon: Plug },
       { title: "QR Payments Audit", path: "/admin/qr-payments-audit", icon: ScrollText },
       { title: "Pay-by-Bank Inspector", path: "/admin/pay-by-bank-inspector", icon: Landmark },
+      { title: "Capture-attempt Audit", path: "/admin/capture-events", icon: Shield },
     ],
   },
   {
