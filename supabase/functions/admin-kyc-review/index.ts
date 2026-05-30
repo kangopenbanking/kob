@@ -38,14 +38,18 @@ serve(async (req) => {
       throw new Error('Forbidden: Admin or Institution access required');
     }
 
-    const { kyc_id, action, rejection_reason } = await req.json();
+    const { kyc_id, action, rejection_reason, info_request_message } = await req.json();
 
-    if (!kyc_id || !['approved', 'rejected'].includes(action)) {
-      throw new Error('kyc_id and valid action (approved/rejected) required');
+    if (!kyc_id || !['approved', 'rejected', 'info_requested'].includes(action)) {
+      throw new Error('kyc_id and valid action (approved/rejected/info_requested) required');
     }
 
     if (action === 'rejected' && !rejection_reason) {
       throw new Error('Rejection reason is required');
+    }
+
+    if (action === 'info_requested' && !info_request_message) {
+      throw new Error('Information request message is required');
     }
 
     // Get the KYC record
