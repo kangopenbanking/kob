@@ -259,11 +259,19 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
             <input
               ref={fileInputSelfie}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               capture="user"
+              aria-label="Selfie photo"
               className="hidden"
-              onChange={(e) => e.target.files?.[0] && setSelfie(e.target.files[0])}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                const err = validateFile(f);
+                if (err) { toast.error(err); return; }
+                setSelfie(f);
+              }}
             />
+
             <Button
               variant="outline"
               onClick={() => fileInputSelfie.current?.click()}
