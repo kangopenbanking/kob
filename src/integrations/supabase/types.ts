@@ -8697,6 +8697,27 @@ export type Database = {
         }
         Relationships: []
       }
+      email_rate_limit: {
+        Row: {
+          count: number
+          recipient_hash: string
+          template_name: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          recipient_hash: string
+          template_name: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          recipient_hash?: string
+          template_name?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           attempt_count: number
@@ -19345,6 +19366,42 @@ export type Database = {
         }
         Relationships: []
       }
+      push_send_audit: {
+        Row: {
+          allowed: boolean
+          attempted_targets: string[]
+          caller_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          reason: string
+          title: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          allowed: boolean
+          attempted_targets?: string[]
+          caller_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          reason: string
+          title?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          allowed?: boolean
+          attempted_targets?: string[]
+          caller_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          reason?: string
+          title?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       push_test_log: {
         Row: {
           actions_tested: Json | null
@@ -27071,6 +27128,15 @@ export type Database = {
           _consent_id: string
           _permission: string
           _user_id: string
+        }
+        Returns: boolean
+      }
+      check_and_increment_email_rate: {
+        Args: {
+          _limit?: number
+          _recipient_hash: string
+          _template_name: string
+          _window_minutes?: number
         }
         Returns: boolean
       }
