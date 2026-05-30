@@ -457,6 +457,20 @@ Deno.serve(async (req) => {
       }
 
 
+      // Detailed rail descriptor so integrators can render the right UI
+      // and troubleshoot which rail handled the intent.
+      const ccyOut = String(currency || 'XAF').toUpperCase();
+      const railDescriptor = sourceRail === 'flutterwave'
+        ? {
+            rail: 'flutterwave_hosted',
+            provider: 'flutterwave',
+            payment_options: ccyOut === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+            requires_linked_account: false,
+          }
+        : sourceRail === 'kob'
+          ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
+          : { rail: null, provider: null, requires_linked_account: false };
+
       return new Response(JSON.stringify({
         intent_id: intent.id,
         consent_id: consentId,
@@ -465,8 +479,10 @@ Deno.serve(async (req) => {
         status: 'awaiting_auth',
         target_type,
         rail: sourceRail,
+        rail_descriptor: railDescriptor,
       }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
 
 
     // ─── get_intent ───────────────────────────────────────────
