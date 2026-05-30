@@ -43,11 +43,69 @@ const OpenApiDownloads = () => {
       </Helmet>
 
       <div className="max-w-5xl mx-auto p-6 space-y-8" data-testid="openapi-downloads-page">
+        {/* Signing-key fingerprint banner */}
+        <div
+          role="region"
+          aria-label="Artifact signing key fingerprints"
+          className="rounded-lg border border-border bg-card overflow-hidden"
+        >
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/40">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium uppercase tracking-wide">
+              Artifact signing keys ({(signing?.algorithm || 'ed25519').toUpperCase()})
+            </span>
+            <Badge variant={signing?.next ? 'secondary' : 'outline'} className="ml-auto text-[10px]">
+              {signing?.next ? 'Rotation staged' : 'Steady state'}
+            </Badge>
+          </div>
+          <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+            <div className="p-4 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <KeyRound className="h-3.5 w-3.5" />
+                Current key
+              </div>
+              <code className="block text-xs break-all font-mono">
+                {signing?.publicKeyFingerprint || 'Loading from /artifacts.json…'}
+              </code>
+            </div>
+            <div className="p-4 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <KeyRound className="h-3.5 w-3.5" />
+                Next key (staged)
+              </div>
+              <code className="block text-xs break-all font-mono text-muted-foreground">
+                {signing?.next?.publicKeyFingerprint || 'None — no rotation in progress'}
+              </code>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-t border-border bg-muted/20 text-xs">
+            <span className="text-muted-foreground">
+              Pin these fingerprints in your build pipeline to detect rotations safely.
+            </span>
+            <div className="ml-auto flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+                <a href="#rotation">Rotation procedure</a>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+                <a href="/docs/signing-key-rotation.md" target="_blank" rel="noreferrer">
+                  Integrator guide
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+                <a href="/signing-key-updates.json" target="_blank" rel="noreferrer">
+                  /signing-key-updates.json
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div>
           <h1 className="text-3xl font-bold">OpenAPI Specification</h1>
           <p className="text-muted-foreground mt-2">
             Download or link to the Kang Open Banking API specification. Use these files with Swagger UI, Redoc, Postman, Insomnia, or any OpenAPI-compatible tool. APIs.json discovery documents are also provided for both environments.
           </p>
+
         </div>
 
         <SpecDownloads env="All" compact />
