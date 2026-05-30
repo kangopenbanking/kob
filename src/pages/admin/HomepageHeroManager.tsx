@@ -346,6 +346,14 @@ export default function HomepageHeroManager() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Drag to reorder"
+                      className="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-accent active:cursor-grabbing"
+                      {...dragHandleProps}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </button>
                     <Badge variant="outline">#{index + 1}</Badge>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveSlide(index, "up")} disabled={index === 0}>
