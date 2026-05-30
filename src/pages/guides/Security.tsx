@@ -7,6 +7,10 @@ export default function Security() {
       eyebrow="Security"
       title="API Security & Authentication"
       description="The protocols, encryption and key-management practices that protect your integration and your customers' data."
+      seoTitle="API Security Guide — OAuth 2.0, OIDC and mTLS | Kang Open Banking"
+      seoDescription="Secure your Kang Open Banking integration with OAuth 2.0, OpenID Connect, mutual TLS and key rotation. FAPI 1.0 Advanced-aligned hardening checklist included."
+      seoKeywords="OAuth 2.0, OIDC, mTLS, FAPI, API security, open banking authentication, certificate-bound tokens"
+      canonicalPath="/guides/security"
       readTime="8 min read"
       level="Intermediate"
       primaryCta={{ label: "Manage API keys", to: "/developer/api-keys" }}
