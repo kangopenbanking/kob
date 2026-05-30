@@ -9495,6 +9495,60 @@ export type Database = {
         }
         Relationships: []
       }
+      firebase_phone_lockouts: {
+        Row: {
+          created_at: string
+          failed_attempts: number
+          id: string
+          last_failure_at: string | null
+          locked_until: string | null
+          phone_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          last_failure_at?: string | null
+          locked_until?: string | null
+          phone_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          last_failure_at?: string | null
+          locked_until?: string | null
+          phone_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      firebase_token_replay_guard: {
+        Row: {
+          expires_at: string
+          phone_number: string | null
+          token_hash: string
+          used_at: string
+          user_id: string | null
+        }
+        Insert: {
+          expires_at?: string
+          phone_number?: string | null
+          token_hash: string
+          used_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          expires_at?: string
+          phone_number?: string | null
+          token_hash?: string
+          used_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       forum_replies: {
         Row: {
           author_name: string
