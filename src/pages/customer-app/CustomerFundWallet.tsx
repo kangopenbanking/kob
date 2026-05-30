@@ -81,6 +81,11 @@ const CustomerFundWallet: React.FC = () => {
   const [selectedPbbBank, setSelectedPbbBank] = useState<BankOption | null>(null);
   const [pbbBankSearch, setPbbBankSearch] = useState('');
   const [pbbReference] = useState(() => `PBB${Date.now().toString().slice(-10)}`);
+  const [pbbRailInfo, setPbbRailInfo] = useState<{
+    recommended_rail: string | null;
+    rails: Array<{ rail: string; provider: string; label: string; supported: boolean; reason?: string; requires_linked_account?: boolean }>;
+  } | null>(null);
+  const [pbbFallback, setPbbFallback] = useState<{ message: string; retry_with: any; label: string } | null>(null);
 
 
   // Bank selection state (for bank_transfer method)
