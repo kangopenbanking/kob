@@ -22,7 +22,19 @@ interface SigningMeta {
 
 
 const OpenApiDownloads = () => {
+  const [signing, setSigning] = useState<SigningMeta | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/artifacts.json', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => { if (!cancelled && m?.signing) setSigning(m.signing); })
+      .catch(() => { /* metadata is best-effort */ });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
+
     <>
       <Helmet>
         <title>OpenAPI Specification Downloads — Kang Open Banking</title>
