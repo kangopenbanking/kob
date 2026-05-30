@@ -282,10 +282,13 @@ export default function KYCVerificationReview() {
                       </Button>
                       {kyc.status === "pending" && (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleReview(kyc, "approved")}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleReview(kyc, "approved")} title="Approve">
                             <CheckCircle className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleReview(kyc, "rejected")}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-sky-600 hover:text-sky-700 hover:bg-sky-50" onClick={() => handleReview(kyc, "info_requested")} title="Request more info">
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleReview(kyc, "rejected")} title="Reject">
                             <XCircle className="h-4 w-4" />
                           </Button>
                         </>
