@@ -19117,6 +19117,72 @@ export type Database = {
           },
         ]
       }
+      push_delivery_log: {
+        Row: {
+          attempts: number
+          created_at: string
+          elapsed_ms: number | null
+          error_body: Json | null
+          error_code: string | null
+          http_status: number | null
+          id: string
+          message: string
+          notification_id: string | null
+          onesignal_id: string | null
+          payload: Json | null
+          recipients: number | null
+          status: string
+          test_mode: boolean
+          title: string
+          triggered_by: string | null
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          elapsed_ms?: number | null
+          error_body?: Json | null
+          error_code?: string | null
+          http_status?: number | null
+          id?: string
+          message: string
+          notification_id?: string | null
+          onesignal_id?: string | null
+          payload?: Json | null
+          recipients?: number | null
+          status?: string
+          test_mode?: boolean
+          title: string
+          triggered_by?: string | null
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          elapsed_ms?: number | null
+          error_body?: Json | null
+          error_code?: string | null
+          http_status?: number | null
+          id?: string
+          message?: string
+          notification_id?: string | null
+          onesignal_id?: string | null
+          payload?: Json | null
+          recipients?: number | null
+          status?: string
+          test_mode?: boolean
+          title?: string
+          triggered_by?: string | null
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_test_log: {
         Row: {
           actions_tested: Json | null
