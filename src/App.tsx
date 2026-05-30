@@ -1070,6 +1070,7 @@ function App() {
               <Route path="firebase-otp-security-audit" element={<FirebaseOTPSecurityAudit />} />
               <Route path="otp-monitoring" element={<OTPMonitoringDashboard />} />
               <Route path="signup-notifications-e2e" element={<SignupNotificationsE2E />} />
+              <Route path="notification-telemetry" element={<NotificationDeliveryTelemetry />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
