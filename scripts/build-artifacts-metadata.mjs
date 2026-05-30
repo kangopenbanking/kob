@@ -3,24 +3,13 @@
  * build-artifacts-metadata.mjs
  *
  * Emits public/artifacts.json — the canonical, public, machine-readable index
- * of every downloadable artifact:
+ * of every downloadable artifact, including:
+ *   - SHA-256 + Ed25519 signature filenames for every artifact
+ *   - Current signing key fingerprint (SHA256:<base64> of SPKI DER) + algorithm
+ *   - Staged "next" key (if configured) for rotation pre-pinning
+ *   - Verification + rotation instructions URLs
  *
- *   {
- *     "ssot": { "apiVersion": "...", "sdkVersions": {...} },
- *     "generatedAt": "...",
- *     "signing":   { "algorithm": "ed25519", "publicKeyUrl": "/artifact-signing-pubkey.pem", ... },
- *     "releaseNotesUrl": "/sdk-downloads/SDK_RELEASE_NOTES.md",
- *     "sdkChangelogs": { "node": "/sdk-downloads/CHANGELOG-node.md", ... },
- *     "artifacts": [
- *       { "url": "/openapi.json", "category": "openapi", "version": "4.49.0",
- *         "size": 12345, "sha256": "...", "signature": { "algorithm": "ed25519",
- *         "sigUrl": "/openapi.json.sig" } },
- *       ...
- *     ]
- *   }
- *
- * Read-only consumer of public/downloads-checksums.json; everything else on
- * this file is metadata that integrators can poll on a schedule.
+ * Read-only consumer of public/downloads-checksums.json.
  */
 import fs from 'node:fs';
 
@@ -30,7 +19,11 @@ const out = {
   ssot: src.ssot,
   generatedAt: src.generatedAt,
   algorithm: src.algorithm,
-  signing: src.signing,
+  signing: {
+    ...src.signing,
+    verifyInstructionsUrl: src.signing?.verifyInstructionsUrl || '/developer/openapi#verify',
+    rotationDocsUrl: src.signing?.rotationDocsUrl || '/developer/openapi#rotation',
+  },
   verifyHint: src.verifyHint,
   releaseNotesUrl: '/sdk-downloads/SDK_RELEASE_NOTES.md',
   sdkChangelogs: {
@@ -46,4 +39,8 @@ const out = {
 };
 
 fs.writeFileSync('public/artifacts.json', JSON.stringify(out, null, 2) + '\n');
-console.log(`Wrote public/artifacts.json (${out.artifacts.length} artifacts).`);
+console.log(
+  `Wrote public/artifacts.json (${out.artifacts.length} artifacts, ` +
+    `fingerprint=${out.signing?.publicKeyFingerprint || 'n/a'}` +
+    `${out.signing?.next ? `, next=${out.signing.next.publicKeyFingerprint}` : ''}).`
+);
