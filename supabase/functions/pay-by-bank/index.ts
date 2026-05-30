@@ -483,9 +483,14 @@ Deno.serve(async (req) => {
           description,
           expires_at: expiresAt,
           customer_email,
-          metadata: source_bank
-            ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
-            : {},
+          metadata: {
+            ...(source_bank ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 } : {}),
+            ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
+            timeline: [
+              { status: 'created', at: new Date().toISOString(), source: 'create_intent' },
+              { status: 'awaiting_webhook', at: new Date().toISOString(), source: 'create_intent' },
+            ],
+          },
 
         })
         .select('id')
@@ -494,6 +499,7 @@ Deno.serve(async (req) => {
       if (intentErr || !intent) {
         return safeErrorResponse(intentErr, corsHeaders, 'create_intent');
       }
+
 
       // Branch authorisation URL by rail:
       //   - KOB: internal authorize page (acts as PISP authorize endpoint;
