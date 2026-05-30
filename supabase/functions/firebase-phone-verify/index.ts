@@ -87,10 +87,8 @@ serve(async (req) => {
     const tokenHash = Array.from(new Uint8Array(tokenDigest))
       .map((b) => b.toString(16).padStart(2, '0')).join('');
 
-    // Initialize Supabase admin client early so we can consult guards.
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Reuse the monitor client initialized at the top.
+    const supabase = monitor;
 
     const { data: replay } = await supabase
       .from('firebase_token_replay_guard')
