@@ -119,9 +119,9 @@ serve(async (req) => {
       await admin.from("push_test_log").insert({
         triggered_by: user.id,
         target_external_user_id: body.external_user_id ?? null,
-        title: body.title,
-        message: body.message,
-        url: body.url ?? null,
+        title: safeTitle,
+        message: safeMessage,
+        url: safeUrl ?? null,
         onesignal_id: respBody?.id ?? null,
         recipients: respBody?.recipients ?? null,
         status: resp.ok ? "sent" : "failed",
