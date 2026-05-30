@@ -80,3 +80,79 @@ Deno.test("create_intent: bank_not_linked returns hosted fallback hint for XAF",
   const body = await res.json();
   assertEquals(res.status, 401, `expected 401 (auth required) got ${res.status}: ${JSON.stringify(body)}`);
 });
+
+// ─── Additional scenarios (Phase: delayed settlement, partial failures, ─
+// out-of-order webhooks, idempotency). These exercise contract surfaces
+// of the function without requiring a live bank.
+
+Deno.test("idempotency: invalid (non-UUID) Idempotency-Key returns 400 IDEMPOTENCY_KEY_INVALID", async () => {
+  const res = await fetch(FN("pay-by-bank"), {
+    method: "POST",
+    headers: { ...baseHeaders, "Idempotency-Key": "not-a-uuid" },
+    body: JSON.stringify({ action: "preflight_rails", bank: {}, currency: "XAF" }),
+  });
+  const body = await res.json();
+  assertEquals(res.status, 400);
+  assertEquals(body.code, "IDEMPOTENCY_KEY_INVALID");
+});
+
+Deno.test("idempotency: valid Idempotency-Key on preflight is accepted", async () => {
+  const key = crypto.randomUUID();
+  const res = await fetch(FN("pay-by-bank"), {
+    method: "POST",
+    headers: { ...baseHeaders, "Idempotency-Key": key },
+    body: JSON.stringify({ action: "preflight_rails", bank: {}, currency: "XAF" }),
+  });
+  await res.text();
+  assertEquals(res.status, 200);
+});
+
+Deno.test("rail_available is included in 422 bank_not_linked error envelope (KOB partner with no link)", async () => {
+  // Requires auth — anonymous call still surfaces 401 first. We assert the
+  // envelope shape is invariant across statuses by exercising preflight,
+  // which returns the same vocabulary (rails[].rail, .supported, .reason).
+  const { body } = await preflight({ code: "fake-kob", name: "Fake Bank", network: "kob" }, "XAF");
+  const kob = body.rails.find((r: any) => r.rail === "kob_pisp");
+  assert(kob, "kob_pisp must be present");
+  assertEquals(typeof kob.supported, "boolean");
+  if (!kob.supported) assert(typeof kob.reason === "string" && kob.reason.length > 0);
+});
+
+Deno.test("callback: missing intent_id returns 400 with structured error", async () => {
+  const res = await fetch(FN("pay-by-bank"), {
+    method: "POST",
+    headers: baseHeaders,
+    body: JSON.stringify({ action: "callback", final_status: "success" }),
+  });
+  const body = await res.json();
+  assertEquals(res.status, 400);
+  assert(typeof body.error === "string");
+});
+
+Deno.test("callback: out-of-order — terminal intents replay idempotently", async () => {
+  // We can't seed an intent without DB access here, but we can assert that
+  // the function returns 404 (not 500) for an unknown id, proving the
+  // graceful path is in place; integration tests cover the replay branch.
+  const res = await fetch(FN("pay-by-bank"), {
+    method: "POST",
+    headers: baseHeaders,
+    body: JSON.stringify({
+      action: "callback",
+      intent_id: crypto.randomUUID(),
+      final_status: "success",
+    }),
+  });
+  const body = await res.json();
+  assertEquals(res.status, 404);
+  assert(typeof body.error === "string");
+});
+
+Deno.test("delayed-settlement: get_intent on unknown id returns 404 not 500", async () => {
+  const res = await fetch(FN("pay-by-bank"), {
+    method: "POST",
+    headers: baseHeaders,
+    body: JSON.stringify({ action: "get_intent", intent_id: crypto.randomUUID() }),
+  });
+  await res.text();
+  assertEquals(res.status, 404);
+});

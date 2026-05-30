@@ -19,6 +19,7 @@ import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { PayByBankLogo } from '@/components/PayByBankLogo';
 import { BankLogo } from '@/components/BankLogo';
 import { CM_BANKS } from '@/constants/cameroon-banks';
+import { PayByBankTimeline } from '@/pages/customer-app/components/PayByBankTimeline';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -438,6 +439,8 @@ const CustomerFundWallet: React.FC = () => {
   }, [selectedPbbBank, linkedAccounts]);
 
 
+  const pbbReturnIntentId = (searchParams.get('source') === 'pay_by_bank') ? searchParams.get('intent_id') : null;
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
@@ -446,6 +449,18 @@ const CustomerFundWallet: React.FC = () => {
         </button>
         <h1 className="text-xl font-bold text-foreground">{tr('Add Money')}</h1>
       </div>
+
+      {pbbReturnIntentId && (
+        <PayByBankTimeline
+          intentId={pbbReturnIntentId}
+          onTerminal={(s) => {
+            if (s === 'completed') {
+              queryClient.refetchQueries({ queryKey: ['account-balances'] });
+            }
+          }}
+        />
+      )}
+
 
       <AnimatePresence mode="wait">
         {step === 'result' && fundingResult ? (

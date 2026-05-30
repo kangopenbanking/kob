@@ -3,6 +3,88 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
 import { createFlutterwaveCharge } from '../_shared/gateway-adapters.ts';
 
+// ─── Timeline + error helpers (E2E reliability hardening) ─────────
+// Status timeline events are appended into pay_by_bank_intents.metadata.timeline
+// so customers and integrators can audit the full state machine driven by
+// webhook reconciliation: created → awaiting_webhook → confirmed/failed.
+type TimelineEvent = {
+  status: string;          // created | awaiting_webhook | authorized | confirmed | failed | expired | rejected
+  at: string;              // ISO timestamp
+  source: string;          // create_intent | authorize | callback | flutterwave_webhook | verify_external
+  detail?: string;
+};
+
+async function appendTimeline(
+  supabase: any,
+  intentId: string,
+  ev: TimelineEvent,
+): Promise<void> {
+  try {
+    const { data: row } = await supabase
+      .from('pay_by_bank_intents')
+      .select('metadata')
+      .eq('id', intentId)
+      .maybeSingle();
+    const meta = (row?.metadata || {}) as any;
+    const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
+    // Dedupe: same status+source within last 2s is a duplicate webhook
+    const last = timeline[timeline.length - 1];
+    if (last && last.status === ev.status && last.source === ev.source) {
+      const dt = Date.now() - new Date(last.at).getTime();
+      if (dt < 2000) return;
+    }
+    timeline.push(ev);
+    await supabase
+      .from('pay_by_bank_intents')
+      .update({ metadata: { ...meta, timeline } })
+      .eq('id', intentId);
+  } catch (e) {
+    console.warn('[pay-by-bank] appendTimeline failed', e);
+  }
+}
+
+// Structured error envelope so integrators can render precise UI:
+//   { error: <machine_code>, code: <SCREAMING_SNAKE>, message: <human>, rail_available: [...] }
+function buildErrorBody(args: {
+  error: string;
+  code: string;
+  message: string;
+  rail_available?: Array<{ rail: string; supported: boolean; reason?: string }>;
+  extra?: Record<string, unknown>;
+}): Record<string, unknown> {
+  return {
+    error: args.error,
+    code: args.code,
+    message: args.message,
+    rail_available: args.rail_available ?? null,
+    ...(args.extra || {}),
+  };
+}
+
+// Lightweight idempotency for create_intent / callback / verify_external.
+// Honors the `Idempotency-Key` header (UUID v4) and re-uses the existing
+// pay_by_bank_intents row whose metadata.idempotency_key matches, returning
+// a 200 replay envelope so double-clicks and webhook retries cannot create
+// duplicate intents or trigger double credits.
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function lookupIntentByIdempotencyKey(
+  supabase: any,
+  key: string,
+  scope: { merchant_id?: string | null; customer_user_id?: string | null },
+): Promise<any | null> {
+  if (!key || !UUID_V4.test(key)) return null;
+  let q = supabase
+    .from('pay_by_bank_intents')
+    .select('*')
+    .contains('metadata', { idempotency_key: key })
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (scope.merchant_id) q = q.eq('merchant_id', scope.merchant_id);
+  if (scope.customer_user_id) q = q.eq('customer_user_id', scope.customer_user_id);
+  const { data } = await q;
+  return data?.[0] || null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,8 +97,18 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    const idempotencyKey = req.headers.get('Idempotency-Key') || req.headers.get('idempotency-key') || '';
+    if (idempotencyKey && !UUID_V4.test(idempotencyKey)) {
+      return new Response(JSON.stringify(buildErrorBody({
+        error: 'idempotency_key_invalid',
+        code: 'IDEMPOTENCY_KEY_INVALID',
+        message: 'Idempotency-Key must be a UUID v4.',
+      })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { action } = body;
+
 
     // ─── preflight_rails ──────────────────────────────────────
     // Returns which Pay-by-Bank rails are available for a given bank +
@@ -161,11 +253,41 @@ Deno.serve(async (req) => {
       const target_type: 'merchant' | 'consumer_wallet' =
         rawTargetType === 'consumer_wallet' ? 'consumer_wallet' : 'merchant';
 
-      if (!amount || !redirect_uri || !state) {
-        return new Response(JSON.stringify({ error: 'Missing required fields: amount, redirect_uri, state' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      // ─── Idempotency replay (E2E) ───────────────────────────
+      // If the same Idempotency-Key was already used to create an intent
+      // (e.g. double-click, retry storm), return the existing intent
+      // verbatim instead of creating a second one.
+      if (idempotencyKey) {
+        const existing = await lookupIntentByIdempotencyKey(supabase, idempotencyKey, {
+          merchant_id: merchant_id || null,
         });
+        if (existing) {
+          const meta = (existing.metadata || {}) as any;
+          return new Response(JSON.stringify({
+            intent_id: existing.id,
+            consent_id: existing.consent_id,
+            authorization_url: existing.authorization_url,
+            expires_at: existing.expires_at,
+            status: existing.status,
+            target_type: existing.target_type,
+            rail: meta.rail || null,
+            rail_descriptor: meta.rail_descriptor || null,
+            idempotent_replay: true,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replay': 'true' },
+          });
+        }
       }
+
+      if (!amount || !redirect_uri || !state) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields',
+          code: 'MISSING_FIELDS',
+          message: 'Missing required fields: amount, redirect_uri, state',
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
 
       let merchant: { id: string; business_name: string | null; logo_url: string | null } | null = null;
       let resolvedTargetAccountId: string | null = null;
@@ -282,19 +404,29 @@ Deno.serve(async (req) => {
           if (!matched) {
             const ccy = String(currency || 'XAF').toUpperCase();
             const hostedFallback = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
-            return new Response(JSON.stringify({
+            const railAvailable = [
+              { rail: 'kob_pisp', supported: false, reason: 'bank_not_linked' },
+              { rail: 'flutterwave_hosted', supported: hostedFallback, reason: hostedFallback ? undefined : 'currency_unsupported' },
+              { rail: 'flutterwave_bank_transfer', supported: ccy === 'NGN', reason: ccy === 'NGN' ? undefined : 'currency_unsupported' },
+            ];
+            return new Response(JSON.stringify(buildErrorBody({
               error: 'bank_not_linked',
-              action: 'link_account',
+              code: 'BANK_NOT_LINKED',
               message: `You don't have a verified account at ${source_bank.name}. Link your bank account first to authorise a Pay-by-Bank payment.`,
-              fallback: hostedFallback ? {
-                rail: 'flutterwave_hosted',
-                provider: 'flutterwave',
-                label: 'Continue via secure hosted checkout (card or Mobile Money)',
-                payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
-                retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
-              } : null,
-            }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              rail_available: railAvailable,
+              extra: {
+                action: 'link_account',
+                fallback: hostedFallback ? {
+                  rail: 'flutterwave_hosted',
+                  provider: 'flutterwave',
+                  label: 'Continue via secure hosted checkout (card or Mobile Money)',
+                  payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+                  retry_with: { source_bank: { ...source_bank, network: 'flutterwave' } },
+                } : null,
+              },
+            })), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
+
 
 
           linkedAccountId = matched.id;
@@ -351,9 +483,14 @@ Deno.serve(async (req) => {
           description,
           expires_at: expiresAt,
           customer_email,
-          metadata: source_bank
-            ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 }
-            : {},
+          metadata: {
+            ...(source_bank ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 } : {}),
+            ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
+            timeline: [
+              { status: 'created', at: new Date().toISOString(), source: 'create_intent' },
+              { status: 'awaiting_webhook', at: new Date().toISOString(), source: 'create_intent' },
+            ],
+          },
 
         })
         .select('id')
@@ -362,6 +499,7 @@ Deno.serve(async (req) => {
       if (intentErr || !intent) {
         return safeErrorResponse(intentErr, corsHeaders, 'create_intent');
       }
+
 
       // Branch authorisation URL by rail:
       //   - KOB: internal authorize page (acts as PISP authorize endpoint;
@@ -523,7 +661,9 @@ Deno.serve(async (req) => {
           ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
           : { rail: null, provider: null, requires_linked_account: false };
 
-      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor }), {
+      const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
+      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor, timeline }), {
+
 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -1024,6 +1164,13 @@ Deno.serve(async (req) => {
         }
       }
 
+      await appendTimeline(supabase, intent_id, {
+        status: mappedStatus === 'completed' ? 'confirmed' : 'failed',
+        at: new Date().toISOString(),
+        source: 'callback',
+        detail: provider_reference ? `provider_reference=${provider_reference}` : undefined,
+      });
+
       const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
       await supabase.rpc('trigger_webhooks', {
         _event_type: eventType,
@@ -1032,6 +1179,7 @@ Deno.serve(async (req) => {
           currency: existing.currency, status: mappedStatus, provider_reference,
         }),
       });
+
 
       return new Response(JSON.stringify({ status: mappedStatus }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1137,6 +1285,11 @@ Deno.serve(async (req) => {
       }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
 
       await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+      await appendTimeline(supabase, intent_id, {
+        status: 'confirmed', at: new Date().toISOString(),
+        source: 'verify_external', detail: `flw_tx_ref=${txRef}`,
+      });
+
 
       await supabase.from('app_notifications').insert({
         user_id, type: 'success',
