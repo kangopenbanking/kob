@@ -1580,7 +1580,10 @@ function App() {
               <Route path="marketplace" element={<CustomerMarketplace />} />
               <Route path="reviews" element={<CustomerReviews />} />
               <Route path="wishlist" element={<CustomerWishlist />} />
+              <Route path="notifications" element={<CustomerNotifications />} />
+              <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
+
 
             {/* Business App PWA Routes */}
             <Route path="/biz" element={<BusinessSplash />} />
