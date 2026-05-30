@@ -416,13 +416,80 @@ export default function CustomerBudget() {
             <NjangiWidget />
 
             {/* Categories */}
-            <section>
-              <SectionHeader
-                title="Categories"
-                rightSlot={
-                  (summary?.categories?.length ?? 0) > 5 ? (
+            <section data-testid="categories-section">
+              <div
+                className="sticky top-0 z-10 -mx-5 mb-3 flex items-center justify-between gap-2 px-5 py-2 backdrop-blur"
+                style={{
+                  background:
+                    theme === "light"
+                      ? "rgba(255,255,255,0.78)"
+                      : "rgba(10,15,25,0.72)",
+                  borderBottom: "1px solid var(--bud-border-soft)",
+                }}
+              >
+                <h2
+                  className="text-[15px] font-semibold tracking-tight"
+                  style={{
+                    fontFamily: "Sora, Inter, sans-serif",
+                    letterSpacing: "-0.01em",
+                    color: "var(--bud-text)",
+                  }}
+                >
+                  Categories
+                </h2>
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        data-testid="categories-filter"
+                        aria-label="Filter categories"
+                        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors"
+                        style={{
+                          borderColor: "var(--bud-border)",
+                          background: "var(--bud-surface-2)",
+                          color: "var(--bud-text-2)",
+                        }}
+                      >
+                        <Filter className="h-3 w-3" strokeWidth={2} />
+                        {catFilter === "all"
+                          ? "All"
+                          : catFilter === "over"
+                          ? "Over budget"
+                          : catFilter === "near"
+                          ? "Near limit"
+                          : "On track"}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="min-w-[180px] animate-in fade-in-0 zoom-in-95 duration-150"
+                    >
+                      <DropdownMenuLabel>Filter</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {([
+                        { id: "all", label: "All categories" },
+                        { id: "over", label: "Over budget" },
+                        { id: "near", label: "Near limit (80%+)" },
+                        { id: "ok", label: "On track (<60%)" },
+                      ] as { id: CatFilter; label: string }[]).map((o) => (
+                        <DropdownMenuItem
+                          key={o.id}
+                          onSelect={() => setCatFilter(o.id)}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span>{o.label}</span>
+                          {catFilter === o.id && (
+                            <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {(summary?.categories?.length ?? 0) > 4 && (
                     <button
+                      data-testid="categories-toggle"
                       onClick={() => setShowAllCats((v) => !v)}
+                      aria-expanded={showAllCats}
                       className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors"
                       style={{
                         borderColor: "var(--bud-border)",
@@ -430,41 +497,47 @@ export default function CustomerBudget() {
                         color: "var(--bud-text-2)",
                       }}
                     >
-                      {showAllCats ? "Show less" : `View all ${summary?.categories?.length ?? 0}`}
+                      {showAllCats ? "Show less" : "View all"}
                       <ChevronRight
-                        className="h-3 w-3 transition-transform"
+                        className="h-3 w-3 transition-transform duration-200"
                         strokeWidth={2}
                         style={{ transform: showAllCats ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
                     </button>
-                  ) : (
-                    <span className="text-[11px]" style={{ color: "var(--bud-text-3)" }}>
-                      {summary?.categories?.length ?? 0} total
-                    </span>
-                  )
-                }
-              />
-              <div className="grid grid-cols-2 gap-3">
+                  )}
+                </div>
+              </div>
+              <div
+                className="grid grid-cols-2 gap-3 transition-all duration-300"
+                data-testid="categories-grid"
+              >
                 {(summary?.categories ?? [])
+                  .filter((c) => {
+                    const p = Math.round(c.percentage_used ?? 0);
+                    if (catFilter === "over") return p >= 100;
+                    if (catFilter === "near") return p >= 80 && p < 100;
+                    if (catFilter === "ok") return p < 60;
+                    return true;
+                  })
                   .slice(0, showAllCats ? undefined : 4)
                   .map((c) => {
                     const meta = getCategory(c.id);
                     const cpct = Math.min(100, Math.round(c.percentage_used ?? 0));
                     const tone =
                       cpct >= 100
-                        ? "#F87171"
+                        ? "#DC2626"
                         : cpct >= 80
-                        ? "#FBBF24"
+                        ? "#D97706"
                         : cpct >= 60
-                        ? "#60A5FA"
-                        : "#10D9A0";
+                        ? "#2563EB"
+                        : "#059669";
                     return (
                       <button
                         key={c.id}
                         onClick={() =>
                           setEditCat({ id: c.id, name: c.name, limit: c.limit, colour: meta.colour })
                         }
-                        className="group relative flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.98]"
+                        className="group relative flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all duration-200 active:scale-[0.98] hover:-translate-y-0.5"
                         style={{
                           background: "var(--bud-surface)",
                           borderColor: "var(--bud-border)",
