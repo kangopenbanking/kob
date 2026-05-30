@@ -113,6 +113,7 @@ export default function AdminPayByBankInspector() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
+        icon={Landmark}
         title="Pay-by-Bank Inspector"
         description="Inspect payment intents, idempotency-key usage, and webhook retry / replay history across the KOB PISP and Flutterwave rails."
       />
