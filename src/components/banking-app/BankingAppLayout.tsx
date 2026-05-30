@@ -41,6 +41,7 @@ const BankingAppInner: React.FC = () => {
     >
       <HealthBanner />
       <ScreenshotGuard />
+      <KYCStatusBanner verifyHref={`${basePath}/kyc`} />
       <OfflineIndicator />
       <TranslationHarvester category="banking" />
       <div className="absolute right-3 top-3 z-40">
