@@ -61,6 +61,7 @@ import {
 import { getCategory, localiseCategoryName } from "@/lib/budget/budgetCategories";
 import { formatXAF } from "@/lib/budget/formatXAF";
 import type { BudgetLang } from "@/types/budget";
+import { trackBudgetEvent } from "@/lib/analytics/budgetAnalytics";
 
 import { useBudgetTheme, type BudgetTheme } from "@/lib/budget/theme";
 
@@ -332,7 +333,12 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#059669" : "#34D399"}
                   bg={theme === "light" ? "rgba(5,150,105,0.10)" : "rgba(52,211,153,0.14)"}
                   ariaLabel={`Remaining: ${formatXAF(summary?.total_remaining ?? 0)}, ${leftPct}% of budget`}
-                  onClick={() => setStatSheet("left")}
+                  onClick={() => {
+                    const payload = { stat: "left" as const, percent: leftPct, value: summary?.total_remaining ?? 0 };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
+                    setStatSheet("left");
+                  }}
                 />
                 <MiniDonutStat
                   testId="mini-donut-daily"
@@ -342,7 +348,12 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#0284C7" : "#38BDF8"}
                   bg={theme === "light" ? "rgba(2,132,199,0.10)" : "rgba(56,189,248,0.14)"}
                   ariaLabel={`Daily allowance: ${formatXAF(dailyAllowance)}, ${dailyPct}% of original daily target`}
-                  onClick={() => setStatSheet("daily")}
+                  onClick={() => {
+                    const payload = { stat: "daily" as const, percent: dailyPct, value: dailyAllowance };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
+                    setStatSheet("daily");
+                  }}
                 />
                 <MiniDonutStat
                   testId="mini-donut-days"
@@ -353,7 +364,12 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#7C3AED" : "#A78BFA"}
                   bg={theme === "light" ? "rgba(124,58,237,0.10)" : "rgba(167,139,250,0.16)"}
                   ariaLabel={`${daysLeft} of ${totalDays} days remaining`}
-                  onClick={() => setStatSheet("days")}
+                  onClick={() => {
+                    const payload = { stat: "days" as const, percent: daysLeftPct, value: daysLeft };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
+                    setStatSheet("days");
+                  }}
                 />
               </div>
             </section>
@@ -732,12 +748,23 @@ export default function CustomerBudget() {
         category={editCat}
       />
 
-      {/* Mini-donut detail bottom sheet */}
-      <Sheet open={!!statSheet} onOpenChange={(v) => !v && setStatSheet(null)}>
+      {/* Mini-donut detail bottom sheet — Radix Dialog provides focus trap, Escape-to-close, role="dialog" and aria-modal automatically. */}
+      <Sheet
+        open={!!statSheet}
+        onOpenChange={(v) => {
+          if (!v) {
+            trackBudgetEvent("budget.stat_sheet.close", { stat: statSheet ?? undefined });
+            setStatSheet(null);
+          }
+        }}
+      >
         <SheetContent
           side="bottom"
-          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5"
+          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5 focus:outline-none"
           data-testid="stat-sheet"
+          aria-modal="true"
+          aria-labelledby="stat-sheet-title"
+          aria-describedby="stat-sheet-desc"
         >
           {statSheet && summary && (() => {
             const config = {
@@ -781,10 +808,10 @@ export default function CustomerBudget() {
             return (
               <>
                 <SheetHeader className="text-left">
-                  <SheetTitle style={{ fontFamily: "Sora, Inter, sans-serif" }}>
+                  <SheetTitle id="stat-sheet-title" style={{ fontFamily: "Sora, Inter, sans-serif" }}>
                     {config.title}
                   </SheetTitle>
-                  <SheetDescription>{config.description}</SheetDescription>
+                  <SheetDescription id="stat-sheet-desc">{config.description}</SheetDescription>
                 </SheetHeader>
                 <div className="mt-5 flex items-center gap-4">
                   <DonutRing
