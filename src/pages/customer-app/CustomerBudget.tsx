@@ -61,6 +61,7 @@ import {
 import { getCategory, localiseCategoryName } from "@/lib/budget/budgetCategories";
 import { formatXAF } from "@/lib/budget/formatXAF";
 import type { BudgetLang } from "@/types/budget";
+import { trackBudgetEvent } from "@/lib/analytics/budgetAnalytics";
 
 import { useBudgetTheme, type BudgetTheme } from "@/lib/budget/theme";
 
