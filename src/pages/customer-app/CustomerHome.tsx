@@ -141,6 +141,25 @@ const CustomerHome: React.FC = () => {
   const spending = summary?.spending ?? 0;
   const animatedBalance = useAnimatedCounter(totalBalance);
 
+  // Auto re-mask the balance after 8 s of being visible.
+  React.useEffect(() => {
+    if (!balanceVisible) return;
+    const id = window.setTimeout(() => setBalanceVisible(false), 8000);
+    return () => window.clearTimeout(id);
+  }, [balanceVisible]);
+
+  // Always re-mask when the tab loses focus or visibility.
+  React.useEffect(() => {
+    const onVis = () => { if (document.visibilityState !== 'visible') setBalanceVisible(false); };
+    window.addEventListener('blur', () => setBalanceVisible(false));
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('blur', () => setBalanceVisible(false));
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
+
   const go = (path: string) => navigate(`/app/${path}`);
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
 
