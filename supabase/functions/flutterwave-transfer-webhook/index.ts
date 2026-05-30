@@ -290,28 +290,31 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Webhook processed successfully' 
+      message: 'Webhook processed successfully',
+      trace_id: traceId,
     }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId },
     });
 
   } catch (error: any) {
     // Log full details server-side for debugging
-    console.error('[FLUTTERWAVE-WEBHOOK] Error:', {
+    console.error(`[FLUTTERWAVE-WEBHOOK][trace=${traceId}] Error:`, {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       webhook_type: 'flutterwave_transfer',
       timestamp: new Date().toISOString()
     });
-    
-    // Return generic error to external webhook caller
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       received: false,
-      message: 'Processing error occurred'
+      error: 'processing_error',
+      code: 'PROCESSING_ERROR',
+      message: 'Processing error occurred',
+      trace_id: traceId,
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId },
     });
   }
 });
