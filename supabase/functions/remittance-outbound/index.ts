@@ -374,7 +374,7 @@ async function sendRemittance(supabase: any, user: any, body: any, req?: Request
     });
   }
 
-  return json({
+  const responseBody = {
     remittance_id: remittance.id,
     partner_reference: partnerRef,
     status: amount < 100000 ? "pending" : "created",
@@ -385,7 +385,14 @@ async function sendRemittance(supabase: any, user: any, body: any, req?: Request
     currency_out: corridor.to_currency,
     fee_total: feeTotal,
     fx_rate: fxRate,
+  };
+  if (commitIdem) await commitIdem(200, responseBody);
+  await recordRemittanceAudit({
+    endpoint: 'remittance-outbound', action: 'send', decision: 'allowed',
+    userId: user.id, remittanceId: remittance.id, req,
+    metadata: { amount, currency_in, delivery_method, partner_reference: partnerRef },
   });
+  return json(responseBody);
 }
 
 // ─── Cancel outbound remittance ──────────────────────────────
