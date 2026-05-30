@@ -1,10 +1,25 @@
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, ShieldCheck, FileText, Download } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, ShieldCheck, FileText, Download, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
 import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
+
+interface SigningMeta {
+  algorithm?: string;
+  publicKeyFingerprint?: string;
+  publicKeyFingerprintSha256Hex?: string;
+  publicKeyUrl?: string;
+  next?: {
+    publicKeyFingerprint?: string;
+    publicKeyUrl?: string;
+    status?: string;
+  } | null;
+}
+
 
 const OpenApiDownloads = () => {
   return (
