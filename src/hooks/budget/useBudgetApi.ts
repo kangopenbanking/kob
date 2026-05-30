@@ -26,7 +26,11 @@ import type {
 } from "@/types/budget";
 
 const FN = "budgeting-ops";
-const READ_TIMEOUT_MS = 12_000;
+// Keep this short — the UI is blocked behind useBudget().isLoading until the
+// primary read resolves. A long timeout makes the /app/budget page feel hung
+// on cold edge-function starts. safeRead() returns a safe empty payload on
+// timeout so the EmptyState renders instead of an infinite spinner.
+const READ_TIMEOUT_MS = 4_500;
 
 async function callFn<T>(path: string, init: RequestInit = {}): Promise<T> {
   const invoke = supabase.functions.invoke(`${FN}${path}`, {
