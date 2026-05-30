@@ -97,11 +97,12 @@ function genTraceId(): string {
 
 // Verify inbound KOB-rail callback signature. Connectors post:
 //   X-KOB-Signature: <hex HMAC-SHA256(rawBody, KOB_INBOUND_WEBHOOK_SECRET)>
-// If the shared secret is configured we enforce it. With no secret we
-// degrade gracefully (back-compat) and emit a warning in logs.
+// The shared secret is REQUIRED. If KOB_INBOUND_WEBHOOK_SECRET is not
+// configured we fail CLOSED (reject all callbacks) so a misconfigured
+// deployment cannot accept unauthenticated state transitions.
 async function verifyKobCallbackSignature(req: Request, rawBody: string): Promise<{ ok: boolean; reason?: string }> {
   const secret = Deno.env.get('KOB_INBOUND_WEBHOOK_SECRET') || '';
-  if (!secret) return { ok: true, reason: 'no_secret_configured' };
+  if (!secret) return { ok: false, reason: 'webhook_secret_not_configured' };
   const provided = (req.headers.get('x-kob-signature') || '').toLowerCase().replace(/^sha256=/, '');
   if (!provided) return { ok: false, reason: 'missing_signature_header' };
   const enc = new TextEncoder();
@@ -113,6 +114,45 @@ async function verifyKobCallbackSignature(req: Request, rawBody: string): Promis
   let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
   return diff === 0 ? { ok: true } : { ok: false, reason: 'signature_mismatch' };
 }
+
+// Resolve the authenticated admin caller for inspector/replay actions.
+// Returns the user id when the JWT belongs to an `admin` role member;
+// otherwise returns an error reason to fail closed.
+async function resolveAdminCaller(req: Request, supabase: any): Promise<{ ok: true; userId: string } | { ok: false; reason: string; status: number }> {
+  const authz = req.headers.get('authorization') || req.headers.get('Authorization') || '';
+  const token = authz.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return { ok: false, reason: 'missing_bearer_token', status: 401 };
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return { ok: false, reason: 'invalid_token', status: 401 };
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+  if (!isAdmin) return { ok: false, reason: 'not_admin', status: 403 };
+  return { ok: true, userId: user.id };
+}
+
+async function recordAdminAudit(supabase: any, params: {
+  userId: string;
+  action: string;
+  entityId: string;
+  traceId: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}) {
+  try {
+    await supabase.from('audit_logs').insert({
+      action_type: params.action,
+      entity_type: 'pay_by_bank_intent',
+      entity_id: params.entityId,
+      performed_by: params.userId,
+      details: { trace_id: params.traceId, ...(params.details || {}) },
+      ip_address: params.ipAddress || null,
+      user_agent: params.userAgent || null,
+    });
+  } catch (e) {
+    console.warn('[pay-by-bank] audit insert failed', e);
+  }
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -666,14 +706,31 @@ Deno.serve(async (req) => {
     // event metadata for a given intent_id, plus webhook_inbox retry/
     // replay records that referenced this intent. Integrators poll this
     // to render a status tracker without depending on redirects.
-    if (action === 'get_timeline') {
-      const { intent_id } = body;
+    if (action === 'get_timeline' || action === 'admin_get_timeline' || action === 'admin_replay_webhook') {
+      const { intent_id, reason: replayReason } = body;
+      const isAdminAction = action === 'admin_get_timeline' || action === 'admin_replay_webhook' || body.admin === true;
+      let adminUserId: string | null = null;
+      if (isAdminAction) {
+        const caller = await resolveAdminCaller(req, supabase);
+        if (!caller.ok) {
+          return new Response(JSON.stringify(buildErrorBody({
+            error: 'forbidden',
+            code: caller.reason === 'not_admin' ? 'NOT_AUTHORIZED' : 'UNAUTHENTICATED',
+            message: caller.reason === 'not_admin'
+              ? 'Admin role required to access the Pay-by-Bank inspector.'
+              : 'A valid admin bearer token is required.',
+            extra: { trace_id: traceId, reason: caller.reason },
+          })), { status: caller.status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+        }
+        adminUserId = caller.userId;
+      }
       if (!intent_id) {
         return new Response(JSON.stringify(buildErrorBody({
           error: 'missing_fields', code: 'MISSING_FIELDS',
           message: 'intent_id is required.', extra: { trace_id: traceId },
         })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
+
       const { data: intent } = await supabase
         .from('pay_by_bank_intents')
         .select('id, status, amount, currency, created_at, updated_at, expires_at, failure_reason, metadata, target_type, customer_user_id, merchant_id')
@@ -713,6 +770,25 @@ Deno.serve(async (req) => {
       const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
       const lastWebhookEvent = inboxRows[0] || null;
 
+      if (isAdminAction && adminUserId) {
+        const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || null;
+        const ua = req.headers.get('user-agent') || null;
+        await recordAdminAudit(supabase, {
+          userId: adminUserId,
+          action: action === 'admin_replay_webhook' ? 'pay_by_bank.admin_replay' : 'pay_by_bank.admin_view',
+          entityId: intent.id,
+          traceId,
+          details: {
+            rail: meta.rail || null,
+            status: intent.status,
+            intent_trace_id: meta.trace_id || null,
+            reason: replayReason || null,
+          },
+          ipAddress: ip,
+          userAgent: ua,
+        });
+      }
+
       return new Response(JSON.stringify({
         intent_id: intent.id,
         status: intent.status,
@@ -727,8 +803,10 @@ Deno.serve(async (req) => {
         webhook_history: inboxRows,
         kob_callback_at: meta.kob_callback_at || null,
         flutterwave_webhook_at: meta.flw_webhook_at || null,
+        audited: isAdminAction,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
+
 
 
 
@@ -1204,19 +1282,26 @@ Deno.serve(async (req) => {
 
     // ─── callback (internal — bank connector confirms) ────────
     if (action === 'callback') {
-      // Verify HMAC signature when KOB_INBOUND_WEBHOOK_SECRET is set.
+      // Verify HMAC signature — KOB_INBOUND_WEBHOOK_SECRET is REQUIRED.
       const sigCheck = await verifyKobCallbackSignature(req, bodyText);
       if (!sigCheck.ok) {
         console.warn(`[pay-by-bank][callback][trace=${traceId}] signature rejected: ${sigCheck.reason}`);
+        const isMisconfig = sigCheck.reason === 'webhook_secret_not_configured';
+        const code = isMisconfig
+          ? 'WEBHOOK_SECRET_NOT_CONFIGURED'
+          : (sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID');
+        const status = isMisconfig ? 500 : 401;
+        const message = isMisconfig
+          ? 'Receiver is not configured to verify KOB callbacks (KOB_INBOUND_WEBHOOK_SECRET is missing).'
+          : (sigCheck.reason === 'missing_signature_header'
+              ? 'Missing X-KOB-Signature header on callback request.'
+              : 'Callback HMAC signature did not match the expected value.');
         return new Response(JSON.stringify(buildErrorBody({
-          error: 'invalid_signature',
-          code: sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID',
-          message: sigCheck.reason === 'missing_signature_header'
-            ? 'Missing X-KOB-Signature header on callback request.'
-            : 'Callback HMAC signature did not match the expected value.',
+          error: 'invalid_signature', code, message,
           extra: { trace_id: traceId, reason: sigCheck.reason },
-        })), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+        })), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
+
       const { intent_id, final_status, provider_reference } = body;
       if (!intent_id || !final_status) {
         return new Response(JSON.stringify(buildErrorBody({

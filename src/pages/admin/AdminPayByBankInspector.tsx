@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, RefreshCw, Search, ShieldCheck, AlertTriangle, Landmark } from "lucide-react";
+import { Loader2, RefreshCw, Search, ShieldCheck, AlertTriangle, Landmark, Download, FileJson, ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
+
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type Intent = {
@@ -46,6 +48,8 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 export default function AdminPayByBankInspector() {
+  const [authChecking, setAuthChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [intents, setIntents] = useState<Intent[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -54,6 +58,16 @@ export default function AdminPayByBankInspector() {
   const [selected, setSelected] = useState<Intent | null>(null);
   const [timeline, setTimeline] = useState<any | null>(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setAuthChecking(false); setIsAdmin(false); return; }
+      const { data: ok } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any });
+      setIsAdmin(!!ok);
+      setAuthChecking(false);
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -66,7 +80,8 @@ export default function AdminPayByBankInspector() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+
 
   const filtered = useMemo(() => {
     return intents.filter((i) => {
@@ -101,14 +116,71 @@ export default function AdminPayByBankInspector() {
     setTimeline(null);
     setTimelineLoading(true);
     try {
-      const { data } = await supabase.functions.invoke("pay-by-bank", {
-        body: { action: "get_timeline", intent_id: i.id },
+      const { data, error } = await supabase.functions.invoke("pay-by-bank", {
+        body: { action: "admin_get_timeline", intent_id: i.id },
       });
+      if (error) throw error;
       setTimeline(data);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load timeline");
     } finally {
       setTimelineLoading(false);
     }
   };
+
+  const downloadBlob = (filename: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportTimelineJSON = () => {
+    if (!selected || !timeline) return;
+    const payload = {
+      exported_at: new Date().toISOString(),
+      intent: selected,
+      timeline: timeline.timeline || [],
+      webhook_history: timeline.webhook_history || [],
+      trace_id: timeline.trace_id,
+      idempotency_key: timeline.idempotency_key,
+    };
+    downloadBlob(`pbb-intent-${selected.id.slice(0, 8)}-${Date.now()}.json`, JSON.stringify(payload, null, 2), "application/json");
+    toast.success("Compliance export downloaded");
+  };
+
+  const exportTimelineCSV = () => {
+    if (!selected || !timeline) return;
+    const rows: string[] = [];
+    const esc = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    rows.push("section,timestamp,status_or_event,source,detail,attempts,processed,trace_id");
+    for (const e of timeline.timeline || []) {
+      rows.push(["timeline", esc(e.at), esc(e.status), esc(e.source || ""), esc(e.detail || ""), "", "", esc(timeline.trace_id || "")].join(","));
+    }
+    for (const w of timeline.webhook_history || []) {
+      rows.push(["webhook", esc(w.created_at), esc(w.event_type || w.event_id), esc(w.source), esc(w.processing_error || ""), esc(`${w.attempt_count ?? 0}/${w.max_attempts ?? ""}`), esc(w.is_processed ? "yes" : "no"), esc(timeline.trace_id || "")].join(","));
+    }
+    downloadBlob(`pbb-intent-${selected.id.slice(0, 8)}-${Date.now()}.csv`, rows.join("\n"), "text/csv");
+    toast.success("Compliance CSV downloaded");
+  };
+
+  if (authChecking) {
+    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader icon={ShieldAlert} title="Access denied" description="Admin role required to inspect Pay-by-Bank intents." />
+        <Card><CardContent className="py-8 text-center text-muted-foreground">You do not have permission to view this page.</CardContent></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -117,6 +189,7 @@ export default function AdminPayByBankInspector() {
         title="Pay-by-Bank Inspector"
         description="Inspect payment intents, idempotency-key usage, and webhook retry / replay history across the KOB PISP and Flutterwave rails."
       />
+
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardDescription>Total intents (last 200)</CardDescription><CardTitle>{idempotencyStats.total}</CardTitle></CardHeader></Card>
@@ -202,14 +275,27 @@ export default function AdminPayByBankInspector() {
       {selected && (
         <Card>
           <CardHeader>
-            <CardTitle>Intent {selected.id}</CardTitle>
-            <CardDescription>
-              Trace id: <span className="font-mono">{selected.metadata?.trace_id || "—"}</span>
-              {selected.metadata?.idempotency_key && (
-                <> · Idempotency key: <span className="font-mono">{selected.metadata.idempotency_key}</span></>
-              )}
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div>
+                <CardTitle>Intent {selected.id}</CardTitle>
+                <CardDescription>
+                  Trace id: <span className="font-mono">{selected.metadata?.trace_id || "—"}</span>
+                  {selected.metadata?.idempotency_key && (
+                    <> · Idempotency key: <span className="font-mono">{selected.metadata.idempotency_key}</span></>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={exportTimelineCSV} disabled={!timeline || timelineLoading} aria-label="Export timeline as CSV">
+                  <Download className="h-4 w-4 mr-2" />CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportTimelineJSON} disabled={!timeline || timelineLoading} aria-label="Export timeline as JSON">
+                  <FileJson className="h-4 w-4 mr-2" />JSON
+                </Button>
+              </div>
+            </div>
           </CardHeader>
+
           <CardContent>
             <Tabs defaultValue="timeline">
               <TabsList>
