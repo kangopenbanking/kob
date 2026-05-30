@@ -220,6 +220,12 @@ Deno.serve(async (req) => {
       status: 'suppressed',
     })
 
+    await supabase.rpc('log_notification_event', {
+      _channel: 'email', _status: 'suppressed', _provider: 'lovable_email',
+      _template_name: templateName, _message_id: messageId, _recipient_hash: recipientHash,
+    }).then(() => {}, () => {})
+
+
     console.log('Email suppressed', { effectiveRecipient, templateName })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
