@@ -78,6 +78,29 @@ export default function EmailTestSuite() {
   );
   const [sending, setSending] = useState<string | null>(null);
   const [results, setResults] = useState<SendResult[]>([]);
+  const [validating, setValidating] = useState(false);
+  const [validation, setValidation] = useState<{ summary: ValidationSummary; results: ValidationResult[] } | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  async function runValidation() {
+    setValidating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-validate-email-templates", {
+        body: {},
+      });
+      if (error) throw error;
+      setValidation({ summary: data.summary, results: data.results });
+      if (data.summary.failed === 0) {
+        toast.success(`All ${data.summary.total} templates passed validation`);
+      } else {
+        toast.error(`${data.summary.failed}/${data.summary.total} templates have errors`);
+      }
+    } catch (err) {
+      toast.error(await extractEdgeFunctionError(err));
+    } finally {
+      setValidating(false);
+    }
+  }
 
   const grouped = useMemo(() => {
     const map = new Map<string, EmailTemplateSpec[]>();
