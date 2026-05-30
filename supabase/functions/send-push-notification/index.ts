@@ -178,6 +178,19 @@ serve(async (req) => {
       });
     } catch { /* table optional */ }
 
+    try {
+      await supabase.rpc("log_notification_event", {
+        _channel: "push",
+        _status: resp.ok ? "sent" : "failed",
+        _provider: "onesignal",
+        _template_name: typeof payload?.scenario === "string" ? payload.scenario : null,
+        _message_id: respBody?.id ?? null,
+        _latency_ms: elapsedMs,
+        _error_code: resp.ok ? null : String(resp.status),
+        _error_message: resp.ok ? null : JSON.stringify(respBody?.errors ?? respBody).slice(0, 500),
+      });
+    } catch { /* logging best-effort */ }
+
     if (!resp.ok) {
       return json({ error: "OneSignal API error", details: respBody, status: resp.status }, 502);
     }
