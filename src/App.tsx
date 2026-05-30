@@ -575,6 +575,7 @@ const AdminKybReviewQueue = lazy(() => import("./pages/admin/AdminKybReviewQueue
 const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeliveries"));
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
+const EmailTestSuite = lazy(() => import("./pages/admin/EmailTestSuite"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
@@ -1050,6 +1051,7 @@ function App() {
               <Route path="bank-onboarding" element={<AdminBankOnboarding />} />
               <Route path="bank-operations" element={<BankOperationsMonitor />} />
               <Route path="notification-history" element={<NotificationHistory />} />
+              <Route path="email-test-suite" element={<EmailTestSuite />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
