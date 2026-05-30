@@ -3,6 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createFlutterwavePayout, createPayPalPayout } from "../_shared/gateway-adapters.ts";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
+import { withRemittanceIdempotency } from "../_shared/remittance-idempotency.ts";
+import { recordRemittanceAudit } from "../_shared/remittance-audit.ts";
 
 /**
  * remittance-fulfill — Payout execution engine.
@@ -16,7 +18,14 @@ serve(async (req) => {
 
   // P0 AUTH GATE — internal-only: require service-role/cron secret.
   const cronAuth = verifyCronAuth(req);
-  if (!cronAuth.authorized) return cronAuth.response!;
+  if (!cronAuth.authorized) {
+    await recordRemittanceAudit({
+      endpoint: 'remittance-fulfill',
+      decision: 'denied_unauthenticated',
+      req,
+    });
+    return cronAuth.response!;
+  }
 
   try {
     const supabase = createClient(
@@ -24,8 +33,27 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { remittance_id } = await req.json();
+    const body = await req.json();
+    const { remittance_id } = body;
     if (!remittance_id) return json({ error: "remittance_id required" }, 400);
+
+    // Idempotency gate — prevents duplicate payouts on retry storms.
+    const idem = await withRemittanceIdempotency({
+      resource: 'remittance.fulfill',
+      defaultKey: remittance_id,
+      headerKey: req.headers.get('Idempotency-Key'),
+      payload: body,
+      corsHeaders,
+    });
+    if (!idem.proceed) {
+      await recordRemittanceAudit({
+        endpoint: 'remittance-fulfill',
+        decision: 'denied_idempotency',
+        remittanceId: remittance_id,
+        req,
+      });
+      return idem.response;
+    }
 
     // Fetch remittance
     const { data: rem, error: rErr } = await supabase
