@@ -6,7 +6,12 @@
  * smoke-send any template without touching live triggers.
  */
 
-export type NotificationVariable = { key: string; sample: string; description?: string };
+export type NotificationVariable = {
+  key: string;
+  sample: string;
+  description?: string;
+  required?: boolean;
+};
 
 export type NotificationAction = { label_en: string; label_fr: string; url: string };
 
@@ -54,9 +59,9 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "{{senderName}} sent you {{amount}} {{currency}}. New balance: {{balance}} {{currency}}.",
     message_fr: "{{senderName}} vous a envoyé {{amount}} {{currency}}. Nouveau solde : {{balance}} {{currency}}.",
     variables: [
-      { key: "amount", sample: "25 000" },
-      { key: "currency", sample: "XAF" },
-      { key: "senderName", sample: "Jean Mbarga" },
+      { key: "amount", sample: "25 000" , required: true },
+      { key: "currency", sample: "XAF" , required: true },
+      { key: "senderName", sample: "Jean Mbarga" , required: true },
       { key: "balance", sample: "184 250" },
     ],
     actions: [{ label_en: "View receipt", label_fr: "Voir le reçu", url: "/app/activity/{{txId}}" }],
@@ -74,9 +79,9 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "Your payment of {{amount}} {{currency}} to {{recipient}} was successful.",
     message_fr: "Votre paiement de {{amount}} {{currency}} à {{recipient}} a réussi.",
     variables: [
-      { key: "amount", sample: "5 000" },
-      { key: "currency", sample: "XAF" },
-      { key: "recipient", sample: "ENEO Cameroun" },
+      { key: "amount", sample: "5 000" , required: true },
+      { key: "currency", sample: "XAF" , required: true },
+      { key: "recipient", sample: "ENEO Cameroun" , required: true },
     ],
     triggered_by: "transfer.success",
   },
@@ -143,11 +148,11 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "{{amount}} {{currency}} arrived in {{country}}. Reference: {{ref}}.",
     message_fr: "{{amount}} {{currency}} sont arrivés à {{country}}. Référence : {{ref}}.",
     variables: [
-      { key: "recipient", sample: "Marie Kouassi" },
-      { key: "amount", sample: "200" },
-      { key: "currency", sample: "EUR" },
+      { key: "recipient", sample: "Marie Kouassi" , required: true },
+      { key: "amount", sample: "200" , required: true },
+      { key: "currency", sample: "EUR" , required: true },
       { key: "country", sample: "Côte d'Ivoire" },
-      { key: "ref", sample: "KOB-RMT-44821" },
+      { key: "ref", sample: "KOB-RMT-44821" , required: true },
     ],
     actions: [{ label_en: "View receipt", label_fr: "Voir le reçu", url: "/app/remittance/{{ref}}" }],
     triggered_by: "remittance.settled",
@@ -164,9 +169,9 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "You saved {{target}} {{currency}}. Withdraw or roll into a new goal.",
     message_fr: "Vous avez économisé {{target}} {{currency}}. Retirez ou démarrez un nouvel objectif.",
     variables: [
-      { key: "goalName", sample: "Vacation 2026" },
-      { key: "target", sample: "500 000" },
-      { key: "currency", sample: "XAF" },
+      { key: "goalName", sample: "Vacation 2026" , required: true },
+      { key: "target", sample: "500 000" , required: true },
+      { key: "currency", sample: "XAF" , required: true },
     ],
     triggered_by: "piggybank.goal_completed",
   },
@@ -182,11 +187,11 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "Pay {{amount}} {{currency}} by {{dueDate}} to avoid late fees.",
     message_fr: "Payez {{amount}} {{currency}} avant le {{dueDate}} pour éviter les frais de retard.",
     variables: [
-      { key: "biller", sample: "ENEO" },
+      { key: "biller", sample: "ENEO" , required: true },
       { key: "days", sample: "3" },
-      { key: "amount", sample: "18 400" },
-      { key: "currency", sample: "XAF" },
-      { key: "dueDate", sample: "2026-06-02" },
+      { key: "amount", sample: "18 400" , required: true },
+      { key: "currency", sample: "XAF" , required: true },
+      { key: "dueDate", sample: "2026-06-02" , required: true },
     ],
     actions: [{ label_en: "Pay now", label_fr: "Payer", url: "/app/bills/{{billId}}" }],
     triggered_by: "bills-cron daily scan",
@@ -203,7 +208,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "Your card was frozen at {{time}}. Unfreeze it any time from the Cards screen.",
     message_fr: "Votre carte a été gelée à {{time}}. Dégelez-la depuis l'écran Cartes.",
     variables: [
-      { key: "last4", sample: "4421" },
+      { key: "last4", sample: "4421" , required: true },
       { key: "time", sample: "09:14" },
     ],
     actions: [{ label_en: "Manage card", label_fr: "Gérer", url: "/app/cards" }],
@@ -221,7 +226,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     message_en: "{{body}} Tap to learn more.",
     message_fr: "{{body}} Appuyez pour en savoir plus.",
     variables: [
-      { key: "headline", sample: "Send to Europe with 0 fees this week" },
+      { key: "headline", sample: "Send to Europe with 0 fees this week" , required: true },
       { key: "body", sample: "Limited-time promo on EUR remittances." },
     ],
     actions: [{ label_en: "Learn more", label_fr: "En savoir plus", url: "/app/promo/{{promoId}}" }],
