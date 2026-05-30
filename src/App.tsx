@@ -584,6 +584,7 @@ const FirebaseOTPTestSuite = lazy(() => import("./pages/admin/FirebaseOTPTestSui
 const FirebaseOTPSecurityAudit = lazy(() => import("./pages/admin/FirebaseOTPSecurityAudit"));
 const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDashboard"));
 const NotificationDeliveryTelemetry = lazy(() => import("./pages/admin/NotificationDeliveryTelemetry"));
+const EmailDLQReplay = lazy(() => import("./pages/admin/EmailDLQReplay"));
 const MfaBackupCodes = lazy(() => import("./pages/security/MfaBackupCodes"));
 const SignupNotificationsE2E = lazy(() => import("./pages/admin/SignupNotificationsE2E"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
@@ -1071,6 +1072,7 @@ function App() {
               <Route path="otp-monitoring" element={<OTPMonitoringDashboard />} />
               <Route path="signup-notifications-e2e" element={<SignupNotificationsE2E />} />
               <Route path="notification-telemetry" element={<NotificationDeliveryTelemetry />} />
+              <Route path="email-dlq" element={<EmailDLQReplay />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}

@@ -64,7 +64,25 @@ Deno.serve(async (req) => {
 
   const isAdminTriggered = body?.triggered_by === "admin";
   const targetMessageId = body?.message_id as string | undefined;
-  const triggeredByUser = body?.user_id as string | undefined;
+  const targetMessageIds = Array.isArray(body?.message_ids) ? body.message_ids as string[] : undefined;
+  let triggeredByUser = body?.user_id as string | undefined;
+
+  // Admin auth gate: verify caller actually has the admin role before
+  // trusting triggered_by='admin' (otherwise any authenticated user
+  // could bypass cron eligibility caps).
+  if (isAdminTriggered) {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return json({ error: "Missing Authorization header" }, 401);
+    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !user) return json({ error: "Unauthorized" }, 401);
+    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+    if (!isAdmin) return json({ error: "Forbidden — admin role required" }, 403);
+    triggeredByUser = user.id;
+  }
 
   try {
     // 1. Fetch eligible DLQ rows.
@@ -79,9 +97,12 @@ Deno.serve(async (req) => {
 
     if (targetMessageId) {
       query = query.eq("message_id", targetMessageId);
+    } else if (targetMessageIds && targetMessageIds.length > 0) {
+      query = query.in("message_id", targetMessageIds);
     }
 
-    const { data: dlqRows, error: dlqErr } = await query.limit(isAdminTriggered ? 5 : 50);
+    const adminLimit = targetMessageIds?.length ? Math.min(targetMessageIds.length, 50) : 5;
+    const { data: dlqRows, error: dlqErr } = await query.limit(isAdminTriggered ? adminLimit : 50);
     if (dlqErr) throw dlqErr;
 
     let attempted = 0;
