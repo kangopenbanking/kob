@@ -197,6 +197,54 @@ openssl pkeyutl -verify -pubin -inkey artifact-signing-pubkey.pem \\
           </CardContent>
         </Card>
 
+        <Card id="rotation">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <KeyRound className="h-4 w-4" /> Signing key rotation procedure
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              The portal supports <strong>dual signatures</strong> so integrators
+              can pre-pin the next public key before cutover. During a staged
+              rotation, every artifact ships with both <code>.sig</code> (current
+              key) and <code>.sig.next</code> (next key) — and both fingerprints
+              are exposed above and in <code>/artifacts.json</code>.
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+              <li>
+                <strong>T-14 days</strong>: we publish the staged next key.
+                Update your pipeline to accept <em>either</em> fingerprint.
+              </li>
+              <li>
+                <strong>T-0</strong>: cutover. <code>publicKeyFingerprint</code> in
+                <code> /artifacts.json</code> changes to the staged value;
+                <code> signing.next</code> becomes <code>null</code>.
+              </li>
+              <li>
+                <strong>T+30 days</strong>: the old key is retired.
+              </li>
+            </ol>
+            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# Pin both fingerprints during the rotation window
+EXPECTED_CUR="${signing?.publicKeyFingerprint || 'SHA256:<current>'}"
+EXPECTED_NEXT="${signing?.next?.publicKeyFingerprint || 'SHA256:<next-when-staged>'}"
+
+ACTUAL=$(curl -sS https://kangopenbanking.com/artifacts.json \\
+  | jq -r '.signing.publicKeyFingerprint')
+
+[ "$ACTUAL" = "$EXPECTED_CUR" ] || [ "$ACTUAL" = "$EXPECTED_NEXT" ] \\
+  || { echo "Unknown signing key: $ACTUAL"; exit 1; }`}</code></pre>
+            <p className="text-xs text-muted-foreground">
+              Cutover dates and emergency rotations are announced in the
+              changelog and SDK release notes. CI on this portal verifies every
+              artifact against both keys during the staging window, so a
+              rotation never ships without working dual signatures.
+            </p>
+          </CardContent>
+        </Card>
+
+
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
