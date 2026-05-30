@@ -578,6 +578,7 @@ const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAn
 const EmailTestSuite = lazy(() => import("./pages/admin/EmailTestSuite"));
 const EmailHealthDashboard = lazy(() => import("./pages/admin/EmailHealthDashboard"));
 const OneSignalTestSuite = lazy(() => import("./pages/admin/OneSignalTestSuite"));
+const NotificationTemplateTester = lazy(() => import("./pages/admin/NotificationTemplateTester"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
