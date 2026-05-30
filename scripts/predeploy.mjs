@@ -96,10 +96,17 @@ await run(
 );
 
 await run(
+  'Check Ed25519 signing key (KOB_ARTIFACT_SIGNING_KEY or local key)',
+  'node',
+  ['scripts/check-signing-key.mjs']
+);
+
+await run(
   'Sign download artifacts (Ed25519)',
   'node',
   ['scripts/sign-artifacts.mjs']
 );
+
 
 await run(
   'Build /artifacts.json metadata endpoint',
