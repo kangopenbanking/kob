@@ -4,7 +4,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 const mockIn = vi.fn();
 const mockEq = vi.fn(() => ({ in: mockIn }));
 const mockSelect = vi.fn(() => ({ eq: mockEq }));
-const mockFrom = vi.fn(() => ({ select: mockSelect }));
+const mockFrom = vi.fn((_table: string) => ({ select: mockSelect }));
 const mockGetUser = vi.fn();
 
 vi.mock("@/integrations/supabase/client", () => ({
