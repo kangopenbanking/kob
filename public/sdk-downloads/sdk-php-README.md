@@ -212,6 +212,8 @@ $kob->pisp->submitPayment([
 
 ## Changelog
 
+- **1.6.1** — Aligned to OpenAPI v4.49.0 (Phase 10/11: USSD, agent banking,
+  QR + offline payments, CEMAC remittance, integrator governance APIs).
 - **1.2.0** — Aligned to OpenAPI v4.29.3. `submitPayment` now requires
   `payment_id`, `consent_id`, `amount`, `currency`, `debtor_account`,
   `creditor_account`. Removed legacy `instructed_amount` / `risk` fields.
