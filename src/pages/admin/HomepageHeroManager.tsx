@@ -515,8 +515,49 @@ export default function HomepageHeroManager() {
               </div>
             </div>
           </CardContent>
-        </Card>
+          )}
+        </SortableCardShell>
       ))}
+        </SortableContext>
+      </DndContext>
+
+      <HeroImageCropDialog
+        open={!!cropTarget}
+        imageUrl={cropTarget?.url ?? null}
+        fileName={cropTarget?.fileName ?? "image.jpg"}
+        onClose={() => {
+          if (cropTarget?.url) URL.revokeObjectURL(cropTarget.url);
+          setCropTarget(null);
+        }}
+        onConfirm={handleCropConfirm}
+      />
+    </div>
+  );
+}
+
+/**
+ * SortableCardShell — wraps a sortable Card and exposes drag handle
+ * props to its children via a render prop so the handle can live in
+ * the card header.
+ */
+function SortableCardShell({
+  id,
+  className,
+  children,
+}: {
+  id: string;
+  className?: string;
+  children: (handleProps: Record<string, unknown>) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={className}>{children({ ...attributes, ...listeners })}</Card>
     </div>
   );
 }
