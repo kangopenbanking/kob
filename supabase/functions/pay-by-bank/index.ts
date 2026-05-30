@@ -283,47 +283,92 @@ Deno.serve(async (req) => {
       //     their bank credentials on FW's domain and is redirected back.
       let finalAuthUrl: string;
       if (sourceRail === 'flutterwave' && target_type === 'consumer_wallet') {
+        // ─── CEMAC Pay-by-Bank (non-KOB-partner banks) ────────────
+        // Flutterwave's native `bank_transfer` (virtual NUBAN) only
+        // supports NGN — it returns "This payment method is not allowed
+        // for this currency" for XAF/XOF. The only working XAF path is
+        // the Standard hosted checkout, which lets the user pay from
+        // their bank-issued debit card or mobile-money wallet (both
+        // funded from the chosen bank account). This mirrors the
+        // Eversend / Chipper / NALA fallback when direct PISP is
+        // unavailable for a given bank.
         try {
+          const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+          if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
+
           const flwTxRef = `pbb_${intent.id.replace(/-/g, '').slice(0, 16)}_${Date.now().toString().slice(-6)}`;
-          const flw = await createFlutterwaveCharge({
-            amount: Number(amount),
-            currency: currency || 'XAF',
-            channel: 'bank_transfer',
-            customer_email: customer_email || 'customer@kob.cm',
-            customer_name: creditor_name || 'KANG Customer',
-            customer_phone: '',
-            tx_ref: flwTxRef,
-            metadata: {
-              pay_by_bank_intent_id: intent.id,
-              bank_code: source_bank?.code || null,
-              bank_name: source_bank?.name || null,
-              redirect_url: redirect_uri,
+          const ccy = (currency || 'XAF').toUpperCase();
+          // XAF/XOF: card + franco mobile money (both debit a bank-funded source).
+          // NGN: include account & banktransfer (true Pay-by-Bank).
+          const paymentOptions = ccy === 'NGN'
+            ? 'account,banktransfer,card,ussd'
+            : 'card,mobilemoneyfranco';
+
+          const returnWithIntent = `${redirect_uri}${redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent.id}&source=pay_by_bank`;
+
+          const flwRes = await fetch('https://api.flutterwave.com/v3/payments', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${FLW_SECRET}`,
+              'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+              tx_ref: flwTxRef,
+              amount: Number(amount),
+              currency: ccy,
+              redirect_url: returnWithIntent,
+              payment_options: paymentOptions,
+              customer: {
+                email: customer_email || 'customer@kob.cm',
+                name: creditor_name || 'KANG Customer',
+              },
+              customizations: {
+                title: source_bank?.name ? `Pay from ${source_bank.name}` : 'KANG Pay by Bank',
+                description: description || 'KANG Wallet top-up',
+              },
+              meta: {
+                pay_by_bank_intent_id: intent.id,
+                bank_code: source_bank?.code || null,
+                bank_name: source_bank?.name || null,
+              },
+            }),
           });
-          finalAuthUrl = flw.redirect_url || `${redirect_uri}${redirect_uri.includes('?') ? '&' : '?'}intent_id=${intent.id}&status=pending&source=pay_by_bank`;
+          const flwData = await flwRes.json();
+          console.log('[pay-by-bank][flw] status:', flwData?.status, 'msg:', flwData?.message);
+
+          if (flwData?.status !== 'success' || !flwData?.data?.link) {
+            throw new Error(flwData?.message || 'Flutterwave did not return a checkout link');
+          }
+
+          finalAuthUrl = flwData.data.link as string;
           await supabase.from('pay_by_bank_intents').update({
             authorization_url: finalAuthUrl,
             metadata: {
               source_bank, rail: sourceRail,
               flw_tx_ref: flwTxRef,
-              flw_provider_ref: flw.provider_ref,
-              flw_raw: flw.provider_raw,
+              flw_payment_options: paymentOptions,
             },
           }).eq('id', intent.id);
         } catch (e: any) {
           console.error('[pay-by-bank] flutterwave charge failed', e);
+          const raw = String(e?.message || e);
+          const friendly = /not allowed for this currency/i.test(raw)
+            ? 'This bank is not yet available for direct Pay-by-Bank in XAF. Please use a KOB partner bank, Mobile Money, or pay with your bank card.'
+            : 'Could not start Pay-by-Bank with this bank. Please try another bank or try again later.';
           await supabase.from('pay_by_bank_intents').update({
-            status: 'failed', failure_reason: `flutterwave_init_failed:${e?.message || e}`,
+            status: 'failed', failure_reason: `flutterwave_init_failed:${raw}`,
           }).eq('id', intent.id);
           return new Response(JSON.stringify({
             error: 'flutterwave_init_failed',
-            message: 'Could not start Pay-by-Bank with this bank. Please try another bank or try again later.',
+            message: friendly,
+            detail: raw,
           }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       } else {
         finalAuthUrl = `${req.headers.get('origin') || 'https://kangopenbanking.com'}/pay/authorize?intent_id=${intent.id}&state=${encodeURIComponent(state)}`;
         await supabase.from('pay_by_bank_intents').update({ authorization_url: finalAuthUrl }).eq('id', intent.id);
       }
+
 
       return new Response(JSON.stringify({
         intent_id: intent.id,
