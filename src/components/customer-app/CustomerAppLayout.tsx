@@ -54,6 +54,7 @@ const CustomerAppInner: React.FC = () => {
     >
       <HealthBanner />
       <ScreenshotGuard />
+      <KYCStatusBanner verifyHref="/kyc" />
       <TranslationHarvester category="customer" />
       <LanguagePrompt />
       <PullToRefresh onRefresh={handleRefresh}>
