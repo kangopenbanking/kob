@@ -114,7 +114,25 @@ export default function CustomerBudget() {
   const [goalOpen, setGoalOpen] = useState(false);
   const [roundupOpen, setRoundupOpen] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
+  const [catFilter, setCatFilter] = useState<CatFilter>("all");
+  const [statSheet, setStatSheet] = useState<StatKey | null>(null);
   const [editCat, setEditCat] = useState<{ id: string; name: string; limit: number; colour: string } | null>(null);
+
+  // Persist category view + filter across mounts/scroll
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SHOW_ALL_CATS_KEY);
+      if (saved) setShowAllCats(saved === "1");
+      const f = localStorage.getItem(CAT_FILTER_KEY) as CatFilter | null;
+      if (f && ["all", "over", "near", "ok"].includes(f)) setCatFilter(f);
+    } catch { /* noop */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem(SHOW_ALL_CATS_KEY, showAllCats ? "1" : "0"); } catch { /* noop */ }
+  }, [showAllCats]);
+  useEffect(() => {
+    try { localStorage.setItem(CAT_FILTER_KEY, catFilter); } catch { /* noop */ }
+  }, [catFilter]);
 
   const summary = budget?.summary;
   const goals = goalsData?.goals ?? [];
