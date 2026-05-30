@@ -44,10 +44,18 @@ export function useOneSignal(institutionId?: string) {
           // Set tags for multi-tenancy filtering + locale targeting.
           // We re-emit on every language change so the language tag stays current.
           if (OneSignal.User && typeof OneSignal.User.addTags === 'function') {
+            // Audience isolation: tag every device with an `env` segment so
+            // production sends never reach QA/test devices and vice-versa.
+            // Override per device via localStorage.setItem('onesignal_env','test').
+            const envTag =
+              (typeof localStorage !== 'undefined' && localStorage.getItem('onesignal_env')) ||
+              (import.meta.env.MODE === 'production' ? 'production' : 'test');
+
             const tags: Record<string, string> = {
               user_id: user.id,
               email: user.email || '',
-              language,           // 'en' | 'fr' — used by push-notification fn for headings/contents
+              language,
+              env: envTag,
             };
 
             if (institutionId) {
