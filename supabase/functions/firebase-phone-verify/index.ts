@@ -8,17 +8,69 @@ import {
   tooManyRequestsResponse,
 } from "../_shared/soft-rate-limit.ts";
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const userAgent = req.headers.get('user-agent') || '';
+  const region = req.headers.get('x-vercel-ip-country')
+    || req.headers.get('cf-ipcountry')
+    || req.headers.get('x-region')
+    || 'unknown';
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const monitor = createClient(supabaseUrl, supabaseServiceKey);
+
+  const logOtp = async (
+    phoneHash: string,
+    country: string | null,
+    status: 'requested' | 'verified' | 'failed' | 'blocked',
+    errorCode: string | null,
+    metadata: Record<string, unknown> = {},
+  ) => {
+    try {
+      await monitor.rpc('record_otp_request', {
+        _ip: clientIp,
+        _phone_hash: phoneHash,
+        _country: country,
+        _region: region,
+        _status: status,
+        _error_code: errorCode,
+        _user_agent: userAgent,
+        _metadata: metadata,
+      });
+    } catch (e) {
+      console.error('record_otp_request failed', e);
+    }
+  };
+
   try {
+    // Abuse-detection gate: refuse if IP is already on the OTP block list.
+    const { data: blocked } = await monitor.rpc('is_otp_ip_blocked', { _ip: clientIp });
+    if (blocked === true) {
+      await logOtp('unknown', null, 'blocked', 'ip_blocked');
+      return new Response(
+        JSON.stringify({ error: 'ip_blocked', message: 'This IP is temporarily blocked due to suspicious activity.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
     // Soft IP-based limit on phone verify: protects against SMS-pumping fraud.
-    // Fails open so legitimate auth never breaks if the limiter is unavailable.
     const ipId = getClientIdentifier(req, "ip");
     const rl = await softCheckRateLimit(ipId, "firebase-phone-verify", 20, 60);
-    if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 300);
+    if (!rl.allowed) {
+      await logOtp('unknown', null, 'blocked', 'rate_limited');
+      return tooManyRequestsResponse(corsHeaders, 300);
+    }
+
 
     const { firebase_id_token } = await req.json();
 
@@ -35,10 +87,8 @@ serve(async (req) => {
     const tokenHash = Array.from(new Uint8Array(tokenDigest))
       .map((b) => b.toString(16).padStart(2, '0')).join('');
 
-    // Initialize Supabase admin client early so we can consult guards.
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Reuse the monitor client initialized at the top.
+    const supabase = monitor;
 
     const { data: replay } = await supabase
       .from('firebase_token_replay_guard')
@@ -62,6 +112,7 @@ serve(async (req) => {
 
     if (!verifyRes.ok) {
       console.error('Firebase token verification failed:', await verifyRes.text());
+      await logOtp('unknown', null, 'failed', 'invalid_token');
       return new Response(
         JSON.stringify({ error: 'Invalid Firebase token' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
@@ -72,6 +123,7 @@ serve(async (req) => {
     const firebaseUser = verifyData.users?.[0];
 
     if (!firebaseUser?.phoneNumber) {
+      await logOtp('unknown', null, 'failed', 'no_phone_in_token');
       return new Response(
         JSON.stringify({ error: 'No phone number in Firebase token' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -79,10 +131,12 @@ serve(async (req) => {
     }
 
     const phoneNumber = firebaseUser.phoneNumber;
+    const phoneHash = await sha256Hex(phoneNumber);
+    const countryCode = phoneNumber.slice(0, Math.min(4, phoneNumber.length));
 
     // -------- Server-side E.164 validation. --------
-    // E.164: leading '+', country code 1-3, total 8-15 digits.
     if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+      await logOtp(phoneHash, countryCode, 'failed', 'invalid_phone_format');
       return new Response(
         JSON.stringify({ error: 'invalid_phone_format', message: 'Phone number is not valid E.164.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -97,6 +151,7 @@ serve(async (req) => {
       .maybeSingle();
     if (lockout?.locked_until && new Date(lockout.locked_until) > new Date()) {
       const retrySec = Math.ceil((new Date(lockout.locked_until).getTime() - Date.now()) / 1000);
+      await logOtp(phoneHash, countryCode, 'blocked', 'phone_locked');
       return new Response(
         JSON.stringify({
           error: 'phone_locked',
@@ -106,6 +161,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 423 }
       );
     }
+
 
     // Look up user by phone number in profiles table
     const { data: profile, error: profileError } = await supabase
@@ -236,6 +292,8 @@ serve(async (req) => {
       _event_category: 'authentication',
       _metadata: { method: 'firebase_phone_otp', phone: phoneNumber, token_hash: tokenHash.slice(0, 12) },
     });
+    await logOtp(phoneHash, countryCode, 'verified', null, { user_id: userId });
+
 
     return new Response(
       JSON.stringify({

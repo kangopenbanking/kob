@@ -582,6 +582,7 @@ const NotificationTemplateTester = lazy(() => import("./pages/admin/Notification
 const PushDeliveryLog = lazy(() => import("./pages/admin/PushDeliveryLog"));
 const FirebaseOTPTestSuite = lazy(() => import("./pages/admin/FirebaseOTPTestSuite"));
 const FirebaseOTPSecurityAudit = lazy(() => import("./pages/admin/FirebaseOTPSecurityAudit"));
+const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDashboard"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
 const MerchantKYB = lazy(() => import("./pages/merchant/MerchantKYB"));
@@ -1064,6 +1065,7 @@ function App() {
               <Route path="push-delivery-log" element={<PushDeliveryLog />} />
               <Route path="firebase-otp-test-suite" element={<FirebaseOTPTestSuite />} />
               <Route path="firebase-otp-security-audit" element={<FirebaseOTPSecurityAudit />} />
+              <Route path="otp-monitoring" element={<OTPMonitoringDashboard />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}

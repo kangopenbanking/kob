@@ -16152,6 +16152,30 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_ip_block: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          ip_address: string
+          metadata: Json
+          reason: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          ip_address: string
+          metadata?: Json
+          reason: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          ip_address?: string
+          metadata?: Json
+          reason?: string
+        }
+        Relationships: []
+      }
       otp_provider_settings: {
         Row: {
           created_at: string
@@ -16185,6 +16209,45 @@ export type Database = {
           sms_fallback_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      otp_request_log: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          id: string
+          ip_address: string
+          metadata: Json
+          phone_country_code: string | null
+          phone_hash: string
+          region: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          ip_address: string
+          metadata?: Json
+          phone_country_code?: string | null
+          phone_hash: string
+          region?: string | null
+          status: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          ip_address?: string
+          metadata?: Json
+          phone_country_code?: string | null
+          phone_hash?: string
+          region?: string | null
+          status?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -27326,6 +27389,7 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      is_otp_ip_blocked: { Args: { _ip: string }; Returns: boolean }
       is_pos_staff: {
         Args: { _merchant_id: string; _user_id: string }
         Returns: boolean
@@ -27447,6 +27511,19 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_otp_request: {
+        Args: {
+          _country: string
+          _error_code: string
+          _ip: string
+          _metadata: Json
+          _phone_hash: string
+          _region: string
+          _status: string
+          _user_agent: string
+        }
+        Returns: string
       }
       record_transaction_fee: {
         Args: {
