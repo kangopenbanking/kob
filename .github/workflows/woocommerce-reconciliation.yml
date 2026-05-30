@@ -1,0 +1,19 @@
+name: woocommerce-reconciliation
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6h
+  workflow_dispatch:
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger WooCommerce reconciliation
+        run: |
+          curl -fsS -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/woocommerce-reconciliation \
+            -d '{"hours": 24, "triggered_by": "github_actions"}'
