@@ -289,7 +289,7 @@ export default function FirebaseOTPTestSuite() {
                       Burst send ({rateBurstCount}/6)
                     </Button>
                   ) : (
-                    <Button onClick={handleSend} disabled={auth.loading} className="gap-2">
+                    <Button onClick={() => handleSend(false)} disabled={auth.loading} className="gap-2">
                       {auth.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PhoneCall className="h-4 w-4" strokeWidth={1.5} />}
                       Send OTP
                     </Button>
@@ -318,9 +318,28 @@ export default function FirebaseOTPTestSuite() {
                       {scenario === "expired_code" && (
                         <p className="text-xs text-muted-foreground">Wait ~5 minutes after Send OTP, then submit the original code.</p>
                       )}
+
+                      {/* Live countdown + resend cooldown */}
+                      {timers.expiresAt != null && (
+                        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                          <span className={`inline-flex items-center gap-1 ${timers.isExpired ? "text-destructive" : "text-muted-foreground"}`}>
+                            <Timer className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            {timers.isExpired ? "Code expired" : `Expires in ${formatMMSS(timers.remainingExpiry)}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSend(true)}
+                            disabled={!timers.canResend || auth.loading}
+                            className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+                          >
+                            <Send className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            {timers.canResend ? "Resend code" : `Resend available in ${timers.remainingResend}s`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-end">
-                      <Button onClick={handleVerify} disabled={auth.loading} className="gap-2">
+                      <Button onClick={handleVerify} disabled={auth.loading || timers.isExpired} className="gap-2">
                         {auth.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" strokeWidth={1.5} />}
                         Verify
                       </Button>
@@ -332,8 +351,11 @@ export default function FirebaseOTPTestSuite() {
               {auth.error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
-                  <AlertTitle className="text-sm">{auth.errorCategory || "error"}</AlertTitle>
-                  <AlertDescription className="text-xs">{auth.error}{auth.errorHint ? ` — ${auth.errorHint}` : ""}</AlertDescription>
+                  <AlertTitle className="text-sm">{friendly?.title || auth.errorCategory || "Error"}</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    {friendly?.hint || auth.error}
+                    {auth.errorHint && !friendly ? ` — ${auth.errorHint}` : ""}
+                  </AlertDescription>
                 </Alert>
               )}
 
