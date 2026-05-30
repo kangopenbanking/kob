@@ -512,7 +512,19 @@ Deno.serve(async (req) => {
         intent.status = 'expired';
       }
 
-      return new Response(JSON.stringify(intent), {
+      const meta = (intent.metadata || {}) as any;
+      const rail = meta.rail as string | null;
+      const ccyOut = String(intent.currency || 'XAF').toUpperCase();
+      const rail_descriptor = rail === 'flutterwave'
+        ? { rail: 'flutterwave_hosted', provider: 'flutterwave',
+            payment_options: meta.flw_payment_options || (ccyOut === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco'),
+            requires_linked_account: false }
+        : rail === 'kob'
+          ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
+          : { rail: null, provider: null, requires_linked_account: false };
+
+      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor }), {
+
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
