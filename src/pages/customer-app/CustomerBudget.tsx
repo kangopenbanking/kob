@@ -318,31 +318,42 @@ export default function CustomerBudget() {
                 </div>
               </div>
 
-              {/* Hero stat row — mini donuts */}
+              {/* Hero stat row — mini donuts (tap to open detail sheet) */}
               <div
-                className="mt-6 grid grid-cols-3 gap-3"
+                className="mt-6 grid grid-cols-3 gap-2.5"
+                role="group"
+                aria-label="Budget summary metrics"
               >
                 <MiniDonutStat
+                  testId="mini-donut-left"
                   label="Left"
                   percent={leftPct}
                   centerValue={formatXAF(summary?.total_remaining ?? 0, true)}
-                  colour="#10D9A0"
-                  bg={theme === "light" ? "rgba(16,217,160,0.10)" : "rgba(16,217,160,0.14)"}
+                  colour={theme === "light" ? "#059669" : "#34D399"}
+                  bg={theme === "light" ? "rgba(5,150,105,0.10)" : "rgba(52,211,153,0.14)"}
+                  ariaLabel={`Remaining: ${formatXAF(summary?.total_remaining ?? 0)}, ${leftPct}% of budget`}
+                  onClick={() => setStatSheet("left")}
                 />
                 <MiniDonutStat
+                  testId="mini-donut-daily"
                   label="Daily"
                   percent={dailyPct}
                   centerValue={formatXAF(dailyAllowance, true)}
-                  colour="#38BDF8"
-                  bg={theme === "light" ? "rgba(56,189,248,0.10)" : "rgba(56,189,248,0.14)"}
+                  colour={theme === "light" ? "#0284C7" : "#38BDF8"}
+                  bg={theme === "light" ? "rgba(2,132,199,0.10)" : "rgba(56,189,248,0.14)"}
+                  ariaLabel={`Daily allowance: ${formatXAF(dailyAllowance)}, ${dailyPct}% of original daily target`}
+                  onClick={() => setStatSheet("daily")}
                 />
                 <MiniDonutStat
+                  testId="mini-donut-days"
                   label="Days left"
                   percent={daysLeftPct}
                   centerValue={String(daysLeft)}
                   centerSub={`/${totalDays}`}
-                  colour="#A78BFA"
-                  bg={theme === "light" ? "rgba(167,139,250,0.12)" : "rgba(167,139,250,0.16)"}
+                  colour={theme === "light" ? "#7C3AED" : "#A78BFA"}
+                  bg={theme === "light" ? "rgba(124,58,237,0.10)" : "rgba(167,139,250,0.16)"}
+                  ariaLabel={`${daysLeft} of ${totalDays} days remaining`}
+                  onClick={() => setStatSheet("days")}
                 />
               </div>
             </section>
