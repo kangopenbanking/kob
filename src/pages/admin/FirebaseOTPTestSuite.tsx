@@ -23,12 +23,27 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useFirebasePhoneAuth } from "@/hooks/useFirebasePhoneAuth";
+import { useOTPTimers, formatMMSS } from "@/hooks/useOTPTimers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   ShieldCheck, PhoneCall, KeyRound, Timer, AlertCircle,
-  CheckCircle2, RefreshCw, BookOpen, ListChecks, Loader2,
+  CheckCircle2, RefreshCw, BookOpen, ListChecks, Loader2, Send,
 } from "lucide-react";
+
+/** Human-friendly mapping for the common failure categories. */
+const FRIENDLY_ERROR: Record<string, { title: string; hint: string }> = {
+  "invalid-phone":        { title: "Invalid phone number",   hint: "Use full international format, e.g. +16505551234." },
+  "too-many-requests":    { title: "Too many attempts",      hint: "Wait a few minutes before requesting another code." },
+  "unauthorized-domain":  { title: "Domain not authorized",  hint: "Add this host to Firebase Authorized domains." },
+  "recaptcha-disabled":   { title: "Security check failed",  hint: "reCAPTCHA could not load. Reload the page and retry." },
+  "billing-required":     { title: "Provider unavailable",   hint: "Firebase phone billing is not enabled for this project." },
+  "network":              { title: "Network error",          hint: "Check your connection and try again." },
+  "provider-disabled":    { title: "Phone sign-in disabled", hint: "Enable Phone provider in Firebase Console." },
+  "invalid-code":         { title: "Wrong verification code", hint: "Double-check the digits and try again." },
+  "expired-code":         { title: "Code expired",           hint: "Request a new code — codes are valid for 5 minutes." },
+  "unknown":              { title: "Verification failed",    hint: "Please try again or request a new code." },
+};
 
 type Scenario = "happy_path" | "wrong_code" | "expired_code" | "rate_limit";
 
@@ -61,11 +76,13 @@ export default function FirebaseOTPTestSuite() {
   const [rateBurstCount, setRateBurstCount] = useState(0);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
-  const [sendStartedAt, setSendStartedAt] = useState<number | null>(null);
+  
 
   const auth = useFirebasePhoneAuth({ otpType: "login" });
+  const timers = useOTPTimers({ expirySeconds: 300, resendCooldownSeconds: 60 });
 
   const isHappyPath = scenario === "happy_path";
+  const friendly = auth.errorCategory ? FRIENDLY_ERROR[auth.errorCategory] : null;
 
   const insertLog = async (row: {
     step: string;
@@ -110,25 +127,35 @@ export default function FirebaseOTPTestSuite() {
 
   useEffect(() => { void refreshLogs(); }, []);
 
-  const handleSend = async () => {
+  const handleSend = async (isResend = false) => {
     if (!phone.trim().startsWith("+")) {
       toast.error("Phone must be E.164 (e.g. +16505551234).");
       return;
     }
-    setSendStartedAt(Date.now());
-    void insertLog({ step: "send_attempt", status: "pending" });
+    if (isResend && !timers.canResend) {
+      toast.error(`Please wait ${timers.remainingResend}s before requesting a new code.`);
+      return;
+    }
+    const t0 = Date.now();
+    void insertLog({ step: isResend ? "resend_attempt" : "send_attempt", status: "pending" });
     await auth.sendOTP(phone.trim());
-    const elapsed = sendStartedAt ? Date.now() - sendStartedAt : null;
+    const elapsed = Date.now() - t0;
     if (auth.error) {
       void insertLog({
-        step: "send_otp",
+        step: isResend ? "resend_otp" : "send_otp",
         status: "fail",
         error_code: auth.errorCategory,
         error_message: auth.error,
         elapsed_ms: elapsed,
       });
     } else {
-      void insertLog({ step: "send_otp", status: "ok", elapsed_ms: elapsed });
+      timers.start();
+      void insertLog({
+        step: isResend ? "resend_otp" : "send_otp",
+        status: "ok",
+        elapsed_ms: elapsed,
+        metadata: { expiry_seconds: 300, cooldown_seconds: 60 },
+      });
     }
   };
 
@@ -262,7 +289,7 @@ export default function FirebaseOTPTestSuite() {
                       Burst send ({rateBurstCount}/6)
                     </Button>
                   ) : (
-                    <Button onClick={handleSend} disabled={auth.loading} className="gap-2">
+                    <Button onClick={() => handleSend(false)} disabled={auth.loading} className="gap-2">
                       {auth.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PhoneCall className="h-4 w-4" strokeWidth={1.5} />}
                       Send OTP
                     </Button>
@@ -291,9 +318,28 @@ export default function FirebaseOTPTestSuite() {
                       {scenario === "expired_code" && (
                         <p className="text-xs text-muted-foreground">Wait ~5 minutes after Send OTP, then submit the original code.</p>
                       )}
+
+                      {/* Live countdown + resend cooldown */}
+                      {timers.expiresAt != null && (
+                        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                          <span className={`inline-flex items-center gap-1 ${timers.isExpired ? "text-destructive" : "text-muted-foreground"}`}>
+                            <Timer className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            {timers.isExpired ? "Code expired" : `Expires in ${formatMMSS(timers.remainingExpiry)}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSend(true)}
+                            disabled={!timers.canResend || auth.loading}
+                            className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+                          >
+                            <Send className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            {timers.canResend ? "Resend code" : `Resend available in ${timers.remainingResend}s`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-end">
-                      <Button onClick={handleVerify} disabled={auth.loading} className="gap-2">
+                      <Button onClick={handleVerify} disabled={auth.loading || timers.isExpired} className="gap-2">
                         {auth.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" strokeWidth={1.5} />}
                         Verify
                       </Button>
@@ -305,8 +351,11 @@ export default function FirebaseOTPTestSuite() {
               {auth.error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
-                  <AlertTitle className="text-sm">{auth.errorCategory || "error"}</AlertTitle>
-                  <AlertDescription className="text-xs">{auth.error}{auth.errorHint ? ` — ${auth.errorHint}` : ""}</AlertDescription>
+                  <AlertTitle className="text-sm">{friendly?.title || auth.errorCategory || "Error"}</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    {friendly?.hint || auth.error}
+                    {auth.errorHint && !friendly ? ` — ${auth.errorHint}` : ""}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -318,7 +367,7 @@ export default function FirebaseOTPTestSuite() {
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { auth.reset(); setCode(""); }}>Reset</Button>
+                <Button variant="outline" size="sm" onClick={() => { auth.reset(); setCode(""); timers.reset(); }}>Reset</Button>
               </div>
             </CardContent>
           </Card>
