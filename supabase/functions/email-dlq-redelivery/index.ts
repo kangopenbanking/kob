@@ -101,7 +101,8 @@ Deno.serve(async (req) => {
       query = query.in("message_id", targetMessageIds);
     }
 
-    const { data: dlqRows, error: dlqErr } = await query.limit(isAdminTriggered ? 5 : 50);
+    const adminLimit = targetMessageIds?.length ? Math.min(targetMessageIds.length, 50) : 5;
+    const { data: dlqRows, error: dlqErr } = await query.limit(isAdminTriggered ? adminLimit : 50);
     if (dlqErr) throw dlqErr;
 
     let attempted = 0;
