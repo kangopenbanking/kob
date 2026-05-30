@@ -522,8 +522,9 @@ Deno.serve(async (req) => {
           metadata: {
             ...(source_bank ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 } : {}),
             ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
+            trace_id: traceId,
             timeline: [
-              { status: 'created', at: new Date().toISOString(), source: 'create_intent' },
+              { status: 'created', at: new Date().toISOString(), source: 'create_intent', detail: `trace=${traceId}` },
               { status: 'awaiting_webhook', at: new Date().toISOString(), source: 'create_intent' },
             ],
           },
