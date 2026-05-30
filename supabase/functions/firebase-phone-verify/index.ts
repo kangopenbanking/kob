@@ -112,6 +112,7 @@ serve(async (req) => {
 
     if (!verifyRes.ok) {
       console.error('Firebase token verification failed:', await verifyRes.text());
+      await logOtp('unknown', null, 'failed', 'invalid_token');
       return new Response(
         JSON.stringify({ error: 'Invalid Firebase token' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
@@ -122,6 +123,7 @@ serve(async (req) => {
     const firebaseUser = verifyData.users?.[0];
 
     if (!firebaseUser?.phoneNumber) {
+      await logOtp('unknown', null, 'failed', 'no_phone_in_token');
       return new Response(
         JSON.stringify({ error: 'No phone number in Firebase token' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -129,10 +131,12 @@ serve(async (req) => {
     }
 
     const phoneNumber = firebaseUser.phoneNumber;
+    const phoneHash = await sha256Hex(phoneNumber);
+    const countryCode = phoneNumber.slice(0, Math.min(4, phoneNumber.length));
 
     // -------- Server-side E.164 validation. --------
-    // E.164: leading '+', country code 1-3, total 8-15 digits.
     if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+      await logOtp(phoneHash, countryCode, 'failed', 'invalid_phone_format');
       return new Response(
         JSON.stringify({ error: 'invalid_phone_format', message: 'Phone number is not valid E.164.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -147,6 +151,7 @@ serve(async (req) => {
       .maybeSingle();
     if (lockout?.locked_until && new Date(lockout.locked_until) > new Date()) {
       const retrySec = Math.ceil((new Date(lockout.locked_until).getTime() - Date.now()) / 1000);
+      await logOtp(phoneHash, countryCode, 'blocked', 'phone_locked');
       return new Response(
         JSON.stringify({
           error: 'phone_locked',
@@ -156,6 +161,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 423 }
       );
     }
+
 
     // Look up user by phone number in profiles table
     const { data: profile, error: profileError } = await supabase
