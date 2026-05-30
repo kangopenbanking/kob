@@ -395,7 +395,7 @@ export default function EmailTestSuite() {
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </Fragment>
                     ))}
                   </TableBody>
                 </Table>
