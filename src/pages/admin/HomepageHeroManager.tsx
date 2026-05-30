@@ -306,8 +306,11 @@ export default function HomepageHeroManager() {
         </Card>
       )}
 
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
       {slides.map((slide, index) => (
-        <Card key={slide.id} className={!slide.is_active ? "opacity-60" : ""}>
+        <SortableCardShell key={slide.id} id={slide.id} className={!slide.is_active ? "opacity-60" : ""}>
+          {(dragHandleProps) => (
           <CardContent className="p-6">
             <div className="grid lg:grid-cols-[200px_1fr] gap-6">
               {/* Preview */}
