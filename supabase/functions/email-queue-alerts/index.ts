@@ -169,6 +169,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (deliveryTotal >= BOUNCE_MIN_SAMPLE && bounceRate > BOUNCE_RATE_THRESHOLD) {
+      await fire(
+        "email_bounce_rate_high",
+        "critical",
+        "Email bounce rate exceeds threshold",
+        `${(bounceRate * 100).toFixed(2)}% of delivered emails bounced or were marked as spam in the last 24h (${bounces + complaints}/${deliveryTotal}, threshold: ${(BOUNCE_RATE_THRESHOLD * 100).toFixed(0)}%). Investigate template content, sender reputation, and recipient hygiene.`,
+        { bounce_rate: bounceRate, bounces, complaints, total: deliveryTotal, window: "24h", threshold: BOUNCE_RATE_THRESHOLD },
+      );
+    }
+
     return json({
       success: true,
       checked_at: new Date().toISOString(),
@@ -177,9 +187,14 @@ Deno.serve(async (req) => {
         backlog_over_30min: backlogCount || 0,
         sends_last_hour: total,
         failure_rate: failureRate,
+        bounce_rate_24h: bounceRate,
+        bounces_24h: bounces,
+        complaints_24h: complaints,
+        delivery_total_24h: deliveryTotal,
       },
       alerts_fired: triggered,
     });
+
   } catch (e: any) {
     console.error("email-queue-alerts error:", e);
     return json({ error: e?.message || "Internal error" }, 500);
