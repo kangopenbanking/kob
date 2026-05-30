@@ -16,6 +16,7 @@ import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguagePrompt } from '@/components/i18n/LanguagePrompt';
 import { loadAppNamespaces } from '@/lib/i18n/i18next';
 import { ScreenshotGuard } from '@/components/security/ScreenshotGuard';
+import { KYCStatusBanner } from '@/components/kyc/KYCStatusBanner';
 import { useEffect } from 'react';
 
 const CustomerAppInner: React.FC = () => {
