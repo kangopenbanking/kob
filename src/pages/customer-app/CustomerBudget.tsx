@@ -731,6 +731,112 @@ export default function CustomerBudget() {
         budgetId={budget?.budget?.id ?? ""}
         category={editCat}
       />
+
+      {/* Mini-donut detail bottom sheet */}
+      <Sheet open={!!statSheet} onOpenChange={(v) => !v && setStatSheet(null)}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5"
+          data-testid="stat-sheet"
+        >
+          {statSheet && summary && (() => {
+            const config = {
+              left: {
+                title: "Remaining this month",
+                description: "What you have left to spend before your budget resets.",
+                value: formatXAF(summary.total_remaining ?? 0),
+                percent: leftPct,
+                tone: theme === "light" ? "#059669" : "#34D399",
+                rows: [
+                  { k: "Budget", v: formatXAF(summary.total_limit ?? 0) },
+                  { k: "Spent", v: formatXAF(summary.total_spent ?? 0) },
+                  { k: "Remaining", v: formatXAF(summary.total_remaining ?? 0) },
+                ],
+              },
+              daily: {
+                title: "Daily allowance",
+                description: "Your remaining balance divided by the days left in the cycle.",
+                value: formatXAF(dailyAllowance),
+                percent: dailyPct,
+                tone: theme === "light" ? "#0284C7" : "#38BDF8",
+                rows: [
+                  { k: "Daily target", v: formatXAF(dailyTarget) },
+                  { k: "Today's allowance", v: formatXAF(dailyAllowance) },
+                  { k: "vs. target", v: `${dailyPct}%` },
+                ],
+              },
+              days: {
+                title: "Days remaining",
+                description: "Days left in the current budget cycle.",
+                value: `${daysLeft} / ${totalDays}`,
+                percent: daysLeftPct,
+                tone: theme === "light" ? "#7C3AED" : "#A78BFA",
+                rows: [
+                  { k: "Days left", v: String(daysLeft) },
+                  { k: "Cycle length", v: `${totalDays} days` },
+                  { k: "Progress", v: `${100 - daysLeftPct}%` },
+                ],
+              },
+            }[statSheet];
+            return (
+              <>
+                <SheetHeader className="text-left">
+                  <SheetTitle style={{ fontFamily: "Sora, Inter, sans-serif" }}>
+                    {config.title}
+                  </SheetTitle>
+                  <SheetDescription>{config.description}</SheetDescription>
+                </SheetHeader>
+                <div className="mt-5 flex items-center gap-4">
+                  <DonutRing
+                    size={88}
+                    strokeWidth={10}
+                    segments={[
+                      { value: config.percent, colour: config.tone },
+                      { value: 100 - config.percent, colour: "var(--bud-track)" },
+                    ]}
+                    centerLabel={
+                      <span className="text-[14px] font-semibold" style={{ color: "var(--bud-text)" }}>
+                        {config.percent}%
+                      </span>
+                    }
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      style={{ color: "var(--bud-text-3)" }}
+                    >
+                      Exact value
+                    </div>
+                    <div
+                      data-testid="stat-sheet-value"
+                      className="mt-1 text-[24px] font-semibold tabular-nums"
+                      style={{
+                        fontFamily: "Sora, Inter, sans-serif",
+                        letterSpacing: "-0.02em",
+                        color: config.tone,
+                      }}
+                    >
+                      {config.value}
+                    </div>
+                  </div>
+                </div>
+                <dl className="mt-5 divide-y" style={{ borderColor: "var(--bud-border-soft)" }}>
+                  {config.rows.map((r) => (
+                    <div key={r.k} className="flex items-center justify-between py-2.5">
+                      <dt className="text-[12px]" style={{ color: "var(--bud-text-2)" }}>
+                        {r.k}
+                      </dt>
+                      <dd className="text-[13px] font-medium tabular-nums" style={{ color: "var(--bud-text)" }}>
+                        {r.v}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
