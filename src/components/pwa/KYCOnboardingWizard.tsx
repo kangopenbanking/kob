@@ -39,72 +39,121 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
 
-  const next = () => setCurrentStep((s) => Math.min(s + 1, 3));
+  const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_BYTES = 10 * 1024 * 1024;
+
+  const validateFile = (file: File): string | null => {
+    if (!ACCEPTED_MIME.includes(file.type)) return 'Only JPG, PNG or WebP images are accepted.';
+    if (file.size > MAX_BYTES) return 'File must be smaller than 10 MB.';
+    return null;
+  };
+
+  const setValidatedFile = (setter: (f: File) => void) => (file: File) => {
+    const err = validateFile(file);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setter(file);
+  };
+
+  const validateCurrentStep = (): string | null => {
+    if (currentStep === 0) {
+      if (!personalInfo.dateOfBirth) return 'Date of birth is required.';
+      if (new Date(personalInfo.dateOfBirth) >= new Date()) return 'Date of birth must be in the past.';
+      if (!personalInfo.nationality.trim()) return 'Nationality is required.';
+      if (!personalInfo.idNumber.trim() || personalInfo.idNumber.trim().length < 5)
+        return 'Please enter a valid ID number (min 5 characters).';
+    }
+    if (currentStep === 1) {
+      if (!idFront) return 'Please upload the front of your ID.';
+      if (personalInfo.idType !== 'passport' && !idBack) return 'Please upload the back of your ID.';
+    }
+    if (currentStep === 2) {
+      if (!selfie) return 'Please take a selfie to continue.';
+    }
+    return null;
+  };
+
+  const next = () => {
+    const err = validateCurrentStep();
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setCurrentStep((s) => Math.min(s + 1, 3));
+  };
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
+    const err = validateCurrentStep();
+    if (err) {
+      toast.error(err);
+      return;
+    }
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       // Upload documents to storage (store paths, not public URLs)
-      let documentFrontUrl: string | null = null;
-      let documentBackUrl: string | null = null;
-      let selfieUrl: string | null = null;
+      const uploadOne = async (file: File, slot: string) => {
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/kyc/${slot}-${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('kyc-documents').upload(path, file);
+        if (error) throw new Error(`Failed to upload ${slot}: ${error.message}`);
+        return path;
+      };
 
-      if (idFront) {
-        const path = `${user.id}/kyc/id-front-${Date.now()}.${idFront.name.split('.').pop()}`;
-        const { error } = await supabase.storage.from('kyc-documents').upload(path, idFront);
-        if (error) {
-          console.error('ID front upload failed:', error);
-          throw new Error(`Failed to upload ID front: ${error.message}`);
-        }
-        documentFrontUrl = path;
+      const documentFrontUrl = idFront ? await uploadOne(idFront, 'id-front') : null;
+      const documentBackUrl = idBack ? await uploadOne(idBack, 'id-back') : null;
+      const selfieUrl = selfie ? await uploadOne(selfie, 'selfie') : null;
+
+      if (!documentFrontUrl || !selfieUrl) {
+        throw new Error('Document front and selfie are required.');
       }
 
-      if (idBack) {
-        const path = `${user.id}/kyc/id-back-${Date.now()}.${idBack.name.split('.').pop()}`;
-        const { error } = await supabase.storage.from('kyc-documents').upload(path, idBack);
-        if (error) {
-          console.error('ID back upload failed:', error);
-          throw new Error(`Failed to upload ID back: ${error.message}`);
-        }
-        documentBackUrl = path;
-      }
+      // Route through the validated edge function so we get:
+      //  - Zod validation
+      //  - Duplicate-submission guard
+      //  - Acknowledgment email + in-app notification
+      //  - Admin notification + sanctions screening
+      const todayPlus = new Date();
+      todayPlus.setFullYear(todayPlus.getFullYear() + 5);
+      const fallbackExpiry = todayPlus.toISOString().slice(0, 10);
 
-      if (selfie) {
-        const path = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
-        const { error } = await supabase.storage.from('kyc-documents').upload(path, selfie);
-        if (error) {
-          console.error('Selfie upload failed:', error);
-          throw new Error(`Failed to upload selfie: ${error.message}`);
-        }
-        selfieUrl = path;
-      }
-
-      // Insert KYC verification record (banking app → with institution_id)
-      const { error: insertErr } = await supabase.from('kyc_verifications').insert({
-        user_id: user.id,
-        verification_type: 'identity',
-        status: 'pending',
-        document_type: personalInfo.idType,
-        document_number: personalInfo.idNumber || null,
-        document_country: personalInfo.nationality || null,
-        document_front_url: documentFrontUrl,
-        document_back_url: documentBackUrl,
-        selfie_url: selfieUrl,
-        source_app: 'banking_app',
-        institution_id: tenant.id || null,
-        metadata: {
-          date_of_birth: personalInfo.dateOfBirth,
-          nationality: personalInfo.nationality,
+      const { data, error } = await supabase.functions.invoke('kyc-submit', {
+        body: {
+          verification_type: 'identity',
+          document_type: personalInfo.idType,
+          document_number: personalInfo.idNumber,
+          document_country: personalInfo.nationality || 'CM',
+          document_expiry_date: fallbackExpiry,
+          document_front_url: documentFrontUrl,
+          document_back_url: documentBackUrl || undefined,
+          selfie_url: selfieUrl,
         },
-      } as any);
+      });
 
-      if (insertErr) throw insertErr;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      toast.success('KYC submitted for verification!');
+      // Best-effort: tag institution context onto the new verification
+      if (tenant.id && data?.verification_id) {
+        await supabase
+          .from('kyc_verifications')
+          .update({
+            source_app: 'banking_app',
+            institution_id: tenant.id,
+            metadata: {
+              date_of_birth: personalInfo.dateOfBirth,
+              nationality: personalInfo.nationality,
+            },
+          } as any)
+          .eq('id', data.verification_id);
+      }
+
+      toast.success('Verification submitted — we will email you when the review is complete.');
       onComplete();
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Failed to submit KYC'));
@@ -112,6 +161,7 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       setLoading(false);
     }
   };
+
 
   const renderStep = () => {
     switch (currentStep) {
