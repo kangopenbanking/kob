@@ -31,7 +31,7 @@ serve(async (req) => {
     const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
     const ONESIGNAL_REST_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
-    // RBAC: must be admin
+    // Auth: must be a logged-in user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return json({ error: "Unauthorized" }, 401);
@@ -46,9 +46,31 @@ serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("has_role", {
       _user_id: user.id, _role: "admin",
     });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
+    const ipAddress =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") || null;
+    const userAgent = req.headers.get("user-agent") || null;
+
+    const audit = async (allowed: boolean, reason: string, targets: string[], title?: string) => {
+      try {
+        await admin.from("push_send_audit").insert({
+          caller_id: user.id,
+          attempted_targets: targets,
+          allowed,
+          reason,
+          title: title ?? null,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        });
+      } catch (e) {
+        console.warn("push_send_audit insert failed", e);
+      }
+    };
 
     if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
+      await audit(false, "onesignal_not_configured", []);
       return json({ error: "OneSignal not configured" }, 500);
     }
 
@@ -77,6 +99,24 @@ serve(async (req) => {
     }
     if (!body.external_user_id && !(body.user_ids?.length)) {
       return json({ error: "external_user_id or user_ids[] required" }, 400);
+    }
+
+    // Authorization: non-admins may only push to their OWN external_user_id.
+    // Admins may push to any external_user_id (broadcast / ops).
+    // Raw OneSignal player ids (user_ids[]) are admin-only since they're not
+    // verifiable against auth.uid().
+    const targets: string[] = body.external_user_id
+      ? [body.external_user_id]
+      : (body.user_ids ?? []);
+    if (!isAdmin) {
+      if (body.user_ids?.length) {
+        await audit(false, "non_admin_used_player_ids", targets, safeTitle);
+        return json({ error: "Forbidden: player ids require admin" }, 403);
+      }
+      if (body.external_user_id && body.external_user_id !== user.id) {
+        await audit(false, "cross_user_push_blocked", targets, safeTitle);
+        return json({ error: "Forbidden: can only push to your own account" }, 403);
+      }
     }
 
     const payload: Record<string, unknown> = {
@@ -113,6 +153,14 @@ serve(async (req) => {
     });
     const elapsedMs = Date.now() - started;
     const respBody = await resp.json().catch(() => ({}));
+
+    await audit(
+      resp.ok,
+      resp.ok ? (isAdmin ? "allowed_admin" : "allowed_self") : "onesignal_error",
+      targets,
+      safeTitle,
+    );
+
 
     // Log to push_test_log if the table exists; ignore otherwise.
     try {
