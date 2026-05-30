@@ -361,7 +361,8 @@ function RetentionCard() {
     const { data, error } = await supabase.rpc("cleanup_security_capture_events" as never);
     setSaving(false);
     if (error) { setMsg(error.message); return; }
-    const row = (data == null ? null : Array.isArray(data) ? data[0] : data) as { deleted_count?: number; retention_days?: number } | null;
+    const anyData = data as unknown as { deleted_count?: number; retention_days?: number } | Array<{ deleted_count?: number; retention_days?: number }> | null;
+    const row = Array.isArray(anyData) ? anyData[0] : anyData;
     setMsg(`Cleanup complete. Deleted ${row?.deleted_count ?? 0} row(s) older than ${row?.retention_days ?? days} day(s).`);
   };
 
