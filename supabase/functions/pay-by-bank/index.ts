@@ -18,6 +18,83 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action } = body;
 
+    // ─── preflight_rails ──────────────────────────────────────
+    // Returns which Pay-by-Bank rails are available for a given bank +
+    // currency, so the client can disable/hide unsupported options
+    // before the user commits. Mirrors Plaid/Token capability probes.
+    if (action === 'preflight_rails') {
+      const { bank, currency } = body as { bank?: { code?: string; name?: string; network?: string }; currency?: string };
+      const ccy = String(currency || 'XAF').toUpperCase();
+
+      // KOB partner rail: only if institution exists & approved
+      let kobSupported = false;
+      let kobReason: string | undefined;
+      if (bank?.code) {
+        const { data: inst } = await supabase
+          .from('institutions')
+          .select('id, status')
+          .eq('id', bank.code)
+          .maybeSingle();
+        if (inst && inst.status === 'approved') kobSupported = true;
+        else kobReason = 'Bank is not a KOB partner — direct account debit unavailable.';
+      } else if (bank?.network === 'kob') {
+        kobSupported = true;
+      } else {
+        kobReason = 'No bank identifier supplied.';
+      }
+
+      // Flutterwave hosted (card + franco MoMo) — supported for XAF/XOF/NGN
+      const fwSupported = ['XAF', 'XOF', 'NGN', 'GHS', 'KES'].includes(ccy);
+      const fwReason = fwSupported ? undefined : `Hosted checkout is not available for ${ccy} in this region.`;
+
+      // Native Flutterwave bank_transfer — NGN only
+      const fwBankTransfer = ccy === 'NGN';
+      const fwBankTransferReason = fwBankTransfer ? undefined
+        : 'Native bank transfer (virtual account) is only available for NGN. XAF/XOF must use hosted checkout or a KOB partner bank.';
+
+      const rails = [
+        {
+          rail: 'kob_pisp',
+          provider: 'kob',
+          label: 'Direct bank account debit (PSD2 PISP)',
+          supported: kobSupported,
+          requires_linked_account: true,
+          reason: kobSupported ? undefined : kobReason,
+        },
+        {
+          rail: 'flutterwave_hosted',
+          provider: 'flutterwave',
+          label: 'Bank card or Mobile Money (Flutterwave hosted)',
+          supported: fwSupported,
+          requires_linked_account: false,
+          reason: fwReason,
+          payment_options: ccy === 'NGN' ? 'account,banktransfer,card,ussd' : 'card,mobilemoneyfranco',
+        },
+        {
+          rail: 'flutterwave_bank_transfer',
+          provider: 'flutterwave',
+          label: 'Virtual bank account (NGN only)',
+          supported: fwBankTransfer,
+          requires_linked_account: false,
+          reason: fwBankTransferReason,
+        },
+      ];
+
+      const recommended = rails.find(r => r.rail === 'kob_pisp' && r.supported)?.rail
+        ?? rails.find(r => r.rail === 'flutterwave_hosted' && r.supported)?.rail
+        ?? rails.find(r => r.supported)?.rail
+        ?? null;
+
+      return new Response(JSON.stringify({
+        currency: ccy,
+        bank: bank || null,
+        rails,
+        recommended_rail: recommended,
+        any_supported: rails.some(r => r.supported),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
     // ─── list_payment_banks ────────────────────────────────────
     // Returns banks usable for Pay-by-Bank, tagged by rail.
     if (action === 'list_payment_banks') {
