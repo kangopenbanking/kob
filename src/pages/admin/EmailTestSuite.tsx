@@ -536,3 +536,29 @@ export default function EmailTestSuite() {
     </div>
   );
 }
+
+function SummaryStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  tone?: "default" | "success" | "warning" | "danger";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "text-primary"
+      : tone === "danger"
+      ? "text-destructive"
+      : tone === "warning"
+      ? "text-amber-600"
+      : "text-foreground";
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={`text-2xl font-semibold ${toneClass}`}>{value}</div>
+    </div>
+  );
+}
+
