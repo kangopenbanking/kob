@@ -136,11 +136,18 @@ export function ScreenshotGuard() {
     };
   }, [active, pathname]);
 
-  // ---- Blur on visibility/blur ---------------------------------------
+  // ---- Blur on visibility/blur + telemetry ---------------------------
   useEffect(() => {
     if (!active) return;
-    const onVis = () => setHidden(document.visibilityState !== "visible");
-    const onBlur = () => setHidden(true);
+    const onVis = () => {
+      const isHidden = document.visibilityState !== "visible";
+      setHidden(isHidden);
+      if (isHidden) emitAttempt("visibility:hidden", pathname);
+    };
+    const onBlur = () => {
+      setHidden(true);
+      emitAttempt("blur", pathname);
+    };
     const onFocus = () => setHidden(false);
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("blur", onBlur);
@@ -150,7 +157,35 @@ export function ScreenshotGuard() {
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
-  }, [active]);
+  }, [active, pathname]);
+
+  // ---- Native shell: toggle FLAG_SECURE / iOS blur overlay -----------
+  useEffect(() => {
+    if (!active || !isNativeShell()) return;
+    let cancelled = false;
+    let removeListener: (() => Promise<void>) | null = null;
+
+    (async () => {
+      try {
+        await SecureView.enable({ reason: `route:${pathname}` });
+        if (cancelled) return;
+        emitAttempt("native:secured", pathname);
+        const sub = await SecureView.addListener("captureStateChanged", (evt) => {
+          if (evt.captured) emitAttempt("native:capture_detected", pathname);
+        });
+        removeListener = sub.remove;
+      } catch (e) {
+        logger.warn("[ScreenshotGuard] SecureView.enable failed", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (removeListener) removeListener().catch(() => {});
+      SecureView.disable().then(() => emitAttempt("native:unsecured", pathname)).catch(() => {});
+    };
+  }, [active, pathname]);
+
 
   // ---- CSS injection (selection / callout / mask) --------------------
   useEffect(() => {
