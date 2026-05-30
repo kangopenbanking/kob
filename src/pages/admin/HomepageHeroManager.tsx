@@ -89,6 +89,28 @@ export default function HomepageHeroManager() {
     setUploading(false);
   };
 
+  const replaceMedia = async (id: string, file: File) => {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `slide-${id}-${Date.now()}.${ext}`;
+    const mediaType = file.type.startsWith("video/") ? "video" : "image";
+
+    const { error: uploadError } = await supabase.storage
+      .from("homepage-hero")
+      .upload(path, file, { contentType: file.type, upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
+    await updateSlide(id, { media_url: `${publicUrl}?v=${Date.now()}`, media_type: mediaType });
+    toast({ title: "Media replaced" });
+    setUploading(false);
+  };
+
   const updateSlide = async (id: string, updates: Partial<HeroSlide>) => {
     const { error } = await supabase.from("homepage_hero_slides").update(updates as any).eq("id", id);
     if (error) {
