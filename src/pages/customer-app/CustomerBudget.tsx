@@ -333,7 +333,14 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#059669" : "#34D399"}
                   bg={theme === "light" ? "rgba(5,150,105,0.10)" : "rgba(52,211,153,0.14)"}
                   ariaLabel={`Remaining: ${formatXAF(summary?.total_remaining ?? 0)}, ${leftPct}% of budget`}
-                  onClick={() => setStatSheet("left")}
+                  onClick={() => {
+                    trackBudgetEvent("budget.mini_donut.tap", {
+                      stat: "left",
+                      percent: leftPct,
+                      value: summary?.total_remaining ?? 0,
+                    });
+                    setStatSheet("left");
+                  }}
                 />
                 <MiniDonutStat
                   testId="mini-donut-daily"
@@ -343,7 +350,14 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#0284C7" : "#38BDF8"}
                   bg={theme === "light" ? "rgba(2,132,199,0.10)" : "rgba(56,189,248,0.14)"}
                   ariaLabel={`Daily allowance: ${formatXAF(dailyAllowance)}, ${dailyPct}% of original daily target`}
-                  onClick={() => setStatSheet("daily")}
+                  onClick={() => {
+                    trackBudgetEvent("budget.mini_donut.tap", {
+                      stat: "daily",
+                      percent: dailyPct,
+                      value: dailyAllowance,
+                    });
+                    setStatSheet("daily");
+                  }}
                 />
                 <MiniDonutStat
                   testId="mini-donut-days"
@@ -354,7 +368,14 @@ export default function CustomerBudget() {
                   colour={theme === "light" ? "#7C3AED" : "#A78BFA"}
                   bg={theme === "light" ? "rgba(124,58,237,0.10)" : "rgba(167,139,250,0.16)"}
                   ariaLabel={`${daysLeft} of ${totalDays} days remaining`}
-                  onClick={() => setStatSheet("days")}
+                  onClick={() => {
+                    trackBudgetEvent("budget.mini_donut.tap", {
+                      stat: "days",
+                      percent: daysLeftPct,
+                      value: daysLeft,
+                    });
+                    setStatSheet("days");
+                  }}
                 />
               </div>
             </section>
