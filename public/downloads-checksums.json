@@ -7,7 +7,7 @@
       "php": "1.6.1"
     }
   },
-  "generatedAt": "2026-05-30T10:00:09.565Z",
+  "generatedAt": "2026-05-30T10:00:55.171Z",
   "algorithm": "sha256",
   "verifyHint": "curl -sSO https://kangopenbanking.com/SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt",
   "artifacts": [
@@ -142,7 +142,7 @@
       "category": "changelog",
       "version": "4.49.0",
       "size": 132939,
-      "sha256": "1fe54bc7736e9737bd791b2cd5cda56855dbe14361bffb7887c7e0176440a60f"
+      "sha256": "9ba9c05e32ff020f67cf0f872d05fcaf818d7301f1b07fcde8393c561ee1dbb5"
     }
   ]
 }
