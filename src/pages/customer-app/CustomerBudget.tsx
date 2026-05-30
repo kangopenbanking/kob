@@ -278,32 +278,31 @@ export default function CustomerBudget() {
                 </div>
               </div>
 
-              {/* Hero stat row */}
+              {/* Hero stat row — mini donuts */}
               <div
-                className="mt-6 grid grid-cols-3 rounded-2xl"
-                style={{ background: "var(--bud-surface-2)" }}
+                className="mt-6 grid grid-cols-3 gap-3"
               >
-                <HeroStat
+                <MiniDonutStat
                   label="Left"
-                  value={formatXAF(summary?.total_remaining ?? 0, true)}
-                  tone={theme === "light" ? "#059669" : "#34D399"}
-                  border
+                  percent={leftPct}
+                  centerValue={formatXAF(summary?.total_remaining ?? 0, true)}
+                  colour="#10D9A0"
+                  bg={theme === "light" ? "rgba(16,217,160,0.10)" : "rgba(16,217,160,0.14)"}
                 />
-                <HeroStat
+                <MiniDonutStat
                   label="Daily"
-                  value={formatXAF(
-                    summary && summary.days_remaining > 0
-                      ? Math.max(0, (summary.total_remaining ?? 0) / summary.days_remaining)
-                      : 0,
-                    true,
-                  )}
-                  tone={theme === "light" ? "#2563EB" : "#60A5FA"}
-                  border
+                  percent={dailyPct}
+                  centerValue={formatXAF(dailyAllowance, true)}
+                  colour="#38BDF8"
+                  bg={theme === "light" ? "rgba(56,189,248,0.10)" : "rgba(56,189,248,0.14)"}
                 />
-                <HeroStat
+                <MiniDonutStat
                   label="Days left"
-                  value={String(summary?.days_remaining ?? 0)}
-                  tone="var(--bud-text)"
+                  percent={daysLeftPct}
+                  centerValue={String(daysLeft)}
+                  centerSub={`/${totalDays}`}
+                  colour="#A78BFA"
+                  bg={theme === "light" ? "rgba(167,139,250,0.12)" : "rgba(167,139,250,0.16)"}
                 />
               </div>
             </section>
