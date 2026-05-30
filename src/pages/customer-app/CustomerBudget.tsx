@@ -334,11 +334,9 @@ export default function CustomerBudget() {
                   bg={theme === "light" ? "rgba(5,150,105,0.10)" : "rgba(52,211,153,0.14)"}
                   ariaLabel={`Remaining: ${formatXAF(summary?.total_remaining ?? 0)}, ${leftPct}% of budget`}
                   onClick={() => {
-                    trackBudgetEvent("budget.mini_donut.tap", {
-                      stat: "left",
-                      percent: leftPct,
-                      value: summary?.total_remaining ?? 0,
-                    });
+                    const payload = { stat: "left" as const, percent: leftPct, value: summary?.total_remaining ?? 0 };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
                     setStatSheet("left");
                   }}
                 />
@@ -351,11 +349,9 @@ export default function CustomerBudget() {
                   bg={theme === "light" ? "rgba(2,132,199,0.10)" : "rgba(56,189,248,0.14)"}
                   ariaLabel={`Daily allowance: ${formatXAF(dailyAllowance)}, ${dailyPct}% of original daily target`}
                   onClick={() => {
-                    trackBudgetEvent("budget.mini_donut.tap", {
-                      stat: "daily",
-                      percent: dailyPct,
-                      value: dailyAllowance,
-                    });
+                    const payload = { stat: "daily" as const, percent: dailyPct, value: dailyAllowance };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
                     setStatSheet("daily");
                   }}
                 />
@@ -369,11 +365,9 @@ export default function CustomerBudget() {
                   bg={theme === "light" ? "rgba(124,58,237,0.10)" : "rgba(167,139,250,0.16)"}
                   ariaLabel={`${daysLeft} of ${totalDays} days remaining`}
                   onClick={() => {
-                    trackBudgetEvent("budget.mini_donut.tap", {
-                      stat: "days",
-                      percent: daysLeftPct,
-                      value: daysLeft,
-                    });
+                    const payload = { stat: "days" as const, percent: daysLeftPct, value: daysLeft };
+                    trackBudgetEvent("budget.mini_donut.tap", payload);
+                    trackBudgetEvent("budget.stat_sheet.open", payload);
                     setStatSheet("days");
                   }}
                 />
