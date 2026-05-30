@@ -1,0 +1,23 @@
+# Kang Open Banking — artifact checksums
+# Generated: 2026-05-30T10:00:09.565Z
+# API: v4.49.0  SDK: node@1.6.1 php@1.6.1 python@1.6.1
+# Verify: sha256sum -c SHA256SUMS.txt
+fad940a165c74afa4cd87d839e5523a23929cc8fefee3719702f5f55a814bfd0  ./openapi.json
+7ee8a3437eb7014719f0f5b13d3b79613c0904aa067f6de8ab317d2af76323ad  ./openapi.yaml
+6630612d42a2683ea1c4b0895ff99bf72d1c20571a6774e4c28f18625cff418e  ./openapi-sandbox.json
+193b80bb01eaeda3a39552cff7c6f4b9d241b9c39689d146a90adfd434de5e49  ./openapi-sandbox.yaml
+7f5ccdb365425cf6d0377913ed6cd944cced240d2c34561b066c0271a06c54e4  ./apis.json
+3132ce4fa158b8637b7776c369c3ecd4513dc79bec0f283aa181dbce4548311a  ./apis-sandbox.json
+fad940a165c74afa4cd87d839e5523a23929cc8fefee3719702f5f55a814bfd0  ./openapi-history/openapi-4.49.0.json
+7ee8a3437eb7014719f0f5b13d3b79613c0904aa067f6de8ab317d2af76323ad  ./openapi-history/openapi-4.49.0.yaml
+1dea2e8fb06e29dbcd2f85cb1021b32f8901f77464e15709b5ec8ef9617aebd6  ./postman/Kang_Open_Banking_API_latest.postman_collection.json
+1dea2e8fb06e29dbcd2f85cb1021b32f8901f77464e15709b5ec8ef9617aebd6  ./postman/Kang_Open_Banking_API_v4.49.0.postman_collection.json
+0468b6599f97833556f246ab6c1b5dcf87e8df6a3287e4634d5786da8bc01895  ./postman/Kang_Open_Banking_Sandbox.postman_environment.json
+05faa3909865736e6087ab6ccd7941f10372df5d045ab5c738a0724fd09be855  ./postman/Kang_Open_Banking_Production.postman_environment.json
+e5830083a5f1ca4869f68b55043bdd0d33736eae4fc570bda1bb7fd26cfbd059  ./sdk-downloads/sdk-node-package.json
+1831de6b076ae9d607dc85311916c79429796a1b26fc9204ab7699da33868cfc  ./sdk-downloads/sdk-node-README.md
+4ca6ef6c3c339583cc5fb2deb200edf86ec00219ed1827b142c3b4a03764c38f  ./sdk-downloads/sdk-php-composer.json
+93148e825a5886e3b1760ecb8db56f909a89ca7407e92fdae1c0f3d373b6138b  ./sdk-downloads/sdk-php-README.md
+6d5369f20b57d0e10c0a1e3b38395f9a3cc069ebced483b7737e58cd968227f3  ./sdk-downloads/sdk-python-pyproject.toml
+783e7bc38ce227e42228d6563c0c599ef3bc288aca35c9a31d666c2413546cd5  ./sdk-downloads/sdk-python-README.md
+1fe54bc7736e9737bd791b2cd5cda56855dbe14361bffb7887c7e0176440a60f  ./changelog.json
