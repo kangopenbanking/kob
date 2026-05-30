@@ -438,6 +438,8 @@ const CustomerFundWallet: React.FC = () => {
   }, [selectedPbbBank, linkedAccounts]);
 
 
+  const pbbReturnIntentId = (searchParams.get('source') === 'pay_by_bank') ? searchParams.get('intent_id') : null;
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
@@ -446,6 +448,18 @@ const CustomerFundWallet: React.FC = () => {
         </button>
         <h1 className="text-xl font-bold text-foreground">{tr('Add Money')}</h1>
       </div>
+
+      {pbbReturnIntentId && (
+        <PayByBankTimeline
+          intentId={pbbReturnIntentId}
+          onTerminal={(s) => {
+            if (s === 'completed') {
+              queryClient.refetchQueries({ queryKey: ['account-balances'] });
+            }
+          }}
+        />
+      )}
+
 
       <AnimatePresence mode="wait">
         {step === 'result' && fundingResult ? (
