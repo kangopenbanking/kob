@@ -102,7 +102,9 @@ const CustomerHome: React.FC = () => {
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
   const { unreadCount } = useNotifications(undefined, false, true);
-  const [balanceVisible, setBalanceVisible] = useState(true);
+  // Balances default to MASKED on mount and auto re-mask after 8s of
+  // visibility to reduce shoulder-surfing and casual screenshot risk.
+  const [balanceVisible, setBalanceVisible] = useState(false);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
   const tr = useHarvestedT('customer');
 
