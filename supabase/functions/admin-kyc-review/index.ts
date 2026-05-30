@@ -131,9 +131,11 @@ serve(async (req) => {
           body: {
             template_key: templateKey,
             recipient_email: profile.email,
+            recipient_id: kyc.user_id,
             variables: {
               recipient_name: profile.full_name || 'Valued Customer',
               status: action,
+              verified_at: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
               rejection_reason: rejection_reason || '',
             },
           },
@@ -154,6 +156,24 @@ serve(async (req) => {
       icon: 'kyc',
       metadata: { verification_id: kyc_id, status: action },
     });
+
+    // Send push notification (non-blocking)
+    try {
+      await supabaseAdmin.functions.invoke('push-notification', {
+        body: {
+          user_id: kyc.user_id,
+          type: action === 'approved' ? 'success' : 'warning',
+          title: action === 'approved' ? 'KYC Approved' : 'KYC Action Required',
+          message: action === 'approved'
+            ? 'Your identity has been verified. Full account access unlocked.'
+            : `Verification not approved: ${rejection_reason}`,
+          data: { verification_id: kyc_id, status: action, category: 'kyc' },
+        },
+      });
+    } catch (pushErr) {
+      console.error('Push notification failed (non-blocking):', pushErr);
+    }
+
 
     console.log(`KYC ${kyc_id} ${action} by ${user.id}`);
 
