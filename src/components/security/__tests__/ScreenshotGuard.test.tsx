@@ -105,15 +105,21 @@ describe("ScreenshotGuard", () => {
     );
   });
 
-  it("blurs the body when the document visibility changes to hidden", () => {
+  it("blurs the body when the document visibility changes to hidden", async () => {
     renderAtPath("/app/home");
-    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
-    document.dispatchEvent(new Event("visibilitychange"));
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
     expect(document.documentElement.getAttribute("data-kob-secure-hide")).toBe("1");
-    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
-    document.dispatchEvent(new Event("visibilitychange"));
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
     expect(document.documentElement.getAttribute("data-kob-secure-hide")).toBeNull();
   });
+
 
   it("activates for banking PWA routes with the correct app context", () => {
     renderAtPath("/bank/inst-123/home");
