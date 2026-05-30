@@ -171,7 +171,16 @@ serve(async (req) => {
         });
       }
 
-      return json({ success: true, rail, status: "credited", provider_ref: providerRef });
+      const walletBody = { success: true, rail, status: "credited", provider_ref: providerRef };
+      await idem.commit(200, walletBody);
+      await recordRemittanceAudit({
+        endpoint: 'remittance-fulfill',
+        decision: 'allowed',
+        remittanceId: rem.id,
+        req,
+        metadata: { rail, status: 'credited' },
+      });
+      return json(walletBody);
     }
 
     // ─── MOBILE MONEY (Flutterwave) ──────────────────────────
