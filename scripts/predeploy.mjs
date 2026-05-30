@@ -83,6 +83,18 @@ await run(
   ['vitest', 'run', 'src/test/version-source-drift.test.ts', 'src/test/version-consistency.test.ts']
 );
 
+await run(
+  'Artifact version drift gate (SDK + Postman + OpenAPI artifacts)',
+  'node',
+  ['scripts/check-artifact-versions.mjs']
+);
+
+await run(
+  'Generate SHA-256 checksums for download artifacts',
+  'node',
+  ['scripts/generate-artifact-checksums.mjs']
+);
+
 if (OFFLINE) {
   console.log('\nSkipping public-access + link-health audits (offline mode).');
   process.exit(0);

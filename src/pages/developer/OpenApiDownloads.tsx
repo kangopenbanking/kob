@@ -1,9 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ShieldCheck, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
+import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
 
 const OpenApiDownloads = () => {
   return (
@@ -43,6 +44,41 @@ const OpenApiDownloads = () => {
                 <Link to="/developer/sandbox/api"><ExternalLink className="h-4 w-4 mr-1" /> Sandbox API Reference</Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> Verify your downloads (SHA-256)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Every artifact on this page is checksummed at deploy time against the SSOT
+              (currently OpenAPI {KOB_API_VERSION_LABEL} · SDKs node@{KOB_SDK_VERSIONS.node} ·
+              php@{KOB_SDK_VERSIONS.php} · python@{KOB_SDK_VERSIONS.python}). Use the files
+              below to detect tampering or stale mirrors.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" size="sm" asChild>
+                <a href="/SHA256SUMS.txt" download>
+                  <Download className="h-4 w-4 mr-1" /> SHA256SUMS.txt
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/downloads-checksums.json" download>
+                  <Download className="h-4 w-4 mr-1" /> downloads-checksums.json
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/sdk-downloads/SDK_RELEASE_NOTES.md" download>
+                  <FileText className="h-4 w-4 mr-1" /> SDK release notes (v1.2.0 → v1.6.1)
+                </a>
+              </Button>
+            </div>
+            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`curl -sSO https://kangopenbanking.com/SHA256SUMS.txt
+sha256sum -c SHA256SUMS.txt --ignore-missing`}</code></pre>
           </CardContent>
         </Card>
 
