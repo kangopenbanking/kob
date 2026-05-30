@@ -67,18 +67,68 @@ const OpenApiDownloads = () => {
                 </a>
               </Button>
               <Button variant="outline" size="sm" asChild>
+                <a href="/SHA256SUMS.txt.sig" download>
+                  <Download className="h-4 w-4 mr-1" /> SHA256SUMS.txt.sig
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/artifact-signing-pubkey.pem" download>
+                  <ShieldCheck className="h-4 w-4 mr-1" /> Ed25519 public key
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/artifacts.json" download>
+                  <Download className="h-4 w-4 mr-1" /> artifacts.json (metadata)
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
                 <a href="/downloads-checksums.json" download>
                   <Download className="h-4 w-4 mr-1" /> downloads-checksums.json
                 </a>
               </Button>
+            </div>
+            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# Checksum-only
+curl -sSO https://kangopenbanking.com/SHA256SUMS.txt
+sha256sum -c SHA256SUMS.txt --ignore-missing
+
+# Checksum + Ed25519 signature (one command)
+curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
+# Or pick what you need: openapi | postman | sdk-node | sdk-php | sdk-python`}</code></pre>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4" /> SDK release notes & changelogs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Rolled-up notes plus per-SDK changelogs for v1.2.0 → v{KOB_SDK_VERSIONS.node}, aligned to OpenAPI {KOB_API_VERSION_LABEL}.
+            </p>
+            <div className="flex flex-wrap gap-3">
               <Button variant="outline" size="sm" asChild>
                 <a href="/sdk-downloads/SDK_RELEASE_NOTES.md" download>
-                  <FileText className="h-4 w-4 mr-1" /> SDK release notes (v1.2.0 → v1.6.1)
+                  <FileText className="h-4 w-4 mr-1" /> Combined release notes
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/sdk-downloads/CHANGELOG-node.md" download>
+                  <FileText className="h-4 w-4 mr-1" /> Node v{KOB_SDK_VERSIONS.node}
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/sdk-downloads/CHANGELOG-php.md" download>
+                  <FileText className="h-4 w-4 mr-1" /> PHP v{KOB_SDK_VERSIONS.php}
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/sdk-downloads/CHANGELOG-python.md" download>
+                  <FileText className="h-4 w-4 mr-1" /> Python v{KOB_SDK_VERSIONS.python}
                 </a>
               </Button>
             </div>
-            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`curl -sSO https://kangopenbanking.com/SHA256SUMS.txt
-sha256sum -c SHA256SUMS.txt --ignore-missing`}</code></pre>
           </CardContent>
         </Card>
 
