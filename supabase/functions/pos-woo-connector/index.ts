@@ -10,8 +10,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ── Hardening: AUTH IS THE FIRST GATE ────────────────────────────────
+    // Do NOT read / parse / validate the request body before this block.
+    // Returning field-level validation errors before authentication would
+    // leak the API contract (expected fields, accepted actions) to
+    // unauthenticated callers. Body parsing happens only after a verified
+    // JWT and a resolved Supabase user.
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const token = authHeader.replace('Bearer ', '');
@@ -21,8 +27,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const body = await req.json();
-    const { action } = body;
+    // Only now do we touch the body.
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { action } = body || {};
+    if (!action || typeof action !== 'string') {
+      return new Response(JSON.stringify({ error: 'action required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     switch (action) {
       case 'connect':
