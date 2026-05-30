@@ -128,7 +128,7 @@ serve(async (req) => {
         // Configuration check — refuse the action when PayPal is not configured
         // instead of writing a misleading "pending" stub intent.
         const paypalClient = Deno.env.get("PAYPAL_CLIENT_ID");
-        const paypalSecret = Deno.env.get("PAYPAL_SECRET");
+        const paypalSecret = Deno.env.get("PAYPAL_CLIENT_SECRET") || Deno.env.get("PAYPAL_SECRET");
         if (!paypalClient || !paypalSecret) {
           return json({
             error: "paypal_not_configured",
