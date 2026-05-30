@@ -1162,6 +1162,13 @@ Deno.serve(async (req) => {
         }
       }
 
+      await appendTimeline(supabase, intent_id, {
+        status: mappedStatus === 'completed' ? 'confirmed' : 'failed',
+        at: new Date().toISOString(),
+        source: 'callback',
+        detail: provider_reference ? `provider_reference=${provider_reference}` : undefined,
+      });
+
       const eventType = mappedStatus === 'completed' ? 'pay_by_bank.completed' : 'pay_by_bank.failed';
       await supabase.rpc('trigger_webhooks', {
         _event_type: eventType,
@@ -1170,6 +1177,7 @@ Deno.serve(async (req) => {
           currency: existing.currency, status: mappedStatus, provider_reference,
         }),
       });
+
 
       return new Response(JSON.stringify({ status: mappedStatus }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
