@@ -52,8 +52,27 @@ serve(async (req) => {
       return json({ error: "OneSignal not configured" }, 500);
     }
 
-    const body = (await req.json()) as Payload;
-    if (!body.title || !body.message) {
+    const body = (await req.json()) as Payload & { test_mode?: boolean };
+    // XSS-safe sanitization for any field that may render in-app.
+    const sanitize = (s: unknown, max: number) =>
+      typeof s === "string"
+        ? s.replace(/<\/?[^>]+(>|$)/g, "")
+            .replace(/javascript:/gi, "")
+            .replace(/on\w+\s*=/gi, "")
+            .replace(/[\u0000-\u001F\u007F]/g, "")
+            .trim()
+            .slice(0, max)
+        : "";
+    const safeTitle = sanitize(body.title, 120);
+    const safeMessage = sanitize(body.message, 500);
+    // Restrict deep-link URL: only same-origin paths or https URLs.
+    let safeUrl: string | undefined;
+    if (body.url && typeof body.url === "string") {
+      if (/^\//.test(body.url) || /^https:\/\//i.test(body.url)) {
+        safeUrl = body.url.slice(0, 2048);
+      }
+    }
+    if (!safeTitle || !safeMessage) {
       return json({ error: "title and message are required" }, 400);
     }
     if (!body.external_user_id && !(body.user_ids?.length)) {
@@ -62,14 +81,14 @@ serve(async (req) => {
 
     const payload: Record<string, unknown> = {
       app_id: ONESIGNAL_APP_ID,
-      headings: { en: body.title },
-      contents: { en: body.message },
-      data: { ...(body.data || {}), source: "send-push-notification" },
+      headings: { en: safeTitle },
+      contents: { en: safeMessage },
+      data: { ...(body.data || {}), source: "send-push-notification", test_mode: !!body.test_mode },
       chrome_web_icon: "https://kangopenbanking.com/favicon.png",
     };
-    if (body.url) {
-      payload.url = body.url;            // web push click target
-      payload.app_url = body.url;        // mobile click target
+    if (safeUrl) {
+      payload.url = safeUrl;
+      payload.app_url = safeUrl;
     }
     if (body.external_user_id) {
       payload.include_aliases = { external_id: [body.external_user_id] };
@@ -77,6 +96,11 @@ serve(async (req) => {
     } else if (body.user_ids?.length) {
       payload.include_player_ids = body.user_ids;
     }
+    // Audience isolation: route through env-tagged segment so test runs
+    // never hit production-subscribed devices.
+    payload.filters = [
+      { field: "tag", key: "env", relation: "=", value: body.test_mode ? "test" : "production" },
+    ];
 
     const started = Date.now();
     const resp = await fetch("https://onesignal.com/api/v1/notifications", {
