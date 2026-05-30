@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
 
     if (targetMessageId) {
       query = query.eq("message_id", targetMessageId);
+    } else if (targetMessageIds && targetMessageIds.length > 0) {
+      query = query.in("message_id", targetMessageIds);
     }
 
     const { data: dlqRows, error: dlqErr } = await query.limit(isAdminTriggered ? 5 : 50);
