@@ -78,6 +78,7 @@ Allow: /changelog.json
 Allow: /guides/certificates
 Allow: /guides/security
 
+Sitemap: https://kob.lovable.app/sitemap.xml
 Sitemap: https://kangopenbanking.com/sitemap.xml
 
 # AI crawler index (llmstxt.org convention)

@@ -4,10 +4,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { HelpCircle, Book, Shield, Code, CreditCard, Users } from "lucide-react";
+import { SEO } from "@/components/SEO";
+
+const FAQ_ITEMS = [
+  { question: "What is Kang Open Banking?", answer: "Kang Open Banking is Cameroon's unified banking API platform that connects financial institutions, fintech companies, and developers across the Central African region with a single, secure API." },
+  { question: "How do I get started?", answer: "Register for an account, complete KYC verification (usually approved within 24–48 hours), access the free sandbox, build your integration with our SDKs, test thoroughly, and request production credentials." },
+  { question: "Is it secure and compliant?", answer: "Yes. We use TLS 1.3 and AES-256 encryption, OAuth 2.0 with OpenID Connect, optional mTLS, and hold PCI-DSS Level 1, ISO 27001, and SOC 2 Type II certifications. Fully COBAC and BEAC compliant." },
+  { question: "What financial institutions do you support?", answer: "Over 25 institutions across Cameroon including major commercial banks, microfinance institutions, credit unions (CamCCUL network), and mobile money operators (MTN Mobile Money, Orange Money)." },
+  { question: "What APIs do you provide?", answer: "Account Information Services (AISP), Payment Initiation Services (PISP), and Mobile Money services covering MTN Mobile Money and Orange Money collections and disbursements." },
+  { question: "What are the API rate limits?", answer: "Sandbox: 100 requests per minute. Production Standard: 1,000 requests per minute. Enterprise: custom limits. Burst up to 2,000 requests per minute for short periods." },
+  { question: "How much does it cost?", answer: "Sandbox is free forever. Production has pay-as-you-go starter pricing, monthly Growth subscriptions with included calls, and custom Enterprise pricing with dedicated support and SLAs." },
+];
 
 export default function FAQ() {
   return (
     <div className="container mx-auto px-4 py-12">
+      <SEO
+        title="Frequently Asked Questions"
+        description="Answers about Kang Open Banking APIs, integration, security, pricing, compliance, and developer support across Cameroon and CEMAC."
+        canonical="https://kangopenbanking.com/faq"
+        faqItems={FAQ_ITEMS}
+      />
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
         <section className="text-center mb-12">
@@ -17,6 +34,7 @@ export default function FAQ() {
             Find answers to common questions about Kang Open Banking, our APIs, and integration process
           </p>
         </section>
+
 
         {/* Quick Links */}
         <div className="grid md:grid-cols-3 gap-4 mb-12">

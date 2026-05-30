@@ -115,7 +115,8 @@ export default function Contact() {
         </section>
 
         {/* Quick Contact Cards */}
-        <section className="grid md:grid-cols-4 gap-6 mb-12">
+        <h2 className="sr-only">Ways to reach our team</h2>
+        <section className="grid md:grid-cols-4 gap-6 mb-12" aria-labelledby="contact-channels">
           <Card className="p-6 text-center hover:shadow-lg transition-shadow">
             <HeadphonesIcon className="h-10 w-10 text-primary mx-auto mb-3" />
             <h3 className="font-semibold mb-2">24/7 Support</h3>
