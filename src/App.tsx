@@ -343,6 +343,7 @@ const PaymentStateMachine = lazy(() => import("./pages/developer/PaymentStateMac
 const AdminSLO = lazy(() => import("./pages/admin/AdminSLO"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
+const AdminPayByBankInspector = lazy(() => import("./pages/admin/AdminPayByBankInspector"));
 // Phase 5 — additive merchants documentation hub
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 // Phase 5 follow-up — interactive merchant API key management page
@@ -954,6 +955,7 @@ function App() {
               <Route path="otp-providers" element={<AdminOTPProviderSettings />} />
               <Route path="webhooks" element={<WebhookManagement />} />
               <Route path="webhooks/replay" element={<AdminWebhookReplay />} />
+              <Route path="pay-by-bank-inspector" element={<AdminPayByBankInspector />} />
               <Route path="branches" element={<BranchManagement />} />
               <Route path="transactions" element={<TransactionMonitoring />} />
               <Route path="consent-data" element={<ConsentDataManagement />} />

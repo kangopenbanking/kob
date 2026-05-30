@@ -8,48 +8,71 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Inbound trace id — echo back on the response so Flutterwave-side
+  // logs can be correlated with our internal Pay-by-Bank operations.
+  const traceId = req.headers.get('x-trace-id')
+    || req.headers.get('traceparent')?.split('-')[1]
+    || crypto.randomUUID().replace(/-/g, '');
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const flutterwaveSecret = Deno.env.get('FLUTTERWAVE_SECRET_KEY')!;
+    // Flutterwave webhooks are authenticated via a STATIC shared "secret
+    // hash" that you set in the FW dashboard and that they send back
+    // verbatim on every webhook in the `verif-hash` header. This is
+    // distinct from FLUTTERWAVE_SECRET_KEY (used for outbound API auth).
+    // See: https://developer.flutterwave.com/docs/webhooks
+    const flutterwaveWebhookHash = Deno.env.get('FLUTTERWAVE_WEBHOOK_HASH')
+      || Deno.env.get('FLUTTERWAVE_SECRET_HASH')
+      || Deno.env.get('FLUTTERWAVE_ENCRYPTION_KEY')
+      || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify webhook signature
-    const signature = req.headers.get('verif-hash');
+    // Verify webhook signature — structured 401 so the dashboard / FW
+    // operator can tell missing-header from wrong-secret at a glance.
+    const signature = req.headers.get('verif-hash') || '';
+    if (!flutterwaveWebhookHash) {
+      console.error(`[flw-webhook][trace=${traceId}] FLUTTERWAVE_WEBHOOK_HASH not configured`);
+      return new Response(JSON.stringify({
+        error: 'webhook_secret_not_configured',
+        code: 'WEBHOOK_SECRET_NOT_CONFIGURED',
+        message: 'Receiver is not configured to verify Flutterwave webhooks.',
+        trace_id: traceId,
+      }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+    }
     if (!signature) {
-      console.error('Missing verif-hash header');
-      return new Response(JSON.stringify({ error: 'Missing signature' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({
+        error: 'missing_signature',
+        code: 'SIGNATURE_MISSING',
+        message: 'Missing verif-hash header on Flutterwave webhook.',
+        trace_id: traceId,
+      }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
-    const payload = await req.json();
-    
-    // Verify signature using Web Crypto API
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(flutterwaveSecret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const signatureBuffer = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(JSON.stringify(payload))
-    );
-    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    const rawBody = await req.text();
+    let payload: any;
+    try { payload = JSON.parse(rawBody); } catch {
+      return new Response(JSON.stringify({
+        error: 'invalid_json', code: 'INVALID_JSON',
+        message: 'Webhook body is not valid JSON.', trace_id: traceId,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+    }
 
-    if (signature !== expectedSignature) {
-      console.error('Invalid webhook signature');
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Constant-time static compare of the shared secret hash.
+    const a = new TextEncoder().encode(signature);
+    const b = new TextEncoder().encode(flutterwaveWebhookHash);
+    let diff = a.length ^ b.length;
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
+    }
+    if (diff !== 0) {
+      console.error(`[flw-webhook][trace=${traceId}] signature mismatch`);
+      return new Response(JSON.stringify({
+        error: 'invalid_signature',
+        code: 'SIGNATURE_INVALID',
+        message: 'verif-hash did not match the configured Flutterwave webhook hash.',
+        trace_id: traceId,
+      }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
     console.log('Flutterwave webhook received:', payload);
@@ -192,22 +215,26 @@ serve(async (req) => {
                     metadata: { intent_id: pbbIntentId, flw_tx_ref: transactionRef, source: 'flutterwave_webhook' },
                   }]).then(() => {}, () => {});
                   // Append confirmed event to intent timeline, preserving any
-                  // earlier 'created' / 'awaiting_webhook' entries.
+                  // earlier 'created' / 'awaiting_webhook' entries. The trace_id
+                  // attached to the intent at create_intent is correlated with
+                  // the FW-side trace echoed in `meta.trace_id`.
                   const prevMeta = (pbb.metadata || {}) as any;
                   const prevTl = Array.isArray(prevMeta.timeline) ? prevMeta.timeline : [];
+                  const fwTrace = data?.meta?.trace_id || traceId;
                   await supabase.from('pay_by_bank_intents')
                     .update({
                       status: 'completed',
                       metadata: {
                         ...prevMeta,
                         flw_webhook_at: new Date().toISOString(),
-                        timeline: [...prevTl, { status: 'confirmed', at: new Date().toISOString(), source: 'flutterwave_webhook', detail: `flw_tx_ref=${transactionRef}` }],
+                        flw_webhook_trace_id: fwTrace,
+                        timeline: [...prevTl, { status: 'confirmed', at: new Date().toISOString(), source: 'flutterwave_webhook', detail: `flw_tx_ref=${transactionRef} trace=${fwTrace}` }],
                       },
                     })
                     .eq('id', pbbIntentId);
                   await supabase.rpc('trigger_webhooks', {
                     _event_type: 'pay_by_bank.completed',
-                    _event_data: JSON.stringify({ intent_id: pbbIntentId, amount: amountNum, currency: ccy, status: 'completed', source: 'flutterwave_webhook' }),
+                    _event_data: JSON.stringify({ intent_id: pbbIntentId, amount: amountNum, currency: ccy, status: 'completed', source: 'flutterwave_webhook', trace_id: fwTrace }),
                   }).catch(() => {});
                 }
               } else if (updateStatus === 'failed') {
@@ -263,28 +290,31 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Webhook processed successfully' 
+      message: 'Webhook processed successfully',
+      trace_id: traceId,
     }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId },
     });
 
   } catch (error: any) {
     // Log full details server-side for debugging
-    console.error('[FLUTTERWAVE-WEBHOOK] Error:', {
+    console.error(`[FLUTTERWAVE-WEBHOOK][trace=${traceId}] Error:`, {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       webhook_type: 'flutterwave_transfer',
       timestamp: new Date().toISOString()
     });
-    
-    // Return generic error to external webhook caller
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       received: false,
-      message: 'Processing error occurred'
+      error: 'processing_error',
+      code: 'PROCESSING_ERROR',
+      message: 'Processing error occurred',
+      trace_id: traceId,
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId },
     });
   }
 });

@@ -86,10 +86,42 @@ async function lookupIntentByIdempotencyKey(
   return data?.[0] || null;
 }
 
+// W3C-style trace id (32 hex). Stamped on every log line and propagated
+// to Flutterwave (meta.trace_id) + outbound webhooks so a single Pay-by-Bank
+// operation can be correlated across services and external partners.
+function genTraceId(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Verify inbound KOB-rail callback signature. Connectors post:
+//   X-KOB-Signature: <hex HMAC-SHA256(rawBody, KOB_INBOUND_WEBHOOK_SECRET)>
+// If the shared secret is configured we enforce it. With no secret we
+// degrade gracefully (back-compat) and emit a warning in logs.
+async function verifyKobCallbackSignature(req: Request, rawBody: string): Promise<{ ok: boolean; reason?: string }> {
+  const secret = Deno.env.get('KOB_INBOUND_WEBHOOK_SECRET') || '';
+  if (!secret) return { ok: true, reason: 'no_secret_configured' };
+  const provided = (req.headers.get('x-kob-signature') || '').toLowerCase().replace(/^sha256=/, '');
+  if (!provided) return { ok: false, reason: 'missing_signature_header' };
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+  const expected = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const a = enc.encode(expected); const b = enc.encode(provided);
+  if (a.length !== b.length) return { ok: false, reason: 'signature_length_mismatch' };
+  let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0 ? { ok: true } : { ok: false, reason: 'signature_mismatch' };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const traceId = (req.headers.get('x-trace-id')
+    || req.headers.get('traceparent')?.split('-')[1]
+    || genTraceId()).slice(0, 32);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -103,10 +135,14 @@ Deno.serve(async (req) => {
         error: 'idempotency_key_invalid',
         code: 'IDEMPOTENCY_KEY_INVALID',
         message: 'Idempotency-Key must be a UUID v4.',
-      })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        extra: { trace_id: traceId },
+      })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
-    const body = await req.json().catch(() => ({}));
+    // Read raw body once so signature verification (callback action) can
+    // HMAC the exact bytes the partner signed.
+    const bodyText = await req.text();
+    const body = bodyText ? (() => { try { return JSON.parse(bodyText); } catch { return {}; } })() : {};
     const { action } = body;
 
 
@@ -486,8 +522,9 @@ Deno.serve(async (req) => {
           metadata: {
             ...(source_bank ? { source_bank, rail: sourceRail, linked_account_id: linkedAccountId, linked_last4: linkedLast4 } : {}),
             ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
+            trace_id: traceId,
             timeline: [
-              { status: 'created', at: new Date().toISOString(), source: 'create_intent' },
+              { status: 'created', at: new Date().toISOString(), source: 'create_intent', detail: `trace=${traceId}` },
               { status: 'awaiting_webhook', at: new Date().toISOString(), source: 'create_intent' },
             ],
           },
@@ -555,11 +592,12 @@ Deno.serve(async (req) => {
                 pay_by_bank_intent_id: intent.id,
                 bank_code: source_bank?.code || null,
                 bank_name: source_bank?.name || null,
+                trace_id: traceId,
               },
             }),
           });
           const flwData = await flwRes.json();
-          console.log('[pay-by-bank][flw] status:', flwData?.status, 'msg:', flwData?.message);
+          console.log(`[pay-by-bank][flw][trace=${traceId}] status:`, flwData?.status, 'msg:', flwData?.message);
 
           if (flwData?.status !== 'success' || !flwData?.data?.link) {
             throw new Error(flwData?.message || 'Flutterwave did not return a checkout link');
@@ -618,7 +656,78 @@ Deno.serve(async (req) => {
         target_type,
         rail: sourceRail,
         rail_descriptor: railDescriptor,
-      }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        trace_id: traceId,
+      }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+    }
+
+
+    // ─── get_timeline ─────────────────────────────────────────
+    // Returns the full webhook-driven status timeline + last webhook
+    // event metadata for a given intent_id, plus webhook_inbox retry/
+    // replay records that referenced this intent. Integrators poll this
+    // to render a status tracker without depending on redirects.
+    if (action === 'get_timeline') {
+      const { intent_id } = body;
+      if (!intent_id) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields', code: 'MISSING_FIELDS',
+          message: 'intent_id is required.', extra: { trace_id: traceId },
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
+      const { data: intent } = await supabase
+        .from('pay_by_bank_intents')
+        .select('id, status, amount, currency, created_at, updated_at, expires_at, failure_reason, metadata, target_type, customer_user_id, merchant_id')
+        .eq('id', intent_id)
+        .maybeSingle();
+      if (!intent) {
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'intent_not_found', code: 'INTENT_NOT_FOUND',
+          message: 'No Pay-by-Bank intent matches that id.', extra: { trace_id: traceId },
+        })), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
+      const meta = (intent.metadata || {}) as any;
+      const flwTxRef = meta.flw_tx_ref as string | undefined;
+
+      // Pull related inbox rows by intent id (most reliable) and by
+      // flw_tx_ref so we capture both KOB and Flutterwave deliveries.
+      const inboxRows: any[] = [];
+      try {
+        const { data: byIntent } = await supabase.from('webhook_inbox')
+          .select('id, source, event_id, event_type, status, attempt_count, max_attempts, next_retry_at, is_processed, processed_at, processing_error, created_at')
+          .or(`event_id.ilike.%${intent_id}%`)
+          .order('created_at', { ascending: false }).limit(25);
+        if (byIntent) inboxRows.push(...byIntent);
+        if (flwTxRef) {
+          const { data: byTxRef } = await supabase.from('webhook_inbox')
+            .select('id, source, event_id, event_type, status, attempt_count, max_attempts, next_retry_at, is_processed, processed_at, processing_error, created_at')
+            .ilike('event_id', `%${flwTxRef}%`)
+            .order('created_at', { ascending: false }).limit(25);
+          if (byTxRef) {
+            for (const r of byTxRef) if (!inboxRows.find(x => x.id === r.id)) inboxRows.push(r);
+          }
+        }
+      } catch (e) {
+        console.warn(`[pay-by-bank][get_timeline][trace=${traceId}] webhook_inbox lookup failed`, e);
+      }
+
+      const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
+      const lastWebhookEvent = inboxRows[0] || null;
+
+      return new Response(JSON.stringify({
+        intent_id: intent.id,
+        status: intent.status,
+        amount: intent.amount,
+        currency: intent.currency,
+        failure_reason: intent.failure_reason,
+        rail: meta.rail || null,
+        trace_id: meta.trace_id || null,
+        idempotency_key: meta.idempotency_key || null,
+        timeline,
+        last_webhook_event: lastWebhookEvent,
+        webhook_history: inboxRows,
+        kob_callback_at: meta.kob_callback_at || null,
+        flutterwave_webhook_at: meta.flw_webhook_at || null,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
 
@@ -1095,11 +1204,26 @@ Deno.serve(async (req) => {
 
     // ─── callback (internal — bank connector confirms) ────────
     if (action === 'callback') {
+      // Verify HMAC signature when KOB_INBOUND_WEBHOOK_SECRET is set.
+      const sigCheck = await verifyKobCallbackSignature(req, bodyText);
+      if (!sigCheck.ok) {
+        console.warn(`[pay-by-bank][callback][trace=${traceId}] signature rejected: ${sigCheck.reason}`);
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'invalid_signature',
+          code: sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID',
+          message: sigCheck.reason === 'missing_signature_header'
+            ? 'Missing X-KOB-Signature header on callback request.'
+            : 'Callback HMAC signature did not match the expected value.',
+          extra: { trace_id: traceId, reason: sigCheck.reason },
+        })), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+      }
       const { intent_id, final_status, provider_reference } = body;
       if (!intent_id || !final_status) {
-        return new Response(JSON.stringify({ error: 'intent_id and final_status required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return new Response(JSON.stringify(buildErrorBody({
+          error: 'missing_fields', code: 'MISSING_FIELDS',
+          message: 'intent_id and final_status are required.',
+          extra: { trace_id: traceId },
+        })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
 
       const { data: existing } = await supabase
@@ -1123,8 +1247,8 @@ Deno.serve(async (req) => {
 
       const mappedStatus = final_status === 'success' ? 'completed' : 'failed';
 
-      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref)
-      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString() };
+      // Merge metadata rather than overwriting (preserves source_bank, rail, flw_tx_ref, trace_id)
+      const mergedMeta = { ...(existing.metadata || {}), provider_reference, kob_callback_at: new Date().toISOString(), kob_callback_trace_id: traceId };
 
       await supabase.from('pay_by_bank_intents').update({
         status: mappedStatus,
