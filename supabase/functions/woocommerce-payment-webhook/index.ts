@@ -2,18 +2,21 @@
 // Bridges the Kang gateway settlement pipeline to woocommerce_transactions and
 // emits a signed outbound webhook to the merchant's WordPress site.
 //
-// Two modes:
-//   1) "sync"   — Called by the PHP plugin (or merchant frontend) with the
-//                 merchant api_key. Re-checks settlement state from
-//                 gateway_charges (matched via metadata.transaction_ref) and
-//                 reflects it onto woocommerce_transactions. Returns current
-//                 status. Safe to call repeatedly (idempotent).
-//   2) "notify" — Called internally with the SERVICE_ROLE key (e.g. from
-//                 gateway-webhook-flutterwave / -stripe). Updates the matching
-//                 woocommerce_transactions row, then POSTs a signed payload to
-//                 the merchant's configured webhook URL.
+// Modes:
+//   1) "sync"   — Called by the PHP plugin with the merchant api_key. Re-checks
+//                 settlement state from gateway_charges and reflects it onto
+//                 woocommerce_transactions. Safe to call repeatedly.
+//   2) "notify" — Called internally with the SERVICE_ROLE key (from gateway
+//                 webhook handlers). Updates the matching woocommerce_transactions
+//                 row, then POSTs a signed payload to the merchant's webhook URL.
+//                 Idempotent via webhook_inbox (source='woocommerce', event_id).
+//   3) "inbound"— Called by the merchant's WordPress plugin posting back a status
+//                 update. Verified via HMAC-SHA256(X-Kang-Signature) using the
+//                 stored webhook_secret_hash. Rejected deterministically on bad
+//                 signature with an audit log entry.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import { checkAndRegisterWebhook, markWebhookProcessed } from "../_shared/webhook-replay-protection.ts";
 
 const TERMINAL = new Set(["completed", "failed", "refunded"]);
 
@@ -33,6 +36,14 @@ async function hmac(payload: string, secret: string) {
 async function sha256(text: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Constant-time equality to avoid timing oracles on signature comparison.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
 }
 
 function mapGatewayStatus(s: string): "pending" | "processing" | "completed" | "failed" | "refunded" {
@@ -68,6 +79,7 @@ async function deliverOutbound(merchantUrl: string | null | undefined, secret: s
         "Content-Type": "application/json",
         "X-Kang-Signature": signature,
         "X-Kang-Event": payload.event,
+        "X-Kang-Event-ID": payload.event_id,
       },
       body,
       signal: AbortSignal.timeout(10_000),
@@ -92,9 +104,11 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Read raw body once so we can verify HMAC signatures byte-exactly.
+  const rawBody = await req.text();
   let body: any;
   try {
-    body = await req.json();
+    body = rawBody ? JSON.parse(rawBody) : {};
   } catch {
     return new Response(JSON.stringify({ error: "invalid_json" }), {
       status: 400,
@@ -103,15 +117,15 @@ Deno.serve(async (req) => {
   }
 
   const mode = body?.mode;
-  if (mode !== "sync" && mode !== "notify") {
+  if (mode !== "sync" && mode !== "notify" && mode !== "inbound") {
     return new Response(
-      JSON.stringify({ error: "invalid_mode", message: 'mode must be "sync" or "notify"' }),
+      JSON.stringify({ error: "invalid_mode", message: 'mode must be "sync", "notify", or "inbound"' }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
   try {
-    // ---------- internal NOTIFY (service-role only) ----------
+    // ---------- internal NOTIFY (service-role only, with replay protection) ----
     if (mode === "notify") {
       const internalKey = req.headers.get("x-internal-key") || "";
       if (internalKey !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
@@ -121,20 +135,42 @@ Deno.serve(async (req) => {
         });
       }
       const { transaction_ref, status, provider_ref, error_message } = body;
+      const idempotency_key: string | undefined =
+        body.idempotency_key || body.event_id || req.headers.get("idempotency-key") || undefined;
       if (!transaction_ref || !status) {
         return new Response(JSON.stringify({ error: "transaction_ref and status required" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      // Replay/idempotency guard. Duplicates short-circuit with 200.
+      const eventId = idempotency_key || `${transaction_ref}:${status}:${provider_ref ?? ""}`;
+      const replay = await checkAndRegisterWebhook(supabase, {
+        source: "woocommerce",
+        event_id: eventId,
+        payload: body,
+      });
+      if (replay.duplicate) {
+        return new Response(
+          JSON.stringify({ success: true, duplicate: true, reason: replay.reason }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       const finalStatus = mapGatewayStatus(status);
       const { data: tx, error: txErr } = await supabase
         .from("woocommerce_transactions")
-        .update({ status: finalStatus, error_message: error_message ?? null, metadata: { provider_ref } })
+        .update({
+          status: finalStatus,
+          error_message: error_message ?? null,
+          metadata: { provider_ref, idempotency_key: eventId, settled_via: "notify" },
+        })
         .eq("transaction_ref", transaction_ref)
         .select("id, merchant_id, woocommerce_order_id, amount, currency, metadata")
         .maybeSingle();
       if (txErr || !tx) {
+        if (replay.inbox_id) await markWebhookProcessed(supabase, replay.inbox_id, "transaction_not_found");
         return new Response(JSON.stringify({ error: "transaction_not_found" }), {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -147,13 +183,10 @@ Deno.serve(async (req) => {
         .eq("id", tx.merchant_id)
         .maybeSingle();
 
-      // We never store the plaintext webhook secret; the PHP plugin verifies
-      // signatures by knowing its own secret. We sign with the stored hash so
-      // delivery still includes a verifiable HMAC field (the plugin compares
-      // both forms).
       const signingMaterial = merchant?.webhook_secret_hash || tx.merchant_id;
       const delivery = await deliverOutbound(merchant?.webhook_url, signingMaterial, {
         event: `payment.${finalStatus}`,
+        event_id: eventId,
         transaction_ref,
         woocommerce_order_id: tx.woocommerce_order_id,
         amount: tx.amount,
@@ -162,7 +195,94 @@ Deno.serve(async (req) => {
         emitted_at: new Date().toISOString(),
       });
 
-      return new Response(JSON.stringify({ success: true, status: finalStatus, delivery }), {
+      if (replay.inbox_id) await markWebhookProcessed(supabase, replay.inbox_id);
+
+      return new Response(JSON.stringify({ success: true, status: finalStatus, delivery, event_id: eventId }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ---------- INBOUND from WordPress plugin (strict HMAC verification) -------
+    if (mode === "inbound") {
+      const merchantId: string | undefined = body.merchant_id;
+      const signature = req.headers.get("x-kang-signature") || "";
+      if (!merchantId || !signature) {
+        await supabase.from("audit_logs").insert({
+          event_type: "woocommerce.webhook.rejected",
+          severity: "warning",
+          details: { reason: "missing_signature_or_merchant", merchant_id: merchantId ?? null },
+        }).then(() => {}, () => {});
+        return new Response(JSON.stringify({ error: "missing_signature_or_merchant" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: merchant } = await supabase
+        .from("woocommerce_merchants")
+        .select("id, webhook_secret_hash, status")
+        .eq("id", merchantId)
+        .maybeSingle();
+
+      if (!merchant || merchant.status !== "active" || !merchant.webhook_secret_hash) {
+        await supabase.from("audit_logs").insert({
+          event_type: "woocommerce.webhook.rejected",
+          severity: "warning",
+          details: { reason: "merchant_not_verifiable", merchant_id: merchantId },
+        }).then(() => {}, () => {});
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const expected = await hmac(rawBody, merchant.webhook_secret_hash);
+      if (!timingSafeEqual(signature.toLowerCase(), expected.toLowerCase())) {
+        await supabase.from("audit_logs").insert({
+          event_type: "woocommerce.webhook.signature_invalid",
+          severity: "error",
+          details: { merchant_id: merchant.id, event: body.event ?? null },
+        }).then(() => {}, () => {});
+        return new Response(JSON.stringify({ error: "invalid_signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Replay protection — use event_id when provided, otherwise hash of body.
+      const eventId = body.event_id || (await sha256(rawBody));
+      const replay = await checkAndRegisterWebhook(supabase, {
+        source: "woocommerce_inbound",
+        event_id: eventId,
+        payload: body,
+        signature,
+      });
+      if (replay.duplicate) {
+        return new Response(JSON.stringify({ success: true, duplicate: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Apply status update if present.
+      if (body.transaction_ref && body.status) {
+        const finalStatus = mapGatewayStatus(body.status);
+        await supabase
+          .from("woocommerce_transactions")
+          .update({ status: finalStatus, metadata: { inbound: true, event_id: eventId } })
+          .eq("transaction_ref", body.transaction_ref)
+          .eq("merchant_id", merchant.id);
+      }
+
+      await supabase.from("audit_logs").insert({
+        event_type: "woocommerce.webhook.accepted",
+        severity: "info",
+        details: { merchant_id: merchant.id, event: body.event ?? null, event_id: eventId },
+      }).then(() => {}, () => {});
+
+      if (replay.inbox_id) await markWebhookProcessed(supabase, replay.inbox_id);
+      return new Response(JSON.stringify({ success: true, event_id: eventId }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -203,7 +323,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // If still non-terminal, re-check gateway_charges by tx_ref OR linked id.
     if (!TERMINAL.has(tx.status) && tx.kob_transaction_id) {
       const { data: charge } = await supabase
         .from("gateway_charges")
