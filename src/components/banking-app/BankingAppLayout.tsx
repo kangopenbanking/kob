@@ -39,6 +39,7 @@ const BankingAppInner: React.FC = () => {
       style={{ '--pwa-font-multiplier': tenant.fontSizeMultiplier } as React.CSSProperties}
     >
       <HealthBanner />
+      <ScreenshotGuard />
       <OfflineIndicator />
       <TranslationHarvester category="banking" />
       <div className="absolute right-3 top-3 z-40">
