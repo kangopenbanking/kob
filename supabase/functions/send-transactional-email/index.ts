@@ -416,11 +416,22 @@ Deno.serve(async (req) => {
       error_message: 'Failed to enqueue email',
     })
 
+    await supabase.rpc('log_notification_event', {
+      _channel: 'email', _status: 'failed', _provider: 'lovable_email',
+      _template_name: templateName, _message_id: messageId, _recipient_hash: recipientHash,
+      _error_code: 'enqueue_failed', _error_message: String(enqueueError?.message ?? enqueueError),
+    }).then(() => {}, () => {})
+
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+
+  await supabase.rpc('log_notification_event', {
+    _channel: 'email', _status: 'queued', _provider: 'lovable_email',
+    _template_name: templateName, _message_id: messageId, _recipient_hash: recipientHash,
+  }).then(() => {}, () => {})
 
   console.log('Transactional email enqueued', { templateName, effectiveRecipient })
 
