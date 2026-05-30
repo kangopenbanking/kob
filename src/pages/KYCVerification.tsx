@@ -216,10 +216,15 @@ export default function KYCVerification() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Identity verification</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="mb-5">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Identity
+        </p>
+        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+          Identity verification
+        </h1>
+        <p className="mt-1 text-[12px] text-muted-foreground">
           Complete your verification to unlock full account access.
         </p>
       </div>
@@ -227,14 +232,15 @@ export default function KYCVerification() {
       {renderStatusCard()}
 
       {canSubmitNew && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{latest?.status === "rejected" ? "Resubmit verification" : "Submit verification"}</CardTitle>
-            <CardDescription>
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-semibold">{latest?.status === "rejected" ? "Resubmit verification" : "Submit verification"}</CardTitle>
+            <CardDescription className="text-[12px]">
               Provide your identification documents. Accepted formats: JPG, PNG, WebP, PDF (max 10 MB each).
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-2">
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="verification_type">Verification type</Label>
