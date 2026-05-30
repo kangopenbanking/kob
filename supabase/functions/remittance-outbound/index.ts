@@ -42,7 +42,7 @@ serve(async (req) => {
       case "get_quote":
         return await getQuote(supabase, user, body);
       case "send":
-        return await sendRemittance(supabase, user, body);
+        return await sendRemittance(supabase, user, body, req);
       case "cancel":
         return await cancelRemittance(supabase, user, body);
       case "track":
