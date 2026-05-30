@@ -490,7 +490,7 @@ export default function KYCVerificationReview() {
               )}
 
               {/* Action buttons */}
-              {selectedKYC.status === "pending" && (
+              {selectedKYC.status === "pending" && canReview && (
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button onClick={() => handleReview(selectedKYC, "approved")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <CheckCircle className="h-4 w-4" /> Approve
@@ -501,6 +501,11 @@ export default function KYCVerificationReview() {
                   <Button variant="destructive" onClick={() => handleReview(selectedKYC, "rejected")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <XCircle className="h-4 w-4" /> Reject
                   </Button>
+                </div>
+              )}
+              {selectedKYC.status === "pending" && !canReview && !permLoading && (
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                  You do not have permission to act on KYC submissions. Contact a compliance officer or platform admin.
                 </div>
               )}
             </div>
