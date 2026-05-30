@@ -13,6 +13,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { safeErrorResponse } from "../_shared/errors.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 const STALE_HOURS_THRESHOLD = 48; // Flag after 48 hours without settlement
 
@@ -31,15 +32,17 @@ serve(async (req) => {
       action = action || body.action;
     }
 
-    // Auth: admin or service role (cron)
-    const authHeader = req.headers.get('Authorization') || '';
-    const token = authHeader.replace('Bearer ', '');
-    if (token) {
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) {
-        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-        if (!isAdmin) return json({ error: 'forbidden' }, 403);
-      }
+    // P0 AUTH GATE — require service-role/cron secret OR an authenticated admin.
+    // Previously the function was publicly executable (token-less requests passed).
+    const cronAuth = verifyCronAuth(req);
+    if (!cronAuth.authorized) {
+      const authHeader = req.headers.get('Authorization') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+      if (!token) return json({ error: 'unauthorized' }, 401);
+      const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
+      if (userErr || !user) return json({ error: 'unauthorized' }, 401);
+      const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (!isAdmin) return json({ error: 'forbidden' }, 403);
     }
 
     switch (action || 'run_recon') {
