@@ -158,6 +158,8 @@ export default function FirebaseOTPTestSuite() {
       });
     }
   };
+
+  const handleVerify = async () => {
     const submit = scenario === "wrong_code" ? "000000" : code;
     if (!submit || submit.length < 6) {
       toast.error("Enter the 6-digit verification code.");
