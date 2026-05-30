@@ -754,12 +754,25 @@ export default function CustomerBudget() {
         category={editCat}
       />
 
-      {/* Mini-donut detail bottom sheet */}
-      <Sheet open={!!statSheet} onOpenChange={(v) => !v && setStatSheet(null)}>
+      {/* Mini-donut detail bottom sheet — Radix Dialog provides focus trap, Escape-to-close, role="dialog" and aria-modal automatically. */}
+      <Sheet
+        open={!!statSheet}
+        onOpenChange={(v) => {
+          if (v) {
+            trackBudgetEvent("budget.stat_sheet.open", { stat: statSheet ?? undefined });
+          } else {
+            trackBudgetEvent("budget.stat_sheet.close", { stat: statSheet ?? undefined });
+            setStatSheet(null);
+          }
+        }}
+      >
         <SheetContent
           side="bottom"
-          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5"
+          className="rounded-t-3xl border-t-0 px-6 pb-8 pt-5 focus:outline-none"
           data-testid="stat-sheet"
+          aria-labelledby="stat-sheet-title"
+          aria-describedby="stat-sheet-desc"
+          onEscapeKeyDown={() => trackBudgetEvent("budget.stat_sheet.close", { stat: statSheet ?? undefined, source: "escape" })}
         >
           {statSheet && summary && (() => {
             const config = {
