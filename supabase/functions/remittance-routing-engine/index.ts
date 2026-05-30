@@ -60,12 +60,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { safeErrorResponse } from "../_shared/errors.ts";
 import { REMITTANCE_LEDGER_CODES } from "../_shared/remittance-adapters.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 // KOB fee percentage on remittances (configurable per corridor in future)
 const KOB_REMITTANCE_FEE_PCT = 0.5; // 0.5%
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // P0 AUTH GATE — internal-only: require service-role/cron secret.
+  const cronAuth = verifyCronAuth(req);
+  if (!cronAuth.authorized) return cronAuth.response!;
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createFlutterwavePayout, createPayPalPayout } from "../_shared/gateway-adapters.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 /**
  * remittance-fulfill — Payout execution engine.
@@ -12,6 +13,10 @@ import { createFlutterwavePayout, createPayPalPayout } from "../_shared/gateway-
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // P0 AUTH GATE — internal-only: require service-role/cron secret.
+  const cronAuth = verifyCronAuth(req);
+  if (!cronAuth.authorized) return cronAuth.response!;
 
   try {
     const supabase = createClient(
