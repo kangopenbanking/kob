@@ -45,33 +45,34 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <!-- Integration Guides (real routes from src/App.tsx) -->
   <url>
-    <loc>https://kangopenbanking.com/developer/getting-started</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-  <url>
-    <loc>https://kangopenbanking.com/developer/getting-started/authentication</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://kangopenbanking.com/guides/aisp</loc>
+    <lastmod>2026-05-30</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://kangopenbanking.com/developer/integration-workflow</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://kangopenbanking.com/guides/pisp</loc>
+    <lastmod>2026-05-30</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://kangopenbanking.com/developer/guides/sdks</loc>
-    <lastmod>2026-03-07</lastmod>
+    <loc>https://kangopenbanking.com/guides/security</loc>
+    <lastmod>2026-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://kangopenbanking.com/developer/api-reference/charge-states</loc>
-    <lastmod>2026-05-04</lastmod>
+    <loc>https://kangopenbanking.com/guides/webhooks</loc>
+    <lastmod>2026-05-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/guides/certificates</loc>
+    <lastmod>2026-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
