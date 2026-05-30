@@ -154,6 +154,14 @@ serve(async (req) => {
     const elapsedMs = Date.now() - started;
     const respBody = await resp.json().catch(() => ({}));
 
+    await audit(
+      resp.ok,
+      resp.ok ? (isAdmin ? "allowed_admin" : "allowed_self") : "onesignal_error",
+      targets,
+      safeTitle,
+    );
+
+
     // Log to push_test_log if the table exists; ignore otherwise.
     try {
       await admin.from("push_test_log").insert({
