@@ -97,11 +97,12 @@ function genTraceId(): string {
 
 // Verify inbound KOB-rail callback signature. Connectors post:
 //   X-KOB-Signature: <hex HMAC-SHA256(rawBody, KOB_INBOUND_WEBHOOK_SECRET)>
-// If the shared secret is configured we enforce it. With no secret we
-// degrade gracefully (back-compat) and emit a warning in logs.
+// The shared secret is REQUIRED. If KOB_INBOUND_WEBHOOK_SECRET is not
+// configured we fail CLOSED (reject all callbacks) so a misconfigured
+// deployment cannot accept unauthenticated state transitions.
 async function verifyKobCallbackSignature(req: Request, rawBody: string): Promise<{ ok: boolean; reason?: string }> {
   const secret = Deno.env.get('KOB_INBOUND_WEBHOOK_SECRET') || '';
-  if (!secret) return { ok: true, reason: 'no_secret_configured' };
+  if (!secret) return { ok: false, reason: 'webhook_secret_not_configured' };
   const provided = (req.headers.get('x-kob-signature') || '').toLowerCase().replace(/^sha256=/, '');
   if (!provided) return { ok: false, reason: 'missing_signature_header' };
   const enc = new TextEncoder();
@@ -113,6 +114,45 @@ async function verifyKobCallbackSignature(req: Request, rawBody: string): Promis
   let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
   return diff === 0 ? { ok: true } : { ok: false, reason: 'signature_mismatch' };
 }
+
+// Resolve the authenticated admin caller for inspector/replay actions.
+// Returns the user id when the JWT belongs to an `admin` role member;
+// otherwise returns an error reason to fail closed.
+async function resolveAdminCaller(req: Request, supabase: any): Promise<{ ok: true; userId: string } | { ok: false; reason: string; status: number }> {
+  const authz = req.headers.get('authorization') || req.headers.get('Authorization') || '';
+  const token = authz.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return { ok: false, reason: 'missing_bearer_token', status: 401 };
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return { ok: false, reason: 'invalid_token', status: 401 };
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+  if (!isAdmin) return { ok: false, reason: 'not_admin', status: 403 };
+  return { ok: true, userId: user.id };
+}
+
+async function recordAdminAudit(supabase: any, params: {
+  userId: string;
+  action: string;
+  entityId: string;
+  traceId: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}) {
+  try {
+    await supabase.from('audit_logs').insert({
+      action_type: params.action,
+      entity_type: 'pay_by_bank_intent',
+      entity_id: params.entityId,
+      performed_by: params.userId,
+      details: { trace_id: params.traceId, ...(params.details || {}) },
+      ip_address: params.ipAddress || null,
+      user_agent: params.userAgent || null,
+    });
+  } catch (e) {
+    console.warn('[pay-by-bank] audit insert failed', e);
+  }
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
