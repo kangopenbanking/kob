@@ -292,6 +292,8 @@ serve(async (req) => {
       _event_category: 'authentication',
       _metadata: { method: 'firebase_phone_otp', phone: phoneNumber, token_hash: tokenHash.slice(0, 12) },
     });
+    await logOtp(phoneHash, countryCode, 'verified', null, { user_id: userId });
+
 
     return new Response(
       JSON.stringify({
