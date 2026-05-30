@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Mail, CheckCircle2, XCircle, Send } from "lucide-react";
+import { Loader2, Mail, CheckCircle2, XCircle, Send, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface SendResult {
@@ -43,6 +43,33 @@ interface SendResult {
   at: string;
 }
 
+interface ValidationCheck {
+  id: string;
+  label: string;
+  severity: "error" | "warning" | "info";
+  passed: boolean;
+  detail?: string;
+}
+interface ValidationResult {
+  template: string;
+  displayName: string;
+  passed: boolean;
+  errors: number;
+  warnings: number;
+  checks: ValidationCheck[];
+  renders: { scenario: string; ok: boolean; html_length: number; text_length: number; error?: string }[];
+}
+interface ValidationSummary {
+  total: number;
+  passed: number;
+  failed: number;
+  total_errors: number;
+  total_warnings: number;
+  from_address: string;
+  reply_to: string;
+  sender_domain: string;
+}
+
 export default function EmailTestSuite() {
   const [recipient, setRecipient] = useState("");
   const [selected, setSelected] = useState<EmailTemplateSpec>(EMAIL_TEMPLATES[0]);
@@ -51,6 +78,29 @@ export default function EmailTestSuite() {
   );
   const [sending, setSending] = useState<string | null>(null);
   const [results, setResults] = useState<SendResult[]>([]);
+  const [validating, setValidating] = useState(false);
+  const [validation, setValidation] = useState<{ summary: ValidationSummary; results: ValidationResult[] } | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  async function runValidation() {
+    setValidating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-validate-email-templates", {
+        body: {},
+      });
+      if (error) throw error;
+      setValidation({ summary: data.summary, results: data.results });
+      if (data.summary.failed === 0) {
+        toast.success(`All ${data.summary.total} templates passed validation`);
+      } else {
+        toast.error(`${data.summary.failed}/${data.summary.total} templates have errors`);
+      }
+    } catch (err) {
+      toast.error(await extractEdgeFunctionError(err));
+    } finally {
+      setValidating(false);
+    }
+  }
 
   const grouped = useMemo(() => {
     const map = new Map<string, EmailTemplateSpec[]>();
@@ -227,7 +277,135 @@ export default function EmailTestSuite() {
         </CardContent>
       </Card>
 
-      {/* Template catalog */}
+      {/* Template validation suite */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="h-4 w-4" /> Template validation
+            </CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Static Litmus-style checks: verified From domain, Reply-To, plain-text fallback, unsubscribe handling,
+              empty/partial variable rendering, image alts, inline styles, no scripts.
+            </p>
+          </div>
+          <Button onClick={runValidation} disabled={validating} variant="outline">
+            {validating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+            Run validation
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!validation ? (
+            <p className="text-sm text-muted-foreground">
+              Click "Run validation" to render every template with full, empty, and partial variable payloads and check
+              against deliverability rules.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                <SummaryStat label="Templates" value={validation.summary.total} />
+                <SummaryStat label="Passed" value={validation.summary.passed} tone="success" />
+                <SummaryStat label="Failed" value={validation.summary.failed} tone={validation.summary.failed ? "danger" : "default"} />
+                <SummaryStat label="Errors" value={validation.summary.total_errors} tone={validation.summary.total_errors ? "danger" : "default"} />
+                <SummaryStat label="Warnings" value={validation.summary.total_warnings} tone={validation.summary.total_warnings ? "warning" : "default"} />
+              </div>
+              <div className="rounded-md border bg-muted/30 p-3 text-xs">
+                <div><span className="text-muted-foreground">From:</span> <span className="font-mono">{validation.summary.from_address}</span></div>
+                <div><span className="text-muted-foreground">Reply-To:</span> <span className="font-mono">{validation.summary.reply_to}</span></div>
+                <div><span className="text-muted-foreground">Sender domain:</span> <span className="font-mono">{validation.summary.sender_domain}</span></div>
+              </div>
+              <div className="overflow-x-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">Status</TableHead>
+                      <TableHead>Template</TableHead>
+                      <TableHead className="w-[90px]">Errors</TableHead>
+                      <TableHead className="w-[110px]">Warnings</TableHead>
+                      <TableHead className="w-[260px]">Renders (full / empty / partial)</TableHead>
+                      <TableHead className="w-[120px] text-right">Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {validation.results.map((r) => (
+                      <Fragment key={r.template}>
+                        <TableRow>
+                          <TableCell>
+                            {r.passed ? (
+                              <CheckCircle2 className="h-4 w-4 text-primary" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{r.displayName}</div>
+                            <div className="font-mono text-xs text-muted-foreground">{r.template}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={r.errors ? "destructive" : "outline"}>{r.errors}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={r.warnings ? "secondary" : "outline"}>{r.warnings}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {r.renders.map((p) => (
+                              <span
+                                key={p.scenario}
+                                className={`mr-1 inline-block rounded border px-1.5 py-0.5 ${
+                                  p.ok ? "border-primary/30 text-primary" : "border-destructive/30 text-destructive"
+                                }`}
+                                title={p.error ?? `${p.html_length} bytes / ${p.text_length} text chars`}
+                              >
+                                {p.scenario}: {p.ok ? "ok" : "fail"}
+                              </span>
+                            ))}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setExpanded(expanded === r.template ? null : r.template)}
+                            >
+                              {expanded === r.template ? "Hide" : "Show"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {expanded === r.template && (
+                          <TableRow key={`${r.template}-detail`}>
+                            <TableCell colSpan={6} className="bg-muted/20">
+                              <div className="space-y-1 py-2">
+                                {r.checks.map((c) => (
+                                  <div key={c.id} className="flex items-start gap-2 text-xs">
+                                    {c.passed ? (
+                                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                                    ) : c.severity === "error" ? (
+                                      <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                                    ) : (
+                                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                                    )}
+                                    <div className="flex-1">
+                                      <span className={c.passed ? "" : "font-medium"}>{c.label}</span>
+                                      {c.detail && (
+                                        <span className="ml-2 font-mono text-muted-foreground">— {c.detail}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Template catalog & triggers</CardTitle>
@@ -358,3 +536,29 @@ export default function EmailTestSuite() {
     </div>
   );
 }
+
+function SummaryStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  tone?: "default" | "success" | "warning" | "danger";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "text-primary"
+      : tone === "danger"
+      ? "text-destructive"
+      : tone === "warning"
+      ? "text-amber-600"
+      : "text-foreground";
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={`text-2xl font-semibold ${toneClass}`}>{value}</div>
+    </div>
+  );
+}
+
