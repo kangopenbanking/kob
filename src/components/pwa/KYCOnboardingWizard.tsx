@@ -389,6 +389,7 @@ const UploadBox: React.FC<{
     <Label className="mb-2 text-sm">{label}</Label>
     <button
       type="button"
+      aria-label={`Upload ${label}`}
       onClick={() => inputRef.current?.click()}
       className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted p-6 transition-colors hover:border-primary/50"
     >
@@ -401,17 +402,19 @@ const UploadBox: React.FC<{
       ) : (
         <>
           <Upload className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
-          <span className="text-xs text-muted-foreground">Tap to upload</span>
+          <span className="text-xs text-muted-foreground">Tap to upload {label.toLowerCase()}</span>
         </>
       )}
     </button>
     <input
       ref={inputRef}
       type="file"
-      accept="image/*"
+      accept="image/jpeg,image/png,image/webp"
+      aria-label={label}
       className="hidden"
       onChange={(e) => e.target.files?.[0] && onFileChange(e.target.files[0])}
     />
+
   </div>
 );
 
