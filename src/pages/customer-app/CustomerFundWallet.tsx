@@ -849,6 +849,42 @@ const CustomerFundWallet: React.FC = () => {
                     : tr('You will be securely redirected to Flutterwave to enter your bank credentials and confirm this payment.')}
                 </p>
 
+                {/* Rail capability summary from preflight — explains why a
+                    direct bank-debit rail may not be available and which
+                    rail will actually carry the payment. */}
+                {pbbRailInfo && (
+                  <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
+                    <p className="text-[11px] font-semibold text-foreground">{tr('Available rails for this bank')}</p>
+                    <ul className="space-y-1.5">
+                      {pbbRailInfo.rails.map((r) => (
+                        <li key={r.rail} className="flex items-start gap-2 text-[11px]">
+                          <span className={cn(
+                            'mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                            r.supported ? 'border-primary/60 text-primary' : 'border-muted-foreground/30 text-muted-foreground/50',
+                          )}>
+                            {r.supported ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                          </span>
+                          <span className="flex-1">
+                            <span className={cn('font-semibold', r.supported ? 'text-foreground' : 'text-muted-foreground line-through')}>{r.label}</span>
+                            {!r.supported && r.reason && (
+                              <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5">{r.reason}</span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {pbbFallback && (
+                  <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-3 text-[11px] text-foreground">
+                    <p className="font-semibold">{tr('Switched to secure hosted checkout')}</p>
+                    <p className="text-muted-foreground leading-snug">{pbbFallback.label}</p>
+                  </div>
+                )}
+
+
+
                 {selectedPbbBank?.source === 'kob' && !selectedPbbBankLinked && (
                   <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
                     <p className="text-xs font-semibold text-destructive">{tr('This bank is not linked to your account')}</p>
