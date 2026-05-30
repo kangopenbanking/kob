@@ -422,6 +422,7 @@ export default function IntegrationWorkflow() {
             aria-hidden
             className="pointer-events-none absolute -right-24 -top-24 h-[460px] w-[460px] object-cover opacity-40 dark:opacity-25 hidden md:block"
             loading="lazy"
+                decoding="async"
           />
           <div className="relative grid gap-10 p-8 md:grid-cols-[1.2fr_1fr] md:p-12">
             <div className="space-y-6">
@@ -499,6 +500,7 @@ export default function IntegrationWorkflow() {
                 alt="Signed, verified, encrypted credentials illustration"
                 className="h-full w-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-x-4 bottom-4 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
                 <div className="flex items-center gap-2 font-medium">
@@ -552,6 +554,7 @@ export default function IntegrationWorkflow() {
                     aria-hidden
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
+                decoding="async"
                   />
                 </div>
                 <div className="space-y-2 p-5">
@@ -756,6 +759,7 @@ export default function IntegrationWorkflow() {
                                 aria-hidden
                                 className="h-full w-full object-cover"
                                 loading="lazy"
+                decoding="async"
                                 decoding="async"
                               />
                             </div>
@@ -959,6 +963,7 @@ export default function IntegrationWorkflow() {
                     alt="Customers using Kang Open Banking on their phones"
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="lazy"
+                decoding="async"
                   />
                 </div>
               </div>
