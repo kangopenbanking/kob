@@ -19,6 +19,7 @@ import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { PayByBankLogo } from '@/components/PayByBankLogo';
 import { BankLogo } from '@/components/BankLogo';
 import { CM_BANKS } from '@/constants/cameroon-banks';
+import { PayByBankTimeline } from '@/pages/customer-app/components/PayByBankTimeline';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
