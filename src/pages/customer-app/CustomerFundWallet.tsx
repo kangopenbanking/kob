@@ -252,12 +252,56 @@ const CustomerFundWallet: React.FC = () => {
     setStep('pay_by_bank');
   };
 
+  // Preflight which rails (KOB PISP / Flutterwave hosted / NGN bank_transfer)
+  // are actually supported for the selected bank + currency. Lets us hide
+  // or disable rails before checkout instead of failing on submit.
+  const runPreflight = useCallback(async (bank: BankOption, currency = 'XAF') => {
+    try {
+      const { data } = await supabase.functions.invoke('pay-by-bank', {
+        body: {
+          action: 'preflight_rails',
+          bank: { code: bank.code, name: bank.name, network: bank.source },
+          currency,
+        },
+      });
+      if (data?.rails) {
+        setPbbRailInfo({ recommended_rail: data.recommended_rail ?? null, rails: data.rails });
+      }
+    } catch (e) {
+      console.warn('[FundWallet] preflight_rails failed', e);
+    }
+  }, []);
+
+  // Attempt create_intent with provided source_bank. Returns the response
+  // (with error/fallback fields) so the caller can decide whether to
+  // auto-switch rails.
+  const submitPayByBankIntent = async (sourceBank: { code: string; name: string; network: string }, amt: number) => {
+    const state = crypto.randomUUID();
+    const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
+    const { data, error } = await supabase.functions.invoke('pay-by-bank', {
+      body: {
+        action: 'create_intent',
+        target_type: 'consumer_wallet',
+        target_account_id: primaryAccount!.id,
+        amount: amt,
+        currency: 'XAF',
+        redirect_uri: returnUrl,
+        state,
+        description: 'KANG Wallet top-up',
+        source_bank: sourceBank,
+      },
+    });
+    if (error) throw error;
+    return { data, state };
+  };
+
   const handlePayByBankSubmit = async () => {
     const amt = Number(pbbAmount);
     if (!amt || amt <= 0) { toast.error('Enter a valid amount'); return; }
     if (!primaryAccount?.id) { toast.error('No wallet account found.'); return; }
     if (!selectedPbbBank) { toast.error('Please select your bank'); return; }
     setPbbProcessing(true);
+    setPbbFallback(null);
     try {
       const { data: userCheck, error: userCheckError } = await supabase.auth.getUser();
       if (userCheckError || !userCheck?.user) {
@@ -266,30 +310,31 @@ const CustomerFundWallet: React.FC = () => {
         return;
       }
 
-      const state = crypto.randomUUID();
-      const returnUrl = `${window.location.origin}/app/fund?source=pay_by_bank`;
-      const { data, error } = await supabase.functions.invoke('pay-by-bank', {
-        body: {
-          action: 'create_intent',
-          target_type: 'consumer_wallet',
-          target_account_id: primaryAccount.id,
-          amount: amt,
-          currency: 'XAF',
-          redirect_uri: returnUrl,
-          state,
-          description: 'KANG Wallet top-up',
-          source_bank: {
-            code: selectedPbbBank.code,
-            name: selectedPbbBank.name,
-            network: selectedPbbBank.source,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.message || data.error);
+      let { data, state } = await submitPayByBankIntent({
+        code: selectedPbbBank.code,
+        name: selectedPbbBank.name,
+        network: selectedPbbBank.source,
+      }, amt);
+
+      // Backend declined KOB rail because the bank isn't linked → if a
+      // hosted-checkout fallback is offered, switch transparently for
+      // XAF/XOF where direct account debit is not yet available.
+      if (data?.error === 'bank_not_linked' && data?.fallback?.retry_with?.source_bank) {
+        setPbbFallback({
+          message: data.message,
+          retry_with: data.fallback.retry_with,
+          label: data.fallback.label,
+        });
+        const retry = await submitPayByBankIntent(data.fallback.retry_with.source_bank, amt);
+        data = retry.data;
+        state = retry.state;
+        toast.info('Switched to secure hosted checkout (card or Mobile Money).');
+      } else if (data?.error) {
+        throw new Error(data.message || data.error);
+      }
+
       if (!data?.authorization_url || !data?.intent_id) throw new Error('Invalid response from server');
       setPbbStep('redirecting');
-      // Persist state so /pay/authorize can validate when user returns
       try { sessionStorage.setItem(`pbb_state_${data.intent_id}`, state); } catch {}
       window.location.assign(data.authorization_url);
     } catch (err: any) {
@@ -299,6 +344,7 @@ const CustomerFundWallet: React.FC = () => {
       setPbbProcessing(false);
     }
   };
+
 
   const handleSubmit = async () => {
     if (!numAmount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
