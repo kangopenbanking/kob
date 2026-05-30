@@ -212,12 +212,29 @@ serve(async (req) => {
       );
     }
 
+    // Record the token hash so it cannot be replayed.
+    await supabase.from('firebase_token_replay_guard').insert({
+      token_hash: tokenHash,
+      user_id: userId,
+      phone_number: phoneNumber,
+    });
+
+    // Reset any lockout counter for this phone after a successful verification.
+    await supabase
+      .from('firebase_phone_lockouts')
+      .upsert({
+        phone_number: phoneNumber,
+        failed_attempts: 0,
+        locked_until: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'phone_number' });
+
     // Log security event
     await supabase.rpc('log_security_event', {
       _user_id: userId,
       _event_type: 'firebase_phone_login',
       _event_category: 'authentication',
-      _metadata: { method: 'firebase_phone_otp', phone: phoneNumber },
+      _metadata: { method: 'firebase_phone_otp', phone: phoneNumber, token_hash: tokenHash.slice(0, 12) },
     });
 
     return new Response(
