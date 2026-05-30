@@ -18,7 +18,7 @@ import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import {
   Shield, FileText, CheckCircle, XCircle, Clock, Eye,
   Image as ImageIcon, Search, Users, User, Calendar, Hash,
-  ArrowRight, Loader2, Download,
+  ArrowRight, Loader2, Download, MessageSquare, HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -29,7 +29,7 @@ export default function KYCVerificationReview() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLabel, setPreviewLabel] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
-  const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
+  const [reviewAction, setReviewAction] = useState<"approved" | "rejected" | "info_requested">("approved");
   const [searchQuery, setSearchQuery] = useState("");
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
@@ -75,15 +75,21 @@ export default function KYCVerificationReview() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { data, error } = await supabase.functions.invoke("admin-kyc-review", {
-        body: { kyc_id: id, action: status, rejection_reason: notes || undefined },
-      });
+      const body: Record<string, unknown> = { kyc_id: id, action: status };
+      if (status === "rejected") body.rejection_reason = notes;
+      if (status === "info_requested") body.info_request_message = notes;
+      const { data, error } = await supabase.functions.invoke("admin-kyc-review", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc-submissions-admin"] });
-      toast({ title: "KYC Review Complete", description: `Submission has been ${reviewAction}. Notification sent to customer.` });
+      const labels: Record<string, string> = {
+        approved: "approved",
+        rejected: "rejected",
+        info_requested: "marked as needing more information",
+      };
+      toast({ title: "KYC Review Complete", description: `Submission has been ${labels[reviewAction]}. Notification sent to customer.` });
       setReviewDialogOpen(false);
       setDetailOpen(false);
       setSelectedKYC(null);
@@ -94,7 +100,7 @@ export default function KYCVerificationReview() {
     },
   });
 
-  const handleReview = (kyc: any, action: "approved" | "rejected") => {
+  const handleReview = (kyc: any, action: "approved" | "rejected" | "info_requested") => {
     setSelectedKYC(kyc);
     setReviewAction(action);
     setReviewDialogOpen(true);
@@ -130,6 +136,7 @@ export default function KYCVerificationReview() {
       pending: { variant: "outline", icon: Clock, label: "Pending Review", className: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800" },
       approved: { variant: "outline", icon: CheckCircle, label: "Approved", className: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800" },
       rejected: { variant: "outline", icon: XCircle, label: "Rejected", className: "border-red-300 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800" },
+      info_requested: { variant: "outline", icon: HelpCircle, label: "Info Requested", className: "border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800" },
     };
     return configs[status] || configs.pending;
   };
@@ -162,6 +169,7 @@ export default function KYCVerificationReview() {
     pending: filterByStatus("pending").length,
     approved: filterByStatus("approved").length,
     rejected: filterByStatus("rejected").length,
+    info_requested: filterByStatus("info_requested").length,
   };
 
   // ── Loading skeleton ──
@@ -275,10 +283,13 @@ export default function KYCVerificationReview() {
                       </Button>
                       {kyc.status === "pending" && (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleReview(kyc, "approved")}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleReview(kyc, "approved")} title="Approve">
                             <CheckCircle className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleReview(kyc, "rejected")}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-sky-600 hover:text-sky-700 hover:bg-sky-50" onClick={() => handleReview(kyc, "info_requested")} title="Request more info">
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleReview(kyc, "rejected")} title="Reject">
                             <XCircle className="h-4 w-4" />
                           </Button>
                         </>
@@ -338,6 +349,7 @@ export default function KYCVerificationReview() {
         <TabsList className="inline-flex h-10 items-center rounded-xl bg-muted p-1 gap-0.5">
           {[
             { value: "pending", label: "Pending", count: stats.pending },
+            { value: "info_requested", label: "Info Requested", count: stats.info_requested },
             { value: "approved", label: "Approved", count: stats.approved },
             { value: "rejected", label: "Rejected", count: stats.rejected },
             { value: "all", label: "All", count: allFiltered?.length || 0 },
@@ -355,7 +367,7 @@ export default function KYCVerificationReview() {
           ))}
         </TabsList>
 
-        {["pending", "approved", "rejected"].map((status) => (
+        {["pending", "info_requested", "approved", "rejected"].map((status) => (
           <TabsContent key={status} value={status}>
             {isLoading ? <TableSkeleton /> : renderTable(filterByStatus(status))}
           </TabsContent>
@@ -477,11 +489,14 @@ export default function KYCVerificationReview() {
 
               {/* Action buttons */}
               {selectedKYC.status === "pending" && (
-                <div className="flex gap-3 pt-2">
-                  <Button onClick={() => handleReview(selectedKYC, "approved")} className="flex-1 h-10 font-semibold gap-2">
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Button onClick={() => handleReview(selectedKYC, "approved")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <CheckCircle className="h-4 w-4" /> Approve
                   </Button>
-                  <Button variant="destructive" onClick={() => handleReview(selectedKYC, "rejected")} className="flex-1 h-10 font-semibold gap-2">
+                  <Button variant="outline" onClick={() => handleReview(selectedKYC, "info_requested")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2 border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300">
+                    <MessageSquare className="h-4 w-4" /> Request more info
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleReview(selectedKYC, "rejected")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <XCircle className="h-4 w-4" /> Reject
                   </Button>
                 </div>
@@ -498,14 +513,18 @@ export default function KYCVerificationReview() {
             <DialogTitle className="flex items-center gap-2">
               {reviewAction === "approved" ? (
                 <CheckCircle className="h-5 w-5 text-emerald-600" />
+              ) : reviewAction === "info_requested" ? (
+                <MessageSquare className="h-5 w-5 text-sky-600" />
               ) : (
                 <XCircle className="h-5 w-5 text-destructive" />
               )}
-              {reviewAction === "approved" ? "Approve" : "Reject"} KYC Submission
+              {reviewAction === "approved" ? "Approve" : reviewAction === "info_requested" ? "Request More Information" : "Reject"} KYC Submission
             </DialogTitle>
             <DialogDescription>
               {reviewAction === "approved"
                 ? "Confirm identity verification approval. The customer will be notified."
+                : reviewAction === "info_requested"
+                ? "Describe what additional information or documents are required. The customer will receive an email and in-app notification with this message and can resubmit."
                 : "Provide a clear reason for rejection. The customer will be notified."}
             </DialogDescription>
           </DialogHeader>
@@ -522,14 +541,21 @@ export default function KYCVerificationReview() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="review-notes" className="text-xs font-semibold">
-                  Review Notes {reviewAction === "rejected" && <span className="text-destructive">*</span>}
+                  {reviewAction === "info_requested" ? "Message to customer" : "Review Notes"}
+                  {(reviewAction === "rejected" || reviewAction === "info_requested") && <span className="text-destructive ml-1">*</span>}
                 </Label>
                 <Textarea
                   id="review-notes"
-                  placeholder={reviewAction === "rejected" ? "Explain why this submission is being rejected…" : "Optional notes…"}
+                  placeholder={
+                    reviewAction === "rejected"
+                      ? "Explain why this submission is being rejected…"
+                      : reviewAction === "info_requested"
+                      ? "e.g. Please upload a clearer photo of the back of your ID and a fresh selfie holding the document."
+                      : "Optional notes…"
+                  }
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={3}
+                  rows={4}
                   className="text-sm resize-none"
                 />
               </div>
@@ -539,12 +565,15 @@ export default function KYCVerificationReview() {
             <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>Cancel</Button>
             <Button
               onClick={submitReview}
-              variant={reviewAction === "approved" ? "default" : "destructive"}
-              disabled={reviewMutation.isPending || (reviewAction === "rejected" && !reviewNotes.trim())}
+              variant={reviewAction === "rejected" ? "destructive" : "default"}
+              disabled={
+                reviewMutation.isPending ||
+                ((reviewAction === "rejected" || reviewAction === "info_requested") && !reviewNotes.trim())
+              }
               className="gap-2"
             >
               {reviewMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {reviewAction === "approved" ? "Approve" : "Reject"}
+              {reviewAction === "approved" ? "Approve" : reviewAction === "info_requested" ? "Send request" : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

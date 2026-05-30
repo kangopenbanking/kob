@@ -38,14 +38,18 @@ serve(async (req) => {
       throw new Error('Forbidden: Admin or Institution access required');
     }
 
-    const { kyc_id, action, rejection_reason } = await req.json();
+    const { kyc_id, action, rejection_reason, info_request_message } = await req.json();
 
-    if (!kyc_id || !['approved', 'rejected'].includes(action)) {
-      throw new Error('kyc_id and valid action (approved/rejected) required');
+    if (!kyc_id || !['approved', 'rejected', 'info_requested'].includes(action)) {
+      throw new Error('kyc_id and valid action (approved/rejected/info_requested) required');
     }
 
     if (action === 'rejected' && !rejection_reason) {
       throw new Error('Rejection reason is required');
+    }
+
+    if (action === 'info_requested' && !info_request_message) {
+      throw new Error('Information request message is required');
     }
 
     // Get the KYC record
@@ -105,6 +109,13 @@ serve(async (req) => {
     if (action === 'rejected') {
       updateData.rejection_reason = rejection_reason;
     }
+    if (action === 'info_requested') {
+      // Reuse rejection_reason column to carry the message shown to the user.
+      updateData.rejection_reason = info_request_message;
+      // Don't lock verified_at for info-requested state.
+      updateData.verified_at = null;
+      updateData.metadata = { ...(kyc.metadata ?? {}), info_request_message, requested_by: user.id, requested_at: new Date().toISOString() };
+    }
 
     const { error: updateError } = await supabaseAdmin
       .from('kyc_verifications')
@@ -119,13 +130,22 @@ serve(async (req) => {
       entity_type: 'kyc_verification',
       entity_id: kyc_id,
       performed_by: user.id,
-      details: { action, rejection_reason: rejection_reason || null, user_id: kyc.user_id },
+      details: {
+        action,
+        rejection_reason: rejection_reason || null,
+        info_request_message: info_request_message || null,
+        user_id: kyc.user_id,
+      },
     });
 
     // Send email notification to customer
     const profile = kyc.profiles as any;
+    const templateKey =
+      action === 'approved' ? 'kyc_approved'
+      : action === 'rejected' ? 'kyc_rejected'
+      : 'kyc_info_requested';
+
     if (profile?.email) {
-      const templateKey = action === 'approved' ? 'kyc_approved' : 'kyc_rejected';
       try {
         await supabaseAdmin.functions.invoke('send-communication', {
           body: {
@@ -137,6 +157,7 @@ serve(async (req) => {
               status: action,
               verified_at: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
               rejection_reason: rejection_reason || '',
+              info_request_message: info_request_message || '',
             },
           },
         });
@@ -145,14 +166,18 @@ serve(async (req) => {
       }
     }
 
-    // Create in-app notification (trigger already exists but let's be explicit)
+    // Create in-app notification
+    const notifConfig = {
+      approved: { type: 'success', title: 'KYC Approved', message: 'Your identity verification has been approved. Full account access is now available.' },
+      rejected: { type: 'warning', title: 'KYC Rejected', message: `Your identity verification was not approved. Reason: ${rejection_reason}` },
+      info_requested: { type: 'info', title: 'Additional information requested', message: `Our reviewer needs more information: ${info_request_message}` },
+    }[action as 'approved' | 'rejected' | 'info_requested'];
+
     await supabaseAdmin.from('app_notifications').insert({
       user_id: kyc.user_id,
-      type: action === 'approved' ? 'success' : 'warning',
-      title: action === 'approved' ? 'KYC Approved' : 'KYC Rejected',
-      message: action === 'approved'
-        ? 'Your identity verification has been approved. Full account access is now available.'
-        : `Your identity verification was not approved. Reason: ${rejection_reason}`,
+      type: notifConfig.type,
+      title: notifConfig.title,
+      message: notifConfig.message,
       icon: 'kyc',
       metadata: { verification_id: kyc_id, status: action },
     });
@@ -162,11 +187,9 @@ serve(async (req) => {
       await supabaseAdmin.functions.invoke('push-notification', {
         body: {
           user_id: kyc.user_id,
-          type: action === 'approved' ? 'success' : 'warning',
-          title: action === 'approved' ? 'KYC Approved' : 'KYC Action Required',
-          message: action === 'approved'
-            ? 'Your identity has been verified. Full account access unlocked.'
-            : `Verification not approved: ${rejection_reason}`,
+          type: notifConfig.type,
+          title: notifConfig.title,
+          message: notifConfig.message,
           data: { verification_id: kyc_id, status: action, category: 'kyc' },
         },
       });

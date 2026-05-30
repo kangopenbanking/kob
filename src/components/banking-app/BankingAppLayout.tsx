@@ -17,6 +17,7 @@ import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { loadAppNamespaces } from '@/lib/i18n/i18next';
 import { ScreenshotGuard } from '@/components/security/ScreenshotGuard';
+import { KYCStatusBanner } from '@/components/kyc/KYCStatusBanner';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -40,6 +41,7 @@ const BankingAppInner: React.FC = () => {
     >
       <HealthBanner />
       <ScreenshotGuard />
+      <KYCStatusBanner verifyHref={`${basePath}/kyc`} />
       <OfflineIndicator />
       <TranslationHarvester category="banking" />
       <div className="absolute right-3 top-3 z-40">
