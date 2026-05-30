@@ -130,6 +130,56 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // 1b. Per-recipient rate limit (hourly cap per template).
+  // Defaults to 10/hour; override per template via PER_TEMPLATE_RATE_LIMIT.
+  // Auth-flow templates get a higher cap because retries are expected.
+  const PER_TEMPLATE_RATE_LIMIT: Record<string, number> = {
+    'password-reset': 5,
+    'magic-link': 5,
+    'verify-email': 5,
+    'auth_emails': 20,
+    'customer-invoice': 30,
+  }
+  try {
+    const enc = new TextEncoder().encode(effectiveRecipient.toLowerCase())
+    const digest = await crypto.subtle.digest('SHA-256', enc)
+    const recipientHash = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    const limit = PER_TEMPLATE_RATE_LIMIT[templateName] ?? 10
+    const { data: allowed, error: rlError } = await supabase.rpc(
+      'check_and_increment_email_rate',
+      {
+        _recipient_hash: recipientHash,
+        _template_name: templateName,
+        _limit: limit,
+        _window_minutes: 60,
+      },
+    )
+    if (rlError) {
+      // Fail-open on infra errors so legitimate sends aren't blocked, but log loudly.
+      console.error('Rate limit check failed (fail-open)', { error: rlError })
+    } else if (allowed === false) {
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'failed',
+        error_message: `rate_limited: ${limit}/hour cap exceeded for template`,
+      })
+      console.warn('Email rate-limited', { templateName, effectiveRecipient, limit })
+      return new Response(
+        JSON.stringify({ success: false, reason: 'rate_limited', limit_per_hour: limit }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+  } catch (e) {
+    console.error('Rate limit unexpected error (fail-open)', e)
+  }
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
