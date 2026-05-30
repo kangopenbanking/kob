@@ -21,6 +21,7 @@ import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSp
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { SecureField } from '@/components/security/SecureField';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
