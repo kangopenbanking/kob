@@ -115,6 +115,13 @@ await run(
 );
 
 await run(
+  'Build /signing-key-updates.json (rotation poll endpoint)',
+  'node',
+  ['scripts/build-signing-key-updates.mjs']
+);
+
+
+await run(
   'Verify artifact signatures',
   'node',
   ['scripts/verify-artifact-signatures.mjs']
