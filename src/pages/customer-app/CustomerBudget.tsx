@@ -816,10 +816,10 @@ export default function CustomerBudget() {
             return (
               <>
                 <SheetHeader className="text-left">
-                  <SheetTitle style={{ fontFamily: "Sora, Inter, sans-serif" }}>
+                  <SheetTitle id="stat-sheet-title" style={{ fontFamily: "Sora, Inter, sans-serif" }}>
                     {config.title}
                   </SheetTitle>
-                  <SheetDescription>{config.description}</SheetDescription>
+                  <SheetDescription id="stat-sheet-desc">{config.description}</SheetDescription>
                 </SheetHeader>
                 <div className="mt-5 flex items-center gap-4">
                   <DonutRing
