@@ -86,10 +86,42 @@ async function lookupIntentByIdempotencyKey(
   return data?.[0] || null;
 }
 
+// W3C-style trace id (32 hex). Stamped on every log line and propagated
+// to Flutterwave (meta.trace_id) + outbound webhooks so a single Pay-by-Bank
+// operation can be correlated across services and external partners.
+function genTraceId(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Verify inbound KOB-rail callback signature. Connectors post:
+//   X-KOB-Signature: <hex HMAC-SHA256(rawBody, KOB_INBOUND_WEBHOOK_SECRET)>
+// If the shared secret is configured we enforce it. With no secret we
+// degrade gracefully (back-compat) and emit a warning in logs.
+async function verifyKobCallbackSignature(req: Request, rawBody: string): Promise<{ ok: boolean; reason?: string }> {
+  const secret = Deno.env.get('KOB_INBOUND_WEBHOOK_SECRET') || '';
+  if (!secret) return { ok: true, reason: 'no_secret_configured' };
+  const provided = (req.headers.get('x-kob-signature') || '').toLowerCase().replace(/^sha256=/, '');
+  if (!provided) return { ok: false, reason: 'missing_signature_header' };
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+  const expected = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const a = enc.encode(expected); const b = enc.encode(provided);
+  if (a.length !== b.length) return { ok: false, reason: 'signature_length_mismatch' };
+  let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0 ? { ok: true } : { ok: false, reason: 'signature_mismatch' };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const traceId = (req.headers.get('x-trace-id')
+    || req.headers.get('traceparent')?.split('-')[1]
+    || genTraceId()).slice(0, 32);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -103,10 +135,14 @@ Deno.serve(async (req) => {
         error: 'idempotency_key_invalid',
         code: 'IDEMPOTENCY_KEY_INVALID',
         message: 'Idempotency-Key must be a UUID v4.',
-      })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        extra: { trace_id: traceId },
+      })), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
 
-    const body = await req.json().catch(() => ({}));
+    // Read raw body once so signature verification (callback action) can
+    // HMAC the exact bytes the partner signed.
+    const bodyText = await req.text();
+    const body = bodyText ? (() => { try { return JSON.parse(bodyText); } catch { return {}; } })() : {};
     const { action } = body;
 
 
