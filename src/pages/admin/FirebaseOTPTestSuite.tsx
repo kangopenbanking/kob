@@ -79,8 +79,10 @@ export default function FirebaseOTPTestSuite() {
   const [sendStartedAt, setSendStartedAt] = useState<number | null>(null);
 
   const auth = useFirebasePhoneAuth({ otpType: "login" });
+  const timers = useOTPTimers({ expirySeconds: 300, resendCooldownSeconds: 60 });
 
   const isHappyPath = scenario === "happy_path";
+  const friendly = auth.errorCategory ? FRIENDLY_ERROR[auth.errorCategory] : null;
 
   const insertLog = async (row: {
     step: string;
@@ -125,29 +127,37 @@ export default function FirebaseOTPTestSuite() {
 
   useEffect(() => { void refreshLogs(); }, []);
 
-  const handleSend = async () => {
+  const handleSend = async (isResend = false) => {
     if (!phone.trim().startsWith("+")) {
       toast.error("Phone must be E.164 (e.g. +16505551234).");
       return;
     }
-    setSendStartedAt(Date.now());
-    void insertLog({ step: "send_attempt", status: "pending" });
+    if (isResend && !timers.canResend) {
+      toast.error(`Please wait ${timers.remainingResend}s before requesting a new code.`);
+      return;
+    }
+    const t0 = Date.now();
+    void insertLog({ step: isResend ? "resend_attempt" : "send_attempt", status: "pending" });
     await auth.sendOTP(phone.trim());
-    const elapsed = sendStartedAt ? Date.now() - sendStartedAt : null;
+    const elapsed = Date.now() - t0;
     if (auth.error) {
       void insertLog({
-        step: "send_otp",
+        step: isResend ? "resend_otp" : "send_otp",
         status: "fail",
         error_code: auth.errorCategory,
         error_message: auth.error,
         elapsed_ms: elapsed,
       });
     } else {
-      void insertLog({ step: "send_otp", status: "ok", elapsed_ms: elapsed });
+      timers.start();
+      void insertLog({
+        step: isResend ? "resend_otp" : "send_otp",
+        status: "ok",
+        elapsed_ms: elapsed,
+        metadata: { expiry_seconds: 300, cooldown_seconds: 60 },
+      });
     }
   };
-
-  const handleVerify = async () => {
     const submit = scenario === "wrong_code" ? "000000" : code;
     if (!submit || submit.length < 6) {
       toast.error("Enter the 6-digit verification code.");
