@@ -1244,19 +1244,26 @@ Deno.serve(async (req) => {
 
     // ─── callback (internal — bank connector confirms) ────────
     if (action === 'callback') {
-      // Verify HMAC signature when KOB_INBOUND_WEBHOOK_SECRET is set.
+      // Verify HMAC signature — KOB_INBOUND_WEBHOOK_SECRET is REQUIRED.
       const sigCheck = await verifyKobCallbackSignature(req, bodyText);
       if (!sigCheck.ok) {
         console.warn(`[pay-by-bank][callback][trace=${traceId}] signature rejected: ${sigCheck.reason}`);
+        const isMisconfig = sigCheck.reason === 'webhook_secret_not_configured';
+        const code = isMisconfig
+          ? 'WEBHOOK_SECRET_NOT_CONFIGURED'
+          : (sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID');
+        const status = isMisconfig ? 500 : 401;
+        const message = isMisconfig
+          ? 'Receiver is not configured to verify KOB callbacks (KOB_INBOUND_WEBHOOK_SECRET is missing).'
+          : (sigCheck.reason === 'missing_signature_header'
+              ? 'Missing X-KOB-Signature header on callback request.'
+              : 'Callback HMAC signature did not match the expected value.');
         return new Response(JSON.stringify(buildErrorBody({
-          error: 'invalid_signature',
-          code: sigCheck.reason === 'missing_signature_header' ? 'SIGNATURE_MISSING' : 'SIGNATURE_INVALID',
-          message: sigCheck.reason === 'missing_signature_header'
-            ? 'Missing X-KOB-Signature header on callback request.'
-            : 'Callback HMAC signature did not match the expected value.',
+          error: 'invalid_signature', code, message,
           extra: { trace_id: traceId, reason: sigCheck.reason },
-        })), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
+        })), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
       }
+
       const { intent_id, final_status, provider_reference } = body;
       if (!intent_id || !final_status) {
         return new Response(JSON.stringify(buildErrorBody({
