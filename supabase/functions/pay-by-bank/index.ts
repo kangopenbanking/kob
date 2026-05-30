@@ -1283,6 +1283,11 @@ Deno.serve(async (req) => {
       }]).then(() => {}, (e) => console.warn('[pay-by-bank] tx insert failed', e));
 
       await supabase.from('pay_by_bank_intents').update({ status: 'completed' }).eq('id', intent_id);
+      await appendTimeline(supabase, intent_id, {
+        status: 'confirmed', at: new Date().toISOString(),
+        source: 'verify_external', detail: `flw_tx_ref=${txRef}`,
+      });
+
 
       await supabase.from('app_notifications').insert({
         user_id, type: 'success',
