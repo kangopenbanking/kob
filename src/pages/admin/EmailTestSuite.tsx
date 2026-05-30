@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Mail, CheckCircle2, XCircle, Send } from "lucide-react";
+import { Loader2, Mail, CheckCircle2, XCircle, Send, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface SendResult {
@@ -41,6 +41,33 @@ interface SendResult {
   errorMessage: string | null;
   variablesRendered: { variable: string; rendered: boolean }[];
   at: string;
+}
+
+interface ValidationCheck {
+  id: string;
+  label: string;
+  severity: "error" | "warning" | "info";
+  passed: boolean;
+  detail?: string;
+}
+interface ValidationResult {
+  template: string;
+  displayName: string;
+  passed: boolean;
+  errors: number;
+  warnings: number;
+  checks: ValidationCheck[];
+  renders: { scenario: string; ok: boolean; html_length: number; text_length: number; error?: string }[];
+}
+interface ValidationSummary {
+  total: number;
+  passed: number;
+  failed: number;
+  total_errors: number;
+  total_warnings: number;
+  from_address: string;
+  reply_to: string;
+  sender_domain: string;
 }
 
 export default function EmailTestSuite() {
