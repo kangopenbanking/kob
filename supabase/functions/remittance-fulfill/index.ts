@@ -326,7 +326,16 @@ serve(async (req) => {
       details: { rail, tx_ref: txRef, provider_ref: providerRef, delivery_method: method },
     });
 
-    return json({ success: true, rail, status: "received", tx_ref: txRef, provider_ref: providerRef });
+    const finalBody = { success: true, rail, status: "received", tx_ref: txRef, provider_ref: providerRef };
+    await idem.commit(200, finalBody);
+    await recordRemittanceAudit({
+      endpoint: 'remittance-fulfill',
+      decision: 'allowed',
+      remittanceId: rem.id,
+      req,
+      metadata: { rail, tx_ref: txRef, status: 'received' },
+    });
+    return json(finalBody);
   } catch (err: any) {
     console.error("remittance-fulfill error:", err);
     return json({ error: err.message }, 500);
