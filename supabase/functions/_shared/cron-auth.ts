@@ -1,7 +1,13 @@
 /**
  * Shared cron authentication guard.
- * Verifies that the request includes a valid CRON_SECRET header
- * or a service_role JWT (for pg_cron invocations).
+ *
+ * Accepted credentials (in order of preference):
+ *   1. `x-cron-secret` header matching the `CRON_SECRET` Supabase secret.
+ *   2. `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` (used by pg_cron → pg_net).
+ *
+ * The public Supabase anon/publishable key is NEVER accepted, because it ships
+ * in the browser JS bundle and would allow any visitor to invoke billing,
+ * settlement, withdrawal, and reconciliation jobs.
  */
 export function verifyCronAuth(req: Request): { authorized: boolean; response?: Response } {
   const corsHeaders = {
@@ -9,26 +15,18 @@ export function verifyCronAuth(req: Request): { authorized: boolean; response?: 
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
   };
 
-  // Check for cron secret header
   const cronSecret = req.headers.get('x-cron-secret');
   const expectedSecret = Deno.env.get('CRON_SECRET');
 
-  if (expectedSecret && cronSecret === expectedSecret) {
+  if (expectedSecret && cronSecret && cronSecret === expectedSecret) {
     return { authorized: true };
   }
 
-  // Check for service_role JWT or anon key in Authorization header
   const authHeader = req.headers.get('authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
-  if (serviceRoleKey && token === serviceRoleKey) {
-    return { authorized: true };
-  }
-
-  // Allow anon key for pg_cron → pg_net invocations
-  if (anonKey && token === anonKey) {
+  if (serviceRoleKey && token && token === serviceRoleKey) {
     return { authorized: true };
   }
 
