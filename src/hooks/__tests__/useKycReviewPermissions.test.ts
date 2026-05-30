@@ -10,7 +10,7 @@ const mockGetUser = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: () => mockGetUser() },
-    from: (...args: unknown[]) => mockFrom(...args),
+    from: (table: string) => mockFrom(table),
   },
 }));
 
