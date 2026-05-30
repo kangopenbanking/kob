@@ -139,30 +139,20 @@ export const KYCStatusBanner: React.FC<Props> = ({
   if (!config) return null;
   const Icon = config.icon;
 
-  // Semantic, theme-aware tones. No gradients.
-  const toneClasses: Record<typeof config.tone, {
-    card: string;
-    iconWrap: string;
-    pill: string;
-    accent: string;
-  }> = {
+  // Subtle status tint reserved only for the icon tile. The card itself uses
+  // the neutral surface tokens to match other in-app guide cards.
+  const toneClasses: Record<typeof config.tone, { iconWrap: string; pillDot: string }> = {
     warning: {
-      card: "border-amber-200/70 bg-amber-50/80 dark:border-amber-900/50 dark:bg-amber-950/30",
-      iconWrap: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-200",
-      pill: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-100",
-      accent: "before:bg-amber-500",
+      iconWrap: "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200",
+      pillDot: "bg-amber-500",
     },
     info: {
-      card: "border-sky-200/70 bg-sky-50/80 dark:border-sky-900/50 dark:bg-sky-950/30",
-      iconWrap: "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-200",
-      pill: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-100",
-      accent: "before:bg-sky-500",
+      iconWrap: "bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200",
+      pillDot: "bg-sky-500",
     },
     danger: {
-      card: "border-red-200/70 bg-red-50/80 dark:border-red-900/50 dark:bg-red-950/30",
-      iconWrap: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200",
-      pill: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-100",
-      accent: "before:bg-red-500",
+      iconWrap: "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200",
+      pillDot: "bg-red-500",
     },
   };
 
@@ -177,27 +167,23 @@ export const KYCStatusBanner: React.FC<Props> = ({
   };
 
   return (
-    <div className="px-3 pt-3 sm:px-4 sm:pt-4 pointer-events-none">
+    <div className="px-3 pt-3 pointer-events-none">
       <section
         ref={containerRef}
         role="region"
         aria-labelledby={headingId}
         aria-describedby={descId}
         className={[
-          "relative overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm pointer-events-auto",
-          "transition-all duration-500 ease-out",
+          "relative rounded-2xl border bg-card text-card-foreground shadow-sm pointer-events-auto",
+          "transition-all duration-300 ease-out",
           mounted ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
-          "before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-2xl",
           "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1",
-          tone.card,
-          tone.accent,
         ].join(" ")}
       >
-        <div className="flex items-start gap-2.5 p-3 pl-4 sm:gap-3 sm:p-4 sm:pl-5">
+        <div className="flex items-start gap-2.5 p-3">
           <div
             className={[
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-              "ring-1 ring-inset ring-current/10",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
               tone.iconWrap,
             ].join(" ")}
             aria-hidden="true"
@@ -206,31 +192,29 @@ export const KYCStatusBanner: React.FC<Props> = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span
-                className={[
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                  tone.pill,
-                ].join(" ")}
-              >
+            <div className="flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${tone.pillDot}`} aria-hidden="true" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {config.label}
-              </span>
-              <span className="text-[10px] font-medium text-muted-foreground">
-                Identity verification
               </span>
             </div>
             <h3
               id={headingId}
-              className="mt-1 text-[13px] font-semibold leading-snug text-foreground"
+              className="mt-0.5 text-[12px] font-semibold leading-snug text-foreground"
             >
               {config.title}
             </h3>
-            <p id={descId} className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+            <p id={descId} className="mt-0.5 text-[10.5px] leading-relaxed text-muted-foreground">
               {config.message}
             </p>
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <Button asChild size="sm" variant="default" className="h-8 rounded-full px-3 text-xs">
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              <Button
+                asChild
+                size="sm"
+                variant="default"
+                className="h-7 rounded-full px-2.5 text-[11px] font-medium"
+              >
                 <Link to={verifyHref} aria-label={config.cta}>
                   {config.cta}
                   <ArrowRight className="ml-1 h-3 w-3" strokeWidth={2} aria-hidden="true" />
@@ -241,10 +225,10 @@ export const KYCStatusBanner: React.FC<Props> = ({
                 asChild
                 size="sm"
                 variant="ghost"
-                className="h-8 rounded-full px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                className="h-7 rounded-full px-2 text-[10.5px] text-muted-foreground hover:text-foreground"
               >
                 <Link to={notificationsHref} aria-label="Open notifications center">
-                  <Bell className="mr-1 h-3 w-3" strokeWidth={2} aria-hidden="true" />
+                  <Bell className="mr-0.5 h-3 w-3" strokeWidth={2} aria-hidden="true" />
                   Notifications
                 </Link>
               </Button>
@@ -259,18 +243,18 @@ export const KYCStatusBanner: React.FC<Props> = ({
                       aria-label="Remind me later"
                       aria-haspopup="menu"
                       aria-expanded={snoozeOpen}
-                      className="h-8 rounded-full px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                      className="h-7 rounded-full px-2 text-[10.5px] text-muted-foreground hover:text-foreground"
                     >
                       Remind me later
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
                     align="start"
-                    className="w-52 p-1.5"
+                    className="w-48 p-1"
                     role="menu"
                     aria-label="Choose a reminder time"
                   >
-                    <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="px-2 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                       Remind me
                     </p>
                     <ul className="flex flex-col">
@@ -280,7 +264,7 @@ export const KYCStatusBanner: React.FC<Props> = ({
                             type="button"
                             role="menuitem"
                             onClick={() => handleSnoozeChoice(opt.ms)}
-                            className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-foreground hover:bg-accent focus:bg-accent focus:outline-none"
+                            className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[11px] text-foreground hover:bg-accent focus:bg-accent focus:outline-none"
                           >
                             <span>{opt.label}</span>
                             <Clock className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
@@ -298,6 +282,7 @@ export const KYCStatusBanner: React.FC<Props> = ({
             <button
               type="button"
               aria-label="Dismiss verification notification"
+
               onClick={() => {
                 scheduleSnooze(24 * 60 * 60 * 1000);
                 setSnoozed(true);
