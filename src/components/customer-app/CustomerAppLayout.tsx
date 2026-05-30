@@ -52,6 +52,7 @@ const CustomerAppInner: React.FC = () => {
       } as React.CSSProperties}
     >
       <HealthBanner />
+      <ScreenshotGuard />
       <TranslationHarvester category="customer" />
       <LanguagePrompt />
       <PullToRefresh onRefresh={handleRefresh}>
