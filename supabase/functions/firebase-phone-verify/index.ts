@@ -22,17 +22,37 @@ serve(async (req) => {
 
     const { firebase_id_token } = await req.json();
 
-    if (!firebase_id_token) {
+    if (!firebase_id_token || typeof firebase_id_token !== 'string') {
       return new Response(
         JSON.stringify({ error: 'firebase_id_token is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Verify the Firebase ID token by calling Google's token info endpoint
-    const firebaseProjectId = Deno.env.get('FIREBASE_PROJECT_ID')!;
-    
-    // Verify token with Google's public keys
+    // -------- Replay guard: hash the token and reject reuse. --------
+    const tokenBytes = new TextEncoder().encode(firebase_id_token);
+    const tokenDigest = await crypto.subtle.digest('SHA-256', tokenBytes);
+    const tokenHash = Array.from(new Uint8Array(tokenDigest))
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+
+    // Initialize Supabase admin client early so we can consult guards.
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: replay } = await supabase
+      .from('firebase_token_replay_guard')
+      .select('token_hash, used_at')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+    if (replay) {
+      return new Response(
+        JSON.stringify({ error: 'token_replayed', message: 'This verification token was already used.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+      );
+    }
+
+    // -------- Verify token with Firebase Identity Toolkit. --------
     const verifyUrl = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${Deno.env.get('FIREBASE_API_KEY')}`;
     const verifyRes = await fetch(verifyUrl, {
       method: 'POST',
@@ -60,10 +80,32 @@ serve(async (req) => {
 
     const phoneNumber = firebaseUser.phoneNumber;
 
-    // Initialize Supabase admin client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // -------- Server-side E.164 validation. --------
+    // E.164: leading '+', country code 1-3, total 8-15 digits.
+    if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+      return new Response(
+        JSON.stringify({ error: 'invalid_phone_format', message: 'Phone number is not valid E.164.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // -------- Per-phone lockout: 5 failed attempts → 15 minute lock. --------
+    const { data: lockout } = await supabase
+      .from('firebase_phone_lockouts')
+      .select('failed_attempts, locked_until')
+      .eq('phone_number', phoneNumber)
+      .maybeSingle();
+    if (lockout?.locked_until && new Date(lockout.locked_until) > new Date()) {
+      const retrySec = Math.ceil((new Date(lockout.locked_until).getTime() - Date.now()) / 1000);
+      return new Response(
+        JSON.stringify({
+          error: 'phone_locked',
+          message: 'Too many failed verifications. Please try again later.',
+          retry_after_seconds: retrySec,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 423 }
+      );
+    }
 
     // Look up user by phone number in profiles table
     const { data: profile, error: profileError } = await supabase
