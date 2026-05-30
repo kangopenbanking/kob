@@ -349,6 +349,7 @@ export default function KYCVerificationReview() {
         <TabsList className="inline-flex h-10 items-center rounded-xl bg-muted p-1 gap-0.5">
           {[
             { value: "pending", label: "Pending", count: stats.pending },
+            { value: "info_requested", label: "Info Requested", count: stats.info_requested },
             { value: "approved", label: "Approved", count: stats.approved },
             { value: "rejected", label: "Rejected", count: stats.rejected },
             { value: "all", label: "All", count: allFiltered?.length || 0 },
@@ -366,7 +367,7 @@ export default function KYCVerificationReview() {
           ))}
         </TabsList>
 
-        {["pending", "approved", "rejected"].map((status) => (
+        {["pending", "info_requested", "approved", "rejected"].map((status) => (
           <TabsContent key={status} value={status}>
             {isLoading ? <TableSkeleton /> : renderTable(filterByStatus(status))}
           </TabsContent>
