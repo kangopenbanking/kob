@@ -31,7 +31,7 @@ serve(async (req) => {
     const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
     const ONESIGNAL_REST_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
-    // RBAC: must be admin
+    // Auth: must be a logged-in user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return json({ error: "Unauthorized" }, 401);
@@ -46,9 +46,31 @@ serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("has_role", {
       _user_id: user.id, _role: "admin",
     });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
+    const ipAddress =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") || null;
+    const userAgent = req.headers.get("user-agent") || null;
+
+    const audit = async (allowed: boolean, reason: string, targets: string[], title?: string) => {
+      try {
+        await admin.from("push_send_audit").insert({
+          caller_id: user.id,
+          attempted_targets: targets,
+          allowed,
+          reason,
+          title: title ?? null,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        });
+      } catch (e) {
+        console.warn("push_send_audit insert failed", e);
+      }
+    };
 
     if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
+      await audit(false, "onesignal_not_configured", []);
       return json({ error: "OneSignal not configured" }, 500);
     }
 
