@@ -23,6 +23,8 @@ import {
   Target,
   Sun,
   Moon,
+  Filter,
+  Check,
 } from "lucide-react";
 import { DonutRing } from "@/components/budget/DonutRing";
 import { AnimatedAmount } from "@/components/budget/AnimatedAmount";
@@ -35,6 +37,21 @@ import { NjangiWidget } from "@/components/budget/NjangiWidget";
 import { RoundupCard } from "@/components/budget/RoundupCard";
 import { RoundupSettingsSheet } from "@/components/budget/RoundupSettingsSheet";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   useBudget,
   useInsight,
   useGoals,
@@ -46,6 +63,11 @@ import { formatXAF } from "@/lib/budget/formatXAF";
 import type { BudgetLang } from "@/types/budget";
 
 import { useBudgetTheme, type BudgetTheme } from "@/lib/budget/theme";
+
+type StatKey = "left" | "daily" | "days";
+type CatFilter = "all" | "over" | "near" | "ok";
+const SHOW_ALL_CATS_KEY = "kob_budget_show_all_cats";
+const CAT_FILTER_KEY = "kob_budget_cat_filter";
 
 const LANG_KEY = "kob_adviser_lang";
 
