@@ -236,13 +236,23 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// ── OneSignal Push ──────────────────────────────────────────────
-async function sendOneSignalPush(
+// ── OneSignal Push (with retry on transient failures) ──────────
+interface PushResult {
+  status: "sent" | "failed" | "partial";
+  httpStatus?: number;
+  errorCode?: string;
+  errorBody?: unknown;
+  onesignalId?: string;
+  recipients?: number;
+  attempts: number;
+}
+
+async function sendOneSignalPushWithRetry(
   appId: string,
   restApiKey: string,
   params: {
     user_id: string;
-    institution_id?: string;
+    institution_id?: string | null;
     title: string;
     message: string;
     title_fr?: string;
@@ -250,29 +260,22 @@ async function sendOneSignalPush(
     type: string;
     notificationId: string;
     test_mode?: boolean;
-  }
-) {
+  },
+): Promise<PushResult> {
   const filters: Record<string, string>[] = [
     { field: "tag", key: "user_id", relation: "=", value: params.user_id },
   ];
   if (params.institution_id) {
-    filters.push(
-      { field: "tag", key: "institution_id", relation: "=", value: params.institution_id }
-    );
+    filters.push({ field: "tag", key: "institution_id", relation: "=", value: params.institution_id });
   }
-  // Audience isolation: only fan out to devices whose `env` tag matches.
-  // Devices that opted into the test audience (set tag env=test in client)
-  // never receive production notifications, and vice-versa.
-  filters.push(
-    { field: "tag", key: "env", relation: "=", value: params.test_mode ? "test" : "production" }
-  );
+  filters.push({ field: "tag", key: "env", relation: "=", value: params.test_mode ? "test" : "production" });
 
   const headings: Record<string, string> = { en: params.title };
   const contents: Record<string, string> = { en: params.message };
-  if (params.title_fr)   headings.fr = params.title_fr;
+  if (params.title_fr) headings.fr = params.title_fr;
   if (params.message_fr) contents.fr = params.message_fr;
 
-  const payload: Record<string, unknown> = {
+  const payload = {
     app_id: appId,
     filters,
     headings,
@@ -286,22 +289,67 @@ async function sendOneSignalPush(
     chrome_web_icon: "https://kangopenbanking.com/favicon.png",
   };
 
-  try {
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${restApiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errBody = await response.text();
-      console.error("OneSignal push failed:", errBody);
+  const MAX_ATTEMPTS = 3;
+  let lastResult: PushResult = { status: "failed", attempts: 0 };
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${restApiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await response.text();
+      let parsed: any = null;
+      try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = { raw: rawText }; }
+
+      if (response.ok) {
+        const recipients = typeof parsed?.recipients === "number" ? parsed.recipients : undefined;
+        const errs = parsed?.errors;
+        // OneSignal returns 200 with errors:["All included players are not subscribed"]
+        const hasErrors = Array.isArray(errs) ? errs.length > 0 : !!errs;
+        return {
+          status: hasErrors ? "partial" : "sent",
+          httpStatus: response.status,
+          onesignalId: parsed?.id,
+          recipients,
+          errorBody: hasErrors ? errs : undefined,
+          errorCode: hasErrors ? "no_subscribers" : undefined,
+          attempts: attempt,
+        };
+      }
+
+      lastResult = {
+        status: "failed",
+        httpStatus: response.status,
+        errorCode: `http_${response.status}`,
+        errorBody: parsed ?? rawText,
+        attempts: attempt,
+      };
+
+      // Retry only on transient failures (5xx, 408, 429).
+      const transient = response.status >= 500 || response.status === 408 || response.status === 429;
+      if (!transient) return lastResult;
+    } catch (err) {
+      lastResult = {
+        status: "failed",
+        errorCode: "network_error",
+        errorBody: { message: err instanceof Error ? err.message : String(err) },
+        attempts: attempt,
+      };
     }
-  } catch (err) {
-    console.error("OneSignal push error:", err);
+
+    if (attempt < MAX_ATTEMPTS) {
+      const backoff = 250 * Math.pow(2, attempt - 1); // 250ms, 500ms
+      await new Promise((r) => setTimeout(r, backoff));
+    }
   }
+
+  return lastResult;
 }
 
 // ── Pusher Batch ────────────────────────────────────────────────
