@@ -269,14 +269,25 @@ serve(async (req) => {
       },
     });
 
-    return new Response(JSON.stringify({
+    const responseBody = {
       success: credited,
       remittance_id: rem.id,
       destination_type: rem.destination_type,
       net_amount: netAmount,
       kob_fee: kobFee,
       journal_entry_id: journalEntry.id,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    };
+    await idem.commit(200, responseBody);
+    await recordRemittanceAudit({
+      endpoint: 'remittance-routing-engine',
+      decision: 'allowed',
+      remittanceId: rem.id,
+      req,
+      metadata: { destination_type: rem.destination_type, net_amount: netAmount, kob_fee: kobFee },
+    });
+    return new Response(JSON.stringify(responseBody), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (err) {
     return safeErrorResponse(err, corsHeaders, 'remittance-routing-engine');
