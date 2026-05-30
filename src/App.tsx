@@ -1388,6 +1388,7 @@ function App() {
               <Route index element={<Dashboard />} />
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/security/backup-codes" element={<ProtectedRoute><DashboardLayout><MfaBackupCodes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/notification-history" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationHistory /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/mobile-money" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
