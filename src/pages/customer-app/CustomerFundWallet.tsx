@@ -783,7 +783,7 @@ const CustomerFundWallet: React.FC = () => {
                     </div>
                   ) : (
                     filteredPbbBanks.map((bank) => (
-                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbStep('amount'); }}
+                      <button key={`pbb-${bank.source}-${bank.code}`} onClick={() => { setSelectedPbbBank(bank); setPbbRailInfo(null); setPbbFallback(null); runPreflight(bank, 'XAF'); setPbbStep('amount'); }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/30">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                           <BankLogo logoUrl={bank.logoUrl} name={bank.name} iconClassName="h-4 w-4 text-primary" />
