@@ -165,7 +165,7 @@ export default function FirebaseOTPTestSuite() {
     for (let i = 0; i < 6; i++) {
       setRateBurstCount(i + 1);
       await auth.sendOTP(phone.trim());
-      if (auth.errorCategory === "rate_limit" || /too-many-requests/i.test(auth.error || "")) {
+      if (auth.errorCategory === "too-many-requests" || /too-many-requests/i.test(auth.error || "")) {
         void insertLog({
           step: "rate_limit_hit",
           status: "ok",
