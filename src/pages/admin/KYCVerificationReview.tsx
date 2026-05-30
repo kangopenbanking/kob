@@ -487,11 +487,14 @@ export default function KYCVerificationReview() {
 
               {/* Action buttons */}
               {selectedKYC.status === "pending" && (
-                <div className="flex gap-3 pt-2">
-                  <Button onClick={() => handleReview(selectedKYC, "approved")} className="flex-1 h-10 font-semibold gap-2">
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Button onClick={() => handleReview(selectedKYC, "approved")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <CheckCircle className="h-4 w-4" /> Approve
                   </Button>
-                  <Button variant="destructive" onClick={() => handleReview(selectedKYC, "rejected")} className="flex-1 h-10 font-semibold gap-2">
+                  <Button variant="outline" onClick={() => handleReview(selectedKYC, "info_requested")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2 border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300">
+                    <MessageSquare className="h-4 w-4" /> Request more info
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleReview(selectedKYC, "rejected")} className="flex-1 min-w-[140px] h-10 font-semibold gap-2">
                     <XCircle className="h-4 w-4" /> Reject
                   </Button>
                 </div>
