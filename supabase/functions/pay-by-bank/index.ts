@@ -661,7 +661,9 @@ Deno.serve(async (req) => {
           ? { rail: 'kob_pisp', provider: 'kob', requires_linked_account: true }
           : { rail: null, provider: null, requires_linked_account: false };
 
-      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor }), {
+      const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
+      return new Response(JSON.stringify({ ...intent, rail, rail_descriptor, timeline }), {
+
 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
