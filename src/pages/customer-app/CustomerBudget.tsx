@@ -332,13 +332,7 @@ export default function CustomerBudget() {
                   </span>
                   <div>
                     <div className="text-[13px] font-medium" style={{ color: "var(--bud-text)" }}>
-                      AI Adviser
-                    </div>
-                    <div
-                      className="text-[10px] uppercase tracking-[0.14em]"
-                      style={{ color: "var(--bud-text-3)" }}
-                    >
-                      Personal insight
+                      Kang Adviser
                     </div>
                   </div>
                 </div>
