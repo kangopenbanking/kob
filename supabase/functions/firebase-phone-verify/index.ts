@@ -8,17 +8,69 @@ import {
   tooManyRequestsResponse,
 } from "../_shared/soft-rate-limit.ts";
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const userAgent = req.headers.get('user-agent') || '';
+  const region = req.headers.get('x-vercel-ip-country')
+    || req.headers.get('cf-ipcountry')
+    || req.headers.get('x-region')
+    || 'unknown';
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const monitor = createClient(supabaseUrl, supabaseServiceKey);
+
+  const logOtp = async (
+    phoneHash: string,
+    country: string | null,
+    status: 'requested' | 'verified' | 'failed' | 'blocked',
+    errorCode: string | null,
+    metadata: Record<string, unknown> = {},
+  ) => {
+    try {
+      await monitor.rpc('record_otp_request', {
+        _ip: clientIp,
+        _phone_hash: phoneHash,
+        _country: country,
+        _region: region,
+        _status: status,
+        _error_code: errorCode,
+        _user_agent: userAgent,
+        _metadata: metadata,
+      });
+    } catch (e) {
+      console.error('record_otp_request failed', e);
+    }
+  };
+
   try {
+    // Abuse-detection gate: refuse if IP is already on the OTP block list.
+    const { data: blocked } = await monitor.rpc('is_otp_ip_blocked', { _ip: clientIp });
+    if (blocked === true) {
+      await logOtp('unknown', null, 'blocked', 'ip_blocked');
+      return new Response(
+        JSON.stringify({ error: 'ip_blocked', message: 'This IP is temporarily blocked due to suspicious activity.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
     // Soft IP-based limit on phone verify: protects against SMS-pumping fraud.
-    // Fails open so legitimate auth never breaks if the limiter is unavailable.
     const ipId = getClientIdentifier(req, "ip");
     const rl = await softCheckRateLimit(ipId, "firebase-phone-verify", 20, 60);
-    if (!rl.allowed) return tooManyRequestsResponse(corsHeaders, 300);
+    if (!rl.allowed) {
+      await logOtp('unknown', null, 'blocked', 'rate_limited');
+      return tooManyRequestsResponse(corsHeaders, 300);
+    }
+
 
     const { firebase_id_token } = await req.json();
 
