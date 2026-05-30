@@ -275,14 +275,27 @@ export default function AdminPayByBankInspector() {
       {selected && (
         <Card>
           <CardHeader>
-            <CardTitle>Intent {selected.id}</CardTitle>
-            <CardDescription>
-              Trace id: <span className="font-mono">{selected.metadata?.trace_id || "—"}</span>
-              {selected.metadata?.idempotency_key && (
-                <> · Idempotency key: <span className="font-mono">{selected.metadata.idempotency_key}</span></>
-              )}
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div>
+                <CardTitle>Intent {selected.id}</CardTitle>
+                <CardDescription>
+                  Trace id: <span className="font-mono">{selected.metadata?.trace_id || "—"}</span>
+                  {selected.metadata?.idempotency_key && (
+                    <> · Idempotency key: <span className="font-mono">{selected.metadata.idempotency_key}</span></>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={exportTimelineCSV} disabled={!timeline || timelineLoading} aria-label="Export timeline as CSV">
+                  <Download className="h-4 w-4 mr-2" />CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportTimelineJSON} disabled={!timeline || timelineLoading} aria-label="Export timeline as JSON">
+                  <FileJson className="h-4 w-4 mr-2" />JSON
+                </Button>
+              </div>
+            </div>
           </CardHeader>
+
           <CardContent>
             <Tabs defaultValue="timeline">
               <TabsList>
