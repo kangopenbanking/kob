@@ -957,6 +957,7 @@ function App() {
               <Route path="webhooks" element={<WebhookManagement />} />
               <Route path="webhooks/replay" element={<AdminWebhookReplay />} />
               <Route path="pay-by-bank-inspector" element={<AdminPayByBankInspector />} />
+              <Route path="capture-events" element={<AdminCaptureEvents />} />
               <Route path="branches" element={<BranchManagement />} />
               <Route path="transactions" element={<TransactionMonitoring />} />
               <Route path="consent-data" element={<ConsentDataManagement />} />
