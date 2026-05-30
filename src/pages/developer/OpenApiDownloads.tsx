@@ -1,13 +1,40 @@
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, ShieldCheck, FileText, Download } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, ShieldCheck, FileText, Download, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpecDownloads from '@/components/developer/SpecDownloads';
 import { KOB_API_VERSION_LABEL, KOB_SDK_VERSIONS } from '@/config/version';
 
+interface SigningMeta {
+  algorithm?: string;
+  publicKeyFingerprint?: string;
+  publicKeyFingerprintSha256Hex?: string;
+  publicKeyUrl?: string;
+  next?: {
+    publicKeyFingerprint?: string;
+    publicKeyUrl?: string;
+    status?: string;
+  } | null;
+}
+
+
 const OpenApiDownloads = () => {
+  const [signing, setSigning] = useState<SigningMeta | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/artifacts.json', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => { if (!cancelled && m?.signing) setSigning(m.signing); })
+      .catch(() => { /* metadata is best-effort */ });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
+
     <>
       <Helmet>
         <title>OpenAPI Specification Downloads — Kang Open Banking</title>
@@ -97,13 +124,46 @@ curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="verify">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <ShieldCheck className="h-4 w-4" /> Verify signed artifacts (Ed25519)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
+            <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <KeyRound className="h-4 w-4" />
+                Current signing key
+                <Badge variant="outline" className="ml-auto">
+                  {(signing?.algorithm || 'ed25519').toUpperCase()}
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Fingerprint (SHA-256 of SPKI DER):
+              </div>
+              <code className="block text-xs break-all bg-background border border-border rounded px-2 py-1">
+                {signing?.publicKeyFingerprint || 'Loading from /artifacts.json…'}
+              </code>
+              {signing?.next?.publicKeyFingerprint && (
+                <>
+                  <div className="flex items-center gap-2 text-sm font-medium pt-2 border-t border-border">
+                    <KeyRound className="h-4 w-4" />
+                    Staged next key
+                    <Badge variant="secondary" className="ml-auto">
+                      {signing.next.status || 'staged'}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Pre-pin this fingerprint to survive the upcoming rotation
+                    without a code change. See the rotation procedure below.
+                  </div>
+                  <code className="block text-xs break-all bg-background border border-border rounded px-2 py-1">
+                    {signing.next.publicKeyFingerprint}
+                  </code>
+                </>
+              )}
+            </div>
             <p className="text-muted-foreground">
               Every artifact is signed with an Ed25519 detached signature using a
               stable build-time key. The public key is published at{' '}
@@ -111,6 +171,7 @@ curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - all
               <code>/artifacts.json</code>. Verify any download with either of the
               snippets below.
             </p>
+
             <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# 1) One-shot verifier (fetches spec, checksum, signature, public key)
 curl -sSL https://kangopenbanking.com/scripts/kob-fetch.mjs | node - openapi
 
@@ -135,6 +196,54 @@ openssl pkeyutl -verify -pubin -inkey artifact-signing-pubkey.pem \\
             </p>
           </CardContent>
         </Card>
+
+        <Card id="rotation">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <KeyRound className="h-4 w-4" /> Signing key rotation procedure
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              The portal supports <strong>dual signatures</strong> so integrators
+              can pre-pin the next public key before cutover. During a staged
+              rotation, every artifact ships with both <code>.sig</code> (current
+              key) and <code>.sig.next</code> (next key) — and both fingerprints
+              are exposed above and in <code>/artifacts.json</code>.
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+              <li>
+                <strong>T-14 days</strong>: we publish the staged next key.
+                Update your pipeline to accept <em>either</em> fingerprint.
+              </li>
+              <li>
+                <strong>T-0</strong>: cutover. <code>publicKeyFingerprint</code> in
+                <code> /artifacts.json</code> changes to the staged value;
+                <code> signing.next</code> becomes <code>null</code>.
+              </li>
+              <li>
+                <strong>T+30 days</strong>: the old key is retired.
+              </li>
+            </ol>
+            <pre className="bg-muted/60 px-3 py-2 rounded text-xs overflow-x-auto"><code>{`# Pin both fingerprints during the rotation window
+EXPECTED_CUR="${signing?.publicKeyFingerprint || 'SHA256:<current>'}"
+EXPECTED_NEXT="${signing?.next?.publicKeyFingerprint || 'SHA256:<next-when-staged>'}"
+
+ACTUAL=$(curl -sS https://kangopenbanking.com/artifacts.json \\
+  | jq -r '.signing.publicKeyFingerprint')
+
+[ "$ACTUAL" = "$EXPECTED_CUR" ] || [ "$ACTUAL" = "$EXPECTED_NEXT" ] \\
+  || { echo "Unknown signing key: $ACTUAL"; exit 1; }`}</code></pre>
+            <p className="text-xs text-muted-foreground">
+              Cutover dates and emergency rotations are announced in the
+              changelog and SDK release notes. CI on this portal verifies every
+              artifact against both keys during the staging window, so a
+              rotation never ships without working dual signatures.
+            </p>
+          </CardContent>
+        </Card>
+
+
 
         <Card>
           <CardHeader>

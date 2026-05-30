@@ -7,7 +7,7 @@
       "php": "1.6.1"
     }
   },
-  "generatedAt": "2026-05-30T10:05:17.494Z",
+  "generatedAt": "2026-05-30T11:22:46.381Z",
   "algorithm": "sha256",
   "verifyHint": "curl -sSO https://kangopenbanking.com/SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt",
   "artifacts": [
@@ -20,7 +20,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi.json.sig"
+        "sigUrl": "/openapi.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -32,7 +33,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi.yaml.sig"
+        "sigUrl": "/openapi.yaml.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -44,7 +46,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi-sandbox.json.sig"
+        "sigUrl": "/openapi-sandbox.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -56,7 +59,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi-sandbox.yaml.sig"
+        "sigUrl": "/openapi-sandbox.yaml.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -68,7 +72,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/apis.json.sig"
+        "sigUrl": "/apis.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -80,7 +85,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/apis-sandbox.json.sig"
+        "sigUrl": "/apis-sandbox.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -92,7 +98,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi-history/openapi-4.49.0.json.sig"
+        "sigUrl": "/openapi-history/openapi-4.49.0.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -104,7 +111,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/openapi-history/openapi-4.49.0.yaml.sig"
+        "sigUrl": "/openapi-history/openapi-4.49.0.yaml.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -116,7 +124,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/postman/Kang_Open_Banking_API_latest.postman_collection.json.sig"
+        "sigUrl": "/postman/Kang_Open_Banking_API_latest.postman_collection.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -128,7 +137,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/postman/Kang_Open_Banking_API_v4.49.0.postman_collection.json.sig"
+        "sigUrl": "/postman/Kang_Open_Banking_API_v4.49.0.postman_collection.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -140,7 +150,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json.sig"
+        "sigUrl": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -152,7 +163,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/postman/Kang_Open_Banking_Production.postman_environment.json.sig"
+        "sigUrl": "/postman/Kang_Open_Banking_Production.postman_environment.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -164,7 +176,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-node-package.json.sig"
+        "sigUrl": "/sdk-downloads/sdk-node-package.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -176,7 +189,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-node-README.md.sig"
+        "sigUrl": "/sdk-downloads/sdk-node-README.md.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -188,7 +202,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-php-composer.json.sig"
+        "sigUrl": "/sdk-downloads/sdk-php-composer.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -200,7 +215,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-php-README.md.sig"
+        "sigUrl": "/sdk-downloads/sdk-php-README.md.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -212,7 +228,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-python-pyproject.toml.sig"
+        "sigUrl": "/sdk-downloads/sdk-python-pyproject.toml.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -224,7 +241,8 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/sdk-downloads/sdk-python-README.md.sig"
+        "sigUrl": "/sdk-downloads/sdk-python-README.md.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     },
     {
@@ -236,15 +254,21 @@
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
-        "sigUrl": "/changelog.json.sig"
+        "sigUrl": "/changelog.json.sig",
+        "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM"
       }
     }
   ],
   "signing": {
     "algorithm": "ed25519",
     "publicKeyUrl": "/artifact-signing-pubkey.pem",
+    "publicKeyFingerprint": "SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM",
+    "publicKeyFingerprintSha256Hex": "06:bd:a2:7b:b1:a3:77:a2:90:a8:c8:ff:40:2c:7b:c0:a5:f5:1f:b5:69:24:2f:d1:f1:dc:99:bb:12:50:9e:93",
     "manifestSigUrl": "/SHA256SUMS.txt.sig",
     "keySource": "local-dev",
-    "signedAt": "2026-05-30T10:05:17.717Z"
+    "signedAt": "2026-05-30T11:22:58.548Z",
+    "verifyInstructionsUrl": "/developer/openapi#verify",
+    "rotationDocsUrl": "/developer/openapi#rotation",
+    "next": null
   }
 }
