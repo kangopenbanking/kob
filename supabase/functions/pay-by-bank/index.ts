@@ -770,6 +770,25 @@ Deno.serve(async (req) => {
       const timeline = Array.isArray(meta.timeline) ? meta.timeline : [];
       const lastWebhookEvent = inboxRows[0] || null;
 
+      if (isAdminAction && adminUserId) {
+        const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || null;
+        const ua = req.headers.get('user-agent') || null;
+        await recordAdminAudit(supabase, {
+          userId: adminUserId,
+          action: action === 'admin_replay_webhook' ? 'pay_by_bank.admin_replay' : 'pay_by_bank.admin_view',
+          entityId: intent.id,
+          traceId,
+          details: {
+            rail: meta.rail || null,
+            status: intent.status,
+            intent_trace_id: meta.trace_id || null,
+            reason: replayReason || null,
+          },
+          ipAddress: ip,
+          userAgent: ua,
+        });
+      }
+
       return new Response(JSON.stringify({
         intent_id: intent.id,
         status: intent.status,
@@ -784,8 +803,10 @@ Deno.serve(async (req) => {
         webhook_history: inboxRows,
         kob_callback_at: meta.kob_callback_at || null,
         flutterwave_webhook_at: meta.flw_webhook_at || null,
+        audited: isAdminAction,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Trace-Id': traceId } });
     }
+
 
 
 
