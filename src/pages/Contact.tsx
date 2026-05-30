@@ -21,6 +21,33 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+
+const CONTACT_STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Kang Open Banking",
+  "description": "Unified Open Banking API platform for Cameroon and the CEMAC region.",
+  "url": "https://kangopenbanking.com",
+  "telephone": "+237 6 22 02 25 67",
+  "email": "info@kangopenbanking.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "CM",
+    "addressLocality": "Douala",
+    "addressRegion": "Littoral"
+  },
+  "areaServed": ["CM", "CF", "TD", "CG", "GA", "GQ"],
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "telephone": "+237 6 22 02 25 67",
+      "contactType": "customer support",
+      "availableLanguage": ["English", "French"],
+      "areaServed": "CM"
+    }
+  ]
+};
 
 export default function Contact() {
   const { toast } = useToast();
