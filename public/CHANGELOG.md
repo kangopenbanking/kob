@@ -10,6 +10,61 @@ Current API version: **4.49.0** · Last updated: **2026-05-30**
 
 ---
 
+## Security & signing keys — 2026-05-30 <a id="signing-keys"></a>
+**Type:** infrastructure · **Breaking changes:** none · **Action required for integrators verifying signatures:** review fingerprint below.
+
+We formalised the Ed25519 signing-key rotation contract used to sign every
+downloadable artifact (OpenAPI spec, Postman collections, SDK manifests,
+`SHA256SUMS.txt`). This is the **initial registration** of the current key
+plus the infrastructure that supports future zero-downtime rotations.
+
+### Key fingerprints
+
+| Status | Algorithm | Fingerprint (SHA-256 of SPKI DER) | Published at |
+| --- | --- | --- | --- |
+| Previous | n/a | (no prior published key — initial registration) | n/a |
+| **Current** | Ed25519 | `SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM` | `/artifact-signing-pubkey.pem` |
+| Staged next | Ed25519 | none yet — will appear in `/signing-key-updates.json` when scheduled | `/artifact-signing-pubkey-next.pem` |
+
+> The fingerprint above is the value published by the current build and is
+> echoed verbatim in `/signing-key-updates.json` and `/artifacts.json`.
+> Production deployments stamp the same value when
+> `KOB_ARTIFACT_SIGNING_KEY` is configured as a workspace build secret.
+
+### Integrator impact
+
+- **No code change required today** unless you previously pinned a
+  different key fingerprint (e.g. from an ephemeral preview build). If
+  you did, refetch `/artifact-signing-pubkey.pem` and update the pin.
+- **Going forward**, poll `/signing-key-updates.json` (default cadence:
+  6 hours) to detect upcoming rotations. When a `next` key appears,
+  pre-pin both fingerprints — see
+  [/docs/signing-key-rotation.md](./docs/signing-key-rotation.md) and
+  [/developer/openapi#rotation](https://kangopenbanking.com/developer/openapi#rotation).
+- **Automated verification**:
+  `curl -sSL https://kangopenbanking.com/scripts/kob-verify-keys.mjs | node - --pin <fingerprint>`
+  validates every published artifact against current (and staged next)
+  keys with the same logic the portal enforces in CI.
+
+### New surfaces
+
+- `GET /signing-key-updates.json` — small pollable endpoint with
+  `current`, `next`, `history[]`, and `pollIntervalSeconds`.
+- `GET /scripts/kob-verify-keys.mjs` — standalone CLI verifier.
+- `GET /docs/signing-key-rotation.md` — step-by-step integrator guide.
+- `/artifacts.json` now includes `signing.publicKeyFingerprint`,
+  per-artifact `signature.sigUrl` / `nextSigUrl`, `verifyInstructionsUrl`
+  and `rotationDocsUrl`.
+
+### Standards & citations
+- RFC 8032 — Edwards-Curve Digital Signature Algorithm (Ed25519)
+- NIST SP 800-57 Pt.1 Rev.5 §5.6 — Cryptoperiods and key rotation
+- Standing Orders P4 (Open Spec) and P7 (Changelog)
+
+---
+
+
+
 ## 4.49.0 — 2026-05-29
 **Type:** minor · **Breaking changes:** none
 

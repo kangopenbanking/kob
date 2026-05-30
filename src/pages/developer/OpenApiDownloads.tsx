@@ -240,6 +240,24 @@ ACTUAL=$(curl -sS https://kangopenbanking.com/artifacts.json \\
               artifact against both keys during the staging window, so a
               rotation never ships without working dual signatures.
             </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <Button variant="outline" size="sm" asChild>
+                <a href="/docs/signing-key-rotation.md" download>
+                  <FileText className="h-4 w-4 mr-1" /> Integrator rotation guide
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/signing-key-updates.json" download>
+                  <Download className="h-4 w-4 mr-1" /> /signing-key-updates.json
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/scripts/kob-verify-keys.mjs" download>
+                  <ShieldCheck className="h-4 w-4 mr-1" /> kob-verify-keys CLI
+                </a>
+              </Button>
+            </div>
+
           </CardContent>
         </Card>
 
