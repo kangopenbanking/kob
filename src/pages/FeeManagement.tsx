@@ -192,9 +192,36 @@ export default function FeeManagement() {
     finally { setGeneratingInvoice(false); }
   };
 
-  const filteredStructures = institutionFilter === 'all' ? feeStructures : feeStructures.filter(s => s.institution_id === institutionFilter);
-  const filteredFees = institutionFilter === 'all' ? transactionFees : transactionFees.filter(f => f.institution_id === institutionFilter);
-  const filteredInvoices = institutionFilter === 'all' ? invoices : invoices.filter(i => i.institution_id === institutionFilter);
+  const institutionsById = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const i of institutions) m.set(i.id, i);
+    return m;
+  }, [institutions]);
+
+  const filteredInstitutions = useMemo(() => {
+    return institutions.filter((i) => {
+      const matchesType = institutionTypeFilter === 'all' || i.institution_type === institutionTypeFilter;
+      const matchesSearch = !searchQuery || i.institution_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesType && matchesSearch;
+    });
+  }, [institutions, institutionTypeFilter, searchQuery]);
+
+  const matchesInstitutionFilters = (instId: string | null | undefined) => {
+    if (institutionFilter !== 'all' && instId !== institutionFilter) return false;
+    if (!instId) {
+      // platform-scope row: include unless a specific institution / type filter is active
+      return institutionFilter === 'all' && institutionTypeFilter === 'all' && !searchQuery;
+    }
+    const inst = institutionsById.get(instId);
+    if (!inst) return false;
+    if (institutionTypeFilter !== 'all' && inst.institution_type !== institutionTypeFilter) return false;
+    if (searchQuery && !inst.institution_name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  };
+
+  const filteredStructures = feeStructures.filter(s => matchesInstitutionFilters(s.institution_id));
+  const filteredFees = transactionFees.filter(f => matchesInstitutionFilters(f.institution_id));
+  const filteredInvoices = invoices.filter(i => matchesInstitutionFilters(i.institution_id));
 
   const thisMonth = new Date();
   const monthlyFees = transactionFees.filter(f => { const d = new Date(f.transaction_date); return d.getMonth() === thisMonth.getMonth() && d.getFullYear() === thisMonth.getFullYear(); }).reduce((s, f) => s + Number(f.final_fee || 0), 0);
