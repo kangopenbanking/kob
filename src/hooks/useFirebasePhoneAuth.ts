@@ -85,8 +85,27 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
     setProvider('vonage');
     setStep('otp');
     toast.success('Verification code sent via SMS (fallback)');
+    void sendEmailMirror(phoneNumber);
     return true;
   }, []);
+
+  // Fire-and-forget: send an independent email OTP to the user's registered
+  // email so they receive verification via Firebase/SMS *and* email.
+  const sendEmailMirror = useCallback(async (phoneNumber: string) => {
+    try {
+      const { data } = await supabase.functions.invoke('phone-auth-send-email-otp', {
+        body: { phone_number: phoneNumber, otp_type: optsRef.current.otpType || 'login' },
+      });
+      if (data?.success) {
+        toast.message('We also emailed a backup code', {
+          description: data.email_masked ? `Sent to ${data.email_masked}` : undefined,
+        });
+      }
+    } catch (e) {
+      console.warn('[useFirebasePhoneAuth] email mirror failed (non-blocking)', e);
+    }
+  }, []);
+
 
   const sendOTP = useCallback(async (phoneNumber: string) => {
     phoneRef.current = phoneNumber;
