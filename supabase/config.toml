@@ -789,6 +789,9 @@ verify_jwt = false
 [functions.phone-auth-send-otp]
 verify_jwt = false
 
+[functions.phone-auth-send-email-otp]
+verify_jwt = false
+
 [functions.phone-auth-verify-otp]
 verify_jwt = false
 
