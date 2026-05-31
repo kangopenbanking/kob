@@ -604,7 +604,7 @@ export default function BusinessKYCReview() {
               {/* Documents */}
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Submitted Documents</p>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-2.5" data-testid="kyb-doc-grid">
                   {DOCS.map(doc => {
                     const storedPath = selectedKYB[doc.key];
                     const thumbUrl = resolvedThumbs[doc.key];
@@ -612,6 +612,9 @@ export default function BusinessKYCReview() {
                     return (
                       <button
                         key={doc.key}
+                        data-kyb-doc-slot={doc.key}
+                        data-kyb-doc-has-file={storedPath ? "1" : "0"}
+                        data-kyb-doc-resolved={thumbUrl ? "1" : "0"}
                         className="relative rounded-xl border border-border/40 overflow-hidden aspect-[4/3] bg-muted/20 hover:border-primary/40 transition-all group disabled:opacity-30 disabled:cursor-not-allowed"
                         disabled={!storedPath}
                         onClick={() => openPreview(storedPath, doc.label)}
@@ -641,7 +644,39 @@ export default function BusinessKYCReview() {
                     );
                   })}
                 </div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {DOCS.filter(d => selectedKYB[d.key]).map(d => (
+                    <Button
+                      key={`dl-${d.key}`}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[11px] gap-1.5"
+                      onClick={() => downloadDoc(selectedKYB[d.key], d.label)}
+                      data-kyb-download={d.key}
+                    >
+                      <Download className="h-3 w-3" /> {d.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              {/* Prior submissions (dedupe history) */}
+              {selectedKYB._history && selectedKYB._history.length > 0 && (
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/20" data-testid="kyb-history">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">
+                    Prior submissions ({selectedKYB._history.length})
+                  </p>
+                  <ul className="space-y-1.5">
+                    {selectedKYB._history.map((h: any) => (
+                      <li key={h.id} className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-mono text-muted-foreground truncate">{String(h.id).slice(0, 8)}…</span>
+                        <span className="text-muted-foreground">{format(new Date(h.created_at), "PP")}</span>
+                        {getStatusBadge(h.verification_status)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Rejection Reason */}
               {selectedKYB.rejection_reason && (
