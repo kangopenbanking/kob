@@ -34,6 +34,8 @@ import { template as crediqTipRecommendation } from './crediq-tip-recommendation
 import { template as rentPaymentReminder } from './rent-payment-reminder.tsx'
 import { template as adminEmailQueueAlert } from './admin-email-queue-alert.tsx'
 import { template as supportAgentInvite } from './support-agent-invite.tsx'
+import { template as weeklyActivityDigest } from './weekly-activity-digest.tsx'
+import { template as monthlyStatement } from './monthly-statement.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
