@@ -643,11 +643,71 @@ export default function InstitutionVerification() {
     <>
       <div className="space-y-6">
         <AdminPageHeader icon={BadgeCheck} title="Institution Verification" description="Review and verify financial institution applications">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const rows = institutions || [];
+              const header = ["id","institution_name","institution_type","status","verification_step","main_branch_id","kyb_verified_at","created_at"];
+              const escape = (v: any) => {
+                const s = v == null ? "" : String(v);
+                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+              };
+              const lines = [header.join(",")].concat(
+                rows.map(i => header.map(h => escape((i as any)[h])).join(","))
+              );
+              const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
+              a.href = url; a.download = `institutions-${stamp}.csv`; a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 mr-2"
+            data-testid="inst-export-csv"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
           <Button variant="outline" onClick={() => refetch()} className="text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </AdminPageHeader>
+
+        {/* Stats overview */}
+        {institutions && institutions.length > 0 && (() => {
+          const total = institutions.length;
+          const byStep = (s: string) => institutions.filter(i => i.verification_step === s).length;
+          const cards = [
+            { label: "Total", value: total, icon: Building2, cls: "bg-primary/5 border-primary/10 text-primary" },
+            { label: "Pending KYB", value: byStep("pending_kyb") + byStep("pending_registration"), icon: Clock, cls: "bg-amber-500/5 border-amber-500/10 text-amber-600" },
+            { label: "KYB Review", value: byStep("kyb_submitted"), icon: FileText, cls: "bg-blue-500/5 border-blue-500/10 text-blue-600" },
+            { label: "Pending Branch", value: byStep("pending_branch") + byStep("kyb_approved"), icon: MapPin, cls: "bg-purple-500/5 border-purple-500/10 text-purple-600" },
+            { label: "Approved", value: byStep("approved"), icon: CheckCircle, cls: "bg-emerald-500/5 border-emerald-500/10 text-emerald-600" },
+            { label: "Rejected", value: byStep("rejected"), icon: Ban, cls: "bg-destructive/5 border-destructive/10 text-destructive" },
+          ];
+          return (
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6" data-testid="inst-stats">
+              {cards.map(c => (
+                <Card key={c.label} className="border-border/40">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{c.label}</p>
+                        <p className="text-2xl font-bold mt-1 tracking-tight" data-stat={c.label.toLowerCase().replace(/\s+/g, "-")}>{c.value}</p>
+                      </div>
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${c.cls}`}>
+                        <c.icon className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          );
+        })()}
+
 
         {isLoading ? (
           <div className="text-center py-12">
