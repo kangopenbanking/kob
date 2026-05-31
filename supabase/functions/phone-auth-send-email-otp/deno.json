@@ -1,0 +1,4 @@
+{
+  "name": "phone-auth-send-email-otp",
+  "verify_jwt": false
+}
