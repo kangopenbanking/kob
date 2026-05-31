@@ -1089,3 +1089,9 @@ verify_jwt = false
 [functions.developer-tryit]
 verify_jwt = false
 
+[functions.send-weekly-activity-digest]
+verify_jwt = false
+
+[functions.send-monthly-statement]
+verify_jwt = false
+
