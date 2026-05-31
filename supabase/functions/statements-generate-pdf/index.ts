@@ -20,6 +20,10 @@ interface ReqBody {
   institution_id?: string;
   period_from: string;
   period_to: string;
+  /** Mode: "paid" generates the PDF and charges; "free_preview" is disallowed here (server is paid-only entitlement). */
+  mode?: "paid";
+  /** Required when fee > 0: client-generated v4 UUID that prevents double-deduction on repeated clicks. */
+  idempotency_key?: string;
 }
 
 const BRAND = "#0a4a8a";
@@ -230,24 +234,49 @@ Deno.serve(async (req) => {
     }
     const serial = String(serialData);
 
-    // Charge statement download fee (if enabled by admin)
-    const { data: feeSettings } = await admin
-      .from("statement_fee_settings")
-      .select("fee_amount, currency, is_enabled")
-      .eq("id", true)
-      .maybeSingle();
+    // Resolve effective fee (per app + institution type) with global fallback
+    let institutionType: string | null = null;
+    if (body.source === "banking" && body.institution_id) {
+      const { data: instType } = await admin
+        .from("institutions")
+        .select("institution_type")
+        .eq("id", body.institution_id)
+        .maybeSingle();
+      institutionType = (instType as any)?.institution_type ?? null;
+    }
+    const { data: feeCfg } = await admin.rpc("resolve_statement_fee", {
+      p_source: body.source,
+      p_institution_type: institutionType,
+    });
+    const feeAmount = Number((feeCfg as any)?.fee_amount ?? 0);
+    const feeEnabled = !!(feeCfg as any)?.is_enabled;
+    const feeCurrency = String((feeCfg as any)?.currency ?? "XAF");
+    const feeIsFree = !feeEnabled || feeAmount <= 0;
 
     let feeCharged = 0;
-    let feeCurrency = (feeSettings as any)?.currency || "XAF";
-    if (feeSettings && (feeSettings as any).is_enabled && Number((feeSettings as any).fee_amount) > 0) {
-      const feeAmount = Number((feeSettings as any).fee_amount);
-      const { data: chargeResult, error: chargeErr } = await admin.rpc("charge_statement_fee", {
+    let feeStatus: "charged" | "waived" | "replayed" = feeIsFree ? "waived" : "charged";
+
+    if (!feeIsFree) {
+      const idemKey = (body.idempotency_key || "").trim();
+      if (!idemKey || !/^[0-9a-f-]{16,}$/i.test(idemKey)) {
+        return new Response(
+          JSON.stringify({
+            error: "idempotency_key_required",
+            message:
+              "An idempotency key is required to safely charge the download fee. Please retry from the preview screen.",
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: chargeResult, error: chargeErr } = await admin.rpc("charge_statement_fee_v2", {
         p_user_id: user.id,
         p_account_id: acct.id,
         p_amount: feeAmount,
         p_currency: feeCurrency,
         p_source: body.source,
         p_serial: serial,
+        p_idempotency_key: idemKey,
       });
       if (chargeErr) {
         return new Response(
@@ -256,14 +285,17 @@ Deno.serve(async (req) => {
         );
       }
       const status = (chargeResult as any)?.status;
+      const replay = !!(chargeResult as any)?.replay;
+
       if (status === "insufficient_funds") {
         return new Response(
           JSON.stringify({
             error: "insufficient_funds",
-            message: `Insufficient balance to pay the ${feeAmount} ${feeCurrency} statement download fee.`,
+            message: `Your balance is too low to cover the ${feeAmount.toLocaleString()} ${feeCurrency} statement download fee. Please top up and try again.`,
             fee_amount: feeAmount,
             currency: feeCurrency,
             available: (chargeResult as any)?.available,
+            shortfall: Math.max(0, feeAmount - Number((chargeResult as any)?.available ?? 0)),
           }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -272,14 +304,29 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: "no_balance",
-            message: "No account balance found to deduct the statement download fee.",
+            message: "No account balance is available to deduct the statement download fee. Please fund your account and try again.",
             fee_amount: feeAmount,
             currency: feeCurrency,
           }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      if (status === "charged") feeCharged = feeAmount;
+      if (status === "charged") {
+        feeCharged = feeAmount;
+        feeStatus = replay ? "replayed" : "charged";
+      } else if (status === "skipped") {
+        feeStatus = "waived";
+      } else {
+        // Unexpected — surface as 409 conflict so UI can guide the user
+        return new Response(
+          JSON.stringify({
+            error: "fee_charge_conflict",
+            message: "We could not finalise the statement charge. Please refresh and try again.",
+            details: chargeResult,
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
 
@@ -530,6 +577,11 @@ Deno.serve(async (req) => {
         period_from: body.period_from,
         period_to: body.period_to,
         tx_count: (txs || []).length,
+        fee_amount: feeCharged,
+        fee_currency: feeCurrency,
+        fee_status: feeStatus,
+        institution_type: institutionType,
+        idempotency_key: body.idempotency_key ?? null,
       },
       ip_address: ip,
       user_agent: ua,
@@ -547,6 +599,7 @@ Deno.serve(async (req) => {
         "X-Statement-Tx-Count": String((txs || []).length),
         "X-Statement-Fee-Charged": String(feeCharged),
         "X-Statement-Fee-Currency": feeCurrency,
+        "X-Statement-Fee-Status": feeStatus,
       },
     });
   } catch (e) {

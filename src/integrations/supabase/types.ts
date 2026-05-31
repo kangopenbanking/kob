@@ -23599,6 +23599,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          idempotency_key: string | null
           metadata: Json | null
           serial: string | null
           source: string
@@ -23611,6 +23612,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           serial?: string | null
           source: string
@@ -23623,11 +23625,51 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           serial?: string | null
           source?: string
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      statement_fee_overrides: {
+        Row: {
+          app_source: string
+          created_at: string
+          currency: string
+          fee_amount: number
+          id: string
+          institution_type: string | null
+          is_enabled: boolean
+          is_free: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          app_source: string
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          institution_type?: string | null
+          is_enabled?: boolean
+          is_free?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          app_source?: string
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          institution_type?: string | null
+          is_enabled?: boolean
+          is_free?: boolean
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -27392,6 +27434,18 @@ export type Database = {
         }
         Returns: Json
       }
+      charge_statement_fee_v2: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_currency: string
+          p_idempotency_key: string
+          p_serial: string
+          p_source: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       check_aisp_permission: {
         Args: { _consent_id: string; _permission: string; _user_id: string }
         Returns: boolean
@@ -27928,6 +27982,10 @@ export type Database = {
           key_version: number
           status: string
         }[]
+      }
+      resolve_statement_fee: {
+        Args: { p_institution_type: string; p_source: string }
+        Returns: Json
       }
       search_profiles_by_name: {
         Args: { _limit?: number; _query: string }
