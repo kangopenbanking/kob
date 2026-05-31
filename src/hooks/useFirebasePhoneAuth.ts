@@ -162,6 +162,7 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
       setProvider('firebase');
       setStep('otp');
       toast.success('Verification code sent.');
+      void sendEmailMirror(phoneNumber);
     } catch (err: any) {
       console.error('Firebase sendOTP error:', err);
       const mapped = mapFirebaseAuthError(err);
