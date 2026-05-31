@@ -85,6 +85,25 @@ export const StatementDownloadDialog: React.FC<StatementDownloadDialogProps> = (
   const [previewing, setPreviewing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [preview, setPreview] = useState<StatementPreviewData | null>(null);
+  const [fee, setFee] = useState<{ amount: number; currency: string; enabled: boolean } | null>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    supabase
+      .from("statement_fee_settings")
+      .select("fee_amount, currency, is_enabled")
+      .eq("id", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setFee({
+            amount: Number((data as any).fee_amount) || 0,
+            currency: (data as any).currency || "XAF",
+            enabled: !!(data as any).is_enabled,
+          });
+        }
+      });
+  }, [open]);
 
   const yearOptions = useMemo(() => {
     if (years && years.length) return years;
