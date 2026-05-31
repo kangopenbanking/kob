@@ -157,27 +157,86 @@ export default function KYCVerificationReview() {
     );
   };
 
-  const filterByStatus = (status: string) => {
-    let items = kycSubmissions?.filter((kyc) => kyc.status === status) || [];
-    if (searchQuery) {
-      items = items.filter(k =>
-        `${getDisplayName(k)} ${k.document_number} ${getEmail(k) || ""}`.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Group submissions by user so the page never shows duplicate rows for the
+  // same applicant (historic data created before the server-side dedup guard
+  // can still produce multiple rows per user). The most recent row wins, and
+  // older rows are exposed via `_history` for the detail dialog.
+  const groupedByUser = (() => {
+    if (!kycSubmissions) return [] as any[];
+    if (!dedupeByUser) return kycSubmissions.map(k => ({ ...k, _history: [] as any[] }));
+    const byUser = new Map<string, any[]>();
+    for (const row of kycSubmissions) {
+      const key = row.user_id || row.id;
+      const arr = byUser.get(key) || [];
+      arr.push(row);
+      byUser.set(key, arr);
     }
-    return items;
-  };
+    return Array.from(byUser.values()).map(rows => {
+      rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { ...rows[0], _history: rows.slice(1) };
+    });
+  })();
 
-  const allFiltered = searchQuery
-    ? kycSubmissions?.filter(k => `${getDisplayName(k)} ${k.document_number} ${getEmail(k) || ""}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : kycSubmissions;
+  const matchesQuery = (k: any) =>
+    !searchQuery ||
+    `${getDisplayName(k)} ${k.document_number || ""} ${getEmail(k) || ""}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+  const matchesSource = (k: any) =>
+    sourceFilter === "all" || (k.source_app || "customer_app") === sourceFilter;
+
+  const filterByStatus = (status: string) =>
+    groupedByUser.filter(k => k.status === status && matchesQuery(k) && matchesSource(k));
+
+  const allFiltered = groupedByUser.filter(k => matchesQuery(k) && matchesSource(k));
 
   const stats = {
-    total: kycSubmissions?.length || 0,
+    total: groupedByUser.length,
     pending: filterByStatus("pending").length,
     approved: filterByStatus("approved").length,
     rejected: filterByStatus("rejected").length,
     info_requested: filterByStatus("info_requested").length,
   };
+
+  const exportCsv = () => {
+    const rows = allFiltered;
+    const headers = ["id","user_id","name","email","status","source_app","document_type","document_number","document_country","created_at","verified_at","rejection_reason"];
+    const csv = [
+      headers.join(","),
+      ...rows.map(r => headers.map(h => {
+        const v = h === "name" ? getDisplayName(r) : h === "email" ? (getEmail(r) || "") : (r[h] ?? "");
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(",")),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kyc-submissions-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Export ready", description: `${rows.length} submissions exported to CSV.` });
+  };
+
+  const sourceBadge = (src?: string | null) => {
+    const s = src || "customer_app";
+    const isBank = s === "banking_app" || s === "bank_app";
+    return (
+      <Badge
+        variant="outline"
+        className={`gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 ${
+          isBank
+            ? "border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800"
+            : "border-slate-300 bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700"
+        }`}
+      >
+        {isBank ? <Building2 className="h-2.5 w-2.5" /> : <Smartphone className="h-2.5 w-2.5" />}
+        {isBank ? "Banking" : "Consumer"}
+      </Badge>
+    );
+  };
+
 
   // ── Loading skeleton ──
   const TableSkeleton = () => (
