@@ -146,9 +146,13 @@ export default function InstitutionVerification() {
   };
 
   const getKYBForInstitution = (userId: string, accountId: string | null): KYBSubmission | undefined => {
-    return kybSubmissions?.find(kyb => 
+    const matches = (kybSubmissions || []).filter(kyb =>
       kyb.user_id === userId || (accountId && kyb.account_id === accountId)
     );
+    if (matches.length === 0) return undefined;
+    // Always return the LATEST submission (dedupe by user, prevents stale rejected
+    // rows from masking a newer pending resubmit).
+    return matches.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
   };
 
   const calculateProgress = (steps: VerificationStep[]): number => {
