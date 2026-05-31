@@ -1,0 +1,74 @@
+name: KYC E2E (Playwright)
+
+# Runs the full KYC lifecycle Playwright suite on every PR and on push to
+# main. Fails the build if the admin UI drifts from the persisted
+# kyc-documents metadata, if duplicate submissions are accepted, or if
+# document previews/downloads break.
+#
+# The job is gated on the E2E_PASSWORD secret being present. Forks
+# without secrets get a no-op pass to avoid red CI on contributor PRs.
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/admin/KYCVerificationReview.tsx'
+      - 'src/components/kyc/**'
+      - 'src/lib/kyc-storage.ts'
+      - 'supabase/functions/kyc-submit/**'
+      - 'supabase/functions/admin-kyc-review/**'
+      - 'e2e/authenticated/kyc-*.spec.ts'
+      - 'e2e/authenticated/helpers.ts'
+      - '.github/workflows/kyc-e2e.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  kyc-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL || 'https://kob.lovable.app' }}
+      RUN_AUTHENTICATED_E2E: '1'
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_CONSUMER_EMAIL: ${{ secrets.E2E_CONSUMER_EMAIL }}
+      E2E_INSTITUTION_EMAIL: ${{ secrets.E2E_INSTITUTION_EMAIL }}
+      E2E_MERCHANT_EMAIL: ${{ secrets.E2E_MERCHANT_EMAIL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip on fork (no secrets)
+        if: ${{ env.E2E_PASSWORD == '' }}
+        run: |
+          echo "::notice::E2E_PASSWORD not configured — KYC E2E skipped (fork or unseeded env)."
+          exit 0
+
+      - uses: actions/setup-node@v4
+        if: ${{ env.E2E_PASSWORD != '' }}
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Run KYC E2E suite
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright test e2e/authenticated/kyc-full-flow.spec.ts e2e/authenticated/kyc-admin-review.spec.ts e2e/authenticated/kyc-info-requested.spec.ts --reporter=github,list
+
+      - name: Upload Playwright report
+        if: ${{ always() && env.E2E_PASSWORD != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kyc-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
