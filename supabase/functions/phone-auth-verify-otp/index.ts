@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { phone_number, otp_code, otp_type, full_name, email, pin_code, country_code } = await req.json();
+    const { phone_number, otp_code, otp_type, full_name, email, pin_code, country_code, verify_via_email } = await req.json();
 
     if (!phone_number || !otp_code || !otp_type) {
       return new Response(
@@ -35,11 +35,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Lookup OTP by phone + type only (NOT by otp_code) to enable attempt tracking
+    // Build lookup keys: always include the phone; when verify_via_email is
+    // requested, also look up by the registered email (parallel email-OTP).
+    const lookupKeys: string[] = [phone_number];
+    if (verify_via_email) {
+      try {
+        const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 200 });
+        const match = list?.users?.find((u: any) =>
+          u.phone === phone_number || u.phone === phone_number.replace(/^\+/, '')
+        );
+        if (match?.email && !match.email.endsWith('@kang.id') && !lookupKeys.includes(match.email)) {
+          lookupKeys.push(match.email);
+        }
+      } catch (_) { /* non-fatal */ }
+    }
+
     const { data: otpRecord, error: otpError } = await supabase
       .from('phone_otp_codes')
       .select('*')
-      .eq('phone_number', phone_number)
+      .in('phone_number', lookupKeys)
       .eq('otp_type', otp_type)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
