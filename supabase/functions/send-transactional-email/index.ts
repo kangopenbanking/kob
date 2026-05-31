@@ -140,10 +140,11 @@ Deno.serve(async (req) => {
     'auth_emails': 20,
     'customer-invoice': 30,
   }
+  let recipientHash = ''
   try {
     const enc = new TextEncoder().encode(effectiveRecipient.toLowerCase())
     const digest = await crypto.subtle.digest('SHA-256', enc)
-    const recipientHash = Array.from(new Uint8Array(digest))
+    recipientHash = Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
     const limit = PER_TEMPLATE_RATE_LIMIT[templateName] ?? 10
