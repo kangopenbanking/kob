@@ -100,6 +100,8 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   overdraft_interest: { rate: 0.08, fixed: 0 },
   overdraft_setup_fee: { rate: 0, fixed: 1000 },
   overdraft_renewal_fee: { rate: 0, fixed: 500 },
+  statement_download_consumer: { rate: 0, fixed: 500 },
+  statement_download_banking: { rate: 0, fixed: 500 },
 };
 
 interface UseFeeEstimateOptions {
