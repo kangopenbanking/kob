@@ -39,6 +39,9 @@ export default function FeeManagement() {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [institutionFilter, setInstitutionFilter] = useState("all");
+  const [institutionTypeFilter, setInstitutionTypeFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [auditRunning, setAuditRunning] = useState(false);
 
   useEffect(() => { checkAdminAccess(); }, []);
 
@@ -60,7 +63,7 @@ export default function FeeManagement() {
     setLoading(true);
     try {
       const [instRes, feeRes, feesRes, invRes] = await Promise.all([
-        supabase.from('institutions').select('id, institution_name, status').eq('status', 'approved').order('institution_name'),
+        supabase.from('institutions').select('id, institution_name, institution_type, status').eq('status', 'approved').order('institution_name'),
         supabase.from('fee_structures').select('*, institutions!fee_structures_institution_id_fkey(institution_name)').order('created_at', { ascending: false }),
         supabase.from('transaction_fees').select('*, institutions!transaction_fees_institution_id_fkey(institution_name)').order('transaction_date', { ascending: false }).limit(200),
         supabase.from('institution_invoices').select('*, institutions(institution_name)').order('created_at', { ascending: false }).limit(50),
