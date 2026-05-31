@@ -9,8 +9,10 @@ import jsPDF from "https://esm.sh/jspdf@2.5.1";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-idempotency-key",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Expose-Headers":
+    "X-Statement-Serial, X-Statement-Tx-Count, X-Statement-Fee-Charged, X-Statement-Fee-Currency, X-Statement-Fee-Status, Content-Disposition",
 };
 
 type Source = "customer" | "banking";
