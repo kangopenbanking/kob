@@ -259,6 +259,7 @@ export default function Sandbox() {
 
   return (
     <>
+      <TurnstileWidget containerRef={turnstile.containerRef} enabled={turnstile.enabled} />
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
