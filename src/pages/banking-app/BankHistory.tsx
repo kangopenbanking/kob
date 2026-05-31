@@ -9,10 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatementDownloadDialog } from '@/components/statements/StatementDownloadDialog';
 
 const BankHistory: React.FC = () => {
+  const { institutionId } = useParams<{ institutionId: string }>();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'Credit' | 'Debit'>('all');
   const { data: transactions, isLoading } = useBankTransactions(50);
-  const exportMutation = useExportStatement();
 
   const filtered = (transactions || []).filter((tx) => {
     const info = tx.transaction_information || tx.transaction_type || '';
