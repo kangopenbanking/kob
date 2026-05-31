@@ -234,18 +234,41 @@ export function useFirebasePhoneAuth(options: UseFirebasePhoneAuthOptions = {}) 
         setError('No verification in progress');
         return false;
       }
-      const result = await confirmationRef.current.confirm(code);
-      const idToken = await result.user.getIdToken();
-      const { data, error: fnError } = await supabase.functions.invoke('firebase-phone-verify', {
-        body: { firebase_id_token: idToken },
-      });
-      if (fnError) throw fnError;
-      if (!data?.success) throw new Error(data?.error || 'Verification failed');
+      let session: { access_token: string; refresh_token: string } | null = null;
+      try {
+        const result = await confirmationRef.current.confirm(code);
+        const idToken = await result.user.getIdToken();
+        const { data, error: fnError } = await supabase.functions.invoke('firebase-phone-verify', {
+          body: { firebase_id_token: idToken },
+        });
+        if (fnError) throw fnError;
+        if (!data?.success) throw new Error(data?.error || 'Verification failed');
+        session = data.session ?? null;
+      } catch (firebaseErr: any) {
+        // Fallback: maybe the user entered the EMAIL OTP code we sent in parallel.
+        const opts = optsRef.current;
+        const { data: emailVerify } = await supabase.functions.invoke('phone-auth-verify-otp', {
+          body: {
+            phone_number: phoneRef.current,
+            otp_code: code,
+            otp_type: opts.otpType || 'login',
+            full_name: opts.fullName,
+            pin_code: opts.pinCode,
+            country_code: opts.countryCode,
+            verify_via_email: true,
+          },
+        }).catch(() => ({ data: null }));
+        if (emailVerify?.success && emailVerify.session?.access_token) {
+          session = emailVerify.session;
+        } else {
+          throw firebaseErr;
+        }
+      }
 
-      if (data.session?.access_token && data.session?.refresh_token) {
+      if (session?.access_token && session?.refresh_token) {
         const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
         });
         if (sessionError) throw sessionError;
       }
