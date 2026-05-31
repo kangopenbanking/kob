@@ -14,6 +14,7 @@ import {
   RefreshCw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LiveFeePreview } from "./LiveFeePreview";
 
 const TRANSACTION_TYPES = [
   { value: "transfer", label: "Account Transfer", icon: ArrowLeftRight, category: "Core" },
