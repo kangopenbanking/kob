@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 
 interface SandboxCredentials {
   client_id: string;
@@ -27,6 +29,7 @@ const DeveloperRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [credentials, setCredentials] = useState<SandboxCredentials | null>(null);
+  const turnstile = useTurnstile({ action: "developer_register" });
   const [form, setForm] = useState({
     appName: "",
     email: "",
@@ -47,6 +50,7 @@ const DeveloperRegistration = () => {
     try {
       // Try backend first
       const { data: session } = await supabase.auth.getSession();
+      const turnstile_token = await turnstile.getToken();
       if (session?.session) {
         const { data, error } = await supabase.functions.invoke('developer-register-app', {
           body: {
@@ -55,6 +59,7 @@ const DeveloperRegistration = () => {
             developer_company: form.company || undefined,
             api_environment: 'sandbox',
             rate_limit_tier: 'free',
+            turnstile_token,
           },
         });
         if (!error && data?.client_id) {
@@ -201,6 +206,7 @@ const DeveloperRegistration = () => {
                 <Input id="redirectUri" placeholder="https://app.example.com/callback" value={form.redirectUri} onChange={(e) => setForm({ ...form, redirectUri: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Required for OAuth2 flows. Can be added later.</p>
               </div>
+              <TurnstileWidget containerRef={turnstile.containerRef} enabled={turnstile.enabled} />
               <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto">
                 {loading ? "Generating Credentials..." : "Create Sandbox App"}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
