@@ -278,6 +278,7 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
 
   return (
     <>
+      <TurnstileWidget containerRef={turnstile.containerRef} enabled={turnstile.enabled} />
       <Helmet>
         <title>Sandbox Console | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Self-service sandbox console for Kang Open Banking API. Register, get API keys, seed test data, and validate bank connectors -- all without manual key issuance." />
