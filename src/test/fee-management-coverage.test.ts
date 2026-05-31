@@ -51,9 +51,9 @@ describe("Fee Management — coverage ratchet", () => {
     expect(hook).toMatch(/statement_download_banking/);
   });
 
-  it("resolve_statement_fee migration reads from fee_structures (gap #3 — 2026-05-31)", () => {
+  it("resolve_statement_fee resolver reads from fee_structures (gap #3 — 2026-05-31)", () => {
     const mig = read(
-      "supabase/migrations/20260531105157_9f4ce40a-cb1c-4cdb-82ed-188a31dfc34f.sql",
+      "supabase/migrations/20260531105256_db3da17b-da5b-46cc-8772-1a0b83bcd3d7.sql",
     );
     expect(mig).toMatch(/fee_structures/);
     expect(mig).toMatch(/resolve_statement_fee/);

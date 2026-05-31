@@ -98,6 +98,9 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   overdraft_interest: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Interest" },
   overdraft_setup_fee: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Setup Fee" },
   overdraft_renewal_fee: { icon: RefreshCw, category: "Lending", label: "Overdraft Renewal Fee" },
+  // Statements
+  statement_download_consumer: { icon: FileText, category: "Services", label: "Statement Download — Consumers App" },
+  statement_download_banking: { icon: FileText, category: "Services", label: "Statement Download — Banking App" },
   // WooCommerce & Enterprise packages
   woocommerce_transaction: { icon: ShieldCheck, category: "Gateway", label: "WooCommerce Transaction Fee" },
   enterprise_subscription_starter: { icon: ShieldCheck, category: "Services", label: "Enterprise Starter Package (Monthly)" },
