@@ -1,6 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from "../_shared/cors.ts";
 import { ensureSandboxMerchantId } from "../_shared/sandbox-merchant.ts";
+import {
+  clientIpFrom,
+  extractTurnstileToken,
+  logTurnstileDecision,
+  turnstileEnforceEnabled,
+  verifyTurnstile,
+} from "../_shared/turnstile.ts";
 
 function randHex(len: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(len)))
@@ -40,6 +47,23 @@ Deno.serve(async (req) => {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // --- Cloudflare Turnstile bot gate (shadow-mode by default) ---
+    const ts_token = await extractTurnstileToken(req);
+    const ts_ip = clientIpFrom(req);
+    const ts_result = await verifyTurnstile(ts_token, ts_ip);
+    await logTurnstileDecision(supabase, {
+      endpoint: 'sandbox-create-api-key',
+      user_id: user.id,
+      ip: ts_ip,
+      result: ts_result,
+    });
+    if (turnstileEnforceEnabled() && !ts_result.ok) {
+      return new Response(
+        JSON.stringify({ error: 'turnstile_failed', codes: ts_result.codes }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     const { key_name, tier: requestedTier } = await req.json().catch(() => ({}));
