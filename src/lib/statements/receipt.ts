@@ -13,6 +13,12 @@ export interface DownloadReceipt {
   account_no: string;
   user_label: string;
   bank_name?: string;
+  /** Amount actually deducted from the user's balance (0 when waived). */
+  fee_amount?: number;
+  fee_currency?: string;
+  /** charged = funds debited; waived = free per admin config; replayed = idempotent re-download. */
+  fee_status?: "charged" | "waived" | "replayed";
+  idempotency_key?: string;
 }
 
 function d(iso: string) {
@@ -38,6 +44,14 @@ export function downloadStatementReceipt(r: DownloadReceipt) {
   doc.setFontSize(9.5);
   doc.setTextColor(40, 40, 40);
 
+  const feeLabel = (() => {
+    if (r.fee_status === "waived" || !r.fee_amount) return "Waived (free)";
+    if (r.fee_status === "replayed") {
+      return `${(r.fee_amount || 0).toLocaleString()} ${r.fee_currency || "XAF"} (already paid)`;
+    }
+    return `${(r.fee_amount || 0).toLocaleString()} ${r.fee_currency || "XAF"}`;
+  })();
+
   const rows: Array<[string, string]> = [
     ["App", r.source === "customer" ? "Consumers App" : "Banking App"],
     ["Account holder", r.user_label],
@@ -46,7 +60,9 @@ export function downloadStatementReceipt(r: DownloadReceipt) {
     ["Period from", d(r.period_from)],
     ["Period to", d(r.period_to)],
     ["Transactions", String(r.tx_count)],
+    ["Download fee", feeLabel],
     ["Statement serial", r.serial],
+    ["Idempotency key", r.idempotency_key ? r.idempotency_key.slice(0, 18) + "…" : "—"],
     ["Downloaded at", new Date().toLocaleString("en-GB")],
   ];
 
