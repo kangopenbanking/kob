@@ -586,6 +586,7 @@ export default function KYCVerificationReview() {
                 ].filter(d => selectedKYC[d.key]).map(d => (
                   <Button
                     key={d.key}
+                    data-kyc-download={d.key}
                     variant="outline"
                     size="sm"
                     className="h-8 gap-1.5 text-xs"
