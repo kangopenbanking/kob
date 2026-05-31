@@ -313,11 +313,19 @@ export default function KYCVerificationReview() {
                         <User className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm text-foreground truncate">{getDisplayName(kyc)}</p>
+                        <p className="font-semibold text-sm text-foreground truncate flex items-center gap-1.5">
+                          {getDisplayName(kyc)}
+                          {kyc._history?.length > 0 && (
+                            <span title={`${kyc._history.length} prior submission(s)`} className="inline-flex items-center gap-0.5 rounded-md border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800">
+                              <Layers className="h-2.5 w-2.5" />+{kyc._history.length}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-[11px] text-muted-foreground truncate">{getEmail(kyc) || `ID: ${kyc.user_id?.slice(0, 8)}…`}</p>
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{sourceBadge(kyc.source_app)}</TableCell>
                   <TableCell>
                     <div>
                       <p className="text-sm font-medium capitalize">{kyc.document_type?.replace(/_/g, " ")}</p>
