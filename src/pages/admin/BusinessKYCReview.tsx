@@ -55,6 +55,8 @@ export default function BusinessKYCReview() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "business_kyc" | "gateway_merchant">("all");
+  const [dedupeByUser, setDedupeByUser] = useState(true);
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
