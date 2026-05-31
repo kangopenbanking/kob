@@ -1,5 +1,5 @@
-import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { loadProviderSettings, sendEmailWithFallback, resolveFromAddress } from '../_shared/email-sender.ts'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -110,8 +110,9 @@ Deno.serve(async (req) => {
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     )
   }
-
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const providerSettings = await loadProviderSettings(supabase)
+
 
   // 1. Check rate-limit cooldown and read queue config
   const { data: state } = await supabase
@@ -249,11 +250,14 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
+        // Override the From with provider settings when sending via Resend.
+        // Lovable Email path uses the original payload.from / sender_domain.
+        const resendFrom = resolveFromAddress(providerSettings, payload.from)
+        const result = await sendEmailWithFallback(
           {
             run_id: payload.run_id,
             to: payload.to,
-            from: payload.from,
+            from: providerSettings.primary_provider === 'resend' ? resendFrom : payload.from,
             sender_domain: payload.sender_domain,
             subject: payload.subject,
             html: payload.html,
@@ -264,18 +268,33 @@ Deno.serve(async (req) => {
             unsubscribe_token: payload.unsubscribe_token,
             message_id: payload.message_id,
           },
-          // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
-          // falls back to the default Lovable API endpoint (https://api.lovable.dev).
-          // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
-          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
+          providerSettings,
         )
 
-        // Log success
+        if (!result.ok) {
+          const primary = result.primary
+          const fb = result.fallback
+          // Rate limit on primary (no fallback attempted) → propagate to queue cooldown
+          if (primary.rateLimited) {
+            throw Object.assign(new Error(primary.error || 'rate_limited'), {
+              status: 429, retryAfterSeconds: primary.retryAfterSeconds ?? 60,
+            })
+          }
+          if (primary.forbidden) {
+            throw Object.assign(new Error(primary.error || 'forbidden'), { status: 403 })
+          }
+          const combined = `primary(${primary.provider}):${primary.error || primary.status}` +
+            (fb ? ` | fallback(${fb.provider}):${fb.error || fb.status}` : '')
+          throw new Error(combined)
+        }
+
+        // Log success with the actual provider used
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
+          metadata: { provider: result.finalProvider, fallback_used: !!result.fallback },
         })
 
         // Delete from queue

@@ -8697,6 +8697,69 @@ export type Database = {
         }
         Relationships: []
       }
+      email_provider_settings: {
+        Row: {
+          created_at: string
+          environment: string
+          fallback_enabled: boolean
+          fallback_provider: string
+          id: number
+          monthly_statement_enabled: boolean
+          notes: string | null
+          primary_provider: string
+          production_from_email: string
+          production_from_name: string
+          reply_to_email: string | null
+          resend_api_key_label: string
+          resend_enabled: boolean
+          sandbox_from_email: string
+          sandbox_from_name: string
+          updated_at: string
+          updated_by: string | null
+          weekly_digest_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          fallback_enabled?: boolean
+          fallback_provider?: string
+          id?: number
+          monthly_statement_enabled?: boolean
+          notes?: string | null
+          primary_provider?: string
+          production_from_email?: string
+          production_from_name?: string
+          reply_to_email?: string | null
+          resend_api_key_label?: string
+          resend_enabled?: boolean
+          sandbox_from_email?: string
+          sandbox_from_name?: string
+          updated_at?: string
+          updated_by?: string | null
+          weekly_digest_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          fallback_enabled?: boolean
+          fallback_provider?: string
+          id?: number
+          monthly_statement_enabled?: boolean
+          notes?: string | null
+          primary_provider?: string
+          production_from_email?: string
+          production_from_name?: string
+          reply_to_email?: string | null
+          resend_api_key_label?: string
+          resend_enabled?: boolean
+          sandbox_from_email?: string
+          sandbox_from_name?: string
+          updated_at?: string
+          updated_by?: string | null
+          weekly_digest_enabled?: boolean
+        }
+        Relationships: []
+      }
       email_rate_limit: {
         Row: {
           count: number
@@ -25952,6 +26015,39 @@ export type Database = {
           user_id?: string
           verification_method?: string | null
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      user_email_preferences: {
+        Row: {
+          created_at: string
+          last_monthly_sent_at: string | null
+          last_weekly_sent_at: string | null
+          monthly_statement: boolean
+          product_announcements: boolean
+          updated_at: string
+          user_id: string
+          weekly_activity_digest: boolean
+        }
+        Insert: {
+          created_at?: string
+          last_monthly_sent_at?: string | null
+          last_weekly_sent_at?: string | null
+          monthly_statement?: boolean
+          product_announcements?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_activity_digest?: boolean
+        }
+        Update: {
+          created_at?: string
+          last_monthly_sent_at?: string | null
+          last_weekly_sent_at?: string | null
+          monthly_statement?: boolean
+          product_announcements?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_activity_digest?: boolean
         }
         Relationships: []
       }
