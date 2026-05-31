@@ -1004,6 +1004,7 @@ function App() {
               <Route path="woo-webhooks" element={<AdminWooWebhooks />} />
               <Route path="remittance-security" element={<AdminRemittanceSecurity />} />
               <Route path="turnstile-monitor" element={<AdminTurnstileMonitor />} />
+              <Route path="statement-fees" element={<AdminStatementFees />} />
 
               <Route path="institution-api-keys" element={<AdminInstitutionApiKeys />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
