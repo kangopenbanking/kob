@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     // --- Cloudflare Turnstile bot gate (shadow-mode by default) ---
     const ts_token = await extractTurnstileToken(req);
     const ts_ip = clientIpFrom(req);
-    const ts_result = await verifyTurnstile(ts_token, ts_ip, { expectedAction: 'sandbox_create_key' });
+    const ts_result = await verifyTurnstile(ts_token, ts_ip);
     await logTurnstileDecision(supabase, {
       endpoint: 'sandbox-create-api-key',
       user_id: user.id,
