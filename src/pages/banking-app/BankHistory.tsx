@@ -43,17 +43,76 @@ const BankHistory: React.FC = () => {
     <div className="flex flex-col px-4 py-6">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">History</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 rounded-xl font-semibold"
-          disabled={exportMutation.isPending}
-          onClick={() => exportMutation.mutate({ format: 'pdf' })}
-        >
-          <Download className="h-4 w-4" strokeWidth={2} />
-          {exportMutation.isPending ? 'Exporting...' : 'Export'}
-        </Button>
+        <StatementDownloadDialog
+          source="banking"
+          getStatementInput={async ({ from, to }) => {
+            const { data: { user: u } } = await supabase.auth.getUser();
+            if (!u) return null;
+            const [{ data: profile }, { data: accts }, { data: inst }, { data: txs }] = await Promise.all([
+              supabase.from('profiles').select('full_name, email, phone_number, address, city, country_code').eq('id', u.id).maybeSingle(),
+              supabase.from('accounts')
+                .select('account_id, account_holder_name, currency, identification_scheme, identification_value, swift_bic, rib_bank_code, rib_branch_code, rib_account_number, rib_key')
+                .eq('user_id', u.id)
+                .eq('institution_id', institutionId!)
+                .eq('is_active', true)
+                .limit(1),
+              institutionId
+                ? supabase.from('institutions').select('institution_name, address, country').eq('id', institutionId).maybeSingle()
+                : Promise.resolve({ data: null }),
+              (async () => {
+                const accountsForUser = await supabase
+                  .from('accounts').select('id').eq('user_id', u.id).eq('institution_id', institutionId!);
+                const ids = (accountsForUser.data || []).map((a: any) => a.id);
+                if (ids.length === 0) return { data: [] };
+                return supabase.from('transactions')
+                  .select('amount, currency, credit_debit_indicator, transaction_type, transaction_information, booking_datetime, created_at')
+                  .in('account_id', ids)
+                  .gte('created_at', from)
+                  .lte('created_at', to)
+                  .order('created_at', { ascending: true })
+                  .limit(1000);
+              })(),
+            ]);
+            const acct = (accts || [])[0] || ({} as any);
+            const rib = [acct.rib_bank_code, acct.rib_branch_code, acct.rib_account_number, acct.rib_key].filter(Boolean).join('-');
+            const bankName = (inst as any)?.institution_name || 'Your Bank';
+            return {
+              customer: {
+                full_name: profile?.full_name || u.email || 'Account holder',
+                address_lines: [profile?.address, profile?.city, profile?.country_code, profile?.phone_number].filter(Boolean) as string[],
+              },
+              account: {
+                holder_name: acct.account_holder_name || profile?.full_name,
+                account_no: acct.account_id || acct.identification_value || '—',
+                sort_code: acct.rib_branch_code,
+                iban: rib || acct.identification_value,
+                swift: acct.swift_bic,
+                currency: acct.currency || 'XAF',
+              },
+              bank: {
+                name: bankName,
+                address_lines: [(inst as any)?.address, (inst as any)?.country].filter(Boolean) as string[],
+                registration: `${bankName} — issued via Kang Open Banking`,
+              },
+              transactions: (txs || []).map((t: any) => ({
+                date: t.booking_datetime || t.created_at,
+                description: t.transaction_information || t.transaction_type || 'Transaction',
+                type: t.transaction_type,
+                credit_debit_indicator: t.credit_debit_indicator,
+                amount: t.amount || 0,
+                currency: t.currency,
+              })),
+            };
+          }}
+          trigger={
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl font-semibold">
+              <Download className="h-4 w-4" strokeWidth={2} />
+              Statement
+            </Button>
+          }
+        />
       </div>
+
 
       {/* Search */}
       <div className="relative mb-4">
