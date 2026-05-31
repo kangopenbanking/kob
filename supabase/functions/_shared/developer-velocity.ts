@@ -4,10 +4,11 @@
 // Limits are intentionally generous so they never bite a real human, but
 // will throttle scripted abuse that bypasses Turnstile during enforcement.
 
+import { corsHeaders } from "./cors.ts";
 import {
   getClientIdentifier,
   softCheckRateLimit,
-  rateLimitedResponse,
+  tooManyRequestsResponse,
 } from "./soft-rate-limit.ts";
 
 const VELOCITY_PROFILES: Record<string, { perMinute: number; perHour: number }> = {
@@ -16,6 +17,10 @@ const VELOCITY_PROFILES: Record<string, { perMinute: number; perHour: number }> 
   "sandbox-create-api-key": { perMinute: 5, perHour: 30 },
 };
 
+/**
+ * Returns a 429 Response when the caller exceeds the velocity budget for
+ * `endpoint`, otherwise null. Fail-open: any limiter error → null.
+ */
 export async function enforceDeveloperVelocity(
   req: Request,
   endpoint: keyof typeof VELOCITY_PROFILES,
@@ -30,10 +35,10 @@ export async function enforceDeveloperVelocity(
     : `${getClientIdentifier(req, "developer")}:${endpoint}`;
 
   const perMin = await softCheckRateLimit(identifier, `${endpoint}:1m`, profile.perMinute, 1);
-  if (!perMin.allowed) return rateLimitedResponse(perMin.identifier, 60);
+  if (!perMin.allowed) return tooManyRequestsResponse(corsHeaders, 60);
 
   const perHr = await softCheckRateLimit(identifier, `${endpoint}:60m`, profile.perHour, 60);
-  if (!perHr.allowed) return rateLimitedResponse(perHr.identifier, 3600);
+  if (!perHr.allowed) return tooManyRequestsResponse(corsHeaders, 3600);
 
   return null;
 }
