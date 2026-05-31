@@ -306,7 +306,7 @@ export default function KYCVerificationReview() {
             </TableHeader>
             <TableBody>
               {items.map((kyc) => (
-                <TableRow key={kyc.id} className="group hover:bg-muted/20 transition-colors">
+                <TableRow key={kyc.id} data-kyc-row={kyc.id} className="group hover:bg-muted/20 transition-colors">
                   <TableCell className="pl-6">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
