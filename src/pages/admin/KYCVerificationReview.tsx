@@ -533,6 +533,9 @@ export default function KYCVerificationReview() {
                     return (
                       <button
                         key={doc.label}
+                        data-kyc-doc-slot={doc.key}
+                        data-kyc-doc-has-file={storedPath ? "1" : "0"}
+                        data-kyc-doc-resolved={thumbUrl ? "1" : "0"}
                         className="relative rounded-xl border-2 border-border/50 overflow-hidden aspect-[4/3] bg-muted/20 hover:border-primary/50 transition-all group disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         disabled={!storedPath}
                         onClick={() => openPreview(storedPath, doc.label)}
