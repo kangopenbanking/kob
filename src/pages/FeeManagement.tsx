@@ -80,6 +80,27 @@ export default function FeeManagement() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const isPlatform = formData.fee_scope === 'platform';
+      const effectiveFrom = formData.effective_from || new Date().toISOString().split('T')[0];
+
+      // Duplicate guard — match the partial unique indexes added by the platform/institution migrations.
+      const dupQuery = supabase
+        .from('fee_structures')
+        .select('id, is_active, transaction_type, effective_from')
+        .eq('transaction_type', formData.transaction_type)
+        .eq('effective_from', effectiveFrom)
+        .eq('fee_scope', formData.fee_scope || 'institution');
+      const { data: dups } = isPlatform
+        ? await dupQuery.is('institution_id', null)
+        : await dupQuery.eq('institution_id', formData.institution_id);
+      if ((dups?.length ?? 0) > 0) {
+        toast({
+          title: "Duplicate fee structure",
+          description: `An ${isPlatform ? 'platform-default' : 'institution'} fee structure for ${formData.transaction_type} on ${effectiveFrom} already exists. Edit the existing one or pick a different effective date.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from('fee_structures').insert({
         institution_id: isPlatform ? null : formData.institution_id,
         fee_scope: formData.fee_scope || 'institution',
@@ -90,7 +111,7 @@ export default function FeeManagement() {
         min_fee_amount: formData.min_fee_amount || 0,
         max_fee_amount: formData.max_fee_amount || null,
         tiered_rates: formData.tiered_rates || null,
-        effective_from: formData.effective_from || new Date().toISOString().split('T')[0],
+        effective_from: effectiveFrom,
         effective_until: formData.effective_until || null,
         is_active: true,
         created_by: user?.id,
@@ -104,12 +125,41 @@ export default function FeeManagement() {
         merchant_percent_charge: formData.merchant_percent_charge ?? 0,
         merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
       });
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === '23505') {
+          toast({
+            title: "Duplicate fee structure",
+            description: "A fee structure with these scope, type and effective date already exists.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
       toast({ title: "Success", description: "Fee structure created" });
       setShowCreateDialog(false);
       loadData();
     } catch (error: any) {
       toast({ title: "Error", description: error?.message || "Failed to create", variant: "destructive" });
+    }
+  };
+
+  const handleRunAudit = async () => {
+    setAuditRunning(true);
+    try {
+      const report = await runFeeStructuresAudit();
+      downloadAuditReport(report);
+      toast({
+        title: report.pass ? "Audit passed" : "Audit found gaps",
+        description: report.pass
+          ? `${report.covered}/${report.totalTypes} transaction types covered. Report downloaded.`
+          : `${report.missing.length} missing: ${report.missing.slice(0, 3).join(', ')}${report.missing.length > 3 ? '…' : ''}. Report downloaded.`,
+        variant: report.pass ? "default" : "destructive",
+      });
+    } catch (e: any) {
+      toast({ title: "Audit failed", description: e?.message || "Could not run audit", variant: "destructive" });
+    } finally {
+      setAuditRunning(false);
     }
   };
 
