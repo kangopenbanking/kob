@@ -40,13 +40,16 @@ useTurnstile()  ──token──▶  developer-register-app / sandbox-create-ac
 
 ## Configuration
 
-Three env vars control behaviour:
+Five env vars control behaviour:
 
 | Name | Type | Where | Behaviour when unset |
 |---|---|---|---|
 | `VITE_TURNSTILE_SITE_KEY` | Publishable (frontend `.env`) | Cloudflare → Turnstile → Site Key | Widget no-op, token = null, frontend works as before |
-| `TURNSTILE_SECRET_KEY` | Runtime secret (Lovable Cloud) | Cloudflare → Turnstile → Secret Key | Verifier returns `{ ok: true, codes: ['turnstile_disabled'] }` — **fail-open** |
+| `TURNSTILE_SECRET_KEY` | Runtime secret (Lovable Cloud) | Cloudflare → Turnstile → Secret Key | Verifier returns `{ ok: true, reason: 'secret_unset_failopen' }` — **fail-open** |
 | `TURNSTILE_ENFORCE` | Runtime secret | Lovable Cloud | `!== 'true'` → shadow mode (log, never block). Set to `'true'` to enforce. |
+| `TURNSTILE_ALLOWED_HOSTNAMES` | Runtime secret | Lovable Cloud (comma-separated) | Hostname allowlist check is skipped (only CF's site-key binding applies) |
+| `TURNSTILE_MAX_AGE_S` | Runtime secret | Lovable Cloud (integer seconds) | Defaults to `120` — rejects replayed tokens older than the window |
+
 
 **Authorized hostnames** to add in the Cloudflare Turnstile widget:
 - `kob.lovable.app`
@@ -91,6 +94,17 @@ ORDER BY 3 DESC;
 The existing realtime alert trigger on `security_audit_logs` will fire
 `remittance_abuse_suspected`-style alerts if denied volume spikes — no
 extra alerting code needed.
+
+**Admin dashboard:** `/admin/turnstile-monitor` shows 7-day pass/fail
+counts, bot-attempt trends, per-endpoint breakdown, and the top structured
+failure `reason`s (missing_token, hostname_not_allowlisted,
+replay_window_exceeded, action_mismatch, cf_5xx_failopen, …).
+
+**Velocity gate:** `_shared/developer-velocity.ts` adds a small fail-open
+IP/user-bucket throttle (3–5 req/min, 10–30 req/h) in front of the three
+gated endpoints. Complements Turnstile during enforcement and never bites
+a real human at these limits.
+
 
 ## Rollout
 

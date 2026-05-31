@@ -14,6 +14,8 @@ import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { detectTurnstileFailure } from "@/lib/turnstile-error";
+
 import {
   Key, Database, Webhook, Play, Copy, Check, AlertCircle, Loader2,
   Shield, Server, RefreshCw, Terminal, Radio, ArrowRight, Clock
@@ -119,11 +121,18 @@ export default function SandboxConsole() {
       setAccount(data.account);
       toast({ title: "Sandbox account created", description: "You can now generate API keys." });
     } catch (err: any) {
-      toast({ title: "Registration failed", description: err.message, variant: "destructive" });
+      const ts_fail = detectTurnstileFailure(err);
+      if (ts_fail) {
+        turnstile.reset();
+        toast({ title: "Verification challenge failed", description: ts_fail.message, variant: "destructive" });
+      } else {
+        toast({ title: "Registration failed", description: err.message, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   // --- Step 2: Generate API Key ---
   const generateApiKey = async () => {
@@ -138,11 +147,18 @@ export default function SandboxConsole() {
       setApiKey(data);
       toast({ title: "API key generated", description: "Save this key securely -- it will not be shown again." });
     } catch (err: any) {
-      toast({ title: "Key generation failed", description: err.message, variant: "destructive" });
+      const ts_fail = detectTurnstileFailure(err);
+      if (ts_fail) {
+        turnstile.reset();
+        toast({ title: "Verification challenge failed", description: ts_fail.message, variant: "destructive" });
+      } else {
+        toast({ title: "Key generation failed", description: err.message, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   // --- Step 3: Generate Test Data ---
   const generateTestData = async () => {
