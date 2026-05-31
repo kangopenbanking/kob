@@ -14,7 +14,7 @@ import { WaiversManagement } from "@/components/fee-management/WaiversManagement
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
 import { FeeSimulator } from "@/components/fee-management/FeeSimulator";
 
-import { MerchantFeesTab } from "@/components/fee-ground/MerchantFeesTab".replace("fee-ground", "fee-management");
+import { MerchantFeesTab } from "@/components/fee-management/MerchantFeesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
