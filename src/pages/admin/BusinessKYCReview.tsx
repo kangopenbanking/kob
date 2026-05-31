@@ -55,6 +55,8 @@ export default function BusinessKYCReview() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "business_kyc" | "gateway_merchant">("all");
+  const [dedupeByUser, setDedupeByUser] = useState(true);
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -202,8 +204,28 @@ export default function BusinessKYCReview() {
     </Badge>
   );
 
+  // Apply source filter + optional latest-per-user dedupe to the master list
+  const baseList = (() => {
+    let rows = kybSubmissions || [];
+    if (sourceFilter !== "all") rows = rows.filter(r => r._source === sourceFilter);
+    if (!dedupeByUser) return rows;
+    const byKey = new Map<string, any[]>();
+    for (const row of rows) {
+      // Dedupe scope = same user + same source (a user may legitimately be both a
+      // merchant and an institution, those stay distinct).
+      const key = `${row._source}:${row.user_id || row.id}`;
+      const arr = byKey.get(key) || [];
+      arr.push(row);
+      byKey.set(key, arr);
+    }
+    return Array.from(byKey.values()).map(rs => {
+      rs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { ...rs[0], _history: rs.slice(1) };
+    });
+  })();
+
   const filterByStatus = (status: string) => {
-    let items = kybSubmissions?.filter((k) => k.verification_status === status) || [];
+    let items = baseList.filter((k) => k.verification_status === status);
     if (searchQuery) {
       items = items.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()));
     }
@@ -211,17 +233,51 @@ export default function BusinessKYCReview() {
   };
 
   const allFiltered = searchQuery
-    ? kybSubmissions?.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : kybSubmissions;
+    ? baseList.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    : baseList;
 
   const stats = {
-    total: kybSubmissions?.length || 0,
-    pending: filterByStatus("pending").length,
-    approved: filterByStatus("approved").length,
-    rejected: filterByStatus("rejected").length,
+    total: baseList.length,
+    pending: baseList.filter(k => k.verification_status === "pending").length,
+    approved: baseList.filter(k => k.verification_status === "approved").length,
+    rejected: baseList.filter(k => k.verification_status === "rejected").length,
   };
 
   const docCount = (kyb: any) => DOCS.filter(d => kyb[d.key]).length;
+
+  // ─── CSV Export ───
+  const exportCsv = () => {
+    const rows = allFiltered || [];
+    const header = [
+      "id","source","business_name","business_type","registration_number","industry",
+      "tax_id","status","risk_rating","docs_uploaded","total_docs","created_at","rejection_reason",
+    ];
+    const escape = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [header.join(",")].concat(
+      rows.map(r => [
+        r.id, r._source, r.business_name, r.business_type, r.registration_number, r.industry,
+        r.tax_id, r.verification_status, r.risk_rating, docCount(r), DOCS.length, r.created_at, r.rejection_reason,
+      ].map(escape).join(","))
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
+    a.href = url;
+    a.download = `kyb-submissions-${stamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDoc = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) window.open(signedUrl, "_blank", "noopener,noreferrer");
+    else toast({ title: "Download failed", description: `Could not resolve URL for ${label}`, variant: "destructive" });
+  };
 
   // ─── Loading Skeleton ───
   const renderSkeleton = () => (
@@ -276,6 +332,9 @@ export default function BusinessKYCReview() {
                   transition={{ delay: idx * 0.03 }}
                   className="group border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => handleOpenDetail(kyb)}
+                  data-kyb-row={kyb.id}
+                  data-kyb-source={kyb._source}
+                  data-kyb-status={kyb.verification_status}
                 >
                   <TableCell className="pl-4">
                     <div className="flex items-center gap-3">
@@ -401,8 +460,8 @@ export default function BusinessKYCReview() {
         ))}
       </div>
 
-      {/* Search + Tabs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Toolbar: search, source filter, dedupe toggle, CSV export */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
           <Input
@@ -410,9 +469,48 @@ export default function BusinessKYCReview() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pl-9 h-9 text-sm border-border/40 bg-background"
+            data-testid="kyb-search"
           />
         </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border/40 bg-background p-0.5" data-testid="kyb-source-filter">
+          {([
+            { v: "all", label: "All sources" },
+            { v: "business_kyc", label: "Institution" },
+            { v: "gateway_merchant", label: "Merchant" },
+          ] as const).map(opt => (
+            <Button
+              key={opt.v}
+              variant={sourceFilter === opt.v ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-3 text-[11px]"
+              onClick={() => setSourceFilter(opt.v)}
+              data-source-value={opt.v}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-[11px] text-muted-foreground select-none">
+          <input
+            type="checkbox"
+            checked={dedupeByUser}
+            onChange={e => setDedupeByUser(e.target.checked)}
+            className="h-3.5 w-3.5"
+            data-testid="kyb-dedupe-toggle"
+          />
+          Latest per user
+        </label>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs ml-auto"
+          onClick={exportCsv}
+          data-testid="kyb-export-csv"
+        >
+          <Download className="h-3 w-3" /> Export CSV
+        </Button>
       </div>
+
 
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted/60 p-1 border border-border/30">
@@ -506,7 +604,7 @@ export default function BusinessKYCReview() {
               {/* Documents */}
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Submitted Documents</p>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-2.5" data-testid="kyb-doc-grid">
                   {DOCS.map(doc => {
                     const storedPath = selectedKYB[doc.key];
                     const thumbUrl = resolvedThumbs[doc.key];
@@ -514,6 +612,9 @@ export default function BusinessKYCReview() {
                     return (
                       <button
                         key={doc.key}
+                        data-kyb-doc-slot={doc.key}
+                        data-kyb-doc-has-file={storedPath ? "1" : "0"}
+                        data-kyb-doc-resolved={thumbUrl ? "1" : "0"}
                         className="relative rounded-xl border border-border/40 overflow-hidden aspect-[4/3] bg-muted/20 hover:border-primary/40 transition-all group disabled:opacity-30 disabled:cursor-not-allowed"
                         disabled={!storedPath}
                         onClick={() => openPreview(storedPath, doc.label)}
@@ -543,7 +644,39 @@ export default function BusinessKYCReview() {
                     );
                   })}
                 </div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {DOCS.filter(d => selectedKYB[d.key]).map(d => (
+                    <Button
+                      key={`dl-${d.key}`}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[11px] gap-1.5"
+                      onClick={() => downloadDoc(selectedKYB[d.key], d.label)}
+                      data-kyb-download={d.key}
+                    >
+                      <Download className="h-3 w-3" /> {d.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              {/* Prior submissions (dedupe history) */}
+              {selectedKYB._history && selectedKYB._history.length > 0 && (
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/20" data-testid="kyb-history">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">
+                    Prior submissions ({selectedKYB._history.length})
+                  </p>
+                  <ul className="space-y-1.5">
+                    {selectedKYB._history.map((h: any) => (
+                      <li key={h.id} className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-mono text-muted-foreground truncate">{String(h.id).slice(0, 8)}…</span>
+                        <span className="text-muted-foreground">{format(new Date(h.created_at), "PP")}</span>
+                        {getStatusBadge(h.verification_status)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Rejection Reason */}
               {selectedKYB.rejection_reason && (

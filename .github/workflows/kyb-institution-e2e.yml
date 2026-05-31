@@ -1,0 +1,73 @@
+name: KYB & Institution Verification E2E (Playwright)
+
+# Runs the admin /admin/business-kyc and /admin/institution-verification
+# Playwright parity suites on every PR and on push to main. Fails the build
+# if the admin UI drifts from the persisted business_kyc / gateway_merchants
+# / institutions records, if dedupe/source filters break, or if document
+# previews/downloads break.
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/admin/BusinessKYCReview.tsx'
+      - 'src/pages/admin/InstitutionVerification.tsx'
+      - 'src/components/admin/InstitutionDetailsDialog.tsx'
+      - 'supabase/functions/admin-kyb-verify/**'
+      - 'supabase/functions/gateway-merchant-kyb-review/**'
+      - 'supabase/functions/admin-institution-approve/**'
+      - 'e2e/authenticated/business-kyc-admin.spec.ts'
+      - 'e2e/authenticated/institution-verification-admin.spec.ts'
+      - 'e2e/authenticated/helpers.ts'
+      - '.github/workflows/kyb-institution-e2e.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  kyb-institution-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL || 'https://kob.lovable.app' }}
+      RUN_AUTHENTICATED_E2E: '1'
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_MERCHANT_EMAIL: ${{ secrets.E2E_MERCHANT_EMAIL }}
+      E2E_INSTITUTION_EMAIL: ${{ secrets.E2E_INSTITUTION_EMAIL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip on fork (no secrets)
+        if: ${{ env.E2E_PASSWORD == '' }}
+        run: |
+          echo "::notice::E2E_PASSWORD not configured — KYB/Institution E2E skipped."
+          exit 0
+
+      - uses: actions/setup-node@v4
+        if: ${{ env.E2E_PASSWORD != '' }}
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Run KYB + Institution Verification E2E
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright test e2e/authenticated/business-kyc-admin.spec.ts e2e/authenticated/institution-verification-admin.spec.ts --reporter=github,list
+
+      - name: Upload Playwright report
+        if: ${{ always() && env.E2E_PASSWORD != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kyb-institution-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
