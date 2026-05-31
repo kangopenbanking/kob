@@ -204,8 +204,28 @@ export default function BusinessKYCReview() {
     </Badge>
   );
 
+  // Apply source filter + optional latest-per-user dedupe to the master list
+  const baseList = (() => {
+    let rows = kybSubmissions || [];
+    if (sourceFilter !== "all") rows = rows.filter(r => r._source === sourceFilter);
+    if (!dedupeByUser) return rows;
+    const byKey = new Map<string, any[]>();
+    for (const row of rows) {
+      // Dedupe scope = same user + same source (a user may legitimately be both a
+      // merchant and an institution, those stay distinct).
+      const key = `${row._source}:${row.user_id || row.id}`;
+      const arr = byKey.get(key) || [];
+      arr.push(row);
+      byKey.set(key, arr);
+    }
+    return Array.from(byKey.values()).map(rs => {
+      rs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { ...rs[0], _history: rs.slice(1) };
+    });
+  })();
+
   const filterByStatus = (status: string) => {
-    let items = kybSubmissions?.filter((k) => k.verification_status === status) || [];
+    let items = baseList.filter((k) => k.verification_status === status);
     if (searchQuery) {
       items = items.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()));
     }
@@ -213,17 +233,51 @@ export default function BusinessKYCReview() {
   };
 
   const allFiltered = searchQuery
-    ? kybSubmissions?.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : kybSubmissions;
+    ? baseList.filter(k => `${k.business_name} ${k.registration_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    : baseList;
 
   const stats = {
-    total: kybSubmissions?.length || 0,
-    pending: filterByStatus("pending").length,
-    approved: filterByStatus("approved").length,
-    rejected: filterByStatus("rejected").length,
+    total: baseList.length,
+    pending: baseList.filter(k => k.verification_status === "pending").length,
+    approved: baseList.filter(k => k.verification_status === "approved").length,
+    rejected: baseList.filter(k => k.verification_status === "rejected").length,
   };
 
   const docCount = (kyb: any) => DOCS.filter(d => kyb[d.key]).length;
+
+  // ─── CSV Export ───
+  const exportCsv = () => {
+    const rows = allFiltered || [];
+    const header = [
+      "id","source","business_name","business_type","registration_number","industry",
+      "tax_id","status","risk_rating","docs_uploaded","total_docs","created_at","rejection_reason",
+    ];
+    const escape = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [header.join(",")].concat(
+      rows.map(r => [
+        r.id, r._source, r.business_name, r.business_type, r.registration_number, r.industry,
+        r.tax_id, r.verification_status, r.risk_rating, docCount(r), DOCS.length, r.created_at, r.rejection_reason,
+      ].map(escape).join(","))
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
+    a.href = url;
+    a.download = `kyb-submissions-${stamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDoc = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) window.open(signedUrl, "_blank", "noopener,noreferrer");
+    else toast({ title: "Download failed", description: `Could not resolve URL for ${label}`, variant: "destructive" });
+  };
 
   // ─── Loading Skeleton ───
   const renderSkeleton = () => (
