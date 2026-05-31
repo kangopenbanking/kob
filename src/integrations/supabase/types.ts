@@ -23547,6 +23547,111 @@ export type Database = {
           },
         ]
       }
+      statement_download_audit: {
+        Row: {
+          account_no: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          period_from: string
+          period_to: string
+          scope_id: string
+          serial: string
+          source: string
+          tx_count: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          account_no: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          period_from: string
+          period_to: string
+          scope_id: string
+          serial: string
+          source: string
+          tx_count?: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          account_no?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          period_from?: string
+          period_to?: string
+          scope_id?: string
+          serial?: string
+          source?: string
+          tx_count?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      statement_serial_counters: {
+        Row: {
+          last_value: number
+          scope_id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          last_value?: number
+          scope_id: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          last_value?: number
+          scope_id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      statement_serials: {
+        Row: {
+          account_no: string
+          created_at: string
+          id: string
+          period_from: string
+          period_to: string
+          scope_id: string
+          sequence_no: number
+          serial: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          account_no: string
+          created_at?: string
+          id?: string
+          period_from: string
+          period_to: string
+          scope_id: string
+          sequence_no: number
+          serial: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          account_no?: string
+          created_at?: string
+          id?: string
+          period_from?: string
+          period_to?: string
+          scope_id?: string
+          sequence_no?: number
+          serial?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_cardholders: {
         Row: {
           billing_address: Json | null
@@ -27133,6 +27238,17 @@ export type Database = {
     }
     Functions: {
       admin_can_read_qr_audit: { Args: never; Returns: boolean }
+      allocate_statement_serial: {
+        Args: {
+          p_account_no: string
+          p_period_from: string
+          p_period_to: string
+          p_scope_id: string
+          p_source: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       atomic_charge_wallet_credit: {
         Args: {
           _charge_id: string
