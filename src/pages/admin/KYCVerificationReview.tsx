@@ -19,9 +19,12 @@ import {
   Shield, FileText, CheckCircle, XCircle, Clock, Eye,
   Image as ImageIcon, Search, Users, User, Calendar, Hash,
   ArrowRight, Loader2, Download, MessageSquare, HelpCircle,
+  Building2, Smartphone, History, Layers,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useKycReviewPermissions } from "@/hooks/useKycReviewPermissions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export default function KYCVerificationReview() {
   const [selectedKYC, setSelectedKYC] = useState<any | null>(null);
