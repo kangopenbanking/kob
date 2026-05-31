@@ -483,18 +483,22 @@ export default function KYCVerificationReview() {
             </DialogHeader>
           </div>
           {selectedKYC && (
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
               {/* Applicant info */}
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 flex-wrap">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
                   <User className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-bold text-foreground">{getDisplayName(selectedKYC)}</p>
-                  <p className="text-sm text-muted-foreground">{getEmail(selectedKYC) || `User ${selectedKYC.user_id?.slice(0, 12)}…`}</p>
+                  <p className="text-sm text-muted-foreground break-all">{getEmail(selectedKYC) || `User ${selectedKYC.user_id?.slice(0, 12)}…`}</p>
                 </div>
-                {getStatusBadge(selectedKYC.status)}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {sourceBadge(selectedKYC.source_app)}
+                  {getStatusBadge(selectedKYC.status)}
+                </div>
               </div>
+
 
               {/* Detail grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
