@@ -332,6 +332,9 @@ export default function BusinessKYCReview() {
                   transition={{ delay: idx * 0.03 }}
                   className="group border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => handleOpenDetail(kyb)}
+                  data-kyb-row={kyb.id}
+                  data-kyb-source={kyb._source}
+                  data-kyb-status={kyb.verification_status}
                 >
                   <TableCell className="pl-4">
                     <div className="flex items-center gap-3">
