@@ -752,6 +752,7 @@ export default function InstitutionVerification() {
                       placeholder="Search institutions..."
                       className="pl-8"
                       aria-label="Search institutions"
+                      data-testid="inst-search"
                     />
                   </div>
                 </div>
