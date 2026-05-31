@@ -17,6 +17,8 @@ import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { detectTurnstileFailure } from "@/lib/turnstile-error";
+
 
 export default function Sandbox() {
   const navigate = useNavigate();
@@ -109,10 +111,17 @@ export default function Sandbox() {
       setAccount(data.account);
     } catch (error: any) {
       console.error('Error creating sandbox account:', error);
-      toast.error(extractEdgeFunctionError(error, 'Failed to create sandbox account'));
+      const ts_fail = detectTurnstileFailure(error);
+      if (ts_fail) {
+        turnstile.reset();
+        toast.error(ts_fail.message);
+      } else {
+        toast.error(extractEdgeFunctionError(error, 'Failed to create sandbox account'));
+      }
     } finally {
       setSubmitting(false);
     }
+
   };
 
   const createApiKey = async () => {
@@ -145,10 +154,17 @@ export default function Sandbox() {
       fetchSandboxData();
     } catch (error: any) {
       console.error('Error creating API key:', error);
-      toast.error(extractEdgeFunctionError(error, 'Failed to create API key'));
+      const ts_fail = detectTurnstileFailure(error);
+      if (ts_fail) {
+        turnstile.reset();
+        toast.error(ts_fail.message);
+      } else {
+        toast.error(extractEdgeFunctionError(error, 'Failed to create API key'));
+      }
     } finally {
       setSubmitting(false);
     }
+
   };
 
   const deleteApiKey = async (keyId: string) => {

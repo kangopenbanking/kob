@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { detectTurnstileFailure } from "@/lib/turnstile-error";
+
 
 interface SandboxCredentials {
   client_id: string;
@@ -62,6 +64,17 @@ const DeveloperRegistration = () => {
             turnstile_token,
           },
         });
+        const ts_fail = detectTurnstileFailure(error);
+        if (ts_fail) {
+          turnstile.reset();
+          toast({
+            title: "Verification challenge failed",
+            description: ts_fail.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         if (!error && data?.client_id) {
           setCredentials({
             client_id: data.client_id,
@@ -73,6 +86,7 @@ const DeveloperRegistration = () => {
           setLoading(false);
           return;
         }
+
       }
 
       // Fallback: generate client-side sandbox credentials instantly
