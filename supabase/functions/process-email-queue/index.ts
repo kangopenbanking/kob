@@ -110,8 +110,9 @@ Deno.serve(async (req) => {
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     )
   }
-
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const providerSettings = await loadProviderSettings(supabase)
+
 
   // 1. Check rate-limit cooldown and read queue config
   const { data: state } = await supabase
