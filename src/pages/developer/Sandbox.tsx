@@ -15,11 +15,14 @@ import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 
 export default function Sandbox() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const turnstile = useTurnstile({ action: "sandbox_create" });
   const [submitting, setSubmitting] = useState(false);
   const [account, setAccount] = useState<any>(null);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -92,11 +95,12 @@ export default function Sandbox() {
         return;
       }
 
+      const turnstile_token = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke('sandbox-create-account', {
         headers: {
           Authorization: `Bearer ${session.access_token}`
         },
-        body: { company_name: companyName, website, description }
+        body: { company_name: companyName, website, description, turnstile_token }
       });
 
       if (error) throw error;
@@ -120,11 +124,12 @@ export default function Sandbox() {
         return;
       }
 
+      const turnstile_token = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke('sandbox-create-api-key', {
         headers: {
           Authorization: `Bearer ${session.access_token}`
         },
-        body: { key_name: keyName || 'Default Key' }
+        body: { key_name: keyName || 'Default Key', turnstile_token }
       });
 
       if (error) throw error;
@@ -254,6 +259,7 @@ export default function Sandbox() {
 
   return (
     <>
+      <TurnstileWidget containerRef={turnstile.containerRef} enabled={turnstile.enabled} />
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>

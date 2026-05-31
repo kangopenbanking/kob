@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import {
   Key, Database, Webhook, Play, Copy, Check, AlertCircle, Loader2,
   Shield, Server, RefreshCw, Terminal, Radio, ArrowRight, Clock
@@ -49,6 +51,7 @@ interface ConnectorTestResult {
 export default function SandboxConsole() {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const turnstile = useTurnstile({ action: "sandbox_console" });
   const [loading, setLoading] = useState(false);
   const [account, setAccount] = useState<SandboxAccount | null>(null);
   const [apiKey, setApiKey] = useState<ApiKeyResult | null>(null);
@@ -107,8 +110,9 @@ export default function SandboxConsole() {
     }
     setLoading(true);
     try {
+      const turnstile_token = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke("sandbox-create-account", {
-        body: { company_name: companyName || "My App", website, description },
+        body: { company_name: companyName || "My App", website, description, turnstile_token },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -125,8 +129,9 @@ export default function SandboxConsole() {
   const generateApiKey = async () => {
     setLoading(true);
     try {
+      const turnstile_token = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke("sandbox-create-api-key", {
-        body: { key_name: keyName },
+        body: { key_name: keyName, turnstile_token },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -273,6 +278,7 @@ curl -X POST https://api.kangopenbanking.com/v1/sandbox/data/generate \\
 
   return (
     <>
+      <TurnstileWidget containerRef={turnstile.containerRef} enabled={turnstile.enabled} />
       <Helmet>
         <title>Sandbox Console | Kang Open Banking Developer Docs</title>
         <meta name="description" content="Self-service sandbox console for Kang Open Banking API. Register, get API keys, seed test data, and validate bank connectors -- all without manual key issuance." />
