@@ -576,6 +576,7 @@ const AdminWebhookDeliveries = lazy(() => import("./pages/admin/AdminWebhookDeli
 const AdminWooWebhooks = lazy(() => import("./pages/admin/AdminWooWebhooks"));
 const AdminRemittanceSecurity = lazy(() => import("./pages/admin/AdminRemittanceSecurity"));
 const AdminTurnstileMonitor = lazy(() => import("./pages/admin/AdminTurnstileMonitor"));
+const AdminStatementFees = lazy(() => import("./pages/admin/AdminStatementFees"));
 
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
