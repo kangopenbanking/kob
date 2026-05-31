@@ -545,6 +545,8 @@ Deno.serve(async (req) => {
         "Content-Disposition": `attachment; filename="${filename}"`,
         "X-Statement-Serial": serial,
         "X-Statement-Tx-Count": String((txs || []).length),
+        "X-Statement-Fee-Charged": String(feeCharged),
+        "X-Statement-Fee-Currency": feeCurrency,
       },
     });
   } catch (e) {
