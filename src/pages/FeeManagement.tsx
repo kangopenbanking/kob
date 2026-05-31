@@ -293,19 +293,55 @@ export default function FeeManagement() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search institutions…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm rounded-lg"
+            />
+          </div>
+          <Select value={institutionTypeFilter} onValueChange={setInstitutionTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[170px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="bank">Banks</SelectItem>
+              <SelectItem value="credit_union">Credit Unions</SelectItem>
+              <SelectItem value="fintech">Fintech</SelectItem>
+              <SelectItem value="developer">Developers</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
-            <SelectTrigger className="w-[220px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
+            <SelectTrigger className="w-full sm:w-[220px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
               <SelectValue placeholder="All Institutions" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Institutions</SelectItem>
-              {institutions.map((inst) => (
+              {filteredInstitutions.map((inst) => (
                 <SelectItem key={inst.id} value={inst.id}>{inst.institution_name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-lg gap-1.5 text-xs font-semibold"
+            onClick={handleRunAudit}
+            disabled={auditRunning}
+          >
+            {auditRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+            {auditRunning ? "Auditing…" : "Run E2E Audit"}
+          </Button>
         </div>
+        {(institutionTypeFilter !== 'all' || searchQuery) && (
+          <Badge variant="secondary" className="self-start sm:self-center text-[10px]">
+            {filteredInstitutions.length} institution{filteredInstitutions.length === 1 ? '' : 's'} match
+          </Badge>
+        )}
       </div>
 
       {/* Stats Grid */}
