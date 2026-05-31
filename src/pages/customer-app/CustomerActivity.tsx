@@ -8,6 +8,8 @@ import BalanceReconciliationBanner from '@/components/customer-app/BalanceReconc
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { toast } from 'sonner';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { supabase } from '@/integrations/supabase/client';
+import { StatementDownloadDialog } from '@/components/statements/StatementDownloadDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,8 +104,59 @@ const CustomerActivity: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-xl font-bold text-foreground">{tr('Activity')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-foreground">{tr('Activity')}</h1>
+        <StatementDownloadDialog
+          source="customer"
+          getStatementInput={async ({ from, to }) => {
+            const { data: { user: u } } = await supabase.auth.getUser();
+            if (!u) return null;
+            const [{ data: profile }, { data: accts }, { data: txs }] = await Promise.all([
+              supabase.from('profiles').select('full_name, email, phone_number, address, city, country_code').eq('id', u.id).maybeSingle(),
+              supabase.from('accounts').select('account_id, account_holder_name, currency, identification_scheme, identification_value, swift_bic, rib_bank_code, rib_branch_code, rib_account_number, rib_key').eq('user_id', u.id).eq('is_active', true).limit(1),
+              supabase.from('transactions')
+                .select('amount, currency, credit_debit_indicator, transaction_type, transaction_information, booking_datetime')
+                .eq('user_id', u.id)
+                .gte('booking_datetime', from)
+                .lte('booking_datetime', to)
+                .order('booking_datetime', { ascending: true })
+                .limit(1000),
+            ]);
+            const acct = (accts || [])[0] || {} as any;
+            const rib = [acct.rib_bank_code, acct.rib_branch_code, acct.rib_account_number, acct.rib_key].filter(Boolean).join('-');
+            return {
+              customer: {
+                full_name: profile?.full_name || u.email || 'Account holder',
+                address_lines: [profile?.address, profile?.city, profile?.country_code, profile?.phone_number].filter(Boolean) as string[],
+              },
+              account: {
+                holder_name: acct.account_holder_name || profile?.full_name,
+                account_no: acct.account_id || acct.identification_value || '—',
+                sort_code: acct.rib_branch_code,
+                iban: rib || acct.identification_value,
+                swift: acct.swift_bic,
+                currency: acct.currency || 'XAF',
+              },
+              bank: {
+                name: 'Kang',
+                address_lines: ['Kang Open Banking S.A.', 'Douala, Cameroon'],
+                registration: 'Kang Open Banking S.A. — Douala, Cameroon',
+              },
+              transactions: (txs || []).map((t: any) => ({
+                date: t.booking_datetime,
+                description: t.transaction_information || t.transaction_type || 'Transaction',
+                type: t.transaction_type,
+                credit_debit_indicator: t.credit_debit_indicator,
+                amount: t.amount || 0,
+                currency: t.currency,
+              })),
+            };
+          }}
+        />
+      </div>
       <BalanceReconciliationBanner mismatch={reconciliation} />
+
+
 
       <div className="flex items-center gap-2 rounded-2xl bg-muted p-3">
         <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
