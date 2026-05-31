@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity, Calculator } from "lucide-react";
+import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity, Calculator, ShieldCheck, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
@@ -14,10 +14,13 @@ import { WaiversManagement } from "@/components/fee-management/WaiversManagement
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
 import { FeeSimulator } from "@/components/fee-management/FeeSimulator";
 
-import { MerchantFeesTab } from "@/components/fee-management/MerchantFeesTab";
+import { MerchantFeesTab } from "@/components/fee-ground/MerchantFeesTab".replace("fee-ground", "fee-management");
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { runFeeStructuresAudit, downloadAuditReport } from "@/lib/fee-management/auditFeeStructures";
 
 export default function FeeManagement() {
   const navigate = useNavigate();
