@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Search, Download, ArrowDownLeft, Send, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useBankTransactions, useExportStatement } from '@/hooks/useBankingData';
+import { useBankTransactions } from '@/hooks/useBankingData';
+import { supabase } from '@/integrations/supabase/client';
+import { StatementDownloadDialog } from '@/components/statements/StatementDownloadDialog';
 
 const BankHistory: React.FC = () => {
   const [search, setSearch] = useState('');
