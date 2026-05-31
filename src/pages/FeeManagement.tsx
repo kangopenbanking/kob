@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity, Calculator } from "lucide-react";
+import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity, Calculator, ShieldCheck, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
@@ -16,8 +16,11 @@ import { FeeSimulator } from "@/components/fee-management/FeeSimulator";
 
 import { MerchantFeesTab } from "@/components/fee-management/MerchantFeesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { runFeeStructuresAudit, downloadAuditReport } from "@/lib/fee-management/auditFeeStructures";
 
 export default function FeeManagement() {
   const navigate = useNavigate();
@@ -36,6 +39,9 @@ export default function FeeManagement() {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [institutionFilter, setInstitutionFilter] = useState("all");
+  const [institutionTypeFilter, setInstitutionTypeFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [auditRunning, setAuditRunning] = useState(false);
 
   useEffect(() => { checkAdminAccess(); }, []);
 
@@ -57,7 +63,7 @@ export default function FeeManagement() {
     setLoading(true);
     try {
       const [instRes, feeRes, feesRes, invRes] = await Promise.all([
-        supabase.from('institutions').select('id, institution_name, status').eq('status', 'approved').order('institution_name'),
+        supabase.from('institutions').select('id, institution_name, institution_type, status').eq('status', 'approved').order('institution_name'),
         supabase.from('fee_structures').select('*, institutions!fee_structures_institution_id_fkey(institution_name)').order('created_at', { ascending: false }),
         supabase.from('transaction_fees').select('*, institutions!transaction_fees_institution_id_fkey(institution_name)').order('transaction_date', { ascending: false }).limit(200),
         supabase.from('institution_invoices').select('*, institutions(institution_name)').order('created_at', { ascending: false }).limit(50),
@@ -74,6 +80,27 @@ export default function FeeManagement() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const isPlatform = formData.fee_scope === 'platform';
+      const effectiveFrom = formData.effective_from || new Date().toISOString().split('T')[0];
+
+      // Duplicate guard — match the partial unique indexes added by the platform/institution migrations.
+      const dupQuery = supabase
+        .from('fee_structures')
+        .select('id, is_active, transaction_type, effective_from')
+        .eq('transaction_type', formData.transaction_type)
+        .eq('effective_from', effectiveFrom)
+        .eq('fee_scope', formData.fee_scope || 'institution');
+      const { data: dups } = isPlatform
+        ? await dupQuery.is('institution_id', null)
+        : await dupQuery.eq('institution_id', formData.institution_id);
+      if ((dups?.length ?? 0) > 0) {
+        toast({
+          title: "Duplicate fee structure",
+          description: `An ${isPlatform ? 'platform-default' : 'institution'} fee structure for ${formData.transaction_type} on ${effectiveFrom} already exists. Edit the existing one or pick a different effective date.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from('fee_structures').insert({
         institution_id: isPlatform ? null : formData.institution_id,
         fee_scope: formData.fee_scope || 'institution',
@@ -84,7 +111,7 @@ export default function FeeManagement() {
         min_fee_amount: formData.min_fee_amount || 0,
         max_fee_amount: formData.max_fee_amount || null,
         tiered_rates: formData.tiered_rates || null,
-        effective_from: formData.effective_from || new Date().toISOString().split('T')[0],
+        effective_from: effectiveFrom,
         effective_until: formData.effective_until || null,
         is_active: true,
         created_by: user?.id,
@@ -98,12 +125,41 @@ export default function FeeManagement() {
         merchant_percent_charge: formData.merchant_percent_charge ?? 0,
         merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
       });
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === '23505') {
+          toast({
+            title: "Duplicate fee structure",
+            description: "A fee structure with these scope, type and effective date already exists.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
       toast({ title: "Success", description: "Fee structure created" });
       setShowCreateDialog(false);
       loadData();
     } catch (error: any) {
       toast({ title: "Error", description: error?.message || "Failed to create", variant: "destructive" });
+    }
+  };
+
+  const handleRunAudit = async () => {
+    setAuditRunning(true);
+    try {
+      const report = await runFeeStructuresAudit();
+      downloadAuditReport(report);
+      toast({
+        title: report.pass ? "Audit passed" : "Audit found gaps",
+        description: report.pass
+          ? `${report.covered}/${report.totalTypes} transaction types covered. Report downloaded.`
+          : `${report.missing.length} missing: ${report.missing.slice(0, 3).join(', ')}${report.missing.length > 3 ? '…' : ''}. Report downloaded.`,
+        variant: report.pass ? "default" : "destructive",
+      });
+    } catch (e: any) {
+      toast({ title: "Audit failed", description: e?.message || "Could not run audit", variant: "destructive" });
+    } finally {
+      setAuditRunning(false);
     }
   };
 
@@ -136,9 +192,36 @@ export default function FeeManagement() {
     finally { setGeneratingInvoice(false); }
   };
 
-  const filteredStructures = institutionFilter === 'all' ? feeStructures : feeStructures.filter(s => s.institution_id === institutionFilter);
-  const filteredFees = institutionFilter === 'all' ? transactionFees : transactionFees.filter(f => f.institution_id === institutionFilter);
-  const filteredInvoices = institutionFilter === 'all' ? invoices : invoices.filter(i => i.institution_id === institutionFilter);
+  const institutionsById = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const i of institutions) m.set(i.id, i);
+    return m;
+  }, [institutions]);
+
+  const filteredInstitutions = useMemo(() => {
+    return institutions.filter((i) => {
+      const matchesType = institutionTypeFilter === 'all' || i.institution_type === institutionTypeFilter;
+      const matchesSearch = !searchQuery || i.institution_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesType && matchesSearch;
+    });
+  }, [institutions, institutionTypeFilter, searchQuery]);
+
+  const matchesInstitutionFilters = (instId: string | null | undefined) => {
+    if (institutionFilter !== 'all' && instId !== institutionFilter) return false;
+    if (!instId) {
+      // platform-scope row: include unless a specific institution / type filter is active
+      return institutionFilter === 'all' && institutionTypeFilter === 'all' && !searchQuery;
+    }
+    const inst = institutionsById.get(instId);
+    if (!inst) return false;
+    if (institutionTypeFilter !== 'all' && inst.institution_type !== institutionTypeFilter) return false;
+    if (searchQuery && !inst.institution_name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  };
+
+  const filteredStructures = feeStructures.filter(s => matchesInstitutionFilters(s.institution_id));
+  const filteredFees = transactionFees.filter(f => matchesInstitutionFilters(f.institution_id));
+  const filteredInvoices = invoices.filter(i => matchesInstitutionFilters(i.institution_id));
 
   const thisMonth = new Date();
   const monthlyFees = transactionFees.filter(f => { const d = new Date(f.transaction_date); return d.getMonth() === thisMonth.getMonth() && d.getFullYear() === thisMonth.getFullYear(); }).reduce((s, f) => s + Number(f.final_fee || 0), 0);
@@ -210,19 +293,55 @@ export default function FeeManagement() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search institutions…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm rounded-lg"
+            />
+          </div>
+          <Select value={institutionTypeFilter} onValueChange={setInstitutionTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[170px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="bank">Banks</SelectItem>
+              <SelectItem value="credit_union">Credit Unions</SelectItem>
+              <SelectItem value="fintech">Fintech</SelectItem>
+              <SelectItem value="developer">Developers</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
-            <SelectTrigger className="w-[220px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
+            <SelectTrigger className="w-full sm:w-[220px] h-9 text-sm rounded-lg border-border bg-card shadow-sm">
               <SelectValue placeholder="All Institutions" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Institutions</SelectItem>
-              {institutions.map((inst) => (
+              {filteredInstitutions.map((inst) => (
                 <SelectItem key={inst.id} value={inst.id}>{inst.institution_name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-lg gap-1.5 text-xs font-semibold"
+            onClick={handleRunAudit}
+            disabled={auditRunning}
+          >
+            {auditRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+            {auditRunning ? "Auditing…" : "Run E2E Audit"}
+          </Button>
         </div>
+        {(institutionTypeFilter !== 'all' || searchQuery) && (
+          <Badge variant="secondary" className="self-start sm:self-center text-[10px]">
+            {filteredInstitutions.length} institution{filteredInstitutions.length === 1 ? '' : 's'} match
+          </Badge>
+        )}
       </div>
 
       {/* Stats Grid */}

@@ -14,6 +14,7 @@ import {
   RefreshCw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LiveFeePreview } from "./LiveFeePreview";
 
 const TRANSACTION_TYPES = [
   { value: "transfer", label: "Account Transfer", icon: ArrowLeftRight, category: "Core" },
@@ -595,22 +596,15 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
               </AnimatePresence>
             </div>
 
-            {/* Live Fee Simulator */}
-            <div className="rounded-xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <h4 className="text-sm font-bold text-foreground">Fee Simulator</h4>
-              </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[5000, 25000, 100000].map(amount => (
-                  <div key={amount} className="rounded-lg bg-background/80 border p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase font-semibold">{amount.toLocaleString()} XAF</p>
-                    <p className="text-lg font-bold text-primary mt-1">{Math.round(estimateFee(amount)).toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground">XAF fee</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Live Fee Preview */}
+            <LiveFeePreview
+              estimate={estimateFee}
+              transactionType={formData.transaction_type}
+              effectiveFrom={formData.effective_from}
+              effectiveUntil={formData.effective_until}
+              feeScope={formData.fee_scope}
+              institutionType={institutions.find((i) => i.id === formData.institution_id)?.institution_type}
+            />
           </motion.div>
         )}
       </AnimatePresence>
