@@ -23592,6 +23592,72 @@ export type Database = {
         }
         Relationships: []
       }
+      statement_fee_charges: {
+        Row: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          serial: string | null
+          source: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          serial?: string | null
+          source: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          serial?: string | null
+          source?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      statement_fee_settings: {
+        Row: {
+          currency: string
+          fee_amount: number
+          id: boolean
+          is_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          currency?: string
+          fee_amount?: number
+          id?: boolean
+          is_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          currency?: string
+          fee_amount?: number
+          id?: boolean
+          is_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       statement_serial_counters: {
         Row: {
           last_value: number
@@ -27312,6 +27378,17 @@ export type Database = {
           _transaction_amount: number
           _transaction_date?: string
           _transaction_type: string
+        }
+        Returns: Json
+      }
+      charge_statement_fee: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_currency: string
+          p_serial: string
+          p_source: string
+          p_user_id: string
         }
         Returns: Json
       }
