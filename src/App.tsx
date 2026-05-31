@@ -973,6 +973,7 @@ function App() {
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
               <Route path="system-config" element={<SystemConfig />} />
               <Route path="otp-providers" element={<AdminOTPProviderSettings />} />
+              <Route path="email-provider-settings" element={<AdminEmailProviderSettings />} />
               <Route path="webhooks" element={<WebhookManagement />} />
               <Route path="webhooks/replay" element={<AdminWebhookReplay />} />
               <Route path="pay-by-bank-inspector" element={<AdminPayByBankInspector />} />
