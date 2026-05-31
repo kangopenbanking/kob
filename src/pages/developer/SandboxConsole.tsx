@@ -51,6 +51,7 @@ interface ConnectorTestResult {
 export default function SandboxConsole() {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const turnstile = useTurnstile({ action: "sandbox_console" });
   const [loading, setLoading] = useState(false);
   const [account, setAccount] = useState<SandboxAccount | null>(null);
   const [apiKey, setApiKey] = useState<ApiKeyResult | null>(null);
