@@ -457,8 +457,8 @@ export default function BusinessKYCReview() {
         ))}
       </div>
 
-      {/* Search + Tabs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Toolbar: search, source filter, dedupe toggle, CSV export */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
           <Input
@@ -466,9 +466,48 @@ export default function BusinessKYCReview() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pl-9 h-9 text-sm border-border/40 bg-background"
+            data-testid="kyb-search"
           />
         </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border/40 bg-background p-0.5" data-testid="kyb-source-filter">
+          {([
+            { v: "all", label: "All sources" },
+            { v: "business_kyc", label: "Institution" },
+            { v: "gateway_merchant", label: "Merchant" },
+          ] as const).map(opt => (
+            <Button
+              key={opt.v}
+              variant={sourceFilter === opt.v ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-3 text-[11px]"
+              onClick={() => setSourceFilter(opt.v)}
+              data-source-value={opt.v}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-[11px] text-muted-foreground select-none">
+          <input
+            type="checkbox"
+            checked={dedupeByUser}
+            onChange={e => setDedupeByUser(e.target.checked)}
+            className="h-3.5 w-3.5"
+            data-testid="kyb-dedupe-toggle"
+          />
+          Latest per user
+        </label>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs ml-auto"
+          onClick={exportCsv}
+          data-testid="kyb-export-csv"
+        >
+          <Download className="h-3 w-3" /> Export CSV
+        </Button>
       </div>
+
 
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted/60 p-1 border border-border/30">
