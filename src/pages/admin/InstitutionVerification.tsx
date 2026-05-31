@@ -441,7 +441,7 @@ export default function InstitutionVerification() {
     const hasNoSteps = steps.length === 0;
 
     return (
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="hover:shadow-lg transition-shadow" data-inst-row={institution.id} data-inst-step={institution.verification_step}>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
