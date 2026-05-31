@@ -77,6 +77,9 @@ const TRANSACTION_TYPES = [
   { value: "credit_score_inquiry", label: "Credit Score Inquiry (Bank)", icon: Hash, category: "CrediQ" },
   { value: "credit_report_inquiry", label: "Credit Report Inquiry (Bank)", icon: FileText, category: "CrediQ" },
   { value: "credit_premium_subscription", label: "CrediQ Premium Subscription (User)", icon: Sparkles, category: "CrediQ" },
+  // Statements (PDF downloads)
+  { value: "statement_download_consumer", label: "Statement Download — Consumers App", icon: FileText, category: "Statements" },
+  { value: "statement_download_banking", label: "Statement Download — Banking App", icon: FileText, category: "Statements" },
 ];
 
 const FEE_MODELS = [

@@ -27984,7 +27984,7 @@ export type Database = {
         }[]
       }
       resolve_statement_fee: {
-        Args: { p_institution_type: string; p_source: string }
+        Args: { p_institution_type?: string; p_source: string }
         Returns: Json
       }
       search_profiles_by_name: {

@@ -56,6 +56,8 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   overdraft_interest: "overdraft_interest",
   overdraft_setup_fee: "overdraft_setup_fee",
   overdraft_renewal_fee: "overdraft_renewal_fee",
+  statement_download_consumer: "statement_download_consumer",
+  statement_download_banking: "statement_download_banking",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
@@ -98,6 +100,8 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   overdraft_interest: { rate: 0.08, fixed: 0 },
   overdraft_setup_fee: { rate: 0, fixed: 1000 },
   overdraft_renewal_fee: { rate: 0, fixed: 500 },
+  statement_download_consumer: { rate: 0, fixed: 500 },
+  statement_download_banking: { rate: 0, fixed: 500 },
 };
 
 interface UseFeeEstimateOptions {
