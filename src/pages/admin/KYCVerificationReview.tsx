@@ -19,9 +19,12 @@ import {
   Shield, FileText, CheckCircle, XCircle, Clock, Eye,
   Image as ImageIcon, Search, Users, User, Calendar, Hash,
   ArrowRight, Loader2, Download, MessageSquare, HelpCircle,
+  Building2, Smartphone, History, Layers,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useKycReviewPermissions } from "@/hooks/useKycReviewPermissions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export default function KYCVerificationReview() {
   const [selectedKYC, setSelectedKYC] = useState<any | null>(null);
@@ -32,6 +35,8 @@ export default function KYCVerificationReview() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected" | "info_requested">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [dedupeByUser, setDedupeByUser] = useState(true);
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -152,27 +157,86 @@ export default function KYCVerificationReview() {
     );
   };
 
-  const filterByStatus = (status: string) => {
-    let items = kycSubmissions?.filter((kyc) => kyc.status === status) || [];
-    if (searchQuery) {
-      items = items.filter(k =>
-        `${getDisplayName(k)} ${k.document_number} ${getEmail(k) || ""}`.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Group submissions by user so the page never shows duplicate rows for the
+  // same applicant (historic data created before the server-side dedup guard
+  // can still produce multiple rows per user). The most recent row wins, and
+  // older rows are exposed via `_history` for the detail dialog.
+  const groupedByUser = (() => {
+    if (!kycSubmissions) return [] as any[];
+    if (!dedupeByUser) return kycSubmissions.map(k => ({ ...k, _history: [] as any[] }));
+    const byUser = new Map<string, any[]>();
+    for (const row of kycSubmissions) {
+      const key = row.user_id || row.id;
+      const arr = byUser.get(key) || [];
+      arr.push(row);
+      byUser.set(key, arr);
     }
-    return items;
-  };
+    return Array.from(byUser.values()).map(rows => {
+      rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { ...rows[0], _history: rows.slice(1) };
+    });
+  })();
 
-  const allFiltered = searchQuery
-    ? kycSubmissions?.filter(k => `${getDisplayName(k)} ${k.document_number} ${getEmail(k) || ""}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : kycSubmissions;
+  const matchesQuery = (k: any) =>
+    !searchQuery ||
+    `${getDisplayName(k)} ${k.document_number || ""} ${getEmail(k) || ""}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+  const matchesSource = (k: any) =>
+    sourceFilter === "all" || (k.source_app || "customer_app") === sourceFilter;
+
+  const filterByStatus = (status: string) =>
+    groupedByUser.filter(k => k.status === status && matchesQuery(k) && matchesSource(k));
+
+  const allFiltered = groupedByUser.filter(k => matchesQuery(k) && matchesSource(k));
 
   const stats = {
-    total: kycSubmissions?.length || 0,
+    total: groupedByUser.length,
     pending: filterByStatus("pending").length,
     approved: filterByStatus("approved").length,
     rejected: filterByStatus("rejected").length,
     info_requested: filterByStatus("info_requested").length,
   };
+
+  const exportCsv = () => {
+    const rows = allFiltered;
+    const headers = ["id","user_id","name","email","status","source_app","document_type","document_number","document_country","created_at","verified_at","rejection_reason"];
+    const csv = [
+      headers.join(","),
+      ...rows.map(r => headers.map(h => {
+        const v = h === "name" ? getDisplayName(r) : h === "email" ? (getEmail(r) || "") : (r[h] ?? "");
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(",")),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kyc-submissions-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Export ready", description: `${rows.length} submissions exported to CSV.` });
+  };
+
+  const sourceBadge = (src?: string | null) => {
+    const s = src || "customer_app";
+    const isBank = s === "banking_app" || s === "bank_app";
+    return (
+      <Badge
+        variant="outline"
+        className={`gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 ${
+          isBank
+            ? "border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800"
+            : "border-slate-300 bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700"
+        }`}
+      >
+        {isBank ? <Building2 className="h-2.5 w-2.5" /> : <Smartphone className="h-2.5 w-2.5" />}
+        {isBank ? "Banking" : "Consumer"}
+      </Badge>
+    );
+  };
+
 
   // ── Loading skeleton ──
   const TableSkeleton = () => (
@@ -232,6 +296,7 @@ export default function KYCVerificationReview() {
             <TableHeader>
               <TableRow className="hover:bg-transparent bg-muted/30">
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground pl-6">Applicant</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Source</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Document</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Submitted</TableHead>
@@ -248,11 +313,19 @@ export default function KYCVerificationReview() {
                         <User className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm text-foreground truncate">{getDisplayName(kyc)}</p>
+                        <p className="font-semibold text-sm text-foreground truncate flex items-center gap-1.5">
+                          {getDisplayName(kyc)}
+                          {kyc._history?.length > 0 && (
+                            <span title={`${kyc._history.length} prior submission(s)`} className="inline-flex items-center gap-0.5 rounded-md border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800">
+                              <Layers className="h-2.5 w-2.5" />+{kyc._history.length}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-[11px] text-muted-foreground truncate">{getEmail(kyc) || `ID: ${kyc.user_id?.slice(0, 8)}…`}</p>
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{sourceBadge(kyc.source_app)}</TableCell>
                   <TableCell>
                     <div>
                       <p className="text-sm font-medium capitalize">{kyc.document_type?.replace(/_/g, " ")}</p>
@@ -310,23 +383,41 @@ export default function KYCVerificationReview() {
   return (
     <div className="space-y-6">
       <AdminPageHeader icon={Shield} title="KYC Verification" description="Review and approve customer identity submissions" />
-      <div className="flex items-center gap-2">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search name, email, or doc #..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 w-64 text-sm bg-background"
+            className="pl-9 h-9 text-sm bg-background"
           />
         </div>
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="h-9 w-[170px] text-sm">
+            <SelectValue placeholder="Source app" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All apps</SelectItem>
+            <SelectItem value="customer_app">Consumer app</SelectItem>
+            <SelectItem value="banking_app">Banking app</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 h-9">
+          <Switch id="dedupe" checked={dedupeByUser} onCheckedChange={setDedupeByUser} />
+          <Label htmlFor="dedupe" className="text-xs font-medium cursor-pointer whitespace-nowrap">Latest per user</Label>
+        </div>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={exportCsv} disabled={!allFiltered.length}>
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {[
-          { label: "Total Submissions", value: stats.total, icon: Users, iconBg: "bg-primary/10 text-primary" },
-          { label: "Pending Review", value: stats.pending, icon: Clock, iconBg: "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+          { label: "Total", value: stats.total, icon: Users, iconBg: "bg-primary/10 text-primary" },
+          { label: "Pending", value: stats.pending, icon: Clock, iconBg: "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+          { label: "Info Requested", value: stats.info_requested, icon: HelpCircle, iconBg: "bg-sky-100 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400" },
           { label: "Approved", value: stats.approved, icon: CheckCircle, iconBg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400" },
           { label: "Rejected", value: stats.rejected, icon: XCircle, iconBg: "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400" },
         ].map(s => (
@@ -345,6 +436,7 @@ export default function KYCVerificationReview() {
           </Card>
         ))}
       </div>
+
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="pending" className="space-y-4">
@@ -391,18 +483,22 @@ export default function KYCVerificationReview() {
             </DialogHeader>
           </div>
           {selectedKYC && (
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
               {/* Applicant info */}
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 flex-wrap">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
                   <User className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-bold text-foreground">{getDisplayName(selectedKYC)}</p>
-                  <p className="text-sm text-muted-foreground">{getEmail(selectedKYC) || `User ${selectedKYC.user_id?.slice(0, 12)}…`}</p>
+                  <p className="text-sm text-muted-foreground break-all">{getEmail(selectedKYC) || `User ${selectedKYC.user_id?.slice(0, 12)}…`}</p>
                 </div>
-                {getStatusBadge(selectedKYC.status)}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {sourceBadge(selectedKYC.source_app)}
+                  {getStatusBadge(selectedKYC.status)}
+                </div>
               </div>
+
 
               {/* Detail grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -477,6 +573,50 @@ export default function KYCVerificationReview() {
                   })}
                 </div>
               </div>
+
+              {/* Download originals */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "document_front_url", label: "Front" },
+                  { key: "document_back_url", label: "Back" },
+                  { key: "selfie_url", label: "Selfie" },
+                ].filter(d => selectedKYC[d.key]).map(d => (
+                  <Button
+                    key={d.key}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={async () => {
+                      const url = await getKycDocumentUrl(selectedKYC[d.key]);
+                      if (url) window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download {d.label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Submission history (older rows for the same user) */}
+              {selectedKYC._history && selectedKYC._history.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/40 dark:bg-amber-950/20 dark:border-amber-900 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-3 flex items-center gap-1.5">
+                    <History className="h-3.5 w-3.5" /> Prior submissions for this user ({selectedKYC._history.length})
+                  </p>
+                  <ul className="space-y-2">
+                    {selectedKYC._history.map((h: any) => (
+                      <li key={h.id} className="flex items-center justify-between gap-3 text-xs bg-background/60 rounded-lg p-2.5 border border-border/40">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {sourceBadge(h.source_app)}
+                          {getStatusBadge(h.status)}
+                          <span className="text-muted-foreground truncate">{format(new Date(h.created_at), "dd MMM yyyy, HH:mm")}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">{h.id.slice(0, 8)}…</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
 
               {/* Rejection reason */}
               {selectedKYC.rejection_reason && (
