@@ -56,6 +56,8 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   overdraft_interest: "overdraft_interest",
   overdraft_setup_fee: "overdraft_setup_fee",
   overdraft_renewal_fee: "overdraft_renewal_fee",
+  statement_download_consumer: "statement_download_consumer",
+  statement_download_banking: "statement_download_banking",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
