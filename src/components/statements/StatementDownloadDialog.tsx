@@ -341,6 +341,26 @@ export const StatementDownloadDialog: React.FC<StatementDownloadDialogProps> = (
                     Final serial is allocated server-side and will appear on the PDF.
                   </p>
                 </div>
+                <div className="border-t pt-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Download fee
+                  </p>
+                  {fee?.enabled && fee.amount > 0 ? (
+                    <p className="text-sm font-semibold text-foreground">
+                      {fee.amount.toLocaleString()} {fee.currency}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        will be deducted from your balance when you download.
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-foreground">
+                      Free — no fee applied.
+                    </p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">
+                    Viewing this preview is always free.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -355,7 +375,11 @@ export const StatementDownloadDialog: React.FC<StatementDownloadDialogProps> = (
               </Button>
               <Button onClick={handleConfirmDownload} disabled={downloading} className="rounded-xl gap-2">
                 {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                {downloading ? "Generating PDF..." : "Download PDF"}
+                {downloading
+                  ? "Generating PDF..."
+                  : fee?.enabled && fee.amount > 0
+                  ? `Pay ${fee.amount.toLocaleString()} ${fee.currency} & download`
+                  : "Download PDF"}
               </Button>
             </DialogFooter>
           </>
