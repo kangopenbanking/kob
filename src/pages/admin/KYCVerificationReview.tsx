@@ -383,23 +383,41 @@ export default function KYCVerificationReview() {
   return (
     <div className="space-y-6">
       <AdminPageHeader icon={Shield} title="KYC Verification" description="Review and approve customer identity submissions" />
-      <div className="flex items-center gap-2">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search name, email, or doc #..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 w-64 text-sm bg-background"
+            className="pl-9 h-9 text-sm bg-background"
           />
         </div>
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="h-9 w-[170px] text-sm">
+            <SelectValue placeholder="Source app" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All apps</SelectItem>
+            <SelectItem value="customer_app">Consumer app</SelectItem>
+            <SelectItem value="banking_app">Banking app</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 h-9">
+          <Switch id="dedupe" checked={dedupeByUser} onCheckedChange={setDedupeByUser} />
+          <Label htmlFor="dedupe" className="text-xs font-medium cursor-pointer whitespace-nowrap">Latest per user</Label>
+        </div>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={exportCsv} disabled={!allFiltered.length}>
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {[
-          { label: "Total Submissions", value: stats.total, icon: Users, iconBg: "bg-primary/10 text-primary" },
-          { label: "Pending Review", value: stats.pending, icon: Clock, iconBg: "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+          { label: "Total", value: stats.total, icon: Users, iconBg: "bg-primary/10 text-primary" },
+          { label: "Pending", value: stats.pending, icon: Clock, iconBg: "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+          { label: "Info Requested", value: stats.info_requested, icon: HelpCircle, iconBg: "bg-sky-100 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400" },
           { label: "Approved", value: stats.approved, icon: CheckCircle, iconBg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400" },
           { label: "Rejected", value: stats.rejected, icon: XCircle, iconBg: "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400" },
         ].map(s => (
@@ -418,6 +436,7 @@ export default function KYCVerificationReview() {
           </Card>
         ))}
       </div>
+
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="pending" className="space-y-4">
