@@ -574,6 +574,50 @@ export default function KYCVerificationReview() {
                 </div>
               </div>
 
+              {/* Download originals */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "document_front_url", label: "Front" },
+                  { key: "document_back_url", label: "Back" },
+                  { key: "selfie_url", label: "Selfie" },
+                ].filter(d => selectedKYC[d.key]).map(d => (
+                  <Button
+                    key={d.key}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={async () => {
+                      const url = await getKycDocumentUrl(selectedKYC[d.key]);
+                      if (url) window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download {d.label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Submission history (older rows for the same user) */}
+              {selectedKYC._history && selectedKYC._history.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/40 dark:bg-amber-950/20 dark:border-amber-900 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-3 flex items-center gap-1.5">
+                    <History className="h-3.5 w-3.5" /> Prior submissions for this user ({selectedKYC._history.length})
+                  </p>
+                  <ul className="space-y-2">
+                    {selectedKYC._history.map((h: any) => (
+                      <li key={h.id} className="flex items-center justify-between gap-3 text-xs bg-background/60 rounded-lg p-2.5 border border-border/40">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {sourceBadge(h.source_app)}
+                          {getStatusBadge(h.status)}
+                          <span className="text-muted-foreground truncate">{format(new Date(h.created_at), "dd MMM yyyy, HH:mm")}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">{h.id.slice(0, 8)}…</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+
               {/* Rejection reason */}
               {selectedKYC.rejection_reason && (
                 <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-xl">
