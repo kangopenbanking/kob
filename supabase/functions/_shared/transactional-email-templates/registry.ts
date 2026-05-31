@@ -63,4 +63,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'rent-payment-reminder': rentPaymentReminder,
   'admin-email-queue-alert': adminEmailQueueAlert,
   'support-agent-invite': supportAgentInvite,
+  'weekly-activity-digest': weeklyActivityDigest,
+  'monthly-statement': monthlyStatement,
 }
