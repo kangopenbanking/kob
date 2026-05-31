@@ -230,6 +230,59 @@ Deno.serve(async (req) => {
     }
     const serial = String(serialData);
 
+    // Charge statement download fee (if enabled by admin)
+    const { data: feeSettings } = await admin
+      .from("statement_fee_settings")
+      .select("fee_amount, currency, is_enabled")
+      .eq("id", true)
+      .maybeSingle();
+
+    let feeCharged = 0;
+    let feeCurrency = (feeSettings as any)?.currency || "XAF";
+    if (feeSettings && (feeSettings as any).is_enabled && Number((feeSettings as any).fee_amount) > 0) {
+      const feeAmount = Number((feeSettings as any).fee_amount);
+      const { data: chargeResult, error: chargeErr } = await admin.rpc("charge_statement_fee", {
+        p_user_id: user.id,
+        p_account_id: acct.id,
+        p_amount: feeAmount,
+        p_currency: feeCurrency,
+        p_source: body.source,
+        p_serial: serial,
+      });
+      if (chargeErr) {
+        return new Response(
+          JSON.stringify({ error: "fee_charge_failed", message: chargeErr.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const status = (chargeResult as any)?.status;
+      if (status === "insufficient_funds") {
+        return new Response(
+          JSON.stringify({
+            error: "insufficient_funds",
+            message: `Insufficient balance to pay the ${feeAmount} ${feeCurrency} statement download fee.`,
+            fee_amount: feeAmount,
+            currency: feeCurrency,
+            available: (chargeResult as any)?.available,
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (status === "no_balance") {
+        return new Response(
+          JSON.stringify({
+            error: "no_balance",
+            message: "No account balance found to deduct the statement download fee.",
+            fee_amount: feeAmount,
+            currency: feeCurrency,
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (status === "charged") feeCharged = feeAmount;
+    }
+
+
     // Build PDF
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const w = doc.internal.pageSize.getWidth();
