@@ -296,6 +296,7 @@ export default function KYCVerificationReview() {
             <TableHeader>
               <TableRow className="hover:bg-transparent bg-muted/30">
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground pl-6">Applicant</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Source</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Document</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Submitted</TableHead>
