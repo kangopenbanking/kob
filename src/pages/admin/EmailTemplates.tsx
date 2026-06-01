@@ -154,6 +154,7 @@ export default function EmailTemplates() {
                                   )}
                                 </DialogContent>
                               </Dialog>
+                              <Button size="sm" variant="ghost" title="Send test email" onClick={() => { setTestTemplate(template); setTestRecipient(""); setTestResult(null); }}><Send className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
