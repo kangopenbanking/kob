@@ -15,12 +15,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FileCode, Eye, Edit, Mail, Send } from "lucide-react";
 import { format } from "date-fns";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function EmailTemplates() {
   const queryClient = useQueryClient();
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [previewTemplate, setPreviewTemplate] = useState<any>(null);
+  const [testTemplate, setTestTemplate] = useState<any>(null);
+  const [testRecipient, setTestRecipient] = useState("");
+  const [testResult, setTestResult] = useState<any | null>(null);
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["email-templates"],
@@ -55,6 +59,31 @@ export default function EmailTemplates() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["email-templates"] });
       toast.success("Template status updated");
+    },
+  });
+
+  const sendTest = useMutation({
+    mutationFn: async ({ template, recipient }: { template: any; recipient: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-test-email", {
+        body: {
+          template_key: template.template_key,
+          recipient_email: recipient,
+          subject: `[TEST] ${template.subject || template.name}`,
+          body_html: template.body_html,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setTestResult(data);
+      if (data?.success) toast.success(`Test sent via ${data.provider || "provider"}`);
+      else toast.error(data?.error || "Test failed");
+    },
+    onError: (e: any) => {
+      const msg = extractEdgeFunctionError(e);
+      setTestResult({ success: false, error: msg });
+      toast.error(msg);
     },
   });
 
@@ -125,6 +154,7 @@ export default function EmailTemplates() {
                                   )}
                                 </DialogContent>
                               </Dialog>
+                              <Button size="sm" variant="ghost" title="Send test email" onClick={() => { setTestTemplate(template); setTestRecipient(""); setTestResult(null); }}><Send className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -137,6 +167,41 @@ export default function EmailTemplates() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Send Test Email Dialog */}
+      <Dialog open={!!testTemplate} onOpenChange={(o) => { if (!o) { setTestTemplate(null); setTestRecipient(""); setTestResult(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Send Test Email</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Send <span className="font-mono text-xs">{testTemplate?.template_key}</span> via Resend (with Lovable Email fallback) to verify rendering and delivery.</p>
+            <div>
+              <Label>Recipient email</Label>
+              <Input type="email" value={testRecipient} onChange={(e) => setTestRecipient(e.target.value)} placeholder="you@example.com" className="mt-1" />
+              <p className="text-[11px] text-muted-foreground mt-1">Leave blank to send to your own admin inbox.</p>
+            </div>
+            {testResult && (
+              <div className="rounded-md border p-3 space-y-2 bg-muted/30 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">Result</span>
+                  <Badge variant={testResult.success ? "default" : "destructive"}>{testResult.success ? "sent" : "failed"}</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><div className="text-muted-foreground">Provider</div><div className="font-medium">{testResult.provider || "—"}</div></div>
+                  <div><div className="text-muted-foreground">Environment</div><div className="font-medium">{testResult.environment || "—"}</div></div>
+                  <div className="col-span-2"><div className="text-muted-foreground">Message ID</div><div className="font-mono text-[10px] truncate">{testResult.message_id || "—"}</div></div>
+                </div>
+                {testResult.error && <div className="text-destructive break-words"><span className="font-medium">Reason: </span>{testResult.error}</div>}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setTestTemplate(null); setTestRecipient(""); setTestResult(null); }}>Close</Button>
+              <Button onClick={() => testTemplate && sendTest.mutate({ template: testTemplate, recipient: testRecipient })} disabled={sendTest.isPending}>
+                {sendTest.isPending ? "Sending..." : testResult ? "Retry" : "Send Test"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

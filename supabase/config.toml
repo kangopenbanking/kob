@@ -723,6 +723,9 @@ verify_jwt = false
 [functions.managed-send-email]
 verify_jwt = false
 
+[functions.admin-test-email]
+verify_jwt = true
+
 [functions.merchant-create-staff]
 verify_jwt = false
 

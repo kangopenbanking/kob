@@ -1,0 +1,1 @@
+UPDATE public.email_provider_settings SET resend_api_key_label = 'RESEND_API_KEY_1', updated_at = now() WHERE id = 1;

@@ -128,12 +128,27 @@ async function sendViaResend(payload: EmailPayload, settings: ProviderSettings):
 async function sendViaLovable(payload: EmailPayload): Promise<SendResult> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
   if (!apiKey) return { provider: 'lovable_email', ok: false, error: 'LOVABLE_API_KEY missing' }
+  // Lovable Email requires the From address domain to align with sender_domain.
+  // If the configured From (e.g. Resend sandbox onboarding@resend.dev) doesn't,
+  // rewrite it to noreply@<sender_domain> using the same display name so the
+  // fallback succeeds.
+  let fromForLovable = payload.from || ''
+  if (payload.sender_domain && fromForLovable) {
+    const match = fromForLovable.match(/^\s*(.*?)\s*<([^>]+)>\s*$/)
+    const addr = match ? match[2] : fromForLovable
+    const name = match ? match[1] : ''
+    const addrDomain = addr.split('@')[1] || ''
+    if (!addrDomain.endsWith(payload.sender_domain)) {
+      const local = (addr.split('@')[0] || 'noreply').replace(/[^A-Za-z0-9._-]/g, '') || 'noreply'
+      fromForLovable = name ? `${name} <${local}@${payload.sender_domain}>` : `${local}@${payload.sender_domain}`
+    }
+  }
   try {
     await sendLovableEmail(
       {
         run_id: payload.run_id,
         to: payload.to,
-        from: payload.from!,
+        from: fromForLovable,
         sender_domain: payload.sender_domain!,
         subject: payload.subject,
         html: payload.html,
