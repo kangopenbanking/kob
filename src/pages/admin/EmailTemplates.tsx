@@ -62,6 +62,31 @@ export default function EmailTemplates() {
     },
   });
 
+  const sendTest = useMutation({
+    mutationFn: async ({ template, recipient }: { template: any; recipient: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-test-email", {
+        body: {
+          template_key: template.template_key,
+          recipient_email: recipient,
+          subject: `[TEST] ${template.subject || template.name}`,
+          body_html: template.body_html,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setTestResult(data);
+      if (data?.success) toast.success(`Test sent via ${data.provider || "provider"}`);
+      else toast.error(data?.error || "Test failed");
+    },
+    onError: (e: any) => {
+      const msg = extractEdgeFunctionError(e);
+      setTestResult({ success: false, error: msg });
+      toast.error(msg);
+    },
+  });
+
   const transactional = templates?.filter((t) => t.category === "transactional") || [];
   const notification = templates?.filter((t) => t.category === "notification") || [];
 
