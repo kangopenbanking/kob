@@ -167,6 +167,41 @@ export default function EmailTemplates() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Send Test Email Dialog */}
+      <Dialog open={!!testTemplate} onOpenChange={(o) => { if (!o) { setTestTemplate(null); setTestRecipient(""); setTestResult(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Send Test Email</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Send <span className="font-mono text-xs">{testTemplate?.template_key}</span> via Resend (with Lovable Email fallback) to verify rendering and delivery.</p>
+            <div>
+              <Label>Recipient email</Label>
+              <Input type="email" value={testRecipient} onChange={(e) => setTestRecipient(e.target.value)} placeholder="you@example.com" className="mt-1" />
+              <p className="text-[11px] text-muted-foreground mt-1">Leave blank to send to your own admin inbox.</p>
+            </div>
+            {testResult && (
+              <div className="rounded-md border p-3 space-y-2 bg-muted/30 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">Result</span>
+                  <Badge variant={testResult.success ? "default" : "destructive"}>{testResult.success ? "sent" : "failed"}</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><div className="text-muted-foreground">Provider</div><div className="font-medium">{testResult.provider || "—"}</div></div>
+                  <div><div className="text-muted-foreground">Environment</div><div className="font-medium">{testResult.environment || "—"}</div></div>
+                  <div className="col-span-2"><div className="text-muted-foreground">Message ID</div><div className="font-mono text-[10px] truncate">{testResult.message_id || "—"}</div></div>
+                </div>
+                {testResult.error && <div className="text-destructive break-words"><span className="font-medium">Reason: </span>{testResult.error}</div>}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setTestTemplate(null); setTestRecipient(""); setTestResult(null); }}>Close</Button>
+              <Button onClick={() => testTemplate && sendTest.mutate({ template: testTemplate, recipient: testRecipient })} disabled={sendTest.isPending}>
+                {sendTest.isPending ? "Sending..." : testResult ? "Retry" : "Send Test"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
