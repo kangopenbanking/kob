@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FileCode, Eye, Edit, Mail, Send } from "lucide-react";
 import { format } from "date-fns";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function EmailTemplates() {
