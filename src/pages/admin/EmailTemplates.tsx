@@ -22,6 +22,9 @@ export default function EmailTemplates() {
   const queryClient = useQueryClient();
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [previewTemplate, setPreviewTemplate] = useState<any>(null);
+  const [testTemplate, setTestTemplate] = useState<any>(null);
+  const [testRecipient, setTestRecipient] = useState("");
+  const [testResult, setTestResult] = useState<any | null>(null);
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["email-templates"],
