@@ -8,6 +8,7 @@ import { OrderStatusTimeline } from "@/components/daily-needs/OrderStatusTimelin
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveDeliveryMap } from "@/components/daily-needs/LiveDeliveryMap";
 import { DeliveryCodeCard } from "@/components/daily-needs/DeliveryCodeCard";
+import { useSmoothedEta } from "@/hooks/useSmoothedEta";
 
 const ACTIVE = new Set(["accepted", "picked_up", "on_the_way", "arriving"]);
 
