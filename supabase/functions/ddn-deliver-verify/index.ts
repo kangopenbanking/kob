@@ -77,5 +77,36 @@ Deno.serve(async (req) => {
   const { error: settleErr } = await sb.rpc("ddn_settle_delivery", { _assignment_id: assignment_id });
   if (settleErr) return json(500, { error: "settlement_failed", details: settleErr.message });
 
+  // Notify merchant: code verified + settlement completed
+  try {
+    const { data: full } = await sb
+      .from("ddn_assignments")
+      .select("merchant_id, driver_earnings_xaf, delivery_fee_xaf, platform_fee_xaf")
+      .eq("id", assignment_id).maybeSingle();
+    if (full?.merchant_id) {
+      const mUser = await getMerchantOwnerId(sb, full.merchant_id);
+      if (mUser) {
+        await notifyUser(sb, {
+          user_id: mUser,
+          type: "ddn.delivery.verified",
+          title: "Delivery code verified",
+          message: "The customer code matched — order marked delivered.",
+          icon: "check-circle",
+          metadata: { assignment_id, order_id: assignment.order_id },
+          idempotency_key: `ddn.verified:${assignment_id}`,
+        });
+        await notifyUser(sb, {
+          user_id: mUser,
+          type: "ddn.settlement.completed",
+          title: "Settlement completed",
+          message: `Driver paid ${Number((full as any).driver_earnings_xaf ?? 0).toLocaleString()} XAF · platform ${Number((full as any).platform_fee_xaf ?? 0).toLocaleString()} XAF.`,
+          icon: "wallet",
+          metadata: { assignment_id, ...(full as any) },
+          idempotency_key: `ddn.settled:${assignment_id}`,
+        });
+      }
+    }
+  } catch (e) { console.error("verify notify failed", e); }
+
   return json(200, { ok: true });
 });
