@@ -1684,6 +1684,13 @@ function App() {
                 <Route path="cart" element={<DailyNeedsCart />} />
                 <Route path="checkout" element={<DailyNeedsCheckout />} />
                 <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
+                <Route path="orders" element={<DailyNeedsOrders />} />
+                <Route path="addresses" element={<DailyNeedsAddresses />} />
+                <Route path="search" element={<DailyNeedsSearch />} />
+                <Route path="favorites" element={<DailyNeedsFavorites />} />
+                <Route path="promos" element={<DailyNeedsPromos />} />
+                <Route path="orders/:orderId/review" element={<DailyNeedsReview />} />
+                <Route path="orders/:orderId/report" element={<DailyNeedsReportIssue />} />
               </Route>
               <Route path="driver" element={<DriverGuard><DriverHome /></DriverGuard>} />
               <Route path="driver/register" element={<DriverGuard><DriverRegister /></DriverGuard>} />
@@ -1691,6 +1698,11 @@ function App() {
               <Route path="driver/payouts" element={<DriverGuard><DriverPayouts /></DriverGuard>} />
               <Route path="driver/active/:id" element={<DriverGuard><DriverActiveDelivery /></DriverGuard>} />
               <Route path="driver/offers" element={<DriverGuard><DriverOffers /></DriverGuard>} />
+              <Route path="driver/profile" element={<DriverGuard><DriverProfile /></DriverGuard>} />
+              <Route path="driver/history" element={<DriverGuard><DriverHistory /></DriverGuard>} />
+              <Route path="driver/schedule" element={<DriverGuard><DriverSchedule /></DriverGuard>} />
+              <Route path="driver/support" element={<DriverGuard><DriverSupport /></DriverGuard>} />
+              <Route path="driver/inbox" element={<DriverGuard><DriverInbox /></DriverGuard>} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 
