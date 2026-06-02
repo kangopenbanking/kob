@@ -31,7 +31,7 @@ export default function MerchantDailyNeedsDrivers() {
 
   useEffect(() => { load(); }, [user]);
 
-  const inviteLink = `${window.location.origin}/app/driver/register`;
+  const inviteLink = `https://kangopenbanking.com/app/driver/register`;
   const copyInvite = async () => {
     await navigator.clipboard.writeText(inviteLink);
     toast({ title: "Invite link copied", description: "Share with riders to onboard them to your fleet." });
