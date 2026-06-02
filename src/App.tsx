@@ -709,10 +709,18 @@ const MerchantDailyNeedsDeliveries = lazy(() => import("./pages/merchant/Merchan
 const MerchantDailyNeedsDrivers = lazy(() => import("./pages/merchant/MerchantDailyNeedsDrivers"));
 const MerchantDailyNeedsDeliverySettings = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliverySettings"));
 const MerchantNotificationsInbox = lazy(() => import("./pages/merchant/MerchantNotificationsInbox"));
+const MerchantOrders = lazy(() => import("./pages/merchant/MerchantOrders"));
+const MerchantCatalog = lazy(() => import("./pages/merchant/MerchantCatalog"));
+const MerchantSettings = lazy(() => import("./pages/merchant/MerchantSettings"));
+const MerchantHelp = lazy(() => import("./pages/merchant/MerchantHelp"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
 const AdminDDNDriverRules = lazy(() => import("./pages/admin/AdminDDNDriverRules"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
+const CustomerSessions = lazy(() => import("./pages/customer-app/CustomerSessions"));
+const CustomerTwoFactor = lazy(() => import("./pages/customer-app/CustomerTwoFactor"));
+const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
+const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
 const CustomerNotifications = lazy(() => import("./pages/customer-app/CustomerNotifications"));
 const CustomerHelp = lazy(() => import("./pages/customer-app/CustomerHelp"));
@@ -994,6 +1002,10 @@ function App() {
               <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
               <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
               <Route path="notifications" element={<MerchantNotificationsInbox />} />
+              <Route path="orders" element={<MerchantOrders />} />
+              <Route path="catalog" element={<MerchantCatalog />} />
+              <Route path="settings" element={<MerchantSettings />} />
+              <Route path="help" element={<MerchantHelp />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
