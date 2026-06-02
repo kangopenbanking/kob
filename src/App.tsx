@@ -698,6 +698,7 @@ const DriverHome = lazy(() => import("./pages/customer-app/driver/DriverHome"));
 const DriverRegister = lazy(() => import("./pages/customer-app/driver/DriverRegister"));
 const DriverActiveDelivery = lazy(() => import("./pages/customer-app/driver/DriverActiveDelivery"));
 const DriverEarnings = lazy(() => import("./pages/customer-app/driver/DriverEarnings"));
+const DriverPayouts = lazy(() => import("./pages/customer-app/driver/DriverPayouts"));
 const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
 const MerchantDailyNeedsOnboarding = lazy(() => import("./pages/merchant/MerchantDailyNeedsOnboarding"));
 const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
