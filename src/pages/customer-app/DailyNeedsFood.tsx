@@ -28,7 +28,7 @@ export default function DailyNeedsFood() {
       const ascending = sort !== "rating";
       const { data } = await supabase
         .from("daily_needs_stores")
-        .select("id, name, banner_url, rating, preparation_time_min, vertical, tags")
+        .select("id, name, banner_url, rating, preparation_time_min, vertical")
         .eq("vertical", "food")
         .eq("status", "active")
         .order(orderCol, { ascending });
@@ -50,8 +50,8 @@ export default function DailyNeedsFood() {
     const q = query.trim().toLowerCase();
     return stores.filter((s) => {
       const matchesQ = !q || s.name?.toLowerCase().includes(q);
-      const tags: string[] = Array.isArray(s.tags) ? s.tags : [];
-      const matchesC = cuisine === "All" || tags.map((t) => String(t).toLowerCase()).includes(cuisine.toLowerCase());
+      // Cuisine filter applied client-side once tags are introduced; for now "All" passes everything.
+      const matchesC = cuisine === "All";
       return matchesQ && matchesC;
     });
   }, [stores, query, cuisine]);
