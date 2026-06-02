@@ -29,6 +29,7 @@ interface Category {
 export default function DailyNeedsStore() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const cart = useDailyNeedsCart();
   const [store, setStore] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +37,8 @@ export default function DailyNeedsStore() {
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const filter = (searchParams.get("filter") ?? "all") as "all" | "otc" | "rx";
+  const isPharmacy = store?.vertical === "pharmacy";
 
   useEffect(() => {
     if (!id) return;
