@@ -558,6 +558,7 @@ const ConnectorOnboard = lazy(() => import("./pages/institution/connector/Connec
 
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
+const MerchantGuideHub = lazy(() => import("./pages/merchant/MerchantGuideHub"));
 const MerchantTransactions = lazy(() => import("./pages/merchant/MerchantTransactions"));
 const MerchantPaymentLinks = lazy(() => import("./pages/merchant/MerchantPaymentLinks"));
 const MerchantCustomers = lazy(() => import("./pages/merchant/MerchantCustomers"));
