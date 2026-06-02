@@ -78,6 +78,14 @@ export const merchantNavigation = [
     ],
   },
   {
+    title: "Daily Needs",
+    items: [
+      { title: "Stores", path: "/merchant/daily-needs", icon: UtensilsCrossed },
+      { title: "New Store", path: "/merchant/daily-needs/new", icon: PlusCircle },
+      { title: "Pharmacy Reviews", path: "/merchant/daily-needs/pharmacy-reviews", icon: ClipboardCheck },
+    ],
+  },
+  {
     title: "Point of Sale",
     items: [
       { title: "POS Till", path: "/merchant/pos-till", icon: Monitor },
