@@ -219,10 +219,23 @@ export default function MerchantDailyNeedsOnboarding() {
     if (err) { toast({ title: "Please fix", description: err, variant: "destructive" }); return; }
     setSaving(true);
     try {
-      // Strip empty strings — zod URL/date validators in the edge function reject "".
+      // Full sanitisation pass — no empty strings, no invalid dates, no out-of-range numbers reach the server.
+      const URL_FIELDS = new Set(["pharmacy_license_url", "logo_url", "banner_url"]);
+      const DATE_FIELDS = new Set(["pharmacy_license_expires_on"]);
       const payload: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(draft)) {
-        if (typeof v === "string" && v.trim() === "") continue;
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string") {
+          const trimmed = v.trim();
+          if (trimmed === "") continue;
+          if (URL_FIELDS.has(k) && !/^https?:\/\/[^\s]+$/i.test(trimmed)) continue;
+          if (DATE_FIELDS.has(k)) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed) || Number.isNaN(new Date(trimmed).getTime())) continue;
+          }
+          payload[k] = trimmed;
+          continue;
+        }
+        if (typeof v === "number" && !Number.isFinite(v)) continue;
         if (Array.isArray(v) && v.length === 0 && k !== "delivery_modes") continue;
         payload[k] = v;
       }
