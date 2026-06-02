@@ -103,6 +103,7 @@ export default function DriverRegister() {
           {submitting ? "Submitting…" : "Submit application"}
         </Button>
       </form>
+      </div>
     </div>
   );
 }
