@@ -8603,8 +8603,11 @@ export type Database = {
         Row: {
           address: string | null
           banner_url: string | null
+          cold_chain_capable: boolean
           contact_phone: string | null
+          controlled_substances_allowed: boolean
           created_at: string
+          delivery_modes: string[]
           delivery_radius_km: number
           description: string | null
           id: string
@@ -8613,21 +8616,39 @@ export type Database = {
           longitude: number | null
           merchant_id: string
           name: string
+          onboarding_completed_at: string | null
+          onboarding_step: number
           opening_hours: Json
+          otc_enabled: boolean
+          pharmacist_in_charge_license: string | null
+          pharmacist_in_charge_name: string | null
+          pharmacist_in_charge_phone: string | null
+          pharmacy_license_expires_on: string | null
+          pharmacy_license_number: string | null
+          pharmacy_license_url: string | null
           preparation_time_min: number
           rating: number | null
           rating_count: number
+          rx_enabled: boolean
+          service_areas: string[]
           slug: string
           source: string
           status: Database["public"]["Enums"]["dn_store_status"]
           updated_at: string
+          verification_notes: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
           vertical: Database["public"]["Enums"]["dn_vertical"]
         }
         Insert: {
           address?: string | null
           banner_url?: string | null
+          cold_chain_capable?: boolean
           contact_phone?: string | null
+          controlled_substances_allowed?: boolean
           created_at?: string
+          delivery_modes?: string[]
           delivery_radius_km?: number
           description?: string | null
           id?: string
@@ -8636,21 +8657,39 @@ export type Database = {
           longitude?: number | null
           merchant_id: string
           name: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number
           opening_hours?: Json
+          otc_enabled?: boolean
+          pharmacist_in_charge_license?: string | null
+          pharmacist_in_charge_name?: string | null
+          pharmacist_in_charge_phone?: string | null
+          pharmacy_license_expires_on?: string | null
+          pharmacy_license_number?: string | null
+          pharmacy_license_url?: string | null
           preparation_time_min?: number
           rating?: number | null
           rating_count?: number
+          rx_enabled?: boolean
+          service_areas?: string[]
           slug: string
           source?: string
           status?: Database["public"]["Enums"]["dn_store_status"]
           updated_at?: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
           vertical: Database["public"]["Enums"]["dn_vertical"]
         }
         Update: {
           address?: string | null
           banner_url?: string | null
+          cold_chain_capable?: boolean
           contact_phone?: string | null
+          controlled_substances_allowed?: boolean
           created_at?: string
+          delivery_modes?: string[]
           delivery_radius_km?: number
           description?: string | null
           id?: string
@@ -8659,14 +8698,29 @@ export type Database = {
           longitude?: number | null
           merchant_id?: string
           name?: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number
           opening_hours?: Json
+          otc_enabled?: boolean
+          pharmacist_in_charge_license?: string | null
+          pharmacist_in_charge_name?: string | null
+          pharmacist_in_charge_phone?: string | null
+          pharmacy_license_expires_on?: string | null
+          pharmacy_license_number?: string | null
+          pharmacy_license_url?: string | null
           preparation_time_min?: number
           rating?: number | null
           rating_count?: number
+          rx_enabled?: boolean
+          service_areas?: string[]
           slug?: string
           source?: string
           status?: Database["public"]["Enums"]["dn_store_status"]
           updated_at?: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
           vertical?: Database["public"]["Enums"]["dn_vertical"]
         }
         Relationships: [
