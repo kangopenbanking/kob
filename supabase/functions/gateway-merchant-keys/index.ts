@@ -173,6 +173,11 @@ Deno.serve(async (req) => {
       }).select().single();
       if (error) throw error;
 
+      await audit(supabase, 'gateway_merchant_key_rotated', user.id, merchant_id, {
+        new_key_id: newKey.id, revoked_key_id: key_id, environment: env,
+        public_key_prefix: publicKey.slice(0, 16),
+      });
+
       return new Response(JSON.stringify({ ...newKey, merchant_id, secret_key: secretKey, revoked_key_id: key_id, warning: 'Store this key securely.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
