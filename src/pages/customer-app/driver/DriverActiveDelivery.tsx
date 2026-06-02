@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Package, MapPin, ShieldCheck, Truck } from "lucide-react";
+import { ChevronLeft, Package, MapPin, ShieldCheck, Truck, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,6 +132,22 @@ export default function DriverActiveDelivery() {
           />
           <Button className="w-full" size="lg" onClick={verifyDelivery} disabled={busy || code.length < 3}>
             Confirm delivery
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            size="sm"
+            disabled={busy}
+            onClick={async () => {
+              const reason = window.prompt("Why request a new code? (e.g. customer can't find SMS)") ?? "customer_unable";
+              const r = await callFn("ddn-deliver-code-resend", { assignment_id: id, reason });
+              if (r?.ok) {
+                toast.success("New code sent to the customer");
+                setCode("");
+              }
+            }}
+          >
+            <RefreshCw className="size-4 mr-2" /> Request a new code
           </Button>
         </Card>
       )}

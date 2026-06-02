@@ -32,7 +32,11 @@ Deno.serve(async (req) => {
     .eq("id", parsed.data.assignment_id).maybeSingle();
   if (!a) return json(404, { error: "assignment_not_found" });
   if ((a as any).ddn_drivers?.user_id !== user.id) return json(403, { error: "not_assigned_driver" });
-  if (!["accepted", "picked_up"].includes(a.status)) return json(409, { error: "invalid_status", current: a.status });
+  // State machine validation — only accepted assignments may transition to picked_up/on_the_way
+  const { data: allowed } = await sb.rpc("ddn_validate_transition", { _from: a.status, _to: "on_the_way" });
+  if (!allowed && !["accepted", "picked_up", "on_the_way"].includes(a.status)) {
+    return json(409, { error: "invalid_status", current: a.status, expected: "accepted" });
+  }
 
   const now = new Date().toISOString();
   await sb.from("ddn_assignments").update({ status: "on_the_way", picked_up_at: now }).eq("id", a.id);

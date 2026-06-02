@@ -47,9 +47,13 @@ Deno.serve(async (req) => {
   const driverUser = (assignment as any).ddn_drivers?.user_id;
   if (driverUser !== user.id) return json(403, { error: "not_assigned_driver" });
   if (assignment.status === "delivered") return json(200, { ok: true, replay: true });
+  // State machine — only on-the-way / arriving / picked_up can be delivered
+  if (!["picked_up", "on_the_way", "arriving"].includes(assignment.status)) {
+    return json(409, { error: "invalid_status", current: assignment.status, expected: "on_the_way" });
+  }
 
   const expected = String((assignment as any).daily_needs_orders.delivery_code ?? "").trim();
-  if (!expected || expected !== code.trim()) return json(400, { error: "invalid_code" });
+  if (!expected || expected !== code.trim()) return json(400, { error: "invalid_code", message: "Code mismatch. Ask the customer to read it again or request a new code." });
 
   const codeHash = await sha256(code.trim());
   const now = new Date().toISOString();
