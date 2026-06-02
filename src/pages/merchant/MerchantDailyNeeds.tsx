@@ -67,7 +67,7 @@ export default function MerchantDailyNeeds() {
               </div>
               <p className="text-xs text-muted-foreground capitalize">{s.vertical} · {s.preparation_time_min} min prep · {s.delivery_radius_km} km radius</p>
               <div className="flex gap-2 pt-2">
-                <Button size="sm" variant="outline" onClick={() => navigate(`/merchant/daily-needs/${s.id}`)}>Manage</Button>
+                <Button size="sm" variant="outline" onClick={() => navigate(`/merchant/daily-needs/${s.id}/edit`)}>Manage</Button>
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/merchant/daily-needs/${s.id}/menu`)}>Menu</Button>
               </div>
             </Card>
