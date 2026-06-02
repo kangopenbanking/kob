@@ -7,6 +7,18 @@ function problem(status: number, title: string, detail: string) {
   });
 }
 
+async function audit(supabase: any, action: string, user_id: string, merchant_id: string, details: Record<string, unknown>) {
+  try {
+    await supabase.from('audit_logs').insert({
+      action_type: action,
+      entity_type: 'gateway_merchant_key',
+      entity_id: merchant_id,
+      performed_by: user_id,
+      details,
+    });
+  } catch (e) { console.warn('audit_logs insert failed:', e); }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
