@@ -1633,10 +1633,11 @@ function App() {
                 <Route path="checkout" element={<DailyNeedsCheckout />} />
                 <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
               </Route>
-              <Route path="driver" element={<DriverHome />} />
-              <Route path="driver/register" element={<DriverRegister />} />
-              <Route path="driver/earnings" element={<DriverEarnings />} />
-              <Route path="driver/active/:id" element={<DriverActiveDelivery />} />
+              <Route path="driver" element={<DriverGuard><DriverHome /></DriverGuard>} />
+              <Route path="driver/register" element={<DriverGuard><DriverRegister /></DriverGuard>} />
+              <Route path="driver/earnings" element={<DriverGuard><DriverEarnings /></DriverGuard>} />
+              <Route path="driver/payouts" element={<DriverGuard><DriverPayouts /></DriverGuard>} />
+              <Route path="driver/active/:id" element={<DriverGuard><DriverActiveDelivery /></DriverGuard>} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 
