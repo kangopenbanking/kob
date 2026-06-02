@@ -109,7 +109,7 @@ export default function MerchantDashboard() {
         );
 
         setSetupSteps([
-          { key: "kyb", title: "Complete KYB Verification", description: "Submit business documents to go live", icon: ShieldCheck, completed: m.kyb_status === "verified" || m.status === "active", path: "/merchant/kyb" },
+          { key: "kyb", title: "Complete KYB Verification", description: "Submit business documents to go live", icon: ShieldCheck, completed: ["verified", "approved"].includes(String(m.kyb_status || "").toLowerCase()) || ["active", "verified"].includes(String(m.status || "").toLowerCase()), path: "/merchant/kyb" },
           { key: "api_keys", title: "Generate API Keys", description: "Get sandbox keys to integrate", icon: Key, completed: (apiKeysRes.data?.length || 0) > 0, path: "/merchant/api-keys" },
           { key: "webhooks", title: "Configure Webhooks", description: "Real-time payment notifications", icon: Webhook, completed: (webhooksRes.data?.length || 0) > 0, path: "/merchant/webhooks" },
           { key: "settlement", title: "Add Settlement Account", description: "Bank or mobile money for payouts", icon: Building2, completed: (settlementRes.data?.length || 0) > 0, path: "/merchant/settlement-accounts" },
