@@ -24,6 +24,8 @@ export default function DailyNeedsCheckout() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [prescriptionUrl, setPrescriptionUrl] = useState("");
+  const [prescriptionFileName, setPrescriptionFileName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Prefill phone from profile
