@@ -148,6 +148,7 @@ export default function DriverPayouts() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
