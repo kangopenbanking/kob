@@ -119,6 +119,25 @@ Deno.serve(async (req) => {
     const expires = new Date(Date.now() + offer_ttl_seconds * 1000).toISOString();
     await sb.from("ddn_assignment_offers").insert({ assignment_id: created.id, driver_id: driverId, expires_at: expires });
     await sb.from("ddn_assignments").update({ status: "offered" }).eq("id", created.id);
+
+    // Push to the driver (in-app row is auto-created by DB trigger)
+    try {
+      const mod = await import("../_shared/ddn-notify.ts");
+      const pushOn = await mod.isDriverPushEnabled(sb, "offer");
+      if (pushOn) {
+        const userId = await mod.getDriverUserId(sb, driverId);
+        if (userId) {
+          await mod.notifyUserPush({
+            user_id: userId,
+            title: "New delivery offer",
+            message: `Earn ${driver_earnings_xaf.toLocaleString()} XAF — expires in ${offer_ttl_seconds}s`,
+            url: `/app/driver/offers`,
+            data: { assignment_id: created.id, kind: "ddn.offer.new", expires_at: expires },
+          });
+        }
+      }
+    } catch (e) { console.error("offer push failed", e); }
+
     return json(200, { ok: true, assignment: { ...created, status: "offered" }, offered_to: driverId, expires_at: expires });
   }
 

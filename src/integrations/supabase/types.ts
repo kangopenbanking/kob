@@ -9352,6 +9352,54 @@ export type Database = {
           },
         ]
       }
+      ddn_driver_notification_rules: {
+        Row: {
+          assignment_change_in_app: boolean
+          assignment_change_push: boolean
+          created_at: string
+          id: string
+          missed_pickup_in_app: boolean
+          missed_pickup_minutes: number
+          missed_pickup_push: boolean
+          offer_in_app_enabled: boolean
+          offer_push_enabled: boolean
+          offer_warn_seconds: number
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assignment_change_in_app?: boolean
+          assignment_change_push?: boolean
+          created_at?: string
+          id?: string
+          missed_pickup_in_app?: boolean
+          missed_pickup_minutes?: number
+          missed_pickup_push?: boolean
+          offer_in_app_enabled?: boolean
+          offer_push_enabled?: boolean
+          offer_warn_seconds?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assignment_change_in_app?: boolean
+          assignment_change_push?: boolean
+          created_at?: string
+          id?: string
+          missed_pickup_in_app?: boolean
+          missed_pickup_minutes?: number
+          missed_pickup_push?: boolean
+          offer_in_app_enabled?: boolean
+          offer_push_enabled?: boolean
+          offer_warn_seconds?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       ddn_driver_status_log: {
         Row: {
           created_at: string
@@ -28898,6 +28946,31 @@ export type Database = {
       ddn_find_best_driver: {
         Args: { _assignment_id: string; _max_radius_km?: number }
         Returns: string
+      }
+      ddn_flag_missed_pickups: { Args: never; Returns: number }
+      ddn_get_notification_rules: {
+        Args: never
+        Returns: {
+          assignment_change_in_app: boolean
+          assignment_change_push: boolean
+          created_at: string
+          id: string
+          missed_pickup_in_app: boolean
+          missed_pickup_minutes: number
+          missed_pickup_push: boolean
+          offer_in_app_enabled: boolean
+          offer_push_enabled: boolean
+          offer_warn_seconds: number
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ddn_driver_notification_rules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       ddn_haversine_km: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }

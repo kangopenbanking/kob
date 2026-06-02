@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Truck, MapPin, Wallet, Star, ChevronRight, RadioTower } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +22,7 @@ export default function DriverHome() {
   const [offers, setOffers] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState<{ offerId: string; action: "accept" | "decline" } | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -188,8 +193,8 @@ export default function DriverHome() {
                   <span className="text-xs font-normal text-muted-foreground ml-1">(fee {Number(a.delivery_fee_xaf).toLocaleString()})</span>
                 </p>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => respond(o.id, "decline")}>Decline</Button>
-                  <Button className="flex-1" onClick={() => respond(o.id, "accept")}>Accept</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => setConfirm({ offerId: o.id, action: "decline" })}>Decline</Button>
+                  <Button className="flex-1" onClick={() => setConfirm({ offerId: o.id, action: "accept" })}>Accept</Button>
                 </div>
               </Card>
             );
@@ -215,6 +220,27 @@ export default function DriverHome() {
           ))
         )}
       </section>
+
+      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.action === "accept" ? "Accept this delivery?" : "Decline this offer?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.action === "accept"
+                ? "You commit to picking up and delivering this order. Repeated cancellations may affect your rating."
+                : "This offer will be reassigned to another driver."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirm) respond(confirm.offerId, confirm.action); setConfirm(null); }}>
+              {confirm?.action === "accept" ? "Yes, accept" : "Yes, decline"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,11 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Package, MapPin, ShieldCheck, Truck, RefreshCw } from "lucide-react";
+import { ChevronLeft, Package, MapPin, ShieldCheck, Truck, RefreshCw, Phone } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveDeliveryMap } from "@/components/daily-needs/LiveDeliveryMap";
 import { toast } from "sonner";
@@ -19,6 +23,8 @@ export default function DriverActiveDelivery() {
   const [assignment, setAssignment] = useState<any>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmPickupOpen, setConfirmPickupOpen] = useState(false);
+  const [confirmDeliverOpen, setConfirmDeliverOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -110,7 +116,7 @@ export default function DriverActiveDelivery() {
       </Card>
 
       {canPickup && (
-        <Button className="w-full" size="lg" onClick={confirmPickup} disabled={busy}>
+        <Button className="w-full" size="lg" onClick={() => setConfirmPickupOpen(true)} disabled={busy}>
           <Truck className="size-4 mr-2" /> I have the items — start delivery
         </Button>
       )}
@@ -130,7 +136,7 @@ export default function DriverActiveDelivery() {
             className="text-center text-2xl font-mono tracking-[0.4em]"
             aria-label="Delivery code"
           />
-          <Button className="w-full" size="lg" onClick={verifyDelivery} disabled={busy || code.length < 3}>
+          <Button className="w-full" size="lg" onClick={() => setConfirmDeliverOpen(true)} disabled={busy || code.length < 3}>
             Confirm delivery
           </Button>
           <Button
@@ -157,6 +163,41 @@ export default function DriverActiveDelivery() {
           Delivery complete. <Link to="/app/driver/earnings" className="text-primary">View earnings</Link>
         </Card>
       )}
+
+      <AlertDialog open={confirmPickupOpen} onOpenChange={setConfirmPickupOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm pickup</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirm that you have collected all items from <strong>{o.daily_needs_stores?.name}</strong>. The customer will be notified that the order is on the way.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Not yet</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmPickupOpen(false); confirmPickup(); }}>
+              Yes, I have the items
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmDeliverOpen} onOpenChange={setConfirmDeliverOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm delivery</AlertDialogTitle>
+            <AlertDialogDescription>
+              Submit the customer's code <strong>{code}</strong>? Once verified, the order is marked delivered and your earnings are credited.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmDeliverOpen(false); verifyDelivery(); }}>
+              Yes, submit code
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
