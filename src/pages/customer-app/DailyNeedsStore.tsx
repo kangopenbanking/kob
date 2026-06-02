@@ -18,7 +18,6 @@ interface Product {
   category_id: string | null;
   is_otc: boolean | null;
   requires_prescription: boolean | null;
-  image_url?: string | null;
 }
 
 interface Category {
@@ -45,7 +44,7 @@ export default function DailyNeedsStore() {
       const [{ data: s }, { data: p }, { data: c }] = await Promise.all([
         supabase.from("daily_needs_stores").select("*").eq("id", id).maybeSingle(),
         supabase.from("daily_needs_products")
-          .select("id, name, price_xaf, description, requires_prescription, is_otc, category_id, image_url")
+          .select("id, name, price_xaf, description, requires_prescription, is_otc, category_id")
           .eq("store_id", id).eq("is_available", true)
           .order("name"),
         supabase.from("daily_needs_categories")
