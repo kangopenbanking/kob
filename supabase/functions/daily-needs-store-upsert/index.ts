@@ -1,4 +1,4 @@
-// Daily Needs — Store upsert (merchant onboarding / settings)
+// Daily Needs — Store upsert (merchant onboarding wizard / settings)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 
@@ -24,7 +24,23 @@ const Body = z.object({
   delivery_radius_km: z.number().positive().max(50).default(5),
   preparation_time_min: z.number().int().positive().max(240).default(20),
   opening_hours: z.record(z.any()).default({}),
-  status: z.enum(["draft", "active", "paused", "suspended"]).default("draft"),
+  status: z.enum(["draft", "active", "paused", "suspended"]).optional(),
+
+  // Pharmacy capabilities & verification
+  pharmacy_license_number: z.string().max(120).optional(),
+  pharmacy_license_url: z.string().url().optional(),
+  pharmacy_license_expires_on: z.string().optional(),
+  pharmacist_in_charge_name: z.string().max(120).optional(),
+  pharmacist_in_charge_license: z.string().max(120).optional(),
+  pharmacist_in_charge_phone: z.string().max(20).optional(),
+  controlled_substances_allowed: z.boolean().optional(),
+  otc_enabled: z.boolean().optional(),
+  rx_enabled: z.boolean().optional(),
+  cold_chain_capable: z.boolean().optional(),
+  delivery_modes: z.array(z.enum(["delivery", "pickup"])).optional(),
+  service_areas: z.array(z.string().max(120)).optional(),
+  onboarding_step: z.number().int().min(0).max(10).optional(),
+  submit_for_verification: z.boolean().optional(),
 });
 
 function json(status: number, body: unknown) {
@@ -61,7 +77,26 @@ Deno.serve(async (req) => {
     return json(403, { error: "not_merchant_owner" });
   }
 
-  const row = { ...b };
+  // Pharmacy verification gate
+  if (b.vertical === "pharmacy" && b.submit_for_verification) {
+    const missing: string[] = [];
+    if (!b.pharmacy_license_number) missing.push("pharmacy_license_number");
+    if (!b.pharmacy_license_url) missing.push("pharmacy_license_url");
+    if (!b.pharmacist_in_charge_name) missing.push("pharmacist_in_charge_name");
+    if (!b.pharmacist_in_charge_license) missing.push("pharmacist_in_charge_license");
+    if (!b.address) missing.push("address");
+    if (!b.contact_phone) missing.push("contact_phone");
+    if (missing.length) return json(422, { error: "pharmacy_verification_incomplete", missing });
+  }
+
+  const { submit_for_verification, ...rest } = b;
+  const row: Record<string, unknown> = { ...rest };
+
+  if (submit_for_verification) {
+    row.verification_status = "pending";
+    row.onboarding_completed_at = new Date().toISOString();
+  }
+
   const { data, error } = b.id
     ? await supabase.from("daily_needs_stores").update(row).eq("id", b.id).select().single()
     : await supabase.from("daily_needs_stores").insert(row).select().single();
