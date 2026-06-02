@@ -76,19 +76,32 @@ export default function AdminEmailProviderSettings() {
   async function sendTest() {
     if (!testEmail) return;
     setSendingTest(true);
-    const { data, error } = await supabase.functions.invoke("send-transactional-email", {
+    setTestResult(null);
+    const { data, error } = await supabase.functions.invoke("admin-test-email", {
       body: {
-        templateName: "welcome",
-        recipientEmail: testEmail,
-        idempotencyKey: `provider-test-${Date.now()}`,
-        templateData: { name: "Tester" },
+        recipient_email: testEmail,
+        subject: "Provider settings test — Kang Open Banking",
+        body_html: `<h2>Provider configuration test</h2>
+          <p>This live test was dispatched from the Email Provider Settings page to confirm that the configured primary provider is delivering successfully.</p>
+          <p><strong>Environment:</strong> ${settings?.environment ?? "—"}<br/>
+          <strong>Primary provider:</strong> ${settings?.primary_provider ?? "—"}<br/>
+          <strong>Fallback provider:</strong> ${settings?.fallback_provider ?? "—"}</p>
+          <p>If you received this message, end-to-end delivery is operational.</p>`,
+        template_key: "provider-settings",
       },
     });
     setSendingTest(false);
-    if (error) {
-      toast({ title: "Test failed", description: error.message, variant: "destructive" });
+    const payload = (data ?? {}) as any;
+    if (error || !payload.success) {
+      const msg = payload?.error || error?.message || "Test delivery failed.";
+      setTestResult({ success: false, error: msg });
+      toast({ title: "Test failed", description: msg, variant: "destructive" });
     } else {
-      toast({ title: "Test queued", description: `Sent via current provider settings. ${JSON.stringify(data).slice(0, 80)}` });
+      setTestResult(payload);
+      toast({
+        title: "Test delivered",
+        description: `Sent via ${payload.provider} (${payload.environment}). Message ID ${String(payload.message_id || "").slice(0, 8)}…`,
+      });
     }
   }
 
