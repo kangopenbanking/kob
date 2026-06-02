@@ -9023,6 +9023,434 @@ export type Database = {
         }
         Relationships: []
       }
+      ddn_assignment_offers: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          driver_id: string
+          expires_at: string
+          id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          driver_id: string
+          expires_at: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_assignment_offers_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ddn_assignment_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_assignments: {
+        Row: {
+          assigned_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_fee_xaf: number
+          distance_km: number | null
+          driver_earnings_xaf: number
+          driver_id: string | null
+          drop_lat: number | null
+          drop_lng: number | null
+          eta_min: number | null
+          id: string
+          merchant_id: string
+          order_id: string
+          picked_up_at: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          platform_fee_xaf: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee_xaf?: number
+          distance_km?: number | null
+          driver_earnings_xaf?: number
+          driver_id?: string | null
+          drop_lat?: number | null
+          drop_lng?: number | null
+          eta_min?: number | null
+          id?: string
+          merchant_id: string
+          order_id: string
+          picked_up_at?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee_xaf?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee_xaf?: number
+          distance_km?: number | null
+          driver_earnings_xaf?: number
+          driver_id?: string | null
+          drop_lat?: number | null
+          drop_lng?: number | null
+          eta_min?: number | null
+          id?: string
+          merchant_id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee_xaf?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_assignments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ddn_assignments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_delivery_proofs: {
+        Row: {
+          assignment_id: string
+          code_hash: string
+          code_verified_at: string | null
+          created_at: string
+          customer_confirmed: boolean
+          drop_lat: number | null
+          drop_lng: number | null
+          photo_url: string | null
+        }
+        Insert: {
+          assignment_id: string
+          code_hash: string
+          code_verified_at?: string | null
+          created_at?: string
+          customer_confirmed?: boolean
+          drop_lat?: number | null
+          drop_lng?: number | null
+          photo_url?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          code_hash?: string
+          code_verified_at?: string | null
+          created_at?: string
+          customer_confirmed?: boolean
+          drop_lat?: number | null
+          drop_lng?: number | null
+          photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_delivery_proofs_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "ddn_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_driver_earnings: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          driver_earnings_xaf: number
+          driver_id: string
+          gross_fee_xaf: number
+          id: string
+          platform_fee_xaf: number
+          status: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          driver_earnings_xaf: number
+          driver_id: string
+          gross_fee_xaf: number
+          id?: string
+          platform_fee_xaf: number
+          status?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          driver_earnings_xaf?: number
+          driver_id?: string
+          gross_fee_xaf?: number
+          id?: string
+          platform_fee_xaf?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_driver_earnings_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "ddn_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ddn_driver_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_driver_locations: {
+        Row: {
+          accuracy_m: number | null
+          driver_id: string
+          heading: number | null
+          lat: number
+          lng: number
+          speed_kmh: number | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          driver_id: string
+          heading?: number | null
+          lat: number
+          lng: number
+          speed_kmh?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          driver_id?: string
+          heading?: number | null
+          lat?: number
+          lng?: number
+          speed_kmh?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_driver_status_log: {
+        Row: {
+          created_at: string
+          driver_id: string
+          from_status: string | null
+          id: string
+          to_status: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          from_status?: string | null
+          id?: string
+          to_status: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          from_status?: string | null
+          id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_driver_status_log_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_driver_wallets: {
+        Row: {
+          available_xaf: number
+          driver_id: string
+          lifetime_earned_xaf: number
+          pending_xaf: number
+          updated_at: string
+        }
+        Insert: {
+          available_xaf?: number
+          driver_id: string
+          lifetime_earned_xaf?: number
+          pending_xaf?: number
+          updated_at?: string
+        }
+        Update: {
+          available_xaf?: number
+          driver_id?: string
+          lifetime_earned_xaf?: number
+          pending_xaf?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_driver_wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ddn_drivers: {
+        Row: {
+          address: string | null
+          approval_status: string
+          coverage_center_lat: number | null
+          coverage_center_lng: number | null
+          coverage_radius_km: number | null
+          created_at: string
+          full_name: string
+          id: string
+          kyc_status: string
+          last_seen_at: string | null
+          mode: string
+          owner_merchant_id: string | null
+          phone: string
+          photo_url: string | null
+          rating: number
+          status: string
+          total_deliveries: number
+          updated_at: string
+          user_id: string
+          vehicle_registration: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          address?: string | null
+          approval_status?: string
+          coverage_center_lat?: number | null
+          coverage_center_lng?: number | null
+          coverage_radius_km?: number | null
+          created_at?: string
+          full_name: string
+          id?: string
+          kyc_status?: string
+          last_seen_at?: string | null
+          mode?: string
+          owner_merchant_id?: string | null
+          phone: string
+          photo_url?: string | null
+          rating?: number
+          status?: string
+          total_deliveries?: number
+          updated_at?: string
+          user_id: string
+          vehicle_registration?: string | null
+          vehicle_type: string
+        }
+        Update: {
+          address?: string | null
+          approval_status?: string
+          coverage_center_lat?: number | null
+          coverage_center_lng?: number | null
+          coverage_radius_km?: number | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          kyc_status?: string
+          last_seen_at?: string | null
+          mode?: string
+          owner_merchant_id?: string | null
+          phone?: string
+          photo_url?: string | null
+          rating?: number
+          status?: string
+          total_deliveries?: number
+          updated_at?: string
+          user_id?: string
+          vehicle_registration?: string | null
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
+      ddn_merchant_delivery_settings: {
+        Row: {
+          auto_assign: boolean
+          base_fee_xaf: number
+          created_at: string
+          delivery_radius_km: number
+          merchant_id: string
+          mode: string
+          per_km_fee_xaf: number
+          platform_fee_pct: number
+          prep_time_min: number
+          updated_at: string
+        }
+        Insert: {
+          auto_assign?: boolean
+          base_fee_xaf?: number
+          created_at?: string
+          delivery_radius_km?: number
+          merchant_id: string
+          mode?: string
+          per_km_fee_xaf?: number
+          platform_fee_pct?: number
+          prep_time_min?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_assign?: boolean
+          base_fee_xaf?: number
+          created_at?: string
+          delivery_radius_km?: number
+          merchant_id?: string
+          mode?: string
+          per_km_fee_xaf?: number
+          platform_fee_pct?: number
+          prep_time_min?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       developer_orgs: {
         Row: {
           country: string | null
@@ -28373,6 +28801,19 @@ export type Database = {
           id: string
         }[]
       }
+      ddn_find_best_driver: {
+        Args: { _assignment_id: string; _max_radius_km?: number }
+        Returns: string
+      }
+      ddn_haversine_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
+      ddn_offer_accept: {
+        Args: { _driver_user_id: string; _offer_id: string }
+        Returns: Json
+      }
+      ddn_settle_delivery: { Args: { _assignment_id: string }; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
