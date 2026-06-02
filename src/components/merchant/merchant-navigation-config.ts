@@ -94,6 +94,8 @@ export const merchantNavigation = [
     title: "Point of Sale",
     items: [
       { title: "POS Till", path: "/merchant/pos-till", icon: Monitor },
+      { title: "Orders", path: "/merchant/orders", icon: ShoppingBag },
+      { title: "Catalog", path: "/merchant/catalog", icon: BoxIcon },
     ],
   },
   {
@@ -113,6 +115,8 @@ export const merchantNavigation = [
     title: "Settings",
     items: [
       { title: "Business Profile", path: "/merchant/profile", icon: Store },
+      { title: "Settings", path: "/merchant/settings", icon: SettingsIcon },
+      { title: "Help & Support", path: "/merchant/help", icon: HelpCircle },
     ],
   },
 ];
