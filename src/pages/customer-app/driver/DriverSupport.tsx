@@ -14,18 +14,36 @@ export default function DriverSupport() {
   const triggerSOS = async () => {
     if (!confirm("Trigger emergency SOS? Our safety team will be alerted immediately.")) return;
     setSending(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: drv } = await supabase.from("ddn_drivers").select("id").eq("user_id", user!.id).maybeSingle();
-    if (drv) {
-      await supabase.from("daily_needs_issue_reports").insert({
-        order_id: drv.id, user_id: user!.id, category: "driver_sos",
-        description: "Driver triggered SOS from app", status: "open",
-      } as any).then(() => {
-        // Best-effort; may fail if order_id FK doesn't match — fall back to localStorage queue
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+      const { data: drv } = await supabase.from("ddn_drivers").select("id").eq("user_id", user.id).maybeSingle();
+
+      // Best-effort geolocation — never blocks the SOS write.
+      const coords = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
+        if (!("geolocation" in navigator)) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          () => resolve(null),
+          { timeout: 3000, maximumAge: 60000 },
+        );
       });
+
+      const { error } = await supabase.from("driver_sos_events").insert({
+        driver_id: drv?.id ?? null,
+        user_id: user.id,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+        note: "Driver triggered SOS from app",
+        status: "open",
+      } as any);
+      if (error) throw error;
+      toast({ title: "SOS sent", description: "A safety agent will contact you shortly." });
+    } catch (e: any) {
+      toast({ title: "Could not send SOS", description: e?.message ?? "Please call support directly.", variant: "destructive" });
+    } finally {
+      setSending(false);
     }
-    setSending(false);
-    toast({ title: "SOS sent", description: "A safety agent will contact you shortly." });
   };
 
   return (

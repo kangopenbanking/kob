@@ -11,17 +11,14 @@ const corsHeaders = {
 };
 const json = (s: number, b: unknown) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-Deno.serve(async (req) => {
+export async function handleMissedPickupCron(req: Request, sb: any): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   // 1) flag in-app via SECURITY DEFINER function (returns # of inserted rows)
   const { data: flagged, error } = await sb.rpc("ddn_flag_missed_pickups");
   if (error) return json(500, { ok: false, error: error.message });
 
   // 2) optionally push for each driver currently in the missed window.
-  // Re-read newly flagged rows (last 5 minutes) and notify via push channel.
   let pushed = 0;
   try {
     const pushEnabled = await isDriverPushEnabled(sb, "missed_pickup");
@@ -48,4 +45,9 @@ Deno.serve(async (req) => {
   } catch (e) { console.error("missed push fanout", e); }
 
   return json(200, { ok: true, flagged_count: flagged ?? 0, pushed });
+}
+
+Deno.serve((req) => {
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  return handleMissedPickupCron(req, sb);
 });
