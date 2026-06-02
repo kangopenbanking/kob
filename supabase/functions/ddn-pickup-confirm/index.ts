@@ -2,6 +2,7 @@
 // Moves assignment to picked_up + on_the_way and updates the underlying order.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { notifyUser, getMerchantOwnerId } from "../_shared/ddn-notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,6 +52,24 @@ Deno.serve(async (req) => {
   };
   await stamp("picked_up");
   await stamp("on_the_way");
+
+  // Notify merchant: package picked up
+  try {
+    const { data: full } = await sb
+      .from("ddn_assignments").select("merchant_id").eq("id", a.id).maybeSingle();
+    if (full?.merchant_id) {
+      const mUser = await getMerchantOwnerId(sb, full.merchant_id);
+      if (mUser) await notifyUser(sb, {
+        user_id: mUser,
+        type: "ddn.assignment.picked_up",
+        title: "Order picked up",
+        message: "The driver has collected the order and is heading to the customer.",
+        icon: "package",
+        metadata: { assignment_id: a.id, order_id: a.order_id },
+        idempotency_key: `ddn.picked_up:${a.id}`,
+      });
+    }
+  } catch (e) { console.error("pickup notify failed", e); }
 
   return json(200, { ok: true });
 });

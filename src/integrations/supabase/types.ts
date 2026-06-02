@@ -9487,39 +9487,57 @@ export type Database = {
       }
       ddn_merchant_delivery_settings: {
         Row: {
+          accept_outside_hours: boolean
           auto_assign: boolean
           base_fee_xaf: number
           created_at: string
           delivery_radius_km: number
+          max_fee_xaf: number | null
+          max_radius_km: number
           merchant_id: string
+          min_fee_xaf: number
           mode: string
+          operating_hours: Json
           per_km_fee_xaf: number
           platform_fee_pct: number
           prep_time_min: number
+          surge_multiplier: number
           updated_at: string
         }
         Insert: {
+          accept_outside_hours?: boolean
           auto_assign?: boolean
           base_fee_xaf?: number
           created_at?: string
           delivery_radius_km?: number
+          max_fee_xaf?: number | null
+          max_radius_km?: number
           merchant_id: string
+          min_fee_xaf?: number
           mode?: string
+          operating_hours?: Json
           per_km_fee_xaf?: number
           platform_fee_pct?: number
           prep_time_min?: number
+          surge_multiplier?: number
           updated_at?: string
         }
         Update: {
+          accept_outside_hours?: boolean
           auto_assign?: boolean
           base_fee_xaf?: number
           created_at?: string
           delivery_radius_km?: number
+          max_fee_xaf?: number | null
+          max_radius_km?: number
           merchant_id?: string
+          min_fee_xaf?: number
           mode?: string
+          operating_hours?: Json
           per_km_fee_xaf?: number
           platform_fee_pct?: number
           prep_time_min?: number
+          surge_multiplier?: number
           updated_at?: string
         }
         Relationships: []

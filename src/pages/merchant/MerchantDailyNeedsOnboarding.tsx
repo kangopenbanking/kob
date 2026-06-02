@@ -151,15 +151,24 @@ export default function MerchantDailyNeedsOnboarding() {
 
   const update = (patch: Partial<StoreDraft>) => setDraft((d) => (d ? { ...d, ...patch } : d));
 
+  const PHONE_RE = /^\+?[0-9 ()-]{7,20}$/;
+  const URL_RE = /^https?:\/\/[^\s]+$/i;
+  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
   const validateStep = (): string | null => {
     if (!draft) return "Loading";
     if (step === 0) {
       if (draft.name.trim().length < 2) return "Store name is required (min 2 chars).";
+      if (draft.name.trim().length > 120) return "Store name must be 120 characters or less.";
       if (!/^[a-z0-9-]{2,60}$/.test(draft.slug)) return "Slug must be 2–60 chars, lowercase letters, numbers, hyphens only.";
+      if (draft.description.length > 1000) return "Description must be 1000 characters or less.";
     }
     if (step === 1) {
       if (!draft.address.trim()) return "Address is required.";
-      if (!draft.contact_phone.trim()) return "Contact phone is required.";
+      if (draft.address.trim().length > 500) return "Address must be 500 characters or less.";
+      if (!PHONE_RE.test(draft.contact_phone.trim())) return "Enter a valid phone number (digits, spaces, +, -, parentheses only).";
+      if (!Number.isFinite(draft.preparation_time_min) || draft.preparation_time_min < 5 || draft.preparation_time_min > 240) return "Preparation time must be between 5 and 240 minutes.";
+      if (!Number.isFinite(draft.delivery_radius_km) || draft.delivery_radius_km <= 0 || draft.delivery_radius_km > 50) return "Delivery radius must be between 0.5 and 50 km.";
     }
     if (isPharmacy && step === 2) {
       if (!draft.otc_enabled && !draft.rx_enabled) return "Enable at least OTC or Prescription dispensing.";
@@ -167,10 +176,19 @@ export default function MerchantDailyNeedsOnboarding() {
     if (isPharmacy && step === 3) {
       if (!draft.pharmacist_in_charge_name.trim()) return "Pharmacist-in-charge name is required.";
       if (!draft.pharmacist_in_charge_license.trim()) return "Pharmacist license number is required.";
+      const ph = draft.pharmacist_in_charge_phone.trim();
+      if (ph && !PHONE_RE.test(ph)) return "Pharmacist phone number is not valid.";
     }
     if (isPharmacy && step === 4) {
       if (!draft.pharmacy_license_number.trim()) return "Pharmacy license number is required.";
-      if (!draft.pharmacy_license_url) return "Upload the pharmacy license document.";
+      if (!draft.pharmacy_license_url || !URL_RE.test(draft.pharmacy_license_url)) return "Upload the pharmacy license document.";
+      const exp = draft.pharmacy_license_expires_on.trim();
+      if (exp) {
+        if (!ISO_DATE_RE.test(exp)) return "License expiry must be a valid date.";
+        const d = new Date(exp);
+        if (Number.isNaN(d.getTime())) return "License expiry must be a valid date.";
+        if (d.getTime() < Date.now() - 86400000) return "License expiry date is in the past — submit a valid license.";
+      }
     }
     return null;
   };
@@ -201,10 +219,23 @@ export default function MerchantDailyNeedsOnboarding() {
     if (err) { toast({ title: "Please fix", description: err, variant: "destructive" }); return; }
     setSaving(true);
     try {
-      // Strip empty strings — zod URL/date validators in the edge function reject "".
+      // Full sanitisation pass — no empty strings, no invalid dates, no out-of-range numbers reach the server.
+      const URL_FIELDS = new Set(["pharmacy_license_url", "logo_url", "banner_url"]);
+      const DATE_FIELDS = new Set(["pharmacy_license_expires_on"]);
       const payload: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(draft)) {
-        if (typeof v === "string" && v.trim() === "") continue;
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string") {
+          const trimmed = v.trim();
+          if (trimmed === "") continue;
+          if (URL_FIELDS.has(k) && !/^https?:\/\/[^\s]+$/i.test(trimmed)) continue;
+          if (DATE_FIELDS.has(k)) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed) || Number.isNaN(new Date(trimmed).getTime())) continue;
+          }
+          payload[k] = trimmed;
+          continue;
+        }
+        if (typeof v === "number" && !Number.isFinite(v)) continue;
         if (Array.isArray(v) && v.length === 0 && k !== "delivery_modes") continue;
         payload[k] = v;
       }
