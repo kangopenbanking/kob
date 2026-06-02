@@ -71,6 +71,11 @@ Deno.serve(async (req) => {
 
       if (error) throw error;
 
+      await audit(supabase, 'gateway_merchant_key_created', user.id, merchant_id, {
+        key_id: apiKey.id, environment: env, public_key_prefix: publicKey.slice(0, 16),
+        label: label || 'Unnamed Key',
+      });
+
       // Also insert into legacy table for backward compat (best-effort)
       try {
         await supabase.from('gateway_merchant_api_keys').insert({
