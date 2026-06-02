@@ -695,6 +695,22 @@ const DailyNeedsStore = lazy(() => import("./pages/customer-app/DailyNeedsStore"
 const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"));
 const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
 const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
+const DailyNeedsOrders = lazy(() => import("./pages/customer-app/DailyNeedsOrders"));
+const DailyNeedsAddresses = lazy(() => import("./pages/customer-app/DailyNeedsAddresses"));
+const DailyNeedsSearch = lazy(() => import("./pages/customer-app/DailyNeedsSearch"));
+const DailyNeedsFavorites = lazy(() => import("./pages/customer-app/DailyNeedsFavorites"));
+const DailyNeedsPromos = lazy(() => import("./pages/customer-app/DailyNeedsPromos"));
+const DailyNeedsReview = lazy(() => import("./pages/customer-app/DailyNeedsReview"));
+const DailyNeedsReportIssue = lazy(() => import("./pages/customer-app/DailyNeedsReportIssue"));
+const DriverProfile = lazy(() => import("./pages/customer-app/driver/DriverProfile"));
+const DriverHistory = lazy(() => import("./pages/customer-app/driver/DriverHistory"));
+const DriverSchedule = lazy(() => import("./pages/customer-app/driver/DriverSchedule"));
+const DriverSupport = lazy(() => import("./pages/customer-app/driver/DriverSupport"));
+const DriverInbox = lazy(() => import("./pages/customer-app/driver/DriverInbox"));
+const MerchantDailyNeedsOrders = lazy(() => import("./pages/merchant/MerchantDailyNeedsOrders"));
+const MerchantDailyNeedsHours = lazy(() => import("./pages/merchant/MerchantDailyNeedsHours"));
+const MerchantDailyNeedsAnalytics = lazy(() => import("./pages/merchant/MerchantDailyNeedsAnalytics"));
+const MerchantDailyNeedsPayouts = lazy(() => import("./pages/merchant/MerchantDailyNeedsPayouts"));
 const DriverHome = lazy(() => import("./pages/customer-app/driver/DriverHome"));
 const DriverRegister = lazy(() => import("./pages/customer-app/driver/DriverRegister"));
 const DriverActiveDelivery = lazy(() => import("./pages/customer-app/driver/DriverActiveDelivery"));
@@ -1003,6 +1019,10 @@ function App() {
               <Route path="daily-needs/deliveries" element={<MerchantDailyNeedsDeliveries />} />
               <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
               <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
+              <Route path="daily-needs/orders" element={<MerchantDailyNeedsOrders />} />
+              <Route path="daily-needs/hours" element={<MerchantDailyNeedsHours />} />
+              <Route path="daily-needs/analytics" element={<MerchantDailyNeedsAnalytics />} />
+              <Route path="daily-needs/payouts" element={<MerchantDailyNeedsPayouts />} />
               <Route path="notifications" element={<MerchantNotificationsInbox />} />
               <Route path="orders" element={<MerchantOrders />} />
               <Route path="catalog" element={<MerchantCatalog />} />
@@ -1664,6 +1684,13 @@ function App() {
                 <Route path="cart" element={<DailyNeedsCart />} />
                 <Route path="checkout" element={<DailyNeedsCheckout />} />
                 <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
+                <Route path="orders" element={<DailyNeedsOrders />} />
+                <Route path="addresses" element={<DailyNeedsAddresses />} />
+                <Route path="search" element={<DailyNeedsSearch />} />
+                <Route path="favorites" element={<DailyNeedsFavorites />} />
+                <Route path="promos" element={<DailyNeedsPromos />} />
+                <Route path="orders/:orderId/review" element={<DailyNeedsReview />} />
+                <Route path="orders/:orderId/report" element={<DailyNeedsReportIssue />} />
               </Route>
               <Route path="driver" element={<DriverGuard><DriverHome /></DriverGuard>} />
               <Route path="driver/register" element={<DriverGuard><DriverRegister /></DriverGuard>} />
@@ -1671,6 +1698,11 @@ function App() {
               <Route path="driver/payouts" element={<DriverGuard><DriverPayouts /></DriverGuard>} />
               <Route path="driver/active/:id" element={<DriverGuard><DriverActiveDelivery /></DriverGuard>} />
               <Route path="driver/offers" element={<DriverGuard><DriverOffers /></DriverGuard>} />
+              <Route path="driver/profile" element={<DriverGuard><DriverProfile /></DriverGuard>} />
+              <Route path="driver/history" element={<DriverGuard><DriverHistory /></DriverGuard>} />
+              <Route path="driver/schedule" element={<DriverGuard><DriverSchedule /></DriverGuard>} />
+              <Route path="driver/support" element={<DriverGuard><DriverSupport /></DriverGuard>} />
+              <Route path="driver/inbox" element={<DriverGuard><DriverInbox /></DriverGuard>} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 

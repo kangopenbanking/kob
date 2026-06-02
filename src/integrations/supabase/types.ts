@@ -8375,6 +8375,73 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_needs_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_favorites_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_issue_reports: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_issue_reports_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_needs_order_items: {
         Row: {
           created_at: string
@@ -8708,6 +8775,98 @@ export type Database = {
           },
         ]
       }
+      daily_needs_promos: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          discount_xaf: number
+          expires_at: string | null
+          id: string
+          min_subtotal_xaf: number
+          store_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          discount_xaf?: number
+          expires_at?: string | null
+          id?: string
+          min_subtotal_xaf?: number
+          store_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          discount_xaf?: number
+          expires_at?: string | null
+          id?: string
+          min_subtotal_xaf?: number
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_promos_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          order_id: string
+          rating: number
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          rating: number
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_needs_reviews_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_needs_stores: {
         Row: {
           address: string | null
@@ -8720,6 +8879,7 @@ export type Database = {
           delivery_radius_km: number
           description: string | null
           id: string
+          is_paused: boolean
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -8729,6 +8889,8 @@ export type Database = {
           onboarding_step: number
           opening_hours: Json
           otc_enabled: boolean
+          paused_reason: string | null
+          paused_until: string | null
           pharmacist_in_charge_license: string | null
           pharmacist_in_charge_name: string | null
           pharmacist_in_charge_phone: string | null
@@ -8761,6 +8923,7 @@ export type Database = {
           delivery_radius_km?: number
           description?: string | null
           id?: string
+          is_paused?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -8770,6 +8933,8 @@ export type Database = {
           onboarding_step?: number
           opening_hours?: Json
           otc_enabled?: boolean
+          paused_reason?: string | null
+          paused_until?: string | null
           pharmacist_in_charge_license?: string | null
           pharmacist_in_charge_name?: string | null
           pharmacist_in_charge_phone?: string | null
@@ -8802,6 +8967,7 @@ export type Database = {
           delivery_radius_km?: number
           description?: string | null
           id?: string
+          is_paused?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -8811,6 +8977,8 @@ export type Database = {
           onboarding_step?: number
           opening_hours?: Json
           otc_enabled?: boolean
+          paused_reason?: string | null
+          paused_until?: string | null
           pharmacist_in_charge_license?: string | null
           pharmacist_in_charge_name?: string | null
           pharmacist_in_charge_phone?: string | null
@@ -9399,6 +9567,44 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      ddn_driver_shifts: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          driver_id: string
+          enabled: boolean
+          end_minute: number
+          id: string
+          start_minute: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          driver_id: string
+          enabled?: boolean
+          end_minute: number
+          id?: string
+          start_minute: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          driver_id?: string
+          enabled?: boolean
+          end_minute?: number
+          id?: string
+          start_minute?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_driver_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ddn_driver_status_log: {
         Row: {
