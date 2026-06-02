@@ -283,6 +283,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
+    // Reset inbox row to 'failed' so Flutterwave's retry can re-process (don't leave it stuck on 'processing')
+    if (dedupeKeyForCleanup) {
+      try {
+        await supabase.from('webhook_inbox').update({ status: 'failed', error_message: String((err as Error)?.message ?? err).slice(0, 500) }).eq('event_id', dedupeKeyForCleanup);
+      } catch (_) { /* swallow */ }
+    }
     return safeErrorResponse(err, corsHeaders, 'gateway-webhook-flutterwave');
   }
 });
+
