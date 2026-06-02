@@ -9149,6 +9149,67 @@ export type Database = {
           },
         ]
       }
+      ddn_code_resend_log: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          driver_id: string | null
+          id: string
+          ip_address: string | null
+          new_code_hash: string | null
+          order_id: string
+          previous_code_hash: string | null
+          reason: string | null
+          requested_by: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          ip_address?: string | null
+          new_code_hash?: string | null
+          order_id: string
+          previous_code_hash?: string | null
+          reason?: string | null
+          requested_by: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          ip_address?: string | null
+          new_code_hash?: string | null
+          order_id?: string
+          previous_code_hash?: string | null
+          reason?: string | null
+          requested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ddn_code_resend_log_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ddn_code_resend_log_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "ddn_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ddn_code_resend_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ddn_delivery_proofs: {
         Row: {
           assignment_id: string
@@ -9198,7 +9259,11 @@ export type Database = {
           driver_id: string
           gross_fee_xaf: number
           id: string
+          paid_at: string | null
+          payout_method: string | null
+          payout_reference: string | null
           platform_fee_xaf: number
+          settled_at: string
           status: string
         }
         Insert: {
@@ -9208,7 +9273,11 @@ export type Database = {
           driver_id: string
           gross_fee_xaf: number
           id?: string
+          paid_at?: string | null
+          payout_method?: string | null
+          payout_reference?: string | null
           platform_fee_xaf: number
+          settled_at?: string
           status?: string
         }
         Update: {
@@ -9218,7 +9287,11 @@ export type Database = {
           driver_id?: string
           gross_fee_xaf?: number
           id?: string
+          paid_at?: string | null
+          payout_method?: string | null
+          payout_reference?: string | null
           platform_fee_xaf?: number
+          settled_at?: string
           status?: string
         }
         Relationships: [
@@ -28814,6 +28887,10 @@ export type Database = {
         Returns: Json
       }
       ddn_settle_delivery: { Args: { _assignment_id: string }; Returns: Json }
+      ddn_validate_transition: {
+        Args: { _from: string; _to: string }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
