@@ -976,7 +976,7 @@ function App() {
               <Route path="daily-needs/new" element={<MerchantDailyNeedsOnboarding />} />
               <Route path="daily-needs/:storeId/edit" element={<MerchantDailyNeedsOnboarding />} />
               <Route path="daily-needs/:storeId" element={<MerchantDailyNeeds />} />
-              <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeedsMenu />} />
               <Route path="daily-needs/pharmacy-reviews" element={<MerchantPharmacyReviews />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
