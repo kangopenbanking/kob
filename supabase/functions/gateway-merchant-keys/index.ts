@@ -124,6 +124,8 @@ Deno.serve(async (req) => {
         .eq('id', key_id)
         .eq('merchant_id', merchant_id);
 
+      await audit(supabase, 'gateway_merchant_key_revoked', user.id, merchant_id, { key_id });
+
       return new Response(JSON.stringify({ status: 'revoked' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
