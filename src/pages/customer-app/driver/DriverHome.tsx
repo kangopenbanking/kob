@@ -251,6 +251,7 @@ export default function DriverHome() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }
