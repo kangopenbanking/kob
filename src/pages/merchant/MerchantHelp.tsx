@@ -30,16 +30,8 @@ export default function MerchantHelp() {
     if (!subject || !message) { toast.error("Subject and message are required"); return; }
     setBusy(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
-      const { error } = await (supabase.from("support_tickets") as any).insert({
-        user_id: user.id,
-        subject,
-        category,
-        message,
-        priority: "normal",
-        status: "open",
-        source: "merchant-portal",
+      const { error } = await supabase.functions.invoke("support-start", {
+        body: { subject, category, message, source: "merchant-portal", priority: "normal" },
       });
       if (error) throw error;
       toast.success("Ticket submitted — we'll respond within 1 business day");
