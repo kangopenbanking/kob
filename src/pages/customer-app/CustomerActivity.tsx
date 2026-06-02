@@ -8,6 +8,7 @@ import BalanceReconciliationBanner from '@/components/customer-app/BalanceReconc
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { toast } from 'sonner';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { StatementDownloadDialog } from '@/components/statements/StatementDownloadDialog';
 import {

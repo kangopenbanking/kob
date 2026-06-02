@@ -75,7 +75,14 @@ const CustomerCards: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-44 w-full rounded-3xl" />
+        <Skeleton className="h-44 w-full rounded-3xl" />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-20 rounded-2xl" />
+        </div>
+      </div>
     );
   }
 

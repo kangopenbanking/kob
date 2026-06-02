@@ -81,8 +81,12 @@ export default function MerchantTransactions() {
   };
 
   if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-10 w-full" />
+      <div className="space-y-2">
+        {[0,1,2,3,4,5].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+      </div>
     </div>
   );
 
