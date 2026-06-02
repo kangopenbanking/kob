@@ -22,11 +22,11 @@ const faqCategoriesRaw = [
   { key: 'General', label: 'General', icon: <HelpCircle className="h-4 w-4" strokeWidth={1.8} /> },
 ];
 
-const faqs = [
+const faqsRaw = [
   { q: 'How do I send money?', a: 'Go to the Home screen and tap "Transfer". Enter the recipient details and amount, then confirm.', cat: 'Payments' },
   { q: 'How do I link a bank account?', a: 'Navigate to More > Bank, then tap the "+" button to add a new account.', cat: 'Account' },
   { q: 'What are the transfer fees?', a: 'Transfers within the same network are free. Cross-network transfers have a small fee shown before confirmation.', cat: 'Payments' },
-  { q: 'How do I change my PIN?', a: 'Go to More > Settings > Security > Change PIN. You\'ll need to verify your current PIN first.', cat: 'Security' },
+  { q: 'How do I change my PIN?', a: 'Go to More > Settings > Security > Change PIN. You will need to verify your current PIN first.', cat: 'Security' },
   { q: 'Is my money safe?', a: 'Yes. We use bank-grade encryption and your funds are held in regulated financial institutions.', cat: 'Security' },
   { q: 'How do I contact support?', a: 'You can use Live Chat or email us from this Help page.', cat: 'General' },
 ];

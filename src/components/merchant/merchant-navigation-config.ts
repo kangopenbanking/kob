@@ -46,7 +46,6 @@ export const merchantNavigation = [
     title: "Configuration",
     items: [
       { title: "API Keys", path: "/merchant/api-keys", icon: Key },
-      { title: "API Key Management", path: "/merchant/api-key-management", icon: Key },
       { title: "Webhooks", path: "/merchant/webhooks", icon: Webhook },
       { title: "Webhook Deliveries", path: "/merchant/webhooks/deliveries", icon: Webhook },
       { title: "Settlement Accounts", path: "/merchant/settlement-accounts", icon: Building2 },
