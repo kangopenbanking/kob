@@ -237,7 +237,11 @@ const CustomerTransfer: React.FC = () => {
     setStep('confirm');
   };
 
-  const handleSend = async () => {
+  const handleSend = async (pin?: string) => {
+    if (!pin) {
+      toast.error('PIN is required to authorize this transfer');
+      return;
+    }
     setSending(true);
     try {
       // For name-based transfers, preserve spaces; for others, strip formatting
@@ -254,6 +258,7 @@ const CustomerTransfer: React.FC = () => {
           description: `Transfer to ${selectedRecipientName || recipient}${note ? ` - ${note}` : ''}`,
           identifier_type: getIdentifierType(),
           idempotency_key: idempotencyKey,
+          pin_code: pin,
         },
       });
 
