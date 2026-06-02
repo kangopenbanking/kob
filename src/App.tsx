@@ -685,6 +685,17 @@ const CustomerPiggyBank = lazy(() => import("./pages/customer-app/CustomerPiggyB
 const CustomerNjangi = lazy(() => import("./pages/customer-app/CustomerNjangi"));
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
+// Daily Needs (Food + Pharmacy)
+const DailyNeedsHome = lazy(() => import("./pages/customer-app/DailyNeedsHome"));
+const DailyNeedsFood = lazy(() => import("./pages/customer-app/DailyNeedsFood"));
+const DailyNeedsPharmacy = lazy(() => import("./pages/customer-app/DailyNeedsPharmacy"));
+const DailyNeedsStore = lazy(() => import("./pages/customer-app/DailyNeedsStore"));
+const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"));
+const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
+const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
+const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
+const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
+const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
 const CustomerNotifications = lazy(() => import("./pages/customer-app/CustomerNotifications"));
@@ -828,6 +839,7 @@ function App() {
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
+            <Route path="/daily-needs" element={<Layout><DailyNeedsMarketing /></Layout>} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/store/:merchantId" element={<PublicStorefront />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
@@ -956,6 +968,10 @@ function App() {
               <Route path="notification-history" element={<NotificationHistory />} />
               <Route path="pay-by-bank" element={<MerchantPayByBank />} />
               <Route path="qr-acceptance" element={<MerchantQRAcceptance />} />
+              <Route path="daily-needs" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/:storeId" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/new" element={<MerchantDailyNeeds />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -966,6 +982,7 @@ function App() {
               <Route index element={<Admin />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
+              <Route path="daily-needs" element={<AdminDailyNeeds />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
               <Route path="issuing" element={<AdminIssuingPage />} />
@@ -1596,6 +1613,13 @@ function App() {
               <Route path="reviews" element={<CustomerReviews />} />
               <Route path="wishlist" element={<CustomerWishlist />} />
               <Route path="notifications" element={<CustomerNotifications />} />
+              <Route path="daily-needs" element={<DailyNeedsHome />} />
+              <Route path="daily-needs/food" element={<DailyNeedsFood />} />
+              <Route path="daily-needs/pharmacy" element={<DailyNeedsPharmacy />} />
+              <Route path="daily-needs/store/:id" element={<DailyNeedsStore />} />
+              <Route path="daily-needs/cart" element={<DailyNeedsCart />} />
+              <Route path="daily-needs/checkout" element={<DailyNeedsCheckout />} />
+              <Route path="daily-needs/orders/:id" element={<DailyNeedsOrderTrack />} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 

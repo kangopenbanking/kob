@@ -1,70 +1,113 @@
+# Daily Needs — Food & Pharmacy Marketplace
 
-# Production Readiness Plan — Merchant Module + KOB Platform
+A new **Commerce Layer** inside Kang called **Daily Needs**, additive to all existing modules. Two verticals only: **Food Delivery** and **Pharmacy**. Reuses Wallet, KYC, Transport, WooCommerce, Notifications, and Design System. Nothing existing is replaced or rewritten.
 
-Scope is large. To stay safe and reviewable, work is split into **8 phases**, each ending in a checkpoint where you approve before I touch anything in the next phase. Phases 0–2 are **read-only discovery**; phases 3+ make changes only after your explicit `APPROVE` per finding.
-
-## Guardrails (apply to every phase)
-- Sandbox/test environment only; no production data mutations.
-- All Standing Orders 1–10 + Docs Orders P1–P10 enforced.
-- Direct Backend Mandate: edge calls hit `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1`.
-- No schema renames/drops without version bump + your approval.
-- Every fix ships with: diff, justification (cited standard), rollback steps.
+This is a very large scope (10 phases, ~6 surfaces: consumer, merchant, driver, admin, public site, APIs). I'll deliver it incrementally across multiple turns and pause for your approval between phases. This first plan covers **Phase 1 (Audit) + Phase 2 (Foundation)**, with the remaining phases scoped at a high level so you can see the whole picture.
 
 ---
 
-## Phase 0 — Backend health & discovery (read-only)
-- `cloud_status` Test + Live; confirm `ACTIVE_HEALTHY`.
-- Inventory: merchant tables, RLS, `/merchant/*` routes, `gateway-merchant-*` + related edge functions.
-- Endpoint coverage matrix vs `public/openapi.json` (Standing Order 1 lock check).
-- Output: `MERCHANT_DISCOVERY.md` under `/mnt/documents/`.
+## Phase 1 — Architecture Audit (deliverable: report, no code)
 
-## Phase 1 — Database & RLS audit (read-only)
-- `supabase--linter` Test + Live.
-- RLS coverage check on every `gateway_*` and `merchant_*` table.
-- `SECURITY DEFINER` + `search_path = public` audit on all functions.
-- GRANTs check (anon/authenticated/service_role) per public-schema mandate.
-- Output: findings list — Critical/High/Medium/Low — with proposed migrations (not yet applied).
+I'll produce `docs/daily-needs/impact-assessment.md` covering:
 
-## Phase 2 — Edge function audit (read-only)
-- For each merchant edge fn: JWT validation in code, CORS headers, Zod input validation, idempotency keys + row-level locks on financial mutations, error envelope (RFC 7807, 63-code catalog).
-- Log scan (last 24h) for 4xx/5xx hotspots via `analytics_query`.
-- Output: per-function score card.
+- **Reusable components**: shadcn primitives, `Layout`, `CustomerAppLayout`, `CustomerBottomNav`, `MerchantLayout`, `PinConfirmDialog`, `useRealtimeBalanceSync`, `useConsumerWebhookEvents`, KOBApiClient, gateway-charge flow.
+- **Wallet hooks**: confirm `wallets`, `gateway_charges`, escrow/release path, `kob_pos_pay` QR semantics — Daily Needs orders settle via existing escrow `funds_held → released_on_delivery`.
+- **WooCommerce**: 6 functions (`woocommerce-*`) + 2 (`pos-woo-*`). Daily Needs **extends** `pos_products` with vertical metadata; does NOT fork.
+- **Transport**: reuse existing driver assignment + tracking tables (`trips`, driver assignment edge fn). Daily Needs orders create a `delivery_task` linked to a trip.
+- **Notifications**: Resend + OneSignal already wired; add 7 new templates.
+- **Nav**: `bottom_nav_items` is admin-configurable — add one "Daily Needs" entry without touching defaults; merchant sidebar gets a "Daily Needs" track under "Accept Payments".
+- **Risks**: ratchet rule on OpenAPI (additive only, minor bump), RLS on every new table, no changes to `auth.*` / `storage.*` / financial mutation paths.
 
-## Phase 3 — UI & navigation audit (browser-driven)
-- Browser walkthrough of every `/merchant/*` route at 1040×669 + mobile viewport.
-- For each page: CTA click, form submit (happy + invalid), empty/error/loading states, network 200s, no console errors.
-- Output: per-page pass/fail table with screenshots.
+## Phase 2 — Daily Needs Foundation (DB + routing + empty surfaces)
 
-## Phase 4 — KOB API integration & webhooks
-- End-to-end: KYB submit → admin approve → API key mint → charge → webhook delivery → settlement → statement export → payout.
-- Webhook signature validation + replay protection.
-- Pay-by-Bank intent → redirect → callback round-trip in sandbox.
-- Mobile/PWA sync: `kob_pos_pay` QR bridge consumer↔merchant.
+### New tables (all `public`, all with GRANTs + RLS, all FK to `gateway_merchants.id`)
 
-## Phase 5 — Security & pen-test pass
-- OWASP Top 10 sweep on merchant surfaces (IDOR via `merchant_id` swap, SSRF in webhook URLs, XSS in storefront product fields, SQLi via RPC params, JWT tampering).
-- Cross-merchant RLS isolation tests (Merchant A cannot read Merchant B rows).
-- Secret hygiene: `fetch_secrets` audit, no secrets in client bundle, no plaintext keys at rest.
-- `security--run_security_scan` + ignore-with-justification or fix.
+```text
+daily_needs_stores            (vertical: food|pharmacy, status, hours, radius_km, prep_time_min, banner_url, logo_url)
+daily_needs_categories        (store_id, name, position)
+daily_needs_products          (store_id, category_id, name, price_xaf, stock, is_otc, requires_prescription, attributes jsonb)
+daily_needs_product_images    (product_id, url, position)
+daily_needs_carts             (user_id, store_id) + daily_needs_cart_items
+daily_needs_orders            (user_id, store_id, status enum, total_xaf, delivery_fee_xaf, service_fee_xaf, charge_id → gateway_charges, delivery_code, prescription_url, escrow_status)
+daily_needs_order_items
+daily_needs_order_status_history   (immutable)
+daily_needs_delivery_assignments   (order_id, trip_id, driver_id, pickup_at, delivered_at)
+```
 
-## Phase 6 — Apply fixes (gated)
-- Group findings into approval batches (Critical → High → Medium).
-- For each batch: present diffs + rollback → wait for `APPROVE: <id>` → apply migration / edit / deploy → re-verify.
-- Standing Order 6 version bumps applied where OpenAPI touched.
+Enums: `dn_vertical`, `dn_store_status`, `dn_order_status` (received, accepted, preparing, ready, picked_up, on_the_way, arriving, delivered, cancelled, refunded), `dn_prescription_status`.
 
-## Phase 7 — Production-readiness gates
-- E2E suite (`e2e/authenticated/`) green, including the new `admin-email-send-test.spec.ts`.
-- Deploy edge fns; verify with `curl_edge_functions`.
-- Re-run `supabase--linter`; expect zero Critical/High.
-- Sign artifacts (`openapi.json.sig`, postman, SDK READMEs).
-- Final reports: `MERCHANT_FULL_AUDIT_REPORT.md` + `.json` in `/mnt/documents/`.
+### Edge functions (additive)
+
+- `daily-needs-store-upsert` — merchant CRUD via router
+- `daily-needs-order-create` — atomic: lock wallet, create order, escrow via `gateway_charges` (idempotency_key required)
+- `daily-needs-order-transition` — state machine, validates actor (merchant/driver/customer code)
+- `daily-needs-assign-driver` — calls existing transport assignment fn
+- `daily-needs-prescription-review` — pharmacist approval
+- `daily-needs-search` — full-text over stores + products
+
+All use existing `corsHeaders`, `supabase.auth.getUser()`, SECURITY DEFINER helpers, structured error envelope.
+
+### Routing
+
+- Consumer: `/app/daily-needs`, `/app/daily-needs/food`, `/pharmacy`, `/store/:id`, `/cart`, `/checkout`, `/orders/:id/track`
+- Merchant: `/merchant/daily-needs` (onboarding flow), `/merchant/daily-needs/menu`, `/orders`, `/settings`
+- Public site: feature card on homepage + `/daily-needs` marketing page
+- Admin: `/admin/daily-needs` (stores, orders, prescription queue)
+
+### Navigation integration (non-disruptive)
+
+- Consumer bottom nav: insert via `bottom_nav_items` seed (admin can hide). If no slot — surface as a **prominent home card** on `/app/home` instead. Default: home card; bottom nav slot opt-in.
+- Merchant sidebar: new "Daily Needs" entry inside existing "Accept Payments" track.
+- Public homepage: add Daily Needs feature card alongside existing modules.
 
 ---
 
-## What I need from you before starting Phase 0
-1. **Authorization model** — confirm: read-only tools (DB selects, linter, logs, browser observe, `curl GET`) run without per-step approval; any write/migration/deploy waits for `APPROVE: <id>`.
-2. **Priority flows for Phase 4** — pick top 3: (a) KYB onboarding, (b) API key lifecycle, (c) Charge→webhook→settlement, (d) Pay-by-Bank, (e) Payouts, (f) Staff RLS.
-3. **Sandbox merchant account** — should I use an existing seeded merchant, or create one via the standard KYB flow at the start of Phase 4?
-4. **Stop conditions** — pause and report if I find: (a) any unencrypted secret, (b) cross-tenant RLS leak, (c) missing webhook signature verification? Confirm Y/N.
+## Phases 3–10 (high-level, delivered after Phase 2 approval)
 
-Reply with answers + `START PHASE 0` to begin.
+| Phase | Scope |
+|-------|-------|
+| 3 | Food marketplace — restaurant list, menu, cart, checkout, Just-Eat-style listings |
+| 4 | Pharmacy — OTC vs prescription split, upload, pharmacist review queue |
+| 5 | Merchant onboarding flow (native form-wizard) + WooCommerce extension (vertical metadata sync, opening hours, radius, prep time) |
+| 6 | Wallet escrow settlement (reuse `gateway_charges` + release on `delivered`) |
+| 7 | Transport integration (trip created on `ready`, driver app surfaces task) |
+| 8 | Live tracking (Realtime channel on `daily_needs_orders` + delivery_code confirmation) |
+| 9 | Performance — lazy routes, image CDN, query prefetch, skeletons |
+| 10 | UX polish — micro-animations, empty states, a11y, copy, dark mode parity |
+
+## Files (Phase 1 + 2 only)
+
+**Created**
+- `docs/daily-needs/impact-assessment.md`
+- `supabase/migrations/<ts>_daily_needs_foundation.sql`
+- `supabase/functions/daily-needs-store-upsert/index.ts`
+- `supabase/functions/daily-needs-order-create/index.ts`
+- `supabase/functions/daily-needs-order-transition/index.ts`
+- `supabase/functions/daily-needs-search/index.ts`
+- `src/pages/customer-app/DailyNeedsHome.tsx` (shell)
+- `src/pages/customer-app/DailyNeedsFood.tsx` (shell)
+- `src/pages/customer-app/DailyNeedsPharmacy.tsx` (shell)
+- `src/pages/merchant/MerchantDailyNeeds.tsx` (shell)
+- `src/pages/admin/AdminDailyNeeds.tsx` (shell)
+- `src/pages/DailyNeedsMarketing.tsx` (public)
+- `src/components/daily-needs/*` (StoreCard, OrderStatusTimeline, CheckoutSummary — reusing shadcn)
+
+**Edited**
+- `src/App.tsx` (routes)
+- `src/components/merchant/MerchantLayout.tsx` (sidebar entry)
+- `src/pages/Index.tsx` or homepage features section (feature card)
+- `src/components/customer-app/CustomerAppLayout.tsx` (home card or nav)
+- OpenAPI spec (additive, minor version bump per Standing Order 6)
+- Changelog (per Order P7)
+
+## Guardrails honored
+
+- No edits to wallet/savings/transfer/KYC/auth/storage code paths.
+- All financial state changes via edge functions with idempotency keys + row locks.
+- All new tables: GRANTs + RLS + `has_role` checks.
+- OpenAPI additive only, version bump, audit citation in commit.
+- Public routes never gated.
+
+---
+
+**Confirm to proceed with Phase 1 (audit report) + Phase 2 (foundation: migration + edge fn skeletons + route shells).** I'll pause after Phase 2 for review before building Phases 3+.
