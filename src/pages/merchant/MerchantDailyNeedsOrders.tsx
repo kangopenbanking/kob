@@ -19,7 +19,7 @@ type OrderRow = {
   delivery_phone: string | null;
   created_at: string;
   daily_needs_stores: { name: string } | null;
-  daily_needs_order_items: { id: string; quantity: number; product_name: string }[];
+  daily_needs_order_items: { id: string; quantity: number; name_snapshot: string }[];
 };
 
 const COLUMNS = [
@@ -51,7 +51,7 @@ export default function MerchantDailyNeedsOrders() {
     queryFn: async () => {
       const { data } = await supabase
         .from("daily_needs_orders")
-        .select("id,status,total_xaf,delivery_address,delivery_phone,created_at,daily_needs_stores(name),daily_needs_order_items(id,quantity,product_name)")
+        .select("id,status,total_xaf,delivery_address,delivery_phone,created_at,daily_needs_stores(name),daily_needs_order_items(id,quantity,name_snapshot)")
         .in("store_id", storeIds)
         .in("status", ["received", "accepted", "preparing", "ready", "picked_up", "on_the_way", "arriving"])
         .order("created_at", { ascending: false });
@@ -134,7 +134,7 @@ export default function MerchantDailyNeedsOrders() {
 
               <div className="space-y-1">
                 {o.daily_needs_order_items?.map((it) => (
-                  <p key={it.id} className="text-xs text-foreground">{it.quantity} × {it.product_name}</p>
+                  <p key={it.id} className="text-xs text-foreground">{it.quantity} × {it.name_snapshot}</p>
                 ))}
               </div>
 
