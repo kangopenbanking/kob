@@ -201,8 +201,18 @@ export default function MerchantDailyNeedsOnboarding() {
     if (err) { toast({ title: "Please fix", description: err, variant: "destructive" }); return; }
     setSaving(true);
     try {
+      // Strip empty strings — zod URL/date validators in the edge function reject "".
+      const payload: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(draft)) {
+        if (typeof v === "string" && v.trim() === "") continue;
+        if (Array.isArray(v) && v.length === 0 && k !== "delivery_modes") continue;
+        payload[k] = v;
+      }
+      payload.onboarding_step = step;
+      payload.submit_for_verification = opts?.submit ?? false;
+
       const { data, error } = await supabase.functions.invoke("daily-needs-store-upsert", {
-        body: { ...draft, onboarding_step: step, submit_for_verification: opts?.submit ?? false },
+        body: payload,
       });
       if (error) throw error;
       const savedId = data?.store?.id;

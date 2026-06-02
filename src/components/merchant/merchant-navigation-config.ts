@@ -5,6 +5,7 @@ import {
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
   MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
   Package, Plug, Monitor, Landmark, UtensilsCrossed, Pill, ClipboardCheck,
+  Truck, Bike, Settings2,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -82,6 +83,9 @@ export const merchantNavigation = [
     items: [
       { title: "Stores", path: "/merchant/daily-needs", icon: UtensilsCrossed },
       { title: "New Store", path: "/merchant/daily-needs/new", icon: PlusCircle },
+      { title: "Deliveries", path: "/merchant/daily-needs/deliveries", icon: Truck },
+      { title: "Drivers", path: "/merchant/daily-needs/drivers", icon: Bike },
+      { title: "Delivery Settings", path: "/merchant/daily-needs/delivery-settings", icon: Settings2 },
       { title: "Pharmacy Reviews", path: "/merchant/daily-needs/pharmacy-reviews", icon: ClipboardCheck },
     ],
   },
