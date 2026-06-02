@@ -64,10 +64,20 @@ export default function DailyNeedsOrderTrack() {
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [assignment?.driver_id, assignment?.status]);
 
+  // Smoothed ETA — debounces GPS noise and computes a stable ETA the customer can trust
+  const { etaMin: smoothEta, distanceKm: smoothKm } = useSmoothedEta({
+    driver: driverLoc,
+    destination: assignment?.drop_lat && assignment?.drop_lng
+      ? { lat: Number(assignment.drop_lat), lng: Number(assignment.drop_lng) }
+      : null,
+  });
+
   if (loading) return <div className="p-4"><Skeleton className="h-64 rounded-xl" /></div>;
   if (!order) return <div className="p-8 text-center text-muted-foreground">Order not found.</div>;
 
   const showCode = ["ready", "picked_up", "on_the_way", "arriving"].includes(assignment?.status ?? order.status);
+  const eta = smoothEta ?? assignment?.eta_min;
+  const km = smoothKm ?? assignment?.distance_km;
 
   return (
     <div className="px-4 pt-4 pb-8 space-y-4">
@@ -79,9 +89,9 @@ export default function DailyNeedsOrderTrack() {
       <Card className="p-4 space-y-1">
         <p className="text-sm text-muted-foreground">{order.daily_needs_stores?.name}</p>
         <p className="font-semibold">{Number(order.total_xaf).toLocaleString()} XAF</p>
-        {assignment?.eta_min && (
+        {eta != null && (
           <p className="text-xs text-muted-foreground">
-            ETA ~{assignment.eta_min} min{assignment.distance_km ? ` · ${assignment.distance_km} km` : ""}
+            ETA ~{eta} min{km != null ? ` · ${km} km` : ""}
           </p>
         )}
       </Card>
