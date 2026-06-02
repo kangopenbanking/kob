@@ -710,6 +710,7 @@ const MerchantDailyNeedsDrivers = lazy(() => import("./pages/merchant/MerchantDa
 const MerchantDailyNeedsDeliverySettings = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliverySettings"));
 const MerchantNotificationsInbox = lazy(() => import("./pages/merchant/MerchantNotificationsInbox"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
+const AdminDDNDriverRules = lazy(() => import("./pages/admin/AdminDDNDriverRules"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
