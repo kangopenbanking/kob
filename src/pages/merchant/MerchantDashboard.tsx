@@ -211,27 +211,74 @@ export default function MerchantDashboard() {
       </motion.div>
 
       {/* KYB Banner */}
-      {merchant.kyb_status !== "verified" && merchant.status !== "active" && (
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card className="border-[hsl(40,80%,75%)] bg-[hsl(40,80%,96%)] dark:bg-[hsl(40,30%,10%)] overflow-hidden">
-            <CardContent className="p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-[hsl(40,80%,88%)] flex items-center justify-center shrink-0">
-                  <ShieldCheck className="h-5 w-5 text-[hsl(40,70%,35%)]" strokeWidth={2} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm">KYB Verification</span>
-                    <Badge variant="secondary" className="text-[10px] font-bold">{merchant.kyb_status?.replace(/_/g, " ").toUpperCase()}</Badge>
+      {(() => {
+        const kybStatus = String(merchant.kyb_status || "").toLowerCase();
+        const mStatus = String(merchant.status || "").toLowerCase();
+        const isVerified = ["verified", "approved"].includes(kybStatus) || ["active", "verified", "approved"].includes(mStatus);
+        const isPending = ["pending", "under_review", "submitted", "in_review"].includes(kybStatus);
+        const isRejected = ["rejected", "denied"].includes(kybStatus);
+
+        if (isVerified) {
+          return (
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+              <Card className="border-[hsl(150,40%,75%)] bg-[hsl(150,40%,96%)] dark:bg-[hsl(150,30%,10%)] overflow-hidden">
+                <CardContent className="p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[hsl(150,40%,86%)] flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="h-5 w-5 text-[hsl(150,50%,28%)]" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">KYB Verified</span>
+                        <Badge className="text-[10px] font-bold bg-[hsl(150,40%,86%)] text-[hsl(150,50%,28%)] border-[hsl(150,40%,70%)] hover:bg-[hsl(150,40%,86%)]">APPROVED</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">Your business is verified and ready to accept live payments.</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Complete your KYB to accept live payments.</p>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/merchant/kyb")} className="rounded-xl font-bold">View Details</Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        }
+
+        const bannerStyle = isRejected
+          ? "border-destructive/40 bg-destructive/5"
+          : "border-[hsl(40,80%,75%)] bg-[hsl(40,80%,96%)] dark:bg-[hsl(40,30%,10%)]";
+        const iconBg = isRejected ? "bg-destructive/10" : "bg-[hsl(40,80%,88%)]";
+        const iconColor = isRejected ? "text-destructive" : "text-[hsl(40,70%,35%)]";
+        const title = isPending ? "KYB Under Review" : isRejected ? "KYB Rejected" : "KYB Verification";
+        const desc = isPending
+          ? "Your submission is being reviewed. We'll notify you once approved."
+          : isRejected
+          ? "Your submission needs attention. Please review and resubmit."
+          : "Complete your KYB to accept live payments.";
+        const cta = isPending ? "View Status" : isRejected ? "Resubmit" : "Complete KYB";
+
+        return (
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className={`${bannerStyle} overflow-hidden`}>
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`h-11 w-11 rounded-2xl ${iconBg} flex items-center justify-center shrink-0`}>
+                    <ShieldCheck className={`h-5 w-5 ${iconColor}`} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm">{title}</span>
+                      {merchant.kyb_status && (
+                        <Badge variant="secondary" className="text-[10px] font-bold">{merchant.kyb_status.replace(/_/g, " ").toUpperCase()}</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                  </div>
                 </div>
-              </div>
-              <Button size="sm" onClick={() => navigate("/merchant/kyb")} className="rounded-xl font-bold">Complete KYB</Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+                <Button size="sm" onClick={() => navigate("/merchant/kyb")} className="rounded-xl font-bold">{cta}</Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })()}
 
       {/* Setup Checklist */}
       {showSetup && (
