@@ -1,0 +1,138 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+
+interface KycStatus {
+  level: number | null;
+  status: string | null;
+  document_status?: string | null;
+  selfie_status?: string | null;
+  address_status?: string | null;
+}
+
+const STEPS = [
+  { id: "document", label: "Identity document", desc: "National ID, passport or driver's license", icon: FileText, href: "/kyc-verification?step=document" },
+  { id: "selfie", label: "Selfie verification", desc: "Take a quick selfie to match your ID", icon: Camera, href: "/kyc-verification?step=selfie" },
+  { id: "address", label: "Proof of address", desc: "Utility bill or bank statement", icon: MapPin, href: "/kyc-verification?step=address" },
+];
+
+const statusBadge = (s?: string | null) => {
+  if (s === "approved" || s === "verified") return <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" />Verified</Badge>;
+  if (s === "pending" || s === "submitted") return <Badge variant="secondary">In review</Badge>;
+  if (s === "rejected") return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Rejected</Badge>;
+  return <Badge variant="outline">Not started</Badge>;
+};
+
+export default function CustomerKYCWizard() {
+  const nav = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [kyc, setKyc] = useState<KycStatus | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const { data } = await (supabase.from("profiles") as any)
+        .select("kyc_level, kyc_status, kyc_document_status, kyc_selfie_status, kyc_address_status")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        setKyc({
+          level: data.kyc_level,
+          status: data.kyc_status,
+          document_status: data.kyc_document_status,
+          selfie_status: data.kyc_selfie_status,
+          address_status: data.kyc_address_status,
+        });
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const stepStatus = (id: string) =>
+    id === "document" ? kyc?.document_status : id === "selfie" ? kyc?.selfie_status : kyc?.address_status;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+        <button onClick={() => nav(-1)} className="rounded-full p-2 hover:bg-muted" aria-label="Back">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Identity Verification</h1>
+          <p className="text-xs text-muted-foreground">Unlock higher limits and full features</p>
+        </div>
+      </header>
+
+      <div className="space-y-4 p-4">
+        <Card className="border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">Verification status</p>
+                {statusBadge(kyc?.status)}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Level {kyc?.level ?? 0} of 3 — complete all steps below to reach full verification.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {STEPS.map(s => {
+              const Icon = s.icon;
+              const st = stepStatus(s.id);
+              return (
+                <Link key={s.id} to={s.href}>
+                  <Card className="border-border bg-card p-4 transition-colors hover:bg-muted/40">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                        <Icon className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">{s.label}</p>
+                          {statusBadge(st)}
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.desc}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        <Card className="border-border bg-muted/40 p-4">
+          <p className="text-xs font-semibold text-foreground">Why verify?</p>
+          <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+            <li>· Send larger transfers and receive higher limits</li>
+            <li>· Required for international remittances and card issuance</li>
+            <li>· Protects your account from fraud</li>
+          </ul>
+        </Card>
+
+        <Button variant="outline" className="w-full" onClick={() => nav("/app/help")}>
+          Need help with verification?
+        </Button>
+      </div>
+    </div>
+  );
+}
