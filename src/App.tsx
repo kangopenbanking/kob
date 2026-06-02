@@ -1005,6 +1005,7 @@ function App() {
               <Route path="users" element={<UserManagement />} />
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="daily-needs" element={<AdminDailyNeeds />} />
+              <Route path="daily-needs/driver-rules" element={<AdminDDNDriverRules />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
               <Route path="issuing" element={<AdminIssuingPage />} />
