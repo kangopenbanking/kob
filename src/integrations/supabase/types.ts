@@ -27489,6 +27489,20 @@ export type Database = {
         }
         Returns: Json
       }
+      atomic_flw_account_credit: {
+        Args: {
+          _account_id: string
+          _amount: number
+          _currency: string
+          _institution_id?: string
+          _metadata?: Json
+          _provider_ref?: string
+          _source?: string
+          _tx_ref: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       atomic_refund_wallet_debit: {
         Args: {
           _currency?: string
