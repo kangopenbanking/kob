@@ -987,6 +987,9 @@ function App() {
               <Route path="daily-needs/:storeId" element={<MerchantDailyNeeds />} />
               <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeedsMenu />} />
               <Route path="daily-needs/pharmacy-reviews" element={<MerchantPharmacyReviews />} />
+              <Route path="daily-needs/deliveries" element={<MerchantDailyNeedsDeliveries />} />
+              <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
+              <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
