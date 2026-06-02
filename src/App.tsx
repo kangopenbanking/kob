@@ -686,6 +686,7 @@ const CustomerNjangi = lazy(() => import("./pages/customer-app/CustomerNjangi"))
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
 // Daily Needs (Food + Pharmacy)
+const DailyNeedsLayout = lazy(() => import("./pages/customer-app/DailyNeedsLayout"));
 const DailyNeedsHome = lazy(() => import("./pages/customer-app/DailyNeedsHome"));
 const DailyNeedsFood = lazy(() => import("./pages/customer-app/DailyNeedsFood"));
 const DailyNeedsPharmacy = lazy(() => import("./pages/customer-app/DailyNeedsPharmacy"));
@@ -1613,13 +1614,15 @@ function App() {
               <Route path="reviews" element={<CustomerReviews />} />
               <Route path="wishlist" element={<CustomerWishlist />} />
               <Route path="notifications" element={<CustomerNotifications />} />
-              <Route path="daily-needs" element={<DailyNeedsHome />} />
-              <Route path="daily-needs/food" element={<DailyNeedsFood />} />
-              <Route path="daily-needs/pharmacy" element={<DailyNeedsPharmacy />} />
-              <Route path="daily-needs/store/:id" element={<DailyNeedsStore />} />
-              <Route path="daily-needs/cart" element={<DailyNeedsCart />} />
-              <Route path="daily-needs/checkout" element={<DailyNeedsCheckout />} />
-              <Route path="daily-needs/orders/:id" element={<DailyNeedsOrderTrack />} />
+              <Route path="daily-needs" element={<DailyNeedsLayout />}>
+                <Route index element={<DailyNeedsHome />} />
+                <Route path="food" element={<DailyNeedsFood />} />
+                <Route path="pharmacy" element={<DailyNeedsPharmacy />} />
+                <Route path="store/:id" element={<DailyNeedsStore />} />
+                <Route path="cart" element={<DailyNeedsCart />} />
+                <Route path="checkout" element={<DailyNeedsCheckout />} />
+                <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
+              </Route>
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 
