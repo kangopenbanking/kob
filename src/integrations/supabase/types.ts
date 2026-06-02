@@ -10148,6 +10148,57 @@ export type Database = {
           },
         ]
       }
+      driver_sos_events: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          assignment_id: string | null
+          created_at: string
+          driver_id: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          note: string | null
+          order_id: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          assignment_id?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          order_id?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          assignment_id?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          order_id?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_dlq_redeliveries: {
         Row: {
           created_at: string
