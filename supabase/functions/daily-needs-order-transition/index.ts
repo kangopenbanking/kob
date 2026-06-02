@@ -95,12 +95,13 @@ Deno.serve(async (req) => {
     escrow = data;
   }
 
-  // Phase 7: auto-assign driver / shipping provider when ready for pickup
+  // Phase 7+ (DDN): on "ready", dispatch the Daily Needs Delivery Network.
+  // Falls back to legacy daily-needs-assign-driver if DDN finds no driver.
   let assignment: unknown = null;
   if (to_status === "ready") {
     try {
       const res = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/daily-needs-assign-driver`,
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/ddn-dispatch`,
         {
           method: "POST",
           headers: {
@@ -113,7 +114,7 @@ Deno.serve(async (req) => {
       );
       assignment = await res.json().catch(() => null);
     } catch (e) {
-      assignment = { error: "assign_failed", details: (e as Error).message };
+      assignment = { error: "ddn_dispatch_failed", details: (e as Error).message };
     }
   }
 
