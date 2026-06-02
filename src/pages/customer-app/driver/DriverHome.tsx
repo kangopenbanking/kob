@@ -124,49 +124,59 @@ export default function DriverHome() {
   const isOnline = driver.status === "online";
 
   return (
-    <div className="px-4 pt-4 pb-24 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Driver</h1>
-          <p className="text-xs text-muted-foreground">{driver.full_name}</p>
+    <div className="pb-24 animate-fade-in">
+      <div className={`relative overflow-hidden text-white px-4 pt-4 pb-10 rounded-b-[2rem] bg-gradient-to-br ${isOnline ? "from-[hsl(160,65%,38%)] via-[hsl(170,60%,42%)] to-[hsl(195,70%,45%)]" : "from-[hsl(220,30%,30%)] via-[hsl(225,25%,35%)] to-[hsl(230,20%,40%)]"}`}>
+        <div className="absolute -top-16 -right-10 size-52 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="absolute -bottom-16 -left-10 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="relative flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">Driver</h1>
+            <p className="text-xs text-white/80">{driver.full_name}</p>
+          </div>
+          <Link to="/app/driver/earnings" className="text-xs text-white/90 inline-flex items-center gap-1 bg-white/15 backdrop-blur px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/25 transition">
+            Earnings <ChevronRight className="size-3" />
+          </Link>
         </div>
-        <Link to="/app/driver/earnings" className="text-xs text-primary inline-flex items-center gap-1">
-          Earnings <ChevronRight className="size-3" />
-        </Link>
+
+        <div className="relative bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20 flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center">
+                <RadioTower className="size-4" strokeWidth={2} />
+              </div>
+              <span className="font-semibold">{isOnline ? "You're online" : "You're offline"}</span>
+              {driver.status === "busy" && <Badge variant="secondary" className="bg-white/25 text-white border-0">On delivery</Badge>}
+            </div>
+            <p className="text-xs text-white/85 pl-10">
+              {isOnline ? "Accepting nearby offers" : "Go online to receive offers"}
+            </p>
+          </div>
+          <Switch
+            checked={isOnline}
+            disabled={busy || driver.status === "busy"}
+            onCheckedChange={toggleOnline}
+            aria-label="Toggle online"
+          />
+        </div>
       </div>
 
-      <Card className="p-4 flex items-center justify-between">
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <RadioTower className={`size-4 ${isOnline ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="font-medium">{isOnline ? "You're online" : "You're offline"}</span>
-            {driver.status === "busy" && <Badge variant="secondary">On delivery</Badge>}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {isOnline ? "Accepting nearby offers" : "Go online to receive delivery offers"}
-          </p>
+      <div className="px-4 -mt-6 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="p-4 border-0 shadow-md bg-[hsl(220,75%,50%)] text-white">
+            <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center mb-2">
+              <Wallet className="size-4" strokeWidth={2} />
+            </div>
+            <p className="text-xs text-white/85">Available</p>
+            <p className="text-lg font-bold">{Number(wallet?.available_xaf ?? 0).toLocaleString()} XAF</p>
+          </Card>
+          <Card className="p-4 border-0 shadow-md bg-[hsl(45,90%,55%)] text-white">
+            <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center mb-2">
+              <Star className="size-4" strokeWidth={2} />
+            </div>
+            <p className="text-xs text-white/85">Rating</p>
+            <p className="text-lg font-bold">{Number(driver.rating).toFixed(2)}</p>
+          </Card>
         </div>
-        <Switch
-          checked={isOnline}
-          disabled={busy || driver.status === "busy"}
-          onCheckedChange={toggleOnline}
-          aria-label="Toggle online"
-        />
-      </Card>
-
-      <Card className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Wallet className="size-5 text-primary" />
-          <div>
-            <p className="text-xs text-muted-foreground">Available</p>
-            <p className="text-lg font-semibold">{Number(wallet?.available_xaf ?? 0).toLocaleString()} XAF</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 text-sm">
-          <Star className="size-4 text-amber-500" />
-          {Number(driver.rating).toFixed(2)}
-        </div>
-      </Card>
 
       {offers.length > 0 && (
         <section className="space-y-2">
