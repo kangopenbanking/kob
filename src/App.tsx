@@ -694,6 +694,10 @@ const DailyNeedsStore = lazy(() => import("./pages/customer-app/DailyNeedsStore"
 const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"));
 const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
 const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
+const DriverHome = lazy(() => import("./pages/customer-app/driver/DriverHome"));
+const DriverRegister = lazy(() => import("./pages/customer-app/driver/DriverRegister"));
+const DriverActiveDelivery = lazy(() => import("./pages/customer-app/driver/DriverActiveDelivery"));
+const DriverEarnings = lazy(() => import("./pages/customer-app/driver/DriverEarnings"));
 const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
 const MerchantDailyNeedsOnboarding = lazy(() => import("./pages/merchant/MerchantDailyNeedsOnboarding"));
 const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
@@ -1628,6 +1632,10 @@ function App() {
                 <Route path="checkout" element={<DailyNeedsCheckout />} />
                 <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
               </Route>
+              <Route path="driver" element={<DriverHome />} />
+              <Route path="driver/register" element={<DriverRegister />} />
+              <Route path="driver/earnings" element={<DriverEarnings />} />
+              <Route path="driver/active/:id" element={<DriverActiveDelivery />} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 
