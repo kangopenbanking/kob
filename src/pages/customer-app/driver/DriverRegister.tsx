@@ -70,6 +70,7 @@ export default function DriverRegister() {
       </div>
 
       <div className="px-4 mt-4 max-w-md mx-auto">
+        <form className="space-y-3" onSubmit={submit}>
         <div className="space-y-1">
           <Label htmlFor="full_name">Full name</Label>
           <Input id="full_name" maxLength={120} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
