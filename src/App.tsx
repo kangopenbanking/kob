@@ -972,9 +972,10 @@ function App() {
               <Route path="pay-by-bank" element={<MerchantPayByBank />} />
               <Route path="qr-acceptance" element={<MerchantQRAcceptance />} />
               <Route path="daily-needs" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/new" element={<MerchantDailyNeedsOnboarding />} />
+              <Route path="daily-needs/:storeId/edit" element={<MerchantDailyNeedsOnboarding />} />
               <Route path="daily-needs/:storeId" element={<MerchantDailyNeeds />} />
               <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeeds />} />
-              <Route path="daily-needs/new" element={<MerchantDailyNeeds />} />
               <Route path="daily-needs/pharmacy-reviews" element={<MerchantPharmacyReviews />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
