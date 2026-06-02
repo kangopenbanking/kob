@@ -214,6 +214,23 @@ async function sendRemittance(supabase: any, user: any, body: any, req?: Request
 
   if (!corridor) return json({ error: "Corridor not found" }, 404);
 
+  // ─── F3 fix: KYC gate (was entirely absent) ─────────────────
+  // Cross-border outflow requires at least one approved KYC verification on file.
+  const { data: kyc } = await supabase
+    .from("kyc_verifications")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .in("status", ["approved", "verified"])
+    .limit(1)
+    .maybeSingle();
+  if (!kyc) {
+    return json({
+      error: "kyc_required",
+      error_code: "RMT_KYC_001",
+      message: "KYC verification is required before initiating an outbound remittance.",
+    }, 403);
+  }
+
   let quoteData: any = null;
   if (quote_id) {
     const { data: q } = await supabase
@@ -226,7 +243,31 @@ async function sendRemittance(supabase: any, user: any, body: any, req?: Request
     }
   }
 
-  const fxRate = quoteData?.fx_rate || corridor.fees_model?.fx_rate || 1;
+  // ─── F8 fix: FX peg fallback ────────────────────────────────
+  // XAF/XOF are pegged to EUR at 655.957 (CEMAC/UEMOA monetary union, fixed).
+  // Previously `|| 1` allowed a ~655× pricing error if corridor.fees_model.fx_rate was missing.
+  const PEG_XAF_PER_EUR = 655.957;
+  function fallbackFxRate(from: string, to: string): number | null {
+    const f = (from || "").toUpperCase();
+    const t = (to || "").toUpperCase();
+    if ((f === "XAF" || f === "XOF") && t === "EUR") return 1 / PEG_XAF_PER_EUR;
+    if (f === "EUR" && (t === "XAF" || t === "XOF")) return PEG_XAF_PER_EUR;
+    if ((f === "XAF" || f === "XOF") && (t === "XAF" || t === "XOF")) return 1;
+    return null;
+  }
+  const corridorOutCurrency = corridor.to_currency || "XAF";
+  const pegRate = fallbackFxRate(currency_in, corridorOutCurrency);
+  const fxRate = quoteData?.fx_rate
+    ?? corridor.fees_model?.fx_rate
+    ?? pegRate
+    ?? null;
+  if (fxRate == null || fxRate <= 0) {
+    return json({
+      error: "fx_rate_unavailable",
+      error_code: "RMT_FX_001",
+      message: `No FX rate available for ${currency_in} → ${corridorOutCurrency}. Provide a valid quote_id or configure corridor.fees_model.fx_rate.`,
+    }, 422);
+  }
   const feePercent = corridor.fees_model?.fee_percent || 2.5;
   const fixedFee = corridor.fees_model?.fixed_fee || 0;
   const feeTotal = quoteData?.fee_total || (Math.round(amount * feePercent / 100) + fixedFee);
