@@ -13,6 +13,7 @@ export const merchantNavigation = [
     title: "Overview",
     items: [
       { title: "Dashboard", path: "/merchant", icon: LayoutDashboard },
+      { title: "Notifications", path: "/merchant/notifications", icon: Inbox },
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
       { title: "Advanced Analytics", path: "/merchant/advanced-analytics", icon: LineChart },
       { title: "Fees", path: "/merchant/fees", icon: Receipt },
