@@ -558,6 +558,7 @@ const ConnectorOnboard = lazy(() => import("./pages/institution/connector/Connec
 
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
+const MerchantGuideHub = lazy(() => import("./pages/merchant/MerchantGuideHub"));
 const MerchantTransactions = lazy(() => import("./pages/merchant/MerchantTransactions"));
 const MerchantPaymentLinks = lazy(() => import("./pages/merchant/MerchantPaymentLinks"));
 const MerchantCustomers = lazy(() => import("./pages/merchant/MerchantCustomers"));
@@ -906,6 +907,8 @@ function App() {
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<MerchantDashboard />} />
+              <Route path="guide" element={<MerchantGuideHub />} />
+              <Route path="guide/:slug" element={<MerchantGuideHub />} />
               <Route path="transactions" element={<MerchantTransactions />} />
               <Route path="payment-links" element={<MerchantPaymentLinks />} />
               <Route path="customers" element={<MerchantCustomers />} />
