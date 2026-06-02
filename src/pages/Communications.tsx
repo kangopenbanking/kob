@@ -188,6 +188,39 @@ const Communications = () => {
     },
   });
 
+  // Quick per-template Send Test — fires admin-test-email (Resend-first) and surfaces live result.
+  const [quickTestResult, setQuickTestResult] = useState<any | null>(null);
+  const [quickTestKey, setQuickTestKey] = useState<string | null>(null);
+  const quickTestMutation = useMutation({
+    mutationFn: async (template: any) => {
+      setQuickTestKey(template.template_key);
+      setQuickTestResult(null);
+      const { data: { user } } = await supabase.auth.getUser();
+      const recipient = user?.email;
+      if (!recipient) throw new Error("Sign in required to send a test.");
+      const { data, error } = await supabase.functions.invoke("admin-test-email", {
+        body: {
+          recipient_email: recipient,
+          subject: `[TEST] ${template.subject || template.name}`,
+          body_html: template.body || `<p>${template.name}</p>`,
+          template_key: template.template_key,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setQuickTestResult(data);
+      if (data?.success) toast.success(`Test sent via ${data.provider} (${data.environment})`);
+      else toast.error(data?.error || "Test failed");
+    },
+    onError: (e: any) => {
+      const msg = e?.message || "Test failed";
+      setQuickTestResult({ success: false, error: msg });
+      toast.error(msg);
+    },
+  });
+
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       user_auth: 'bg-blue-100 text-blue-800',
