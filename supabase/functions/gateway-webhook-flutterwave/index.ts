@@ -9,8 +9,10 @@ import { corsHeaders } from "../_shared/cors.ts";
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let dedupeKeyForCleanup: string | null = null;
   try {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
 
     // ─── Webhook Rate Limiting: 100 req/min for Flutterwave ───
     const { data: allowed } = await supabase.rpc('check_webhook_rate_limit', { _provider: 'flutterwave', _max_requests: 100, _window_minutes: 1 });
