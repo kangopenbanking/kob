@@ -363,7 +363,6 @@ const Communications = () => {
                           {quickTestResult.error && <div className="text-destructive break-words mt-1">{quickTestResult.error}</div>}
                         </div>
                       )}
-                       </div>
                     </div>
                   </CardContent>
                 </Card>
