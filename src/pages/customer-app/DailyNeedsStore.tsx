@@ -35,7 +35,7 @@ export default function DailyNeedsStore() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -169,7 +169,7 @@ export default function DailyNeedsStore() {
         ) : grouped.map((g) => (
           <section
             key={g.id}
-            ref={(el: HTMLDivElement | null) => { sectionRefs.current[g.id] = el; }}
+            ref={(el) => { sectionRefs.current[g.id] = el; }}
             className="space-y-2"
             aria-labelledby={`cat-${g.id}`}
           >
