@@ -138,14 +138,65 @@ export default function DailyNeedsCheckout() {
             <Upload className="size-4" /> Prescription required
           </h2>
           <p className="text-xs text-muted-foreground">
-            Paste the URL of a clear photo of your prescription. A pharmacist will review before dispatch.
+            Upload a clear photo of a valid prescription (JPG/PNG/PDF, max 8 MB). A licensed pharmacist
+            will review it before your order is dispatched.
           </p>
-          <Input
-            value={prescriptionUrl}
-            onChange={(e) => setPrescriptionUrl(e.target.value)}
-            placeholder="https://…"
-            inputMode="url"
+          <input
+            id="rx-file"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,application/pdf"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              if (file.size > 8 * 1024 * 1024) { toast.error("File is over 8 MB"); return; }
+              setUploading(true);
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { toast.error("Please sign in"); navigate("/auth"); return; }
+                const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+                const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+                const { error: upErr } = await supabase.storage
+                  .from("daily-needs-prescriptions")
+                  .upload(path, file, { contentType: file.type, upsert: false });
+                if (upErr) throw upErr;
+                const { data: signed } = await supabase.storage
+                  .from("daily-needs-prescriptions")
+                  .createSignedUrl(path, 60 * 60 * 24 * 7); // 7d
+                if (!signed?.signedUrl) throw new Error("Could not generate URL");
+                setPrescriptionUrl(signed.signedUrl);
+                setPrescriptionFileName(file.name);
+                toast.success("Prescription uploaded");
+              } catch (err: any) {
+                toast.error(err?.message ?? "Upload failed");
+              } finally {
+                setUploading(false);
+              }
+            }}
           />
+          {!prescriptionUrl ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={uploading}
+              onClick={() => document.getElementById("rx-file")?.click()}
+            >
+              {uploading ? (<><Loader2 className="size-4 mr-2 animate-spin" /> Uploading…</>) : (<><Upload className="size-4 mr-2" /> Upload prescription</>)}
+            </Button>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border bg-background p-2.5 text-sm">
+              <span className="inline-flex items-center gap-2 min-w-0 truncate">
+                <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                <span className="truncate">{prescriptionFileName || "Prescription attached"}</span>
+              </span>
+              <Button
+                type="button" variant="ghost" size="sm"
+                onClick={() => { setPrescriptionUrl(""); setPrescriptionFileName(""); }}
+              >Replace</Button>
+            </div>
+          )}
         </Card>
       )}
 
