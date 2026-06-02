@@ -697,6 +697,7 @@ const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsO
 const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
 const MerchantDailyNeedsOnboarding = lazy(() => import("./pages/merchant/MerchantDailyNeedsOnboarding"));
 const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
+const MerchantDailyNeedsMenu = lazy(() => import("./pages/merchant/MerchantDailyNeedsMenu"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
@@ -975,7 +976,7 @@ function App() {
               <Route path="daily-needs/new" element={<MerchantDailyNeedsOnboarding />} />
               <Route path="daily-needs/:storeId/edit" element={<MerchantDailyNeedsOnboarding />} />
               <Route path="daily-needs/:storeId" element={<MerchantDailyNeeds />} />
-              <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeeds />} />
+              <Route path="daily-needs/:storeId/menu" element={<MerchantDailyNeedsMenu />} />
               <Route path="daily-needs/pharmacy-reviews" element={<MerchantPharmacyReviews />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
