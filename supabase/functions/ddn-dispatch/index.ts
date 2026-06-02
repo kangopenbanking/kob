@@ -34,8 +34,13 @@ Deno.serve(async (req) => {
 
   const { data: order, error: oErr } = await sb
     .from("daily_needs_orders")
-    .select("id, total_xaf, delivery_latitude, delivery_longitude, daily_needs_stores!inner(id, merchant_id, latitude, longitude)")
+    .select("id, status, total_xaf, delivery_latitude, delivery_longitude, daily_needs_stores!inner(id, merchant_id, latitude, longitude)")
     .eq("id", order_id).maybeSingle();
+  if (oErr || !order) return json(404, { error: "order_not_found" });
+  // State machine — only dispatch orders that have reached "ready"
+  if (!["ready", "preparing"].includes(String((order as any).status))) {
+    return json(409, { error: "invalid_order_status", current: (order as any).status, required: "ready" });
+  }
   if (oErr || !order) return json(404, { error: "order_not_found" });
   const store: any = order.daily_needs_stores;
 
