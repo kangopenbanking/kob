@@ -17,6 +17,7 @@ export const merchantNavigation = [
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
       { title: "Advanced Analytics", path: "/merchant/advanced-analytics", icon: LineChart },
       { title: "Fees", path: "/merchant/fees", icon: Receipt },
+      { title: "Tax Rates", path: "/merchant/tax-rates", icon: Receipt },
     ],
   },
   {
@@ -46,7 +47,6 @@ export const merchantNavigation = [
     title: "Configuration",
     items: [
       { title: "API Keys", path: "/merchant/api-keys", icon: Key },
-      { title: "API Key Management", path: "/merchant/api-key-management", icon: Key },
       { title: "Webhooks", path: "/merchant/webhooks", icon: Webhook },
       { title: "Webhook Deliveries", path: "/merchant/webhooks/deliveries", icon: Webhook },
       { title: "Settlement Accounts", path: "/merchant/settlement-accounts", icon: Building2 },

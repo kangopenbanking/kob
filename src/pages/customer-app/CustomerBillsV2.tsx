@@ -228,7 +228,7 @@ const CustomerBillsV2: React.FC = () => {
                     <motion.button key={cat.id} variants={fadeUp} whileTap={{ scale: 0.97 }}
                       onClick={() => selectCategory(cat.id)}
                       className={`flex items-center gap-3.5 rounded-2xl ${bgColor} p-4 shadow-sm transition-shadow active:shadow-md`}>
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconColor} text-white shadow-sm`}>
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconColor} text-primary-foreground shadow-sm`}>
                         <Icon className="h-5 w-5" strokeWidth={1.5} />
                       </div>
                       <div className="flex flex-1 flex-col items-start">
@@ -265,7 +265,7 @@ const CustomerBillsV2: React.FC = () => {
                     return (
                       <motion.div key={p.id} variants={fadeUp}
                         className={`flex items-center gap-3 rounded-2xl ${bgColor} p-3.5 shadow-sm`}>
-                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconColor} text-white shadow-sm`}>
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconColor} text-primary-foreground shadow-sm`}>
                           {React.createElement(getIcon(pIcon), { className: 'h-4 w-4', strokeWidth: 1.5 })}
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col">

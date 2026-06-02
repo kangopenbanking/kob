@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PayoutSchedule } from "@/components/merchant/PayoutSchedule";
 
 export default function MerchantPayouts() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -186,6 +187,10 @@ export default function MerchantPayouts() {
         <StatCard title="Completed" value={formatXAF(completedAmount)} icon={<CheckCircle2 className="h-5 w-5" />} />
         <StatCard title="Pending" value={String(pendingCount)} icon={<Clock className="h-5 w-5" />} />
       </div>
+
+      {/* Payout Schedule */}
+      <PayoutSchedule />
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">

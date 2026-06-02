@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,11 +201,11 @@ export default function MerchantDisputes() {
         </CardHeader>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No disputes found</p>
-              <p className="text-sm">Disputes from chargebacks will appear here</p>
-            </div>
+            <EmptyState
+              icon={<Shield className="h-6 w-6 text-muted-foreground" />}
+              title="No disputes found"
+              description="Disputes from chargebacks will appear here"
+            />
           ) : (
             <Table>
               <TableHeader>

@@ -483,7 +483,7 @@ const CustomerFundWallet: React.FC = () => {
               onClick={handlePayByBankStart}
               className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary/40 bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/30 bg-background">
                 <PayByBankLogo className="h-7 w-7" />
               </div>
               <div className="flex-1 min-w-0">
@@ -538,7 +538,7 @@ const CustomerFundWallet: React.FC = () => {
                       >
                         <div className={cn(
                           'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
-                          selected ? `${colors.active} text-white` : 'bg-white/60 text-muted-foreground'
+                          selected ? `${colors.active} text-primary-foreground` : 'bg-muted text-muted-foreground'
                         )}>
                           <Icon className="h-5 w-5" />
                         </div>
@@ -758,7 +758,7 @@ const CustomerFundWallet: React.FC = () => {
         ) : step === 'pay_by_bank' ? (
           <motion.div key="pay_by_bank" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
             <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-background">
                 <PayByBankLogo className="h-6 w-6" />
               </div>
               <div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { EmptyState } from '@/components/ui/empty-state';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ export default function MerchantProfile() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!merchant) return <div className="text-center py-20 text-muted-foreground">No merchant account found</div>;
+  if (!merchant) return <EmptyState icon={<Store className="h-6 w-6 text-muted-foreground" />} title="No merchant account found" description="Complete merchant onboarding to manage your business profile." />;
 
   const kybBadge = () => {
     const status = merchant.kyb_status || "not_submitted";
