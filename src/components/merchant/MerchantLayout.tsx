@@ -148,6 +148,7 @@ export function MerchantLayout() {
               <Outlet />
             </PortalErrorBoundary>
           </main>
+          <MerchantHelpButton />
         </div>
       </div>
     </SidebarProvider>
