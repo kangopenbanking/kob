@@ -37,5 +37,30 @@ Deno.serve(async (req) => {
 
   const { data, error } = await sb.rpc("ddn_offer_accept", { _offer_id: parsed.data.offer_id, _driver_user_id: user.id });
   if (error) return json(500, { error: "accept_failed", details: error.message });
+
+  // Notify merchant: driver accepted
+  try {
+    const assignmentId = (data as any)?.assignment_id;
+    if (assignmentId) {
+      const { data: a } = await sb
+        .from("ddn_assignments")
+        .select("merchant_id, ddn_drivers!ddn_assignments_driver_id_fkey(full_name, vehicle_type)")
+        .eq("id", assignmentId).maybeSingle();
+      if (a?.merchant_id) {
+        const mUser = await getMerchantOwnerId(sb, a.merchant_id);
+        const drv: any = (a as any).ddn_drivers;
+        if (mUser) await notifyUser(sb, {
+          user_id: mUser,
+          type: "ddn.assignment.accepted",
+          title: "Driver accepted",
+          message: `${drv?.full_name ?? "A driver"} (${drv?.vehicle_type ?? "vehicle"}) is on the way to pick up.`,
+          icon: "check",
+          metadata: { assignment_id: assignmentId },
+          idempotency_key: `ddn.accepted:${assignmentId}`,
+        });
+      }
+    }
+  } catch (e) { console.error("accept notify failed", e); }
+
   return json(200, { ok: true, action: "accepted", result: data });
 });
