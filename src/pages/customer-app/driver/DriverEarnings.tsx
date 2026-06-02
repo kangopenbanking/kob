@@ -33,6 +33,9 @@ export default function DriverEarnings() {
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"><ChevronLeft /></Button>
         <h1 className="text-xl font-semibold">Earnings</h1>
+        <Button variant="link" size="sm" className="ml-auto" onClick={() => navigate("/app/driver/payouts")}>
+          Payout history
+        </Button>
       </div>
 
       <Card className="p-5 space-y-3">
