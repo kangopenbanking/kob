@@ -240,7 +240,7 @@ const CustomerInvoices: React.FC = () => {
       <AnimatePresence>
         {showCreate && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-b from-primary/5 via-card to-card shadow-lg shadow-primary/5">
+            className="overflow-hidden rounded-3xl border-2 border-primary/30 bg-card shadow-sm">
             <div className="flex flex-col gap-4 p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ const CustomerInvoices: React.FC = () => {
               </div>
 
               {/* Total */}
-              <div className="rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/15 p-4">
+              <div className="rounded-2xl bg-primary/5 border border-primary/15 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tr('Total Amount')}</p>
@@ -386,7 +386,7 @@ const CustomerInvoices: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[120px] sm:max-w-none">{inv.client_name}</p>
                         {isDue && (
-                          <span className="text-[8px] font-bold text-white bg-gradient-to-r from-red-500 to-red-600 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse shrink-0">
+                          <span className="text-[8px] font-bold text-destructive-foreground bg-destructive px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse shrink-0">
                             Overdue
                           </span>
                         )}
@@ -451,7 +451,7 @@ const CustomerInvoices: React.FC = () => {
                                   <p className="font-bold text-foreground">{(item.quantity * item.unitPrice).toLocaleString()}</p>
                                 </div>
                               ))}
-                              <div className="flex justify-between items-center px-3 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-t border-primary/15">
+                              <div className="flex justify-between items-center px-3 py-3 bg-primary/5 border-t border-primary/15">
                                 <p className="text-[11px] font-bold text-primary">{tr('Total')}</p>
                                 <p className="text-sm font-extrabold text-primary">{Number(inv.amount).toLocaleString()} {inv.currency}</p>
                               </div>
@@ -470,7 +470,7 @@ const CustomerInvoices: React.FC = () => {
                                 {sendingId === inv.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="mr-1.5 h-3 w-3" strokeWidth={1.5} />}
                                 {inv.sent_at ? 'Resend' : 'Send'}
                               </Button>
-                              <Button size="sm" className="rounded-xl text-[10px] h-9 flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-sm shadow-emerald-500/20"
+                              <Button size="sm" className="rounded-xl text-[10px] h-9 flex-1"
                                 onClick={() => handleMarkPaid(inv)}>
                                 <CheckCircle2 className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Mark Paid
                               </Button>
