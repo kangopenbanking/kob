@@ -348,7 +348,7 @@ const CustomerAuth: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <div id="recaptcha-container" />
 
       {/* Hero Header */}

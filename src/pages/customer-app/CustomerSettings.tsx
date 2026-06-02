@@ -383,13 +383,14 @@ const CustomerSettings: React.FC = () => {
               <SettingRow
                 icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
                 label={tr('Two-Factor Auth')}
-                description={tr('Extra layer of security')}
-                right={<Switch checked={twoFA} onCheckedChange={async (v) => {
-                  setTwoFA(v);
-                  const { data: { user: u } } = await supabase.auth.getUser();
-                  if (u) await (supabase.from('user_preferences') as any).upsert({ user_id: u.id, two_factor_enabled: v, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-                  toast.success(v ? '2FA enabled' : '2FA disabled');
-                }} />}
+                description={twoFA ? tr('Enabled — manage') : tr('Set up SMS-OTP 2FA')}
+                onClick={() => navigate('/app/settings/two-factor')}
+              />
+              <SettingRow
+                icon={<Phone className="h-5 w-5" strokeWidth={1.5} />}
+                label={tr('Active Devices & Sessions')}
+                description={tr('Review and revoke sign-ins')}
+                onClick={() => navigate('/app/settings/sessions')}
               />
             </SettingCard>
 

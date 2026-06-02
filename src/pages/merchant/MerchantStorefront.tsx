@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Store, Eye, EyeOff, QrCode, Save, Loader2, CheckCircle2,
   Crown, AlertCircle, Globe, MapPin, Tag, Image, FileText,
@@ -256,13 +257,14 @@ export default function MerchantStorefront() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading your storefront...</p>
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-40 rounded-2xl" />
+          <Skeleton className="h-40 rounded-2xl" />
         </div>
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     );
   }

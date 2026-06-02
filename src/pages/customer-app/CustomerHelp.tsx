@@ -120,7 +120,7 @@ const CustomerHelp: React.FC = () => {
       {/* Header with gradient */}
       <motion.div
         variants={fadeUp}
-        className="relative overflow-hidden rounded-b-3xl bg-gradient-to-br from-primary to-primary/80 px-5 pb-6 pt-5"
+        className="relative overflow-hidden rounded-b-3xl bg-primary px-5 pb-6 pt-5"
       >
         <div className="absolute inset-0 opacity-10">
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20" />
@@ -234,16 +234,16 @@ const CustomerHelp: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 + i * 0.08, duration: 0.35 }}
-                className={`flex items-center gap-3.5 rounded-2xl bg-gradient-to-r ${opt.gradient} p-3.5 shadow-md transition-shadow hover:shadow-lg`}
+                className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${opt.iconBg} shadow-inner`}>
-                  <span className="text-white">{opt.icon}</span>
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${opt.iconBg}`}>
+                  <span className="text-primary-foreground">{opt.icon}</span>
                 </div>
                 <div className="flex flex-1 flex-col items-start text-left">
-                  <span className="text-sm font-bold text-white">{opt.label}</span>
-                  <span className="text-xs text-white/75 leading-tight">{opt.desc}</span>
+                  <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground leading-tight">{opt.desc}</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-white/60 shrink-0" strokeWidth={2} />
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={2} />
               </motion.button>
             ))}
           </div>

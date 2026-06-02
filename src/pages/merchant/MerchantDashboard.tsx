@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,8 +122,18 @@ export default function MerchantDashboard() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-7 w-56" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[0,1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Skeleton className="h-72 rounded-2xl lg:col-span-2" />
+        <Skeleton className="h-72 rounded-2xl" />
+      </div>
     </div>
   );
 

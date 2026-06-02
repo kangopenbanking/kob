@@ -8,6 +8,7 @@ import BalanceReconciliationBanner from '@/components/customer-app/BalanceReconc
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { toast } from 'sonner';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { StatementDownloadDialog } from '@/components/statements/StatementDownloadDialog';
 import {
@@ -162,7 +163,25 @@ const CustomerActivity: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        <div className="space-y-4">
+          {[0,1,2].map(g => (
+            <div key={g}>
+              <Skeleton className="h-3 w-24 mb-2" />
+              <div className="space-y-2">
+                {[0,1,2].map(i => (
+                  <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3.5 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : Object.keys(grouped).length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <p className="text-sm font-semibold text-muted-foreground">{tr('No transactions found')}</p>
