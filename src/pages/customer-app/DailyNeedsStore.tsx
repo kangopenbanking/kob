@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, Clock, Star, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,6 +29,7 @@ interface Category {
 export default function DailyNeedsStore() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const cart = useDailyNeedsCart();
   const [store, setStore] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +37,8 @@ export default function DailyNeedsStore() {
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const filter = (searchParams.get("filter") ?? "all") as "all" | "otc" | "rx";
+  const isPharmacy = store?.vertical === "pharmacy";
 
   useEffect(() => {
     if (!id) return;
@@ -59,10 +62,17 @@ export default function DailyNeedsStore() {
     })();
   }, [id]);
 
+  const filteredProducts = useMemo(() => {
+    if (!isPharmacy || filter === "all") return products;
+    if (filter === "rx") return products.filter((p) => p.requires_prescription);
+    if (filter === "otc") return products.filter((p) => !p.requires_prescription);
+    return products;
+  }, [products, filter, isPharmacy]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();
     const uncategorized: Product[] = [];
-    for (const prod of products) {
+    for (const prod of filteredProducts) {
       if (!prod.category_id) { uncategorized.push(prod); continue; }
       const arr = map.get(prod.category_id) ?? [];
       arr.push(prod);
@@ -73,7 +83,7 @@ export default function DailyNeedsStore() {
       .map((c) => ({ id: c.id, name: c.name, items: map.get(c.id)! }));
     if (uncategorized.length) ordered.push({ id: "__other", name: "Other", items: uncategorized });
     return ordered;
-  }, [products, categories]);
+  }, [filteredProducts, categories]);
 
   useEffect(() => {
     if (!activeCat && grouped.length) setActiveCat(grouped[0].id);
@@ -140,6 +150,28 @@ export default function DailyNeedsStore() {
             <span className="inline-flex items-center gap-1"><Info className="size-3.5" /> Min {formatXAF(Number(store.minimum_order_xaf))}</span>
           )}
         </div>
+        {isPharmacy && (
+          <div className="flex gap-2 pt-3">
+            {(["all", "otc", "rx"] as const).map((k) => (
+              <button
+                key={k}
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  if (k === "all") next.delete("filter"); else next.set("filter", k);
+                  setSearchParams(next, { replace: true });
+                }}
+                className={`h-8 px-3 rounded-full text-xs font-medium transition border ${
+                  filter === k
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-background text-foreground border-border hover:bg-muted"
+                }`}
+                aria-pressed={filter === k}
+              >
+                {k === "all" ? "All items" : k === "otc" ? "OTC" : "Prescription"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {grouped.length > 1 && (

@@ -12,11 +12,11 @@ interface Store {
   vertical?: string;
 }
 
-export function StoreCard({ store }: { store: Store }) {
+export function StoreCard({ store, hrefSuffix = "" }: { store: Store; hrefSuffix?: string }) {
   const navigate = useNavigate();
   return (
     <Card
-      onClick={() => navigate(`/app/daily-needs/store/${store.id}`)}
+      onClick={() => navigate(`/app/daily-needs/store/${store.id}${hrefSuffix}`)}
       className="overflow-hidden cursor-pointer border-border/50 hover:border-border transition-colors"
     >
       <div className="aspect-[16/9] bg-muted overflow-hidden">
