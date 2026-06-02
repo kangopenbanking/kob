@@ -34,9 +34,77 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = body;
+    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type, pin_code } = body;
 
     console.log('Transfer request:', { source_account_id, destination_account_id, amount, currency, identifier_type });
+
+    // ─── F2 fix: PIN gate (Core memory: PIN is mandatory for fund movement) ───
+    // Phase 6 Batch D: enforced when ENFORCE_TRANSFER_PIN=1 OR a pin_code is supplied.
+    // When pin_code is absent AND the flag is off, we log a warning so the rollout to all
+    // UI callers (CustomerTransfer, BankingOps, useBankingData, api-bills-v2) is observable
+    // before flipping the flag to mandatory. Set ENFORCE_TRANSFER_PIN=1 once UI ships.
+    const ENFORCE_PIN = (Deno.env.get('ENFORCE_TRANSFER_PIN') || '').trim() === '1';
+    const pinSupplied = pin_code != null && pin_code !== '';
+    if (!pinSupplied && !ENFORCE_PIN) {
+      console.warn('[api-transfers] pin_code not supplied — accepted under transitional flag. Set ENFORCE_TRANSFER_PIN=1 after UI rollout.');
+    }
+    if (pinSupplied || ENFORCE_PIN) {
+    if (!pin_code || !/^\d{4,6}$/.test(String(pin_code))) {
+      return new Response(JSON.stringify({ error: 'pin_required', message: 'A valid 4-6 digit PIN code is required to authorise this transfer.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    {
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('id, pin_code_hash, pin_attempts, pin_locked_until')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!senderProfile?.pin_code_hash) {
+        return new Response(JSON.stringify({ error: 'pin_not_set', message: 'You must set a PIN code before initiating transfers.' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (senderProfile.pin_locked_until && new Date(senderProfile.pin_locked_until) > new Date()) {
+        const mins = Math.ceil((new Date(senderProfile.pin_locked_until).getTime() - Date.now()) / 60000);
+        return new Response(JSON.stringify({ error: 'pin_locked', message: `PIN is locked. Try again in ${mins} minutes.`, locked_until: senderProfile.pin_locked_until }), {
+          status: 423, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const stored = senderProfile.pin_code_hash as string;
+      let pinValid = false;
+      if (stored.startsWith('s2$')) {
+        const [, saltHex, storedHashHex] = stored.split('$');
+        const salt = new Uint8Array(saltHex.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
+        const pinBytes = new TextEncoder().encode(String(pin_code));
+        const toHash = new Uint8Array(salt.length + pinBytes.length);
+        toHash.set(salt, 0); toHash.set(pinBytes, salt.length);
+        const digest = await crypto.subtle.digest('SHA-256', toHash);
+        const computed = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+        pinValid = computed === storedHashHex;
+      }
+      if (!pinValid) {
+        const newAttempts = (senderProfile.pin_attempts || 0) + 1;
+        const upd: any = { pin_attempts: newAttempts };
+        if (newAttempts >= 3) upd.pin_locked_until = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        await supabase.from('profiles').update(upd).eq('id', user.id);
+        await supabase.rpc('log_security_event', {
+          _user_id: user.id, _event_type: 'transfer_pin_failed', _event_category: 'authentication',
+          _metadata: { attempts: newAttempts, source_account_id },
+        }).then(() => {}).catch(() => {});
+        return new Response(JSON.stringify({
+          error: 'invalid_pin',
+          message: 'Invalid PIN code.',
+          remaining_attempts: Math.max(0, 3 - newAttempts),
+          locked: newAttempts >= 3,
+        }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      // Success: reset attempts
+      if ((senderProfile.pin_attempts || 0) > 0) {
+        await supabase.from('profiles').update({ pin_attempts: 0, pin_locked_until: null }).eq('id', user.id);
+      }
+    }
+    } // end ENFORCE_PIN / pinSupplied gate
 
     // Validate required fields
     if (!source_account_id || !destination_account_id || !amount) {
