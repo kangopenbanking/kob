@@ -21,6 +21,8 @@ import { TransactionImportPreview } from "@/components/banking/TransactionImport
 import { ErrorHandlingDashboard } from "@/components/banking/ErrorHandlingDashboard";
 import MobileMoney from "./MobileMoney";
 
+import { PinConfirmDialog } from "@/components/pwa/PinConfirmDialog";
+
 export default function BankingOps() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -31,11 +33,10 @@ export default function BankingOps() {
     amount: "",
     description: "",
   });
+  const [pinOpen, setPinOpen] = useState(false);
 
-  const handleTransfer = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitTransfer = async (pin: string) => {
     setLoading(true);
-
     try {
       const { data, error } = await supabase.functions.invoke('api-transfers', {
         body: {
@@ -43,6 +44,7 @@ export default function BankingOps() {
           destination_account_id: transferForm.destination_account,
           amount: parseFloat(transferForm.amount),
           description: transferForm.description,
+          pin_code: pin,
         },
       });
 
@@ -68,6 +70,15 @@ export default function BankingOps() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferForm.source_account || !transferForm.destination_account || !transferForm.amount) {
+      toast({ title: "Missing fields", description: "Please fill in all transfer fields", variant: "destructive" });
+      return;
+    }
+    setPinOpen(true);
   };
 
   const handleVerification = async () => {
