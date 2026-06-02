@@ -1098,3 +1098,6 @@ verify_jwt = false
 [functions.send-monthly-statement]
 verify_jwt = false
 
+
+[functions.daily-needs-shipping-webhook]
+verify_jwt = false
