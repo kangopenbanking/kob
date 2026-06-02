@@ -18,14 +18,24 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'rate_limit_exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Verify Flutterwave hash — MANDATORY (C7 fix)
+    // Verify Flutterwave hash — MANDATORY (C7 + F1 fix)
+    // Flutterwave v3 uses a shared-secret header 'verif-hash' (no body HMAC).
+    // We compare in constant time to prevent timing-side-channel leakage of the secret.
     const verifHash = req.headers.get('verif-hash');
     const FLW_HASH = Deno.env.get('FLUTTERWAVE_ENCRYPTION_KEY');
     if (!FLW_HASH) {
       console.error('FLUTTERWAVE_ENCRYPTION_KEY not configured — rejecting webhook');
       return new Response(JSON.stringify({ error: 'webhook_not_configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    if (!verifHash || verifHash !== FLW_HASH) {
+    const timingSafeEqual = (a: string, b: string): boolean => {
+      const ea = new TextEncoder().encode(a);
+      const eb = new TextEncoder().encode(b);
+      if (ea.length !== eb.length) return false;
+      let diff = 0;
+      for (let i = 0; i < ea.length; i++) diff |= ea[i] ^ eb[i];
+      return diff === 0;
+    };
+    if (!verifHash || !timingSafeEqual(verifHash, FLW_HASH)) {
       console.error('Invalid or missing Flutterwave verif-hash — rejecting');
       return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }

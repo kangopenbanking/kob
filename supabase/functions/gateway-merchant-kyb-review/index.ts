@@ -195,7 +195,10 @@ Deno.serve(async (req) => {
         }
       }
 
-      const newKybStatus = decision === 'approve' ? 'verified' : 'rejected';
+      // F4 fix: canonical post-review state is 'approved' (matches gateway-merchant-keys,
+      // public-business-identity, developer-register-app, toggle-live-mode, OpenAPI spec).
+      // Previously wrote 'verified', which permanently blocked live key issuance.
+      const newKybStatus = decision === 'approve' ? 'approved' : 'rejected';
       const newMerchantStatus = decision === 'approve' ? 'VERIFIED' : merchant.status;
 
       const { error } = await supabase.from('gateway_merchants').update({
@@ -292,7 +295,7 @@ Deno.serve(async (req) => {
       if (action === 'suspend' && !reason_code) {
         return rfc7807('validation_error', 'Validation Error', 400, 'reason_code is required to suspend');
       }
-      const newStatus = action === 'suspend' ? 'SUSPENDED' : (merchant.kyb_status === 'verified' ? 'VERIFIED' : 'UNDER_REVIEW');
+      const newStatus = action === 'suspend' ? 'SUSPENDED' : (merchant.kyb_status === 'approved' ? 'VERIFIED' : 'UNDER_REVIEW');
       const { error } = await supabase.from('gateway_merchants').update({
         status: newStatus,
         updated_at: new Date().toISOString(),
