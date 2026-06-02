@@ -78,18 +78,26 @@ Deno.serve(async (req) => {
   }
 
   const patch: Record<string, unknown> = { status: to_status };
-  if (to_status === "delivered") {
-    patch.delivered_at = new Date().toISOString();
-    patch.escrow_status = "released";
-  }
-  if (to_status === "refunded") patch.escrow_status = "refunded";
+  if (to_status === "delivered") patch.delivered_at = new Date().toISOString();
 
   const { error: uErr } = await supabase.from("daily_needs_orders").update(patch).eq("id", order_id);
   if (uErr) return json(500, { error: "update_failed", details: uErr.message });
+
+  // Phase 6: escrow settlement
+  let escrow: unknown = null;
+  if (to_status === "delivered") {
+    const { data, error } = await supabase.rpc("dn_escrow_release", { _order_id: order_id });
+    if (error) return json(500, { error: "escrow_release_failed", details: error.message });
+    escrow = data;
+  } else if (to_status === "cancelled" || to_status === "refunded") {
+    const { data, error } = await supabase.rpc("dn_escrow_refund", { _order_id: order_id });
+    if (error) return json(500, { error: "escrow_refund_failed", details: error.message });
+    escrow = data;
+  }
 
   await supabase.from("daily_needs_order_status_history").insert({
     order_id, status: to_status, changed_by: user.id, reason: reason ?? null,
   });
 
-  return json(200, { ok: true, from, to: to_status });
+  return json(200, { ok: true, from, to: to_status, escrow });
 });

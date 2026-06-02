@@ -8380,7 +8380,11 @@ export type Database = {
           delivery_latitude: number | null
           delivery_longitude: number | null
           delivery_phone: string | null
+          escrow_funded_at: string | null
+          escrow_refunded_at: string | null
+          escrow_released_at: string | null
           escrow_status: Database["public"]["Enums"]["dn_escrow_status"]
+          escrow_wallet_id: string | null
           id: string
           idempotency_key: string
           notes: string | null
@@ -8407,7 +8411,11 @@ export type Database = {
           delivery_latitude?: number | null
           delivery_longitude?: number | null
           delivery_phone?: string | null
+          escrow_funded_at?: string | null
+          escrow_refunded_at?: string | null
+          escrow_released_at?: string | null
           escrow_status?: Database["public"]["Enums"]["dn_escrow_status"]
+          escrow_wallet_id?: string | null
           id?: string
           idempotency_key: string
           notes?: string | null
@@ -8434,7 +8442,11 @@ export type Database = {
           delivery_latitude?: number | null
           delivery_longitude?: number | null
           delivery_phone?: string | null
+          escrow_funded_at?: string | null
+          escrow_refunded_at?: string | null
+          escrow_released_at?: string | null
           escrow_status?: Database["public"]["Enums"]["dn_escrow_status"]
+          escrow_wallet_id?: string | null
           id?: string
           idempotency_key?: string
           notes?: string | null
@@ -8451,6 +8463,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_needs_orders_escrow_wallet_id_fkey"
+            columns: ["escrow_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_wallets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_needs_orders_store_id_fkey"
             columns: ["store_id"]
@@ -28270,6 +28289,13 @@ export type Database = {
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      dn_escrow_fund: { Args: { _order_id: string }; Returns: Json }
+      dn_escrow_refund: { Args: { _order_id: string }; Returns: Json }
+      dn_escrow_release: { Args: { _order_id: string }; Returns: Json }
+      dn_get_or_create_escrow_wallet: {
+        Args: { _merchant_id: string }
+        Returns: string
       }
       encrypt_sandbox_credentials: {
         Args: {

@@ -145,5 +145,18 @@ Deno.serve(async (req) => {
     changed_by: user.id,
   });
 
-  return json(201, { order, replayed: false });
+  // Phase 6: fund escrow atomically (held against merchant escrow wallet)
+  const { data: fundRes, error: fundErr } = await supabase.rpc("dn_escrow_fund", { _order_id: order.id });
+  if (fundErr) {
+    return json(500, { error: "escrow_fund_failed", details: fundErr.message, order_id: order.id });
+  }
+
+  // Re-read with escrow fields populated
+  const { data: funded } = await supabase
+    .from("daily_needs_orders")
+    .select("*")
+    .eq("id", order.id)
+    .single();
+
+  return json(201, { order: funded ?? order, escrow: fundRes, replayed: false });
 });
