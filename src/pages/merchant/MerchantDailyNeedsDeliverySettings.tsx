@@ -40,7 +40,7 @@ export default function MerchantDailyNeedsDeliverySettings() {
       setMerchantId(m.id);
       const { data } = await supabase
         .from("ddn_merchant_delivery_settings").select("*").eq("merchant_id", m.id).maybeSingle();
-      setS(data ?? {
+      setS((data as Settings) ?? {
         merchant_id: m.id, mode: "platform", delivery_radius_km: 5,
         base_fee_xaf: 500, per_km_fee_xaf: 150, prep_time_min: 20,
         auto_assign: true, platform_fee_pct: 15,
