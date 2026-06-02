@@ -23,6 +23,8 @@ export default function DriverActiveDelivery() {
   const [assignment, setAssignment] = useState<any>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmPickupOpen, setConfirmPickupOpen] = useState(false);
+  const [confirmDeliverOpen, setConfirmDeliverOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
