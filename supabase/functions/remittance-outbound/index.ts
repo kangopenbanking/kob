@@ -569,13 +569,35 @@ async function complianceDecision(supabase: any, user: any, body: any) {
       compliance_cleared_at: new Date().toISOString(),
     }).eq("id", remittance_id);
 
-    // Trigger fulfillment after compliance approval
+    // F9 fix: fulfill failure was previously swallowed, leaving remittances stuck cleared-but-not-paid.
+    // We now record the failure as an event, alert the sender, and flag the remittance for cron retry.
     try {
-      await supabase.functions.invoke("remittance-fulfill", {
+      const { error: invokeErr } = await supabase.functions.invoke("remittance-fulfill", {
         body: { remittance_id },
       });
+      if (invokeErr) throw invokeErr;
     } catch (fulfillErr: any) {
-      console.error("Post-compliance fulfill failed (non-blocking):", fulfillErr?.message);
+      const msg = fulfillErr?.message || String(fulfillErr);
+      console.error("Post-compliance fulfill failed — queued for retry:", msg);
+      await supabase.from("remittances").update({
+        status: "fulfillment_retry",
+        last_error: msg,
+        last_error_at: new Date().toISOString(),
+      }).eq("id", remittance_id);
+      await supabase.from("remittance_events").insert({
+        remittance_id,
+        event_type: "fulfillment_failed",
+        payload_raw: JSON.stringify({ error: msg, source: "post_compliance" }),
+        signature_valid: true,
+      });
+      // Best-effort operator alert
+      await supabase.from("audit_logs").insert({
+        action_type: "remittance_fulfillment_failed",
+        entity_type: "remittance",
+        entity_id: remittance_id,
+        performed_by: user.id,
+        details: { error: msg, requires_manual_retry: true },
+      }).then(() => {}).catch(() => {});
     }
   } else {
     await supabase.from("remittances").update({
