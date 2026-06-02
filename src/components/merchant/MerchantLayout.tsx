@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantContext } from "@/hooks/useMerchantContext";
 import { useMerchantRealtime } from "@/hooks/useMerchantRealtime";
+import { MerchantHelpButton } from "./MerchantHelpButton";
 
 const STAFF_ALLOWED_SECTION = "Travel Services";
 
