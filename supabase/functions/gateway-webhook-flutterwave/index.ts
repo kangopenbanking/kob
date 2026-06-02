@@ -286,7 +286,7 @@ serve(async (req) => {
     // Reset inbox row to 'failed' so Flutterwave's retry can re-process (don't leave it stuck on 'processing')
     if (dedupeKeyForCleanup) {
       try {
-        await supabase.from('webhook_inbox').update({ status: 'failed', error_message: String((err as Error)?.message ?? err).slice(0, 500) }).eq('event_id', dedupeKeyForCleanup);
+        await supabase.from('webhook_inbox').update({ status: 'failed', dlq_reason: String((err as Error)?.message ?? err).slice(0, 500) }).eq('event_id', dedupeKeyForCleanup);
       } catch (_) { /* swallow */ }
     }
     return safeErrorResponse(err, corsHeaders, 'gateway-webhook-flutterwave');
