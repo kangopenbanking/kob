@@ -721,6 +721,8 @@ const CustomerSessions = lazy(() => import("./pages/customer-app/CustomerSession
 const CustomerTwoFactor = lazy(() => import("./pages/customer-app/CustomerTwoFactor"));
 const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
 const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
+const CustomerReferral = lazy(() => import("./pages/customer-app/CustomerReferral"));
+const MerchantTaxRates = lazy(() => import("./pages/merchant/MerchantTaxRates"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
 const CustomerNotifications = lazy(() => import("./pages/customer-app/CustomerNotifications"));
 const CustomerHelp = lazy(() => import("./pages/customer-app/CustomerHelp"));
@@ -1005,6 +1007,7 @@ function App() {
               <Route path="orders" element={<MerchantOrders />} />
               <Route path="catalog" element={<MerchantCatalog />} />
               <Route path="settings" element={<MerchantSettings />} />
+              <Route path="tax-rates" element={<MerchantTaxRates />} />
               <Route path="help" element={<MerchantHelp />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
@@ -1628,6 +1631,7 @@ function App() {
               <Route path="settings/two-factor" element={<CustomerTwoFactor />} />
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
+              <Route path="referral" element={<CustomerReferral />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
