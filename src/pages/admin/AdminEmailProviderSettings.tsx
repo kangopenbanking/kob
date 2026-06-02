@@ -36,6 +36,7 @@ export default function AdminEmailProviderSettings() {
   const [saving, setSaving] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<any | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => { load(); }, []);
