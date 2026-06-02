@@ -62,10 +62,17 @@ export default function DailyNeedsStore() {
     })();
   }, [id]);
 
+  const filteredProducts = useMemo(() => {
+    if (!isPharmacy || filter === "all") return products;
+    if (filter === "rx") return products.filter((p) => p.requires_prescription);
+    if (filter === "otc") return products.filter((p) => !p.requires_prescription);
+    return products;
+  }, [products, filter, isPharmacy]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();
     const uncategorized: Product[] = [];
-    for (const prod of products) {
+    for (const prod of filteredProducts) {
       if (!prod.category_id) { uncategorized.push(prod); continue; }
       const arr = map.get(prod.category_id) ?? [];
       arr.push(prod);
@@ -76,7 +83,7 @@ export default function DailyNeedsStore() {
       .map((c) => ({ id: c.id, name: c.name, items: map.get(c.id)! }));
     if (uncategorized.length) ordered.push({ id: "__other", name: "Other", items: uncategorized });
     return ordered;
-  }, [products, categories]);
+  }, [filteredProducts, categories]);
 
   useEffect(() => {
     if (!activeCat && grouped.length) setActiveCat(grouped[0].id);
