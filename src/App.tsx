@@ -704,6 +704,9 @@ const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeed
 const MerchantDailyNeedsOnboarding = lazy(() => import("./pages/merchant/MerchantDailyNeedsOnboarding"));
 const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
 const MerchantDailyNeedsMenu = lazy(() => import("./pages/merchant/MerchantDailyNeedsMenu"));
+const MerchantDailyNeedsDeliveries = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliveries"));
+const MerchantDailyNeedsDrivers = lazy(() => import("./pages/merchant/MerchantDailyNeedsDrivers"));
+const MerchantDailyNeedsDeliverySettings = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliverySettings"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
