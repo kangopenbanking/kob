@@ -8129,6 +8129,563 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_needs_cart_items: {
+        Row: {
+          cart_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          unit_price_xaf: number
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          unit_price_xaf: number
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          unit_price_xaf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_needs_cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_carts: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_carts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_delivery_assignments: {
+        Row: {
+          assigned_at: string
+          current_latitude: number | null
+          current_longitude: number | null
+          delivered_at: string | null
+          driver_id: string | null
+          id: string
+          order_id: string
+          picked_up_at: string | null
+          trip_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          delivered_at?: string | null
+          driver_id?: string | null
+          id?: string
+          order_id: string
+          picked_up_at?: string | null
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          delivered_at?: string | null
+          driver_id?: string | null
+          id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_delivery_assignments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          name_snapshot: string
+          order_id: string
+          product_id: string
+          quantity: number
+          total_xaf: number
+          unit_price_xaf: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_snapshot: string
+          order_id: string
+          product_id: string
+          quantity: number
+          total_xaf: number
+          unit_price_xaf: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_snapshot?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          total_xaf?: number
+          unit_price_xaf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_needs_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          order_id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["dn_order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          reason?: string | null
+          status: Database["public"]["Enums"]["dn_order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["dn_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_orders: {
+        Row: {
+          charge_id: string | null
+          created_at: string
+          currency: string
+          delivered_at: string | null
+          delivery_address: string
+          delivery_code: string
+          delivery_fee_xaf: number
+          delivery_latitude: number | null
+          delivery_longitude: number | null
+          delivery_phone: string | null
+          escrow_status: Database["public"]["Enums"]["dn_escrow_status"]
+          id: string
+          idempotency_key: string
+          notes: string | null
+          prescription_status:
+            | Database["public"]["Enums"]["dn_prescription_status"]
+            | null
+          prescription_url: string | null
+          service_fee_xaf: number
+          status: Database["public"]["Enums"]["dn_order_status"]
+          store_id: string
+          subtotal_xaf: number
+          total_xaf: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          delivery_address: string
+          delivery_code?: string
+          delivery_fee_xaf?: number
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_phone?: string | null
+          escrow_status?: Database["public"]["Enums"]["dn_escrow_status"]
+          id?: string
+          idempotency_key: string
+          notes?: string | null
+          prescription_status?:
+            | Database["public"]["Enums"]["dn_prescription_status"]
+            | null
+          prescription_url?: string | null
+          service_fee_xaf?: number
+          status?: Database["public"]["Enums"]["dn_order_status"]
+          store_id: string
+          subtotal_xaf: number
+          total_xaf: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          delivery_address?: string
+          delivery_code?: string
+          delivery_fee_xaf?: number
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_phone?: string | null
+          escrow_status?: Database["public"]["Enums"]["dn_escrow_status"]
+          id?: string
+          idempotency_key?: string
+          notes?: string | null
+          prescription_status?:
+            | Database["public"]["Enums"]["dn_prescription_status"]
+            | null
+          prescription_url?: string | null
+          service_fee_xaf?: number
+          status?: Database["public"]["Enums"]["dn_order_status"]
+          store_id?: string
+          subtotal_xaf?: number
+          total_xaf?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_prescription_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["dn_prescription_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["dn_prescription_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["dn_prescription_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_prescription_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "daily_needs_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_product_images: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          product_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_products: {
+        Row: {
+          attributes: Json
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          is_otc: boolean
+          name: string
+          price_xaf: number
+          requires_prescription: boolean
+          source: string
+          stock: number | null
+          store_id: string
+          updated_at: string
+          woo_product_id: number | null
+        }
+        Insert: {
+          attributes?: Json
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          is_otc?: boolean
+          name: string
+          price_xaf: number
+          requires_prescription?: boolean
+          source?: string
+          stock?: number | null
+          store_id: string
+          updated_at?: string
+          woo_product_id?: number | null
+        }
+        Update: {
+          attributes?: Json
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          is_otc?: boolean
+          name?: string
+          price_xaf?: number
+          requires_prescription?: boolean
+          source?: string
+          stock?: number | null
+          store_id?: string
+          updated_at?: string
+          woo_product_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_needs_products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "daily_needs_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_needs_stores: {
+        Row: {
+          address: string | null
+          banner_url: string | null
+          contact_phone: string | null
+          created_at: string
+          delivery_radius_km: number
+          description: string | null
+          id: string
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          merchant_id: string
+          name: string
+          opening_hours: Json
+          preparation_time_min: number
+          rating: number | null
+          rating_count: number
+          slug: string
+          source: string
+          status: Database["public"]["Enums"]["dn_store_status"]
+          updated_at: string
+          vertical: Database["public"]["Enums"]["dn_vertical"]
+        }
+        Insert: {
+          address?: string | null
+          banner_url?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          delivery_radius_km?: number
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          merchant_id: string
+          name: string
+          opening_hours?: Json
+          preparation_time_min?: number
+          rating?: number | null
+          rating_count?: number
+          slug: string
+          source?: string
+          status?: Database["public"]["Enums"]["dn_store_status"]
+          updated_at?: string
+          vertical: Database["public"]["Enums"]["dn_vertical"]
+        }
+        Update: {
+          address?: string | null
+          banner_url?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          delivery_radius_km?: number
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          merchant_id?: string
+          name?: string
+          opening_hours?: Json
+          preparation_time_min?: number
+          rating?: number | null
+          rating_count?: number
+          slug?: string
+          source?: string
+          status?: Database["public"]["Enums"]["dn_store_status"]
+          updated_at?: string
+          vertical?: Database["public"]["Enums"]["dn_vertical"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_needs_stores_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_needs_stores_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_qr_directory"
+            referencedColumns: ["merchant_id"]
+          },
+        ]
+      }
       dashboard_redirect_audit: {
         Row: {
           context: string | null
@@ -28251,6 +28808,21 @@ export type Database = {
         | "SAVINGS_BALANCE_STABLE"
         | "SAVINGS_ROUNDUP"
       credit_score_band: "A" | "B" | "C" | "D" | "F"
+      dn_escrow_status: "held" | "released" | "refunded"
+      dn_order_status:
+        | "received"
+        | "accepted"
+        | "preparing"
+        | "ready"
+        | "picked_up"
+        | "on_the_way"
+        | "arriving"
+        | "delivered"
+        | "cancelled"
+        | "refunded"
+      dn_prescription_status: "pending" | "approved" | "rejected"
+      dn_store_status: "draft" | "active" | "paused" | "suspended"
+      dn_vertical: "food" | "pharmacy"
       inbox_event_status: "received" | "processed" | "ignored" | "failed"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
       institution_type: "bank" | "credit_union" | "fintech" | "developer"
@@ -28637,6 +29209,22 @@ export const Constants = {
         "SAVINGS_ROUNDUP",
       ],
       credit_score_band: ["A", "B", "C", "D", "F"],
+      dn_escrow_status: ["held", "released", "refunded"],
+      dn_order_status: [
+        "received",
+        "accepted",
+        "preparing",
+        "ready",
+        "picked_up",
+        "on_the_way",
+        "arriving",
+        "delivered",
+        "cancelled",
+        "refunded",
+      ],
+      dn_prescription_status: ["pending", "approved", "rejected"],
+      dn_store_status: ["draft", "active", "paused", "suspended"],
+      dn_vertical: ["food", "pharmacy"],
       inbox_event_status: ["received", "processed", "ignored", "failed"],
       institution_status: ["pending", "approved", "rejected", "suspended"],
       institution_type: ["bank", "credit_union", "fintech", "developer"],
