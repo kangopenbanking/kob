@@ -685,6 +685,17 @@ const CustomerPiggyBank = lazy(() => import("./pages/customer-app/CustomerPiggyB
 const CustomerNjangi = lazy(() => import("./pages/customer-app/CustomerNjangi"));
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
+// Daily Needs (Food + Pharmacy)
+const DailyNeedsHome = lazy(() => import("./pages/customer-app/DailyNeedsHome"));
+const DailyNeedsFood = lazy(() => import("./pages/customer-app/DailyNeedsFood"));
+const DailyNeedsPharmacy = lazy(() => import("./pages/customer-app/DailyNeedsPharmacy"));
+const DailyNeedsStore = lazy(() => import("./pages/customer-app/DailyNeedsStore"));
+const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"));
+const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
+const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
+const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
+const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
+const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
 const CustomerNotifications = lazy(() => import("./pages/customer-app/CustomerNotifications"));
