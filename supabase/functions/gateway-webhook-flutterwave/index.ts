@@ -9,8 +9,10 @@ import { corsHeaders } from "../_shared/cors.ts";
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let dedupeKeyForCleanup: string | null = null;
   try {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
 
     // ─── Webhook Rate Limiting: 100 req/min for Flutterwave ───
     const { data: allowed } = await supabase.rpc('check_webhook_rate_limit', { _provider: 'flutterwave', _max_requests: 100, _window_minutes: 1 });
@@ -44,14 +46,22 @@ serve(async (req) => {
     const eventId = payload.data?.id?.toString() || payload.id?.toString();
     const txRef = payload.data?.tx_ref || payload.tx_ref;
 
-    // Dedupe
+    // Dedupe (atomic via UNIQUE(source,event_id) → ignore-on-conflict)
     const dedupeKey = eventId ? `flw_${eventId}` : null;
     if (dedupeKey) {
-      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', dedupeKey).maybeSingle();
-      if (existing) return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-      await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'flutterwave', event_type: payload.event || 'charge.completed', payload, status: 'processing' });
+      const { data: existing } = await supabase.from('webhook_inbox').select('id,status').eq('event_id', dedupeKey).maybeSingle();
+      if (existing && existing.status === 'processed') {
+        return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (!existing) {
+        await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'flutterwave', event_type: payload.event || 'charge.completed', payload, status: 'processing' });
+      } else {
+        // prior attempt failed — reset to processing for retry
+        await supabase.from('webhook_inbox').update({ status: 'processing', payload }).eq('event_id', dedupeKey);
+      }
+      dedupeKeyForCleanup = dedupeKey;
     }
+
 
     // Find matching charge
     if (txRef) {
@@ -273,6 +283,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
+    // Reset inbox row to 'failed' so Flutterwave's retry can re-process (don't leave it stuck on 'processing')
+    if (dedupeKeyForCleanup) {
+      try {
+        await supabase.from('webhook_inbox').update({ status: 'failed', dlq_reason: String((err as Error)?.message ?? err).slice(0, 500) }).eq('event_id', dedupeKeyForCleanup);
+      } catch (_) { /* swallow */ }
+    }
     return safeErrorResponse(err, corsHeaders, 'gateway-webhook-flutterwave');
   }
 });
+
