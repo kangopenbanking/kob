@@ -17,6 +17,7 @@ export const merchantNavigation = [
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
       { title: "Advanced Analytics", path: "/merchant/advanced-analytics", icon: LineChart },
       { title: "Fees", path: "/merchant/fees", icon: Receipt },
+      { title: "Tax Rates", path: "/merchant/tax-rates", icon: Receipt },
     ],
   },
   {
