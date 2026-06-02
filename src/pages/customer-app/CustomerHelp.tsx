@@ -79,6 +79,7 @@ const CustomerHelp: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
+  const faqs = faqsRaw.map(f => ({ ...f, q: tr(f.q), a: tr(f.a) }));
   const filteredFaqs = faqs.filter(faq => {
     const matchesSearch = !searchQuery || faq.q.toLowerCase().includes(searchQuery.toLowerCase()) || faq.a.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !activeCategory || faq.cat === activeCategory;
