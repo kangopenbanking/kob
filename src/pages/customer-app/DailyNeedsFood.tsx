@@ -128,6 +128,7 @@ export default function DailyNeedsFood() {
       ) : (
         <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
       )}
+      </div>
     </div>
   );
 }
