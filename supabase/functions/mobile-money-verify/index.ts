@@ -122,90 +122,37 @@ serve(async (req) => {
         console.error('Failed to update transaction:', updateError);
       }
 
-      // Auto-credit bank account if this is a successful bank deposit
+      // Auto-credit bank account if this is a successful bank deposit (F5: atomic RPC)
       if (dbStatus === 'successful' && transaction.is_bank_deposit && transaction.destination_account_id) {
-        console.log('Auto-crediting bank account:', transaction.destination_account_id);
-
+        console.log('Auto-crediting bank account (atomic):', transaction.destination_account_id);
         try {
-          // Get destination account details
-          const { data: bankAccount } = await supabase
-            .from('accounts')
-            .select('*')
-            .eq('id', transaction.destination_account_id)
-            .single();
+          const { data: creditResult, error: creditErr } = await supabase.rpc('atomic_flw_account_credit', {
+            _account_id: transaction.destination_account_id,
+            _user_id: transaction.user_id,
+            _amount: parseFloat(transaction.amount),
+            _currency: transaction.currency,
+            _tx_ref: transaction.transaction_ref,
+            _institution_id: null,
+            _provider_ref: flutterwaveData.data.flw_ref ?? null,
+            _source: 'mobile_money',
+            _metadata: {
+              mobile_transaction_id: transaction.id,
+              provider: transaction.provider,
+              phone_number: transaction.phone_number,
+            },
+          });
 
-          if (bankAccount) {
-            // Create bank transaction
-            const { data: bankTransaction, error: bankTxError } = await supabase
-              .from('transactions')
-              .insert({
-                user_id: transaction.user_id,
-                account_id: transaction.destination_account_id,
-                transaction_reference: `MMTB-CR-${transaction.transaction_ref}`,
-                amount: transaction.amount,
-                currency: transaction.currency,
-                credit_debit_indicator: 'Credit',
-                status: 'Booked',
-                booking_datetime: new Date().toISOString(),
-                value_datetime: new Date().toISOString(),
-                transaction_information: `Mobile Money Deposit - ${transaction.provider} ${transaction.phone_number}`,
-                merchant_name: 'Mobile Money Deposit',
-                transaction_code: 'MMCR',
-                transaction_subcode: 'MMCR01',
-                proprietary_bank_code: 'MM_DEPOSIT',
-                metadata: {
-                  mobile_transaction_id: transaction.id,
-                  mobile_transaction_ref: transaction.transaction_ref,
-                  provider: transaction.provider,
-                  phone_number: transaction.phone_number
-                }
-              })
-              .select()
-              .single();
-
-            if (!bankTxError && bankTransaction) {
-              // Update account balance
-              const { data: currentBalance } = await supabase
-                .from('account_balances')
-                .select('*')
-                .eq('account_id', transaction.destination_account_id)
-                .eq('balance_type', 'InterimAvailable')
-                .order('balance_datetime', { ascending: false })
-                .limit(1)
-                .single();
-
-              const newBalance = (currentBalance?.amount || 0) + parseFloat(transaction.amount);
-
-              await supabase
-                .from('account_balances')
-                .insert({
-                  account_id: transaction.destination_account_id,
-                  balance_type: 'InterimAvailable',
-                  credit_debit_indicator: 'Credit',
-                  amount: newBalance,
-                  currency: transaction.currency,
-                  balance_datetime: new Date().toISOString()
-                });
-
-              // Link mobile transaction to bank transaction
-              await supabase
-                .from('mobile_money_transactions')
-                .update({
-                  bank_transaction_id: bankTransaction.id
-                })
-                .eq('id', transaction.id);
-
-              console.log('Bank account credited successfully:', {
-                bank_transaction_id: bankTransaction.id,
-                new_balance: newBalance
-              });
-            } else {
-              console.error('Failed to create bank transaction:', bankTxError);
-            }
+          if (creditErr) {
+            console.error('atomic_flw_account_credit failed:', creditErr);
+          } else if (creditResult?.transaction_id) {
+            await supabase
+              .from('mobile_money_transactions')
+              .update({ bank_transaction_id: creditResult.transaction_id })
+              .eq('id', transaction.id);
+            console.log('Bank account credited atomically:', creditResult);
           }
         } catch (autoCredError) {
           console.error('Auto-credit error:', autoCredError);
-          // Don't fail the verification if auto-credit fails
         }
       }
 

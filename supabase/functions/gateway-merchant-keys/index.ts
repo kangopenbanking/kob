@@ -7,6 +7,18 @@ function problem(status: number, title: string, detail: string) {
   });
 }
 
+async function audit(supabase: any, action: string, user_id: string, merchant_id: string, details: Record<string, unknown>) {
+  try {
+    await supabase.from('audit_logs').insert({
+      action_type: action,
+      entity_type: 'gateway_merchant_key',
+      entity_id: merchant_id,
+      performed_by: user_id,
+      details,
+    });
+  } catch (e) { console.warn('audit_logs insert failed:', e); }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -59,6 +71,11 @@ Deno.serve(async (req) => {
 
       if (error) throw error;
 
+      await audit(supabase, 'gateway_merchant_key_created', user.id, merchant_id, {
+        key_id: apiKey.id, environment: env, public_key_prefix: publicKey.slice(0, 16),
+        label: label || 'Unnamed Key',
+      });
+
       // Also insert into legacy table for backward compat (best-effort)
       try {
         await supabase.from('gateway_merchant_api_keys').insert({
@@ -107,6 +124,8 @@ Deno.serve(async (req) => {
         .eq('id', key_id)
         .eq('merchant_id', merchant_id);
 
+      await audit(supabase, 'gateway_merchant_key_revoked', user.id, merchant_id, { key_id });
+
       return new Response(JSON.stringify({ status: 'revoked' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -153,6 +172,11 @@ Deno.serve(async (req) => {
         merchant_id, environment: env, public_key: publicKey, secret_key_hash: hashHex, label: label || 'Rotated key',
       }).select().single();
       if (error) throw error;
+
+      await audit(supabase, 'gateway_merchant_key_rotated', user.id, merchant_id, {
+        new_key_id: newKey.id, revoked_key_id: key_id, environment: env,
+        public_key_prefix: publicKey.slice(0, 16),
+      });
 
       return new Response(JSON.stringify({ ...newKey, merchant_id, secret_key: secretKey, revoked_key_id: key_id, warning: 'Store this key securely.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

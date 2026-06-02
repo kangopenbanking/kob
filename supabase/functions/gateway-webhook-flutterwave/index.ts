@@ -64,58 +64,20 @@ serve(async (req) => {
           provider_raw: payload,
         }).eq('id', charge.id);
 
-        // ─── Auto-credit account for fund_account charges (FIXED: upsert ClosingAvailable) ───
+        // ─── Auto-credit account for fund_account charges (F5: atomic row-locked RPC) ───
         if (newStatus === 'successful' && charge.metadata?.fund_account && charge.metadata?.account_id) {
-          const accountId = charge.metadata.account_id;
-          const userId = charge.metadata.user_id;
-          const creditAmount = charge.amount;
-          const now = new Date().toISOString();
-
-          // Fetch account to get correct institution_id
-          const { data: acctRecord } = await supabase
-            .from('accounts').select('institution_id').eq('id', accountId).maybeSingle();
-          const institutionId = acctRecord?.institution_id || 'f493095b-037a-40cf-82bc-3a3ab74550dd';
-
-          // Upsert ClosingAvailable balance (matches funding-scope-creditor.ts pattern)
-          const { data: existingBalance } = await supabase
-            .from('account_balances')
-            .select('id, amount')
-            .eq('account_id', accountId)
-            .eq('balance_type', 'ClosingAvailable')
-            .eq('credit_debit_indicator', 'Credit')
-            .maybeSingle();
-
-          if (existingBalance) {
-            await supabase.from('account_balances').update({
-              amount: existingBalance.amount + creditAmount,
-              balance_datetime: now,
-            }).eq('id', existingBalance.id);
-          } else {
-            await supabase.from('account_balances').insert({
-              account_id: accountId,
-              balance_type: 'ClosingAvailable',
-              amount: creditAmount,
-              currency: charge.currency,
-              credit_debit_indicator: 'Credit',
-              balance_datetime: now,
-            });
-          }
-
-          await supabase.from('transactions').insert({
-            account_id: accountId, amount: creditAmount, currency: charge.currency,
-            credit_debit_indicator: 'Credit', status: 'Booked',
-            institution_id: institutionId,
-            transaction_type: 'deposit',
-            booking_datetime: now,
-            value_datetime: now,
-            transaction_information: `Account funding completed - ${charge.tx_ref}`,
-            merchant_details: { transaction_ref: charge.tx_ref }, user_id: userId,
-          }).then(() => {}).catch(() => {});
-
-          await supabase.from('audit_logs').insert({
-            action_type: 'gateway_fund_account_completed', entity_type: 'account', entity_id: accountId,
-            performed_by: userId, details: { amount: creditAmount, tx_ref: charge.tx_ref, provider_ref: charge.provider_ref },
-          }).then(() => {}).catch(() => {});
+          const { error: creditErr } = await supabase.rpc('atomic_flw_account_credit', {
+            _account_id: charge.metadata.account_id,
+            _user_id: charge.metadata.user_id ?? null,
+            _amount: charge.amount,
+            _currency: charge.currency,
+            _tx_ref: charge.tx_ref,
+            _institution_id: null,
+            _provider_ref: charge.provider_ref ?? null,
+            _source: 'flutterwave_fund_account',
+            _metadata: { charge_id: charge.id },
+          });
+          if (creditErr) console.error('atomic_flw_account_credit (fund_account) failed', creditErr);
         }
 
         // ─── ATOMIC: Credit merchant wallet on successful charge (C5 fix: skip fund_account) ───
