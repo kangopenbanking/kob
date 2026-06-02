@@ -700,6 +700,7 @@ const DriverRegister = lazy(() => import("./pages/customer-app/driver/DriverRegi
 const DriverActiveDelivery = lazy(() => import("./pages/customer-app/driver/DriverActiveDelivery"));
 const DriverEarnings = lazy(() => import("./pages/customer-app/driver/DriverEarnings"));
 const DriverPayouts = lazy(() => import("./pages/customer-app/driver/DriverPayouts"));
+const DriverOffers = lazy(() => import("./pages/customer-app/driver/DriverOffers"));
 const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
 const MerchantDailyNeedsOnboarding = lazy(() => import("./pages/merchant/MerchantDailyNeedsOnboarding"));
 const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
@@ -1647,6 +1648,7 @@ function App() {
               <Route path="driver/earnings" element={<DriverGuard><DriverEarnings /></DriverGuard>} />
               <Route path="driver/payouts" element={<DriverGuard><DriverPayouts /></DriverGuard>} />
               <Route path="driver/active/:id" element={<DriverGuard><DriverActiveDelivery /></DriverGuard>} />
+              <Route path="driver/offers" element={<DriverGuard><DriverOffers /></DriverGuard>} />
               <Route path="*" element={<NestedNotFound portalName="Kang" homePath="/app/home" />} />
             </Route>
 

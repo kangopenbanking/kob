@@ -165,8 +165,13 @@ export default function DriverHome() {
 
       {offers.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold">New offers</h2>
-          {offers.map((o) => {
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">New offers ({offers.length})</h2>
+            <Link to="/app/driver/offers" className="text-xs text-primary inline-flex items-center gap-1">
+              View all <ChevronRight className="size-3" />
+            </Link>
+          </div>
+          {offers.slice(0, 2).map((o) => {
             const a = o.ddn_assignments;
             const ttl = Math.max(0, Math.round((new Date(o.expires_at).getTime() - Date.now()) / 1000));
             return (
