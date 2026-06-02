@@ -4,7 +4,7 @@ import {
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
   MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
-  Package, Plug, Monitor, Landmark,
+  Package, Plug, Monitor, Landmark, UtensilsCrossed, Pill, ClipboardCheck,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -75,6 +75,14 @@ export const merchantNavigation = [
       { title: "Store & Marketplace", path: "/merchant/storefront", icon: Store },
       { title: "Payment Plans", path: "/merchant/plans", icon: CreditCard },
       { title: "WooCommerce Sync", path: "/merchant/woo-sync", icon: ShoppingCart },
+    ],
+  },
+  {
+    title: "Daily Needs",
+    items: [
+      { title: "Stores", path: "/merchant/daily-needs", icon: UtensilsCrossed },
+      { title: "New Store", path: "/merchant/daily-needs/new", icon: PlusCircle },
+      { title: "Pharmacy Reviews", path: "/merchant/daily-needs/pharmacy-reviews", icon: ClipboardCheck },
     ],
   },
   {
