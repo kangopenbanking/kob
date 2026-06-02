@@ -95,9 +95,31 @@ Deno.serve(async (req) => {
     escrow = data;
   }
 
+  // Phase 7: auto-assign driver / shipping provider when ready for pickup
+  let assignment: unknown = null;
+  if (to_status === "ready") {
+    try {
+      const res = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/daily-needs-assign-driver`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": auth,
+            "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          },
+          body: JSON.stringify({ order_id }),
+        },
+      );
+      assignment = await res.json().catch(() => null);
+    } catch (e) {
+      assignment = { error: "assign_failed", details: (e as Error).message };
+    }
+  }
+
   await supabase.from("daily_needs_order_status_history").insert({
     order_id, status: to_status, changed_by: user.id, reason: reason ?? null,
   });
 
-  return json(200, { ok: true, from, to: to_status, escrow });
+  return json(200, { ok: true, from, to: to_status, escrow, assignment });
 });

@@ -8245,9 +8245,21 @@ export type Database = {
           current_longitude: number | null
           delivered_at: string | null
           driver_id: string | null
+          dropoff_address: string | null
+          dropoff_latitude: number | null
+          dropoff_longitude: number | null
+          estimated_distance_km: number | null
+          estimated_eta_minutes: number | null
+          external_provider: string | null
+          external_tracking_id: string | null
           id: string
           order_id: string
           picked_up_at: string | null
+          pickup_address: string | null
+          pickup_latitude: number | null
+          pickup_longitude: number | null
+          provider: Database["public"]["Enums"]["dn_delivery_provider"]
+          status: string
           trip_id: string | null
           updated_at: string
         }
@@ -8257,9 +8269,21 @@ export type Database = {
           current_longitude?: number | null
           delivered_at?: string | null
           driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_latitude?: number | null
+          dropoff_longitude?: number | null
+          estimated_distance_km?: number | null
+          estimated_eta_minutes?: number | null
+          external_provider?: string | null
+          external_tracking_id?: string | null
           id?: string
           order_id: string
           picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          provider?: Database["public"]["Enums"]["dn_delivery_provider"]
+          status?: string
           trip_id?: string | null
           updated_at?: string
         }
@@ -8269,9 +8293,21 @@ export type Database = {
           current_longitude?: number | null
           delivered_at?: string | null
           driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_latitude?: number | null
+          dropoff_longitude?: number | null
+          estimated_distance_km?: number | null
+          estimated_eta_minutes?: number | null
+          external_provider?: string | null
+          external_tracking_id?: string | null
           id?: string
           order_id?: string
           picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          provider?: Database["public"]["Enums"]["dn_delivery_provider"]
+          status?: string
           trip_id?: string | null
           updated_at?: string
         }
@@ -8284,6 +8320,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_needs_drivers: {
+        Row: {
+          created_at: string
+          current_latitude: number | null
+          current_longitude: number | null
+          full_name: string
+          id: string
+          is_online: boolean
+          last_seen_at: string | null
+          phone: string
+          rating: number
+          total_deliveries: number
+          updated_at: string
+          user_id: string
+          vehicle_plate: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          full_name: string
+          id?: string
+          is_online?: boolean
+          last_seen_at?: string | null
+          phone: string
+          rating?: number
+          total_deliveries?: number
+          updated_at?: string
+          user_id: string
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Update: {
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          full_name?: string
+          id?: string
+          is_online?: boolean
+          last_seen_at?: string | null
+          phone?: string
+          rating?: number
+          total_deliveries?: number
+          updated_at?: string
+          user_id?: string
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Relationships: []
       }
       daily_needs_order_items: {
         Row: {
@@ -28293,9 +28380,21 @@ export type Database = {
       dn_escrow_fund: { Args: { _order_id: string }; Returns: Json }
       dn_escrow_refund: { Args: { _order_id: string }; Returns: Json }
       dn_escrow_release: { Args: { _order_id: string }; Returns: Json }
+      dn_find_nearest_driver: {
+        Args: { _lat: number; _lon: number; _radius_km?: number }
+        Returns: {
+          distance_km: number
+          driver_id: string
+          user_id: string
+        }[]
+      }
       dn_get_or_create_escrow_wallet: {
         Args: { _merchant_id: string }
         Returns: string
+      }
+      dn_haversine_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
       }
       encrypt_sandbox_credentials: {
         Args: {
@@ -28888,6 +28987,7 @@ export type Database = {
         | "SAVINGS_BALANCE_STABLE"
         | "SAVINGS_ROUNDUP"
       credit_score_band: "A" | "B" | "C" | "D" | "F"
+      dn_delivery_provider: "internal" | "external"
       dn_escrow_status: "held" | "released" | "refunded"
       dn_order_status:
         | "received"
@@ -29289,6 +29389,7 @@ export const Constants = {
         "SAVINGS_ROUNDUP",
       ],
       credit_score_band: ["A", "B", "C", "D", "F"],
+      dn_delivery_provider: ["internal", "external"],
       dn_escrow_status: ["held", "released", "refunded"],
       dn_order_status: [
         "received",
