@@ -1019,6 +1019,10 @@ function App() {
               <Route path="daily-needs/deliveries" element={<MerchantDailyNeedsDeliveries />} />
               <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
               <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
+              <Route path="daily-needs/orders" element={<MerchantDailyNeedsOrders />} />
+              <Route path="daily-needs/hours" element={<MerchantDailyNeedsHours />} />
+              <Route path="daily-needs/analytics" element={<MerchantDailyNeedsAnalytics />} />
+              <Route path="daily-needs/payouts" element={<MerchantDailyNeedsPayouts />} />
               <Route path="notifications" element={<MerchantNotificationsInbox />} />
               <Route path="orders" element={<MerchantOrders />} />
               <Route path="catalog" element={<MerchantCatalog />} />
