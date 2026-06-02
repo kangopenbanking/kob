@@ -99,7 +99,7 @@ export default function DailyNeedsStore() {
         name: p.name,
         price_xaf: Number(p.price_xaf),
         quantity: 1,
-        image_url: p.image_url ?? null,
+        image_url: null,
         requires_prescription: !!p.requires_prescription,
       },
     );
@@ -169,7 +169,7 @@ export default function DailyNeedsStore() {
         ) : grouped.map((g) => (
           <section
             key={g.id}
-            ref={(el) => { sectionRefs.current[g.id] = el; }}
+            ref={(el: HTMLDivElement | null) => { sectionRefs.current[g.id] = el; }}
             className="space-y-2"
             aria-labelledby={`cat-${g.id}`}
           >
@@ -188,11 +188,7 @@ export default function DailyNeedsStore() {
                     )}
                     <p className="font-semibold text-sm mt-2">{formatXAF(Number(p.price_xaf))}</p>
                   </div>
-                  {p.image_url && (
-                    <div className="size-20 rounded-lg overflow-hidden bg-muted shrink-0">
-                      <img src={p.image_url} alt={p.name} loading="lazy" className="size-full object-cover" />
-                    </div>
-                  )}
+                  {/* product images come in a later phase via daily_needs_product_images join */}
                   <div className="shrink-0 self-end">
                     {qty === 0 ? (
                       <Button size="sm" variant="outline" onClick={() => handleAdd(p)} aria-label={`Add ${p.name} to cart`}>
