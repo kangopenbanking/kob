@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Bell, Check, CheckCheck, X, Inbox, Truck, AlertCircle,
-  CreditCard, Package, Shield, Activity, Trash2,
+  CreditCard, Package, Shield, Activity,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useEffect } from "react";
+
 
 type Notification = {
   id: string;
