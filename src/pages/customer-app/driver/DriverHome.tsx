@@ -22,6 +22,7 @@ export default function DriverHome() {
   const [offers, setOffers] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState<{ offerId: string; action: "accept" | "decline" } | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
