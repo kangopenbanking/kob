@@ -3,7 +3,7 @@ import { handleMissedPickupCron } from "./index.ts";
 
 // Minimal fake supabase client. The cron only ever calls .rpc() and .from().select().
 function makeFakeSb(opts: {
-  rpcResult?: { data?: number; error?: { message: string } };
+  rpcResult?: { data?: number | null; error?: { message: string } | null };
   pushEnabled?: boolean;
   stuck?: Array<{ id: string; driver_id: string; assigned_at: string }>;
 }) {
