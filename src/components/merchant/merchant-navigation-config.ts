@@ -4,7 +4,7 @@ import {
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
   MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
-  Package, Plug, Monitor, Landmark,
+  Package, Plug, Monitor, Landmark, UtensilsCrossed, Pill, ClipboardCheck,
 } from "lucide-react";
 
 export const merchantNavigation = [
