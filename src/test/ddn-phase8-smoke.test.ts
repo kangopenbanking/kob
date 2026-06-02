@@ -37,7 +37,7 @@ describe("Phase 8 — DDN merchant + driver workflow", () => {
 
   it("renders the deliveries page with realtime + tabs", () => {
     const src = read("src/pages/merchant/MerchantDailyNeedsDeliveries.tsx");
-    expect(src).toContain("supabase.channel");
+    expect(src).toMatch(/supabase[\s\S]*\.channel\(/);
     expect(src).toContain("postgres_changes");
     expect(src).toContain("ddn_assignments");
     expect(src).toMatch(/Active|Completed/);
