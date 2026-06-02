@@ -337,6 +337,35 @@ const Communications = () => {
                           <Send className="w-3 h-3 mr-1" />
                           Send
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          data-testid={`send-test-${template.template_key}`}
+                          onClick={() => quickTestMutation.mutate(template)}
+                          disabled={quickTestMutation.isPending && quickTestKey === template.template_key}
+                        >
+                          {quickTestMutation.isPending && quickTestKey === template.template_key ? "Testing..." : "Send Test"}
+                        </Button>
+                      </div>
+                      {quickTestResult && quickTestKey === template.template_key && (
+                        <div
+                          data-testid={`send-test-result-${template.template_key}`}
+                          data-success={quickTestResult.success ? "true" : "false"}
+                          data-provider={quickTestResult.provider || ""}
+                          className="mt-2 rounded-md border p-2 text-[11px] bg-muted/30"
+                        >
+                          <div className="flex justify-between">
+                            <span>Provider: <span className="font-medium">{quickTestResult.provider || "—"}</span></span>
+                            <span className={quickTestResult.success ? "text-green-600" : "text-destructive"}>
+                              {quickTestResult.success ? "sent" : "failed"}
+                            </span>
+                          </div>
+                          {quickTestResult.error && <div className="text-destructive break-words mt-1">{quickTestResult.error}</div>}
+                        </div>
+                      )}
+                          <Send className="w-3 h-3 mr-1" />
+                          Send
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
