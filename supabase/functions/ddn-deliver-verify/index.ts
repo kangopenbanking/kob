@@ -2,6 +2,7 @@
 // delivered, transitions the order, and credits driver earnings via RPC.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { notifyUser, getMerchantOwnerId } from "../_shared/ddn-notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
