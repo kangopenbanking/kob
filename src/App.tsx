@@ -991,6 +991,7 @@ function App() {
               <Route path="daily-needs/deliveries" element={<MerchantDailyNeedsDeliveries />} />
               <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
               <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
+              <Route path="notifications" element={<MerchantNotificationsInbox />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
