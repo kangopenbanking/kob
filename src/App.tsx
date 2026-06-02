@@ -695,6 +695,7 @@ const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"))
 const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
 const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
 const MerchantDailyNeeds = lazy(() => import("./pages/merchant/MerchantDailyNeeds"));
+const MerchantPharmacyReviews = lazy(() => import("./pages/merchant/MerchantPharmacyReviews"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
