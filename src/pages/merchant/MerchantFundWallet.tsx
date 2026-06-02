@@ -16,6 +16,7 @@ import { FundingHistory } from "@/components/funding/FundingHistory";
 import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PinConfirmDialog } from "@/components/pwa/PinConfirmDialog";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -31,6 +32,7 @@ const MerchantFundWallet = () => {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [pinOpen, setPinOpen] = useState(false);
 
   // Sync from query params on mount
   useEffect(() => {
@@ -62,13 +64,17 @@ const MerchantFundWallet = () => {
 
   const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "merchant", merchantId: merchant?.id });
 
-  const handleFund = async () => {
+  const validateAndOpenPin = () => {
     if (!merchant?.id) { toast.error("Merchant account not found. Please set up your merchant profile first."); return; }
     if (!amount || Number(amount) <= 0) { toast.error("Please enter a valid funding amount"); return; }
     if (method === "mobile_money" && !phone) { toast.error("Phone number is required for Mobile Money payments"); return; }
     if (method === "bank_transfer" && !selectedBankCode) { toast.error("Please select a bank to transfer from"); return; }
     if (method === "bank_transfer" && !bankAccountNumber) { toast.error("Please enter your bank account number"); return; }
+    setPinOpen(true);
+  };
 
+  const handleFund = async () => {
+    setPinOpen(false);
     setLoading(true);
     setResult(null);
     try {
@@ -78,7 +84,7 @@ const MerchantFundWallet = () => {
           currency: "XAF",
           method,
           funding_scope: "merchant",
-          merchant_id: merchant.id,
+          merchant_id: merchant!.id,
           target_description: "Merchant wallet top-up",
           customer: { phone, email },
           bank_code: method === "bank_transfer" ? selectedBankCode : undefined,
@@ -176,10 +182,20 @@ const MerchantFundWallet = () => {
               </div>
             )}
 
-            <Button onClick={handleFund} disabled={loading} className="w-full h-12 text-base font-semibold" size="lg">
+            <Button onClick={validateAndOpenPin} disabled={loading} className="w-full h-12 text-base font-semibold" size="lg">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               {loading ? "Processing..." : `Fund ${amount && Number(amount) > 0 ? fmt(Number(amount)) : "Wallet"}`}
             </Button>
+
+            <PinConfirmDialog
+              open={pinOpen}
+              onOpenChange={setPinOpen}
+              onConfirmed={() => handleFund()}
+              title="Confirm Wallet Top-Up"
+              description={`Enter your 6-digit PIN to fund ${amount ? fmt(Number(amount)) : "your wallet"}`}
+            />
+
+
 
             <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
               <Shield className="h-3.5 w-3.5" /> Secured with end-to-end encryption
