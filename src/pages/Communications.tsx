@@ -188,6 +188,39 @@ const Communications = () => {
     },
   });
 
+  // Quick per-template Send Test — fires admin-test-email (Resend-first) and surfaces live result.
+  const [quickTestResult, setQuickTestResult] = useState<any | null>(null);
+  const [quickTestKey, setQuickTestKey] = useState<string | null>(null);
+  const quickTestMutation = useMutation({
+    mutationFn: async (template: any) => {
+      setQuickTestKey(template.template_key);
+      setQuickTestResult(null);
+      const { data: { user } } = await supabase.auth.getUser();
+      const recipient = user?.email;
+      if (!recipient) throw new Error("Sign in required to send a test.");
+      const { data, error } = await supabase.functions.invoke("admin-test-email", {
+        body: {
+          recipient_email: recipient,
+          subject: `[TEST] ${template.subject || template.name}`,
+          body_html: template.body || `<p>${template.name}</p>`,
+          template_key: template.template_key,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setQuickTestResult(data);
+      if (data?.success) toast.success(`Test sent via ${data.provider} (${data.environment})`);
+      else toast.error(data?.error || "Test failed");
+    },
+    onError: (e: any) => {
+      const msg = e?.message || "Test failed";
+      setQuickTestResult({ success: false, error: msg });
+      toast.error(msg);
+    },
+  });
+
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       user_auth: 'bg-blue-100 text-blue-800',
@@ -304,7 +337,32 @@ const Communications = () => {
                           <Send className="w-3 h-3 mr-1" />
                           Send
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          data-testid={`send-test-${template.template_key}`}
+                          onClick={() => quickTestMutation.mutate(template)}
+                          disabled={quickTestMutation.isPending && quickTestKey === template.template_key}
+                        >
+                          {quickTestMutation.isPending && quickTestKey === template.template_key ? "Testing..." : "Send Test"}
+                        </Button>
                       </div>
+                      {quickTestResult && quickTestKey === template.template_key && (
+                        <div
+                          data-testid={`send-test-result-${template.template_key}`}
+                          data-success={quickTestResult.success ? "true" : "false"}
+                          data-provider={quickTestResult.provider || ""}
+                          className="mt-2 rounded-md border p-2 text-[11px] bg-muted/30"
+                        >
+                          <div className="flex justify-between">
+                            <span>Provider: <span className="font-medium">{quickTestResult.provider || "—"}</span></span>
+                            <span className={quickTestResult.success ? "text-green-600" : "text-destructive"}>
+                              {quickTestResult.success ? "sent" : "failed"}
+                            </span>
+                          </div>
+                          {quickTestResult.error && <div className="text-destructive break-words mt-1">{quickTestResult.error}</div>}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

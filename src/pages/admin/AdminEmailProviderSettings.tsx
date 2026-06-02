@@ -36,6 +36,7 @@ export default function AdminEmailProviderSettings() {
   const [saving, setSaving] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<any | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => { load(); }, []);
@@ -75,19 +76,32 @@ export default function AdminEmailProviderSettings() {
   async function sendTest() {
     if (!testEmail) return;
     setSendingTest(true);
-    const { data, error } = await supabase.functions.invoke("send-transactional-email", {
+    setTestResult(null);
+    const { data, error } = await supabase.functions.invoke("admin-test-email", {
       body: {
-        templateName: "welcome",
-        recipientEmail: testEmail,
-        idempotencyKey: `provider-test-${Date.now()}`,
-        templateData: { name: "Tester" },
+        recipient_email: testEmail,
+        subject: "Provider settings test — Kang Open Banking",
+        body_html: `<h2>Provider configuration test</h2>
+          <p>This live test was dispatched from the Email Provider Settings page to confirm that the configured primary provider is delivering successfully.</p>
+          <p><strong>Environment:</strong> ${settings?.environment ?? "—"}<br/>
+          <strong>Primary provider:</strong> ${settings?.primary_provider ?? "—"}<br/>
+          <strong>Fallback provider:</strong> ${settings?.fallback_provider ?? "—"}</p>
+          <p>If you received this message, end-to-end delivery is operational.</p>`,
+        template_key: "provider-settings",
       },
     });
     setSendingTest(false);
-    if (error) {
-      toast({ title: "Test failed", description: error.message, variant: "destructive" });
+    const payload = (data ?? {}) as any;
+    if (error || !payload.success) {
+      const msg = payload?.error || error?.message || "Test delivery failed.";
+      setTestResult({ success: false, error: msg });
+      toast({ title: "Test failed", description: msg, variant: "destructive" });
     } else {
-      toast({ title: "Test queued", description: `Sent via current provider settings. ${JSON.stringify(data).slice(0, 80)}` });
+      setTestResult(payload);
+      toast({
+        title: "Test delivered",
+        description: `Sent via ${payload.provider} (${payload.environment}). Message ID ${String(payload.message_id || "").slice(0, 8)}…`,
+      });
     }
   }
 
@@ -274,6 +288,26 @@ export default function AdminEmailProviderSettings() {
           </Button>
         </div>
       </div>
+
+      {testResult && (
+        <div
+          data-testid="provider-send-test-result"
+          data-success={testResult.success ? "true" : "false"}
+          data-provider={testResult.provider || ""}
+          className="rounded-md border p-3 text-xs bg-muted/30 space-y-1"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-sm">Live delivery result</span>
+            <span className={testResult.success ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+              {testResult.success ? "sent" : "failed"}
+            </span>
+          </div>
+          <div>Provider: <span className="font-medium">{testResult.provider || "—"}</span></div>
+          <div>Environment: <span className="font-medium">{testResult.environment || "—"}</span></div>
+          <div>Message ID: <span className="font-mono">{testResult.message_id || "—"}</span></div>
+          {testResult.error && <div className="text-destructive break-words">Reason: {testResult.error}</div>}
+        </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Last updated: {settings.updated_at ? new Date(settings.updated_at).toLocaleString() : "—"}
