@@ -1624,6 +1624,10 @@ function App() {
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
               <Route path="settings" element={<CustomerSettings />} />
+              <Route path="settings/sessions" element={<CustomerSessions />} />
+              <Route path="settings/two-factor" element={<CustomerTwoFactor />} />
+              <Route path="statements" element={<CustomerStatements />} />
+              <Route path="kyc" element={<CustomerKYCWizard />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />

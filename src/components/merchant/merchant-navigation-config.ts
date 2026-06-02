@@ -5,7 +5,7 @@ import {
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
   MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
   Package, Plug, Monitor, Landmark, UtensilsCrossed, Pill, ClipboardCheck,
-  Truck, Bike, Settings2, Inbox,
+  Truck, Bike, Settings2, Inbox, HelpCircle, Settings as SettingsIcon, ShoppingBag, BoxIcon,
 } from "lucide-react";
 
 export const merchantNavigation = [
