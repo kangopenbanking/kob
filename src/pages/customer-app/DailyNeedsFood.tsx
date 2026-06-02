@@ -57,22 +57,32 @@ export default function DailyNeedsFood() {
   }, [stores, query, cuisine]);
 
   return (
-    <div className="px-4 pt-4 pb-28 space-y-4">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"><ChevronLeft /></Button>
-        <h1 className="text-xl font-semibold">Food</h1>
+    <div className="pb-28 animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(20,90%,55%)] to-[hsl(15,80%,50%)] text-white px-4 pt-4 pb-8 rounded-b-[2rem]">
+        <div className="absolute -top-16 -right-12 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="relative flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
+            className="text-white hover:bg-white/15 hover:text-white -ml-2">
+            <ChevronLeft />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold leading-tight">Food</h1>
+            <p className="text-xs text-white/85">Hot meals, snacks & drinks</p>
+          </div>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search restaurants or dishes"
+            className="pl-10 h-11 rounded-2xl bg-white text-foreground border-0 shadow-lg"
+            aria-label="Search restaurants"
+          />
+        </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search restaurants or dishes"
-          className="pl-10 h-11 rounded-2xl"
-          aria-label="Search restaurants"
-        />
-      </div>
+      <div className="px-4 mt-4 space-y-4">
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
@@ -118,6 +128,7 @@ export default function DailyNeedsFood() {
       ) : (
         <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
       )}
+      </div>
     </div>
   );
 }

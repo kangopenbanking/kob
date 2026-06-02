@@ -51,16 +51,26 @@ export default function DriverRegister() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-24 space-y-4 max-w-md mx-auto">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"><ChevronLeft /></Button>
-        <h1 className="text-xl font-semibold">Driver registration</h1>
+    <div className="pb-24 animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(220,75%,50%)] via-[hsl(225,70%,55%)] to-[hsl(260,60%,55%)] text-white px-4 pt-4 pb-10 rounded-b-[2rem]">
+        <div className="absolute -top-12 -right-10 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="relative flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
+            className="text-white hover:bg-white/15 hover:text-white -ml-2">
+            <ChevronLeft />
+          </Button>
+          <h1 className="text-2xl font-bold">Driver registration</h1>
+        </div>
+        <div className="relative flex items-center gap-3 bg-white/15 backdrop-blur rounded-2xl p-3 border border-white/20">
+          <div className="size-10 rounded-2xl border-2 border-white/70 flex items-center justify-center shrink-0">
+            <Truck className="size-5" strokeWidth={2} />
+          </div>
+          <p className="text-sm text-white/90">Tell us about you and your vehicle. Approval typically takes 24h.</p>
+        </div>
       </div>
-      <Card className="p-4 flex items-center gap-3">
-        <Truck className="size-5 text-primary" />
-        <p className="text-sm text-muted-foreground">Tell us about you and your vehicle. Approval typically takes 24h.</p>
-      </Card>
-      <form className="space-y-3" onSubmit={submit}>
+
+      <div className="px-4 mt-4 max-w-md mx-auto">
+        <form className="space-y-3" onSubmit={submit}>
         <div className="space-y-1">
           <Label htmlFor="full_name">Full name</Label>
           <Input id="full_name" maxLength={120} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
@@ -94,6 +104,7 @@ export default function DriverRegister() {
           {submitting ? "Submitting…" : "Submit application"}
         </Button>
       </form>
+      </div>
     </div>
   );
 }

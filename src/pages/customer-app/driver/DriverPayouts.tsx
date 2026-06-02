@@ -57,36 +57,54 @@ export default function DriverPayouts() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="px-4 pt-4 pb-24 space-y-4">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"><ChevronLeft /></Button>
-        <h1 className="text-xl font-semibold">Payout history</h1>
+    <div className="pb-24 animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(220,75%,50%)] via-[hsl(225,70%,55%)] to-[hsl(260,60%,55%)] text-white px-4 pt-4 pb-10 rounded-b-[2rem]">
+        <div className="absolute -top-12 -right-10 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="relative flex items-center gap-3 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
+            className="text-white hover:bg-white/15 hover:text-white -ml-2">
+            <ChevronLeft />
+          </Button>
+          <div className="size-10 rounded-2xl border-2 border-white/70 flex items-center justify-center">
+            <Receipt className="size-5" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl font-bold">Payout history</h1>
+        </div>
+        <div className="relative grid grid-cols-3 gap-2">
+          {(["pending", "available", "paid_out"] as const).map((k) => {
+            const M = statusMeta[k];
+            const Icon = M.icon;
+            const tones: Record<string, string> = {
+              pending: "bg-[hsl(45,90%,55%)]",
+              available: "bg-[hsl(160,65%,40%)]",
+              paid_out: "bg-[hsl(280,55%,50%)]",
+            };
+            return (
+              <Card key={k} className={`p-3 border-0 shadow-md text-white ${tones[k]}`}>
+                <div className="size-7 rounded-lg border-2 border-white/70 flex items-center justify-center mb-1.5">
+                  <Icon className="size-3.5" strokeWidth={2} />
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-white/85">{M.label}</p>
+                <p className="text-sm font-bold">{Number(totals[k] ?? 0).toLocaleString()}</p>
+                <p className="text-[10px] text-white/80">XAF</p>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {(["pending", "available", "paid_out"] as const).map((k) => {
-          const M = statusMeta[k];
-          return (
-            <Card key={k} className="p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{M.label}</p>
-              <p className="text-sm font-semibold">{Number(totals[k] ?? 0).toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">XAF</p>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="flex gap-2 text-xs">
-        {(["all", "available", "paid_out"] as const).map((k) => (
-          <button
-            key={k}
-            onClick={() => setFilter(k)}
-            className={`px-3 py-1.5 rounded-full border transition ${filter === k ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
-          >
-            {k === "all" ? "All" : statusMeta[k].label}
-          </button>
-        ))}
-      </div>
+      <div className="px-4 mt-4 space-y-4">
+        <div className="flex gap-2 text-xs">
+          {(["all", "available", "paid_out"] as const).map((k) => (
+            <button
+              key={k}
+              onClick={() => setFilter(k)}
+              className={`px-3 py-1.5 rounded-full border transition ${filter === k ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
+            >
+              {k === "all" ? "All" : statusMeta[k].label}
+            </button>
+          ))}
+        </div>
 
       {loading ? (
         <div className="space-y-2"><Skeleton className="h-20 rounded-xl" /><Skeleton className="h-20 rounded-xl" /></div>
@@ -130,6 +148,7 @@ export default function DriverPayouts() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
