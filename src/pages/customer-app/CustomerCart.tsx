@@ -147,7 +147,7 @@ const CustomerCart: React.FC = () => {
   /* ─── Success ─── */
   if (orderComplete) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 bg-gradient-to-b from-background to-emerald-50/30">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 bg-background">
         <motion.div
           initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}
           className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30"
@@ -195,7 +195,7 @@ const CustomerCart: React.FC = () => {
   }
 
   return (
-    <div className="pb-32 bg-gradient-to-b from-muted/30 via-background to-background min-h-screen">
+    <div className="pb-32 bg-background min-h-screen">
       {/* ─── Header ─── */}
       <div className="px-5 pt-7 flex items-center justify-between">
         <div className="flex items-center gap-3">
