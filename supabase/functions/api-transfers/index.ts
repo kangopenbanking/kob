@@ -104,6 +104,7 @@ serve(async (req) => {
         await supabase.from('profiles').update({ pin_attempts: 0, pin_locked_until: null }).eq('id', user.id);
       }
     }
+    } // end ENFORCE_PIN / pinSupplied gate
 
     // Validate required fields
     if (!source_account_id || !destination_account_id || !amount) {
