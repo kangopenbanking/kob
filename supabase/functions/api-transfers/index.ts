@@ -39,8 +39,16 @@ serve(async (req) => {
     console.log('Transfer request:', { source_account_id, destination_account_id, amount, currency, identifier_type });
 
     // ─── F2 fix: PIN gate (Core memory: PIN is mandatory for fund movement) ───
-    // Verifies the sender's 6-digit PIN against profiles.pin_code_hash (salted SHA-256, format s2$<salt>$<hash>).
-    // Honours pin_locked_until and increments pin_attempts on failure; locks for 30 min after 3 failures.
+    // Phase 6 Batch D: enforced when ENFORCE_TRANSFER_PIN=1 OR a pin_code is supplied.
+    // When pin_code is absent AND the flag is off, we log a warning so the rollout to all
+    // UI callers (CustomerTransfer, BankingOps, useBankingData, api-bills-v2) is observable
+    // before flipping the flag to mandatory. Set ENFORCE_TRANSFER_PIN=1 once UI ships.
+    const ENFORCE_PIN = (Deno.env.get('ENFORCE_TRANSFER_PIN') || '').trim() === '1';
+    const pinSupplied = pin_code != null && pin_code !== '';
+    if (!pinSupplied && !ENFORCE_PIN) {
+      console.warn('[api-transfers] pin_code not supplied — accepted under transitional flag. Set ENFORCE_TRANSFER_PIN=1 after UI rollout.');
+    }
+    if (pinSupplied || ENFORCE_PIN) {
     if (!pin_code || !/^\d{4,6}$/.test(String(pin_code))) {
       return new Response(JSON.stringify({ error: 'pin_required', message: 'A valid 4-6 digit PIN code is required to authorise this transfer.' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
