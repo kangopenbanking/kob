@@ -289,6 +289,26 @@ export default function AdminEmailProviderSettings() {
         </div>
       </div>
 
+      {testResult && (
+        <div
+          data-testid="provider-send-test-result"
+          data-success={testResult.success ? "true" : "false"}
+          data-provider={testResult.provider || ""}
+          className="rounded-md border p-3 text-xs bg-muted/30 space-y-1"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-sm">Live delivery result</span>
+            <span className={testResult.success ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+              {testResult.success ? "sent" : "failed"}
+            </span>
+          </div>
+          <div>Provider: <span className="font-medium">{testResult.provider || "—"}</span></div>
+          <div>Environment: <span className="font-medium">{testResult.environment || "—"}</span></div>
+          <div>Message ID: <span className="font-mono">{testResult.message_id || "—"}</span></div>
+          {testResult.error && <div className="text-destructive break-words">Reason: {testResult.error}</div>}
+        </div>
+      )}
+
       <p className="text-xs text-muted-foreground">
         Last updated: {settings.updated_at ? new Date(settings.updated_at).toLocaleString() : "—"}
       </p>
