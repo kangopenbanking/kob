@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { PayoutSchedule } from "@/components/merchant/PayoutSchedule";
 
 export default function MerchantPayouts() {
   const [payouts, setPayouts] = useState<any[]>([]);
