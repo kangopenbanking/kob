@@ -46,14 +46,22 @@ serve(async (req) => {
     const eventId = payload.data?.id?.toString() || payload.id?.toString();
     const txRef = payload.data?.tx_ref || payload.tx_ref;
 
-    // Dedupe
+    // Dedupe (atomic via UNIQUE(source,event_id) → ignore-on-conflict)
     const dedupeKey = eventId ? `flw_${eventId}` : null;
     if (dedupeKey) {
-      const { data: existing } = await supabase.from('webhook_inbox').select('id').eq('event_id', dedupeKey).maybeSingle();
-      if (existing) return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-      await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'flutterwave', event_type: payload.event || 'charge.completed', payload, status: 'processing' });
+      const { data: existing } = await supabase.from('webhook_inbox').select('id,status').eq('event_id', dedupeKey).maybeSingle();
+      if (existing && existing.status === 'processed') {
+        return new Response(JSON.stringify({ status: 'already_processed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (!existing) {
+        await supabase.from('webhook_inbox').insert({ event_id: dedupeKey, provider: 'flutterwave', event_type: payload.event || 'charge.completed', payload, status: 'processing' });
+      } else {
+        // prior attempt failed — reset to processing for retry
+        await supabase.from('webhook_inbox').update({ status: 'processing', payload }).eq('event_id', dedupeKey);
+      }
+      dedupeKeyForCleanup = dedupeKey;
     }
+
 
     // Find matching charge
     if (txRef) {
