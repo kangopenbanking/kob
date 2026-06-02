@@ -27,14 +27,11 @@ const allQuickActions = [
 const utilityItems = [
   { label: 'Send Abroad', icon: Globe, path: 'send-money', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { label: 'Remittances', icon: Download, path: 'remittances', color: 'bg-[hsl(150,50%,90%)]', iconColor: 'text-[hsl(150,45%,35%)]' },
-  { label: 'Marketplace', icon: Store, path: 'marketplace', color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
   { label: 'Loyalty', icon: Gift, path: 'loyalty', color: 'bg-[hsl(320,60%,92%)]', iconColor: 'text-[hsl(320,50%,45%)]' },
   { label: 'Wishlist', icon: Heart, path: 'wishlist', color: 'bg-[hsl(350,70%,92%)]', iconColor: 'text-[hsl(350,55%,45%)]' },
   { label: 'Reviews', icon: Star, path: 'reviews', color: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(45,70%,35%)]' },
   { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
-  { label: 'Daily Needs', icon: Store, path: 'daily-needs', color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
   { label: 'DDN Orders', icon: Package, path: 'daily-needs/orders', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
-  { label: 'Driver Hub', icon: Store, path: 'driver', color: 'bg-[hsl(160,60%,90%)]', iconColor: 'text-[hsl(160,50%,35%)]' },
   { label: 'Disputes', icon: ShieldAlert, path: 'disputes', color: 'bg-[hsl(0,60%,92%)]', iconColor: 'text-[hsl(0,50%,45%)]' },
   { label: 'Support Chat', icon: HelpCircle, path: 'support', color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,50%,45%)]' },
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
@@ -45,7 +42,8 @@ const utilityItems = [
 // Pre-register strings for the harvester (must be literal calls so the scanner picks them up).
 const _harvest = (t: (s: string) => string) => [
   t('Transfer'), t('Request'), t('Scan'), t('Bills'), t('Cash Out'), t('Add'),
-  t('Send Abroad'), t('Remittances'), t('Marketplace'), t('Loyalty'), t('Wishlist'),
+  t('Marketplace'), t('Daily Needs'), t('Driver Hub'),
+  t('Send Abroad'), t('Remittances'), t('Loyalty'), t('Wishlist'),
   t('Reviews'), t('My Orders'), t('Disputes'), t('Support Chat'), t('Settings'),
   t('Alerts'), t('Help'), t('View All'), t('Done'),
 ];
