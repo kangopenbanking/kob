@@ -60,7 +60,7 @@ export default function DailyNeedsOrders() {
         </div>
       ) : orders.length === 0 ? (
         <EmptyState
-          icon={Package}
+          icon={<Package className="size-6 text-muted-foreground" />}
           title="No orders yet"
           description="Your past Daily Needs orders will appear here."
           action={{ label: "Browse stores", onClick: () => navigate("/app/daily-needs") }}
