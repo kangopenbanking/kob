@@ -581,8 +581,7 @@ async function complianceDecision(supabase: any, user: any, body: any) {
       console.error("Post-compliance fulfill failed — queued for retry:", msg);
       await supabase.from("remittances").update({
         status: "fulfillment_retry",
-        last_error: msg,
-        last_error_at: new Date().toISOString(),
+        cancellation_reason: `auto-retry: ${msg}`.slice(0, 500),
       }).eq("id", remittance_id);
       await supabase.from("remittance_events").insert({
         remittance_id,
