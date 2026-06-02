@@ -295,6 +295,13 @@ export default function BankingOps() {
             <ErrorHandlingDashboard />
           </TabsContent>
         </Tabs>
+        <PinConfirmDialog
+          open={pinOpen}
+          onOpenChange={setPinOpen}
+          onConfirmed={(pin) => submitTransfer(pin)}
+          title="Authorize Transfer"
+          description="Enter your 6-digit PIN to authorize this bank transfer"
+        />
       </div>
   );
 }
