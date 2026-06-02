@@ -5,7 +5,7 @@ import {
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
   MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
   Package, Plug, Monitor, Landmark, UtensilsCrossed, Pill, ClipboardCheck,
-  Truck, Bike, Settings2,
+  Truck, Bike, Settings2, Inbox,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -13,6 +13,7 @@ export const merchantNavigation = [
     title: "Overview",
     items: [
       { title: "Dashboard", path: "/merchant", icon: LayoutDashboard },
+      { title: "Notifications", path: "/merchant/notifications", icon: Inbox },
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
       { title: "Advanced Analytics", path: "/merchant/advanced-analytics", icon: LineChart },
       { title: "Fees", path: "/merchant/fees", icon: Receipt },

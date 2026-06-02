@@ -1278,6 +1278,7 @@ export type Database = {
       app_notifications: {
         Row: {
           created_at: string
+          dismissed_at: string | null
           icon: string | null
           id: string
           idempotency_key: string | null
@@ -1291,6 +1292,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dismissed_at?: string | null
           icon?: string | null
           id?: string
           idempotency_key?: string | null
@@ -1304,6 +1306,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dismissed_at?: string | null
           icon?: string | null
           id?: string
           idempotency_key?: string | null

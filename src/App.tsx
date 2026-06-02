@@ -707,6 +707,7 @@ const MerchantDailyNeedsMenu = lazy(() => import("./pages/merchant/MerchantDaily
 const MerchantDailyNeedsDeliveries = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliveries"));
 const MerchantDailyNeedsDrivers = lazy(() => import("./pages/merchant/MerchantDailyNeedsDrivers"));
 const MerchantDailyNeedsDeliverySettings = lazy(() => import("./pages/merchant/MerchantDailyNeedsDeliverySettings"));
+const MerchantNotificationsInbox = lazy(() => import("./pages/merchant/MerchantNotificationsInbox"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
@@ -990,6 +991,7 @@ function App() {
               <Route path="daily-needs/deliveries" element={<MerchantDailyNeedsDeliveries />} />
               <Route path="daily-needs/drivers" element={<MerchantDailyNeedsDrivers />} />
               <Route path="daily-needs/delivery-settings" element={<MerchantDailyNeedsDeliverySettings />} />
+              <Route path="notifications" element={<MerchantNotificationsInbox />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
