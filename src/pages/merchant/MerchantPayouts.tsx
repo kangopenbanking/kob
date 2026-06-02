@@ -187,6 +187,10 @@ export default function MerchantPayouts() {
         <StatCard title="Pending" value={String(pendingCount)} icon={<Clock className="h-5 w-5" />} />
       </div>
 
+      {/* Payout Schedule */}
+      <PayoutSchedule />
+
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
