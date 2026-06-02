@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2, Search, Store, ScanLine } from 'lucide-react';
 import { useMerchantDirectory, searchMerchants } from '@/hooks/useMerchantDirectory';

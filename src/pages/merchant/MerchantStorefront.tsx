@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Store, Eye, EyeOff, QrCode, Save, Loader2, CheckCircle2,
   Crown, AlertCircle, Globe, MapPin, Tag, Image, FileText,
