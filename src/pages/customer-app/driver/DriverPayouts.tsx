@@ -58,8 +58,8 @@ export default function DriverPayouts() {
 
   return (
     <div className="pb-24 animate-fade-in">
-      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(220,75%,50%)] via-[hsl(225,70%,55%)] to-[hsl(260,60%,55%)] text-white px-4 pt-4 pb-10 rounded-b-[2rem]">
-        <div className="absolute -top-12 -right-10 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+      <div className="relative bg-[hsl(220,75%,50%)] text-white px-4 pt-4 pb-5">
+
         <div className="relative flex items-center gap-3 mb-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
             className="text-white hover:bg-white/15 hover:text-white -ml-2">

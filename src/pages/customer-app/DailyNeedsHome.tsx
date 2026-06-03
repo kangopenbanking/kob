@@ -39,17 +39,15 @@ export default function DailyNeedsHome() {
   return (
     <div className="pb-10 animate-fade-in">
       {/* Hero header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(20,90%,55%)] via-[hsl(15,85%,60%)] to-[hsl(160,60%,45%)] text-white px-4 pt-4 pb-10 rounded-b-[2rem]">
-        <div className="absolute -top-16 -right-16 size-56 rounded-full bg-white/10 blur-2xl" aria-hidden />
-        <div className="absolute -bottom-20 -left-10 size-48 rounded-full bg-white/10 blur-2xl" aria-hidden />
-        <div className="relative flex items-center gap-2 mb-4">
+      <div className="relative bg-[hsl(20,90%,55%)] text-white px-4 pt-4 pb-5">
+        <div className="flex items-center gap-2 mb-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
             className="text-white hover:bg-white/15 hover:text-white -ml-2">
             <ChevronLeft />
           </Button>
           <div>
             <h1 className="text-2xl font-bold leading-tight">Daily Needs</h1>
-            <p className="text-xs text-white/80">Food, pharmacy & essentials delivered</p>
+            <p className="text-xs text-white/85">Food, pharmacy & essentials delivered</p>
           </div>
         </div>
         <div className="relative">
@@ -64,7 +62,8 @@ export default function DailyNeedsHome() {
         </div>
       </div>
 
-      <div className="px-4 -mt-6 space-y-8">
+      <div className="px-4 mt-6 space-y-8">
+
         <section className="grid grid-cols-2 gap-3">
           <Card
             onClick={() => navigate("/app/daily-needs/food")}
