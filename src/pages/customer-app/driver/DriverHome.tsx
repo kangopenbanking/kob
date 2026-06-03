@@ -91,9 +91,19 @@ export default function DriverHome() {
     });
     const body = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) { toast.error(body.error || "Could not change status"); return; }
+    if (!res.ok) {
+      const messages: Record<string, string> = {
+        driver_not_approved: "Your driver account is awaiting approval. You'll be able to go online once our team reviews your registration (usually within 24 hours).",
+        driver_not_found: "We couldn't find your driver profile. Please complete registration first.",
+        cannot_change_while_active: "You can't change status while a delivery is in progress.",
+        unauthorized: "Please sign in again to continue.",
+      };
+      toast.error(messages[body.error] || body.error || "Could not change status");
+      return;
+    }
     await load();
   };
+
 
   const respond = async (offerId: string, action: "accept" | "decline") => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -125,20 +135,18 @@ export default function DriverHome() {
 
   return (
     <div className="pb-24 animate-fade-in">
-      <div className={`relative overflow-hidden text-white px-4 pt-4 pb-10 rounded-b-[2rem] bg-gradient-to-br ${isOnline ? "from-[hsl(160,65%,38%)] via-[hsl(170,60%,42%)] to-[hsl(195,70%,45%)]" : "from-[hsl(220,30%,30%)] via-[hsl(225,25%,35%)] to-[hsl(230,20%,40%)]"}`}>
-        <div className="absolute -top-16 -right-10 size-52 rounded-full bg-white/10 blur-2xl" aria-hidden />
-        <div className="absolute -bottom-16 -left-10 size-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
-        <div className="relative flex items-center justify-between mb-4">
+      <div className={`relative text-white px-4 pt-4 pb-5 ${isOnline ? "bg-[hsl(160,65%,38%)]" : "bg-[hsl(225,25%,32%)]"}`}>
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">Driver</h1>
-            <p className="text-xs text-white/80">{driver.full_name}</p>
+            <p className="text-xs text-white/85">{driver.full_name}</p>
           </div>
-          <Link to="/app/driver/earnings" className="text-xs text-white/90 inline-flex items-center gap-1 bg-white/15 backdrop-blur px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/25 transition">
+          <Link to="/app/driver/earnings" className="text-xs text-white/90 inline-flex items-center gap-1 bg-white/15 px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/25 transition">
             Earnings <ChevronRight className="size-3" />
           </Link>
         </div>
 
-        <div className="relative bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20 flex items-center justify-between">
+        <div className="bg-white/15 rounded-2xl p-4 border border-white/20 flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center">
@@ -148,7 +156,9 @@ export default function DriverHome() {
               {driver.status === "busy" && <Badge variant="secondary" className="bg-white/25 text-white border-0">On delivery</Badge>}
             </div>
             <p className="text-xs text-white/85 pl-10">
-              {isOnline ? "Accepting nearby offers" : "Go online to receive offers"}
+              {driver.approval_status !== "approved"
+                ? "Approval pending — you can go online once approved"
+                : isOnline ? "Accepting nearby offers" : "Go online to receive offers"}
             </p>
           </div>
           <Switch
@@ -160,7 +170,8 @@ export default function DriverHome() {
         </div>
       </div>
 
-      <div className="px-4 -mt-6 space-y-4">
+      <div className="px-4 mt-4 space-y-4">
+
         <div className="grid grid-cols-2 gap-3">
           <Card className="p-4 border-0 shadow-md bg-[hsl(220,75%,50%)] text-white">
             <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center mb-2">
