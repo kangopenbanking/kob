@@ -30,8 +30,8 @@ export default function DriverEarnings() {
 
   return (
     <div className="pb-24 animate-fade-in">
-      <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(160,65%,38%)] via-[hsl(170,60%,40%)] to-[hsl(195,70%,45%)] text-white px-4 pt-4 pb-10 rounded-b-[2rem]">
-        <div className="absolute -top-16 -right-10 size-52 rounded-full bg-white/10 blur-2xl" aria-hidden />
+      <div className="relative bg-[hsl(160,65%,38%)] text-white px-4 pt-4 pb-5">
+
         <div className="relative flex items-center gap-2 mb-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back"
             className="text-white hover:bg-white/15 hover:text-white -ml-2">
@@ -53,7 +53,7 @@ export default function DriverEarnings() {
         </div>
       </div>
 
-      <div className="px-4 -mt-6 space-y-4">
+      <div className="px-4 mt-4 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Card className="p-4 border-0 shadow-md bg-[hsl(45,90%,55%)] text-white">
             <div className="size-8 rounded-xl border-2 border-white/70 flex items-center justify-center mb-2">
