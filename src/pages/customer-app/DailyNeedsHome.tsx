@@ -48,9 +48,9 @@ export default function DailyNeedsHome() {
           .eq("status", "active")
           .limit(8),
         supabase.from("daily_needs_orders")
-          .select("id, store_id, total_xaf, status, created_at, daily_needs_stores(name, banner_url)")
+          .select("id, store_id, total_xaf, status, created_at, daily_needs_stores(name, banner_url, vertical)")
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
       if (cancelled) return;
       setNearby(stores ?? []);
@@ -59,6 +59,15 @@ export default function DailyNeedsHome() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const ACTIVE = new Set(["received", "accepted", "preparing", "ready", "picked_up", "on_the_way", "arriving"]);
+  const activeFor = (vertical: "food" | "pharmacy") =>
+    recent.find((o) => o.daily_needs_stores?.vertical === vertical && ACTIVE.has(o.status));
+  const goVertical = (vertical: "food" | "pharmacy") => {
+    const active = activeFor(vertical);
+    if (active) navigate(`/app/daily-needs/orders/${active.id}/details`);
+    else navigate(`/app/daily-needs/${vertical}`);
+  };
 
   return (
     <div className="pb-10 animate-fade-in">
@@ -100,7 +109,7 @@ export default function DailyNeedsHome() {
 
         <section className="grid grid-cols-2 gap-3">
           <Card
-            onClick={() => navigate("/app/daily-needs/food")}
+            onClick={() => goVertical("food")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(20,90%,55%)] text-white"
           >
             <CardImage
@@ -115,10 +124,15 @@ export default function DailyNeedsHome() {
             <div className="relative">
               <h2 className="font-bold text-lg">Food</h2>
               <p className="text-xs text-white/85">Restaurants & meals</p>
+              {activeFor("food") && (
+                <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/95">
+                  <span className="size-1.5 rounded-full bg-white animate-pulse" /> Active order
+                </p>
+              )}
             </div>
           </Card>
           <Card
-            onClick={() => navigate("/app/daily-needs/pharmacy")}
+            onClick={() => goVertical("pharmacy")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
           >
             <CardImage
@@ -133,6 +147,11 @@ export default function DailyNeedsHome() {
             <div className="relative">
               <h2 className="font-bold text-lg">Pharmacy</h2>
               <p className="text-xs text-white/85">Medicine & wellness</p>
+              {activeFor("pharmacy") && (
+                <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/95">
+                  <span className="size-1.5 rounded-full bg-white animate-pulse" /> Active order
+                </p>
+              )}
             </div>
           </Card>
         </section>
@@ -162,7 +181,7 @@ export default function DailyNeedsHome() {
           ) : (
             <div className="space-y-2">
               {recent.map((o) => (
-                <Card key={o.id} onClick={() => navigate(`/app/daily-needs/orders/${o.id}`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors">
+                <Card key={o.id} onClick={() => navigate(`/app/daily-needs/orders/${o.id}/details`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors">
                   <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                     {o.daily_needs_stores?.banner_url && <img src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
                   </div>
