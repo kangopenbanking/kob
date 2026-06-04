@@ -45,6 +45,14 @@ export interface TravelCardConfig {
   button_size: 'sm' | 'md' | 'lg';
 }
 
+export interface DailyNeedsCardConfig {
+  bg_image: string;
+  overlay_opacity: number;
+  button_text: string;
+  button_bg_color: string;
+  button_size: 'sm' | 'md' | 'lg';
+}
+
 export interface SectionTypography {
   font_size_multiplier: number;
   heading_color: string;
