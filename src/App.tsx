@@ -698,6 +698,7 @@ const DailyNeedsCart = lazy(() => import("./pages/customer-app/DailyNeedsCart"))
 const DailyNeedsCheckout = lazy(() => import("./pages/customer-app/DailyNeedsCheckout"));
 const DailyNeedsOrderTrack = lazy(() => import("./pages/customer-app/DailyNeedsOrderTrack"));
 const DailyNeedsOrders = lazy(() => import("./pages/customer-app/DailyNeedsOrders"));
+const DailyNeedsOrderDetails = lazy(() => import("./pages/customer-app/DailyNeedsOrderDetails"));
 const DailyNeedsAddresses = lazy(() => import("./pages/customer-app/DailyNeedsAddresses"));
 const DailyNeedsSearch = lazy(() => import("./pages/customer-app/DailyNeedsSearch"));
 const DailyNeedsFavorites = lazy(() => import("./pages/customer-app/DailyNeedsFavorites"));
