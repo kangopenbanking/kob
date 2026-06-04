@@ -89,6 +89,7 @@ interface CustomerAppConfig {
   hero_action_opacity: number;
   typography_config: TypographyConfig;
   travel_card_config: {
+    enabled: boolean;
     bg_image: string;
     overlay_opacity: number;
     button_text: string;
@@ -96,12 +97,14 @@ interface CustomerAppConfig {
     button_size: 'sm' | 'md' | 'lg';
   };
   daily_needs_card_config: {
+    enabled: boolean;
     bg_image: string;
     overlay_opacity: number;
     button_text: string;
     button_bg_color: string;
     button_size: 'sm' | 'md' | 'lg';
   };
+  home_carousel_order: ('travel' | 'daily_needs')[];
 }
 
 interface SectionTypography {
