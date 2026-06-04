@@ -665,10 +665,10 @@ const CustomerHome: React.FC = () => {
             <motion.button
               key="daily-needs"
               whileTap={{ scale: 0.97 }}
-              onClick={() => go('daily-needs')}
+              onClick={goDailyNeeds}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
-              <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dn.overlay_opacity})` }} />
               <div className="relative z-10 p-6">
                 <div className="absolute top-4 right-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(160,60%,55%)]">
