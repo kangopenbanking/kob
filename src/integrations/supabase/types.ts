@@ -15593,8 +15593,48 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_gateway_idempotency: {
+        Row: {
+          created_at: string
+          endpoint: string
+          expires_at: string
+          id: string
+          idempotency_key: string
+          request_hash: string
+          response_body: Json
+          response_status: number
+          trace_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          expires_at?: string
+          id?: string
+          idempotency_key: string
+          request_hash: string
+          response_body: Json
+          response_status: number
+          trace_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
+          request_hash?: string
+          response_body?: Json
+          response_status?: number
+          trace_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       kyc_verification_audit: {
         Row: {
+          country: string | null
           created_at: string
           error_code: string | null
           error_message: string | null
@@ -15613,6 +15653,7 @@ export type Database = {
           youverify_success: boolean | null
         }
         Insert: {
+          country?: string | null
           created_at?: string
           error_code?: string | null
           error_message?: string | null
@@ -15631,6 +15672,7 @@ export type Database = {
           youverify_success?: boolean | null
         }
         Update: {
+          country?: string | null
           created_at?: string
           error_code?: string | null
           error_message?: string | null
