@@ -1508,6 +1508,135 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
   );
 }
 
+// ─── Daily Needs Card Panel ───
+function DailyNeedsCardPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
+  const queryClient = useQueryClient();
+  const [config, setConfig] = useState(appConfig.daily_needs_card_config || defaultConfig.daily_needs_card_config);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setConfig(appConfig.daily_needs_card_config || defaultConfig.daily_needs_card_config);
+  }, [appConfig]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: inst } = await supabase.from("institutions").select("app_config").eq("id", institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, daily_needs_card_config: config } }
+      }).eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success("Daily Needs card configuration saved");
+    },
+    onError: () => toast.error("Failed to save Daily Needs card configuration"),
+  });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `daily-needs-card/${institutionId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
+      setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
+      toast.success("Image uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{tr('Daily Needs Card')}</CardTitle>
+        <CardDescription>{tr('Customize the Daily Needs card appearance on the customer home page')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{tr('Background Image')}</Label>
+          {config.bg_image && (
+            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-border">
+              <img src={config.bg_image} alt={tr('Daily Needs card bg')} className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
+              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setConfig(prev => ({ ...prev, bg_image: '' }))}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <label className="flex-1">
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              <Button variant="outline" size="sm" className="w-full gap-1.5" asChild disabled={uploading}>
+                <span>{uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload Image</span>
+              </Button>
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Dark Overlay Opacity: {Math.round(config.overlay_opacity * 100)}%</Label>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={Math.round(config.overlay_opacity * 100)}
+            onChange={(e) => setConfig(prev => ({ ...prev, overlay_opacity: Number(e.target.value) / 100 }))}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{tr('0% (transparent)')}</span>
+            <span>{tr('100% (opaque)')}</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{tr('Button Text')}</Label>
+          <Input value={config.button_text} onChange={(e) => setConfig(prev => ({ ...prev, button_text: e.target.value }))} placeholder={tr('Order Now')} />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{tr('Button Background Color')}</Label>
+          <div className="flex items-center gap-3">
+            <input type="color" value={config.button_bg_color} onChange={(e) => setConfig(prev => ({ ...prev, button_bg_color: e.target.value }))} className="h-9 w-12 rounded border border-border cursor-pointer" />
+            <Input value={config.button_bg_color} onChange={(e) => setConfig(prev => ({ ...prev, button_bg_color: e.target.value }))} className="flex-1 font-mono text-sm" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{tr('Button Size')}</Label>
+          <RadioGroup value={config.button_size} onValueChange={(v) => setConfig(prev => ({ ...prev, button_size: v as 'sm' | 'md' | 'lg' }))}>
+            <div className="flex gap-4">
+              {(['sm', 'md', 'lg'] as const).map(s => (
+                <div key={s} className="flex items-center gap-1.5">
+                  <RadioGroupItem value={s} id={`dn-btn-size-${s}`} />
+                  <Label htmlFor={`dn-btn-size-${s}`} className="text-sm capitalize">{s === 'sm' ? 'Small' : s === 'md' ? 'Medium' : 'Large'}</Label>
+                </div>
+              ))}
+            </div>
+          </RadioGroup>
+        </div>
+
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Daily Needs Card Settings
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+
 // ─── Main Component ───
 export default function CustomerAppManagement() {
   const tr = useHarvestedT('admin');
