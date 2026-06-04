@@ -342,6 +342,7 @@ const WebhookEventsRegistry = lazy(() => import("./pages/developer/WebhookEvents
 const PaymentStateMachine = lazy(() => import("./pages/developer/PaymentStateMachine"));
 // Phase 5 (bank-grade) — admin SLO observability dashboard
 const AdminSLO = lazy(() => import("./pages/admin/AdminSLO"));
+const AdminKycGateway = lazy(() => import("./pages/admin/AdminKycGateway"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 const AdminPayByBankInspector = lazy(() => import("./pages/admin/AdminPayByBankInspector"));
@@ -1068,6 +1069,7 @@ function App() {
               <Route path="system-alerts" element={<SystemAlerts />} />
               <Route path="api-performance" element={<ApiPerformance />} />
               <Route path="slo" element={<AdminSLO />} />
+              <Route path="kyc-gateway" element={<AdminKycGateway />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
               <Route path="load-testing" element={<LoadTesting />} />
