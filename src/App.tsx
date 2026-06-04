@@ -347,6 +347,7 @@ const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/Provide
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 const AdminPayByBankInspector = lazy(() => import("./pages/admin/AdminPayByBankInspector"));
 const AdminCaptureEvents = lazy(() => import("./pages/admin/AdminCaptureEvents"));
+const AdminScreenshotGuard = lazy(() => import("./pages/admin/AdminScreenshotGuard"));
 // Phase 5 — additive merchants documentation hub
 const MerchantsDocsHub = lazy(() => import("./pages/developer/MerchantsDocsHub"));
 // Phase 5 follow-up — interactive merchant API key management page
@@ -1070,6 +1071,7 @@ function App() {
               <Route path="api-performance" element={<ApiPerformance />} />
               <Route path="slo" element={<AdminSLO />} />
               <Route path="kyc-gateway" element={<AdminKycGateway />} />
+              <Route path="screenshot-guard" element={<AdminScreenshotGuard />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
               <Route path="load-testing" element={<LoadTesting />} />
