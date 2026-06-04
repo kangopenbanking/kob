@@ -2,22 +2,23 @@
  * Admin KYC Gateway Console
  *
  * Operator-facing view for the Unified KYC Gateway (Youverify primary,
- * self-hosted fallback). Lets admins:
- *   - Toggle feature flags and adjust rollout percentages / country allowlists
- *   - Inspect the current circuit breaker state
- *   - Read recent audit rows (trace_id, provider, fallback reason, latency)
- *   - View provider metrics (latency, fallback rate, error breakdowns)
+ * self-hosted fallback). Admin-only — gated by ProtectedRoute requiredRole="admin".
  *
- * All mutations go through the standard supabase client and are gated by the
- * existing RLS policies (admin-only via public.has_role).
+ *  - Toggle feature flags / rollout %, country allowlist
+ *  - Configure circuit breaker thresholds (failure count, min samples, window, cooldown)
+ *  - Inspect current breaker state + reset
+ *  - Read recent audit rows (trace_id, provider, fallback reason, latency)
+ *  - Provider metrics with auto-refresh polling
+ *  - Export audit logs to CSV / JSON with filters
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ShieldCheck, RefreshCw, Activity, AlertTriangle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ShieldCheck, RefreshCw, Activity, AlertTriangle, Download, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,6 +42,10 @@ interface BreakerRow {
   failure_count: number;
   opened_at: string | null;
   last_failure_at: string | null;
+  failure_threshold: number;
+  min_samples: number;
+  window_seconds: number;
+  cooldown_seconds: number;
   updated_at: string;
 }
 
@@ -81,6 +86,25 @@ function breakerBadge(state: string) {
   return <Badge variant={variant as never}>{state}</Badge>;
 }
 
+function toCsv(rows: Record<string, unknown>[]): string {
+  if (!rows.length) return "";
+  const cols = Array.from(rows.reduce((s, r) => { Object.keys(r).forEach((k) => s.add(k)); return s; }, new Set<string>()));
+  const esc = (v: unknown) => {
+    if (v == null) return "";
+    const s = typeof v === "string" ? v : JSON.stringify(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
+}
+
+function downloadBlob(content: string, mime: string, filename: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminKycGateway() {
   const [flags, setFlags] = useState<FlagRow[]>([]);
   const [breaker, setBreaker] = useState<BreakerRow | null>(null);
@@ -88,9 +112,26 @@ export default function AdminKycGateway() {
   const [metrics, setMetrics] = useState<MetricsResp | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Export filters
+  const today = new Date().toISOString().slice(0, 10);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
+  const [exportCountry, setExportCountry] = useState("");
+  const [exportProvider, setExportProvider] = useState<"" | "youverify" | "self_hosted">("");
+  const [exportFrom, setExportFrom] = useState(sevenDaysAgo);
+  const [exportTo, setExportTo] = useState(today);
+  const [exporting, setExporting] = useState(false);
+
+  // Breaker config draft
+  const [bkThreshold, setBkThreshold] = useState<number>(5);
+  const [bkSamples, setBkSamples] = useState<number>(10);
+  const [bkWindow, setBkWindow] = useState<number>(30);
+  const [bkCooldown, setBkCooldown] = useState<number>(60);
+  const [savingBreaker, setSavingBreaker] = useState(false);
+
+  const load = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     const [flagRes, brRes, auRes, mRes] = await Promise.all([
       supabase.from("kyc_feature_flags").select("*").order("flag_key"),
       supabase.from("kyc_circuit_breaker_state").select("*").eq("provider", "youverify").maybeSingle(),
@@ -98,13 +139,29 @@ export default function AdminKycGateway() {
       supabase.functions.invoke("kyc-metrics", { method: "GET" as never }),
     ]);
     setFlags((flagRes.data as FlagRow[]) ?? []);
-    setBreaker((brRes.data as BreakerRow) ?? null);
+    const br = (brRes.data as BreakerRow) ?? null;
+    setBreaker(br);
+    if (br) {
+      setBkThreshold(br.failure_threshold);
+      setBkSamples(br.min_samples);
+      setBkWindow(br.window_seconds);
+      setBkCooldown(br.cooldown_seconds);
+    }
     setAudits((auRes.data as AuditRow[]) ?? []);
     if (mRes.data) setMetrics(mRes.data as MetricsResp);
-    setLoading(false);
+    if (showSpinner) setLoading(false);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(true); }, [load]);
+
+  // Auto-refresh polling — every 15s, only when tab is visible
+  const intervalRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const tick = () => { if (document.visibilityState === "visible") void load(false); };
+    intervalRef.current = window.setInterval(tick, 15_000);
+    return () => { if (intervalRef.current) window.clearInterval(intervalRef.current); };
+  }, [autoRefresh, load]);
 
   const updateFlag = async (row: FlagRow, patch: Partial<FlagRow>) => {
     setSavingKey(row.flag_key);
@@ -119,7 +176,7 @@ export default function AdminKycGateway() {
     setSavingKey(null);
     if (error) { toast.error(`Failed to update ${row.flag_key}: ${error.message}`); return; }
     toast.success(`${row.flag_key} updated`);
-    void load();
+    void load(false);
   };
 
   const resetBreaker = async () => {
@@ -129,7 +186,59 @@ export default function AdminKycGateway() {
       .eq("provider", "youverify");
     if (error) { toast.error(error.message); return; }
     toast.success("Circuit breaker reset to closed");
-    void load();
+    void load(false);
+  };
+
+  const saveBreakerConfig = async () => {
+    // Bounds match the migration CHECK constraints
+    if (bkThreshold < 1 || bkThreshold > 1000) return toast.error("Failure threshold must be 1-1000");
+    if (bkSamples < 1 || bkSamples > 10000) return toast.error("Min samples must be 1-10000");
+    if (bkWindow < 5 || bkWindow > 3600) return toast.error("Window must be 5-3600 seconds");
+    if (bkCooldown < 5 || bkCooldown > 86400) return toast.error("Cooldown must be 5-86400 seconds");
+    setSavingBreaker(true);
+    const { error } = await supabase
+      .from("kyc_circuit_breaker_state")
+      .update({
+        failure_threshold: bkThreshold,
+        min_samples: bkSamples,
+        window_seconds: bkWindow,
+        cooldown_seconds: bkCooldown,
+      })
+      .eq("provider", "youverify");
+    setSavingBreaker(false);
+    if (error) { toast.error(`Failed to save thresholds: ${error.message}`); return; }
+    toast.success("Circuit breaker thresholds saved");
+    void load(false);
+  };
+
+  const exportAudits = async (format: "csv" | "json") => {
+    setExporting(true);
+    try {
+      let q = supabase
+        .from("kyc_verification_audit")
+        .select("*")
+        .gte("created_at", `${exportFrom}T00:00:00Z`)
+        .lte("created_at", `${exportTo}T23:59:59Z`)
+        .order("created_at", { ascending: false })
+        .limit(50000);
+      if (exportProvider) q = q.eq("provider_used", exportProvider);
+      if (exportCountry) q = q.eq("country", exportCountry.toUpperCase());
+      const { data, error } = await q;
+      if (error) throw error;
+      const rows = (data ?? []) as Record<string, unknown>[];
+      if (!rows.length) { toast.message("No rows match the filter."); return; }
+      const ts = new Date().toISOString().replace(/[:.]/g, "-");
+      if (format === "json") {
+        downloadBlob(JSON.stringify(rows, null, 2), "application/json", `kyc-audit-${ts}.json`);
+      } else {
+        downloadBlob(toCsv(rows), "text/csv", `kyc-audit-${ts}.csv`);
+      }
+      toast.success(`Exported ${rows.length} rows`);
+    } catch (e) {
+      toast.error(`Export failed: ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const fallbackPills = useMemo(() => {
@@ -142,11 +251,19 @@ export default function AdminKycGateway() {
       <AdminPageHeader
         icon={ShieldCheck}
         title="KYC Gateway"
-        description="Toggle Youverify rollout, monitor circuit breaker, and review audit logs."
+        description="Toggle Youverify rollout, configure circuit breaker, monitor traffic, and export audit logs."
       >
-        <Button variant="secondary" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} id="auto-refresh" />
+            <Label htmlFor="auto-refresh" className="text-xs text-muted-foreground">
+              Auto-refresh {autoRefresh ? "(15s)" : "off"}
+            </Label>
+          </div>
+          <Button variant="secondary" onClick={() => void load(true)} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </AdminPageHeader>
 
       {/* Metrics */}
@@ -205,6 +322,54 @@ export default function AdminKycGateway() {
         </Card>
       </div>
 
+      {/* Circuit breaker configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Circuit breaker — Youverify</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="space-y-1">
+              <Label htmlFor="bk-threshold">Failure threshold</Label>
+              <Input id="bk-threshold" type="number" min={1} max={1000}
+                value={bkThreshold} onChange={(e) => setBkThreshold(parseInt(e.target.value || "0", 10))} />
+              <p className="text-xs text-muted-foreground">Failures before opening</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="bk-samples">Min samples</Label>
+              <Input id="bk-samples" type="number" min={1} max={10000}
+                value={bkSamples} onChange={(e) => setBkSamples(parseInt(e.target.value || "0", 10))} />
+              <p className="text-xs text-muted-foreground">Required before evaluating</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="bk-window">Window (s)</Label>
+              <Input id="bk-window" type="number" min={5} max={3600}
+                value={bkWindow} onChange={(e) => setBkWindow(parseInt(e.target.value || "0", 10))} />
+              <p className="text-xs text-muted-foreground">Rolling failure window</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="bk-cooldown">Cooldown (s)</Label>
+              <Input id="bk-cooldown" type="number" min={5} max={86400}
+                value={bkCooldown} onChange={(e) => setBkCooldown(parseInt(e.target.value || "0", 10))} />
+              <p className="text-xs text-muted-foreground">Stay open before half-open probe</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">
+              Current: {breaker ? (
+                <>state <strong>{breaker.state}</strong> · failures {breaker.failure_count}
+                {breaker.opened_at && <> · opened at {new Date(breaker.opened_at).toLocaleString()}</>}
+                </>
+              ) : "—"}
+            </div>
+            <Button onClick={saveBreakerConfig} disabled={savingBreaker}>
+              <Save className="h-4 w-4 mr-2" />
+              {savingBreaker ? "Saving…" : "Save thresholds"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Feature flags */}
       <Card>
         <CardHeader><CardTitle>Feature flags</CardTitle></CardHeader>
@@ -225,6 +390,53 @@ export default function AdminKycGateway() {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* Export audits */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Download className="h-4 w-4" /> Export audit logs</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-5">
+            <div className="space-y-1">
+              <Label>From</Label>
+              <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>To</Label>
+              <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Country (ISO-2)</Label>
+              <Input placeholder="e.g. CM" value={exportCountry}
+                onChange={(e) => setExportCountry(e.target.value.toUpperCase())} maxLength={2} />
+            </div>
+            <div className="space-y-1">
+              <Label>Provider</Label>
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={exportProvider}
+                onChange={(e) => setExportProvider(e.target.value as "" | "youverify" | "self_hosted")}
+              >
+                <option value="">Any</option>
+                <option value="youverify">youverify</option>
+                <option value="self_hosted">self_hosted</option>
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+              <Button variant="secondary" disabled={exporting} onClick={() => void exportAudits("csv")}>
+                CSV
+              </Button>
+              <Button variant="secondary" disabled={exporting} onClick={() => void exportAudits("json")}>
+                JSON
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Up to 50,000 rows per export. RLS restricts visibility to admins.
+          </p>
         </CardContent>
       </Card>
 
